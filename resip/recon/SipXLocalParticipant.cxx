@@ -16,10 +16,11 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 SipXLocalParticipant::SipXLocalParticipant(ParticipantHandle partHandle,
-                                   SipXConversationManager& conversationManager)
-: Participant(partHandle, conversationManager),
+                                   ConversationManager& conversationManager,
+                                   SipXMediaStackAdapter& sipXMediaStackAdapter)
+: Participant(partHandle, ConversationManager::ParticipantType_Local, conversationManager),
   LocalParticipant(partHandle, conversationManager),
-  SipXParticipant(partHandle, conversationManager),
+  SipXParticipant(partHandle, ConversationManager::ParticipantType_Local, conversationManager, sipXMediaStackAdapter),
   mLocalPortOnBridge(-1)
 {
    InfoLog(<< "SipXLocalParticipant created, handle=" << mHandle);
@@ -54,7 +55,7 @@ SipXLocalParticipant::addToConversation(Conversation *conversation, unsigned int
 {
     Participant::addToConversation(conversation, inputGain, outputGain);
 
-    if(mSipXConversationManager.getMediaInterfaceMode() == SipXConversationManager::sipXConversationMediaInterfaceMode)
+    if(mSipXMediaStackAdapter.getMediaInterfaceMode() == SipXMediaStackAdapter::sipXConversationMediaInterfaceMode)
     {
        // The Local participant is in a new Conversation, give that conversation focus
        resip_assert(getMediaInterface() != 0);       

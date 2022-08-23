@@ -364,6 +364,11 @@ QValueTargetHandler::removeTerminated(std::list<resip::Data> & queue,
    }
 }
 
+void 
+QValueTargetHandler::setCancelBetweenForkGroups(bool enabled)
+{
+   mCancelBetweenForkGroups = enabled;
+}
 }
 
 /* ====================================================================

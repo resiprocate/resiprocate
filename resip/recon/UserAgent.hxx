@@ -312,9 +312,8 @@ protected:
    std::shared_ptr<ConversationProfile> getConversationProfileByMediaAddress(const resip::Data& mediaAddress);
    virtual std::shared_ptr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
 
-private:
    friend class ConversationManager;
-   friend class SipXConversationManager;
+   friend class SipXMediaStackAdapter;
    friend class UserAgentShutdownCmd;
    friend class AddConversationProfileCmd;
    friend class SetDefaultOutgoingConversationProfileCmd;

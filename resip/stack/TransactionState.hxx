@@ -31,7 +31,7 @@ class TransactionState : public DnsHandler
    public:
       RESIP_HeapCount(TransactionState);
 
-      static UInt64 DnsGreylistDurationMs;  // The amount of time to greylist a DNS entry for after receiving a transport error
+      static uint64_t DnsGreylistDurationMs;  // The amount of time to greylist a DNS entry for after receiving a transport error
 
       static void process(TransactionController& controller,
                            TransactionMessage* message); 
@@ -194,7 +194,7 @@ class TransactionState : public DnsHandler
       int mFailureSubCode;
       bool mTcpConnectTimerStarted;
 
-      static UInt32 StatelessIdCounter;
+      static uint32_t StatelessIdCounter;
       
       friend EncodeStream& operator<<(EncodeStream& strm, const TransactionState& state);
       friend class TransactionController;

@@ -33,7 +33,7 @@ BaseUsage::~BaseUsage()
 }
 
 BaseUsageHandle 
-BaseUsage::getBaseHandle()
+BaseUsage::getBaseHandle() const
 {
    return mHandle;
 }

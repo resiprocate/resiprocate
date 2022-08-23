@@ -83,7 +83,7 @@ FiniteFifo<Msg>::add(Msg* msg)
    else
    {
       mFifo.push_back(msg);
-      mCondition.signal();
+      mCondition.notify_one();
       return true;
    }
 }

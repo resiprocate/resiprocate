@@ -35,7 +35,10 @@ protected:
                 ConversationManager& conversationManager,
                 RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet 
                 ConversationHandle sharedMediaInterfaceConvHandle,
-                ConversationManager::AutoHoldMode autoHoldMode);
+                ConversationManager::AutoHoldMode autoHoldMode,
+                unsigned int maxParticipants = 0);
+   virtual void onParticipantAdded(Participant* participant) = 0;
+   virtual void onParticipantRemoved(Participant* participant) = 0;
 public:
    virtual ~Conversation();
 
@@ -58,14 +61,21 @@ public:
    void destroy();
 
    ConversationHandle getHandle() { return mHandle; }
+   void setMaxParticipants(unsigned int maxParticipants) { mMaxParticipants = maxParticipants; };
+   unsigned int getMaxParticipants() const { return mMaxParticipants; };
+
+   virtual void confirmParticipant(Participant* participant) {};
 
 protected:
+   std::shared_ptr<resip::ConfigParse> getConfig() { return mConversationManager.getConfig(); };
+
    friend class Participant;
    friend class SipXParticipant;
    friend class LocalParticipant;
    friend class SipXLocalParticipant;
    friend class RemoteParticipant;
    friend class SipXRemoteParticipant;
+   friend class KurentoRemoteParticipant;
    friend class MediaResourceParticipant;
    friend class SipXMediaResourceParticipant;
    void registerParticipant(Participant *, unsigned int inputGain=100, unsigned int outputGain=100);
@@ -73,6 +83,7 @@ protected:
 
    friend class BridgeMixer;
    friend class SipXBridgeMixer;
+   friend class KurentoBridgeMixer;
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
 
@@ -83,11 +94,14 @@ protected:
    // sipX Media related members
    // Note: these are only set here if sipXConversationMediaInterfaceMode is used
    friend class ConversationManager;
-   friend class SipXConversationManager;
+   friend class SipXMediaStackAdapter;
+   friend class KurentoMediaStackAdapter;
    BridgeMixer* getBridgeMixer() noexcept { return mBridgeMixer.get(); }
    std::shared_ptr<BridgeMixer> getBridgeMixerShared() { return mBridgeMixer; }
    virtual void setBridgeMixer(std::shared_ptr<BridgeMixer> mixer) { mBridgeMixer = mixer; }
    virtual bool isSharingMediaInterfaceWithAnotherConversation() { return mSharingMediaInterfaceWithAnotherConversation; }
+
+   virtual ConversationManager& getConversationManager() { return mConversationManager; }
 
 
 private: 
@@ -103,6 +117,7 @@ private:
    unsigned int mNumRemoteIMParticipants;
    unsigned int mNumMediaParticipants;
    ConversationManager::AutoHoldMode mAutoHoldMode;
+   unsigned int mMaxParticipants;
 
    // sipX Media related members
    // Note: these are only set here if sipXConversationMediaInterfaceMode is used

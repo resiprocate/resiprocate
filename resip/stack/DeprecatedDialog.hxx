@@ -131,7 +131,7 @@ class DeprecatedDialog
       NameAddr mRemoteUri;
       NameAddr mLocalUri;
       
-      UInt64 expireyTimeAbsoluteMs;
+      uint64_t expireyTimeAbsoluteMs;
       
       friend EncodeStream& operator<<(EncodeStream&, const DeprecatedDialog&);
 };

@@ -55,8 +55,8 @@ B2BCall::peer(const recon::ParticipantHandle& partHandle)
    return (partHandle == mPartA) ? mPartB : mPartA;
 }
 
-B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)
-   : MyConversationManager(false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
+B2BCallManager::B2BCallManager(const ReConServerConfig& config, int defaultSampleRate, int maxSampleRate, std::shared_ptr<B2BCallLogger> b2bCallLogger)
+   : MyConversationManager(config, false, defaultSampleRate, maxSampleRate, false),
      mB2BCallLogger(std::move(b2bCallLogger))
 { 
    config.getConfigValue("B2BUAInternalHosts", mInternalHosts);
@@ -209,9 +209,8 @@ void
 B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
 {
    InfoLog(<< "onIncomingParticipant: handle=" << partHandleA << "auto=" << autoAnswer << " msg=" << msg.brief());
-   mRemoteParticipantHandles.push_back(partHandleA);
    // Create a new conversation for each new participant
-   ConversationHandle conv = createConversation();
+   ConversationHandle conv = createConversation(getConfig().getConfigAutoHoldMode("AutoHoldMode", ConversationManager::AutoHoldEnabled));
    addParticipant(conv, partHandleA);
 
    bool internalSource = isSourceInternal(msg);

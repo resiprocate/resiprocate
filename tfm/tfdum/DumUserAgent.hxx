@@ -560,7 +560,7 @@ class DumUserAgent : public EndPoint,
       virtual void onNewSubscriptionFromRefer(resip::ServerSubscriptionHandle, const resip::SipMessage& sub);
       virtual void onTerminated(resip::ServerSubscriptionHandle);
       virtual bool hasDefaultExpires() const { return true; }
-      virtual UInt32 getDefaultExpires() const { return 60; }
+      virtual uint32_t getDefaultExpires() const { return 60; }
 
       // ClientPagerMessageHandler
       virtual void onSuccess(resip::ClientPagerMessageHandle, const resip::SipMessage& status);

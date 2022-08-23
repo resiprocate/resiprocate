@@ -85,8 +85,8 @@ public:
    void setEntity(const Uri& entity) { checkParsed(); mEntity = entity; }
    const Uri& getEntity() const { checkParsed(); return mEntity; }
 
-   void setVersion(UInt32 version) { checkParsed(); mVersion = version; }
-   UInt32 getVersion() const { checkParsed(); return mVersion; }
+   void setVersion(uint32_t version) { checkParsed(); mVersion = version; }
+   uint32_t getVersion() const { checkParsed(); return mVersion; }
 
    void setDialogInfoState(DialogInfoState dialogInfoState) { checkParsed(); mDialogInfoState = dialogInfoState; }
    DialogInfoState getDialogInfoState() const { checkParsed(); return mDialogInfoState; }
@@ -134,10 +134,10 @@ public:
       void setStateCode(const int& stateCode) { mStateCode = stateCode; }
       const int& getStateCode() const { return mStateCode; }
 
-      void setDuration(const UInt32& duration) { mDuration = duration; mHasDuration = true; }
+      void setDuration(const uint32_t& duration) { mDuration = duration; mHasDuration = true; }
       void clearDuration() { mDuration = 0; mHasDuration = false; }
       bool hasDuration() const { return mHasDuration; }
-      const UInt32& getDuration() const { return mDuration; }
+      const uint32_t& getDuration() const { return mDuration; }
 
       void setReplacesInfo(const Data& callId, const Data& localTag, const Data& remoteTag) 
          { mReplaces.mCallId = callId; mReplaces.mLocalTag = localTag; mReplaces.mRemoteTag = remoteTag; }
@@ -200,10 +200,10 @@ public:
          const Data& getSessionDescription() const { return mSessionDescription; }
          const Data& getSessionDescriptionType() const { return mSessionDescriptionType; }
 
-         void setCSeq(const UInt32& cseq) { mCSeq = cseq; mHasCSeq = true; }
+         void setCSeq(const uint32_t& cseq) { mCSeq = cseq; mHasCSeq = true; }
          void clearCSeq() { mCSeq = 0; mHasCSeq = false; }
          bool hasCSeq() const { return mHasCSeq; }
-         const UInt32& getCSeq() const { return mCSeq; }
+         const uint32_t& getCSeq() const { return mCSeq; }
 
       private:
          NameAddr mIdentity;
@@ -211,7 +211,7 @@ public:
          TargetParams mTargetParams;
          Data mSessionDescription;
          Data mSessionDescriptionType;
-         UInt32 mCSeq;
+         uint32_t mCSeq;
          bool mHasCSeq;
 
          friend class Dialog;
@@ -246,7 +246,7 @@ public:
       DialogStateEvent mStateEvent;
       int mStateCode;
 
-      UInt32 mDuration;
+      uint32_t mDuration;
       bool mHasDuration;
 
       DialogIdInfo mReplaces;
@@ -302,7 +302,7 @@ private:
    Data mSharedAppearanceDialogInfoNamespacePrefix;
    Data mIndent;
    Uri mEntity;
-   UInt32 mVersion;
+   uint32_t mVersion;
    DialogInfoState mDialogInfoState;
 
    DialogList mDialogs;

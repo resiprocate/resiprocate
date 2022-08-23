@@ -55,7 +55,8 @@ class SipXMediaResourceParticipant : public virtual MediaResourceParticipant, pu
 {
 public:  
    SipXMediaResourceParticipant(ParticipantHandle partHandle,
-      SipXConversationManager& sipXConversationManager,
+      ConversationManager& conversationManager,
+      SipXMediaStackAdapter& sipXMediaStackAdapter,
       const resip::Uri& mediaUrl);  
    virtual ~SipXMediaResourceParticipant();
 

@@ -11,25 +11,34 @@
 
 #include <rutil/Data.hxx>
 #ifdef USE_SIPXTAPI
-#include <resip/recon/SipXConversationManager.hxx>
+#include <resip/recon/SipXMediaStackAdapter.hxx>
 #endif
+
+#include "reConServerConfig.hxx"
 
 namespace reconserver
 {
 
-class MyConversationManager : public recon::SipXConversationManager
+#ifdef USE_KURENTO
+#define PREFER_KURENTO
+// FIXME: hard-coded to use Kurento when selected at compile time
+#else
+#ifdef USE_SIPXTAPI
+#define PREFER_SIPXTAPI
+#else
+#error No media stack enabled
+#endif
+#endif
+
+class MyConversationManager : public recon::ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
+   MyConversationManager(const ReConServerConfig& config, bool localAudioEnabled, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
    virtual ~MyConversationManager() {};
 
    virtual void startup();
    
-   virtual recon::ConversationHandle createConversation(AutoHoldMode autoHoldMode = AutoHoldEnabled) override;
-   virtual recon::ParticipantHandle createRemoteParticipant(recon::ConversationHandle convHandle, const resip::NameAddr& destination, recon::ConversationManager::ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic, const std::shared_ptr<recon::ConversationProfile>& conversationProfile = nullptr, const std::multimap<resip::Data, resip::Data>& extraHeaders = std::multimap<resip::Data, resip::Data>()) override;
-   virtual recon::ParticipantHandle createMediaResourceParticipant(recon::ConversationHandle convHandle, const resip::Uri& mediaUrl) override;
-   virtual recon::ParticipantHandle createLocalParticipant() override;
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle) override;
    virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle) override;
    virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up) override;
@@ -47,14 +56,20 @@ public:
    virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override;
    virtual void displayInfo();
 
+   typedef std::function<void(const resip::Data& event)> EventListener;
+   virtual void setEventListener(EventListener eventListener) { mEventListener = eventListener; };
+
+   recon::ConversationHandle getRoom(const resip::Data& roomName);
+   void inviteToRoom(const resip::Data& roomName, const resip::NameAddr& destination);
+
 protected:
-   std::list<recon::ConversationHandle> mConversationHandles;
-   std::list<recon::ParticipantHandle> mLocalParticipantHandles;
-   std::list<recon::ParticipantHandle> mRemoteParticipantHandles;
-   std::list<recon::ParticipantHandle> mMediaParticipantHandles;
+   virtual const ReConServerConfig& getConfig() const { return mConfig; };
+   virtual void notifyEvent(const resip::Data& event) { if(mEventListener) {mEventListener(event);} };
+   ReConServerConfig mConfig;
    typedef std::map<resip::Data, recon::ConversationHandle> RoomMap;
    RoomMap mRooms;
    bool mAutoAnswerEnabled;
+   EventListener mEventListener;
 };
 
 }

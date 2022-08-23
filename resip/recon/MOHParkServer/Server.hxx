@@ -8,7 +8,7 @@
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
 
-#include "../SipXConversationManager.hxx"
+#include "../SipXMediaStackAdapter.hxx"
 
 #ifdef WIN32
    #define sleepMs(t) Sleep(t)
@@ -23,7 +23,7 @@ namespace mohparkserver
 class WebAdminThread;
 class WebAdmin;
 
-class Server : public recon::SipXConversationManager
+class Server : public recon::ConversationManager
 {
 public:
    Server(ConfigParser& config);  
@@ -60,8 +60,8 @@ public:
    recon::UserAgent* getMyUserAgent() { return mMyUserAgent; }
 
    // Legacy API's that assume one set of settings for MOH and Park - return first defined MOH and ParkSettings
-   MOHManager& getMOHManager() { assert(mMOHManagerMap.size() != 0);  return *mMOHManagerMap.begin()->second; }
-   ParkManager& getParkManager() { assert(mParkManagerMap.size() != 0);  return *mParkManagerMap.begin()->second; }
+   MOHManager& getMOHManager() { resip_assert(mMOHManagerMap.size() != 0);  return *mMOHManagerMap.begin()->second; }
+   ParkManager& getParkManager() { resip_assert(mParkManagerMap.size() != 0);  return *mParkManagerMap.begin()->second; }
 
    void getActiveCallsInfo(CallInfoList& callInfos);
 
@@ -91,7 +91,6 @@ protected:
 private:
    friend class MOHManager;
    friend class ParkManager;
-   using SipXConversationManager::buildSessionCapabilities;
    virtual void buildSessionCapabilities(resip::SdpContents& sessionCaps);
 
    bool mIsV6Avail;

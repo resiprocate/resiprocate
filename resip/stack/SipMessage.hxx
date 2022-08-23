@@ -506,7 +506,7 @@ class SipMessage : public TransactionMessage
       /// @internal transport interface
       void setStartLine(const char* start, int len); 
 
-      void setBody(const char* start, UInt32 len); 
+      void setBody(const char* start, uint32_t len); 
       
       /// Add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
@@ -535,7 +535,7 @@ class SipMessage : public TransactionMessage
 
       void addBuffer(char* buf);
 
-      UInt64 getCreatedTimeMicroSec() const {return mCreatedTime;}
+      uint64_t getCreatedTimeMicroSec() const {return mCreatedTime;}
 
       /// deal with a notion of an "out-of-band" forced target for SIP routing
       void setForceTarget(const Uri& uri);
@@ -715,7 +715,7 @@ class SipMessage : public TransactionMessage
       bool mInvalid;
       resip::Data* mReason;
       
-      UInt64 mCreatedTime;
+      uint64_t mCreatedTime;
 
       // used when next element is a strict router OR 
       // client forces next hop OOB

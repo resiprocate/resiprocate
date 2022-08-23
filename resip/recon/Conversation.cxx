@@ -5,6 +5,7 @@
 #include "RemoteIMPagerParticipant.hxx"
 #include "RemoteIMSessionParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
+#include "MediaStackAdapter.hxx"
 #include "UserAgent.hxx"
 #include "RelatedConversationSet.hxx"
 #include "ReconSubsystem.hxx"
@@ -24,7 +25,8 @@ Conversation::Conversation(ConversationHandle handle,
                            ConversationManager& conversationManager,
                            RelatedConversationSet* relatedConversationSet,
                            ConversationHandle sharedMediaInterfaceConvHandle,
-                           ConversationManager::AutoHoldMode autoHoldMode)
+                           ConversationManager::AutoHoldMode autoHoldMode,
+                           unsigned int maxParticipants)
 : mHandle(handle),
   mConversationManager(conversationManager),
   mDestroying(false),
@@ -33,6 +35,7 @@ Conversation::Conversation(ConversationHandle handle,
   mNumRemoteIMParticipants(0),
   mNumMediaParticipants(0),
   mAutoHoldMode(autoHoldMode),
+  mMaxParticipants(maxParticipants),
   mBridgeMixer(0),
   mSharingMediaInterfaceWithAnotherConversation(false)
 {
@@ -49,7 +52,7 @@ Conversation::Conversation(ConversationHandle handle,
    }
    InfoLog(<< "Conversation created, handle=" << mHandle);
 
-   if(mConversationManager.supportsMultipleMediaInterfaces())
+   if(mConversationManager.getMediaStackAdapter().supportsMultipleMediaInterfaces())
    {
       // Check if sharedMediaInterfaceConvHandle was passed in, and if so use the same media interface and bridge mixer that, that
       // conversation is using
@@ -94,6 +97,12 @@ Conversation::getParticipant(ParticipantHandle partHandle)
 void 
 Conversation::addParticipant(Participant* participant, unsigned int inputGain, unsigned int outputGain)
 {
+   if(mMaxParticipants > 0 && mParticipants.size() >= mMaxParticipants)
+   {
+      WarningLog(<<"Conversation already has " << mMaxParticipants << " participant(s), can't add another");
+      return;
+   }
+
    // If participant doesn't already exist in this conversation - then add them
    if(getParticipant(participant->getParticipantHandle()) == 0)
    {
@@ -169,7 +178,7 @@ Conversation::relayInstantMessageToRemoteParticipants(ParticipantHandle sourcePa
    if (it == mParticipants.end())
    {
       // Source Participant is not part of the conversation, strange, don't continue
-      assert(false);  // shouldn't happen
+      resip_assert(false);  // shouldn't happen
       return;
    }
    if (it->second.getOutputGain() == 0)
@@ -217,7 +226,7 @@ Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant,
 {
    // Create new Related Conversation
    ConversationHandle relatedConvHandle = mConversationManager.getNewConversationHandle();
-   Conversation* conversation = mConversationManager.createConversationInstance(relatedConvHandle, mRelatedConversationSet,
+   Conversation* conversation = mConversationManager.getMediaStackAdapter().createConversationInstance(relatedConvHandle, mRelatedConversationSet,
                                                  // If this conversation is sharing a media interface, then any related 
                                                  // conversations will as well (use our handle as the original handle
                                                  // passed in contructor could be gone)
@@ -292,9 +301,11 @@ Conversation::destroy()
 void 
 Conversation::registerParticipant(Participant *participant, unsigned int inputGain, unsigned int outputGain)
 {
+   bool added = false;
    // Only increment count if registering new participant
    if(getParticipant(participant->getParticipantHandle()) == 0)
    {
+      added = true;
       bool prevShouldHold = shouldHold();
       if(dynamic_cast<LocalParticipant*>(participant))
       {
@@ -315,7 +326,7 @@ Conversation::registerParticipant(Participant *participant, unsigned int inputGa
       }
       else
       {
-         assert(false);
+         resip_assert(false);
       }
       if(prevShouldHold != shouldHold())
       {
@@ -327,6 +338,10 @@ Conversation::registerParticipant(Participant *participant, unsigned int inputGa
 
    InfoLog(<< "Participant handle=" << participant->getParticipantHandle() << " added to conversation handle=" << mHandle << " (BridgePort=" << participant->getConnectionPortOnBridge() << ")");
 
+   if(added)
+   {
+      onParticipantAdded(participant);
+   }
    participant->applyBridgeMixWeights();
 }
 
@@ -335,33 +350,34 @@ Conversation::unregisterParticipant(Participant *participant)
 {
    if(getParticipant(participant->getParticipantHandle()) != 0)
    {
+      onParticipantRemoved(participant);
       mParticipants.erase(participant->getParticipantHandle());  // No need to notify this party, remove from map first
 
       bool prevShouldHold = shouldHold();
       if(dynamic_cast<LocalParticipant*>(participant))
       {
-         assert(mNumLocalParticipants != 0);
+         resip_assert(mNumLocalParticipants != 0);
          mNumLocalParticipants--;
       }
       else if(dynamic_cast<RemoteParticipant*>(participant))
       {
-         assert(mNumRemoteParticipants != 0);
+         resip_assert(mNumRemoteParticipants != 0);
          mNumRemoteParticipants--;
       }
       else if(dynamic_cast<MediaResourceParticipant*>(participant))
       {
-         assert(mNumMediaParticipants != 0);
+         resip_assert(mNumMediaParticipants != 0);
          mNumMediaParticipants--;
       }
       else if (dynamic_cast<RemoteIMPagerParticipant*>(participant) ||
                dynamic_cast<RemoteIMSessionParticipant*>(participant))
       {
-         assert(mNumRemoteIMParticipants != 0);
+         resip_assert(mNumRemoteIMParticipants != 0);
          mNumRemoteIMParticipants--;
       }
       else
       {
-         assert(false);
+         resip_assert(false);
       }
       if(!mDestroying && prevShouldHold != shouldHold())
       {

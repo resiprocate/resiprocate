@@ -39,7 +39,7 @@ class SdpMediaLine;
 
 namespace recon
 {
-class SipXConversationManager;
+class SipXMediaStackAdapter;
 
 /**
   This class represent a remote participant.  A remote participant is a 
@@ -53,18 +53,20 @@ class SipXRemoteParticipant : public virtual RemoteParticipant, public virtual S
 {
 public:
    SipXRemoteParticipant(ParticipantHandle partHandle,   // UAC
-                     SipXConversationManager& conversationManager,
+                     ConversationManager& conversationManager,
+                     SipXMediaStackAdapter& sipXMediaStackAdapter,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   SipXRemoteParticipant(SipXConversationManager& conversationManager,            // UAS or forked leg
+   SipXRemoteParticipant(ConversationManager& conversationManager,
+                     SipXMediaStackAdapter& sipXMediaStackAdapter,            // UAS or forked leg
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
    virtual ~SipXRemoteParticipant();
 
    virtual unsigned int getLocalRTPPort();
-   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
+   virtual void buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp = false);
 
    virtual int getConnectionPortOnBridge();
    virtual bool hasInput() { return true; }
@@ -76,11 +78,12 @@ public:
 protected:
    virtual bool mediaStackPortAvailable();
 
-   virtual SipXRemoteParticipantDialogSet& getSipXDialogSet() { return dynamic_cast<SipXRemoteParticipantDialogSet&>(getDialogSet()); };
+   // Note:  Returns non-null the majority of the time, can return null on object destruction
+   virtual SipXRemoteParticipantDialogSet* getSipXDialogSet() { return dynamic_cast<SipXRemoteParticipantDialogSet*>(&getDialogSet()); }
 
-private:       
+private:
    bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
-   bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer);
+   virtual void buildSdpAnswer(const resip::SdpContents& offer, CallbackSdpReady sdpReady) override;
 };
 
 }

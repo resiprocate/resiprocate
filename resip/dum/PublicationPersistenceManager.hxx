@@ -24,7 +24,7 @@ public:
    struct PubDocument
    {
       PubDocument() : mExpirationTime(0), mLastUpdated(0), mLingerTime(0), mSyncPublication(false) {}
-      PubDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication = false) :
+      PubDocument(const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication = false) :
          mEventType(eventType), mDocumentKey(documentKey), mETag(eTag), mExpirationTime(expirationTime), mLastUpdated(Timer::getTimeSecs()), mLingerTime(expirationTime), mSyncPublication(syncPublication)
       {
          if (contents)
@@ -40,7 +40,7 @@ public:
 
       void stream(std::iostream& s) const
       {
-          UInt64 now = Timer::getTimeSecs();
+          uint64_t now = Timer::getTimeSecs();
 
           // Note: for compatibility with RegSyncServer/Client, using pubinfo for tag name instead of pubdocument
           s << "<pubinfo>" << Symbols::CRLF;
@@ -126,7 +126,7 @@ public:
           s << "</pubinfo>" << Symbols::CRLF;
       }
       
-      bool deserialize(resip::XMLCursor& xml, UInt64 now = 0)
+      bool deserialize(resip::XMLCursor& xml, uint64_t now = 0)
       {
           bool success = false;
           *this = PubDocument();
@@ -171,7 +171,7 @@ public:
                     {
                         if(xml.firstChild())
                         {
-                           UInt64 expires = xml.getValue().convertUInt64();
+                           uint64_t expires = xml.getValue().convertUInt64();
                            mExpirationTime = (expires == 0 ? 0 : now + expires);
                            mLingerTime = mExpirationTime;
                            xml.parent();
@@ -330,9 +330,9 @@ public:
       Data mEventType;
       Data mDocumentKey;
       Data mETag;
-      UInt64 mExpirationTime;
-      UInt64 mLastUpdated;
-      UInt64 mLingerTime;      // No need to sync this - this is essentially the latest expiration time we have seen for this ETag
+      uint64_t mExpirationTime;
+      uint64_t mLastUpdated;
+      uint64_t mLingerTime;      // No need to sync this - this is essentially the latest expiration time we have seen for this ETag
       std::shared_ptr<Contents> mContents;
       std::shared_ptr<SecurityAttributes> mSecurityAttributes;
       bool mSyncPublication;   // No need to sync this
@@ -352,15 +352,15 @@ public:
    virtual ~PublicationPersistenceManager() = default;
 
    virtual void addUpdateDocument(const PubDocument& document) = 0;
-   virtual void addUpdateDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication = false)
+   virtual void addUpdateDocument(const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication = false)
    {
       addUpdateDocument(PubDocument(eventType, documentKey, eTag, expirationTime, contents, securityAttributes, syncPublication));
    }
-   virtual bool removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated, bool syncPublication = false) = 0;
+   virtual bool removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated, bool syncPublication = false) = 0;
    virtual bool getMergedETags(const Data& eventType, const Data& documentKey, ETagMerger& merger, Contents* destination) = 0;
    virtual bool documentExists(const Data& eventType, const Data& documentKey, const Data& eTag) = 0;
    virtual bool getDocument(const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, PubDocument& document) { return false; }
-   virtual bool checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated) = 0;
+   virtual bool checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated) = 0;
    virtual void lockDocuments() = 0;
    virtual KeyToETagMap& getDocuments() = 0;  // Ensure you lock before calling this and unlock when done
    virtual void unlockDocuments() = 0;

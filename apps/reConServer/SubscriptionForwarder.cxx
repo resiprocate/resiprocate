@@ -65,7 +65,7 @@ SubscriptionForwarder::~SubscriptionForwarder()
 }
 
 bool
-SubscriptionForwarder::process(resip::Lockable* mutex)
+SubscriptionForwarder::process(resip::Mutex* mutex)
 {
    if (mFifo.messageAvailable())
    {

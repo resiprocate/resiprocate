@@ -22,6 +22,9 @@
 #include "rutil/Subsystem.hxx"
 #include "rutil/SysLogStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#ifdef ENABLE_LOG_REPOSITORY_DETAILS
+#include "rutil/Repository.hxx"
+#endif
 
 #ifdef USE_FMT
 #include <fmt/format.h>
@@ -41,8 +44,10 @@ int Log::mSyslogFacility = LOG_DAEMON;
 #else
 int Log::mSyslogFacility = -1;
 #endif
-unsigned int Log::MaxLineCount = 0; // no limit by default
-unsigned int Log::MaxByteCount = 0; // no limit by default
+#define RESIP_LOG_MAX_LINE_COUNT_DEFAULT 0
+#define RESIP_LOG_MAX_BYTE_COUNT_DEFAULT 0
+unsigned int Log::MaxLineCount = RESIP_LOG_MAX_LINE_COUNT_DEFAULT; // no limit by default
+unsigned int Log::MaxByteCount = RESIP_LOG_MAX_BYTE_COUNT_DEFAULT; // no limit by default
 bool Log::KeepAllLogFiles = false;  // do not keep all log files by default
 
 volatile short Log::touchCount = 0;
@@ -265,76 +270,88 @@ Log::initialize(Type type, Level level, const Data& appName,
                 MessageStructure messageStructure,
                 const Data& instanceName)
 {
-   Lock lock(_mutex);
-   mDefaultLoggerData.reset();   
+   {
+      Lock lock(_mutex);
+      mDefaultLoggerData.reset();   
 
-   mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure, instanceName);
+      mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure, instanceName);
 
-   ParseBuffer pb(appName);
-   pb.skipToEnd();
+      ParseBuffer pb(appName);
+      pb.skipToEnd();
 #ifdef _WIN32
-   pb.skipBackToChar('\\');
+      pb.skipBackToChar('\\');
 #else
-   pb.skipBackToChar('/');
+      pb.skipBackToChar('/');
 #endif
-   mAppName = pb.position();
+      mAppName = pb.position();
 
-   mInstanceName = instanceName;
+      mInstanceName = instanceName;
 
 #ifndef WIN32
-   if (!syslogFacilityName.empty())
-   {
-      mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
-      if(mSyslogFacility == -1)
+      if (!syslogFacilityName.empty())
       {
-         mSyslogFacility = LOG_DAEMON;
-         if(type == Log::Syslog)
+         mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
+         if(mSyslogFacility == -1)
          {
-            syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
+            mSyslogFacility = LOG_DAEMON;
+            if(type == Log::Syslog)
+            {
+               syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
+            }
          }
       }
-   }
 #else
-   if (type == Syslog)
-   {
-       std::cerr << "syslog not supported on windows, using cout!" << std::endl;
-       type = Cout;
-   }
+      if (type == Syslog)
+      {
+         std::cerr << "syslog not supported on windows, using cout!" << std::endl;
+         type = Cout;
+      }
 #endif
 
-   char buffer[1024];  
-   buffer[1023] = '\0';
-   if(gethostname(buffer, sizeof(buffer)) == -1)
-   {
-      mHostname = "?";
-   }
-   else
-   {
-      mHostname = buffer;
-   }
-
-   // Note: for Windows users, you must call initNetwork to initialize WinSock before calling 
-   //       Log::initialize in order for getaddrinfo to be successful
-   {
-      struct addrinfo hints;
-      struct addrinfo* info = nullptr;
-      int gai_result;
-
-      memset (&hints, 0, sizeof (hints));
-      hints.ai_family = AF_UNSPEC;    /*either IPV4 or IPV6 */
-      hints.ai_socktype = SOCK_STREAM;
-      hints.ai_flags = AI_CANONNAME;
-
-      if ((gai_result = getaddrinfo (buffer, 0, &hints, &info)) != 0) {
-         mFqdn = mHostname;
-      } else if (info == NULL) {
-         mFqdn = mHostname;
-      } else {
-         mFqdn = info->ai_canonname;
+      char buffer[1024];  
+      buffer[1023] = '\0';
+      if(gethostname(buffer, sizeof(buffer)) == -1)
+      {
+         mHostname = "?";
+      }
+      else
+      {
+         mHostname = buffer;
       }
 
-      freeaddrinfo (info);
+      // Note: for Windows users, you must call initNetwork to initialize WinSock before calling 
+      //       Log::initialize in order for getaddrinfo to be successful
+      {
+         struct addrinfo hints;
+         struct addrinfo* info = nullptr;
+         int gai_result;
+
+         memset (&hints, 0, sizeof (hints));
+         hints.ai_family = AF_UNSPEC;    /*either IPV4 or IPV6 */
+         hints.ai_socktype = SOCK_STREAM;
+         hints.ai_flags = AI_CANONNAME;
+
+         if ((gai_result = getaddrinfo (buffer, 0, &hints, &info)) != 0) {
+            mFqdn = mHostname;
+         } else if (info == NULL) {
+            mFqdn = mHostname;
+         } else {
+            mFqdn = info->ai_canonname;
+         }
+
+         freeaddrinfo (info);
+      }
+
    }
+#ifdef ENABLE_LOG_REPOSITORY_DETAILS
+   GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version=" << VERSION << " git-commit=" << RESIPROCATE_GIT_ID << " git-branch=" << RESIPROCATE_BRANCH_NAME);
+#else
+#ifdef VERSION
+   GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version=" << VERSION << " git repository details unknown");
+#else
+   GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version and git repository details unknown");
+#endif
+#endif
 }
 
 void
@@ -352,7 +369,7 @@ Log::initialize(Type type,
 void
 Log::initialize(const ConfigParse& configParse, const Data& appName, ExternalLogger* externalLogger)
 {
-   Log::setMaxByteCount(configParse.getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */));
+   Log::setMaxByteCount(configParse.getConfigUnsignedLong("LogFileMaxBytes", RESIP_LOG_MAX_BYTE_COUNT_DEFAULT));
 
    Log::setKeepAllLogFiles(configParse.getConfigBool("KeepAllLogFiles", false));
 
@@ -378,7 +395,7 @@ Log::initialize(const ConfigParse& configParse, const Data& appName, ExternalLog
       loggingMessageStructure,
       loggingInstanceName);
 
-   unsigned int loggingFileMaxLineCount = configParse.getConfigUnsignedLong("LogFileMaxLines", 50000);
+   unsigned int loggingFileMaxLineCount = configParse.getConfigUnsignedLong("LogFileMaxLines", RESIP_LOG_MAX_LINE_COUNT_DEFAULT);
    Log::setMaxLineCount(loggingFileMaxLineCount);
 }
 
@@ -591,7 +608,7 @@ Log::tags(Log::Level level,
    char buffer[256] = "";
    Data ts(Data::Borrow, buffer, sizeof(buffer));
 #if defined( __APPLE__ )
-   pthread_t threadId = pthread_self();
+   std::make_unsigned<pthread_t>::type threadId = pthread_self();
    const char* file = pfile;
 #elif defined( WIN32 )
    int threadId = (int)GetCurrentThreadId();
@@ -606,7 +623,7 @@ Log::tags(Log::Level level,
       ++file;
    }
 #else // #if defined( WIN32 ) || defined( __APPLE__ )
-   pthread_t threadId = pthread_self();
+   std::make_unsigned<pthread_t>::type threadId = pthread_self();
    const char* file = pfile;
 #endif
 
@@ -663,7 +680,7 @@ Log::tags(Log::Level level,
       //        << mHostname << Log::delim
       //        << mAppName << Log::delim
               << subsystem << Log::delim
-              << threadId << Log::delim
+              << "0x" << std::hex << threadId << std::dec << Log::delim
               << file << ":" << line;
       }
       else
@@ -677,7 +694,7 @@ Log::tags(Log::Level level,
          }
          strm << Log::delim
               << subsystem << Log::delim
-              << threadId << Log::delim
+              << "0x" << std::hex << threadId << std::dec << Log::delim
               << file << ":" << line;
       }
    }
@@ -1242,7 +1259,7 @@ Log::ThreadData::set(Type type, Level level,
       mLogFileName = Data(_loggingFilename.data(), _loggingFilename.size());
 #else
       mLogFileName = logFileName;
-      mLogFileName.replace("{timestamp}", Data((UInt64)time(0)));
+      mLogFileName.replace("{timestamp}", Data((uint64_t)time(0)));
 #ifdef WIN32
       mLogFileName.replace("{pid}", Data((int)GetCurrentProcess()));
 #else

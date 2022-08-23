@@ -3,6 +3,7 @@
 
 #include "BridgeMixer.hxx"
 
+#include <rutil/ConfigParse.hxx>
 #include <resip/stack/Uri.hxx>
 #include <resip/stack/Contents.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
@@ -11,15 +12,14 @@
 #include <resip/dum/OutOfDialogHandler.hxx>
 #include <resip/dum/RedirectHandler.hxx>
 #include <resip/dum/PagerMessageHandler.hxx>
-#include <rutil/Mutex.hxx>
-
-#include <reflow/RTCPEventLoggingHandler.hxx>
 
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 
 namespace resip
 {
@@ -35,6 +35,7 @@ class UserAgent;
 class ConversationProfile;
 class LocalParticipant;
 class MediaResourceParticipant;
+class MediaStackAdapter;
 class RemoteParticipant;
 class RemoteParticipantDialogSet;
 
@@ -70,8 +71,18 @@ class ConversationManager : public resip::InviteSessionHandler,
 {
 public:
 
-   ConversationManager();
+   ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter,
+      std::shared_ptr<resip::ConfigParse> configParse = std::shared_ptr<resip::ConfigParse>());
    virtual ~ConversationManager();
+
+   typedef enum
+   {
+      ParticipantType_Local,
+      ParticipantType_Remote,
+      ParticipantType_MediaResource,
+      ParticipantType_RemoteIMPager,
+      ParticipantType_RemoteIMSession
+   } ParticipantType;
 
    typedef enum
    {
@@ -354,15 +365,6 @@ public:
    virtual void outputBridgeMatrix(ConversationHandle convHandle = 0);
 
    /**
-     Builds a session capabilties SDPContents based on the passed in ipaddress
-     and codec ordering.
-     Note:  Codec ordering is an array of sipX internal codecId's.  Id's for
-            codecs not loaded are ignored.
-   */
-   virtual void buildSessionCapabilities(const resip::Data& ipaddress,
-      const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps) = 0;
-
-   /**
      Signal to the participant that it should provide ringback.  Only
      applicable to RemoteParticipants.  For SIP this causes a 180 to be sent.
      The early flag indicates if we are sending early media or not.
@@ -458,6 +460,8 @@ public:
    */
    virtual bool getBufferFromMediaResourceCache(const resip::Data& name, resip::Data** buffer, int* type);
    
+   virtual void requestKeyframe(ParticipantHandle partHandle, std::chrono::duration<double> durationMs);
+   virtual void requestKeyframeFromPeer(ParticipantHandle partHandle, std::chrono::duration<double> durationMs);
    /**
      This function is used to start a timer on behalf of recon based application.
      The onApplicationTimer callback will get called when the timer expires.
@@ -671,26 +675,16 @@ public:
    */
    virtual void onMediaResourceParticipantFailed(ParticipantHandle partHandle) {}
 
-   virtual Conversation* createConversationInstance(ConversationHandle handle,
-      RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
-      ConversationHandle sharedMediaInterfaceConvHandle,
-      ConversationManager::AutoHoldMode autoHoldMode) = 0;
-   virtual LocalParticipant* createLocalParticipantInstance(ParticipantHandle partHandle) = 0;
-   virtual MediaResourceParticipant* createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl) = 0;
    virtual RemoteParticipant* createAppropriateRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
    virtual RemoteParticipant* createAppropriateRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
-   virtual RemoteParticipant* createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
-   virtual RemoteParticipant* createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
-   virtual RemoteParticipantDialogSet* createRemoteParticipantDialogSetInstance(
-         ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
-         std::shared_ptr<ConversationProfile> conversationProfile = nullptr) = 0;
    virtual RemoteParticipantDialogSet* createRemoteIMSessionParticipantDialogSetInstance(
       ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
       std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 
-   virtual bool supportsMultipleMediaInterfaces() = 0;
-   virtual bool canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2) = 0;
-   virtual bool supportsLocalAudio() = 0;
+   virtual void setMediaStackAdapter(std::shared_ptr<MediaStackAdapter> mediaStackAdapter);
+   MediaStackAdapter& getMediaStackAdapter() { return *mMediaStackAdapter; };
+
+   std::shared_ptr<resip::ConfigParse> getConfig() { return mConfigParse; };
 
 protected:
 
@@ -749,7 +743,7 @@ protected:
    virtual void onExpiredByClient(resip::ServerSubscriptionHandle, const resip::SipMessage& sub, resip::SipMessage& notify);
    virtual void onExpired(resip::ServerSubscriptionHandle, resip::SipMessage& notify);
    virtual bool hasDefaultExpires() const;
-   virtual UInt32 getDefaultExpires() const;
+   virtual uint32_t getDefaultExpires() const;
 
    // OutOfDialogHandler //////////////////////////////////////////////////////////
    virtual void onSuccess(resip::ClientOutOfDialogReqHandle, const resip::SipMessage& response);
@@ -777,10 +771,14 @@ protected:
 
    virtual void setUserAgent(UserAgent *userAgent);
 
+   friend class MediaStackAdapter;
    std::shared_ptr<BridgeMixer>& getBridgeMixer() { return mBridgeMixer; }
 
    ConversationHandle getNewConversationHandle();  // thread safe
    Conversation* getConversation(ConversationHandle convHandle);
+
+   std::set<ConversationHandle> getConversationHandles() const;  // thread safe
+   std::set<ParticipantHandle> getParticipantHandlesByType(ParticipantType participantType) const;  // thread safe
 
    bool isShuttingDown() { return mShuttingDown; }
 
@@ -794,6 +792,7 @@ private:
    // Note:  In general the following fns are not thread safe and must be called from dum process 
    //        loop only
    friend class Conversation;
+   friend class SipXConversation;
    friend class OutputBridgeMixWeightsCmd;
    void registerConversation(Conversation *);
    void unregisterConversation(Conversation *);
@@ -810,10 +809,7 @@ private:
 
    /* Called periodically in the event loop to give the ConversationManager
       the opportunity to do any pending work */
-   virtual void process() = 0;
-
-   virtual void setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h) = 0;
-   virtual void initializeDtlsFactory(const resip::Data& defaultAoR) = 0;
+   virtual void process();
 
    friend class DtmfEvent;
    friend class MediaEvent;
@@ -842,7 +838,6 @@ private:
    virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer);
 
    friend class OutputBridgeMixWeightsCmd;
-   virtual void outputBridgeMatrixImpl(ConversationHandle convHandle = 0) = 0;
 
    friend class MediaResourceParticipantDeleterCmd;
    friend class CreateConversationCmd;
@@ -864,20 +859,26 @@ private:
    friend class HoldParticipantCmd;
    friend class CreateRemoteIMPagerParticipantCmd;
    friend class SendIMToParticipantCmd;
+   friend class RequestKeyframeCmd;
+   friend class RequestKeyframeFromPeerCmd;
 
    UserAgent* mUserAgent;
+   std::shared_ptr<MediaStackAdapter> mMediaStackAdapter;
+   std::shared_ptr<resip::ConfigParse> mConfigParse;
    bool mShuttingDown;
 
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;
    ConversationMap mConversations;
-   resip::Mutex mConversationHandleMutex;
-   ConversationHandle mCurrentConversationHandle;
+   mutable std::mutex mConversationHandlesMutex;
+   std::atomic<ConversationHandle> mCurrentConversationHandle;
+   std::set<ConversationHandle> mConversationHandles;
 
    typedef std::map<ParticipantHandle, Participant *> ParticipantMap;
    ParticipantMap mParticipants;
-   resip::Mutex mParticipantHandleMutex;
-   ParticipantHandle mCurrentParticipantHandle;
+   mutable std::mutex mParticipantHandlesMutex;
+   std::atomic<ParticipantHandle> mCurrentParticipantHandle;
    Participant* getParticipant(ParticipantHandle partHandle);
+   std::map<ParticipantType, std::set<ParticipantHandle>> mParticipantHandlesByType;
 
    MediaResourceCache mMediaResourceCache;
 

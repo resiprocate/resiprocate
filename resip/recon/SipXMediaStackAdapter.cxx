@@ -25,7 +25,7 @@
 
 #include "ReconSubsystem.hxx"
 #include "UserAgent.hxx"
-#include "SipXConversationManager.hxx"
+#include "SipXMediaStackAdapter.hxx"
 #include "ConversationManagerCmds.hxx"
 #include "SipXConversation.hxx"
 #include "Participant.hxx"
@@ -47,11 +47,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-constexpr char SipXConversationManager::DEFAULT_FROM_FILE_2_RESOURCE_NAME[];
-constexpr char SipXConversationManager::DEFAULT_RECORDER_2_RESOURCE_NAME[];
+constexpr char SipXMediaStackAdapter::DEFAULT_FROM_FILE_2_RESOURCE_NAME[];
+constexpr char SipXMediaStackAdapter::DEFAULT_RECORDER_2_RESOURCE_NAME[];
 
-SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, bool enableExtraPlayAndRecordResources)
-: ConversationManager(),
+SipXMediaStackAdapter::SipXMediaStackAdapter(ConversationManager& conversationManager, bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, bool enableExtraPlayAndRecordResources)
+: MediaStackAdapter(conversationManager),
   mLocalAudioEnabled(localAudioEnabled),
   mMediaInterfaceMode(mediaInterfaceMode),
   mEnableExtraPlayAndRecordResources(enableExtraPlayAndRecordResources),
@@ -61,8 +61,8 @@ SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaIn
    init();
 }
 
-SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool enableExtraPlayAndRecordResources)
-: ConversationManager(),
+SipXMediaStackAdapter::SipXMediaStackAdapter(ConversationManager& conversationManager, bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool enableExtraPlayAndRecordResources)
+: MediaStackAdapter(conversationManager),
   mLocalAudioEnabled(localAudioEnabled),
   mMediaInterfaceMode(mediaInterfaceMode),
   mEnableExtraPlayAndRecordResources(enableExtraPlayAndRecordResources),
@@ -73,7 +73,7 @@ SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaIn
 }
 
 void
-SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
+SipXMediaStackAdapter::init(int defaultSampleRate, int maxSampleRate)
 {
 #ifdef _DEBUG
 
@@ -161,7 +161,11 @@ SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
                << " Rate: " << codecInfoArray[i]->sampleRate
                << " Channels: " << codecInfoArray[i]->numChannels);
    }
+}
 
+void
+SipXMediaStackAdapter::conversationManagerReady(ConversationManager* conversationManager)
+{
    if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
    {
       createMediaInterfaceAndMixer(mLocalAudioEnabled /* giveFocus?*/,    // This is the one and only media interface - give it focus
@@ -170,7 +174,13 @@ SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
    }
 }
 
-SipXConversationManager::~SipXConversationManager()
+void
+SipXMediaStackAdapter::shutdown()
+{
+   InfoLog(<<"SipXMediaStackAdapter shutdown");
+}
+
+SipXMediaStackAdapter::~SipXMediaStackAdapter()
 {
    getBridgeMixer().reset();   // Make sure the mixer is destroyed before the media interface
    mMediaInterface.reset();    // Make sure inteface is destroyed before factory
@@ -178,10 +188,8 @@ SipXConversationManager::~SipXConversationManager()
 }
 
 void
-SipXConversationManager::setUserAgent(UserAgent* userAgent)
+SipXMediaStackAdapter::setUserAgent(UserAgent* userAgent)
 {
-   ConversationManager::setUserAgent(userAgent);
-
    if (mMediaInterface)
    {
       // Enable/Disable DTMF digit logging according to UserAgentMasterProfile setting
@@ -200,32 +208,25 @@ SipXConversationManager::setUserAgent(UserAgent* userAgent)
 }
 
 ConversationHandle
-SipXConversationManager::createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, AutoHoldMode autoHoldMode)
+SipXMediaStackAdapter::createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, ConversationManager::AutoHoldMode autoHoldMode)
 {
    if (isShuttingDown()) return 0;  // Don't allow new things to be created when we are shutting down
    if (mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
    {
-      assert(false);
+      resip_assert(false);
       WarningLog(<< "Calling createSharedMediaInterfaceConversation is not appropriate when using sipXGlobalMediaInterfaceMode");
       return 0;
    }
 
    ConversationHandle convHandle = getNewConversationHandle();
 
-   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, autoHoldMode, sharedMediaInterfaceConvHandle);
+   CreateConversationCmd* cmd = new CreateConversationCmd(&getConversationManager(), convHandle, autoHoldMode, sharedMediaInterfaceConvHandle);
    post(cmd);
    return convHandle;
 }
 
-void 
-SipXConversationManager::outputBridgeMatrix(ConversationHandle convHandle)
-{
-   OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this, convHandle);
-   post(cmd);
-}
-
 void
-SipXConversationManager::outputBridgeMatrixImpl(ConversationHandle convHandle)
+SipXMediaStackAdapter::outputBridgeMatrixImpl(ConversationHandle convHandle)
 {
    // Note: convHandle of 0 only makes sense if sipXGlobalMediaInterfaceMode is enabled
    if (convHandle == 0)
@@ -261,7 +262,7 @@ SipXConversationManager::outputBridgeMatrixImpl(ConversationHandle convHandle)
 }
 
 void
-SipXConversationManager::setSpeakerVolume(int volume)
+SipXMediaStackAdapter::setSpeakerVolume(int volume)
 {
    OsStatus status =  mMediaFactory->setSpeakerVolume(volume);
    if(status != OS_SUCCESS)
@@ -271,7 +272,7 @@ SipXConversationManager::setSpeakerVolume(int volume)
 }
 
 void 
-SipXConversationManager::setMicrophoneGain(int gain)
+SipXMediaStackAdapter::setMicrophoneGain(int gain)
 {
    OsStatus status =  mMediaFactory->setMicrophoneGain(gain);
    if(status != OS_SUCCESS)
@@ -281,7 +282,7 @@ SipXConversationManager::setMicrophoneGain(int gain)
 }
 
 void 
-SipXConversationManager::muteMicrophone(bool mute)
+SipXMediaStackAdapter::muteMicrophone(bool mute)
 {
    OsStatus status =  mMediaFactory->muteMicrophone(mute? TRUE : FALSE);
    if(status != OS_SUCCESS)
@@ -291,7 +292,7 @@ SipXConversationManager::muteMicrophone(bool mute)
 }
  
 void 
-SipXConversationManager::enableEchoCancel(bool enable)
+SipXMediaStackAdapter::enableEchoCancel(bool enable)
 {
    OsStatus status =  mMediaFactory->setAudioAECMode(enable ? MEDIA_AEC_CANCEL : MEDIA_AEC_DISABLED);
    if(status != OS_SUCCESS)
@@ -306,7 +307,7 @@ SipXConversationManager::enableEchoCancel(bool enable)
 }
 
 void 
-SipXConversationManager::enableAutoGainControl(bool enable)
+SipXMediaStackAdapter::enableAutoGainControl(bool enable)
 {
    OsStatus status =  mMediaFactory->enableAGC(enable ? TRUE : FALSE);
    if(status != OS_SUCCESS)
@@ -321,7 +322,7 @@ SipXConversationManager::enableAutoGainControl(bool enable)
 }
  
 void 
-SipXConversationManager::enableNoiseReduction(bool enable)
+SipXMediaStackAdapter::enableNoiseReduction(bool enable)
 {
    OsStatus status =  mMediaFactory->setAudioNoiseReductionMode(enable ? MEDIA_NOISE_REDUCTION_MEDIUM /* arbitrary */ : MEDIA_NOISE_REDUCTION_DISABLED);
    if(status != OS_SUCCESS)
@@ -336,7 +337,7 @@ SipXConversationManager::enableNoiseReduction(bool enable)
 }
 
 void 
-SipXConversationManager::buildSessionCapabilities(const resip::Data& ipaddress,
+SipXMediaStackAdapter::buildSessionCapabilities(const resip::Data& ipaddress,
                                               const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps)
 {
    sessionCaps = SdpContents::Empty;  // clear out passed in SdpContents
@@ -455,7 +456,7 @@ SipXConversationManager::buildSessionCapabilities(const resip::Data& ipaddress,
 }
 
 void 
-SipXConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
+SipXMediaStackAdapter::createMediaInterfaceAndMixer(bool giveFocus,
                                                   std::shared_ptr<SipXMediaInterface>& mediaInterface,
                                                   std::shared_ptr<BridgeMixer>& bridgeMixer)
 {
@@ -463,7 +464,7 @@ SipXConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
 
    // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
    // TODO SLG - if DISABLE_FLOWMANAGER define is on we should consider enabling stun or turn options
-   mediaInterface = std::make_shared<SipXMediaInterface>(*this, (CpTopologyGraphInterface*)mMediaFactory->createMediaInterface(NULL,
+   mediaInterface = std::make_shared<SipXMediaInterface>(getConversationManager(), (CpTopologyGraphInterface*)mMediaFactory->createMediaInterface(NULL,
             localRtpInterfaceAddress, 
             0,     /* numCodecs - not required at this point */
             0,     /* codecArray - not required at this point */ 
@@ -504,64 +505,64 @@ SipXConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
 }
 
 bool
-SipXConversationManager::supportsMultipleMediaInterfaces()
+SipXMediaStackAdapter::supportsMultipleMediaInterfaces()
 {
-   return (getMediaInterfaceMode() == SipXConversationManager::sipXConversationMediaInterfaceMode);
+   return (getMediaInterfaceMode() == SipXMediaStackAdapter::sipXConversationMediaInterfaceMode);
 }
 
 bool
-SipXConversationManager::canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2)
+SipXMediaStackAdapter::canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2)
 {
-   assert(conversation1);
-   assert(conversation2);
+   resip_assert(conversation1);
+   resip_assert(conversation2);
 
    // You can only add non-local (excluding RemoteIM) participants to 2 different conversations if they share the same MediaInterface
    return (((SipXConversation*)conversation1)->getMediaInterface().get() == ((SipXConversation*)conversation2)->getMediaInterface().get());
 }
 
 Conversation *
-SipXConversationManager::createConversationInstance(ConversationHandle handle,
+SipXMediaStackAdapter::createConversationInstance(ConversationHandle handle,
       RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode)
 {
-   return new SipXConversation(handle, *this, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode);
+   return new SipXConversation(handle, getConversationManager(), *this, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode);
 }
 
 LocalParticipant *
-SipXConversationManager::createLocalParticipantInstance(ParticipantHandle partHandle)
+SipXMediaStackAdapter::createLocalParticipantInstance(ParticipantHandle partHandle)
 {
-   return new SipXLocalParticipant(partHandle, *this);
+   return new SipXLocalParticipant(partHandle, getConversationManager(), *this);
 }
 
 MediaResourceParticipant *
-SipXConversationManager::createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl)
+SipXMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl)
 {
-   return new SipXMediaResourceParticipant(partHandle, *this, mediaUrl);
+   return new SipXMediaResourceParticipant(partHandle, getConversationManager(), *this, mediaUrl);
 }
 
 RemoteParticipant *
-SipXConversationManager::createRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
+SipXMediaStackAdapter::createRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   return new SipXRemoteParticipant(*this, dum, rpds);
+   return new SipXRemoteParticipant(getConversationManager(), *this, dum, rpds);
 }
 
 RemoteParticipant *
-SipXConversationManager::createRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
+SipXMediaStackAdapter::createRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   return new SipXRemoteParticipant(partHandle, *this, dum, rpds);
+   return new SipXRemoteParticipant(partHandle, getConversationManager(), *this, dum, rpds);
 }
 
 RemoteParticipantDialogSet *
-SipXConversationManager::createRemoteParticipantDialogSetInstance(
+SipXMediaStackAdapter::createRemoteParticipantDialogSetInstance(
       ConversationManager::ParticipantForkSelectMode forkSelectMode,
       std::shared_ptr<ConversationProfile> conversationProfile)
 {
-   return new SipXRemoteParticipantDialogSet(*this, forkSelectMode, conversationProfile);
+   return new SipXRemoteParticipantDialogSet(getConversationManager(), *this, forkSelectMode, conversationProfile);
 }
 
 bool
-SipXConversationManager::addExtraPlayAndRecordResourcesToTopology()
+SipXMediaStackAdapter::addExtraPlayAndRecordResourcesToTopology()
 {
    MpResourceTopology* resourceTopology = mMediaFactory->getInitialResourceTopology();
 
@@ -595,19 +596,20 @@ SipXConversationManager::addExtraPlayAndRecordResourcesToTopology()
 }
 
 void
-SipXConversationManager::process()
+SipXMediaStackAdapter::process()
 {
    // do nothing
 }
 
 void
-SipXConversationManager::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h)
+SipXMediaStackAdapter::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h)
 {
    getFlowManager().setRTCPEventLoggingHandler(h);
+   MediaStackAdapter::setRTCPEventLoggingHandler(h);
 }
 
 void
-SipXConversationManager::initializeDtlsFactory(const resip::Data& defaultAoR)
+SipXMediaStackAdapter::initializeDtlsFactory(const resip::Data& defaultAoR)
 {
    getFlowManager().initializeDtlsFactory(defaultAoR.c_str());
 }

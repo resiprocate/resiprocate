@@ -48,7 +48,7 @@ ConfigStore::addDomain(const resip::Data& domain,
    }
 
    {
-      Lock lock(mMutex, VOCAL_WRITELOCK);
+      WriteLock lock(mMutex);
       mCachedConfigData[domain] = rec;
    }
    return true;
@@ -68,7 +68,7 @@ ConfigStore::getConfigs() const
 int      
 ConfigStore::getTlsPort(const resip::Data& domain)
 { 
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    ConfigData::const_iterator it = mCachedConfigData.find(domain);
    if(it != mCachedConfigData.end())
    {
@@ -84,7 +84,7 @@ ConfigStore::eraseDomain(const resip::Data& domain)
 {  
    mDb.eraseConfig( buildKey(domain) );
    {
-      Lock lock(mMutex, VOCAL_WRITELOCK);
+      WriteLock lock(mMutex);
       mCachedConfigData.erase(domain);
    }
 }

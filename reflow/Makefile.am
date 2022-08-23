@@ -54,8 +54,7 @@ nobase_reflowinclude_HEADERS = ErrorCode.hxx \
 	dtls_wrapper/bf_dwrap.hxx \
 	dtls_wrapper/DtlsFactory.hxx \
 	dtls_wrapper/DtlsSocket.hxx \
-	dtls_wrapper/DtlsTimer.hxx \
-	rtcp/re_rtp.h
+	dtls_wrapper/DtlsTimer.hxx
 
 ##############################################################################
 # 

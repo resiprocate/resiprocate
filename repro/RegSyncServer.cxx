@@ -123,10 +123,10 @@ RegSyncServer::sendRegistrationModifiedEvent(unsigned int connectionId, const re
 }
 
 void 
-RegSyncServer::sendDocumentModifiedEvent(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+RegSyncServer::sendDocumentModifiedEvent(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
 {
    std::stringstream ss;
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
 
    ss << "<pubinfo>" << Symbols::CRLF;
    ss << "   <eventtype>" << eventType << "</eventtype>" << Symbols::CRLF;
@@ -203,10 +203,10 @@ RegSyncServer::sendDocumentModifiedEvent(unsigned int connectionId, const Data& 
 }
 
 void 
-RegSyncServer::sendDocumentRemovedEvent(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+RegSyncServer::sendDocumentRemovedEvent(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated)
 {
    std::stringstream ss;
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
 
    ss << "<pubinfo>" << Symbols::CRLF;
    ss << "   <eventtype>" << eventType.xmlCharDataEncode() << "</eventtype>" << Symbols::CRLF;
@@ -294,7 +294,7 @@ RegSyncServer::handleInitialSyncRequest(unsigned int connectionId, unsigned int 
 void 
 RegSyncServer::streamContactInstanceRecord(std::stringstream& ss, const ContactInstanceRecord& rec)
 {
-    UInt64 now = Timer::getTimeSecs();
+    uint64_t now = Timer::getTimeSecs();
 
     ss << "   <contactinfo>" << Symbols::CRLF;
     ss << "      <contacturi>" << Data::from(rec.mContact).xmlCharDataEncode() << "</contacturi>" << Symbols::CRLF;
@@ -346,21 +346,21 @@ RegSyncServer::onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor
 }
 
 void 
-RegSyncServer::onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+RegSyncServer::onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
 {
    resip_assert(!sync);  // We register so that we don't get callbacks for sync'd documents
    sendDocumentModifiedEvent(0, eventType, documentKey, eTag, expirationTime, lastUpdated, contents, securityAttributes);
 }
 
 void 
-RegSyncServer::onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+RegSyncServer::onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated)
 {
    resip_assert(!sync);  // We register so that we don't get callbacks for sync'd documents
    sendDocumentRemovedEvent(0, eventType, documentKey, eTag, lastUpdated);
 }
 
 void 
-RegSyncServer::onInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+RegSyncServer::onInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
 {
    sendDocumentModifiedEvent(connectionId, eventType, documentKey, eTag, expirationTime, lastUpdated, contents, securityAttributes);
 }

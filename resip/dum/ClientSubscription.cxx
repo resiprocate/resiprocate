@@ -149,8 +149,8 @@ ClientSubscription::processResponse(const SipMessage& msg)
       if (msg.exists(h_Expires))
       {
          // grab the expires from the 2xx in case there is not one on the NOTIFY .mjf.
-         UInt32 expires = msg.header(h_Expires).value();
-         UInt32 lastExpires = mLastRequest->header(h_Expires).value();
+         uint32_t expires = msg.header(h_Expires).value();
+         uint32_t lastExpires = mLastRequest->header(h_Expires).value();
          if (expires < lastExpires)
          {
             mLastRequest->header(h_Expires).value() = expires;
@@ -283,7 +283,7 @@ ClientSubscription::processNextNotify()
    bool setRefreshTimer=false; 
    if (!qn->outOfOrder())
    {
-      UInt32 expires = 0;
+      uint32_t expires = 0;
       //default to 3600 seconds so non-compliant endpoints don't result in leaked usages
       if (qn->notify().exists(h_SubscriptionState) && qn->notify().header(h_SubscriptionState).exists(p_expires))
       {
@@ -313,7 +313,7 @@ ClientSubscription::processNextNotify()
          !isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Terminated))
       {
          // Don't do this stuff for a NOTIFY terminated.
-         UInt64 now = Timer::getTimeSecs();
+         uint64_t now = Timer::getTimeSecs();
          refreshInterval = Helper::aBitSmallerThan((signed long)expires);
          
          if (mNextRefreshSecs == 0 || now + refreshInterval < mNextRefreshSecs)
@@ -507,7 +507,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 }
 
 void
-ClientSubscription::requestRefresh(UInt32 expires)
+ClientSubscription::requestRefresh(uint32_t expires)
 {
    if (!mEnded)
    {
@@ -542,7 +542,7 @@ ClientSubscription::requestRefresh(UInt32 expires)
 class ClientSubscriptionRefreshCommand : public DumCommandAdapter
 {
 public:
-   ClientSubscriptionRefreshCommand(const ClientSubscriptionHandle& clientSubscriptionHandle, UInt32 expires)
+   ClientSubscriptionRefreshCommand(const ClientSubscriptionHandle& clientSubscriptionHandle, uint32_t expires)
       : mClientSubscriptionHandle(clientSubscriptionHandle),
         mExpires(expires)
    {
@@ -563,11 +563,11 @@ public:
    }
 private:
    ClientSubscriptionHandle mClientSubscriptionHandle;
-   UInt32 mExpires;
+   uint32_t mExpires;
 };
 
 void
-ClientSubscription::requestRefreshCommand(UInt32 expires)
+ClientSubscription::requestRefreshCommand(uint32_t expires)
 {
    mDum.post(new ClientSubscriptionRefreshCommand(getHandle(), expires));
 }

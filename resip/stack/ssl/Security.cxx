@@ -215,7 +215,7 @@ Security::loadCADirectory(const Data& _dir)
             loadCAFile(fileName);
          }
       }
-      catch (Exception& e)
+      catch (const BaseException& e)
       {
          ErrLog(<< "loadCADirectory: Some problem reading " << *it << ": " << e);
       }
@@ -320,7 +320,7 @@ Security::preload()
                attemptedToLoad = false;
             }
          }
-         catch (Exception& e)
+         catch (const BaseException& e)
          {
             ErrLog(<< "Some problem reading " << fileName << ": " << e);
          }
@@ -674,9 +674,14 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
       BaseSecurity*  mutable_this = const_cast<BaseSecurity*>(this);
       mutable_this->addCertPEM(type, aor, certPEM, false);
    }
-   catch (Exception& e)
+   catch (const BaseException& e)
    {
       ErrLog(<<"Caught exception: " << e);
+      return   false;
+   }
+   catch (const std::exception& e)
+   {
+      ErrLog(<<"Caught exception: " << e.what());
       return   false;
    }
    catch (...)
@@ -962,7 +967,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
          char buffer[120];
          unsigned long err = ERR_get_error();
          ERR_error_string(err, buffer);
-         if(ERR_GET_LIB(err) == ERR_LIB_EVP && ERR_GET_FUNC(err) == EVP_F_EVP_DECRYPTFINAL_EX && ERR_GET_REASON(err) == EVP_R_BAD_DECRYPT)
+         if(ERR_GET_LIB(err) == ERR_LIB_EVP && ERR_GET_REASON(err) == EVP_R_BAD_DECRYPT)
          {
             ErrLog(<< "Could not read private key (error=" << buffer << ") - likely incorrect password provided, may load correctly when transports are added with appropriate password");
          }

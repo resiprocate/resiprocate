@@ -9,6 +9,7 @@
 #include "UserAgent.hxx"
 #include "DtmfEvent.hxx"
 #include "ReconSubsystem.hxx"
+#include "MediaStackAdapter.hxx"
 
 #include <rutil/ResipAssert.h>
 #include <rutil/Log.hxx>
@@ -16,6 +17,7 @@
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Random.hxx>
 #include <resip/stack/DtmfPayloadContents.hxx>
+#include <resip/stack/TrickleIceContents.hxx>
 #include <resip/stack/SipFrag.hxx>
 #include <resip/stack/ExtensionHeader.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
@@ -54,9 +56,9 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager, 
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet) :
-   IMParticipantBase(true /* prependSenderInfoToIMs? */),
-   Participant(partHandle, conversationManager),
+   Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
    AppDialog(dum),
+   IMParticipantBase(true /* prependSenderInfoToIMs? */),
    mDum(dum),
    mDialogSet(remoteParticipantDialogSet),
    mDialogId(Data::Empty, Data::Empty, Data::Empty),
@@ -64,6 +66,7 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
    mOfferRequired(false),
    mLocalHold(true),
    mRemoteHold(false),
+   mTrickleIce(false),
    mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
    mLocalSdp(0),
    mRemoteSdp(0)
@@ -75,9 +78,9 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
 RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager, 
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet) :
-   IMParticipantBase(false /* prependSenderInfoToIMs? */),
-   Participant(conversationManager),
+   Participant(ConversationManager::ParticipantType_Remote, conversationManager),
    AppDialog(dum),
+   IMParticipantBase(false /* prependSenderInfoToIMs? */),
    mDum(dum),
    mDialogSet(remoteParticipantDialogSet),
    mDialogId(Data::Empty, Data::Empty, Data::Empty),
@@ -85,6 +88,7 @@ RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager,
    mOfferRequired(false),
    mLocalHold(true),
    mRemoteHold(false),
+   mTrickleIce(false),
    mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
    mLocalSdp(0),
    mRemoteSdp(0)
@@ -113,7 +117,9 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 void
 RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::shared_ptr<ConversationProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
-   SdpContents offer;
+   ParticipantHandle handleId = mHandle;
+   ConversationManager& cm = mConversationManager;
+
    auto profile = callingProfile;
    if (!profile)
    {
@@ -121,75 +127,103 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
       profile = mDialogSet.getConversationProfile();
       resip_assert(profile);
    }
-   buildSdpOffer(mLocalHold, offer);
-   auto invitemsg = mDum.makeInviteSession(
-      destination, 
-      std::move(profile),
-      &offer, 
-      &mDialogSet);
 
-   std::multimap<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
-   for (; it != extraHeaders.end(); it++)
-   {
-      resip::Data headerName(it->first);
-      resip::Data value(it->second);
-      try
+   CallbackSdpReady createAndSendInvite = [this, handleId, &cm, destination, profile, extraHeaders](bool success, std::unique_ptr<SdpContents> offer){
+      if(!cm.getParticipant(handleId))
       {
-         if (resip::isEqualNoCase(headerName, "Replaces"))
+         WarningLog(<<"handle no longer valid");
+         return;
+      }
+      if(!success)
+      {
+         // FIXME - can/should we let the application know this failed?
+         ErrLog(<<"failed to create offer, aborting");
+         mConversationManager.onParticipantTerminated(mHandle, 500);
+         delete this;
+         return;
+      }
+      auto invitemsg = mDum.makeInviteSession(
+               destination,
+               std::move(profile),
+               offer.get(),
+               &mDialogSet);
+
+      std::multimap<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
+      for (; it != extraHeaders.end(); it++)
+      {
+         resip::Data headerName(it->first);
+         resip::Data value(it->second);
+         try
          {
-            HeaderFieldValue hfv(value.data(), value.size());
-            CallId callid(hfv, Headers::UNKNOWN);
-            invitemsg->header(h_Replaces) = callid;
-         }
-         else if (resip::isEqualNoCase(headerName, "Remote-Party-ID"))
-         {
-            invitemsg->header(h_RemotePartyIds).push_back(NameAddr(value));
-         }
-         else if (resip::isEqualNoCase(headerName, "Privacy"))
-         {
-            invitemsg->header(h_Privacies).push_back(PrivacyCategory(value));
-         }
-         else if (resip::isEqualNoCase(headerName, "P-Asserted-Identity"))
-         {
-            invitemsg->header(h_PAssertedIdentities).push_back(NameAddr(value));
-         }
-         else
-         {
-            StackLog(<< "processing an extension header: " << headerName << ": " << value);
-            resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
-            if (hType == resip::Headers::UNKNOWN)
+            if (resip::isEqualNoCase(headerName, "Replaces"))
             {
-               resip::ExtensionHeader h_Tmp(headerName.c_str());
-               resip::ParserContainer<resip::StringCategory>& pc = invitemsg->header(h_Tmp);
-               resip::StringCategory sc(value);
-               pc.push_back(sc);
+               HeaderFieldValue hfv(value.data(), value.size());
+               CallId callid(hfv, Headers::UNKNOWN);
+               invitemsg->header(h_Replaces) = callid;
+            }
+            else if (resip::isEqualNoCase(headerName, "Remote-Party-ID"))
+            {
+               invitemsg->header(h_RemotePartyIds).push_back(NameAddr(value));
+            }
+            else if (resip::isEqualNoCase(headerName, "Privacy"))
+            {
+               invitemsg->header(h_Privacies).push_back(PrivacyCategory(value));
+            }
+            else if (resip::isEqualNoCase(headerName, "P-Asserted-Identity"))
+            {
+               invitemsg->header(h_PAssertedIdentities).push_back(NameAddr(value));
             }
             else
             {
-               WarningLog(<< "Discarding header '" << headerName << "', only extension headers and select standard headers permitted");
+               StackLog(<< "processing an extension header: " << headerName << ": " << value);
+               resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
+               if (hType == resip::Headers::UNKNOWN)
+               {
+                  resip::ExtensionHeader h_Tmp(headerName.c_str());
+                  resip::ParserContainer<resip::StringCategory>& pc = invitemsg->header(h_Tmp);
+                  resip::StringCategory sc(value);
+                  pc.push_back(sc);
+               }
+               else
+               {
+                  WarningLog(<< "Discarding header '" << headerName << "', only extension headers and select standard headers permitted");
+               }
             }
          }
+         catch (resip::BaseException& ex)
+         {
+            WarningLog(<< "Discarding header '" << headerName << "', invalid value format '" << value << "': " << ex);
+         }
       }
-      catch (resip::BaseException& ex)
+
+      mDialogSet.sendInvite(std::move(invitemsg));
+
+      // Clear any pending hold/unhold requests since our offer/answer here will handle it
+      if(mPendingRequest.mType == Hold ||
+               mPendingRequest.mType == Unhold)
       {
-         WarningLog(<< "Discarding header '" << headerName << "', invalid value format '" << value << "': " << ex);
+         mPendingRequest.mType = None;
       }
-   }
 
-   mDialogSet.sendInvite(std::move(invitemsg));
+      // If we are not in delayed media mode, we can start the media setup here
+      if(offer)
+      {
+         // Adjust RTP streams
+         adjustRTPStreams(true);
 
-   // Clear any pending hold/unhold requests since our offer/answer here will handle it
-   if(mPendingRequest.mType == Hold ||
-      mPendingRequest.mType == Unhold)
+         // Special case of this call - since call in addToConversation will not work, since we didn't know our bridge port at that time
+         applyBridgeMixWeights();
+      }
+   };
+
+   if(profile && profile->delayedMediaOutboundMode())
    {
-      mPendingRequest.mType = None;
+      createAndSendInvite(true, std::unique_ptr<SdpContents>(nullptr));
    }
-
-   // Adjust RTP streams
-   adjustRTPStreams(true);
-
-   // Special case of this call - since call in addToConversation will not work, since we didn't know our bridge port at that time
-   applyBridgeMixWeights();
+   else
+   {
+      buildSdpOffer(mLocalHold, createAndSendInvite);
+   }
 }
 
 void 
@@ -365,6 +399,12 @@ RemoteParticipant::stateTransition(State state)
 }
 
 void
+RemoteParticipant::enableTrickleIce()
+{
+   mTrickleIce = true;
+}
+
+void
 RemoteParticipant::accept()
 {
    try
@@ -402,8 +442,8 @@ RemoteParticipant::accept()
                // accept.  In this case the answer from the alert will be queued waiting on the flow to be ready, and 
                // we need to ensure the accept call is also delayed until the answer completes.
                mDialogSet.accept(mInviteSessionHandle);
+               stateTransition(Accepted);
             }
-            stateTransition(Accepted);
          }
       }
       // Accept Pending OOD Refer if required
@@ -446,7 +486,6 @@ RemoteParticipant::alert(bool earlyFlag)
                }
 
                provideAnswer(*mPendingOffer, false /* postAnswerAccept */, true /* postAnswerAlert */);
-               mPendingOffer.release();               
             }
             else
             {
@@ -645,7 +684,14 @@ RemoteParticipant::info(const Contents& contents)
    {
       if(mPendingRequest.mType == None)
       {
-         if(mState == Connected)
+         bool readyForInfo = (mState == Connected);
+         if((mState == Connecting || mState == Accepted) && contents.getType() == TrickleIceContents::getStaticType())
+         {
+            // we can send INFO in the early media stage, subject to
+            // the conditions in RFC 8840 s4.1
+            readyForInfo = isTrickleIce();
+         }
+         if(readyForInfo)
          {
             if(mInviteSessionHandle.isValid())
             {
@@ -690,7 +736,7 @@ RemoteParticipant::hold()
       {
          if(mState == Connected && mInviteSessionHandle.isValid())
          {
-            provideOffer(false /* postOfferAccept */);
+            provideOffer(false /* postOfferAccept */, holdPreferExistingSdp());
             stateTransition(Holding);
          }
          else
@@ -735,7 +781,7 @@ RemoteParticipant::unhold()
       {
          if(mState == Connected && mInviteSessionHandle.isValid())
          {
-            provideOffer(false /* postOfferAccept */);
+            provideOffer(false /* postOfferAccept */, holdPreferExistingSdp());
             stateTransition(Unholding);
          }
          else
@@ -765,6 +811,47 @@ RemoteParticipant::unhold()
    {
       WarningLog(<< "RemoteParticipant::unhold unknown exception");
    }
+}
+
+void
+RemoteParticipant::requestKeyframeFromPeer()
+{
+   auto now = std::chrono::steady_clock::now();
+   if(now < (mLastRemoteKeyframeRequest + mKeyframeRequestInterval))
+   {
+      DebugLog(<<"keyframe request ignored, too soon");
+      return;
+   }
+   mLastRemoteKeyframeRequest = now;
+   std::shared_ptr<resip::SdpContents> _sdp = getRemoteSdp();
+   std::set<Data> streamIDs;
+   if(!_sdp)
+   {
+      WarningLog(<<"we need to request a keyframe but there is no peer SDP");
+   }
+   else
+   {
+      streamIDs = _sdp->session().getMediaStreamLabels();
+      if(streamIDs.empty())
+      {
+         WarningLog(<<"peer SDP does not contain a stream ID (RFC 4574)");
+      }
+   }
+   DebugLog(<<"requesting a keyframe for stream(s)");
+   MediaControlContents mcc;
+   mcc.mediaControl() = MediaControlContents::MediaControl(streamIDs, true);
+   info(mcc);
+}
+
+void
+RemoteParticipant::reInvite()
+{
+   // calling RemoteParticipant::unhold() here forces a reINVITE,
+   // even if not currently on hold.
+   // After experimenting with EX90, discovered that both hold()
+   // and unhold() required to establish video in both directions.
+   hold();
+   unhold();
 }
 
 void
@@ -816,22 +903,36 @@ RemoteParticipant::acceptPendingOODRefer()
       if(accepted)
       {
          // Create offer
-         SdpContents offer;
-         buildSdpOffer(mLocalHold, offer);
+         ParticipantHandle handleId = mHandle;
+         ConversationManager& cm = mConversationManager;
+         buildSdpOffer(mLocalHold, [this, handleId, &cm, profile](bool success, std::unique_ptr<SdpContents> _offer){
+            if(!cm.getParticipant(handleId))
+            {
+               WarningLog(<<"handle no longer valid");
+               return;
+            }
+            if(!success)
+            {
+               ErrLog(<<"failed to create an SDP offer");
+               mConversationManager.onParticipantTerminated(mHandle, 500);
+               delete this;
+               return;
+            }
+            SdpContents& offer = *_offer;
+            // Build the Invite
+            auto invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg,
+                     profile,
+                     mPendingOODReferSubHandle,  // Note will be invalid if refer no-sub, which is fine
+                     &offer,
+                     DialogUsageManager::None,  //EncryptionLevel
+                     0,     // Alternative Contents
+                     &mDialogSet);
+            mDialogSet.sendInvite(std::move(invitemsg));
 
-         // Build the Invite
-         auto invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg, 
-                                                                           profile,
-                                                                           mPendingOODReferSubHandle,  // Note will be invalid if refer no-sub, which is fine
-                                                                           &offer, 
-                                                                           DialogUsageManager::None,  //EncryptionLevel 
-                                                                           0,     //Aleternative Contents
-                                                                           &mDialogSet);
-         mDialogSet.sendInvite(std::move(invitemsg)); 
+            adjustRTPStreams(true);
 
-         adjustRTPStreams(true);
-
-         stateTransition(Connecting);
+            stateTransition(Connecting);
+         });
       }
       else
       {
@@ -954,34 +1055,56 @@ RemoteParticipant::processReferNotify(ClientSubscriptionHandle h, const SipMessa
 }
 
 void 
-RemoteParticipant::provideOffer(bool postOfferAccept)
+RemoteParticipant::provideOffer(bool postOfferAccept, bool preferExistingSdp)
 {
-   std::unique_ptr<SdpContents> offer(new SdpContents);
    resip_assert(mInviteSessionHandle.isValid());
    
-   buildSdpOffer(mLocalHold, *offer);
-
-   mDialogSet.provideOffer(std::move(offer), mInviteSessionHandle, postOfferAccept);
-   mOfferRequired = false;
+   ParticipantHandle handleId = mHandle;
+   ConversationManager& cm = mConversationManager;
+   buildSdpOffer(mLocalHold,[this, handleId, &cm, postOfferAccept](bool success, std::unique_ptr<SdpContents> offer){
+      if(!cm.getParticipant(handleId))
+      {
+         WarningLog(<<"handle no longer valid");
+         return;
+      }
+      if(!success)
+      {
+         ErrLog(<<"buildSdpOffer failed");
+         mConversationManager.onParticipantTerminated(mHandle, 500);
+         delete this;
+         return;
+      }
+      mDialogSet.provideOffer(std::move(offer), mInviteSessionHandle, postOfferAccept);
+      mOfferRequired = false;
+   }, preferExistingSdp);
 }
 
-bool 
+void
 RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert)
 {
-   std::unique_ptr<SdpContents> answer(new SdpContents);
    resip_assert(mInviteSessionHandle.isValid());
-   bool answerOk = buildSdpAnswer(offer, *answer);
-
-   if(answerOk)
-   {
-      mDialogSet.provideAnswer(std::move(answer), mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
-   }
-   else
-   {
-      mInviteSessionHandle->reject(488);
-   }
-
-   return answerOk;
+   InviteSessionHandle h = getInviteSessionHandle();
+   buildSdpAnswer(offer, [this, h, postAnswerAccept, postAnswerAlert](bool answerOk, std::unique_ptr<SdpContents> answer){
+      if(!h.isValid())
+      {
+         WarningLog(<<"handle no longer valid");
+         return;
+      }
+      if(answerOk)
+      {
+         mDialogSet.provideAnswer(std::move(answer), mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
+         if(postAnswerAccept && mState == Replacing)
+         {
+            stateTransition(Connecting);
+         }
+      }
+      else
+      {
+         ErrLog(<<"buildSdpAnswer failed");
+         mInviteSessionHandle->reject(488);
+      }
+      mPendingOffer.release();
+   });
 }
 
 void 
@@ -1151,6 +1274,10 @@ RemoteParticipant::onEarlyMedia(ClientInviteSessionHandle h, const SipMessage& m
    {
       setRemoteSdp(sdp, true);
       adjustRTPStreams();
+      if(sdp.session().isTrickleIceSupported())
+      {
+         enableTrickleIce();
+      }
    }
 }
 
@@ -1167,6 +1294,26 @@ RemoteParticipant::onProvisional(ClientInviteSessionHandle h, const SipMessage& 
 }
 
 void
+RemoteParticipant::conversationsConfirm()
+{
+   if(getLocalSdp() == 0)
+   {
+      WarningLog(<<"no local SDP yet");
+   }
+   if(getRemoteSdp() == 0)
+   {
+      WarningLog(<<"no remote SDP yet");
+   }
+   ConversationMap::const_iterator it;
+   for (it = mConversations.begin(); it != mConversations.end(); it++)
+   {
+      Conversation& conversation = *it->second;
+      conversation.confirmParticipant(this);
+      DebugLog(<<"confirmed participant " << mHandle << " conversation " << conversation.getHandle());
+   }
+}
+
+void
 RemoteParticipant::onConnected(ClientInviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onConnected(Client): handle=" << mHandle << ", " << msg.brief());
@@ -1178,9 +1325,11 @@ RemoteParticipant::onConnected(ClientInviteSessionHandle h, const SipMessage& ms
 
       mDialogSet.setUACConnected(getDialogId(), mHandle);
       stateTransition(Connected);
+      conversationsConfirm();
    }
    else
    {
+      DebugLog(<<"ending forked call leg, another leg already answered");
       // We already have a 200 response - send a BYE to this leg
       h->end();
    }
@@ -1191,6 +1340,10 @@ RemoteParticipant::onConnected(InviteSessionHandle, const SipMessage& msg)
 {
    InfoLog(<< "onConnected: handle=" << mHandle << ", " << msg.brief());
    stateTransition(Connected);
+   if(msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
+   {
+      conversationsConfirm();
+   }
 }
 
 void
@@ -1199,6 +1352,7 @@ RemoteParticipant::onConnectedConfirmed(InviteSessionHandle, const SipMessage& m
    InfoLog(<< "onConnectedConfirmed: handle=" << mHandle << ", " << msg.brief());
    if (mHandle) mConversationManager.onParticipantConnectedConfirmed(mHandle, msg);
    stateTransition(Connected);
+   conversationsConfirm();
 }
 
 void
@@ -1316,13 +1470,7 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
    }
    else
    {
-      if(provideAnswer(offer, mState==Replacing /* postAnswerAccept */, false /* postAnswerAlert */))
-      {
-         if(mState == Replacing)
-         {
-            stateTransition(Connecting);
-         }
-      }
+      provideAnswer(offer, mState==Replacing /* postAnswerAccept */, false /* postAnswerAlert */);
    }
 }
 
@@ -1393,6 +1541,13 @@ RemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl& media
    return false;
 }
 
+bool
+RemoteParticipant::onTrickleIce(TrickleIceContents& trickleIce)
+{
+   InfoLog(<<"onTrickleIce: not implemented by this ConversationManager");
+   return false;
+}
+
 void
 RemoteParticipant::onInfo(InviteSessionHandle session, const SipMessage& msg)
 {
@@ -1421,6 +1576,16 @@ RemoteParticipant::onInfo(InviteSessionHandle session, const SipMessage& msg)
          }
       }
 
+      TrickleIceContents* trickleIceContents = dynamic_cast<TrickleIceContents*>(msg.getContents());
+      if(trickleIceContents)
+      {
+         if(onTrickleIce(*trickleIceContents))
+         {
+            session->acceptNIT();
+            accepted = true;
+         }
+      }
+
       if(!accepted)
       {
          WarningLog(<<"INFO message without recognized payload content-type, rejecting");
@@ -1437,15 +1602,13 @@ RemoteParticipant::onInfo(InviteSessionHandle session, const SipMessage& msg)
 void
 RemoteParticipant::onInfoSuccess(InviteSessionHandle, const SipMessage& msg)
 {
-   InfoLog(<< "onInfoSuccess: handle=" << mHandle << ", " << msg.brief());
-   resip_assert(0);  // We never send an info request
+   WarningLog(<< "(unhandled) onInfoSuccess: handle=" << mHandle << ", " << msg.brief());
 }
 
 void
 RemoteParticipant::onInfoFailure(InviteSessionHandle, const SipMessage& msg)
 {
-   InfoLog(<< "onInfoFailure: handle=" << mHandle << ", " << msg.brief());
-   resip_assert(0);  // We never send an info request
+   WarningLog(<< "(unhandled) onInfoFailure: handle=" << mHandle << ", " << msg.brief());
 }
 
 void
@@ -1474,7 +1637,7 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       else
       {
          // otherwise, create a normal media based RemoteParticipant
-         participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+         participantDialogSet = mConversationManager.getMediaStackAdapter().createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
       }
       RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
       participant->mReferringAppDialog = getHandle();
@@ -1482,15 +1645,29 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       replaceWithParticipant(participant);      // adjust conversation mappings 
 
       // Create offer
-      SdpContents offer;
-      participant->buildSdpOffer(holdSdp, offer);  
+      InviteSessionHandle h = getInviteSessionHandle();
+      participant->buildSdpOffer(holdSdp, [this, h, msg, profile, ss, participantDialogSet, participant](bool success, unique_ptr<SdpContents> _offer){
+         if(!h.isValid())
+         {
+            WarningLog(<<"handle no longer valid");
+            return;
+         }
+         if(!success)
+         {
+            ErrLog(<<"failed to create an SDP offer");
+            mConversationManager.onParticipantTerminated(mHandle, 500);
+            delete this;
+            return;
+         }
+         SdpContents& offer = *_offer;
+         // Build the Invite
+         auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, ss->getHandle(), &offer, DialogUsageManager::None, 0, participantDialogSet);
+         participantDialogSet->sendInvite(std::move(NewInviteMsg));
 
-      // Build the Invite
-      auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, ss->getHandle(), &offer, DialogUsageManager::None, 0, participantDialogSet);
-      participantDialogSet->sendInvite(std::move(NewInviteMsg)); 
+         // Set RTP stack to listen
+         participant->adjustRTPStreams(true);
+      });
 
-      // Set RTP stack to listen
-      participant->adjustRTPStreams(true);
    }
    catch(BaseException &e)
    {
@@ -1521,7 +1698,7 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    else
    {
       // otherwise, create a normal media based RemoteParticipant
-      participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+      participantDialogSet = mConversationManager.getMediaStackAdapter().createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
    }
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
    participant->mReferringAppDialog = getHandle();
@@ -1529,15 +1706,29 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    replaceWithParticipant(participant);      // adjust conversation mappings
 
    // Create offer
-   SdpContents offer;
-   participant->buildSdpOffer(holdSdp, offer);
+   ParticipantHandle handleId = mHandle;
+   ConversationManager& cm = mConversationManager;
+   participant->buildSdpOffer(holdSdp, [this, handleId, &cm, msg, profile, participantDialogSet, participant](bool success, unique_ptr<SdpContents> _offer){
+      if(!cm.getParticipant(handleId))
+      {
+         WarningLog(<<"handle no longer valid");
+         return;
+      }
+      if(!success)
+      {
+         ErrLog(<<"failed to create SDP offer");
+         mConversationManager.onParticipantTerminated(mHandle, 500);
+         delete this;
+         return;
+      }
+      SdpContents& offer = *_offer;
+      // Build the Invite
+      auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, &offer, participantDialogSet);
+      participantDialogSet->sendInvite(std::move(NewInviteMsg));
 
-   // Build the Invite
-   auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, &offer, participantDialogSet);
-   participantDialogSet->sendInvite(std::move(NewInviteMsg)); 
-
-   // Set RTP stack to listen
-   participant->adjustRTPStreams(true);
+      // Set RTP stack to listen
+      participant->adjustRTPStreams(true);
+   });
 }
 
 void
@@ -1623,7 +1814,7 @@ RemoteParticipant::onMessageFailure(InviteSessionHandle h, const SipMessage& msg
 {
    InfoLog(<< "onMessageFailure: handle=" << mHandle << ", " << msg.brief());
    auto failedMessage = h->getLastSentNITRequest();
-   assert(failedMessage->getContents() != nullptr);
+   resip_assert(failedMessage->getContents() != nullptr);
 
    std::unique_ptr<Contents> contents(failedMessage->getContents()->clone());
    if (mHandle) mConversationManager.onParticipantSendIMFailure(mHandle, msg, std::move(contents));

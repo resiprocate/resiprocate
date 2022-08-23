@@ -59,14 +59,14 @@ ExpiresCategory::clone(PoolBase* pool) const
    return new (pool) ExpiresCategory(*this, pool);
 }
 
-UInt32& 
+uint32_t& 
 ExpiresCategory::value() 
 {
    checkParsed(); 
    return mValue;
 }
 
-UInt32
+uint32_t
 ExpiresCategory::value() const 
 {
    checkParsed(); 

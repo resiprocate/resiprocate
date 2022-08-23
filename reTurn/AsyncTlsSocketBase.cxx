@@ -66,20 +66,16 @@ AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::tcp::resolver::query query(address, service.c_str());   
-#else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
-#endif
+   asio::ip::tcp::resolver::query query(mSocket.lowest_layer().local_endpoint().protocol(), address, service.c_str());
    mResolver.async_resolve(query,
         std::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
                     std::placeholders::_1,
-					std::placeholders::_2));
+                    std::placeholders::_2));
 }
 
 void 
 AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
-                                  asio::ip::tcp::resolver::iterator endpoint_iterator)
+                                     asio::ip::tcp::resolver::iterator endpoint_iterator)
 {
    if (!ec)
    {
@@ -342,7 +338,7 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
       */
 
       // Note:  For both StunMessages and ChannelData messages the length in bytes 3 and 4
-      UInt16 dataLen;
+      uint16_t dataLen;
       memcpy(&dataLen, &(*mReceiveBuffer)[2], 2);
       dataLen = ntohs(dataLen);
 

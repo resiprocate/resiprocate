@@ -87,7 +87,7 @@ class DnsUtil
         @code
          Data addr("5f1b:df00:ce3e:e200:20:800:2b37:6426");
          cerr << "!! "<< addr << endl;
-         assert(DnsUtil::isIpV6Address(addr));
+         resip_assert(DnsUtil::isIpV6Address(addr));
         @endcode
         */
       static bool isIpV6Address(const Data& ipAddress);
@@ -149,6 +149,9 @@ class DnsUtil
       /// Used to synchronously query A records - only for test code usage
       static std::list<Data> lookupARecords(const Data& host);
 
+   private:
+      /// Used to synchronously query the local hostname
+      static Data lookupLocalHostName();
 };
 
 }

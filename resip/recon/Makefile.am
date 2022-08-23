@@ -1,6 +1,7 @@
 # $Id$
 
 EXTRA_DIST = readme.txt
+EXTRA_DIST += readme_Kurento.txt
 EXTRA_DIST += *.vcxproj
 EXTRA_DIST += doc
 
@@ -23,6 +24,9 @@ librecon_la_LIBADD += -lsipXmedia
 librecon_la_LIBADD += -lsipXsdp
 librecon_la_LIBADD += -lsipXport
 endif
+if USE_KURENTO
+librecon_la_LIBADD += ../../media/kurento/libkurentoclient.la
+endif
 if USE_SRTP1
 librecon_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
 else
@@ -41,6 +45,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         IMParticipantBase.cxx \
         LocalParticipant.cxx \
         MediaEvent.cxx \
+        MediaStackAdapter.cxx \
         MediaResourceParticipant.cxx \
         MediaResourceCache.cxx \
         MediaStreamEvent.cxx \
@@ -63,7 +68,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
 
 if USE_SIPXTAPI
 librecon_la_SOURCES += FlowManagerSipXSocket.cxx \
-        SipXConversationManager.cxx \
+        SipXMediaStackAdapter.cxx \
         SipXMediaInterface.cxx \
         SipXConversation.cxx \
         SipXBridgeMixer.cxx \
@@ -79,6 +84,15 @@ librecon_la_SOURCES += FlowManagerSipXSocket.cxx \
         sdp/SdpCodec.cxx \
         sdp/SdpHelperResip.cxx \
         sdp/SdpMediaLine.cxx
+endif
+
+if USE_KURENTO
+librecon_la_SOURCES += KurentoBridgeMixer.cxx \
+        KurentoConversation.cxx \
+        KurentoMediaStackAdapter.cxx \
+        KurentoParticipant.cxx \
+        KurentoRemoteParticipant.cxx \
+        KurentoRemoteParticipantDialogSet.cxx
 endif
 
 reconincludedir = $(includedir)/recon
@@ -98,6 +112,7 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         UserAgentCmds.hxx \
         UserAgentRegistration.hxx \
         MediaEvent.hxx \
+        MediaStackAdapter.hxx \
         DefaultDialogSet.hxx \
         Participant.hxx \
         UserAgentClientSubscription.hxx \
@@ -123,7 +138,7 @@ nobase_reconinclude_HEADERS += sdp/SdpMediaLine.hxx \
         sdp/SdpCandidatePair.hxx \
         sdp/SdpCandidate.hxx \
         sdp/Sdp.hxx \
-        SipXConversationManager.hxx \
+        SipXMediaStackAdapter.hxx \
         SipXMediaInterface.hxx \
         SipXConversation.hxx \
         SipXBridgeMixer.hxx \
@@ -133,6 +148,15 @@ nobase_reconinclude_HEADERS += sdp/SdpMediaLine.hxx \
         SipXRemoteParticipant.hxx \
         SipXRemoteParticipantDialogSet.hxx \
         FlowManagerSipXSocket.hxx
+endif
+
+if USE_KURENTO
+nobase_reconinclude_HEADERS += KurentoBridgeMixer.hxx \
+        KurentoConversation.hxx \
+        KurentoMediaStackAdapter.hxx \
+        KurentoParticipant.hxx \
+        KurentoRemoteParticipantDialogSet.hxx \
+        KurentoRemoteParticipant.hxx
 endif
 
 ##############################################################################

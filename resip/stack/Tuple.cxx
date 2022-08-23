@@ -270,7 +270,7 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const
    // bytes for V6, and 14 extra bytes for V4. 
    // V6: sin6_len(1), sin6_flowinfo(4), flowId(4), onlyUseExistingConnection(1)
    // V4: sin_family(2 instead of 1), sin_zero(8), flowId(4), onlyUseExistingConnection(1)
-   UInt32 rawToken[TOKEN_SIZE];
+   uint32_t rawToken[TOKEN_SIZE];
    memset(&rawToken, 0, TOKEN_SIZE * 4);
 
    rawToken[0] = tuple.mFlowKey;
@@ -338,7 +338,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
       return Tuple();
    }
 
-   const UInt32* rawToken=reinterpret_cast<const UInt32*>(binaryFlowToken.data());
+   const uint32_t* rawToken=reinterpret_cast<const uint32_t*>(binaryFlowToken.data());
 
    FlowKey mFlowKey=rawToken[0];
    TransportKey transportKey=rawToken[1];
@@ -347,7 +347,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
 
    bool isRealFlow = (rawToken[2] & 0x00000010 ? true : false);
 
-   UInt8 temp = (TransportType)((rawToken[2] & 0x00000F00) >> 8);
+   uint8_t temp = (TransportType)((rawToken[2] & 0x00000F00) >> 8);
    if(temp >= MAX_TRANSPORT)
    {
       DebugLog(<<"Garbage transport type in flow token: " << temp );
@@ -355,7 +355,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    }
    TransportType type = (TransportType)temp;
 
-   UInt16 port= (rawToken[2] >> 16);
+   uint16_t port= (rawToken[2] >> 16);
 
    // Now that we have the version we can do a more accurate check on the size
    if(!((version==V4 && salt.empty() && binaryFlowToken.size()==(TOKEN_SIZE-3)*4) ||
@@ -860,8 +860,8 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
 
          if(ignorePort || addr1->sin6_port == addr2->sin6_port)
          {
-            UInt32 mask6part;
-            UInt32 temp;
+            uint32_t mask6part;
+            uint32_t temp;
             bool match=true;
             for(int i = 3; i >= 0; i--)
             {
@@ -893,8 +893,8 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
                if((*((unsigned long*)&addr1->sin6_addr.__u6_addr.__u6_addr32[i]) & htonl(mask6part)) != 
                   (*((unsigned long*)&addr2->sin6_addr.__u6_addr.__u6_addr32[i]) & htonl(mask6part)))				  
 #else
-               if((*((UInt32*)&addr1->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)) != 
-                  (*((UInt32*)&addr2->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)))
+               if((*((uint32_t*)&addr1->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)) != 
+                  (*((uint32_t*)&addr2->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)))
 #endif
                {
                   match=false;

@@ -1,0 +1,68 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build with ${{ matrix.compiler }}
+    runs-on: ubuntu-20.04
+    container:
+      image: debian:buster-slim
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc-10, clang]
+    steps:
+      - name: Install Dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -qq \
+            autoconf-archive \
+            autotools-dev \
+            clang \
+            default-libmysqlclient-dev \
+            g++ \
+            git \
+            gperf \
+            libasio-dev \
+            libboost-all-dev \
+            libc-ares-dev \
+            libcajun-dev \
+            libcppunit-dev \
+            libdb++-dev \
+            libfmt-dev \
+            libgloox-dev \
+            libgstreamermm-1.0-dev \
+            libpcre3-dev \
+            libpopt-dev \
+            libpq-dev \
+            libqpid-proton-cpp12-dev \
+            libradcli-dev \
+            libsipxtapi-dev \
+            libsnmp-dev \
+            libsoci-dev \
+            libsrtp2-dev \
+            libssl-dev \
+            libtelepathy-qt5-dev \
+            libxerces-c-dev \
+            make \
+            perl \
+            python3-cxx-dev \
+            python3-dev \
+            xxd
+
+      - name: Checkout source
+        uses: actions/checkout@v2
+
+      - name: Bootstrap
+        run: ./build/travis/bootstrap
+
+      - name: Configure
+        env:
+          TRAVIS_COMPILER: ${{ matrix.compiler }}
+        run: ./build/travis/configure --disable-static
+
+      - name: Build
+        run: ./build/travis/build
+
+      - name: Test
+        run: make -j1 check

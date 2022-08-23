@@ -3,6 +3,8 @@
   #include "config.h"
 #endif
 
+#include <chrono>
+
 #include "rutil/Data.hxx"
 
 namespace resip
@@ -11,7 +13,7 @@ namespace resip
 class ServerProcess
 {
 public:
-   ServerProcess();
+   ServerProcess(std::chrono::milliseconds waitPeriod = std::chrono::milliseconds(50));
    virtual ~ServerProcess();
 
    void mainLoop();
@@ -43,6 +45,7 @@ protected:
    virtual void onReload();
 
 private:
+   std::chrono::milliseconds mWaitPeriod;
    Data mPidFile;
    bool mFinished;
    bool mReceivedHUP;

@@ -38,6 +38,7 @@ class Subsystem
       static Subsystem CONTENTS;
       static Subsystem DNS;
       static Subsystem DUM;
+      static Subsystem EEP;
       static Subsystem NONE; // default subsystem
       static Subsystem PRESENCE; 
       static Subsystem SDP;
@@ -47,6 +48,7 @@ class Subsystem
       static Subsystem TRANSPORT;
       static Subsystem STATS;
       static Subsystem REPRO;
+      static Subsystem QPIDPROTON;
       
       const Data& getSubsystem() const;
       Log::Level getLevel() const { return mLevel; }

@@ -3,7 +3,7 @@
 
 #include "Conversation.hxx"
 #include "ConversationManager.hxx"
-#include "SipXConversationManager.hxx"
+#include "SipXMediaStackAdapter.hxx"
 #include "ConversationParticipantAssignment.hxx"
 
 namespace recon
@@ -34,7 +34,8 @@ class SipXConversation : public Conversation
 {
 public:  
    SipXConversation(ConversationHandle handle,
-                SipXConversationManager& sipXConversationManager,
+                ConversationManager& conversationManager,
+                SipXMediaStackAdapter& sipXMediaStackAdapter,
                 RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet 
                 ConversationHandle sharedMediaInterfaceConvHandle,
                 ConversationManager::AutoHoldMode autoHoldMode);
@@ -58,12 +59,15 @@ protected:
    friend class MoveParticipantCmd;
    std::shared_ptr<SipXMediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
 
+   virtual void onParticipantAdded(Participant* participant);
+   virtual void onParticipantRemoved(Participant* participant);
+
 private: 
-   SipXConversationManager& mSipXConversationManager;
+   SipXMediaStackAdapter& mSipXMediaStackAdapter;
 
    // sipX Media related members
    friend class ConversationManager;
-   friend class SipXConversationManager;
+   friend class SipXMediaStackAdapter;
    // Note: these are only set here if sipXConversationMediaInterfaceMode is used
    std::shared_ptr<SipXMediaInterface> mMediaInterface;
 };

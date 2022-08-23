@@ -48,7 +48,7 @@ InviteClient::go()
    NameAddr contact;
    contact.uri() = mTransceiver.contactUri();
    
-   UInt64 startTime = Timer::getTimeMs();
+   uint64_t startTime = Timer::getTimeMs();
    InfoLog(<< "Invite client is attempting " << mNumInvites << " calls.");
    while (numInvited < mNumInvites)
    {
@@ -94,7 +94,7 @@ InviteClient::go()
          }
       }
    }
-   UInt64 elapsed = Timer::getTimeMs() - startTime;
+   uint64_t elapsed = Timer::getTimeMs() - startTime;
    cout << mNumInvites << " performed in " << elapsed << " ms, a rate of "
         << mNumInvites / ((float) elapsed / 1000.0) << " calls per second." << endl;
 }

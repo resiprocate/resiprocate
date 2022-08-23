@@ -34,13 +34,9 @@ TurnTcpSocket::connect(const std::string& address, unsigned short port)
    // Get a list of endpoints corresponding to the server name.
    asio::ip::tcp::resolver resolver(mIOService);
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::tcp::resolver::query query(address, service.c_str());   
-#else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
-#endif
+   asio::ip::tcp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
    asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   asio::ip::tcp::resolver::iterator end;
+   const asio::ip::tcp::resolver::iterator end;
 
    // Try each endpoint until we successfully establish a connection.
    asio::error_code errorCode = asio::error::host_not_found;
@@ -139,7 +135,7 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
       */
 
       // Note:  For both StunMessages and ChannelData messages the length in bytes 3 and 4
-      UInt16 dataLen;
+      uint16_t dataLen;
       memcpy(&dataLen, &mReadBuffer[2], 2);
       dataLen = ntohs(dataLen);
 

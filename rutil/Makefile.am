@@ -23,6 +23,9 @@ endif
 lib_LTLIBRARIES = librutil.la
 
 librutil_la_LIBADD = $(LIBSSL_LIBADD)
+if BUILD_QPID_PROTON
+librutil_la_LIBADD += -lqpid-proton-cpp
+endif
 librutil_la_LIBADD += $(LIBRADIUS_LIBADD)
 librutil_la_LIBADD += $(LIBARES_LIBADD)
 librutil_la_LIBADD += @LIBSTL_LIBADD@
@@ -37,7 +40,6 @@ librutil_la_SOURCES = \
 	AndroidLogger.cxx \
 	BaseException.cxx \
 	Coders.cxx \
-	Condition.cxx \
 	ConfigParse.cxx \
 	CountStream.cxx \
         Crc32.cxx \
@@ -53,7 +55,6 @@ librutil_la_SOURCES = \
 	Lock.cxx \
 	Log.cxx \
 	MD5Stream.cxx \
-	Mutex.cxx \
 	NetNs.cxx \
 	ParseBuffer.cxx \
 	ParseException.cxx \
@@ -63,7 +64,6 @@ librutil_la_SOURCES = \
 	RADIUSDigestAuthenticator.cxx \
 	RWMutex.cxx \
 	Random.cxx \
-	RecursiveMutex.cxx \
 	resipfaststreams.cxx \
 	SelectInterruptor.cxx \
 	Sha1.cxx \
@@ -115,6 +115,11 @@ librutil_la_LIBADD += $(GSTREAMERMM_1_0_LIBS)
 # $(LDADD)
 endif
 
+if BUILD_QPID_PROTON
+librutil_la_SOURCES += \
+    ProtonThreadBase.cxx
+endif
+
 rutilincludedir = $(includedir)/rutil
 nobase_rutilinclude_HEADERS = compat.hxx \
 	ResipAssert.h \
@@ -139,9 +144,9 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ThreadIf.hxx \
 	WinLeakCheck.hxx \
 	Random.hxx \
-	RecursiveMutex.hxx \
 	AsyncProcessHandler.hxx \
 	RADIUSDigestAuthenticator.hxx \
+	Repository.hxx \
 	RWMutex.hxx \
 	Subsystem.hxx \
 	Logger.hxx \
@@ -195,7 +200,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	PoolBase.hxx \
 	FdPoll.hxx \
 	Time.hxx \
-	Lockable.hxx \
 	stun/Udp.hxx \
 	stun/Stun.hxx \
 	SysLogBuf.hxx \
@@ -212,8 +216,23 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ProducerFifoBuffer.hxx \
 	DinkyPool.hxx \
 	ConsumerFifoBuffer.hxx \
+	ProtonThreadBase.hxx \
 	hep/HepAgent.hxx \
-	hep/ResipHep.hxx
+	hep/ResipHep.hxx \
+	rtcp/re_rtp.h
+
+Log.cxx:	Repository.hxx
+
+Repository.hxx:	.ALWAYS_REBUILD
+	echo "// Auto generated" > $@.tmp
+	echo "#ifndef __Repository_hxx" >> $@.tmp
+	echo "#define __Repository_hxx" >> $@.tmp
+	echo "#define RESIPROCATE_GIT_ID \"`git describe --match="" --always --abbrev=40 --dirty`\"" >> $@.tmp
+	echo "#define RESIPROCATE_BRANCH_NAME \"`git rev-parse --abbrev-ref HEAD`\"" >> $@.tmp
+	echo "#endif" >> $@.tmp
+	diff -q $@ $@.tmp || mv $@.tmp $@
+
+.ALWAYS_REBUILD:
 
 
 ##############################################################################

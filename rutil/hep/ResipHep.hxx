@@ -139,7 +139,7 @@ struct hep_ip6hdr {
 };
 #endif // USE_IPV6
 
-UInt64 hepUnixTimestamp();
+uint64_t hepUnixTimestamp();
 
 #endif // RESIP_HEP_HXX
 

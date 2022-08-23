@@ -50,8 +50,8 @@ class RRList : public IntrusiveListElement<RRList*>
       const Data& key() const { return mKey; }
       int status() const { return mStatus; }
       int rrType() const { return mRRType; }
-      UInt64 absoluteExpiry() const { return mAbsoluteExpiry; }
-      UInt64& absoluteExpiry() { return mAbsoluteExpiry; }
+      uint64_t absoluteExpiry() const { return mAbsoluteExpiry; }
+      uint64_t& absoluteExpiry() { return mAbsoluteExpiry; }
       void log();
       EncodeStream& encodeRRList(EncodeStream& strm);
 
@@ -72,7 +72,7 @@ class RRList : public IntrusiveListElement<RRList*>
       int mRRType;
 
       int mStatus; // dns query status.
-      UInt64 mAbsoluteExpiry;
+      uint64_t mAbsoluteExpiry;
 
       RecordItr find(const Data&);
       void clear();

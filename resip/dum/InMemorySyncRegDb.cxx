@@ -10,10 +10,10 @@ using namespace resip;
 class RemoveIfRequired
 {
 protected:
-    UInt64 mNow;
+    uint64_t mNow;
     unsigned int mRemoveLingerSecs;
 public:
-    RemoveIfRequired(UInt64& now, unsigned int removeLingerSecs) :
+    RemoveIfRequired(uint64_t& now, unsigned int removeLingerSecs) :
        mNow(now),
        mRemoveLingerSecs(removeLingerSecs) {}
     bool operator () (const ContactInstanceRecord& rec)
@@ -36,7 +36,7 @@ public:
    Therefore, this wrapper function implements a workaround,
    iterating the list explicitly and using erase(). */
 void
-contactsRemoveIfRequired(ContactList& contacts, UInt64& now,
+contactsRemoveIfRequired(ContactList& contacts, uint64_t& now,
    unsigned int removeLingerSecs)
 {
    RemoveIfRequired rei(now, removeLingerSecs);
@@ -121,7 +121,7 @@ void
 InMemorySyncRegDb::initialSync(unsigned int connectionId)
 {
    Lock g(mDatabaseMutex);
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    for(database_map_t::iterator it = mDatabase.begin(); it != mDatabase.end(); it++)
    {
       if(it->second)
@@ -175,7 +175,7 @@ InMemorySyncRegDb::removeAor(const Uri& aor)
         if(mRemoveLingerSecs > 0)
         {
            ContactList& contacts = *(i->second);
-           UInt64 now = Timer::getTimeSecs();
+           uint64_t now = Timer::getTimeSecs();
            for(ContactList::iterator it = contacts.begin(); it != contacts.end(); it++)
            {
               // Don't delete record - set expires to 0
@@ -215,7 +215,7 @@ InMemorySyncRegDb::aorIsRegistered(const Uri& aor)
 }
 
 bool 
-InMemorySyncRegDb::aorIsRegistered(const Uri& aor, UInt64* maxExpires)
+InMemorySyncRegDb::aorIsRegistered(const Uri& aor, uint64_t* maxExpires)
 {
    Lock g(mDatabaseMutex);
    bool registered = false;
@@ -225,7 +225,7 @@ InMemorySyncRegDb::aorIsRegistered(const Uri& aor, UInt64* maxExpires)
       if (mRemoveLingerSecs > 0 || maxExpires)
       {
          ContactList& contacts = *(i->second);
-         UInt64 now = Timer::getTimeSecs();
+         uint64_t now = Timer::getTimeSecs();
          for(ContactList::iterator it = contacts.begin(); it != contacts.end(); it++)
          {
             if(it->mRegExpires > now)
@@ -265,7 +265,7 @@ InMemorySyncRegDb::lockRecord(const Uri& aor)
 
    while (mLockedRecords.count(aor))
    {
-      mRecordUnlocked.wait(mLockedRecordsMutex);
+      mRecordUnlocked.wait(g2);
    }
 
    mLockedRecords.insert(aor);
@@ -293,7 +293,7 @@ InMemorySyncRegDb::unlockRecord(const Uri& aor)
    }
 
    mLockedRecords.erase(aor);
-   mRecordUnlocked.broadcast();
+   mRecordUnlocked.notify_all();
 }
 
 RegistrationPersistenceManager::update_status_t 
@@ -413,7 +413,7 @@ InMemorySyncRegDb::getContacts(const Uri& aor, ContactList& container)
    if(mRemoveLingerSecs > 0)
    {
       ContactList& contacts = *(i->second);
-      UInt64 now = Timer::getTimeSecs();
+      uint64_t now = Timer::getTimeSecs();
       contactsRemoveIfRequired(contacts, now, mRemoveLingerSecs);
       container.clear();
       for(ContactList::iterator it = contacts.begin(); it != contacts.end(); it++)
@@ -443,7 +443,7 @@ InMemorySyncRegDb::getContactsFull(const Uri& aor, ContactList& container)
    ContactList& contacts = *(i->second);
    if(mRemoveLingerSecs > 0)
    {
-      UInt64 now = Timer::getTimeSecs();
+      uint64_t now = Timer::getTimeSecs();
       contactsRemoveIfRequired(contacts, now, mRemoveLingerSecs);
    }
    container = contacts;

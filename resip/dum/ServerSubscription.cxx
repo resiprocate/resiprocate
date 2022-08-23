@@ -15,7 +15,7 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 ServerSubscriptionHandle 
-ServerSubscription::getHandle()
+ServerSubscription::getHandle() const
 {
    return ServerSubscriptionHandle(mDum, getBaseHandle().getId());
 }
@@ -57,10 +57,10 @@ ServerSubscription::~ServerSubscription()
    mDialog.mServerSubscriptions.remove(this);
 }
 
-UInt32
+uint32_t
 ServerSubscription::getTimeLeft()
 {
-   UInt32 timeleft =  UInt32(mAbsoluteExpiry - Timer::getTimeSecs());
+   uint32_t timeleft =  uint32_t(mAbsoluteExpiry - Timer::getTimeSecs());
    if (timeleft < 0) // .kw. this can NEVER happen since unsigned!
    {
       return 0;

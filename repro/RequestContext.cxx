@@ -47,12 +47,10 @@ RequestContext::RequestContext(Proxy& proxy,
    mProxy(proxy),
    mTopRouteFlowTupleSet(false),
    mResponseContext(*this),
-   mTCSerial(0),
    mSessionCreatedEventSent(false),
    mSessionEstablishedEventSent(false),
    mKeyValueStore(*Proxy::getRequestKeyValueStoreKeyAllocator())
 {
-   mInitialTimerCSet=false;
 }
 
 RequestContext::~RequestContext()
@@ -676,11 +674,7 @@ RequestContext::process(std::unique_ptr<ApplicationMessage> app)
 
    if(tc)
    {
-      if(tc->mSerial == mTCSerial)
-      {
-         mResponseContext.processTimerC();
-      }
-
+      mResponseContext.processTimerC(tc->getTransactionId(), tc->mSerial);
       return;
    }
 
@@ -887,15 +881,6 @@ const resip::Data&
 RequestContext::getDigestIdentity() const
 {
    return mDigestIdentity;
-}
-
-void
-RequestContext::updateTimerC()
-{
-   InfoLog(<<"Updating timer C.");
-   mTCSerial++;
-   TimerCMessage* tc = new TimerCMessage(this->getTransactionId(),mTCSerial);
-   mProxy.postTimerC(std::unique_ptr<TimerCMessage>(tc));
 }
 
 void

@@ -92,7 +92,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/openssl/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/openssl/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_SIPXTAPI;BOOST_ASIO_HAS_STD_CHRONO;SIPX_TONES_INBAND;WIN32;_WIN32_WINNT=0x0501;_DEBUG;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;_CRT_SECURE_NO_WARNINGS;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -114,7 +114,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/openssl/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/opensslx64/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_SIPXTAPI;BOOST_ASIO_HAS_STD_CHRONO;SIPX_TONES_INBAND;WIN32;_WIN32_WINNT=0x0501;_DEBUG;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;_CRT_SECURE_NO_WARNINGS;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -138,7 +138,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/openssl/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/openssl/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_SIPXTAPI;BOOST_ASIO_HAS_STD_CHRONO;SIPX_TONES_INBAND;WIN32;_WIN32_WINNT=0x0501;NDEBUG;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;_CRT_SECURE_NO_WARNINGS;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>
       </StringPooling>
@@ -162,7 +162,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/openssl/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/opensslx64/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_SIPXTAPI;BOOST_ASIO_HAS_STD_CHRONO;SIPX_TONES_INBAND;WIN32;_WIN32_WINNT=0x0501;NDEBUG;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;_CRT_SECURE_NO_WARNINGS;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>
       </StringPooling>
@@ -198,6 +198,7 @@
     <ClCompile Include="SipXMediaInterface.cxx" />
     <ClCompile Include="MediaResourceCache.cxx" />
     <ClCompile Include="MediaResourceParticipant.cxx" />
+    <ClCompile Include="MediaStackAdapter.cxx" />
     <ClCompile Include="MediaStreamEvent.cxx" />
     <ClCompile Include="Participant.cxx" />
     <ClCompile Include="ReconSubsystem.cxx" />
@@ -207,7 +208,7 @@
     <ClCompile Include="RTPPortManager.cxx" />
     <ClCompile Include="SipXBridgeMixer.cxx" />
     <ClCompile Include="SipXConversation.cxx" />
-    <ClCompile Include="SipXConversationManager.cxx" />
+    <ClCompile Include="SipXMediaStackAdapter.cxx" />
     <ClCompile Include="SipXHelper.cxx" />
     <ClCompile Include="SipXParticipant.cxx" />
     <ClCompile Include="SipXMediaResourceParticipant.cxx" />
@@ -238,6 +239,12 @@
     <ClInclude Include="DefaultDialogSet.hxx" />
     <ClInclude Include="DtmfEvent.hxx" />
     <ClInclude Include="FlowManagerSipXSocket.hxx" />
+    <ClInclude Include="KurentoBridgeMixer.hxx" />
+    <ClInclude Include="KurentoConversation.hxx" />
+    <ClInclude Include="KurentoMediaStackAdapter.hxx" />
+    <ClInclude Include="KurentoParticipant.hxx" />
+    <ClInclude Include="KurentoRemoteParticipantDialogSet.hxx" />
+    <ClInclude Include="KurentoRemoteParticipant.hxx" />
     <ClInclude Include="IMParticipantBase.hxx" />
     <ClInclude Include="RemoteIMSessionParticipant.hxx" />
     <ClInclude Include="RemoteIMSessionParticipantDialogSet.hxx" />
@@ -247,6 +254,7 @@
     <ClInclude Include="SipXMediaInterface.hxx" />
     <ClInclude Include="MediaResourceCache.hxx" />
     <ClInclude Include="MediaResourceParticipant.hxx" />
+    <ClInclude Include="MediaStackAdapter.hxx" />
     <ClInclude Include="MediaStreamEvent.hxx" />
     <ClInclude Include="Participant.hxx" />
     <ClInclude Include="ReconSubsystem.hxx" />
@@ -256,7 +264,7 @@
     <ClInclude Include="RTPPortManager.hxx" />
     <ClInclude Include="SipXBridgeMixer.hxx" />
     <ClInclude Include="SipXConversation.hxx" />
-    <ClInclude Include="SipXConversationManager.hxx" />
+    <ClInclude Include="SipXMediaStackAdapter.hxx" />
     <ClInclude Include="SipXHelper.hxx" />
     <ClInclude Include="SipXParticipant.hxx" />
     <ClInclude Include="SipXMediaResourceParticipant.hxx" />

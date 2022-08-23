@@ -11,9 +11,7 @@
 #include "UserAgentRegistration.hxx"
 #include "ReconSubsystem.hxx"
 
-#ifdef USE_SIPXTAPI
-#include "SipXConversationManager.hxx"
-#endif
+#include "MediaStackAdapter.hxx"
 
 #include "reflow/FlowManagerSubsystem.hxx"
 
@@ -85,7 +83,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mConversationManager->setUserAgent(this);
 
    mStack.setTransportSipMessageLoggingHandler(mProfile->getTransportSipMessageLoggingHandler());
-   mConversationManager->setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
+   mConversationManager->getMediaStackAdapter().setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
 
    addTransports();
 
@@ -608,7 +606,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, std::sha
    // the cert at runtime to equal the aor in the default conversation profile
    if(!mDefaultOutgoingConversationProfileHandle)
    {
-      mConversationManager->initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor());
+      mConversationManager->getMediaStackAdapter().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor());
    }
 #endif
 

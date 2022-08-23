@@ -11,7 +11,7 @@
 #include <rutil/ThreadIf.hxx>
 
 #ifdef BUILD_QPID_PROTON
-#include "repro/QpidProtonThread.hxx"
+#include "rutil/ProtonThreadBase.hxx"
 #endif
 
 #include <memory>
@@ -88,7 +88,8 @@ private:
    bool mSane;
 
 #ifdef BUILD_QPID_PROTON
-   std::shared_ptr<QpidProtonThread> mQpidProtonThread;
+   std::shared_ptr<resip::ProtonThreadBase> mQpidProtonThread;
+   std::shared_ptr<resip::ProtonThreadBase::ProtonSenderBase> mProtonSender;
 #else
    std::shared_ptr<resip::ThreadIf> mQpidProtonThread;
 #endif

@@ -17,24 +17,25 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 SipXConversation::SipXConversation(ConversationHandle handle,
-                           SipXConversationManager& sipXConversationManager,
+                           ConversationManager& conversationManager,
+                           SipXMediaStackAdapter& sipXMediaStackAdapter,
                            RelatedConversationSet* relatedConversationSet,
                            ConversationHandle sharedMediaInterfaceConvHandle,
                            ConversationManager::AutoHoldMode autoHoldMode)
-: Conversation(handle, sipXConversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode),
-  mSipXConversationManager(sipXConversationManager)
+: Conversation(handle, conversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode),
+  mSipXMediaStackAdapter(sipXMediaStackAdapter)
 {
-   if(mSipXConversationManager.supportsMultipleMediaInterfaces())
+   if(mSipXMediaStackAdapter.supportsMultipleMediaInterfaces())
    {
       if (isSharingMediaInterfaceWithAnotherConversation())
       {
-         SipXConversation* sharedFlowConversation = dynamic_cast<SipXConversation*>(mSipXConversationManager.getConversation(sharedMediaInterfaceConvHandle));
+         SipXConversation* sharedFlowConversation = dynamic_cast<SipXConversation*>(conversationManager.getConversation(sharedMediaInterfaceConvHandle));
          mMediaInterface = sharedFlowConversation->getMediaInterface();
       }
       else
       {
          std::shared_ptr<BridgeMixer> mixer;
-         mSipXConversationManager.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
+         mSipXMediaStackAdapter.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
                                                            mMediaInterface,
                                                            mixer);
          setBridgeMixer(mixer);
@@ -47,6 +48,16 @@ SipXConversation::~SipXConversation()
 {
    getBridgeMixerShared().reset();       // Make sure the mixer is destroyed before the media interface
    mMediaInterface.reset();
+}
+
+void
+SipXConversation::onParticipantAdded(Participant* participant)
+{
+}
+
+void
+SipXConversation::onParticipantRemoved(Participant* participant)
+{
 }
 
 /* ====================================================================

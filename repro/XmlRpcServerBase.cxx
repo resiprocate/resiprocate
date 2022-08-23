@@ -124,7 +124,9 @@ XmlRpcServerBase::XmlRpcServerBase(const Data& brokerUrl) :
 {
    // AMQP mode
 #ifdef BUILD_QPID_PROTON
-   mQpidProtonThread.reset(new QpidProtonThread(std::string(brokerUrl.c_str())));
+   mQpidProtonThread.reset(new ProtonThreadBase());
+   mProtonSender.reset(new ProtonThreadBase::ProtonSenderBase(std::string(brokerUrl.c_str())));
+   mQpidProtonThread->addSender(mProtonSender);
    InfoLog(<<"XmlRpcServerBase::XmlRpcServerBase: using Qpid Proton AMQP to send to " << brokerUrl);
 #else
    ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Qpid Proton support not enabled at compile time");
@@ -281,9 +283,9 @@ XmlRpcServerBase::sendResponse(unsigned int connectionId,
 {
 #ifdef BUILD_QPID_PROTON
    // FIXME: response support not yet completed/tested
-   if(mQpidProtonThread.get())
+   if(mProtonSender.get())
    {
-      mQpidProtonThread->sendMessage(responseData);
+      mProtonSender->sendMessage(responseData);
       return;
    }
 #endif
@@ -296,9 +298,9 @@ XmlRpcServerBase::sendEvent(unsigned int connectionId,
                             const Data& eventData)
 {
 #ifdef BUILD_QPID_PROTON
-   if(mQpidProtonThread.get())
+   if(mProtonSender.get())
    {
-      mQpidProtonThread->sendMessage(eventData);
+      mProtonSender->sendMessage(eventData);
       return;
    }
 #endif

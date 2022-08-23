@@ -36,7 +36,7 @@ RemoteIMSessionParticipant::RemoteIMSessionParticipant(ParticipantHandle partHan
                                      ConversationManager& conversationManager,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(partHandle, conversationManager),
+: Participant(partHandle, ConversationManager::ParticipantType_RemoteIMSession, conversationManager),
   RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet)
 {
    InfoLog(<< "RemoteIMSessionParticipant created (UAC), handle=" << mHandle);
@@ -46,7 +46,7 @@ RemoteIMSessionParticipant::RemoteIMSessionParticipant(ParticipantHandle partHan
 RemoteIMSessionParticipant::RemoteIMSessionParticipant(ConversationManager& conversationManager,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(conversationManager),
+: Participant(ConversationManager::ParticipantType_RemoteIMSession, conversationManager),
   RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet)
 {
    InfoLog(<< "RemoteIMSessionParticipant created (UAS or forked leg), handle=" << mHandle);
@@ -71,15 +71,17 @@ RemoteIMSessionParticipant::notifyIncomingParticipant(const resip::SipMessage& m
 }
 
 void
-RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
+RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp)
 {
+   std::unique_ptr<SdpContents> _offer(new SdpContents);
+   SdpContents& offer = *_offer;
    ConversationProfile* profile = getDialogSet().getConversationProfile().get();
    resip_assert(profile);
 
-   offer = profile->sessionCaps();
+   offer = profile->sessionCaps(); // FIXME MediaStackAdapter
 
    // Set sessionid and version for this sdp
-   UInt64 currentTime = Timer::getTimeMicroSec();
+   uint64_t currentTime = Timer::getTimeMicroSec();
    offer.session().origin().getSessionId() = currentTime;
    offer.session().origin().getVersion() = currentTime;
 
@@ -91,21 +93,24 @@ RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
    offer.session().addMedium(medium);
 
    setProposedSdp(offer);
+   sdpReady(true, std::move(_offer));
 }
 
-bool
-RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
+void
+RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady sdpReady)
 {
    bool valid = false;
+   std::unique_ptr<SdpContents> _answer(new SdpContents);
+   SdpContents& answer = *_answer;
 
    try
    {
       ConversationProfile* profile = getDialogSet().getConversationProfile().get();
-      assert(profile);
+      resip_assert(profile);
 
-      answer = profile->sessionCaps();
+      answer = profile->sessionCaps(); // FIXME MediaStackAdapter
 
-      UInt64 currentTime = Timer::getTimeMicroSec();
+      uint64_t currentTime = Timer::getTimeMicroSec();
       answer.session().origin().getSessionId() = currentTime;
       answer.session().origin().getVersion() = currentTime;
 
@@ -162,7 +167,7 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents
       setLocalSdp(answer);
       setRemoteSdp(offer);
    }
-   return valid;
+   sdpReady(valid, std::move(_answer));
 }
 
 

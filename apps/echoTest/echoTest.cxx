@@ -195,6 +195,22 @@ class GstThread : public ThreadIf
 
    public:
 
+      static RefPtr<Element> createElement(const std::string& elementName)
+      {
+         DebugLog(<<"creating element " << elementName);
+         RefPtr<Element> result = ElementFactory::create_element(elementName);
+         if(result)
+         {
+            DebugLog(<<"element created successfully: " << elementName);
+         }
+         else
+         {
+            CritLog(<<"failed to create: " << elementName << " - is the plugin installed?");
+            throw;
+         }
+         return result;
+      }
+
       GstThread(shared_ptr<CodecConfig> codecConfig,
                 const Data& peerAddress,
                 int localAudio, int peerAudio,
@@ -208,42 +224,42 @@ class GstThread : public ThreadIf
 
          DebugLog(<<"Creating elements");
 
-         RefPtr<Element> audio_source = ElementFactory::create_element("udpsrc"),
-            audio_source_rtcp = ElementFactory::create_element("udpsrc"),
-            video_source = ElementFactory::create_element("udpsrc"),
-            video_source_rtcp = ElementFactory::create_element("udpsrc"),
-            audio_sink = ElementFactory::create_element("multiudpsink"),
-            audio_sink_rtcp = ElementFactory::create_element("multiudpsink"),
-            video_sink = ElementFactory::create_element("multiudpsink"),
-            video_sink_rtcp = ElementFactory::create_element("multiudpsink");
+         RefPtr<Element> audio_source = createElement("udpsrc"),
+            audio_source_rtcp = createElement("udpsrc"),
+            video_source = createElement("udpsrc"),
+            video_source_rtcp = createElement("udpsrc"),
+            audio_sink = createElement("multiudpsink"),
+            audio_sink_rtcp = createElement("multiudpsink"),
+            video_sink = createElement("multiudpsink"),
+            video_sink_rtcp = createElement("multiudpsink");
 
-         RefPtr<Element> rtpbin = ElementFactory::create_element("rtpbin");
-         a_rtppcmadepay = ElementFactory::create_element("rtppcmadepay");
-         v_depay = ElementFactory::create_element(codecConfig->mDepay.c_str());
+         RefPtr<Element> rtpbin = createElement("rtpbin");
+         a_rtppcmadepay = createElement("rtppcmadepay");
+         v_depay = createElement(codecConfig->mDepay.c_str());
          RefPtr<Element> v_parse;
          if(codecConfig->mName == "H264")
          {
-            v_parse = ElementFactory::create_element("h264parse");
+            v_parse = createElement("h264parse");
          }
          else if(codecConfig->mName == "VP8")
          {
-            v_parse = ElementFactory::create_element("vp8parse"); // from gst-kurento-plugins
+            v_parse = createElement("vp8parse"); // from gst-kurento-plugins
          }
          else
          {
             ErrLog(<<"v_parse: unsupported video codec " << codecConfig->mName);
             throw;
          }
-         RefPtr<Element> a_queue = ElementFactory::create_element("queue");
-         v_queue = ElementFactory::create_element("queue");
-         RefPtr<Element> alawdec = ElementFactory::create_element("alawdec");
-         RefPtr<Element> alawenc = ElementFactory::create_element("alawenc");
+         RefPtr<Element> a_queue = createElement("queue");
+         v_queue = createElement("queue");
+         RefPtr<Element> alawdec = createElement("alawdec");
+         RefPtr<Element> alawenc = createElement("alawenc");
          DebugLog(<<"selected pipeline: decoder = " << codecConfig->mDecoder <<
                                       " encoder = " << codecConfig->mEncoder);
-         RefPtr<Element> vdec = ElementFactory::create_element(codecConfig->mDecoder.c_str());
-         RefPtr<Element> venc = ElementFactory::create_element(codecConfig->mEncoder.c_str());
-         RefPtr<Element> a_rtppcmapay = ElementFactory::create_element("rtppcmapay");
-         RefPtr<Element> v_pay = ElementFactory::create_element(codecConfig->mPay.c_str());
+         RefPtr<Element> vdec = createElement(codecConfig->mDecoder.c_str());
+         RefPtr<Element> venc = createElement(codecConfig->mEncoder.c_str());
+         RefPtr<Element> a_rtppcmapay = createElement("rtppcmapay");
+         RefPtr<Element> v_pay = createElement(codecConfig->mPay.c_str());
 
          if (!audio_source || !audio_source_rtcp || !video_source || !video_source_rtcp || !audio_sink || !audio_sink_rtcp || !video_sink || !video_sink_rtcp || !rtpbin || !a_rtppcmadepay || !v_depay || !a_queue || !v_queue || !a_rtppcmapay || !v_pay)
          {
@@ -502,7 +518,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
       {         
          registerHandle = h;   
-         assert(registerHandle.isValid());         
+         resip_assert(registerHandle.isValid());         
          InfoLog(<< name << ": ClientRegistration-onSuccess - " << response.brief());
          registered = true;
       }
@@ -567,7 +583,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
          InfoLog(<< name << ": InviteSession-onTerminated - " << msg->brief());
-         assert(0); // This is overriden in UAS and UAC specific handlers
+         resip_assert(0); // This is overriden in UAS and UAC specific handlers
       }
 
       virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents& sdp)
@@ -820,7 +836,7 @@ class TestUas : public TestInviteSessionHandler
          InfoLog(<< name << ": InviteSession-onConnected - " << msg.brief());
          
          // At this point no NIT should have been sent
-         assert(!is->getLastSentNITRequest());
+         resip_assert(!is->getLastSentNITRequest());
       }
 
       virtual void onInfoSuccess(InviteSessionHandle is, const SipMessage& msg)
@@ -921,8 +937,6 @@ class EchoTestServer : public resip::ServerProcess
          {
 #endif
          bool doReg = echoTestConfig.getConfigBool("Register", false);
-         NameAddr uasAor;
-         Uri uasContact;
          Data uasPasswd;
          int uasUdpPort = echoTestConfig.getConfigInt("UDPPort", 12010);
          int uasTcpPort = echoTestConfig.getConfigInt("TCPPort", 12010);
@@ -930,16 +944,34 @@ class EchoTestServer : public resip::ServerProcess
          bool useOutbound = (outboundUri != Uri());
          myIP = echoTestConfig.getConfigData("IPAddress", "127.0.0.1");
 
-         uasAor = echoTestConfig.getConfigNameAddr("SIPUri", NameAddr("sip:UAS@" + myIP + ":" + Data(uasUdpPort)));
-         uasContact = Uri("sip:" + myIP + ":" + Data(uasUdpPort));
          uasPasswd = echoTestConfig.getConfigData("Password", Data::Empty);
 
          //set up UAS
          stackUas = new SipStack();
          dumUas = new DialogUsageManager(*stackUas);
-         stackUas->addTransport(UDP, uasUdpPort);
-         stackUas->addTransport(TCP, uasTcpPort);
-         
+         NameAddr uasAor;
+         Uri uasContact;
+         if(uasUdpPort)
+         {
+            stackUas->addTransport(UDP, uasUdpPort);
+            uasContact = Uri("sip:" + myIP + ":" + Data(uasUdpPort));
+         }
+         if(uasTcpPort)
+         {
+            stackUas->addTransport(TCP, uasTcpPort);
+            if(uasContact.port() == 0)
+            {
+               uasContact = Uri("sip:" + myIP + ":" + Data(uasTcpPort) + ";transport=tcp");
+            }
+         }
+         if(uasContact.port() == 0)
+         {
+            uasContact = Uri("sip:" + myIP);
+            ErrLog(<<"no port for uasContact");
+            resip_assert(0);
+         }
+         uasAor = echoTestConfig.getConfigNameAddr("SIPUri", NameAddr("sip:UAS@" + myIP + ":" + Data(uasContact.port())));
+
          auto uasMasterProfile = std::make_shared<MasterProfile>();
          std::unique_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
          dumUas->setMasterProfile(uasMasterProfile);

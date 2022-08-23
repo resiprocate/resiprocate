@@ -9,6 +9,7 @@
 #include "RemoteParticipantDialogSet.hxx"
 
 #include <resip/stack/MediaControlContents.hxx>
+#include <resip/stack/TrickleIceContents.hxx>
 
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
@@ -35,7 +36,7 @@ namespace recon
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class RemoteParticipant : public IMParticipantBase, public virtual Participant, public resip::AppDialog
+class RemoteParticipant : public virtual Participant, public resip::AppDialog, public IMParticipantBase
 {
 public:
    // UAC
@@ -52,7 +53,11 @@ public:
    virtual ~RemoteParticipant();
 
    virtual resip::InviteSessionHandle& getInviteSessionHandle() { return mInviteSessionHandle; }
-   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer) = 0;
+
+   typedef std::function<void(bool sdpOk, std::unique_ptr<resip::SdpContents> sdp)>
+   CallbackSdpReady;
+   virtual void buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp = false) = 0;
+
    virtual bool isHolding() { return mLocalHold; }
    virtual bool isRemoteHold() { return mRemoteHold; }
 
@@ -79,6 +84,7 @@ public:
    virtual void processReferNotify(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
 
    virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
+   virtual bool onTrickleIce(resip::TrickleIceContents& trickleIce);
 
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
    virtual void destroyConversations();
@@ -124,6 +130,10 @@ public:
    virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
    virtual int onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
+   virtual void requestKeyframeFromPeer();
+   // force a SIP re-INVITE to this RemoteParticipant
+   virtual void reInvite();
+
 protected:
    void setRemoteHold(bool remoteHold);
    void setProposedSdp(const resip::SdpContents& sdp);
@@ -140,10 +150,19 @@ protected:
    virtual void hold();
    virtual void unhold();
 
+   virtual bool holdPreferExistingSdp() { return false; };
+
+   bool isTrickleIce() { return mTrickleIce; };
+   virtual void enableTrickleIce();
+
+   virtual void conversationsConfirm();
+
+   virtual std::chrono::duration<double> getKeyframeRequestInterval() const { return mKeyframeRequestInterval; }
+
 private:       
-   void provideOffer(bool postOfferAccept);
-   bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
-   virtual bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer) = 0;
+   void provideOffer(bool postOfferAccept, bool preferExistingSdp = false);
+   void provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
+   virtual void buildSdpAnswer(const resip::SdpContents& offer, CallbackSdpReady sdpReady) = 0;
    virtual void replaceWithParticipant(Participant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;
@@ -152,6 +171,7 @@ private:
    RemoteParticipantDialogSet& mDialogSet;
    resip::DialogId mDialogId;
 
+   friend class RemoteParticipantDialogSet;
    typedef enum
    {
       Connecting=1, 
@@ -164,11 +184,13 @@ private:
       PendingOODRefer,
       Terminating
    } State;
+   State getState() { return mState; };
    State mState;
    bool mOfferRequired;
    bool mLocalHold;
    bool mRemoteHold;
    void stateTransition(State state);
+   bool mTrickleIce;
 
    resip::AppDialogHandle mReferringAppDialog; 
 
@@ -200,6 +222,9 @@ private:
 
    std::shared_ptr<resip::SdpContents> mLocalSdp;
    std::shared_ptr<resip::SdpContents> mRemoteSdp;
+
+   std::chrono::time_point<std::chrono::steady_clock> mLastRemoteKeyframeRequest = std::chrono::steady_clock::now();
+   std::chrono::duration<double> mKeyframeRequestInterval = std::chrono::milliseconds(1000);
 };
 
 }

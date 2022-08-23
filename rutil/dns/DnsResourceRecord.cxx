@@ -1,6 +1,12 @@
 #include "rutil/dns/DnsResourceRecord.hxx"
 #include <iostream>
 
+using namespace resip;
+
+DnsResourceRecord::~DnsResourceRecord()
+{
+}
+
 EncodeStream& 
 resip::operator<<(EncodeStream& strm, DnsResourceRecord& rr)
 {

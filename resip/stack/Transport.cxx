@@ -38,7 +38,7 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      AfterSocketCreationFuncPtr socketFunc,
                      Compression &compression) :
    mTuple(address),
-   mCongestionManager(0),
+   mCongestionManager(nullptr),
    mStateMachineFifo(rxFifo, 8),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
@@ -64,7 +64,7 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      const Data& netNs) :
    mInterface(intfc),
    mTuple(intfc, portNum, version, UNKNOWN_TRANSPORT, Data::Empty, netNs),
-   mCongestionManager(0),
+   mCongestionManager(nullptr),
    mStateMachineFifo(rxFifo,8),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
@@ -276,7 +276,7 @@ Transport::makeFailedResponse(const SipMessage& msg,
 }
 
 std::unique_ptr<SendData>
-Transport::make503(SipMessage& msg, UInt16 retryAfter)
+Transport::make503(SipMessage& msg, uint16_t retryAfter)
 {
   std::unique_ptr<SendData> result;
   if (msg.isResponse()) return result;

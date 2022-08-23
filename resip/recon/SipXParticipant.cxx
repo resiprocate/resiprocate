@@ -1,4 +1,3 @@
-#include "SipXConversationManager.hxx"
 #include "ReconSubsystem.hxx"
 #include "SipXParticipant.hxx"
 #include "SipXConversation.hxx"
@@ -14,15 +13,19 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 SipXParticipant::SipXParticipant(ParticipantHandle partHandle,
-                         SipXConversationManager& sipXConversationManager)
-: Participant(partHandle, sipXConversationManager),
-  mSipXConversationManager(sipXConversationManager)
+                         ConversationManager::ParticipantType partType,
+                         ConversationManager& conversationManager,
+                         SipXMediaStackAdapter& sipXMediaStackAdapter)
+: Participant(partHandle, partType, conversationManager),
+  mSipXMediaStackAdapter(sipXMediaStackAdapter)
 {
 }
 
-SipXParticipant::SipXParticipant(SipXConversationManager& sipXConversationManager)
-: Participant(sipXConversationManager),
-  mSipXConversationManager(sipXConversationManager)
+SipXParticipant::SipXParticipant(ConversationManager::ParticipantType partType,
+                                 ConversationManager& conversationManager,
+                                 SipXMediaStackAdapter& sipXMediaStackAdapter)
+: Participant(partType, conversationManager),
+  mSipXMediaStackAdapter(sipXMediaStackAdapter)
 {
 }
 
@@ -33,12 +36,12 @@ SipXParticipant::~SipXParticipant()
 std::shared_ptr<SipXMediaInterface>
 SipXParticipant::getMediaInterface()
 {
-   switch(mSipXConversationManager.getMediaInterfaceMode())
+   switch(mSipXMediaStackAdapter.getMediaInterfaceMode())
    {
-   case SipXConversationManager::sipXGlobalMediaInterfaceMode:
-      resip_assert(mSipXConversationManager.getMediaInterface() != 0);
-      return mSipXConversationManager.getMediaInterface();
-   case SipXConversationManager::sipXConversationMediaInterfaceMode:
+   case SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode:
+      resip_assert(mSipXMediaStackAdapter.getMediaInterface() != 0);
+      return mSipXMediaStackAdapter.getMediaInterface();
+   case SipXMediaStackAdapter::sipXConversationMediaInterfaceMode:
    {
       // Note:  For this mode, the recon code ensures that all conversations a participant 
       //        is added to will share the same media interface, so using the first 

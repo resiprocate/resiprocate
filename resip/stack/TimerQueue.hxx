@@ -63,16 +63,16 @@ class TimerQueue
       {
          if (!mTimers.empty())
          {
-            UInt64 next = mTimers.top().getWhen();
-            UInt64 now = Timer::getTimeMs();
+            uint64_t next = mTimers.top().getWhen();
+            uint64_t now = Timer::getTimeMs();
             if (now > next) 
             {
                return 0;
             }
             else
             {
-               UInt64 ret64 = next - now;
-               if ( ret64 > UInt64(INT_MAX) )
+               uint64_t ret64 = next - now;
+               if ( ret64 > uint64_t(INT_MAX) )
                {
                   return INT_MAX;
                }
@@ -91,11 +91,11 @@ class TimerQueue
 
       /// @brief gets the set of timers that have fired, and inserts TimerMsg into the state
       /// machine fifo and application messages into the TU fifo
-      virtual UInt64 process()
+      virtual uint64_t process()
       {
          if (!mTimers.empty())
          {
-            UInt64 now=Timer::getTimeMs();
+            uint64_t now=Timer::getTimeMs();
             while (!mTimers.empty() && !(mTimers.top().getWhen() > now))
             {
                processTimer(mTimers.top());
@@ -160,7 +160,7 @@ class BaseTimeLimitTimerQueue : public TimerQueue<TimerWithPayload>
 {
    public:
       ~BaseTimeLimitTimerQueue();
-      UInt64 add(unsigned int timeMs,Message* payload);
+      uint64_t add(unsigned int timeMs,Message* payload);
       virtual void processTimer(const TimerWithPayload& timer);
    protected:
       virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage)=0;      
@@ -189,7 +189,7 @@ class TuSelectorTimerQueue : public TimerQueue<TimerWithPayload>
    public:
       TuSelectorTimerQueue(TuSelector& sel);
       ~TuSelectorTimerQueue();
-      UInt64 add(unsigned int timeMs,Message* payload);
+      uint64_t add(unsigned int timeMs,Message* payload);
       virtual void processTimer(const TimerWithPayload& timer);
    private:
       TuSelector& mFifoSelector;
@@ -203,7 +203,7 @@ class TransactionTimerQueue : public TimerQueue<TransactionTimer>
 {
    public:
       TransactionTimerQueue(Fifo<TimerMessage>& fifo);
-      UInt64 add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
+      uint64_t add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
       virtual void processTimer(const TransactionTimer& timer);
    private:
       Fifo<TimerMessage>& mFifo;
@@ -221,7 +221,7 @@ class DtlsTimerQueue : public TimerQueue<TimerWithPayload>
    public:
       DtlsTimerQueue(Fifo<DtlsMessage>& fifo);
       ~DtlsTimerQueue();
-      UInt64 add(SSL *, unsigned long msOffset);
+      uint64_t add(SSL *, unsigned long msOffset);
       virtual void processTimer(const TimerWithPayload& timer) ;
       
    private:

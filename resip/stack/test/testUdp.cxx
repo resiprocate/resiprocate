@@ -81,7 +81,7 @@ main(int argc, char* argv[])
 
    list<SipMessage*> messages;
    {
-      UInt64 startTime = Timer::getTimeMs();
+      uint64_t startTime = Timer::getTimeMs();
       for (int i=0; i<runs; i++)
       {
          SipMessage* m = Helper::makeInvite( target, from, from);      
@@ -91,7 +91,7 @@ main(int argc, char* argv[])
          messages.push_back(m);
       }
 
-      UInt64 elapsed = Timer::getTimeMs() - startTime;
+      uint64_t elapsed = Timer::getTimeMs() - startTime;
       cout << runs << " calls performed in " << elapsed << " ms, a rate of "
            << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
       
@@ -104,7 +104,7 @@ main(int argc, char* argv[])
    Tuple dest(in, target.uri().port(), UDP);
    InfoLog (<< "Sending to " << dest);
    
-   UInt64 startTime = Timer::getTimeMs();
+   uint64_t startTime = Timer::getTimeMs();
 
    int tid=1;
    int outstanding=0;
@@ -157,7 +157,7 @@ main(int argc, char* argv[])
       }
    }
 
-   UInt64 elapsed = Timer::getTimeMs() - startTime;
+   uint64_t elapsed = Timer::getTimeMs() - startTime;
    cout << runs << " calls performed in " << elapsed << " ms, a rate of "
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
 

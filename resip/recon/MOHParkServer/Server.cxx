@@ -114,7 +114,7 @@ public:
 MOHParkServerLogger g_MOHParkServerLogger;
 
 Server::Server(ConfigParser& config) : 
-   SipXConversationManager(false /* local audio? */, SipXConversationManager::sipXConversationMediaInterfaceMode),
+   ConversationManager(nullptr),
    mConfig(config),
    mIsV6Avail(false),
    mMyUserAgent(0),
@@ -129,6 +129,8 @@ Server::Server(ConfigParser& config) :
       OsSysLog::initialize(0, "MOHParkServer");
       OsSysLog::setOutputFile(0, mConfig.mSipXLogFilename.c_str()) ;
    }
+
+   setMediaStackAdapter(make_shared<SipXMediaStackAdapter>(*this, false /* local audio? */, SipXMediaStackAdapter::sipXConversationMediaInterfaceMode));
 
    InfoLog( << "MOHParkServer settings:");
    ConfigParser::MOHSettingsMap::iterator itMOH = mConfig.mMOHSettingsMap.begin();
@@ -407,7 +409,7 @@ Server::startup()
    }
 
    // Create a ParkManager for each setting in map can call startup
-   assert(mParkManagerMap.empty());
+   resip_assert(mParkManagerMap.empty());
    ConfigParser::ParkSettingsMap::iterator itPark = mConfig.mParkSettingsMap.begin();
    for (; itPark != mConfig.mParkSettingsMap.end(); itPark++)
    {
@@ -468,7 +470,7 @@ Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
                                SdpCodec::SDP_CODEC_SPEEX_5 /* 97 - speex NB 5,950bps */,
                                SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
-   SipXConversationManager::buildSessionCapabilities(mConfig.mAddress, codecIds, sessionCaps);
+   getMediaStackAdapter().buildSessionCapabilities(mConfig.mAddress, codecIds, sessionCaps);
 }
 
 void 

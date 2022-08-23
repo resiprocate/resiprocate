@@ -25,8 +25,8 @@ int main(int argc, const char* argv[])
     Data eventType("presence");
     Data aorString(uri.getAor());
     Data eTag("e64c1aa043680d6b");
-    UInt64 now = Timer::getTimeSecs();
-    UInt64 expirationTime = now + 120;
+    uint64_t now = Timer::getTimeSecs();
+    uint64_t expirationTime = now + 120;
 
     //cout << "Contents size:" << pidf.getBodyData().size() << endl;
     //cout << pidf.getBodyData() << endl;

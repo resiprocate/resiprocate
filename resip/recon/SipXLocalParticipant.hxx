@@ -1,7 +1,7 @@
 #if !defined(SipXLocalParticipant_hxx)
 #define SipXLocalParticipant_hxx
 
-#include "SipXConversationManager.hxx"
+#include "SipXMediaStackAdapter.hxx"
 #include "LocalParticipant.hxx"
 #include "SipXParticipant.hxx"
 
@@ -30,7 +30,8 @@ class SipXLocalParticipant : public virtual LocalParticipant, public virtual Sip
 {
    public:  
       SipXLocalParticipant(ParticipantHandle partHandle,
-                       SipXConversationManager& conversationManager);
+                       ConversationManager& conversationManager,
+                       SipXMediaStackAdapter& sipXMediaStackAdapter);
       virtual ~SipXLocalParticipant();
 
       virtual int getConnectionPortOnBridge();

@@ -881,7 +881,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
          unsigned int componentId;
          Data token;
          SdpCandidate::SdpCandidateTransportType transport;
-         UInt64 priority;
+         uint64_t priority;
          Data address;
          unsigned int port;
          SdpCandidate::SdpCandidateType candidateType = SdpCandidate::CANDIDATE_TYPE_NONE;

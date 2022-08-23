@@ -397,37 +397,37 @@ MasterProfile::allowBadRegistrationEnabled() noexcept
 }
 
   
-UInt32 &
+uint32_t &
 MasterProfile::serverRegistrationMinExpiresTime() noexcept
 {
    return mServerRegistrationMinExpires;
 }
 
-UInt32 
+uint32_t 
 MasterProfile::serverRegistrationMinExpiresTime() const noexcept
 {
    return mServerRegistrationMinExpires;
 }
 
-UInt32 &
+uint32_t &
 MasterProfile::serverRegistrationMaxExpiresTime() noexcept
 {
    return mServerRegistrationMaxExpires;
 }
 
-UInt32 
+uint32_t 
 MasterProfile::serverRegistrationMaxExpiresTime() const noexcept
 {
    return mServerRegistrationMaxExpires;
 }
 
-UInt32 &
+uint32_t &
 MasterProfile::serverRegistrationDefaultExpiresTime() noexcept
 {
    return mServerRegistrationDefaultExpires;
 }
 
-UInt32 
+uint32_t 
 MasterProfile::serverRegistrationDefaultExpiresTime() const noexcept
 {
    return mServerRegistrationDefaultExpires;

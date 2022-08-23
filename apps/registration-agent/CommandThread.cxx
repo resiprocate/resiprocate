@@ -29,10 +29,9 @@ using namespace resip;
 using namespace std;
 
 CommandThread::CommandThread(const std::string &u)
-   : mMaximumAge(60000),
-     mRetryDelay(2000),
-     mUrl(u),
-     mFifo(0, 0)
+   : ProtonThreadBase::ProtonReceiverBase(u,
+      std::chrono::seconds(60), // FIXME configurable
+      std::chrono::seconds(2))
 {
 }
 
@@ -41,176 +40,62 @@ CommandThread::~CommandThread()
 }
 
 void
-CommandThread::on_container_start(proton::container &c)
-{
-   mReceiver = c.open_receiver(mUrl);
-}
-
-void
-CommandThread::on_connection_open(proton::connection& conn)
-{
-}
-
-void
-CommandThread::on_receiver_open(proton::receiver &)
-{
-   InfoLog(<<"receiver ready for queue " << mUrl);
-   mWorkQueue = &mReceiver.work_queue();
-}
-
-void
-CommandThread::on_receiver_close(proton::receiver &r)
-{
-   InfoLog(<<"receiver closed");
-}
-
-void
-CommandThread::on_transport_error(proton::transport &t)
-{
-   WarningLog(<<"transport closed unexpectedly, trying to re-establish connection");
-   StackLog(<<"sleeping for " << mRetryDelay << "ms before attempting to restart receiver");
-   sleepMs(mRetryDelay);
-   t.connection().container().open_receiver(mUrl);
-}
-
-void
-CommandThread::on_message(proton::delivery &d, proton::message &m)
-{
-   const proton::timestamp::numeric_type& ct = m.creation_time().milliseconds();
-   StackLog(<<"message creation time (ms): " << ct);
-   if(ct > 0 && mMaximumAge > 0)
-   {
-      const proton::timestamp::numeric_type threshold = ResipClock::getTimeMs() - mMaximumAge;
-      if(ct < threshold)
-      {
-         DebugLog(<<"dropping a message because it is too old: " << threshold - ct << "ms");
-         return;
-      }
-   }
-   // get body as std::stringstream
-   std::string _json;
-   try
-   {
-      _json = proton::get<std::string>(m.body());
-   }
-   catch(proton::conversion_error& ex)
-   {
-      ErrLog(<<"failed to extract message body as string: " << ex.what());
-      return;
-   }
-   StackLog(<<"on_message received: " << _json);
-   std::stringstream stream;
-   stream << _json;
-
-   // extract elements from JSON
-   json::Object *elemRootFile = new json::Object();
-   if(!elemRootFile)
-   {
-      ErrLog(<<"failed to allocate new json::Object()"); // FIXME
-      return;
-   }
-   try
-   {
-      json::Reader::Read(*elemRootFile, stream);
-   }
-   catch(json::Reader::ScanException& ex)
-   {
-      ErrLog(<<"failed to scan JSON message: " << ex.what() << " message body: " << _json);
-      return;
-   }
-   mFifo.add(elemRootFile, TimeLimitFifo<json::Object>::InternalElement);
-}
-
-void
 CommandThread::processQueue(UserRegistrationClient& userRegistrationClient)
 {
-   while(mFifo.messageAvailable())
-   {
-      std::unique_ptr<json::Object> _jObj(mFifo.getNext());
-      json::Object& jObj = *_jObj;
-      std::string command = json::String(jObj["command"]).Value();
-      json::Object args = jObj["arguments"];
-      StackLog(<<"received command " << command);
-      if(command == "set_contact")
-      {
-         string _aor = json::String(args["aor"]).Value();
-         Data aor(_aor);
-         string _newContact = json::String(args["contact"]).Value();
-         Data newContact(_newContact);
-         json::Number expires = json::Number(args["expires"]);
-         StackLog(<<"aor = " << aor << " contact = " << newContact << " expires = " << expires.Value());
-         vector<Data> route;
-         json::Array _route = json::Array(args["route"]);
-         for(json::Array::const_iterator it = _route.Begin(); it != _route.End(); it++)
-         {
-            const json::String& element = json::String(*it);
-            StackLog(<<"adding route element " << element.Value());
-            route.push_back(Data(element.Value()));
-         }
-         UInt64 now = ResipClock::getTimeSecs();
-         if(expires.Value() < now)
-         {
-            DebugLog(<<"dropping a command because expiry has already passed " << now - expires << " seconds ago");
-         }
-         else
-         {
-            userRegistrationClient.setContact(Uri(aor), newContact, expires.Value(), route);
-         }
-      }
-      else if(command == "unset_contact")
-      {
-         string _aor = json::String(args["aor"]).Value();
-         Data aor(_aor);
-         userRegistrationClient.unSetContact(Uri(aor));
-      }
-   }
-}
-
-void
-CommandThread::thread()
-{
-   while(!isShutdown())
+   resip::TimeLimitFifo<json::Object>& fifo = getFifo();
+   while(fifo.messageAvailable())
    {
       try
       {
-         proton::default_container(*this).run();
+         std::unique_ptr<json::Object> _jObj(fifo.getNext());
+         json::Object& jObj = *_jObj;
+         std::string command = json::String(jObj["command"]).Value();
+         json::Object args = jObj["arguments"];
+         StackLog(<<"received command " << command);
+         if(command == "set_contact")
+         {
+            string _aor = json::String(args["aor"]).Value();
+            Data aor(_aor);
+            string _newContact = json::String(args["contact"]).Value();
+            Data newContact(_newContact);
+            json::Number expires = json::Number(args["expires"]);
+            StackLog(<<"aor = " << aor << " contact = " << newContact << " expires = " << expires.Value());
+            vector<Data> route;
+            json::Array _route = json::Array(args["route"]);
+            for(json::Array::const_iterator it = _route.Begin(); it != _route.End(); it++)
+            {
+               const json::String& element = json::String(*it);
+               StackLog(<<"adding route element " << element.Value());
+               route.push_back(Data(element.Value()));
+            }
+            uint64_t now = ResipClock::getTimeSecs();
+            if(expires.Value() < now)
+            {
+               DebugLog(<<"dropping a command because expiry has already passed " << now - expires << " seconds ago");
+            }
+            else
+            {
+               userRegistrationClient.setContact(Uri(aor), newContact, expires.Value(), route);
+            }
+         }
+         else if(command == "unset_contact")
+         {
+            string _aor = json::String(args["aor"]).Value();
+            Data aor(_aor);
+            userRegistrationClient.unSetContact(Uri(aor));
+         }
       }
-      catch(exception& e)
+      catch(...)
       {
-         WarningLog(<<"CommandThread::thread container threw " << e.what());
-      }
-      if(!isShutdown())
-      {
-         StackLog(<<"sleeping for " << mRetryDelay << "ms before attempting to restart container");
-         sleepMs(mRetryDelay);
+         ErrLog(<<"exception while parsing the JSON");
       }
    }
-   InfoLog(<<"CommandThread::thread container stopped");
-}
-
-void
-CommandThread::shutdown()
-{
-   if(isShutdown())
-   {
-      DebugLog(<<"shutdown already in progress!");
-      return;
-   }
-   DebugLog(<<"trying to shutdown the Qpid Proton container");
-   ThreadIf::shutdown();
-   mWorkQueue->add(make_work(&CommandThread::doShutdown, this));
-}
-
-void
-CommandThread::doShutdown()
-{
-   StackLog(<<"closing sender");
-   mReceiver.container().stop();
 }
 
 /* ====================================================================
  *
- * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (C) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

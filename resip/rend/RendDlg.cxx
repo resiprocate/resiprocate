@@ -56,11 +56,11 @@
 
 struct RendDlgTimer 
 {
-   RendDlgTimer(RendLocalKey key, int which, UInt64 when)
+   RendDlgTimer(RendLocalKey key, int which, uint64_t when)
       : mLocalKey(key), mWhich(which), mWhen(when) { }
    RendLocalKey mLocalKey;
    int mWhich;
-   UInt64 mWhen;
+   uint64_t mWhen;
 };
 
 bool operator<(const RendDlgTimer& a, const RendDlgTimer& b)

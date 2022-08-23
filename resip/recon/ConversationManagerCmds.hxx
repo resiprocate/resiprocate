@@ -10,6 +10,10 @@
 #include "RemoteIMPagerParticipant.hxx"
 #include "LocalParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
+#include "MediaStackAdapter.hxx"
+#ifdef USE_KURENTO
+#include "KurentoRemoteParticipant.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
@@ -37,7 +41,7 @@ class CreateConversationCmd  : public resip::DumCommandAdapter
            mSharedMediaInterfaceConvHandle(sharedMediaInterfaceConvHandle){}
       virtual void executeCommand()
       {
-            Conversation* conversation = mConversationManager->createConversationInstance(mConvHandle, 0, mSharedMediaInterfaceConvHandle, mAutoHoldMode);
+            Conversation* conversation = mConversationManager->getMediaStackAdapter().createConversationInstance(mConvHandle, 0, mSharedMediaInterfaceConvHandle, mAutoHoldMode);
             resip_assert(conversation);
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateConversationCmd: "; return strm; }
@@ -97,7 +101,7 @@ class JoinConversationCmd  : public resip::DumCommandAdapter
             {
                // Safety check when running in sipXConversationMediaInterfaceMode - ensure both conversation are using the same
                // media interface
-               if (!mConversationManager->canConversationsShareParticipants(sourceConversation, destConversation))
+               if (!mConversationManager->getMediaStackAdapter().canConversationsShareParticipants(sourceConversation, destConversation))
                {
                   WarningLog(<< "JoinConversationCmd: not supported for sourceConv=" << mSourceConvHandle << ", and destConv=" << mDestConvHandle);
                   return;
@@ -148,7 +152,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommandAdapter
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation)
          {
-            RemoteParticipantDialogSet* participantDialogSet = mConversationManager->createRemoteParticipantDialogSetInstance(mForkSelectMode, mCallerProfile);
+            RemoteParticipantDialogSet* participantDialogSet = mConversationManager->getMediaStackAdapter().createRemoteParticipantDialogSetInstance(mForkSelectMode, mCallerProfile);
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle);
             if(participant)
             {
@@ -256,7 +260,7 @@ class CreateMediaResourceParticipantCmd : public resip::DumCommandAdapter
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation)
          {
-            MediaResourceParticipant* mediaResourceParticipant = mConversationManager->createMediaResourceParticipantInstance(mPartHandle, mMediaUrl);
+            MediaResourceParticipant* mediaResourceParticipant = mConversationManager->getMediaStackAdapter().createMediaResourceParticipantInstance(mPartHandle, mMediaUrl);
             if(mediaResourceParticipant)
             {
                conversation->addParticipant(mediaResourceParticipant);
@@ -291,7 +295,7 @@ class CreateLocalParticipantCmd : public resip::DumCommandAdapter
            mPartHandle(partHandle) {}
       virtual void executeCommand()
       {
-         mConversationManager->createLocalParticipantInstance(mPartHandle);
+         mConversationManager->getMediaStackAdapter().createLocalParticipantInstance(mPartHandle);
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateLocalParticipantCmd: "; return strm; }
    private:
@@ -344,7 +348,7 @@ class AddParticipantCmd : public resip::DumCommandAdapter
             {
                // All conversations they are currently in will have the same media interface, just check that first conversation's media interface
                // matches the new conversation we are trying to add to.
-               if (!mConversationManager->canConversationsShareParticipants(participant->getConversations().begin()->second, conversation))
+               if (!mConversationManager->getMediaStackAdapter().canConversationsShareParticipants(participant->getConversations().begin()->second, conversation))
                {
                   WarningLog(<< "AddParticipantCmd: participants cannot belong to multiple conversations that don't share a media interface in sipXConversationMediaInterfaceMode.");
                   return;
@@ -388,7 +392,7 @@ class RemoveParticipantCmd : public resip::DumCommandAdapter
          {
             // When using multiple media interfaces, only local participants and remote IM participants can exist outside of any conversations.  We need to
             // prevent removal of other participant types (ie: those with a connection port on the bridge) from all conversations in this mode.
-            if (mConversationManager->supportsMultipleMediaInterfaces() && participant->getNumConversations() == 1)
+            if (mConversationManager->getMediaStackAdapter().supportsMultipleMediaInterfaces() && participant->getNumConversations() == 1)
             {
                LocalParticipant* localPart = dynamic_cast<LocalParticipant*>(participant);
                if (!localPart && participant->getConnectionPortOnBridge() != -1)  // Note:  connection port on bridge check eliminates RemoteIMParticipants from falling into if
@@ -447,7 +451,7 @@ class MoveParticipantCmd : public resip::DumCommandAdapter
             {
                // Safety check, mostly for when running in sipXConversationMediaInterfaceMode 
                // - ensure both conversation are using the same media interface
-               if (!mConversationManager->canConversationsShareParticipants(sourceConversation, destConversation))
+               if (!mConversationManager->getMediaStackAdapter().canConversationsShareParticipants(sourceConversation, destConversation))
                {
                   WarningLog(<< "MoveParticipantCmd: failed, both conversations must be using the same media interface.");
                   return;
@@ -531,7 +535,7 @@ class OutputBridgeMixWeightsCmd : public resip::DumCommandAdapter
          : mConversationManager(conversationManager), mConversationHandle(convHandle) {}
       virtual void executeCommand()
       {
-         mConversationManager->outputBridgeMatrixImpl(mConversationHandle);
+         mConversationManager->getMediaStackAdapter().outputBridgeMatrixImpl(mConversationHandle);
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " OutputBridgeMixWeightsCmd: conversationHandle=" << mConversationHandle; return strm; }
    private:
@@ -553,7 +557,7 @@ class AlertParticipantCmd : public resip::DumCommandAdapter
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            if(mConversationManager->supportsMultipleMediaInterfaces() && mEarlyFlag)
+            if(mConversationManager->getMediaStackAdapter().supportsMultipleMediaInterfaces() && mEarlyFlag)
             {
                // Need to ensure, that the remote paticipant is added to a conversation before doing an operation that requires
                // media (ie. EarlyMediaFlag set to true).
@@ -590,7 +594,7 @@ class AnswerParticipantCmd : public resip::DumCommandAdapter
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(participant);
          if(remoteParticipant)
          {
-            if(mConversationManager->supportsMultipleMediaInterfaces())
+            if(mConversationManager->getMediaStackAdapter().supportsMultipleMediaInterfaces())
             {
                // Need to ensure, that the remote paticipant is added to a conversation before accepting the call
                if(remoteParticipant->getConversations().size() == 0)
@@ -740,7 +744,7 @@ class HoldParticipantCmd : public resip::DumCommandAdapter
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            if(mConversationManager->supportsMultipleMediaInterfaces() && mHold)
+            if(mConversationManager->getMediaStackAdapter().supportsMultipleMediaInterfaces() && mHold)
             {
                // Need to ensure, that the remote paticipant is added to a conversation before doing an opertation that requires
                // media (ie. hold set to true).
@@ -792,6 +796,66 @@ private:
    std::unique_ptr<resip::Contents> mContents;
 };
 
+class RequestKeyframeCmd : public resip::DumCommandAdapter
+{
+   public:
+      RequestKeyframeCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle) {}
+      virtual Message* clone() const { return new RequestKeyframeCmd(*this); }
+      virtual void executeCommand()
+      {
+#ifdef USE_KURENTO
+         KurentoRemoteParticipant* remoteParticipant = dynamic_cast<KurentoRemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            std::shared_ptr<kurento::BaseRtpEndpoint> endpoint = remoteParticipant->getEndpoint();
+            if(endpoint->valid())
+            {
+               remoteParticipant->getEndpoint()->sendPictureFastUpdate([]{});
+            }
+         }
+         else
+         {
+            WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle.");
+         }
+#else
+         WarningLog(<<"not implemented");
+#endif
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+};
+
+class RequestKeyframeFromPeerCmd : public resip::DumCommandAdapter
+{
+   public:
+      RequestKeyframeFromPeerCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle) {}
+      virtual Message* clone() const { return new RequestKeyframeFromPeerCmd(*this); }
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            remoteParticipant->requestKeyframeFromPeer();
+         }
+         else
+         {
+            WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle.");
+         }
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+};
+
 class ApplicationTimerCmd : public resip::DumCommand
 {
 public:
@@ -816,6 +880,8 @@ private:
 };
 
 }
+
+#undef RESIPROCATE_SUBSYSTEM
 
 #endif
 

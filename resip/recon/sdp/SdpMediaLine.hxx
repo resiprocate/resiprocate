@@ -516,7 +516,7 @@ public:
    //        can be properly tagged and CandidatePresents flag can be properly set
    void addCandidate(SdpCandidate& candidate);
    void addCandidate(const char * foundation, unsigned int id, SdpCandidate::SdpCandidateTransportType transport, 
-                     UInt64 priority, const char * connectionAddress, unsigned int port, 
+                     uint64_t priority, const char * connectionAddress, unsigned int port, 
                      SdpCandidate::SdpCandidateType candidateType, const char * relatedAddress = 0, 
                      unsigned int relatedPort = 0);
    void clearCandidates() { mCandidates.clear(); mRtpCandidatePresent = false; mRtcpCandidatePresent = false; }

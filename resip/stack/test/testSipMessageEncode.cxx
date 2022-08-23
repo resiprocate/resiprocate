@@ -80,8 +80,8 @@ main(int argc, char* argv[])
 	cout << "USING RESIP FAST STREAMS\r\n";
 #endif
 
-	UInt64 startTime=0;
-	UInt64 elapsed=0;
+	uint64_t startTime=0;
+	uint64_t elapsed=0;
 	double secs=0;
 
 	if( args.runFs )

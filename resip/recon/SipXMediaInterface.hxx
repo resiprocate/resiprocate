@@ -37,7 +37,7 @@ public:
    };
 
    SipXMediaInterface(ConversationManager& conversationManager, CpTopologyGraphInterface* mediaInterface);
-   ~SipXMediaInterface() { mMediaInterface->release(); }
+   ~SipXMediaInterface();
 
    CpTopologyGraphInterface* getInterface() { return mMediaInterface; }
    void allowLoggingDTMFDigits(bool allowLogging) { mAllowLoggingDTMFDigits = allowLogging; }

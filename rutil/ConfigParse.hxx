@@ -66,6 +66,27 @@ public:
    void insertConfigValue(const resip::Data& name, const resip::Data& value);
 
 protected:
+   template <typename T>
+   bool translateConfigValue(const std::map<T, resip::Data> dict, const resip::Data& name, T& value) const
+   {
+      Data lowerName(name);  lowerName.lowercase();
+      ConfigValuesMap::const_iterator it = mConfigValues.find(lowerName);
+      if(it == mConfigValues.end())
+      {
+         return false;
+      }
+      const Data& s = it->second;
+      for(const auto kv : dict) {
+         if(isEqualNoCase(s, kv.second))
+         {
+            value = kv.first;
+            return true;
+         }
+      };
+      std::cerr << "Invalid value for " << name << ": " << s;
+      exit(-1);
+   };
+
    typedef HashMultiMap<resip::Data, resip::Data> ConfigValuesMap;
 
    void insertConfigValue(const Data& source, ConfigValuesMap& configValues, const resip::Data& name, const resip::Data& value);

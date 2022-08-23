@@ -762,7 +762,7 @@ Server::checkSubscription(const std::string& to, const std::string& from)
    msg.addArg("sendSubscriptionResponse");
    msg.addArg(from.c_str());
    msg.addArg(to.c_str());   
-   msg.addArg(Data((UInt32)success).c_str());   
+   msg.addArg(Data((uint32_t)success).c_str());   
    mIPCThread->sendIPCMsg(msg);
 }
 
@@ -1340,7 +1340,7 @@ Server::hasDefaultExpires() const
    return true;
 }
 
-UInt32 
+uint32_t 
 Server::getDefaultExpires() const
 {
    return 60;

@@ -38,6 +38,7 @@ class MediaControlContents : public Contents
                   void parseVCPrimitive(XMLCursor& xml);
                   EncodeStream& encode(EncodeStream&) const;
 
+                  /* stream_id is the label attribute from SDP.  See RFC 4574 */
                   const StreamIDList& streamIDs() const { return mStreamIDs; };
                   StreamIDList& streamIDs() { return mStreamIDs; };
 

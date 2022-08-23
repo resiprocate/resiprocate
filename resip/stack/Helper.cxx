@@ -498,7 +498,7 @@ Helper::makeRawResponse(Data& raw,
       encodeStream << "SIP/2.0 " << responseCode << " ";
       Data reason;
       getResponseCodeReason(responseCode, reason);
-      encodeStream << reason;
+      encodeStream << reason << Symbols::CRLF;
       msg.encodeSingleHeader(Headers::Via,encodeStream);
       msg.encodeSingleHeader(Headers::To,encodeStream);
       msg.encodeSingleHeader(Headers::From,encodeStream);
@@ -868,7 +868,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
 
             if (expiresDelta > 0)
             {
-               UInt64 now = Timer::getTimeSecs();
+               uint64_t now = Timer::getTimeSecs();
                if (x_nonce.getCreationTime() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
@@ -1024,7 +1024,7 @@ Helper::authenticateRequest(const SipMessage& request,
          
          if (expiresDelta > 0)
          {
-            UInt64 now = Timer::getTimeSecs();
+            uint64_t now = Timer::getTimeSecs();
             if (x_nonce.getCreationTime() + expiresDelta < now)
             {
                DebugLog(<< "Nonce has expired.");
@@ -1179,7 +1179,7 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
 
          if (expiresDelta > 0)
          {
-            UInt64 now = Timer::getTimeSecs();
+            uint64_t now = Timer::getTimeSecs();
             if (x_nonce.getCreationTime() + expiresDelta < now)
             {
                DebugLog(<< "Nonce has expired.");

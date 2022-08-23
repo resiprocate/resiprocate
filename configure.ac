@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.13.0~alpha1)
+AC_INIT([resiprocate],[1.13.0~alpha1])
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -14,25 +14,26 @@ AM_INIT_AUTOMAKE([foreign subdir-objects tar-pax])
 m4_pattern_forbid([^PKG_])
 
 AC_CANONICAL_HOST
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 
 AC_PROG_CC
 AC_PROG_CXX
 
 AC_PROG_INSTALL
 
-AC_PROG_LIBTOOL
+LT_INIT
 
 AC_PROG_SED
 
 AC_PROG_MAKE_SET
-AC_PROG_RANLIB
 
 AM_MISSING_PROG([GPERF], [gperf])
 
 AC_GPERFVER
 
 AX_CXX_COMPILE_STDCXX(11)
+
+CPPFLAGS="${CPPFLAGS} -DENABLE_LOG_REPOSITORY_DETAILS"
 
 AC_MSG_CHECKING([ for GNU warning flags])
 if test "${GXX}"x = yesx; then
@@ -302,11 +303,21 @@ AC_ARG_WITH(srtp1,
  [AC_DEFINE_UNQUOTED(USE_SRTP1, , USE_SRTP1)
  AM_CONDITIONAL(USE_SRTP1, true)], )
 
+AM_CONDITIONAL(BUILD_RECONSERVER, false)
+
 AM_CONDITIONAL(USE_SIPXTAPI, false)
 AC_ARG_WITH(sipxtapi,
 [  --with-sipxtapi         Build recon with sipXtapi support],
  [AC_DEFINE_UNQUOTED(USE_SIPXTAPI, , USE_SIPXTAPI)
- AM_CONDITIONAL(USE_SIPXTAPI, true)], )
+ AM_CONDITIONAL(USE_SIPXTAPI, true)
+ AM_CONDITIONAL(BUILD_RECONSERVER, true)], )
+
+AM_CONDITIONAL(USE_KURENTO, false)
+AC_ARG_WITH(kurento,
+[  --with-kurento          Build recon with Kurento support],
+ [AC_DEFINE_UNQUOTED(USE_KURENTO, , USE_KURENTO)
+ AM_CONDITIONAL(USE_KURENTO, true)
+ AM_CONDITIONAL(BUILD_RECONSERVER, true)], )
 
 AM_CONDITIONAL(RECON_LOCAL_HW_TESTS, false)
 AC_ARG_ENABLE(recon-local-hw-tests,
@@ -372,7 +383,7 @@ AC_ARG_WITH(gstreamer,
 
 AM_MAINTAINER_MODE
 
-AC_OUTPUT(Makefile \
+AC_CONFIG_FILES([Makefile \
 	rutil/dns/ares/Makefile \
 	rutil/Makefile \
 	rutil/test/Makefile \
@@ -416,6 +427,10 @@ AC_OUTPUT(Makefile \
 	resip/recon/test/Makefile \
 	p2p/s2c/s2c/Makefile \
 	p2p/Makefile \
-	)
+	media/Makefile \
+	media/kurento/Makefile \
+	media/kurento/test/Makefile \
+	])
+AC_OUTPUT
 
 

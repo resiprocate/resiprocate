@@ -17,7 +17,7 @@ class NameAddr;
 class RegistrationCreator : public BaseCreator 
 {
    public:
-      RegistrationCreator(DialogUsageManager& dum, const NameAddr& target, std::shared_ptr<UserProfile> userProfile, UInt32 RegistrationTime);
+      RegistrationCreator(DialogUsageManager& dum, const NameAddr& target, std::shared_ptr<UserProfile> userProfile, uint32_t RegistrationTime);
 };
  
 }

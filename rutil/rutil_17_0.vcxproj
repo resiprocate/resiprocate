@@ -443,7 +443,6 @@
     <ClCompile Include="dns\AresDns.cxx" />
     <ClCompile Include="BaseException.cxx" />
     <ClCompile Include="Coders.cxx" />
-    <ClCompile Include="Condition.cxx" />
     <ClCompile Include="ConfigParse.cxx" />
     <ClCompile Include="CountStream.cxx" />
     <ClCompile Include="Data.cxx" />
@@ -452,6 +451,7 @@
     <ClCompile Include="dns\DnsCnameRecord.cxx" />
     <ClCompile Include="dns\DnsHostRecord.cxx" />
     <ClCompile Include="dns\DnsNaptrRecord.cxx" />
+    <ClCompile Include="dns\DnsResourceRecord.cxx" />
     <ClCompile Include="dns\DnsSrvRecord.cxx" />
     <ClCompile Include="dns\DnsStub.cxx" />
     <ClCompile Include="DnsUtil.cxx" />
@@ -470,7 +470,6 @@
     <ClCompile Include="Lock.cxx" />
     <ClCompile Include="Log.cxx" />
     <ClCompile Include="MD5Stream.cxx" />
-    <ClCompile Include="Mutex.cxx" />
     <ClCompile Include="PoolBase.cxx" />
     <ClCompile Include="SelectInterruptor.cxx" />
     <ClCompile Include="ServerProcess.cxx" />
@@ -486,7 +485,6 @@
     <ClCompile Include="Poll.cxx" />
     <ClCompile Include="dns\QueryTypes.cxx" />
     <ClCompile Include="Random.cxx" />
-    <ClCompile Include="RecursiveMutex.cxx" />
     <ClCompile Include="resipfaststreams.cxx" />
     <ClCompile Include="dns\RRCache.cxx" />
     <ClCompile Include="dns\RRList.cxx" />
@@ -561,7 +559,6 @@
     <ClInclude Include="IntrusiveListElement.hxx" />
     <ClInclude Include="dns\LocalDns.hxx" />
     <ClInclude Include="Lock.hxx" />
-    <ClInclude Include="Lockable.hxx" />
     <ClInclude Include="Log.hxx" />
     <ClInclude Include="Logger.hxx" />
     <ClInclude Include="MediaConstants.hxx" />
@@ -578,7 +575,6 @@
     <ClInclude Include="Poll.hxx" />
     <ClInclude Include="dns\QueryTypes.hxx" />
     <ClInclude Include="Random.hxx" />
-    <ClInclude Include="RecursiveMutex.hxx" />
     <ClInclude Include="ResipAssert.h" />
     <ClInclude Include="resipfaststreams.hxx" />
     <ClInclude Include="dns\RRCache.hxx" />

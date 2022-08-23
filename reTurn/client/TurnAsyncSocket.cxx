@@ -39,6 +39,7 @@ TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService,
    mIOService(ioService),
    mTurnAsyncSocketHandler(turnAsyncSocketHandler),
    mLocalBinding(StunTuple::None /* Set properly by sub class */, address, port),
+   mSoftware(SOFTWARE_STRING),
    mHaveAllocation(false),
    mActiveDestination(0),
    mAsyncSocketBase(asyncSocketBase),
@@ -145,14 +146,14 @@ TurnAsyncSocket::doBindRequest()
 }
 
 void
-TurnAsyncSocket::connectivityCheck(const StunTuple& targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
+TurnAsyncSocket::connectivityCheck(const StunTuple& targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
 {
    resip_assert(setIceControlling || setIceControlled);
    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doConnectivityCheck(new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms); }));
 }
 
 void
-TurnAsyncSocket::doConnectivityCheck(StunTuple* targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
+TurnAsyncSocket::doConnectivityCheck(StunTuple* targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
 {
    // Form Stun Bind request
    StunMessage* request = createNewStunMessage(StunMessage::StunClassRequest, StunMessage::BindMethod);
@@ -176,7 +177,7 @@ void
 TurnAsyncSocket::createAllocation(unsigned int lifetime,
                                   unsigned int bandwidth,
                                   unsigned char requestedProps, 
-                                  UInt64 reservationToken,
+                                  uint64_t reservationToken,
                                   StunTuple::TransportType requestedTransportType)
 {
     mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doCreateAllocation(lifetime, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
@@ -186,7 +187,7 @@ void
 TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
                                     unsigned int bandwidth,
                                     unsigned char requestedProps, 
-                                    UInt64 reservationToken,
+                                    uint64_t reservationToken,
                                     StunTuple::TransportType requestedTransportType)
 {
    // Store Allocation Properties
@@ -383,13 +384,16 @@ TurnAsyncSocket::doClearActiveDestination()
 }
 
 StunMessage* 
-TurnAsyncSocket::createNewStunMessage(UInt16 stunclass, UInt16 method, bool addAuthInfo)
+TurnAsyncSocket::createNewStunMessage(uint16_t stunclass, uint16_t method, bool addAuthInfo)
 {
    StunMessage* msg = new StunMessage();
    msg->createHeader(stunclass, method);
 
    // Add Software Attribute
-   msg->setSoftware(SOFTWARE_STRING);
+   if(!mSoftware.empty())
+   {
+      msg->setSoftware(mSoftware.c_str());
+   }
 
    if(addAuthInfo && !mUsername.empty() && !mHmacKey.empty())
    {
@@ -563,7 +567,10 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
                response->mHasUnknownAttributes = true;
                response->mUnknownAttributes = stunMessage.mUnknownRequiredAttributes;
                // Add Software Attribute
-               response->setSoftware(SOFTWARE_STRING);
+               if(!mSoftware.empty())
+               {
+                  response->setSoftware(mSoftware.c_str());
+               }
                sendStunMessage(response);
             }
             else
@@ -583,7 +590,10 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
             // Copy over TransactionId
             response->mHeader.magicCookieAndTid = stunMessage.mHeader.magicCookieAndTid;
             // Add Software Attribute
-            response->setSoftware(SOFTWARE_STRING);
+            if(!mSoftware.empty())
+            {
+               response->setSoftware(mSoftware.c_str());
+            }
             sendStunMessage(response);
             break;
          }
@@ -716,13 +726,8 @@ TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
    remoteTuple.setTransportType(mRelayTransportType);
    StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress[0]);
 
-   RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
-   if(!remotePeer)
-   {
-      // Remote Peer not found - discard data
-      WarningLog(<< "TurnAsyncSocket::handleDataInd: Data received from unknown RemotePeer " << remoteTuple << " - discarding");
-      return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
-   }
+   // Should we record all the remoteTuples we have sent to before, and reject this message if
+   // not from one of the those endpoints?
 
    const auto data = std::make_shared<DataBuffer>(stunMessage.mTurnData->data(), stunMessage.mTurnData->size());
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(), 
@@ -828,7 +833,10 @@ TurnAsyncSocket::handleBindRequest(StunMessage& stunMessage)
    StunMessage::setStunAtrAddressFromTuple(response->mXorMappedAddress, stunMessage.mRemoteTuple);
 
    // Add Software Attribute
-   response->setSoftware(SOFTWARE_STRING);
+   if(!mSoftware.empty())
+   {
+      response->setSoftware(mSoftware.c_str());
+   }
 
    // If the request contained MESSAGE-INTEGRITY, then the response needs to as well
    if (stunMessage.mHasMessageIntegrity)
@@ -1111,6 +1119,30 @@ TurnAsyncSocket::sendToRemotePeer(RemotePeer& remotePeer, const std::shared_ptr<
 
       // Send indication to Turn Server
       sendStunMessage(ind);
+   }
+}
+
+void
+TurnAsyncSocket::setSoftware(const char* software)
+{
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetSoftware(new Data(software)); }));
+}
+
+void
+TurnAsyncSocket::doSetSoftware(Data* software)
+{
+   mSoftware = *software;
+   delete software;
+
+   const uint32_t unpaddedSize = mSoftware.size();
+   if(unpaddedSize > 0)
+   {
+      // Pad size to a multiple of 4, to help compatibility with older clients
+      const uint32_t remainder  = unpaddedSize % 4,
+                   paddedSize = remainder ? unpaddedSize + 4 - remainder : unpaddedSize;
+
+      while(mSoftware.size() < paddedSize)
+         mSoftware.append(" ", 1);
    }
 }
 

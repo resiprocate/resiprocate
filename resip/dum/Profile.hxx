@@ -43,14 +43,14 @@ class Profile
       /// it's creation time default.  Note:  Defaults are described below.
 
       /// This default is used if no value is passed in when creating a registration
-      virtual void setDefaultRegistrationTime(UInt32 secs) noexcept;
-      virtual UInt32 getDefaultRegistrationTime() const noexcept;
+      virtual void setDefaultRegistrationTime(uint32_t secs) noexcept;
+      virtual uint32_t getDefaultRegistrationTime() const noexcept;
       virtual void unsetDefaultRegistrationTime() noexcept;  
 
       /// If a registration gets rejected with a 423, then we ensure the MinExpires value is less than this before re-registering
       /// Set to 0 to disable this check and accept any time suggested by the server.
-      virtual void setDefaultMaxRegistrationTime(UInt32 secs) noexcept;
-      virtual UInt32 getDefaultMaxRegistrationTime() const noexcept;
+      virtual void setDefaultMaxRegistrationTime(uint32_t secs) noexcept;
+      virtual uint32_t getDefaultMaxRegistrationTime() const noexcept;
       virtual void unsetDefaultMaxRegistrationTime() noexcept;
 
       /// The time to retry registrations on error responses (if Retry-After header is not present in error)
@@ -61,13 +61,13 @@ class Profile
       virtual void unsetDefaultRegistrationRetryTime() noexcept;
 
       /// This default is used if no value is passed in when creating a subscription
-      virtual void setDefaultSubscriptionTime(UInt32 secs) noexcept;
-      virtual UInt32 getDefaultSubscriptionTime() const noexcept;
+      virtual void setDefaultSubscriptionTime(uint32_t secs) noexcept;
+      virtual uint32_t getDefaultSubscriptionTime() const noexcept;
       virtual void unsetDefaultSubscriptionTime() noexcept;
 
       /// This default is used if no value is passed in when creating a publication
-      virtual void setDefaultPublicationTime(UInt32 secs) noexcept;
-      virtual UInt32 getDefaultPublicationTime() const noexcept;
+      virtual void setDefaultPublicationTime(uint32_t secs) noexcept;
+      virtual uint32_t getDefaultPublicationTime() const noexcept;
       virtual void unsetDefaultPublicationTime() noexcept;
 
       /// Call is stale if UAC gets no final response within the stale call timeout (default 3 minutes)
@@ -82,8 +82,8 @@ class Profile
 
       /// Only used if timer option tag is set in MasterProfile.
       /// Note:  Value must be higher than 90 (as specified in RFC 4028)
-      virtual void setDefaultSessionTime(UInt32 secs) noexcept;
-      virtual UInt32 getDefaultSessionTime() const noexcept;
+      virtual void setDefaultSessionTime(uint32_t secs) noexcept;
+      virtual uint32_t getDefaultSessionTime() const noexcept;
       virtual void unsetDefaultSessionTime() noexcept;
 
       /// Only used if timer option tag is set in MasterProfile.
@@ -248,19 +248,19 @@ class Profile
 
    private:
       bool mHasDefaultRegistrationExpires;
-      UInt32 mDefaultRegistrationExpires;
+      uint32_t mDefaultRegistrationExpires;
       
       bool mHasDefaultMaxRegistrationExpires;
-      UInt32 mDefaultMaxRegistrationExpires;
+      uint32_t mDefaultMaxRegistrationExpires;
 
       bool mHasDefaultRegistrationRetryInterval;
       int  mDefaultRegistrationRetryInterval;
 
       bool mHasDefaultSubscriptionExpires;
-      UInt32 mDefaultSubscriptionExpires;
+      uint32_t mDefaultSubscriptionExpires;
 
       bool mHasDefaultPublicationExpires;
-      UInt32 mDefaultPublicationExpires;
+      uint32_t mDefaultPublicationExpires;
 
       bool mHasDefaultStaleCallTime;
       int mDefaultStaleCallTime;
@@ -269,7 +269,7 @@ class Profile
       int mDefaultStaleReInviteTime;
 
       bool mHasDefaultSessionExpires;
-      UInt32 mDefaultSessionExpires;
+      uint32_t mDefaultSessionExpires;
 
       bool mHasDefaultSessionTimerMode;
       SessionTimerMode mDefaultSessionTimerMode;

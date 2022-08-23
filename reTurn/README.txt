@@ -174,7 +174,7 @@ onAllocationSuccess(unsigned int socketDesc,
                     const StunTuple& relayTuple, 
                     unsigned int lifetime, 
                     unsigned int bandwidth, 
-                    UInt64& reservationToken) = 0; 
+                    uint64_t& reservationToken) = 0; 
 onAllocationFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
 onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime) = 0;

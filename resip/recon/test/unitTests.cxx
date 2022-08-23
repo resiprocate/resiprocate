@@ -4,7 +4,7 @@
 
 #include "UserAgent.hxx"
 #include "ReconSubsystem.hxx"
-#include "SipXConversationManager.hxx"
+#include "SipXMediaStackAdapter.hxx"
 
 #include <signal.h>
 #include "rutil/Log.hxx"
@@ -131,15 +131,15 @@ signalHandler(int signo)
 ///////////////////////////////////////////////////////////////////////////////
 //  ALICE
 ///////////////////////////////////////////////////////////////////////////////
-class AliceConversationManager : public SipXConversationManager
+class AliceConversationManager : public ConversationManager
 {
 public:
-   AliceConversationManager(SipXConversationManager::MediaInterfaceMode mode) : SipXConversationManager(true, mode)
+   AliceConversationManager(SipXMediaStackAdapter::MediaInterfaceMode mode) : ConversationManager(make_shared<SipXMediaStackAdapter>(*this, true, mode))
    { 
       mLogPrefix = "Alice: ";
    };
 
-   virtual ConversationHandle createConversation(AutoHoldMode autoHoldMode = AutoHoldEnabled) override
+   virtual ConversationHandle createConversation(ConversationManager::AutoHoldMode autoHoldMode = AutoHoldEnabled) override
    {
       ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
       mConvHandles.push_back(convHandle);
@@ -361,10 +361,10 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 //  BOB
 ///////////////////////////////////////////////////////////////////////////////
-class BobConversationManager : public SipXConversationManager
+class BobConversationManager : public ConversationManager
 {
 public:
-   BobConversationManager(SipXConversationManager::MediaInterfaceMode mode) : SipXConversationManager(true, mode)
+   BobConversationManager(SipXMediaStackAdapter::MediaInterfaceMode mode) : ConversationManager(make_shared<SipXMediaStackAdapter>(*this, true, mode))
    { 
       mLogPrefix = "Bob: ";
    };
@@ -720,10 +720,13 @@ std::shared_ptr<ConversationProfile> createConversationProfile(std::shared_ptr<U
 	sessionCaps.session() = session;
    conversationProfile->sessionCaps() = sessionCaps;
 
+   conversationProfile->mediaEndpointMode() = ConversationProfile::Base;
+   conversationProfile->delayedMediaOutboundMode() = false;
+
    return conversationProfile;
 }
 
-void executeConversationTest(SipXConversationManager::MediaInterfaceMode mode)
+void executeConversationTest(SipXMediaStackAdapter::MediaInterfaceMode mode)
 {
    //////////////////////////////////////////////////////////////////////////////
    // Setup UserAgentMasterProfiles
@@ -813,7 +816,7 @@ main (int argc, char** argv)
    initNetwork();
 
    cout << "Tests for sipXConversationMediaInterfaceMode" << endl;
-   executeConversationTest(SipXConversationManager::sipXConversationMediaInterfaceMode);
+   executeConversationTest(SipXMediaStackAdapter::sipXConversationMediaInterfaceMode);
 
 #ifdef RECON_LOCAL_HW_TESTS
    // Reset counters, etc.
@@ -823,7 +826,7 @@ main (int argc, char** argv)
    finished = false;
 
    cout << "Tests for sipXGlobalMediaInterfaceMode" << endl;
-   executeConversationTest(SipXConversationManager::sipXGlobalMediaInterfaceMode);
+   executeConversationTest(SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode);
 #endif
 
    InfoLog(<< "unitTests is shutdown.");
