@@ -117,20 +117,16 @@ int FlowManagerSipXSocket::read(char* buffer, int bufferLength,
     return iRC ;
 }
 
-
 int FlowManagerSipXSocket::read(char* buffer, int bufferLength, long waitMilliseconds)
 {        
    //cout << "read: bufferlen=" << bufferLength << ", waitMilliseconds=" << waitMilliseconds << "ms" << endl;
    resip_assert(mFlow);
    unsigned int len = bufferLength;
-   if(!mFlow->receive(buffer, len, waitMilliseconds))
-   {
-      return len;
-   }
-   else
+   if(mFlow->receive(buffer, len, waitMilliseconds))
    {
       return 0;
    }
+   return len;
 }
 
 int FlowManagerSipXSocket::write(const char* buffer, int bufferLength)

@@ -911,10 +911,16 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
    {
       auto optionsAnswer = ood->answerOptions();
 
-      // Attach an offer to the options request
-      SdpContents sdp;
-      buildSdpOffer(mUserAgent->getIncomingConversationProfile(msg).get(), sdp);
-      optionsAnswer->setContents(&sdp);
+      ConversationProfile* convProfile = mUserAgent->getIncomingConversationProfile(msg).get();
+
+      if (convProfile)
+      {
+         // Attach an offer to the options request
+         SdpContents sdp;
+         buildSdpOffer(convProfile, sdp);
+         optionsAnswer->setContents(&sdp);
+      }
+
       ood->send(std::move(optionsAnswer));
       break;
    }
