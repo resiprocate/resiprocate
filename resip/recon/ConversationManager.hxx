@@ -13,8 +13,6 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <resip/dum/PagerMessageHandler.hxx>
 
-#include <reflow/RTCPEventLoggingHandler.hxx>
-
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"

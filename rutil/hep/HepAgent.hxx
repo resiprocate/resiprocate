@@ -7,9 +7,10 @@
 #include "rutil/TransportType.hxx"
 #include "rutil/hep/ResipHep.hxx"
 #include "rutil/DataStream.hxx"
+#include "rutil/Subsystem.hxx"
 #include "rutil/Logger.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::EEP
 
 namespace resip
 {
@@ -25,6 +26,7 @@ class HepAgent
 
       HepAgent(const Data &captureHost, int capturePort, int captureAgentID);
       virtual ~HepAgent();
+      virtual Data convertRTCPtoJSON(const Data& rtcpRaw);
       void sendRTCP(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const Data& rtcpRaw, const Data& correlationId);
       template <class T>
       void sendToHOMER(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const HEPEventType eventType, const T& msg, const Data& correlationId)
@@ -216,7 +218,7 @@ class HepAgent
          hg = (struct hep_generic *)buf.data();
          hg->header.length = htons(afterPayload);
 
-         if(sendto(mSocket, buf.data(), buf.size(), 0, &mDestination.address, mDestination.length()) < 0)
+         if(sendToWire(buf))
          {
             int e = getErrno();
 #if defined(WIN32)
@@ -231,6 +233,8 @@ class HepAgent
          }
       }
 
+   protected:
+      virtual bool sendToWire(const Data& buf) const;
    private:
       Data mCaptureHost;
       int mCapturePort;
@@ -249,7 +253,8 @@ class HepAgent
 
 /* ====================================================================
  *
- * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

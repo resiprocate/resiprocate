@@ -33,7 +33,7 @@ UserAgentMasterProfile::UserAgentMasterProfile()
 void
 UserAgentMasterProfile::setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept
 {
-   mTransportSipMessageLoggingHandler = std::move(handler);
+   mTransportSipMessageLoggingHandler = handler;
 }
 
 std::shared_ptr<Transport::SipMessageLoggingHandler>
@@ -45,7 +45,7 @@ UserAgentMasterProfile::getTransportSipMessageLoggingHandler() const noexcept
 void
 UserAgentMasterProfile::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> handler) noexcept
 {
-   mRTCPEventLoggingHandler = std::move(handler);
+   mRTCPEventLoggingHandler = handler;
 }
 
 std::shared_ptr<flowmanager::RTCPEventLoggingHandler>

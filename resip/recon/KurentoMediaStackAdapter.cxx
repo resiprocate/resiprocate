@@ -283,12 +283,6 @@ KurentoMediaStackAdapter::process()
 }
 
 void
-KurentoMediaStackAdapter::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h)
-{
-   // FIXME Kurento
-}
-
-void
 KurentoMediaStackAdapter::initializeDtlsFactory(const resip::Data& defaultAoR)
 {
    // FIXME Kurento

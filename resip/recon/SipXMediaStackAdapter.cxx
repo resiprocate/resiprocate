@@ -605,6 +605,7 @@ void
 SipXMediaStackAdapter::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h)
 {
    getFlowManager().setRTCPEventLoggingHandler(h);
+   MediaStackAdapter::setRTCPEventLoggingHandler(h);
 }
 
 void

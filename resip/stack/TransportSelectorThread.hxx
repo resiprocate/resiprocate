@@ -52,6 +52,8 @@ class TransportSelectorThread : public ThreadIf
 
 } // namespace resip
 
+#undef RESIPROCATE_SUBSYSTEM
+
 #endif // include guard
 
 
