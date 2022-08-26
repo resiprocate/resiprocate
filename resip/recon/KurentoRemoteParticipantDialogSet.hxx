@@ -39,7 +39,8 @@ class KurentoRemoteParticipant;
 class KurentoRemoteParticipantDialogSet : public RemoteParticipantDialogSet
 {
 public:
-   KurentoRemoteParticipantDialogSet(KurentoConversationManager& kurentoConversationManager,
+   KurentoRemoteParticipantDialogSet(ConversationManager& conversationManager,
+                              KurentoConversationManager& kurentoConversationManager,
                               ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
                               std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 

@@ -17,12 +17,6 @@
 #include <rutil/Data.hxx>
 #include <rutil/Time.hxx>
 #include <resip/recon/ConversationManager.hxx>
-#ifdef USE_SIPXTAPI
-#include <resip/recon/SipXConversationManager.hxx>
-#endif
-#ifdef USE_KURENTO
-#include <resip/recon/KurentoConversationManager.hxx>
-#endif
 
 #include "reConServerConfig.hxx"
 #include "MyConversationManager.hxx"
@@ -94,11 +88,7 @@ class B2BCallManager : public MyConversationManager
 {
 public:
 
-#ifdef PREFER_KURENTO
-   B2BCallManager(const resip::Data& kurentoUri, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger = nullptr);
-#else
-   B2BCallManager(recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger = nullptr);
-#endif
+   B2BCallManager(const resip::Data& kurentoUri, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger = nullptr);
    ~B2BCallManager();
 
    virtual void init(MyUserAgent& ua);

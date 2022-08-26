@@ -37,7 +37,7 @@ namespace recon
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class RemoteParticipant : public IMParticipantBase, public virtual Participant, public resip::AppDialog
+class RemoteParticipant : public virtual Participant, public resip::AppDialog, public IMParticipantBase
 {
 public:
    // UAC
@@ -155,7 +155,9 @@ private:
    virtual void replaceWithParticipant(Participant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;
+protected:
    resip::InviteSessionHandle mInviteSessionHandle;
+private:
    resip::ClientSubscriptionHandle mReferSubscriptionHandle;
    RemoteParticipantDialogSet& mDialogSet;
    resip::DialogId mDialogId;
@@ -205,8 +207,9 @@ private:
    };
    PendingRequest mPendingRequest;
    std::unique_ptr<resip::SdpContents> mPendingOffer;
-
+protected:
    std::shared_ptr<resip::SdpContents> mLocalSdp;
+private:
    std::shared_ptr<resip::SdpContents> mRemoteSdp;
 };
 

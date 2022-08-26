@@ -36,7 +36,7 @@ RemoteIMSessionParticipant::RemoteIMSessionParticipant(ParticipantHandle partHan
                                      ConversationManager& conversationManager,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(partHandle, conversationManager),
+: Participant(partHandle, ConversationManager::ParticipantType_RemoteIMSession, conversationManager),
   RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet)
 {
    InfoLog(<< "RemoteIMSessionParticipant created (UAC), handle=" << mHandle);
@@ -46,7 +46,7 @@ RemoteIMSessionParticipant::RemoteIMSessionParticipant(ParticipantHandle partHan
 RemoteIMSessionParticipant::RemoteIMSessionParticipant(ConversationManager& conversationManager,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(conversationManager),
+: Participant(ConversationManager::ParticipantType_RemoteIMSession, conversationManager),
   RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet)
 {
    InfoLog(<< "RemoteIMSessionParticipant created (UAS or forked leg), handle=" << mHandle);
@@ -106,7 +106,7 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, Continuatio
    try
    {
       ConversationProfile* profile = getDialogSet().getConversationProfile().get();
-      assert(profile);
+      resip_assert(profile);
 
       answer = profile->sessionCaps();
 

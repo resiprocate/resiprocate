@@ -55,7 +55,7 @@ PyRouteProcessor::process(RequestContext &context)
    }
 
    SipMessage& msg = context.getOriginalRequest();
-   if(msg.method() != INVITE && msg.method() != MESSAGE && msg.method() != resip::BYE && msg.method() != resip::CANCEL)
+   if(msg.method() != INVITE && msg.method() != MESSAGE && msg.method() != resip::BYE && msg.method() != resip::CANCEL && msg.method() != resip::ACK)
    {
       // We only route INVITE and MESSAGE, otherwise we ignore
       return Processor::Continue;

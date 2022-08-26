@@ -220,37 +220,37 @@
     <None Include="testua_readme.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaAdapterLib\sipXmediaAdapterLib-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaAdapterLib\sipXmediaAdapterLib-msvc17.vcxproj">
       <Project>{9501c518-8693-42f3-86a4-39b14983ec6c}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\sipXmediaLib-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\sipXmediaLib-msvc17.vcxproj">
       <Project>{0ec8287a-481e-45dc-8f95-bad940ae1038}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plggsm\plggsm-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plggsm\plggsm-msvc17.vcxproj">
       <Project>{8ae1ab5c-9815-42d8-9a09-0b4f1e64b4bb}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgilbc\plgilbc-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgilbc\plgilbc-msvc17.vcxproj">
       <Project>{6442c7de-e500-4ba2-b821-98092f1edcaf}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgl16\plgl16-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgl16\plgl16-msvc17.vcxproj">
       <Project>{a9c94d26-c90d-4860-8195-56929e893710}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgopus\plgopus-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgopus\plgopus-msvc17.vcxproj">
       <Project>{b9c94d26-c90d-4860-8195-56929e893777}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgpcmapcmu\plgpcmapcmu-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgpcmapcmu\plgpcmapcmu-msvc17.vcxproj">
       <Project>{a9c94d26-c90d-4860-8195-56929e893757}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgspeex\plgspeex-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgspeex\plgspeex-msvc17.vcxproj">
       <Project>{4f7fda11-42a4-4556-a631-15aa785cd1c1}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgtones\plgtones-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgtones\plgtones-msvc17.vcxproj">
       <Project>{f3bca14e-f24d-4570-833e-8c20c4c393f7}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXportLib\sipXportLib-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXportLib\sipXportLib-msvc17.vcxproj">
       <Project>{14631055-9d3f-47e5-b6a7-16bfc0cc8091}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXsdpLib\sipXsdpLib-msvc16.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXsdpLib\sipXsdpLib-msvc17.vcxproj">
       <Project>{e1d81ea9-4ac3-4cf5-b600-090fd822b1f6}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\contrib\srtp\srtp_17_0.vcxproj">

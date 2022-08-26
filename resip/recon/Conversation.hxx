@@ -39,7 +39,8 @@ protected:
                 ConversationManager& conversationManager,
                 RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet 
                 ConversationHandle sharedMediaInterfaceConvHandle,
-                ConversationManager::AutoHoldMode autoHoldMode);
+                ConversationManager::AutoHoldMode autoHoldMode,
+                unsigned int maxParticipants = 0);
 public:
    virtual ~Conversation();
 
@@ -62,6 +63,8 @@ public:
    void destroy();
 
    ConversationHandle getHandle() { return mHandle; }
+   void setMaxParticipants(unsigned int maxParticipants) { mMaxParticipants = maxParticipants; };
+   unsigned int getMaxParticipants() const { return mMaxParticipants; };
 
 protected:
    friend class Participant;
@@ -111,6 +114,7 @@ private:
    unsigned int mNumRemoteIMParticipants;
    unsigned int mNumMediaParticipants;
    ConversationManager::AutoHoldMode mAutoHoldMode;
+   unsigned int mMaxParticipants;
 
    // sipX Media related members
    // Note: these are only set here if sipXConversationMediaInterfaceMode is used

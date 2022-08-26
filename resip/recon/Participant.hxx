@@ -24,13 +24,16 @@ class Participant
       typedef std::map<ConversationHandle,Conversation*> ConversationMap;
 
       Participant(ParticipantHandle partHandle,
+                  ConversationManager::ParticipantType participantType,
                   ConversationManager& conversationManager);  
 
-      Participant(ConversationManager& conversationManager);
+      Participant(ConversationManager::ParticipantType participantType,
+                  ConversationManager& conversationManager);
 
       virtual ~Participant();
 
       virtual ParticipantHandle getParticipantHandle() { return mHandle; }
+      virtual ConversationManager::ParticipantType getParticipantType() { return mType; }
       virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
       virtual void removeFromConversation(Conversation *conversation);
       virtual void unregisterFromAllConversations();
@@ -53,6 +56,7 @@ class Participant
 
    protected:
       ParticipantHandle mHandle;
+      ConversationManager::ParticipantType mType;
       ConversationManager &mConversationManager;
       ConversationMap mConversations;
 };

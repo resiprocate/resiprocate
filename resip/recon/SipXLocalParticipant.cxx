@@ -16,10 +16,11 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 SipXLocalParticipant::SipXLocalParticipant(ParticipantHandle partHandle,
-                                   SipXConversationManager& conversationManager)
-: Participant(partHandle, conversationManager),
+                                   ConversationManager& conversationManager,
+                                   SipXConversationManager& sipXConversationManager)
+: Participant(partHandle, ConversationManager::ParticipantType_Local, conversationManager),
   LocalParticipant(partHandle, conversationManager),
-  SipXParticipant(partHandle, conversationManager),
+  SipXParticipant(partHandle, ConversationManager::ParticipantType_Local, conversationManager, sipXConversationManager),
   mLocalPortOnBridge(-1)
 {
    InfoLog(<< "SipXLocalParticipant created, handle=" << mHandle);

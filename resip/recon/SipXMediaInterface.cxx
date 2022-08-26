@@ -29,7 +29,8 @@ SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager,
    mMediaResourceAllocations[MediaResourceParticipant::Tone].push_back(MediaResourceAllocationInfo(DEFAULT_TONE_GEN_RESOURCE_NAME));
    mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(DEFAULT_FROM_FILE_RESOURCE_NAME));  // Note:  File resource also tracks Cache type
    mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(DEFAULT_RECORDER_RESOURCE_NAME));
-   if (((SipXConversationManager*)&conversationManager)->extraPlayAndRecordResourcesEnabled())
+   SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(conversationManager.getMediaStackAdapter());
+   if (mediaStackAdapter.extraPlayAndRecordResourcesEnabled())
    {
       mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(SipXConversationManager::DEFAULT_FROM_FILE_2_RESOURCE_NAME));
       mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(SipXConversationManager::DEFAULT_RECORDER_2_RESOURCE_NAME));
@@ -39,7 +40,7 @@ SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager,
 OsStatus 
 SipXMediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle, FlowManagerSipXSocket* rtpSocket, FlowManagerSipXSocket* rtcpSocket, bool isMulticast)
 {
-   assert(mMediaInterface);
+   resip_assert(mMediaInterface);
    OsStatus ret = mMediaInterface->createConnection(connectionId, rtpSocket, rtcpSocket, isMulticast);
    updateConnectionIdToPartipantHandleMapping(connectionId, partHandle);
    return ret;
@@ -48,7 +49,7 @@ SipXMediaInterface::createConnection(int& connectionId, ParticipantHandle partHa
 OsStatus 
 SipXMediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle, const char* localAddress, int localPort)
 {
-   assert(mMediaInterface);
+   resip_assert(mMediaInterface);
    OsStatus ret = mMediaInterface->createConnection(connectionId, localAddress, localPort);
    updateConnectionIdToPartipantHandleMapping(connectionId, partHandle);
    return ret;
@@ -64,7 +65,7 @@ SipXMediaInterface::updateConnectionIdToPartipantHandleMapping(int connectionId,
 OsStatus 
 SipXMediaInterface::deleteConnection(int connectionId)
 {
-   assert(mMediaInterface);
+   resip_assert(mMediaInterface);
    OsStatus ret = mMediaInterface->deleteConnection(connectionId);
    {
       resip::Lock lock(mConnectionIdToParticipantHandleMapMutex);
@@ -97,7 +98,7 @@ SipXMediaInterface::getParticipantHandleForMediaResource(MediaResourceParticipan
    {
       if (it->mSipXResourceName == sipXResourceName)
       {
-         assert(it->mAllocatedParticipantHandle != 0);
+         resip_assert(it->mAllocatedParticipantHandle != 0);
          partHandle = it->mAllocatedParticipantHandle;
          break;
       }
@@ -113,7 +114,7 @@ std::list<SipXMediaInterface::MediaResourceAllocationInfo>& SipXMediaInterface::
       // Cache and File resources are the same sipX resource, track both under the File type
       resourceType = MediaResourceParticipant::File;
    }
-   assert(mMediaResourceAllocations.find(resourceType) != mMediaResourceAllocations.end());
+   resip_assert(mMediaResourceAllocations.find(resourceType) != mMediaResourceAllocations.end());
    return mMediaResourceAllocations[resourceType];
 }
 

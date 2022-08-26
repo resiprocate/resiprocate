@@ -50,7 +50,7 @@ AmIResponsible::process(RequestContext& context)
       target->rec().mReceivedFrom = context.getTopRouteFlowTuple();
       target->rec().mUseFlowRouting = true;
       context.getResponseContext().addTarget(std::move(target));
-        if (request.method() == resip::BYE || request.method() == resip::CANCEL || request.method() == resip::INVITE)
+        if (request.method() == resip::BYE || request.method() == resip::CANCEL || request.method() == resip::INVITE || request.method() == resip::ACK)
         {
            DebugLog(<< "isTopRouteFlowTupleSet is " << context.isTopRouteFlowTupleSet() << "; Handling case for method: " << request.method());
            return Processor::Continue;
@@ -139,7 +139,7 @@ AmIResponsible::process(RequestContext& context)
             }
          }
          
-         if (request.method() == resip::BYE || request.method() == resip::CANCEL || request.method() == resip::INVITE)
+         if (request.method() == resip::BYE || request.method() == resip::CANCEL || request.method() == resip::INVITE || request.method() == resip::ACK)
          {
              return Processor::Continue;
          }

@@ -9,6 +9,7 @@
 #include "UserAgent.hxx"
 #include "DtmfEvent.hxx"
 #include "ReconSubsystem.hxx"
+#include "MediaStackAdapter.hxx"
 
 #include <rutil/ResipAssert.h>
 #include <rutil/Log.hxx>
@@ -54,9 +55,9 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager, 
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet) :
-   IMParticipantBase(true /* prependSenderInfoToIMs? */),
-   Participant(partHandle, conversationManager),
+   Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
    AppDialog(dum),
+   IMParticipantBase(true /* prependSenderInfoToIMs? */),
    mDum(dum),
    mDialogSet(remoteParticipantDialogSet),
    mDialogId(Data::Empty, Data::Empty, Data::Empty),
@@ -75,9 +76,9 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
 RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager, 
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet) :
-   IMParticipantBase(false /* prependSenderInfoToIMs? */),
-   Participant(conversationManager),
+   Participant(ConversationManager::ParticipantType_Remote, conversationManager),
    AppDialog(dum),
+   IMParticipantBase(false /* prependSenderInfoToIMs? */),
    mDum(dum),
    mDialogSet(remoteParticipantDialogSet),
    mDialogId(Data::Empty, Data::Empty, Data::Empty),
@@ -864,7 +865,7 @@ RemoteParticipant::acceptPendingOODRefer()
                      mPendingOODReferSubHandle,  // Note will be invalid if refer no-sub, which is fine
                      &offer,
                      DialogUsageManager::None,  //EncryptionLevel
-                     0,     //Alternative Contents
+                     0,     // Alternative Contents
                      &mDialogSet);
             mDialogSet.sendInvite(std::move(invitemsg));
 
@@ -1523,7 +1524,7 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       else
       {
          // otherwise, create a normal media based RemoteParticipant
-         participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+         participantDialogSet = mConversationManager.getMediaStackAdapter().createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
       }
       RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
       participant->mReferringAppDialog = getHandle();
@@ -1576,7 +1577,7 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    else
    {
       // otherwise, create a normal media based RemoteParticipant
-      participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+      participantDialogSet = mConversationManager.getMediaStackAdapter().createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
    }
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
    participant->mReferringAppDialog = getHandle();
@@ -1683,7 +1684,7 @@ RemoteParticipant::onMessageFailure(InviteSessionHandle h, const SipMessage& msg
 {
    InfoLog(<< "onMessageFailure: handle=" << mHandle << ", " << msg.brief());
    auto failedMessage = h->getLastSentNITRequest();
-   assert(failedMessage->getContents() != nullptr);
+   resip_assert(failedMessage->getContents() != nullptr);
 
    std::unique_ptr<Contents> contents(failedMessage->getContents()->clone());
    if (mHandle) mConversationManager.onParticipantSendIMFailure(mHandle, msg, std::move(contents));

@@ -30,7 +30,8 @@ class SipXLocalParticipant : public virtual LocalParticipant, public virtual Sip
 {
    public:  
       SipXLocalParticipant(ParticipantHandle partHandle,
-                       SipXConversationManager& conversationManager);
+                       ConversationManager& conversationManager,
+                       SipXConversationManager& sipXConversationManager);
       virtual ~SipXLocalParticipant();
 
       virtual int getConnectionPortOnBridge();

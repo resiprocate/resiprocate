@@ -648,7 +648,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
       // .bwc. This handles all appropriate checking for whether
       // this is a response or an ACK.
-      std::unique_ptr<SendData> tryLater(make503(*message, getExpectedWaitForIncoming()/1000));
+      std::unique_ptr<SendData> tryLater(make503(*message, getExpectedWaitForIncoming()));
       if(tryLater.get())
       {
          send(std::move(tryLater));

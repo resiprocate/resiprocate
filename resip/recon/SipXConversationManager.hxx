@@ -17,6 +17,7 @@
 #include "HandleTypes.hxx"
 #include "ConversationManager.hxx"
 #include "SipXMediaInterface.hxx"
+#include "MediaStackAdapter.hxx"
 
 #include "reflow/FlowManager.hxx"
 
@@ -60,7 +61,7 @@ class RemoteParticipantDialogSet;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class SipXConversationManager : public ConversationManager
+class SipXConversationManager : public MediaStackAdapter
 {
 public:
 
@@ -125,9 +126,11 @@ public:
       sipXConversationMediaInterfaceMode
    } MediaInterfaceMode;
 
-   SipXConversationManager(bool localAudioEnabled = true, MediaInterfaceMode mediaInterfaceMode = sipXGlobalMediaInterfaceMode, bool enableExtraPlayAndRecordResources = false);
-   SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool enableExtraPlayAndRecordResources);
+   SipXConversationManager(ConversationManager& conversationManager, bool localAudioEnabled = true, MediaInterfaceMode mediaInterfaceMode = sipXGlobalMediaInterfaceMode, bool enableExtraPlayAndRecordResources = false);
+   SipXConversationManager(ConversationManager& conversationManager, bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool enableExtraPlayAndRecordResources);
    virtual ~SipXConversationManager();
+
+   virtual void conversationManagerReady(ConversationManager* conversationManager) override;
 
    ///////////////////////////////////////////////////////////////////////
    // Conversation methods  //////////////////////////////////////////////
@@ -160,21 +163,11 @@ public:
 
      @return A handle to the newly created conversation.
    */
-   virtual ConversationHandle createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, AutoHoldMode autoHoldMode = AutoHoldEnabled);
+   virtual ConversationHandle createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, ConversationManager::AutoHoldMode autoHoldMode = ConversationManager::AutoHoldEnabled);
 
    ///////////////////////////////////////////////////////////////////////
    // Participant methods  ///////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////
-
-   /**
-     Logs a multiline representation of the current state
-     of the mixing matrix.
-
-     @param convHandle - if sipXGlobalMediaInterfaceMode is used then 0
-                         is the only valid value.  Otherwise you must
-                         specify a specific conversation to view.
-   */
-   virtual void outputBridgeMatrix(ConversationHandle convHandle = 0) override;
 
    /**
      Builds a session capabilties SDPContents based on the passed in ipaddress
@@ -192,10 +185,10 @@ public:
    virtual void setSpeakerVolume(int volume);
    virtual void setMicrophoneGain(int gain);
    virtual void muteMicrophone(bool mute);
-   virtual void enableEchoCancel(bool enable);       
-   virtual void enableAutoGainControl(bool enable);  
-   virtual void enableNoiseReduction(bool enable);   
-   virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; } 
+   virtual void enableEchoCancel(bool enable);
+   virtual void enableAutoGainControl(bool enable);
+   virtual void enableNoiseReduction(bool enable);
+   virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; }
    virtual std::shared_ptr<RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
 
    virtual Conversation *createConversationInstance(ConversationHandle handle,

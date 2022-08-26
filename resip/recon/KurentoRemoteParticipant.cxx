@@ -60,31 +60,37 @@ using namespace std;
 
 // UAC
 KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
+                                     ConversationManager& conversationManager,
                                      KurentoConversationManager& kurentoConversationManager,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(partHandle, kurentoConversationManager),
-  RemoteParticipant(partHandle, kurentoConversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(partHandle, kurentoConversationManager),
+: Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
+  RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet),
+  KurentoParticipant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager, kurentoConversationManager),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
-  mWSAcceptsKeyframeRequests(true)
+  mWSAcceptsKeyframeRequests(true),
+  mLastRemoteSdp(0),
+  mWaitingAnswer(false)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAC), handle=" << mHandle);
 }
 
 // UAS - or forked leg
-KurentoRemoteParticipant::KurentoRemoteParticipant(KurentoConversationManager& kurentoConversationManager,
+KurentoRemoteParticipant::KurentoRemoteParticipant(ConversationManager& conversationManager,
+                                     KurentoConversationManager& kurentoConversationManager,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(kurentoConversationManager),
-  RemoteParticipant(kurentoConversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(kurentoConversationManager),
+: Participant(ConversationManager::ParticipantType_Remote, conversationManager),
+  RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet),
+  KurentoParticipant(ConversationManager::ParticipantType_Remote, conversationManager, kurentoConversationManager),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
-  mWSAcceptsKeyframeRequests(true)
+  mWSAcceptsKeyframeRequests(true),
+  mLastRemoteSdp(0),
+  mWaitingAnswer(false)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -133,88 +139,101 @@ KurentoRemoteParticipant::newEndpoint()
 void
 KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 {
-   // FIXME Kurento - include video, SRTP, WebRTC?
+    // FIXME Kurento - include video, SRTP, WebRTC?
 
-   try
-   {
-      bool endpointExists = true;
-      bool isWebRTC = false; // FIXME - define per RemoteParticipant
-      if(!mEndpoint)
-      {
-         endpointExists = false;
-         if(isWebRTC)
-         {
-            // delay while ICE gathers candidates from STUN and TURN
-            mIceGatheringDone = false;
-            mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoConversationManager.mPipeline));
-         }
-         else
-         {
-            mEndpoint.reset(newEndpoint());
-         }
-      }
-
-      // FIXME - add listeners for Kurento events
-
-      kurento::ContinuationString cOnOfferReady = [this, holdSdp, c](const std::string& offer){
-         StackLog(<<"offer FROM Kurento: " << offer);
-         HeaderFieldValue hfv(offer.data(), offer.size());
-         Mime type("application", "sdp");
-         std::unique_ptr<SdpContents> _offer(new SdpContents(hfv, type));
-         _offer->session().transformLocalHold(holdSdp);
-         setProposedSdp(*_offer);
-         c(true, std::move(_offer));
-      };
-
-      kurento::ContinuationVoid cConnected = [this, isWebRTC, c, cOnOfferReady]{
-         mEndpoint->generateOffer([this, isWebRTC, c, cOnOfferReady](const std::string& offer){
+    try
+    {
+        bool endpointExists = true;
+        bool isWebRTC = false; // FIXME - define per RemoteParticipant
+        if(!mEndpoint)
+        {
+            endpointExists = false;
             if(isWebRTC)
             {
-               std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
-
-               std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
-                        std::make_shared<kurento::EventContinuation>([this, cOnOfferReady](std::shared_ptr<kurento::Event> event){
-                  mIceGatheringDone = true;
-                  mEndpoint->getLocalSessionDescriptor(cOnOfferReady);
-               });
-               webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [this](){});
-
-               webRtc->gatherCandidates([]{
-                        // FIXME - handle the case where it fails
-                        // on success, we continue from the IceGatheringDone event handler
-               }); // gatherCandidates
+                // delay while ICE gathers candidates from STUN and TURN
+                mIceGatheringDone = false;
+                mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoConversationManager.mPipeline));
             }
             else
             {
-
-               cOnOfferReady(offer);
+                mEndpoint.reset(newEndpoint());
             }
-         }); // generateOffer
-      };
+        }
 
-      if(endpointExists)
-      {
-         std::ostringstream offerMangledBuf;
-         offerMangledBuf << *getLocalSdp();
-         std::shared_ptr<std::string> offerMangledStr = std::make_shared<std::string>(offerMangledBuf.str());
-         cOnOfferReady(*offerMangledStr);
-      }
-      else{
-         mEndpoint->create([this, cConnected]{
-            // Note: FIXME this will be done later in the call to
-            //       waitingMode() as that method knows whether
-            //       to do loopback, a PlayerEndpoint or something else
-            //mEndpoint->connect(cConnected, *mEndpoint); // connect
-            cConnected();
-         }); // create
-      }
+        // FIXME - add listeners for Kurento events
 
-   }
-   catch(exception& e)
-   {
-      ErrLog(<<"something went wrong: " << e.what());
-      c(false, nullptr);
-   }
+        kurento::ContinuationString cOnOfferReady = [this, holdSdp, c](const std::string& offer){
+            StackLog(<<"offer FROM Kurento: " << offer);
+            HeaderFieldValue hfv(offer.data(), offer.size());
+            Mime type("application", "sdp");
+            std::unique_ptr<SdpContents> _offer(new SdpContents(hfv, type));
+            _offer->session().transformLocalHold(holdSdp);
+            setProposedSdp(*_offer);
+            c(true, std::move(_offer));
+        };
+
+        kurento::ContinuationVoid cConnected = [this, isWebRTC, c, cOnOfferReady]{
+            mEndpoint->generateOffer([this, isWebRTC, c, cOnOfferReady](const std::string& offer){
+                mWaitingAnswer = true;
+                if(isWebRTC)
+                {
+                    std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
+
+                    std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
+                            std::make_shared<kurento::EventContinuation>([this, cOnOfferReady](std::shared_ptr<kurento::Event> event){
+                                mIceGatheringDone = true;
+                                mEndpoint->getLocalSessionDescriptor(cOnOfferReady);
+                            });
+                    webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [this](){});
+
+                    webRtc->gatherCandidates([]{
+                        // FIXME - handle the case where it fails
+                        // on success, we continue from the IceGatheringDone event handler
+                    }); // gatherCandidates
+                }
+                else
+                {
+                    cOnOfferReady(offer);
+                }
+            }); // generateOffer
+        };
+
+        if(endpointExists)
+        {
+            if(!mReuseSdpAnswer)
+            {
+                cConnected();
+            }
+            else
+            {
+                std::ostringstream offerMangledBuf;
+                getLocalSdp()->session().transformLocalHold(isHolding());
+                offerMangledBuf << *getLocalSdp();
+                std::shared_ptr<std::string> offerMangledStr = std::make_shared<std::string>(offerMangledBuf.str());
+                cOnOfferReady(*offerMangledStr);
+            }
+        }
+        else{
+            mEndpoint->create([this, cConnected]{
+                // Note: FIXME this will be done later in the call to
+                //       waitingMode() as that method knows whether
+                //       to do loopback, a PlayerEndpoint or something else
+                //mEndpoint->connect(cConnected, *mEndpoint); // connect
+
+                // FIXME event listeners
+                // FIXME mplayer
+                // FIXME passthrough
+
+                cConnected();
+            }); // create
+        }
+
+    }
+    catch(exception& e)
+    {
+        ErrLog(<<"something went wrong: " << e.what());
+        c(false, nullptr);
+    }
 }
 
 AsyncBool
@@ -398,6 +417,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
       }
       else
       {
+         mPassThrough.reset(new kurento::PassThroughElement(mKurentoConversationManager.mPipeline));
          mEndpoint->create([this, elError, elEventDebug, elEventKeyframeRequired, cConnected]{
             mEndpoint->addErrorListener(elError, [this](){});
             mEndpoint->addConnectionStateChangedListener(elEventDebug, [this](){});
@@ -441,11 +461,51 @@ string KurentoRemoteParticipant::replaceParameter(string fmtpString, string para
 void
 KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
 {
-   // FIXME Kurento - implement, may need to break up this method into multiple parts
+    // FIXME Kurento - implement, may need to break up this method into multiple parts
+    StackLog(<<"adjustRTPStreams");
 
-   // FIXME Kurento - sometimes true
-   setRemoteHold(false);
+    std::shared_ptr<SdpContents> localSdp = getLocalSdp();
+    resip_assert(localSdp);
 
+    std::shared_ptr<SdpContents> remoteSdp = getRemoteSdp();
+    bool remoteSdpChanged = remoteSdp.get() != mLastRemoteSdp;
+    mLastRemoteSdp = remoteSdp.get();
+    if(remoteSdp)
+    {
+        Data remoteDirection = remoteSdp->session().getDirection();
+        if(remoteDirection == "inactive" || remoteDirection == "sendonly")
+        {
+            setRemoteHold(true);
+        }
+        else
+        {
+            setRemoteHold(false);
+        }
+        if(remoteSdpChanged && mWaitingAnswer)
+        {
+            // FIXME - maybe this should not be in adjustRTPStreams
+            DebugLog(<<"remoteSdp has changed, sending to Kurento");
+            mWaitingAnswer = false;
+            std::ostringstream answerBuf;
+
+            answerBuf << *remoteSdp;
+            DebugLog(<<answerBuf.str());
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            mEndpoint->processOffer([this](const std::string updatedOffer){
+                // FIXME - use updatedOffer
+                WarningLog(<<"Kurento has processed the peer's SDP answer");
+                StackLog(<<"updatedOffer FROM Kurento: " << updatedOffer);
+                HeaderFieldValue hfv(updatedOffer.data(), updatedOffer.size());
+                Mime type("application", "sdp");
+                std::unique_ptr<SdpContents> _updatedOffer(new SdpContents(hfv, type));
+                _updatedOffer->session().transformLocalHold(isHolding());
+                _updatedOffer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", 2048));
+                setLocalSdp(*_updatedOffer);
+                mInviteSessionHandle->provideOffer(*mLocalSdp);
+                //c(true, std::move(_updatedOffer));
+            }, answerBuf.str());
+        }
+    }
 }
 
 void

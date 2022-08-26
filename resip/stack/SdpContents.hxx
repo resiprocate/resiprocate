@@ -1001,6 +1001,14 @@ class SdpContents : public Contents
               *
               * @return set of label attribute values, if any
               **/
+
+          /** @brief examine direction for streams of given types
+            *
+            * @param types
+            * @params protocolTypes
+            */
+          const Data getDirection(const std::set<Data> types = {},
+                                  const std::set<Data> protocolTypes = {}) const;
             std::set<Data> getMediaStreamLabels() const;
             /** @brief determine if the SDP appears to conform to WebRTC
               *

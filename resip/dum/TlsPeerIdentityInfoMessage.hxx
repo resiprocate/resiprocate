@@ -25,7 +25,6 @@ class TlsPeerIdentityInfoMessage : public resip::DumFeatureMessage
       const bool authorized() const{return mAuthorized;}
       bool& authorized(){return mAuthorized;}
 
-      virtual resip::Data brief() const;
       virtual resip::Message* clone() const;
 
       virtual std::ostream& encode(std::ostream& strm) const;

@@ -53,11 +53,13 @@ class SipXRemoteParticipant : public virtual RemoteParticipant, public virtual S
 {
 public:
    SipXRemoteParticipant(ParticipantHandle partHandle,   // UAC
-                     SipXConversationManager& conversationManager,
+                     ConversationManager& conversationManager,
+                     SipXConversationManager& sipXConversationManager,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   SipXRemoteParticipant(SipXConversationManager& conversationManager,            // UAS or forked leg
+   SipXRemoteParticipant(ConversationManager& conversationManager,
+                     SipXConversationManager& sipXConversationManager,            // UAS or forked leg
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
@@ -76,9 +78,10 @@ public:
 protected:
    virtual bool mediaStackPortAvailable();
 
-   virtual SipXRemoteParticipantDialogSet& getSipXDialogSet() { return dynamic_cast<SipXRemoteParticipantDialogSet&>(getDialogSet()); };
+   // Note:  Returns non-null the majority of the time, can return null on object destruction
+   virtual SipXRemoteParticipantDialogSet* getSipXDialogSet() { return dynamic_cast<SipXRemoteParticipantDialogSet*>(&getDialogSet()); }
 
-private:       
+private:
    bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
    resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
 };

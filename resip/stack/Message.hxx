@@ -32,7 +32,7 @@ class Message
       };
 
       /// return a facet for brief encoding of message
-      Brief brief() const;
+      virtual Brief brief() const;
       virtual Message* clone() const = 0;
       /// output the entire message to stream
       virtual EncodeStream& encode(EncodeStream& strm) const = 0;

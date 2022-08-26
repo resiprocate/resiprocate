@@ -1,0 +1,28 @@
+#!/bin/bash
+set -e
+
+if ! which ccache ;
+then
+  exit 0
+fi
+
+if ! which distcc ;
+then
+  exit 0
+fi
+
+DISTCC_CC=`readlink -f \`dirname $0\``/distcc-gcc
+cat << EOF > ${DISTCC_CC}
+#!/bin/bash
+ccache distcc "\$@"
+EOF
+chmod a+x ${DISTCC_CC}
+
+DISTCC_CXX=`readlink -f \`dirname $0\``/distcc-g++
+cat << EOF > ${DISTCC_CXX}
+#!/bin/bash
+ccache distcc g++ "\$@"
+EOF
+chmod a+x ${DISTCC_CXX}
+
+DISTCC="CC=${DISTCC_CC} CXX=${DISTCC_CXX}"

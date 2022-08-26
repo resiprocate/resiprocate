@@ -22,6 +22,9 @@
 #include "rutil/Subsystem.hxx"
 #include "rutil/SysLogStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#ifdef ENABLE_LOG_REPOSITORY_DETAILS
+#include "rutil/Repository.hxx"
+#endif
 
 #ifdef USE_FMT
 #include <fmt/format.h>
@@ -267,76 +270,88 @@ Log::initialize(Type type, Level level, const Data& appName,
                 MessageStructure messageStructure,
                 const Data& instanceName)
 {
-   Lock lock(_mutex);
-   mDefaultLoggerData.reset();   
+   {
+      Lock lock(_mutex);
+      mDefaultLoggerData.reset();   
 
-   mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure, instanceName);
+      mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure, instanceName);
 
-   ParseBuffer pb(appName);
-   pb.skipToEnd();
+      ParseBuffer pb(appName);
+      pb.skipToEnd();
 #ifdef _WIN32
-   pb.skipBackToChar('\\');
+      pb.skipBackToChar('\\');
 #else
-   pb.skipBackToChar('/');
+      pb.skipBackToChar('/');
 #endif
-   mAppName = pb.position();
+      mAppName = pb.position();
 
-   mInstanceName = instanceName;
+      mInstanceName = instanceName;
 
 #ifndef WIN32
-   if (!syslogFacilityName.empty())
-   {
-      mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
-      if(mSyslogFacility == -1)
+      if (!syslogFacilityName.empty())
       {
-         mSyslogFacility = LOG_DAEMON;
-         if(type == Log::Syslog)
+         mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
+         if(mSyslogFacility == -1)
          {
-            syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
+            mSyslogFacility = LOG_DAEMON;
+            if(type == Log::Syslog)
+            {
+               syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
+            }
          }
       }
-   }
 #else
-   if (type == Syslog)
-   {
-       std::cerr << "syslog not supported on windows, using cout!" << std::endl;
-       type = Cout;
-   }
+      if (type == Syslog)
+      {
+         std::cerr << "syslog not supported on windows, using cout!" << std::endl;
+         type = Cout;
+      }
 #endif
 
-   char buffer[1024];  
-   buffer[1023] = '\0';
-   if(gethostname(buffer, sizeof(buffer)) == -1)
-   {
-      mHostname = "?";
-   }
-   else
-   {
-      mHostname = buffer;
-   }
-
-   // Note: for Windows users, you must call initNetwork to initialize WinSock before calling 
-   //       Log::initialize in order for getaddrinfo to be successful
-   {
-      struct addrinfo hints;
-      struct addrinfo* info = nullptr;
-      int gai_result;
-
-      memset (&hints, 0, sizeof (hints));
-      hints.ai_family = AF_UNSPEC;    /*either IPV4 or IPV6 */
-      hints.ai_socktype = SOCK_STREAM;
-      hints.ai_flags = AI_CANONNAME;
-
-      if ((gai_result = getaddrinfo (buffer, 0, &hints, &info)) != 0) {
-         mFqdn = mHostname;
-      } else if (info == NULL) {
-         mFqdn = mHostname;
-      } else {
-         mFqdn = info->ai_canonname;
+      char buffer[1024];  
+      buffer[1023] = '\0';
+      if(gethostname(buffer, sizeof(buffer)) == -1)
+      {
+         mHostname = "?";
+      }
+      else
+      {
+         mHostname = buffer;
       }
 
-      freeaddrinfo (info);
+      // Note: for Windows users, you must call initNetwork to initialize WinSock before calling 
+      //       Log::initialize in order for getaddrinfo to be successful
+      {
+         struct addrinfo hints;
+         struct addrinfo* info = nullptr;
+         int gai_result;
+
+         memset (&hints, 0, sizeof (hints));
+         hints.ai_family = AF_UNSPEC;    /*either IPV4 or IPV6 */
+         hints.ai_socktype = SOCK_STREAM;
+         hints.ai_flags = AI_CANONNAME;
+
+         if ((gai_result = getaddrinfo (buffer, 0, &hints, &info)) != 0) {
+            mFqdn = mHostname;
+         } else if (info == NULL) {
+            mFqdn = mHostname;
+         } else {
+            mFqdn = info->ai_canonname;
+         }
+
+         freeaddrinfo (info);
+      }
+
    }
+#ifdef ENABLE_LOG_REPOSITORY_DETAILS
+   GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version=" << VERSION << " git-commit=" << RESIPROCATE_GIT_ID << " git-branch=" << RESIPROCATE_BRANCH_NAME);
+#else
+#ifdef VERSION
+   GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version=" << VERSION << " git repository details unknown");
+#else
+   GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version and git repository details unknown");
+#endif
+#endif
 }
 
 void
