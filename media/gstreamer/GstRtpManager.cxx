@@ -579,9 +579,12 @@ GstRtpSession::createRtpBinOuter()
          /*RefPtr<Gst::Bin> _enc = *enc;
          _enc->link_pads("src", rtpBin, s.str());*/
          //RefPtr<Pad> mediaSink = rtpBin->create_compatible_pad(pad, caps);
-         string padName = makePadName("send_rtp_sink_", streamId);
-         RefPtr<Pad> mediaSink = rtpBin->get_request_pad(padName);
-         RefPtr<Pad> ghostSink = GhostPad::create(mediaSink, padName);
+         // needs to be consistent with webrtcbin naming convention
+         // rather than rtcbin naming conventions
+         string rtcBinPadName = makePadName("send_rtp_sink_", streamId);
+         string webrtcBinPadName = makePadName("sink_", streamId);
+         RefPtr<Pad> mediaSink = rtpBin->get_request_pad(rtcBinPadName);
+         RefPtr<Pad> ghostSink = GhostPad::create(mediaSink, webrtcBinPadName);
          mOuterBin->add_pad(ghostSink);
 
       }

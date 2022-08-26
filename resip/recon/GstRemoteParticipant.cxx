@@ -70,13 +70,14 @@ using Glib::RefPtr;
  */
 
 
+// These are currently used as defaults for creating an SDP offer for WebRTC
 #define GST_RTP_CAPS_OPUS "application/x-rtp,media=audio,encoding-name=OPUS,payload=96"
 #define GST_RTP_CAPS_VP8 "application/x-rtp,media=video,encoding-name=VP8,payload=97"
 
 // used with g_signal_connect
 void voidStub(GstElement * webrtcbin, void *u)
 {
-   StackLog(<<"stub invoked");
+   StackLog(<<"voidStub invoked");
    std::function<void()> &func = *static_cast<std::function<void()>*>(u);
    func();
 }
@@ -88,6 +89,7 @@ void voidStub(GstElement * webrtcbin, void *u)
 }*/
 
 void promise_stub(GstPromise* promise, void *u) {
+  StackLog(<<"promise_stub invoked");
   // context is static_cast<void*>(&f) below. We reverse the cast to
   // void* and call the std::function object.
   auto _u = static_cast<std::function<void(GstPromise* , gpointer)>*>(u);
@@ -189,45 +191,60 @@ GstRemoteParticipant::applyBridgeMixWeights(Conversation* removedConversation)
    // FIXME Gst - do we need to implement this?
 }
 
-/*gstreamer::BaseRtpEndpoint*
-GstRemoteParticipant::newEndpoint()
+void
+GstRemoteParticipant::linkOutgoingPipeline(unsigned int streamId, RefPtr<Bin> bin, const Glib::RefPtr<Gst::Caps> caps)
 {
-   return mSipRtpEndpoint ?
-            dynamic_cast<gstreamer::BaseRtpEndpoint*>(new gstreamer::SipRtpEndpoint(mGstMediaStackAdapter.mPipeline)) :
-            dynamic_cast<gstreamer::BaseRtpEndpoint*>(new gstreamer::RtpEndpoint(mGstMediaStackAdapter.mPipeline));
-}*/
+   RefPtr<Pad> src = bin->get_static_pad("src");
 
-/*bool
-GstRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
-{
-   if(mEndpoint)
-   {
-      return false;
-   }
+   RefPtr<Caps> padCaps = Caps::create_from_string("application/x-rtp");
+   RefPtr<Gst::PadTemplate> tmpl = PadTemplate::create("send_rtp_sink_%u", PAD_SINK, PAD_REQUEST, padCaps);
+   ostringstream padName;
+   padName << "sink_" << streamId;
+   DebugLog(<< "linking to " << padName.str());
+   //RefPtr<Pad> binSink = mRtpTransportElement->create_compatible_pad(queueSrc, caps);
+   //RefPtr<Pad> binSink = mRtpTransportElement->get_request_pad(padName.str());
+   //RefPtr<Caps> padCaps2 = Caps::create_from_string("application/x-rtp");
+   //RefPtr<Pad> binSink = mRtpTransportElement->request_pad(tmpl, padName.str(), padCaps2);
+   // is a ghost pad, should have been created already
+
+   // it is static_pad on the rtpbin wrapper
+   RefPtr<Pad> binSink;
+   bool isWebRTC = isWebRTCSession();
    if(isWebRTC)
    {
-      // delay while ICE gathers candidates from STUN and TURN
-      mIceGatheringDone = false;
-      mEndpoint.reset(new gstreamer::WebRtcEndpoint(mGstMediaStackAdapter.mPipeline));
+      // and it is a request pad on the webrtcbin
+      binSink = mRtpTransportElement->create_compatible_pad(src, caps);
    }
    else
    {
-      mIceGatheringDone = true;
-      mEndpoint.reset(newEndpoint());
+      binSink = mRtpTransportElement->get_static_pad(padName.str());
    }
-
-   //mMultiqueue.reset(new gstreamer::GStreamerFilter(mGstMediaStackAdapter.mPipeline, "videoconvert"));
-   //mMultiqueue.reset(new gstreamer::PassThroughElement(mGstMediaStackAdapter.mPipeline));
-   std::shared_ptr<resip::ConfigParse> cfg = mConversationManager.getConfig();
-   if(cfg)
+   if(!binSink)
    {
-      const Data& holdVideo = mConversationManager.getConfig()->getConfigData("HoldVideo", "file:///tmp/test.mp4", true);
-      mPlayer.reset(new gstreamer::PlayerEndpoint(mGstMediaStackAdapter.mPipeline, holdVideo.c_str()));
+      CritLog(<<"failed to get request pad " << padName.str());
+      resip_assert(0);
    }
-   mPassThrough.reset(new gstreamer::PassThroughElement(mGstMediaStackAdapter.mPipeline));
 
-   return true;
-}*/
+   src->link(binSink);
+
+   debugGraph();
+}
+
+void
+sendCapsEvent(RefPtr<Bin> bin, RefPtr<Caps> caps)
+{
+   // webrtcbin seems to expect this
+   // https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1055#note_631630
+
+   // send RTP caps into the sink towards the webrtcbin transport bin
+   RefPtr<Gst::EventCaps> capsEvent = Gst::EventCaps::create(caps);
+   RefPtr<Gst::Element> queueOut = RefPtr<Element>::cast_dynamic(bin->get_child("queueOut"));
+   queueOut->get_static_pad("sink")->send_event(capsEvent);
+
+   // send audio/raw-something caps into the bin
+   //RefPtr<Gst::EventCaps> capsEvent = Gst::EventCaps::create(___caps);
+   //sink->send_event(capsEvent);
+}
 
 bool
 GstRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
@@ -250,7 +267,7 @@ GstRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
    mPipeline = Gst::Pipeline::create();
    if(isWebRTC)
    {
-      mWebRTCElement = Gst::ElementFactory::create_element("webrtcbin");
+      mRtpTransportElement = Gst::ElementFactory::create_element("webrtcbin");
 
       // FIXME: use a glibmm-style property
       // FIXME: per-peer bundle-policy
@@ -262,7 +279,7 @@ GstRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
       GValue val = G_VALUE_INIT;
       g_value_init (&val, G_TYPE_ENUM);
       g_value_set_enum (&val, bundlePolicy);
-      g_object_set_property(G_OBJECT(mWebRTCElement->gobj()), "bundle-policy", &val);
+      g_object_set_property(G_OBJECT(mRtpTransportElement->gobj()), "bundle-policy", &val);
 
       std::shared_ptr<resip::ConfigParse> cfg = mConversationManager.getConfig();
       if(cfg)
@@ -275,44 +292,87 @@ GstRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
          {
             Data stunUrl = "stun://" + stunServerName + ":" + stunServerPort;
             InfoLog(<<"using STUN config: " << stunUrl);
-            mWebRTCElement->property<Glib::ustring>("stun-server", stunUrl.c_str());
+            mRtpTransportElement->property<Glib::ustring>("stun-server", stunUrl.c_str());
          }
+//#define GST_TURN_USER "test"   // FIXME - need to read this from the config file
+//#define GST_TURN_PASSWORD ""
+#ifdef GST_TURN_PASSWORD
+         else
+         {
+            ostringstream u;
+            u << "turn://"
+              << GST_TURN_USER
+              << ":"
+              << GST_TURN_PASSWORD
+              << "@195.8.117.61";  // FIXME read from config
+            Glib::ustring turnUrl = u.str();
+            mRtpTransportElement->property<Glib::ustring>("turn-server", turnUrl);
+            InfoLog(<<"using TURN config: " << turnUrl); // FIXME security - logs password
+
+         }
+#endif
       }
    }
    else
    {
-      //mWebRTCElement = Gst::ElementFactory::create_element("rtpbin");
-      mWebRTCElement = mRtpSession->createRtpBinOuter();
-
-      // FIXME - create UDP source, sink, etc
+      mRtpTransportElement = mRtpSession->createRtpBinOuter();
    }
 
-   mPipeline->add(mWebRTCElement);
+   mPipeline->add(mRtpTransportElement);
 
    // need to create all sink pads on the webrtcbin before it can be used
+
+   // when using webrtcbin we can't go straight into loopback, it looks
+   // like we need to create some other source elements and put some caps events
+   // and maybe some media through the pipeline before getting the event
+   // on-negotiation-needed and completing the webrtcbin setup
+   bool loopbackMode = !isWebRTC;
 
    //RefPtr<Caps> mCapsAudio = Gst::Caps::create_from_string(GST_RTP_CAPS_OPUS);
    if(mCapsAudio)
    {
-      createOutgoingPipeline(0, mCapsAudio); // FIXME streamId
+      RefPtr<Bin> bin = createOutgoingPipeline(mCapsAudio);
+      mPipeline->add(bin);
+      linkOutgoingPipeline(0, bin, mCapsAudio); // FIXME streamId
+      if(loopbackMode)
+      {
+         sendCapsEvent(bin, mCapsAudio);
+      }
+      else
+      {
+         RefPtr<Element> testSrc = Parse::create_bin("audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample", true);
+         resip_assert(testSrc);
+         mPipeline->add(testSrc);
+         testSrc->link(bin);
+      }
    }
 
    //RefPtr<Caps> mCapsVideo = Gst::Caps::create_from_string(GST_RTP_CAPS_VP8);
    if(mCapsVideo)
    {
-      createOutgoingPipeline(1, mCapsVideo); // FIXME streamId
+      RefPtr<Bin> bin = createOutgoingPipeline(mCapsVideo);
+      mPipeline->add(bin);
+      linkOutgoingPipeline(1, bin, mCapsVideo); // FIXME streamId
+      if(loopbackMode)
+      {
+         sendCapsEvent(bin, mCapsVideo);
+      }
+      else
+      {
+         RefPtr<Element> testSrc = Parse::create_bin("videotestsrc is-live=true pattern=ball ! videoconvert", true);
+         resip_assert(testSrc);
+         mPipeline->add(testSrc);
+         testSrc->link(bin);
+      }
    }
 
    // FIXME
    RefPtr<Bus> bus = mPipeline->get_bus();
    bus->add_watch(sigc::mem_fun(*this, &GstRemoteParticipant::onGstBusMessage));
 
-   DebugLog(<<"mPipeline and mWebRTCElement created");
+   DebugLog(<<"mPipeline and mRtpTransportElement created");
 
    debugGraph();
-
-   // FIXME - should we do this later?
-   mPipeline->set_state(STATE_PLAYING);
 
    return true;
 }
@@ -399,7 +459,7 @@ GstRemoteParticipant::getKeyForStream(const RefPtr<Caps>& caps) const
 
 // FIXME - remove this, it is a temporary hack until
 // the code is consolidated in GstRtpManager
-Data deduceKeyForPadName(Glib::ustring padName)
+Data deduceKeyForPadName(const Glib::ustring padName)
 {
    StackLog(<<"trying to extract pt from pad name");
    std::regex r("recv_rtp_src_(\\d+)_(\\d+)_(\\d+)");
@@ -423,12 +483,32 @@ Data deduceKeyForPadName(Glib::ustring padName)
          break;
       }
    }
-   else
+
+   r = "src_(\\d+)";
+   if (std::regex_search(s.begin(), s.end(), match, r))
    {
-      WarningLog(<<"pad name didn't match regex");
-      resip_assert(0);
+      unsigned int srcId = atoi(match[1].str().c_str());
+      StackLog(<<"found srcId: " << srcId);
+      switch(srcId)
+      {
+      case 0: return "audio";
+      case 1: return "video";
+      default:
+         ErrLog(<<"unsupported srcId value: " << srcId);
+         resip_assert(0);
+      }
    }
+
+   WarningLog(<<"pad name didn't match regex");
+   resip_assert(0);
    return "";
+}
+
+bool
+GstRemoteParticipant::isWebRTCSession() const
+{
+   // FIXME - find a better way to do this
+   return mRtpTransportElement->get_name() == "webrtcbin0";
 }
 
 RefPtr<Pad>
@@ -454,24 +534,54 @@ GstRemoteParticipant::createIncomingPipeline(RefPtr<Pad> pad)
          }
          else
          {
-            if(key == "video")
+            bool loopback = !isWebRTCSession();
+
+            RefPtr<EncodeEntry> enc = _enc->second;
+
+            RefPtr<Pad> sink = enc->get_static_pad("sink");
+            if(sink->is_linked())
             {
-               RefPtr<Gst::VideoConvert> convert = Gst::VideoConvert::create();
-               mPipeline->add(convert);
-               RefPtr<EncodeEntry> enc = _enc->second;
-               convert->link(enc);
-               pad->link(convert->get_static_pad("sink"));
+               StackLog(<<"unlinking existing src");
+               RefPtr<Pad> src = sink->get_peer();
+               if(src->unlink(sink))
+               {
+                  loopback = true;
+
+                  // FIXME - destroy the unlinked test source
+
+               }
+               else
+               {
+                  ErrLog(<<"failed to unlink existing src");
+                  resip_assert(0);
+               }
+            }
+
+            if(loopback)
+            {
+               if(key == "video")
+               {
+                  RefPtr<Gst::VideoConvert> convert = Gst::VideoConvert::create();
+                  mPipeline->add(convert);
+                  convert->link(enc);
+                  pad->link(convert->get_static_pad("sink"));
+                  convert->sync_state_with_parent();
+               }
+               else
+               {
+                  pad->link(sink);
+               }
+               enc->sync_state_with_parent();
+
+               // FIXME - here we just loop the incoming to outgoing,
+               //         but we should do that in the Conversation class instead
+               DebugLog(<<"completed connection from incoming to outgoing stream");
             }
             else
             {
-               RefPtr<EncodeEntry> enc = _enc->second;
-               pad->link(enc->get_static_pad("sink"));
+               // FIXME - disconnect the test sources and do the loopback
+               ErrLog(<<"not doing loopback for WebRTC");
             }
-            mPipeline->set_state(STATE_PLAYING);
-
-            // FIXME - here we just loop the incoming to outgoing,
-            //         but we should do that in the Conversation class instead
-            DebugLog(<<"completed connection from incoming to outgoing stream");
 
             debugGraph();
 
@@ -482,14 +592,14 @@ GstRemoteParticipant::createIncomingPipeline(RefPtr<Pad> pad)
             if(handler && mDecodes.size() == mEncodes.size())
             {
                DebugLog(<<"all pads ready, trying to setup HOMER HEP RTCP");
-               //resip::addGstreamerRtcpMonitoringPads(RefPtr<Bin>::cast_dynamic(mWebRTCElement));
+               //resip::addGstreamerRtcpMonitoringPads(RefPtr<Bin>::cast_dynamic(mRtpTransportElement));
                // Now all audio and video pads, incoming and outgoing,
                // are present.  We can enable the RTCP signals.  If we
                // ask for these signals before the pads are ready then
                // it looks like we don't receive any signals at all.
                RtcpPeerSpecVector peerSpecs = resip::createRtcpPeerSpecs(*getLocalSdp(), *getRemoteSdp());
                const Data& correlationId = getDialogSet().getDialogSetId().getCallId();
-               //addGstreamerRtcpMonitoringPads(RefPtr<Bin>::cast_dynamic(mWebRTCElement),
+               //addGstreamerRtcpMonitoringPads(RefPtr<Bin>::cast_dynamic(mRtpTransportElement),
                //         handler->getHepAgent(), peerSpecs, correlationId);
             }
 
@@ -497,16 +607,74 @@ GstRemoteParticipant::createIncomingPipeline(RefPtr<Pad> pad)
       }
    };
 
-   RefPtr<Gst::DecodeBin> decodeBin = Gst::DecodeBin::create();
-   const StreamKey& streamKey = getKeyForStream(pad->get_current_caps());
+   StreamKey streamKey = getKeyForStream(pad->get_current_caps());
    if(streamKey.empty())
    {
       streamKey = deduceKeyForPadName(pad->get_name());
    }
+
+   /*RefPtr<Gst::DecodeBin> decodeBin = Gst::DecodeBin::create();*/
+
+   RefPtr<DecodeEntry> decodeBin = Gst::Bin::create();
+   RefPtr<Element> queue = Gst::Queue::create();
+   decodeBin->add(queue);
+   RefPtr<Element> dec;
+   if(streamKey == "video")
+   {
+      RefPtr<Element> depay;
+      RefPtr<Element> parse;
+      if(isWebRTCSession())
+      {
+         depay = Gst::ElementFactory::create_element("rtpvp8depay");
+         parse = Gst::ElementFactory::create_element("vp8parse");
+         dec = Gst::ElementFactory::create_element("vp8dec");
+         //dec->property<guint>("threads", 24); // FIXME magic number
+      }
+      else
+      {
+         depay = Gst::ElementFactory::create_element("rtph264depay");
+         parse = Gst::ElementFactory::create_element("h264parse");
+         dec = Gst::ElementFactory::create_element("openh264dec");
+      }
+      decodeBin->add(depay);
+      decodeBin->add(parse);
+      decodeBin->add(dec);
+      queue->link(depay);
+      depay->link(parse);
+      parse->link(dec);
+   }
+   else if(streamKey == "audio")
+   {
+      RefPtr<Element> depay;
+      if(isWebRTCSession())
+      {
+         depay = Gst::ElementFactory::create_element("rtpopusdepay");
+         dec = Gst::ElementFactory::create_element("opusdec");
+      }
+      else
+      {
+         depay = Gst::ElementFactory::create_element("rtppcmadepay");
+         dec = Gst::ElementFactory::create_element("alawdec");
+      }
+      decodeBin->add(depay);
+      decodeBin->add(dec);
+      queue->link(depay);
+      depay->link(dec);
+   }
+   else
+   {
+      CritLog(<<"unrecognized streamKey: " << streamKey);
+      resip_assert(0);
+   }
+
+   RefPtr<Pad> sink = GhostPad::create(queue->get_static_pad("sink"), "sink");
+   decodeBin->add_pad(sink);
+   //RefPtr<Pad> src = GhostPad::create(dec->get_static_pad("src"), "src");
+   RefPtr<Pad> src = GhostPad::create(dec->get_static_pad("src"), pad->get_name());
+
    mDecodes[streamKey] = decodeBin;
    mPipeline->add(decodeBin);
    decodeBin->signal_pad_added().connect(cDecodePadAdded);
-   RefPtr<Pad> sink = decodeBin->get_static_pad("sink");
 
    // Setup the keyframe request probe
    if(streamKey == "video")
@@ -516,21 +684,25 @@ GstRemoteParticipant::createIncomingPipeline(RefPtr<Pad> pad)
 
    decodeBin->sync_state_with_parent();
 
+   // this is where the signal on-pad-added is triggered
+   // for any signal handlers created elsewhere
+   decodeBin->add_pad(src);
+
    return sink;
 }
 
-void
-GstRemoteParticipant::createOutgoingPipeline(unsigned int streamId, const RefPtr<Caps> caps)
+RefPtr<Bin>
+GstRemoteParticipant::createOutgoingPipeline(const RefPtr<Caps> caps)
 {
-   DebugLog(<<"creating outgoing pipeline for caps: " << caps->to_string());
+   DebugLog(<<"creating outgoing bin for caps: " << caps->to_string());
    RefPtr<EncodeEntry> encodeBin = EncodeEntry::create();
    StreamKey streamKey = getKeyForStream(caps);
    resip_assert(streamKey.size());
-   mEncodes[streamKey] = encodeBin;
 
-   mPipeline->add(encodeBin);
+   RefPtr<Queue> queueIn = Queue::create();
+   encodeBin->add(queueIn);
 
-   RefPtr<Pad> encodeBinSrc = encodeBin->get_static_pad("src");
+   RefPtr<Pad> queueInSrc = queueIn->get_static_pad("src");
 
    RefPtr<Caps> _caps, ___caps;
 
@@ -557,27 +729,60 @@ GstRemoteParticipant::createOutgoingPipeline(unsigned int streamId, const RefPtr
       GstCaps* __caps = gst_caps_from_string("video/x-raw");
       ___caps = Glib::wrap(__caps);
       _caps = mCapsVideo;
+      // profile stuff is only for Gst::EncodeBin
       //encodeBin->property_profile() =
-      GstEncodingVideoProfile* videoProfile =
-               gst_encoding_video_profile_new(__caps, NULL, NULL, 1);
-      g_object_set(encodeBin->gobj(), "profile", videoProfile, NULL);
+      //GstEncodingVideoProfile* videoProfile =
+      //         gst_encoding_video_profile_new(__caps, NULL, NULL, 1);
+      //g_object_set(encodeBin->gobj(), "profile", videoProfile, NULL);
       if(encodingName == "VP8")
       {
+         // https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html?gi-language=c
+         // https://www.webmproject.org/docs/encoder-parameters/
+         // The parameters have slightly different names in gstreamer:
+         // https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good/html/gst-plugins-good-plugins-vp8enc.html
          enc = Gst::ElementFactory::create_element("vp8enc");
-         enc->property<gint64>("deadline", 1);
+         v_caps = Gst::Caps::create_simple("video/x-vp8",
+                               "profile", "0");
+         enc->property<gint64>("deadline", 0);
+         //enc->property<bool>("rt", true);
+         //enc->property<guint>("threads", 24); // FIXME magic number
+         //enc->property<GstVP8EncTokenPartitions>("token-partitions", 3);  // FIXME magic number - requires 8 cores/threads
+         enc->property<gint>("token-partitions", 3);  // FIXME magic number - requires 8 cores/threads
+         enc->property<gint>("keyframe-max-dist", 2000);
          // FIXME properties on vp8enc
          payloader = Gst::ElementFactory::create_element("rtpvp8pay");
          payloader->set_property<gint32>("pt", 120); // FIXME magic number
       }
       else if(encodingName == "H264")
       {
+         // https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html?gi-language=c
          enc = Gst::ElementFactory::create_element("openh264enc");
+         v_caps = Gst::Caps::create_simple("video/x-h264",
+                      "profile", "baseline");
+         enc->property<guint>("bitrate", 90000); // low // FIXME magic number
          enc->property<gint64>("complexity", 0); // low
+         enc->property<gint64>("rate-control", 1); // bitrate // FIXME magic number
+
+         // https://gstreamer.freedesktop.org/documentation/vaapi/vaapih264enc.html?gi-language=c
+         /*enc = Gst::ElementFactory::create_element("vaapih264enc");
+         v_caps = Gst::Caps::create_simple("video/x-h264",
+                               "profile", "constrained-baseline");
+         enc->property<guint>("bitrate", 90); // low // FIXME magic number
+         //enc->property<guint>("quality-factor", 26); // ICQ/QVBR bitrate control mode quality
+         enc->property<guint>("quality-level", 10); // faster encode, lower quality
+         enc->property<gint64>("rate-control", 2); // bitrate // FIXME magic number */
+
+         // https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c
+         /*enc = Gst::ElementFactory::create_element("x264enc");
+         v_caps = Gst::Caps::create_simple("video/x-h264",
+                      "profile", "constrained-baseline");
+         enc->property<guint>("bitrate", 90); // low // FIXME magic number
+         enc->property<gint64>("pass", 0); // CBR // FIXME magic number
+         enc->property<gint64>("tune", 4); // zero latency // FIXME magic number */
+
          // FIXME properties on enc
          payloader = Gst::ElementFactory::create_element("rtph264pay");
          payloader->set_property<gint32>("pt", 97); // FIXME magic number
-         v_caps = Gst::Caps::create_simple("video/x-h264",
-                      "profile", "baseline");
       }
       else
       {
@@ -590,20 +795,34 @@ GstRemoteParticipant::createOutgoingPipeline(unsigned int streamId, const RefPtr
       GstCaps* __caps = gst_caps_from_string("audio/x-raw");
       ___caps = Glib::wrap(__caps);
       _caps = mCapsAudio;
+      // profile stuff is only for Gst::EncodeBin
       //encodeBin->property_profile() =
-      GstEncodingAudioProfile* audioProfile =
-               gst_encoding_audio_profile_new(__caps, NULL, NULL, 1);
-      g_object_set(encodeBin->gobj(), "profile", audioProfile, NULL);
+      //GstEncodingAudioProfile* audioProfile =
+      //         gst_encoding_audio_profile_new(__caps, NULL, NULL, 1);
+      //g_object_set(encodeBin->gobj(), "profile", audioProfile, NULL);
       if(encodingName == "OPUS")
       {
+         // https://gstreamer.freedesktop.org/documentation/opus/opusenc.html?gi-language=c
          enc = Gst::ElementFactory::create_element("opusenc");
+         uint32_t pt = 109; // FIXME magic number
+         v_caps = Gst::Caps::create_simple("audio/x-opus",
+                                        "payload", pt,
+                                        "encoding-name", "OPUS",
+                                        "rate", 48000,       // FIXME magic number
+                                        "channels", 2);     // FIXME magic number
+         enc->property<gint>("bitrate", 48000);
          payloader = Gst::ElementFactory::create_element("rtpopuspay");
-         payloader->set_property<gint32>("pt", 109); // FIXME magic number
+         payloader->set_property<gint32>("pt", pt);
       }
       else if(encodingName == "PCMA")
       {
+         // https://gstreamer.freedesktop.org/documentation/alaw/alawenc.html?gi-language=c
          enc = Gst::ElementFactory::create_element("alawenc");
+         v_caps = Gst::Caps::create_simple("audio/x-alaw",
+                                        "rate", 8000,       // FIXME magic number
+                                        "channels", 1);     // FIXME magic number
          payloader = Gst::ElementFactory::create_element("rtppcmapay");
+         payloader->set_property<gint32>("pt", 8); // FIXME magic number
       }
       else
       {
@@ -617,12 +836,12 @@ GstRemoteParticipant::createOutgoingPipeline(unsigned int streamId, const RefPtr
       resip_assert(0);
    }
 
-   mPipeline->add(enc);
-   mPipeline->add(payloader);
-   RefPtr<Gst::Queue> queue = Gst::Queue::create();
-   mPipeline->add(queue);
+   encodeBin->add(enc);
+   encodeBin->add(payloader);
+   RefPtr<Gst::Queue> queue = Gst::Queue::create("queueOut");
+   encodeBin->add(queue);
 
-   encodeBinSrc->link(enc->get_static_pad("sink"));
+   queueInSrc->link(enc->get_static_pad("sink"));
 
    if(!v_caps)
    {
@@ -632,40 +851,18 @@ GstRemoteParticipant::createOutgoingPipeline(unsigned int streamId, const RefPtr
    {
       enc->link(payloader, v_caps);
    }
-   payloader->link(queue);
+   payloader->link(queue, _caps);
    RefPtr<Pad> queueSrc = queue->get_static_pad("src");
-   RefPtr<Caps> padCaps = Caps::create_from_string("application/x-rtp");
-   RefPtr<Gst::PadTemplate> tmpl = PadTemplate::create("send_rtp_sink_%u", PAD_SINK, PAD_REQUEST, padCaps);
-   ostringstream padName;
-   padName << "send_rtp_sink_" << streamId;
-   DebugLog(<< "linking to " << padName.str());
-   //RefPtr<Pad> binSink = mWebRTCElement->create_compatible_pad(queueSrc, _caps);
-   //RefPtr<Pad> binSink = mWebRTCElement->get_request_pad(padName.str());
-   //RefPtr<Caps> padCaps2 = Caps::create_from_string("application/x-rtp");
-   //RefPtr<Pad> binSink = mWebRTCElement->request_pad(tmpl, padName.str(), padCaps2);
-   // is a ghost pad, should have been created already
-   RefPtr<Pad> binSink = mWebRTCElement->get_static_pad(padName.str());
-   if(!binSink)
-   {
-      CritLog(<<"failed to get request pad " << padName.str());
-      resip_assert(0);
-   }
-   queueSrc->link(binSink);
 
-   encodeBin->sync_state_with_parent();
-   enc->sync_state_with_parent();
-   payloader->sync_state_with_parent();
-   queue->sync_state_with_parent();
+   RefPtr<Pad> sink = GhostPad::create(queueIn->get_static_pad("sink"), "sink");
+   encodeBin->add_pad(sink);
+   RefPtr<Pad> src = GhostPad::create(queueSrc, "src");
+   encodeBin->add_pad(src);
 
-   // webrtcbin expects this
-   // https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1055#note_631630
-   RefPtr<Gst::EventCaps> capsEvent = Gst::EventCaps::create(___caps);
-   encodeBin->get_static_pad("sink")->send_event(capsEvent);
+   // FIXME - move this out of this method
+   mEncodes[streamKey] = encodeBin;
 
-   capsEvent = Gst::EventCaps::create(_caps);
-   binSink->send_event(capsEvent);
-
-   debugGraph();
+   return encodeBin;
 }
 
 void
@@ -695,7 +892,7 @@ GstRemoteParticipant::createAndConnectElementsStandard(std::function<void()> cCo
    DebugLog(<<"going to STATE_READY");
    mPipeline->set_state(STATE_READY);
 
-   mWebRTCElement->signal_pad_added().connect([this](const RefPtr<Pad>& pad){
+   mRtpTransportElement->signal_pad_added().connect([this](const RefPtr<Pad>& pad){
       Glib::ustring padName = pad->get_name();
       DebugLog(<<"WebRTCElement: on-pad-added, padName: " << padName << " stream ID: " << pad->get_stream_id());
       if(pad->get_direction() == PAD_SRC)
@@ -749,7 +946,7 @@ GstRemoteParticipant::createAndConnectElementsStandard(std::function<void()> cCo
       }
    });
 
-   //mWebRTCElement->sync_state_with_parent();
+   //mRtpTransportElement->sync_state_with_parent();
 
    DebugLog(<<"going to STATE_PLAYING");
    StateChangeReturn ret = mPipeline->set_state(STATE_PLAYING);
@@ -771,14 +968,7 @@ GstRemoteParticipant::createAndConnectElementsWebRTC(std::function<void()> cConn
 {
    // FIXME: store return value, destroy in destructor
 
-   static std::function<void()> cOnNegotiationNeeded = [this, cConnected](){
-      DebugLog(<<"onNegotiationNeeded invoked");
-      cConnected();
-   };
-   g_signal_connect(mWebRTCElement->gobj(), "on-negotiation-needed",
-                 G_CALLBACK (voidStub), &cOnNegotiationNeeded);
-
-   /*Glib::signal_any<void>(mWebRTCElement, "on-negotiation-needed").connect([this, cConnected]()
+   Glib::signal_any<void>(mRtpTransportElement, "on-negotiation-needed").connect([this, cConnected]()
    {
       DebugLog(<<"onNegotiationNeeded invoked");
       // FIXME - do we need to do anything here?
@@ -789,21 +979,21 @@ GstRemoteParticipant::createAndConnectElementsWebRTC(std::function<void()> cConn
       // callback is a hint that the webrtcbin element is in
       // a suitable state for the application to call create-offer
 
-      //cConnected();
-   });*/
+      cConnected();
+   });
 
-   Glib::signal_any<void,guint,gchararray>(mWebRTCElement, "on-ice-candidate").connect([this](guint mline_index, gchararray candidate)
+   Glib::signal_any<void,guint,gchararray>(mRtpTransportElement, "on-ice-candidate").connect([this](guint mline_index, gchararray candidate)
    {
       DebugLog(<<"cOnIceCandidate invoked");
       Data mid("0");  // FIXME - why doesn't webrtcbin provide mid?
       onLocalIceCandidate(candidate, mline_index, mid);
    });
 
-   Glib::signal_any<void,GParamSpec*>(mWebRTCElement, "notify::ice-gathering-state").connect_notify([this, sdpReady](GParamSpec * pspec)
+   Glib::signal_any<void,GParamSpec*>(mRtpTransportElement, "notify::ice-gathering-state").connect_notify([this, sdpReady](GParamSpec * pspec)
    {
       DebugLog(<<"cIceGatheringStateNotify invoked");
       GstWebRTCICEGatheringState ice_gather_state;
-      g_object_get (mWebRTCElement->gobj(), "ice-gathering-state", &ice_gather_state,
+      g_object_get (mRtpTransportElement->gobj(), "ice-gathering-state", &ice_gather_state,
          NULL);
       const Data& newState = lookupGstreamerStateName(iCEGatheringStates, ice_gather_state);
       DebugLog(<<"ICE gathering state: " << newState);
@@ -811,7 +1001,7 @@ GstRemoteParticipant::createAndConnectElementsWebRTC(std::function<void()> cConn
       if(ice_gather_state == GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE)
       {
          GstWebRTCSessionDescription *_gstwebrtcsdp = nullptr;
-         g_object_get (mWebRTCElement->gobj(), "local-description", &_gstwebrtcsdp,
+         g_object_get (mRtpTransportElement->gobj(), "local-description", &_gstwebrtcsdp,
             NULL);
          if(!_gstwebrtcsdp)
          {
@@ -829,13 +1019,18 @@ GstRemoteParticipant::createAndConnectElementsWebRTC(std::function<void()> cConn
    });
 
    DebugLog(<<"going to STATE_READY");
-   mPipeline->set_state(STATE_READY);
+   StateChangeReturn ret = mPipeline->set_state(STATE_READY);
+   if (ret == STATE_CHANGE_FAILURE)
+   {
+      ErrLog(<<"pipeline fail");
+      mPipeline.reset();
+      sdpReady(false, nullptr);
+   }
 
-   // FIXME - commented out while trying to resolve missing on-negotiation-needed
-   /*Glib::signal_any<void,GParamSpec*>(mWebRTCElement, "notify::ice-connection-state").connect_notify([this](GParamSpec * pspec)
+   Glib::signal_any<void,GParamSpec*>(mRtpTransportElement, "notify::ice-connection-state").connect_notify([this](GParamSpec * pspec)
    {
       GstWebRTCICEConnectionState ice_connection_state;
-      g_object_get (mWebRTCElement->gobj(), "ice-connection-state", &ice_connection_state,
+      g_object_get (mRtpTransportElement->gobj(), "ice-connection-state", &ice_connection_state,
          NULL);
       const Data& newState = lookupGstreamerStateName(iCEConnectionStates, ice_connection_state);
       DebugLog(<<"ICE connection state: " << newState);
@@ -843,20 +1038,20 @@ GstRemoteParticipant::createAndConnectElementsWebRTC(std::function<void()> cConn
       {
          InfoLog(<<"ICE connected");
       }
-   });*/
+   });
 
    // FIXME - commented out while trying to resolve missing on-negotiation-needed
-   /*Glib::signal_any<void,GParamSpec*>(mWebRTCElement, "notify::signaling-state").connect_notify([this](GParamSpec * pspec)
+   Glib::signal_any<void,GParamSpec*>(mRtpTransportElement, "notify::signaling-state").connect_notify([this](GParamSpec * pspec)
    {
       ErrLog(<<"signaling-state");
       GstWebRTCSignalingState signaling_state;
-      g_object_get (mWebRTCElement->gobj(), "signaling-state", &signaling_state,
+      g_object_get (mRtpTransportElement->gobj(), "signaling-state", &signaling_state,
          NULL);
       const Data& newState = lookupGstreamerStateName(signalingStates, signaling_state);
       DebugLog(<<"signaling state: " << newState);
-   });*/
+   });
 
-   mWebRTCElement->signal_pad_added().connect([this](const RefPtr<Pad>& pad){
+   mRtpTransportElement->signal_pad_added().connect([this](const RefPtr<Pad>& pad){
       DebugLog(<<"WebRTCElement: on-pad-added, stream ID: " << pad->get_stream_id());
       if(pad->get_direction() == PAD_SRC)
       {
@@ -876,18 +1071,16 @@ GstRemoteParticipant::createAndConnectElementsWebRTC(std::function<void()> cConn
       }
    });
 
-   //mWebRTCElement->sync_state_with_parent();
+   //mRtpTransportElement->sync_state_with_parent();
 
    DebugLog(<<"going to STATE_PLAYING");
-   StateChangeReturn ret = mPipeline->set_state(STATE_PLAYING);
+   ret = mPipeline->set_state(STATE_PLAYING);
    if (ret == STATE_CHANGE_FAILURE)
    {
       ErrLog(<<"pipeline fail");
       mPipeline.reset();
       sdpReady(false, nullptr);
    }
-
-   //cConnected();
 }
 
 /*void
@@ -952,13 +1145,13 @@ GstRemoteParticipant::createAndConnectElements(gstreamer::ContinuationVoid cConn
 void
 GstRemoteParticipant::setLocalDescription(GstWebRTCSessionDescription* gstwebrtcdesc)
 {
-   gstWebRTCSetDescription(mWebRTCElement, "set-local-description", gstwebrtcdesc);
+   gstWebRTCSetDescription(mRtpTransportElement, "set-local-description", gstwebrtcdesc);
 }
 
 void
 GstRemoteParticipant::setRemoteDescription(GstWebRTCSessionDescription* gstwebrtcdesc)
 {
-   gstWebRTCSetDescription(mWebRTCElement, "set-remote-description", gstwebrtcdesc);
+   gstWebRTCSetDescription(mRtpTransportElement, "set-remote-description", gstwebrtcdesc);
 }
 
 
@@ -1038,7 +1231,7 @@ GstRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, boo
                   new std::function<void(GstPromise * _promise, gpointer user_data)>(cOnOfferReady);
          promise = gst_promise_new_with_change_func (promise_stub, _cOnOfferReady,
                   NULL);
-         g_signal_emit_by_name (mWebRTCElement->gobj(), "create-offer", NULL, promise);
+         g_signal_emit_by_name (mRtpTransportElement->gobj(), "create-offer", NULL, promise);
 
       };
 
@@ -1302,7 +1495,7 @@ GstRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady 
                      new std::function<void(GstPromise * _promise, gpointer user_data)>(cAnswerCreated);
             _promise = gst_promise_new_with_change_func (promise_stub, _cAnswerCreated,
                      NULL);
-            g_signal_emit_by_name (mWebRTCElement->gobj(), "create-answer", NULL, _promise);
+            g_signal_emit_by_name (mRtpTransportElement->gobj(), "create-answer", NULL, _promise);
          }
          else
          {
@@ -1560,7 +1753,7 @@ GstRemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl& me
 void
 GstRemoteParticipant::onRemoteIceCandidate(const resip::Data& candidate, unsigned int lineIndex, const resip::Data& mid)
 {
-   g_signal_emit_by_name (mWebRTCElement->gobj(), "add-ice-candidate", lineIndex,
+   g_signal_emit_by_name (mRtpTransportElement->gobj(), "add-ice-candidate", lineIndex,
              candidate.c_str());
 }
 
@@ -1602,7 +1795,7 @@ GstRemoteParticipant::requestKeyframe()
    Gst::Structure gSTForceKeyUnit("GstForceKeyUnit",
       "all-headers", true);
 
-   Gst::Iterator<Gst::Pad> it = mWebRTCElement->iterate_sink_pads();
+   Gst::Iterator<Gst::Pad> it = mRtpTransportElement->iterate_sink_pads();
    while(it.next())
    {
       RefPtr<Pad> pad = *it;
