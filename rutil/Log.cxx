@@ -608,7 +608,8 @@ Log::tags(Log::Level level,
    char buffer[256] = "";
    Data ts(Data::Borrow, buffer, sizeof(buffer));
 #if defined( __APPLE__ )
-   std::make_unsigned<pthread_t>::type threadId = pthread_self();
+   uint64_t threadId;
+   pthread_threadid_np(nullptr, &threadId);
    const char* file = pfile;
 #elif defined( WIN32 )
    int threadId = (int)GetCurrentThreadId();
