@@ -22,6 +22,7 @@
 #include "../../rutil/hep/HepAgent.hxx"
 #include "../../resip/stack/SdpContents.hxx"
 #include "../../resip/stack/Tuple.hxx"
+#include "../../rutil/hep/HepAgent.hxx"
 
 #include "../RTPPortManager.hxx"
 
@@ -78,7 +79,7 @@ class GstRtpManager
 class GstRtpSession
 {
    public:
-      GstRtpSession(GstRtpManager& rTPManager);
+      GstRtpSession(GstRtpManager& rTPManager, bool webRTC);
       virtual ~GstRtpSession();
       virtual std::shared_ptr<resip::SdpContents> buildOffer(bool audio, bool video);
       virtual std::shared_ptr<resip::SdpContents> buildAnswer(std::shared_ptr<resip::SdpContents> remoteOffer);
@@ -88,31 +89,60 @@ class GstRtpSession
       // FIXME - assumes only one medium for each name
       virtual Glib::RefPtr<Gst::Caps> getCaps(const resip::Data& mediumName);
 
-      virtual Glib::RefPtr<Gst::Bin> createRtpBinOuter();
+      Glib::RefPtr<Gst::Bin> createOutgoingPipeline(const Glib::RefPtr<Gst::Caps> caps);
+      Glib::RefPtr<Gst::Bin> createDecodeBin(const resip::Data& streamKey, const Glib::ustring& srcPadName, bool isWebRTC);
+      Glib::RefPtr<Gst::Pad> createMediaSink(Glib::RefPtr<Gst::Caps> caps, unsigned int streamId);
+
+      virtual Glib::RefPtr<Gst::Bin> getMediaBin() { return mMediaBin; };
+      //virtual void setRtpTransportBin(Glib::RefPtr<Gst::Bin> bin);
+      virtual Glib::RefPtr<Gst::Bin> getRtpTransportBin();
 
       // FIXME - use a signal handler to invoke this, make it private
       virtual void onPlaying();
 
       std::shared_ptr<resip::SdpContents> getLocalSdp() const { return mLocal; };
+      void setLocalSdp(std::shared_ptr<resip::SdpContents> local) { mLocal = local; };
       std::shared_ptr<resip::SdpContents> getRemoteSdp() const { return mRemote; };
+      void setRemoteSdp(std::shared_ptr<resip::SdpContents> remote) { mRemote = remote; };
+
+      virtual bool isWebRTC() const { return mWebRTC; };
+
+      virtual void setKeyframeRequestHandler(std::function<void()> onKeyframeRequired) { mOnKeyframeRequired = onKeyframeRequired; };
+
+      virtual unsigned int getStreamCount();
+
+      virtual void initHomer(const resip::Data& correlationId, std::shared_ptr<resip::HepAgent> hepAgent);
 
    private:
+      virtual void createRtpTransportBin();
+      virtual void createDecodeBinForStream(const Glib::RefPtr<Gst::Pad>& pad, unsigned int streamId, int pt);
+
+      const resip::Data& getLocalAddress() const;
+      unsigned int allocatePort();
+
       GstRtpManager& mRTPManager;
+      bool mWebRTC;
 
       std::shared_ptr<resip::SdpContents> mLocal;
       std::shared_ptr<resip::SdpContents> mRemote;
 
-      Glib::RefPtr<Gst::Bin> mOuterBin;
-
-      std::vector<Glib::RefPtr<Gst::Bin> > mEncBin;
-      std::vector<Glib::RefPtr<Gst::Bin> > mDecBin;
+      // contains the encode and decodes and the transport wrapper
+      Glib::RefPtr<Gst::Bin> mMediaBin;
+      // wraps the transport (webrtcbin or rtpbin)
+      Glib::RefPtr<Gst::Bin> mRtpTransportBin;
 
       std::vector<Glib::RefPtr<Gst::Pad> > mSourcePads;
       std::map<unsigned int, Glib::RefPtr<Gst::Element> > mSendSinks;
       std::map<unsigned int, Glib::RefPtr<Gst::Element> > mSendRtcpSinks;
 
-      const resip::Data& getLocalAddress() const;
-      unsigned int allocatePort();
+      unsigned int mStreamCount = 0;
+      unsigned int mDecodes = 0;
+
+      std::function<void()> mOnKeyframeRequired;
+
+      // for HOMER / HEP / EEP
+      resip::Data mCorrelationId;
+      std::shared_ptr<resip::HepAgent> mHepAgent;
 };
 
 }

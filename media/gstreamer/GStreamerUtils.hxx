@@ -106,7 +106,7 @@ resip::SdpContents* createSdpContentsFromGstreamer(GstWebRTCSessionDescription *
 
 std::shared_ptr<GstWebRTCSessionDescription> createGstWebRTCSessionDescriptionFromSdpContents(GstWebRTCSDPType sdpType, const resip::SdpContents& sdp);
 
-void addGstreamerKeyframeProbe(Glib::RefPtr<Gst::Pad>& pad, std::function<void()> onKeyframeRequired);
+void addGstreamerKeyframeProbe(const Glib::RefPtr<Gst::Pad>& pad, std::function<void()> onKeyframeRequired);
 
 struct RtcpPeerSpec
 {

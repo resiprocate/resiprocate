@@ -104,22 +104,18 @@ protected:
    virtual bool holdPreferExistingSdp() override { return true; };
 
 private:
+   void initRtpManager();
    //gstreamer::BaseRtpEndpoint* newEndpoint();
-   void linkOutgoingPipeline(unsigned int streamId, Glib::RefPtr<Gst::Bin> bin, const Glib::RefPtr<Gst::Caps> caps);
+   virtual void linkOutgoingPipeline(unsigned int streamId, Glib::RefPtr<Gst::Bin> bin, const Glib::RefPtr<Gst::Caps> caps);
+   virtual void prepareStream(const Glib::RefPtr<Gst::Caps> caps, bool loopbackMode);
    virtual bool initEndpointIfRequired(bool isWebRTC);
    //virtual void doIceGathering(gstreamer::ContinuationString sdpReady);
    //typedef Glib::ustring StreamKey;
    typedef resip::Data StreamKey;
    virtual StreamKey getKeyForStream(const Glib::RefPtr<Gst::Caps>& caps) const;
    virtual bool isWebRTCSession() const;
-   virtual Glib::RefPtr<Gst::Pad> createIncomingPipeline(Glib::RefPtr<Gst::Pad> pad);
-   //virtual void createOutgoingPipeline(const Glib::RefPtr<Gst::Pad>& pad);
-   //typedef Gst::EncodeBin EncodeEntry;
-   //typedef Gst::Queue EncodeEntry;
-   typedef Gst::Bin EncodeEntry;
-   //typedef Gst::DecodeBin DecodeEntry;
-   typedef Gst::Bin DecodeEntry;
-   virtual Glib::RefPtr<Gst::Bin> createOutgoingPipeline(const Glib::RefPtr<Gst::Caps> caps);
+   virtual void onMediaSourceAdded(const Glib::RefPtr<Gst::Pad>& pad);
+   virtual Glib::RefPtr<Gst::Bin> createIncomingPipeline(Glib::RefPtr<Gst::Pad> pad);
    virtual void debugGraph();
    virtual void createAndConnectElements(bool isWebRTC, std::function<void()> cConnected, CallbackSdpReady sdpReady);
    virtual void createAndConnectElementsWebRTC(std::function<void()> cConnected, CallbackSdpReady sdpReady);
@@ -152,10 +148,12 @@ public: // FIXME
    //GstElement* mPipeline;
    //GstElement* mRtpTransportElement;
    Glib::RefPtr<Gst::Pipeline> mPipeline;
+   Glib::RefPtr<Gst::Element> mMediaBin;
    Glib::RefPtr<Gst::Element> mRtpTransportElement;
 
-   std::map<StreamKey, Glib::RefPtr<DecodeEntry>> mDecodes;
-   std::map<StreamKey, Glib::RefPtr<EncodeEntry>> mEncodes;
+   std::map<StreamKey, Glib::RefPtr<Gst::Bin>> mDecodes;
+   //std::map<StreamKey, Glib::RefPtr<Gst::Bin>> mEncodes;
+   std::map<StreamKey, Glib::RefPtr<Gst::Pad>> mEncodes;
 
    std::function<void(const Glib::RefPtr<Gst::Pad>& pad)> mPadAdded;
 

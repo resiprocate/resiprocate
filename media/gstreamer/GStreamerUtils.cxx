@@ -120,7 +120,7 @@ resip::createGstWebRTCSessionDescriptionFromSdpContents(GstWebRTCSDPType sdpType
    return gstwebrtc;
 }
 
-void resip::addGstreamerKeyframeProbe(Glib::RefPtr<Gst::Pad>& pad, std::function<void()> onKeyframeRequired)
+void resip::addGstreamerKeyframeProbe(const Glib::RefPtr<Gst::Pad>& pad, std::function<void()> onKeyframeRequired)
 {
    pad->add_probe(PAD_PROBE_TYPE_EVENT_UPSTREAM,
             [onKeyframeRequired](const Glib::RefPtr<Gst::Pad>& pad, const Gst::PadProbeInfo& info)
