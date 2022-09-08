@@ -103,7 +103,12 @@ class GstRtpSession
       std::shared_ptr<resip::SdpContents> getLocalSdp() const { return mLocal; };
       void setLocalSdp(std::shared_ptr<resip::SdpContents> local) { mLocal = local; };
       std::shared_ptr<resip::SdpContents> getRemoteSdp() const { return mRemote; };
-      void setRemoteSdp(std::shared_ptr<resip::SdpContents> remote) { mRemote = remote; };
+      void setRemoteSdp(std::shared_ptr<resip::SdpContents> remote);
+
+      typedef std::vector<Glib::RefPtr<Gst::Caps>> CapsVector;
+      const CapsVector& getOutgoingCaps() const { return mOutgoingCaps; };
+      typedef std::vector<Glib::RefPtr<Gst::Pad>> PadVector;
+      const PadVector& getOutgoingPads() const { return mOutgoingPads; };
 
       virtual bool isWebRTC() const { return mWebRTC; };
 
@@ -111,14 +116,22 @@ class GstRtpSession
 
       virtual unsigned int getStreamCount();
 
+      virtual void initOutgoingBins();
+
       virtual void initHomer(const resip::Data& correlationId, std::shared_ptr<resip::HepAgent> hepAgent);
 
+      virtual void addStream(Glib::RefPtr<Gst::Caps> caps);
+
    private:
+      virtual void initRtpRxPorts();
+      virtual void initRtpTxPorts();
       virtual void createRtpTransportBin();
       virtual void createDecodeBinForStream(const Glib::RefPtr<Gst::Pad>& pad, unsigned int streamId, int pt);
 
       const resip::Data& getLocalAddress() const;
       unsigned int allocatePort();
+
+      virtual void initCaps(std::shared_ptr<resip::SdpContents> sdp, CapsVector& sessionCaps);
 
       GstRtpManager& mRTPManager;
       bool mWebRTC;
@@ -139,6 +152,9 @@ class GstRtpSession
       unsigned int mDecodes = 0;
 
       std::function<void()> mOnKeyframeRequired;
+
+      CapsVector mOutgoingCaps;
+      PadVector mOutgoingPads;
 
       // for HOMER / HEP / EEP
       resip::Data mCorrelationId;

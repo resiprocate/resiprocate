@@ -151,6 +151,7 @@ GstRtpSession::buildOffer(bool audio, bool video)
 
    const Data& localAddress = getLocalAddress();
    const CodecConfigMap& codecConfigs = mRTPManager.getCodecConfigMap();
+   // FIXME - add more codecs
    const CodecConfig& cAudio = *codecConfigs.at("PCMA");
    unsigned int ptAudio = 8;
    const CodecConfig& cVideo = *codecConfigs.at("H264");
@@ -180,6 +181,10 @@ GstRtpSession::buildOffer(bool audio, bool video)
    HeaderFieldValue *hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
    Mime type("application", "sdp");
    mLocal = std::make_shared<SdpContents>(SdpContents(*hfv, type));
+
+   initCaps(mLocal, mOutgoingCaps);
+
+   initRtpRxPorts();
 
    return mLocal;
 }
@@ -221,23 +226,25 @@ GstRtpSession::buildAnswer(std::shared_ptr<resip::SdpContents> remoteOffer)
             "t=0 0\r\n"
             "a=rtcp-xr:rcvr-rtt=all:10000 stat-summary=loss,dup,jitt,TTL voip-metrics\r\n";
 
+   const CodecConfigMap& codecConfigs = mRTPManager.getCodecConfigMap();
+
+   initCaps(remoteOffer, mOutgoingCaps);
+   unsigned int entry = 0;
    for(auto& m : remoteOffer->session().media())
    {
-      if(m.name() == "audio" || m.name() == "video")
+      const RefPtr<Caps>& caps = mOutgoingCaps[entry];
+      if(caps)
       {
-         int pt = -1;
-         const CodecConfigMap& codecConfigs = mRTPManager.getCodecConfigMap();
-         CodecConfigMap::const_iterator it = codecConfigs.end();
-         for(auto& c : m.codecs())
-         {
-            it = codecConfigs.find(c.getName());  // FIXME - check all codec properties are compatible
-            if(it != codecConfigs.end())
-            {
-               pt = c.payloadType();
-               DebugLog(<<"found supported codec, using peer's payload type " << pt);
-               break;
-            }
-         }
+         Glib::ustring codecName;
+         caps->get_structure(0).get_field("encoding-name", codecName);
+         gint clockRate;
+         caps->get_structure(0).get_field<gint>("clock-rate", clockRate);
+         gint pt;
+         caps->get_structure(0).get_field<gint>("payload", pt);
+         Data _codecName(codecName.raw());
+         _codecName.uppercase();
+         CodecConfigMap::const_iterator it = codecConfigs.find(_codecName);
+         // FIXME - check all codec properties are compatible
          if(it != codecConfigs.end())
          {
             const CodecConfig& cc = *it->second;
@@ -261,6 +268,7 @@ GstRtpSession::buildAnswer(std::shared_ptr<resip::SdpContents> remoteOffer)
          DebugLog(<<"unsupported media type");
          rejectStream(stream, m);
       }
+      entry++;
    }
 
    stream.flush();
@@ -268,20 +276,75 @@ GstRtpSession::buildAnswer(std::shared_ptr<resip::SdpContents> remoteOffer)
    Mime type("application", "sdp");
    mLocal = std::make_shared<SdpContents>(SdpContents(*hfv, type));
 
+   //initRtpPorts();  // configure ports to match the answer
    mRemote = remoteOffer;
+
    return mLocal;
 }
 
 void
 GstRtpSession::processAnswer(std::shared_ptr<resip::SdpContents> remoteAnswer)
 {
-   // FIXME
-   ErrLog(<<"incomplete, answer not processed");
-   resip_assert(0);
+   const CodecConfigMap& codecConfigs = mRTPManager.getCodecConfigMap();
+
+   initCaps(remoteAnswer, mOutgoingCaps);
+
+   // FIXME - intersect properly against the local SDP
+   //         and then iterate over the intersected SDP instead
+
+   unsigned int entry = 0;
+   for(auto& m : remoteAnswer->session().media())
+   {
+      const RefPtr<Caps>& caps = mOutgoingCaps[entry];
+      if(caps)
+      {
+         Glib::ustring codecName;
+         caps->get_structure(0).get_field("encoding-name", codecName);
+         gint clockRate;
+         caps->get_structure(0).get_field<gint>("clock-rate", clockRate);
+         gint pt;
+         caps->get_structure(0).get_field<gint>("payload", pt);
+         Data _codecName(codecName.raw());
+         _codecName.uppercase();
+         CodecConfigMap::const_iterator it = codecConfigs.find(_codecName);
+         // FIXME - check all codec properties are compatible
+         if(it != codecConfigs.end())
+         {
+            const CodecConfig& cc = *it->second;
+            //unsigned int localPort = allocatePort();
+
+
+            // FIXME - we are simply assuming that everything matches here
+
+         }
+         else
+         {
+            DebugLog(<<"didn't find supported codec");
+            //rejectStream(stream, m);
+         }
+      }
+      else
+      {
+         DebugLog(<<"unsupported media type");
+         //rejectStream(stream, m);
+      }
+      entry++;
+   }
 
    mRemote = remoteAnswer;
+   initOutgoingBins();
 
    // doOfferAnswerIntersect
+
+   initRtpRxPorts();  // ensure RX ports really ready
+   initRtpTxPorts();  // configure ports to match the offer
+
+   DebugLog(<<"going to STATE_PLAYING");
+   StateChangeReturn ret = mMediaBin->set_state(STATE_PLAYING);
+   if (ret == STATE_CHANGE_FAILURE)
+   {
+      ErrLog(<<"pipeline fail");
+   }
 }
 
 Glib::RefPtr<Gst::Caps>
@@ -527,13 +590,27 @@ GstRtpSession::createMediaSink(RefPtr<Caps> caps, unsigned int streamId)
       resip_assert(0);
    }
 
+   if(binSink->is_linked())
+   {
+      RefPtr<Pad> peer = binSink->get_peer();
+      binSink->unlink(peer);
+   }
+
    src->link(binSink);
 
    string sinkName = makePadName("sink_", streamId);
-   StackLog(<<"adding new sink: " << sinkName);
+   RefPtr<GhostPad> ghostSink = RefPtr<GhostPad>::cast_dynamic(mMediaBin->get_static_pad(sinkName));
+   if(ghostSink)
+   {
+      ghostSink->set_target(encodeBin->get_static_pad("sink"));
+   }
+   else
+   {
+      StackLog(<<"adding new sink: " << sinkName);
 
-   RefPtr<Pad> ghostSink = GhostPad::create(encodeBin->get_static_pad("sink"), sinkName);
-   mMediaBin->add_pad(ghostSink);
+      ghostSink = GhostPad::create(encodeBin->get_static_pad("sink"), sinkName);
+      mMediaBin->add_pad(ghostSink);
+   }
 
    return ghostSink;
 }
@@ -638,6 +715,288 @@ GstRtpSession::createDecodeBin(const Data& streamKey, const Glib::ustring& srcPa
 }
 
 #define P_CLIENTS(a,p) (a + ":" + Data(p))  // FIXME - eliminate macros
+
+void
+GstRtpSession::initRtpRxPorts()
+{
+   RefPtr<Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp");
+
+   if(!mRtpTransportBin)
+   {
+      DebugLog(<<"mRtpTransportBin not ready yet");
+      return;
+   }
+
+   RefPtr<Bin> rtpBin = RefPtr<Bin>::cast_dynamic(mRtpTransportBin->get_child("rtpbin0"));
+   if(!rtpBin)
+   {
+      DebugLog(<<"rtpBin not ready yet");
+      return;
+   }
+
+   if(mRtpTransportBin->get_child("udpsrc0"))
+   {
+      DebugLog(<<"udpsrc0 already present");
+      return;
+   }
+
+   if(!mLocal)
+   {
+      DebugLog(<<"mLocal not ready");
+      return;
+   }
+
+   // Iterators
+   SdpContents::Session::MediumContainer::iterator local = mLocal->session().media().begin(); // FIXME - migrate to const_iterator
+   //SdpContents::Session::MediumContainer::const_iterator remote = mRemote->session().media().cbegin();
+   //std::vector<Glib::RefPtr<Gst::Bin>>::const_iterator enc = mEncBin.cbegin();
+
+   unsigned int streamCount = 0;
+   for(; local != mLocal->session().media().end() /* &&
+         remote != mRemote->session().media().cend() */ /*&&
+         enc != mEncBin.cend()*/ ; )
+   {
+      if(local->name() == "audio" || local->name() == "video")
+      {
+         string localAddress = local->getConnections().front().getAddress().c_str(); // FIXME - more than one Connection?
+         //Data peerAddress = remote->getConnections().front().getAddress(); // FIXME - more than one Connection?
+
+         // https://gstreamer.freedesktop.org/documentation/udp/udpsrc.html?gi-language=c
+         Glib::RefPtr<Gst::Element> udpSource = Gst::ElementFactory::create_element("udpsrc");
+         udpSource->set_property<Glib::ustring>("address", localAddress);
+         udpSource->set_property<gint32>("port", local->port());
+
+         Glib::RefPtr<Gst::Element> udpSourceRtcp = Gst::ElementFactory::create_element("udpsrc");
+         udpSourceRtcp->set_property<Glib::ustring>("address", localAddress);
+         udpSourceRtcp->set_property<gint32>("port", local->firstRtcpPort()); // FIXME - more than one Connection / RTCP?
+
+         // https://gstreamer.freedesktop.org/documentation/udp/multiudpsink.html?gi-language=c#properties
+         //Glib::RefPtr<Gst::Element> udpSink = Gst::ElementFactory::create_element("multiudpsink");
+         //Data peerClient = P_CLIENTS(peerAddress, remote->port());
+         //DebugLog(<<"peerClient = " << peerClient);
+
+         //udpSink->set_property<Glib::ustring>("clients", peerClient.c_str());
+         // FIXME - specifying the bind-address and bind-port is a very good idea for NAT
+         //         traversal (symmetric RTP RFC 4961)
+         //         https://www.rfc-editor.org/rfc/rfc4961
+         //       - however, when I tried to use these settings, I found that the streams were not
+         //         activated at all or sometimes the pad-added event was only received for one
+         //         stream (audio or video) and not both
+         //       - there is also an option to obtain the GSocket pointer from the udpsrc and give it to
+         //         the udpsink so they share the same socket (properties: socket, socket-v6)
+         //udpSink->set_property<Glib::ustring>("bind-address", localAddress); // FIXME share socket with udpsrc?
+         //udpSink->set_property<gint32>("bind-port", local->port());
+         //udpSink->set_property("sync", false);
+         //udpSink->set_property("async", false);
+         //udpSink->set_property("qos-dscp", ); // FIXME
+         //udpSink->set_property("socket", ); // FIXME
+         //udpSink->set_property("socket-v6", ); // FIXME
+
+         //Glib::RefPtr<Gst::Element> udpSinkRtcp = Gst::ElementFactory::create_element("multiudpsink");
+         //Data peerClientRtcp = P_CLIENTS(peerAddress, remote->firstRtcpPort());
+         //DebugLog(<<"peerClientRtcp = " << peerClientRtcp);
+
+         //udpSinkRtcp->set_property<Glib::ustring>("clients", peerClientRtcp.c_str());
+         // FIXME - see comments above about bind-address and bind-port with udpSink element
+         //udpSinkRtcp->set_property<Glib::ustring>("bind-address", localAddress); // FIXME share socket with udpsrc?
+         //udpSinkRtcp->set_property<gint32>("bind-port", local->firstRtcpPort()); // FIXME - more than one Connection / RTCP?
+         //udpSinkRtcp->set_property("sync", false);
+         //udpSinkRtcp->set_property("async", false);
+         //udpSinkRtcp->set_property("qos-dscp", ); // FIXME
+         //udpSinkRtcp->set_property("socket", ); // FIXME
+         //udpSinkRtcp->set_property("socket-v6", ); // FIXME
+
+         mRtpTransportBin->add(udpSource);
+         mRtpTransportBin->add(udpSourceRtcp);
+         //mRtpTransportBin->add(udpSink);
+         //mRtpTransportBin->add(udpSinkRtcp);
+
+         // incoming RTP / RTCP
+         Glib::RefPtr<Gst::Caps> incomingCaps = getCaps(*local);
+         udpSource->link_pads("src", rtpBin, makePadName("recv_rtp_sink_", streamCount), incomingCaps);
+         udpSourceRtcp->link_pads("src", rtpBin, makePadName("recv_rtcp_sink_", streamCount), rtcp_caps);
+
+         // outgoing RTP - linked by on-pad-added signal handler
+         //rtpBin->link_pads(makePadName("send_rtp_src_", mStreamCount), udpSink, "sink");
+         // outgoing RTCP - linked manually
+         //rtpBin->link_pads(makePadName("send_rtcp_src_", mStreamCount), udpSinkRtcp, "sink", rtcp_caps);
+         //mSendSinks[mStreamCount] = udpSink;
+         //mSendRtcpSinks[mStreamCount] = udpSinkRtcp;
+
+         // FIXME - create the outgoing ghost pads on request only
+         // outgoing media
+         /*RefPtr<Gst::Bin> _enc = *enc;
+         _enc->link_pads("src", rtpBin, s.str());*/
+         //RefPtr<Pad> mediaSink = rtpBin->create_compatible_pad(pad, caps);
+         // needs to be consistent with webrtcbin naming convention
+         // rather than rtcbin naming conventions
+         //string rtcBinPadName = makePadName("send_rtp_sink_", streamCount);
+         string webrtcBinPadName = makePadName("sink_", streamCount);
+         //RefPtr<Pad> mediaSink = rtpBin->get_request_pad(rtcBinPadName);
+         //RefPtr<Pad> ghostSink = GhostPad::create(mediaSink, webrtcBinPadName);
+         RefPtr<GhostPad> ghostSink = RefPtr<GhostPad>::cast_dynamic(mRtpTransportBin->get_static_pad(webrtcBinPadName));
+         if(!ghostSink)
+         {
+            DebugLog(<<"creating GhostPad " << webrtcBinPadName);
+            ghostSink = GhostPad::create(PAD_SINK, webrtcBinPadName);
+            mRtpTransportBin->add_pad(ghostSink);
+         }
+      }
+
+      local++;
+      //remote++;
+      //enc++;
+      streamCount++;
+   }
+   mStreamCount = streamCount;
+}
+
+void
+GstRtpSession::initRtpTxPorts()
+{
+   RefPtr<Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp");
+
+   if(!mRtpTransportBin)
+   {
+      DebugLog(<<"mRtpTransportBin not ready yet");
+      return;
+   }
+
+   RefPtr<Bin> rtpBin = RefPtr<Bin>::cast_dynamic(mRtpTransportBin->get_child("rtpbin0"));
+   if(!rtpBin)
+   {
+      DebugLog(<<"rtpBin not ready yet");
+      return;
+   }
+
+   if(mRtpTransportBin->get_child("multiudpsink0"))
+   {
+      DebugLog(<<"multiudpsink0 already present");
+      return;
+   }
+
+   if(!mLocal)
+   {
+      DebugLog(<<"mLocal not ready");
+      return;
+   }
+
+   if(!mRemote)
+   {
+      DebugLog(<<"mRemote not ready");
+      return;
+   }
+
+   // Iterators
+   SdpContents::Session::MediumContainer::iterator local = mLocal->session().media().begin(); // FIXME - migrate to const_iterator
+   SdpContents::Session::MediumContainer::const_iterator remote = mRemote->session().media().cbegin();
+   //std::vector<Glib::RefPtr<Gst::Bin>>::const_iterator enc = mEncBin.cbegin();
+
+   unsigned int streamCount = 0;
+   for(; local != mLocal->session().media().end() &&
+         remote != mRemote->session().media().cend() /*&&
+         enc != mEncBin.cend()*/ ; )
+   {
+      if(local->name() == "audio" || local->name() == "video")
+      {
+         string localAddress = local->getConnections().front().getAddress().c_str(); // FIXME - more than one Connection?
+         Data peerAddress = remote->getConnections().front().getAddress(); // FIXME - more than one Connection?
+
+         // https://gstreamer.freedesktop.org/documentation/udp/udpsrc.html?gi-language=c
+         /*Glib::RefPtr<Gst::Element> udpSource = Gst::ElementFactory::create_element("udpsrc");
+         udpSource->set_property<Glib::ustring>("address", localAddress);
+         udpSource->set_property<gint32>("port", local->port());*/
+
+         //Glib::RefPtr<Gst::Element> udpSourceRtcp = Gst::ElementFactory::create_element("udpsrc");
+         //udpSourceRtcp->set_property<Glib::ustring>("address", localAddress);
+         //udpSourceRtcp->set_property<gint32>("port", local->firstRtcpPort()); // FIXME - more than one Connection / RTCP?
+
+         // https://gstreamer.freedesktop.org/documentation/udp/multiudpsink.html?gi-language=c#properties
+         Glib::RefPtr<Gst::Element> udpSink = Gst::ElementFactory::create_element("multiudpsink");
+         Data peerClient = P_CLIENTS(peerAddress, remote->port());
+         DebugLog(<<"peerClient = " << peerClient);
+
+         udpSink->set_property<Glib::ustring>("clients", peerClient.c_str());
+         // FIXME - specifying the bind-address and bind-port is a very good idea for NAT
+         //         traversal (symmetric RTP RFC 4961)
+         //         https://www.rfc-editor.org/rfc/rfc4961
+         //       - however, when I tried to use these settings, I found that the streams were not
+         //         activated at all or sometimes the pad-added event was only received for one
+         //         stream (audio or video) and not both
+         //       - there is also an option to obtain the GSocket pointer from the udpsrc and give it to
+         //         the udpsink so they share the same socket (properties: socket, socket-v6)
+         //udpSink->set_property<Glib::ustring>("bind-address", localAddress); // FIXME share socket with udpsrc?
+         //udpSink->set_property<gint32>("bind-port", local->port());
+         udpSink->set_property("sync", false);
+         udpSink->set_property("async", false);
+         //udpSink->set_property("qos-dscp", ); // FIXME
+         //udpSink->set_property("socket", ); // FIXME
+         //udpSink->set_property("socket-v6", ); // FIXME
+
+         Glib::RefPtr<Gst::Element> udpSinkRtcp = Gst::ElementFactory::create_element("multiudpsink");
+         Data peerClientRtcp = P_CLIENTS(peerAddress, remote->firstRtcpPort());
+         DebugLog(<<"peerClientRtcp = " << peerClientRtcp);
+
+         udpSinkRtcp->set_property<Glib::ustring>("clients", peerClientRtcp.c_str());
+         // FIXME - see comments above about bind-address and bind-port with udpSink element
+         //udpSinkRtcp->set_property<Glib::ustring>("bind-address", localAddress); // FIXME share socket with udpsrc?
+         //udpSinkRtcp->set_property<gint32>("bind-port", local->firstRtcpPort()); // FIXME - more than one Connection / RTCP?
+         udpSinkRtcp->set_property("sync", false);
+         udpSinkRtcp->set_property("async", false);
+         //udpSinkRtcp->set_property("qos-dscp", ); // FIXME
+         //udpSinkRtcp->set_property("socket", ); // FIXME
+         //udpSinkRtcp->set_property("socket-v6", ); // FIXME
+
+         //mRtpTransportBin->add(udpSource);
+         //mRtpTransportBin->add(udpSourceRtcp);
+         mRtpTransportBin->add(udpSink);
+         mRtpTransportBin->add(udpSinkRtcp);
+
+         // incoming RTP / RTCP
+         /*Glib::RefPtr<Gst::Caps> incomingCaps = getCaps(*local);
+         udpSource->link_pads("src", rtpBin, makePadName("recv_rtp_sink_", mStreamCount), incomingCaps);
+         udpSourceRtcp->link_pads("src", rtpBin, makePadName("recv_rtcp_sink_", mStreamCount), rtcp_caps);*/
+
+         // outgoing RTP - linked by on-pad-added signal handler
+         //rtpBin->link_pads(makePadName("send_rtp_src_", mStreamCount), udpSink, "sink");
+         // outgoing RTCP - linked manually
+         rtpBin->link_pads(makePadName("send_rtcp_src_", streamCount), udpSinkRtcp, "sink", rtcp_caps);
+         mSendSinks[streamCount] = udpSink;
+         mSendRtcpSinks[streamCount] = udpSinkRtcp;
+
+         // FIXME - create the outgoing ghost pads on request only
+         // outgoing media
+         /*RefPtr<Gst::Bin> _enc = *enc;
+         _enc->link_pads("src", rtpBin, s.str());*/
+         //RefPtr<Pad> mediaSink = rtpBin->create_compatible_pad(pad, caps);
+         // needs to be consistent with webrtcbin naming convention
+         // rather than rtcbin naming conventions
+         string rtcBinPadName = makePadName("send_rtp_sink_", streamCount);
+         string webrtcBinPadName = makePadName("sink_", streamCount);
+         RefPtr<Pad> mediaSink = rtpBin->get_request_pad(rtcBinPadName);
+         //RefPtr<Pad> ghostSink = GhostPad::create(mediaSink, webrtcBinPadName);
+         //mRtpTransportBin->add_pad(ghostSink);
+         RefPtr<GhostPad> ghostSink = RefPtr<GhostPad>::cast_dynamic(mRtpTransportBin->get_static_pad(webrtcBinPadName));
+         if(ghostSink)
+         {
+            DebugLog(<<"using existing GhostPad " << webrtcBinPadName);
+            ghostSink->set_target(mediaSink);
+         }
+         else
+         {
+            DebugLog(<<"creating GhostPad " << webrtcBinPadName);
+            ghostSink = GhostPad::create(mediaSink, webrtcBinPadName);
+            mRtpTransportBin->add_pad(ghostSink);
+         }
+      }
+
+      local++;
+      remote++;
+      //enc++;
+      streamCount++;
+   }
+   mStreamCount = streamCount;
+}
 
 void
 GstRtpSession::createRtpTransportBin()
@@ -767,104 +1126,12 @@ GstRtpSession::createRtpTransportBin()
          }
       });
 
-      Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp");
-
-      // Iterators
-      SdpContents::Session::MediumContainer::iterator local = mLocal->session().media().begin(); // FIXME - migrate to const_iterator
-      SdpContents::Session::MediumContainer::const_iterator remote = mRemote->session().media().cbegin();
-      //std::vector<Glib::RefPtr<Gst::Bin>>::const_iterator enc = mEncBin.cbegin();
-
-      for(; local != mLocal->session().media().end() &&
-      remote != mRemote->session().media().cend() /*&&
-      enc != mEncBin.cend()*/ ; )
-      {
-         if(local->name() == "audio" || local->name() == "video")
-         {
-            string localAddress = local->getConnections().front().getAddress().c_str(); // FIXME - more than one Connection?
-            Data peerAddress = remote->getConnections().front().getAddress(); // FIXME - more than one Connection?
-
-            // https://gstreamer.freedesktop.org/documentation/udp/udpsrc.html?gi-language=c
-            Glib::RefPtr<Gst::Element> udpSource = Gst::ElementFactory::create_element("udpsrc");
-            udpSource->set_property<Glib::ustring>("address", localAddress);
-            udpSource->set_property<gint32>("port", local->port());
-
-            Glib::RefPtr<Gst::Element> udpSourceRtcp = Gst::ElementFactory::create_element("udpsrc");
-            udpSourceRtcp->set_property<Glib::ustring>("address", localAddress);
-            udpSourceRtcp->set_property<gint32>("port", local->firstRtcpPort()); // FIXME - more than one Connection / RTCP?
-
-            // https://gstreamer.freedesktop.org/documentation/udp/multiudpsink.html?gi-language=c#properties
-            Glib::RefPtr<Gst::Element> udpSink = Gst::ElementFactory::create_element("multiudpsink");
-            Data peerClient = P_CLIENTS(peerAddress, remote->port());
-            DebugLog(<<"peerClient = " << peerClient);
-
-            udpSink->set_property<Glib::ustring>("clients", peerClient.c_str());
-            // FIXME - specifying the bind-address and bind-port is a very good idea for NAT
-            //         traversal (symmetric RTP RFC 4961)
-            //         https://www.rfc-editor.org/rfc/rfc4961
-            //       - however, when I tried to use these settings, I found that the streams were not
-            //         activated at all or sometimes the pad-added event was only received for one
-            //         stream (audio or video) and not both
-            //       - there is also an option to obtain the GSocket pointer from the udpsrc and give it to
-            //         the udpsink so they share the same socket (properties: socket, socket-v6)
-            //udpSink->set_property<Glib::ustring>("bind-address", localAddress); // FIXME share socket with udpsrc?
-            //udpSink->set_property<gint32>("bind-port", local->port());
-            udpSink->set_property("sync", false);
-            udpSink->set_property("async", false);
-            //udpSink->set_property("qos-dscp", ); // FIXME
-            //udpSink->set_property("socket", ); // FIXME
-            //udpSink->set_property("socket-v6", ); // FIXME
-
-            Glib::RefPtr<Gst::Element> udpSinkRtcp = Gst::ElementFactory::create_element("multiudpsink");
-            Data peerClientRtcp = P_CLIENTS(peerAddress, remote->firstRtcpPort());
-            DebugLog(<<"peerClientRtcp = " << peerClientRtcp);
-
-            udpSinkRtcp->set_property<Glib::ustring>("clients", peerClientRtcp.c_str());
-            // FIXME - see comments above about bind-address and bind-port with udpSink element
-            //udpSinkRtcp->set_property<Glib::ustring>("bind-address", localAddress); // FIXME share socket with udpsrc?
-            //udpSinkRtcp->set_property<gint32>("bind-port", local->firstRtcpPort()); // FIXME - more than one Connection / RTCP?
-            udpSinkRtcp->set_property("sync", false);
-            udpSinkRtcp->set_property("async", false);
-            //udpSinkRtcp->set_property("qos-dscp", ); // FIXME
-            //udpSinkRtcp->set_property("socket", ); // FIXME
-            //udpSinkRtcp->set_property("socket-v6", ); // FIXME
-
-            mRtpTransportBin->add(udpSource);
-            mRtpTransportBin->add(udpSourceRtcp);
-            mRtpTransportBin->add(udpSink);
-            mRtpTransportBin->add(udpSinkRtcp);
-
-            // incoming RTP / RTCP
-            Glib::RefPtr<Gst::Caps> incomingCaps = getCaps(*local);
-            udpSource->link_pads("src", rtpBin, makePadName("recv_rtp_sink_", mStreamCount), incomingCaps);
-            udpSourceRtcp->link_pads("src", rtpBin, makePadName("recv_rtcp_sink_", mStreamCount), rtcp_caps);
-
-            // outgoing RTP - linked by on-pad-added signal handler
-            //rtpBin->link_pads(makePadName("send_rtp_src_", mStreamCount), udpSink, "sink");
-            // outgoing RTCP - linked manually
-            rtpBin->link_pads(makePadName("send_rtcp_src_", mStreamCount), udpSinkRtcp, "sink", rtcp_caps);
-            mSendSinks[mStreamCount] = udpSink;
-            mSendRtcpSinks[mStreamCount] = udpSinkRtcp;
-
-            // FIXME - create the outgoing ghost pads on request only
-            // outgoing media
-            /*RefPtr<Gst::Bin> _enc = *enc;
-               _enc->link_pads("src", rtpBin, s.str());*/
-            //RefPtr<Pad> mediaSink = rtpBin->create_compatible_pad(pad, caps);
-            // needs to be consistent with webrtcbin naming convention
-            // rather than rtcbin naming conventions
-            string rtcBinPadName = makePadName("send_rtp_sink_", mStreamCount);
-            string webrtcBinPadName = makePadName("sink_", mStreamCount);
-            RefPtr<Pad> mediaSink = rtpBin->get_request_pad(rtcBinPadName);
-            RefPtr<Pad> ghostSink = GhostPad::create(mediaSink, webrtcBinPadName);
-            mRtpTransportBin->add_pad(ghostSink);
-
-         }
-
-         local++;
-         remote++;
-         //enc++;
-         mStreamCount++;
-      }
+      // we used to call this here, now
+      // it is broken up and called as the offer/answer exchange
+      // progresses
+      //initRtpPorts();
+      initRtpRxPorts();
+      initRtpTxPorts();
    }
 
    mRtpTransportBin->signal_pad_added().connect([this](const RefPtr<Pad>& pad){
@@ -1079,6 +1346,120 @@ GstRtpSession::onPlaying()
       DebugLog(<<"onPlaying: adding pad " << pad->get_name());
       //mRtpTransportBin->add_pad(pad);
    }
+}
+
+void
+GstRtpSession::initCaps(std::shared_ptr<SdpContents> sdp, std::vector<Glib::RefPtr<Caps>>& sessionCaps)
+{
+   if(!sdp)
+   {
+      ErrLog(<<"initCaps: we don't have valid SDP");
+      return;
+   }
+
+   const CodecConfigMap& codecConfigs = mRTPManager.getCodecConfigMap();
+
+   sessionCaps.clear();
+   sessionCaps.resize(sdp->session().media().size());
+
+   unsigned int entry = 0;
+   for(const auto& m : sdp->session().media())
+   {
+      RefPtr<Caps>& caps = sessionCaps[entry];
+      Data mediumName = m.name();
+      mediumName.lowercase();
+      if(mediumName == "audio" || mediumName == "video")
+      {
+         StackLog(<<"parsing a medium entry for caps, name = " << mediumName);
+         std::list<Data> formats = m.getFormats(); // must have a copy here because it is emptied by m.codecs()
+         std::map<int, SdpContents::Session::Codec> codecMap;
+         for(const auto& c : m.codecs())
+         {
+            codecMap[c.payloadType()] = c;
+         }
+         StackLog(<<"found " << codecMap.size() << " codec(s) and " << formats.size() << " format(s) in the SDP offer");
+         resip_assert(formats.size() > 0); // FIXME
+         for(const auto& f : formats)
+         {
+            StackLog(<<"checking format " << f);
+            if(!caps && f != "webrtc-datachannel" && f != "*")
+            {
+               int pt = f.convertInt();
+               if(codecMap.find(pt) != codecMap.end())
+               {
+                  const Codec& c = codecMap.at(pt);
+                  Data codecName = c.getName();
+                  codecName.uppercase();
+
+                  CodecConfigMap::const_iterator it = codecConfigs.find(codecName);
+                  // FIXME - check all codec properties are compatible
+
+                  if(it != codecConfigs.cend())
+                  {
+                     const shared_ptr<CodecConfig> cc = it->second;
+                     DebugLog(<<"found supported codec: " << codecName);
+
+                     caps = Gst::Caps::create_simple("application/x-rtp",
+                              "media", mediumName.c_str(),
+                              "encoding-name", codecName.c_str(),
+                              "clock-rate", c.getRate(),
+                              "payload", c.payloadType());
+                  }
+                  else
+                  {
+                     DebugLog(<<"ignoring unsupported codec: " << codecName);
+                  }
+               }
+               else
+               {
+                  WarningLog(<<"format " << pt << " not found in codecMap");
+               }
+            }
+         }
+      }
+      else
+      {
+         WarningLog(<<"medium name " << mediumName << " not supported");
+      }
+      entry++;
+   }
+}
+
+void
+GstRtpSession::initOutgoingBins()
+{
+   initRtpRxPorts();
+   initRtpTxPorts();
+
+   mOutgoingPads.clear();
+   mOutgoingPads.resize(getOutgoingCaps().size());
+   unsigned int streamId = 0;
+   for(auto& caps : getOutgoingCaps())
+   {
+      if(caps)
+      {
+         mOutgoingPads[streamId] = createMediaSink(caps, streamId);
+      }
+      streamId++;
+   }
+}
+
+void
+GstRtpSession::addStream(Glib::RefPtr<Gst::Caps> caps)
+{
+   unsigned int streamId = mOutgoingCaps.size();
+   mOutgoingCaps.push_back(caps);
+   mOutgoingPads.push_back(GhostPad::create(PAD_SINK, makePadName("sink_", streamId)));
+}
+
+void
+GstRtpSession::setRemoteSdp(std::shared_ptr<resip::SdpContents> remote)
+{
+   mRemote = remote;
+   initCaps(mRemote, mOutgoingCaps);
+
+   initRtpRxPorts();
+   initRtpTxPorts();
 }
 
 unsigned int

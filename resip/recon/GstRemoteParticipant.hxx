@@ -105,14 +105,15 @@ protected:
 
 private:
    void initRtpManager();
+   void initRtpSession(bool isWebRTC);
    //gstreamer::BaseRtpEndpoint* newEndpoint();
    virtual void linkOutgoingPipeline(unsigned int streamId, Glib::RefPtr<Gst::Bin> bin, const Glib::RefPtr<Gst::Caps> caps);
-   virtual void prepareStream(const Glib::RefPtr<Gst::Caps> caps, bool loopbackMode);
+   virtual void prepareStream(unsigned int streamId, bool loopbackMode);
    virtual bool initEndpointIfRequired(bool isWebRTC);
    //virtual void doIceGathering(gstreamer::ContinuationString sdpReady);
    //typedef Glib::ustring StreamKey;
-   typedef resip::Data StreamKey;
-   virtual StreamKey getKeyForStream(const Glib::RefPtr<Gst::Caps>& caps) const;
+   typedef resip::Data MediaTypeName;
+   virtual MediaTypeName getMediaTypeName(const Glib::RefPtr<Gst::Caps>& caps) const;
    virtual bool isWebRTCSession() const;
    virtual void onMediaSourceAdded(const Glib::RefPtr<Gst::Pad>& pad);
    virtual Glib::RefPtr<Gst::Bin> createIncomingPipeline(Glib::RefPtr<Gst::Pad> pad);
@@ -151,9 +152,9 @@ public: // FIXME
    Glib::RefPtr<Gst::Element> mMediaBin;
    Glib::RefPtr<Gst::Element> mRtpTransportElement;
 
-   std::map<StreamKey, Glib::RefPtr<Gst::Bin>> mDecodes;
+   //std::map<MediaTypeName, Glib::RefPtr<Gst::Bin>> mDecodes;
    //std::map<StreamKey, Glib::RefPtr<Gst::Bin>> mEncodes;
-   std::map<StreamKey, Glib::RefPtr<Gst::Pad>> mEncodes;
+   //std::map<MediaTypeName, Glib::RefPtr<Gst::Pad>> mEncodes;
 
    std::function<void(const Glib::RefPtr<Gst::Pad>& pad)> mPadAdded;
 
