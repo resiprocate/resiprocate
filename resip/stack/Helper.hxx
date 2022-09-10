@@ -514,15 +514,6 @@ class Helper
       // of reason.
       static bool validateMessage(const SipMessage& message,resip::Data* reason=0);
 
-      // GRUU support -- reversibly and opaquely combine instance id and aor
-      static Data gruuUserPart(const Data& instanceId,
-                               const Data& aor,
-                               const Data& key);
-
-      // GRUU support -- extract instance id and aor from user portion
-      static std::pair<Data,Data> fromGruuUserPart(const Data& gruuUserPart,
-                                                   const Data& key);
-
       struct ContentsSecAttrs
       {
             ContentsSecAttrs() = default;
