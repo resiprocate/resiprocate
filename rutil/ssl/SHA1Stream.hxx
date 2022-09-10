@@ -7,24 +7,14 @@
 
 #include <iostream>
 #include <memory>
-#include <vector>
 #include "rutil/Data.hxx"
+#include "rutil/ssl/OpenSSLDeleter.hxx"
 
 // This will not be compiled or installed if USE_SSL isn't set. If you are 
 // including this file from a source tree, and you are getting link errors, you 
 // are probably trying to link against libs that were built without SSL support. 
-// Either stop trying to use this file, or re-build the libs with ssl support 
+// Either stop trying to use this file, or re-build the libs with SSL support
 // enabled.
-//#if defined (USE_SSL)
-//# include "openssl/sha.h"
-//#else
-//// !kh!
-//// so it would compile without openssl.
-//// also see my comment below.
-//typedef int SHA_CTX;
-//#endif // USE_SSL
-
-# include "openssl/sha.h"
 
 namespace resip
 {
@@ -51,13 +41,8 @@ class SHA1Buffer : public std::streambuf
       virtual int sync();
       virtual int overflow(int c = -1);
    private:
-      // !kh!
-      // used pointers to keep the same object layout.
-      // this adds overhead, two additional new/delete.
-      // could get rid of the overhead if, sizeof(SHA_CTX) and SHA_DIGEST_LENGTH are known and FIXED.
-      // could use pimpl to get rid of one new/delete pair.
-      std::unique_ptr<SHA_CTX> mContext;
-      std::vector<char> mBuf;
+      std::unique_ptr<EVP_MD_CTX, OpenSSLDeleter> mContext;
+      char mBuf[64];
       bool mBlown;
 };
 
@@ -83,7 +68,6 @@ class SHA1Stream : private SHA1Buffer, public std::ostream
 
       /** Calls getBin(32) and converts to a UInt32 */
       uint32_t getUInt32();
-      
 };
 
 }
