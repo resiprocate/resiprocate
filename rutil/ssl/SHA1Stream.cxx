@@ -24,12 +24,6 @@
 
 using namespace resip;
 
-inline SHA1Buffer::EVP_MD_CTX_deleter::result_type
-SHA1Buffer::EVP_MD_CTX_deleter::operator() (EVP_MD_CTX* p) const noexcept
-{
-   EVP_MD_CTX_free(p);
-}
-
 SHA1Buffer::SHA1Buffer()
         : mBlown(false)
 {

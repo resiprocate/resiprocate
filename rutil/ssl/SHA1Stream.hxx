@@ -8,14 +8,13 @@
 #include <iostream>
 #include <memory>
 #include "rutil/Data.hxx"
+#include "rutil/ssl/OpenSSLDeleter.hxx"
 
 // This will not be compiled or installed if USE_SSL isn't set. If you are 
 // including this file from a source tree, and you are getting link errors, you 
 // are probably trying to link against libs that were built without SSL support. 
 // Either stop trying to use this file, or re-build the libs with SSL support
 // enabled.
-
-#include "openssl/ossl_typ.h"  // for EVP_MD_CTX
 
 namespace resip
 {
@@ -25,14 +24,6 @@ namespace resip
  */
 class SHA1Buffer : public std::streambuf
 {
-   private:
-      struct EVP_MD_CTX_deleter
-      {
-         typedef void result_type;
-
-         result_type operator() (EVP_MD_CTX* p) const noexcept;
-      };
-
    public:
       SHA1Buffer();
       virtual ~SHA1Buffer();
@@ -50,7 +41,7 @@ class SHA1Buffer : public std::streambuf
       virtual int sync();
       virtual int overflow(int c = -1);
    private:
-      std::unique_ptr<EVP_MD_CTX, EVP_MD_CTX_deleter> mContext;
+      std::unique_ptr<EVP_MD_CTX, OpenSSLDeleter> mContext;
       char mBuf[64];
       bool mBlown;
 };
