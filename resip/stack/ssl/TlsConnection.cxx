@@ -36,7 +36,11 @@ inline bool handleOpenSSLErrorQueue(int ret, unsigned long err, const char* op)
       const char* file;
       int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
       unsigned long code = ERR_get_error_line(&file,&line);
+#else
+      unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
       if ( code == 0 )
       {
          break;

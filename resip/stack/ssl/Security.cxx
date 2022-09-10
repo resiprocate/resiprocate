@@ -2091,7 +2091,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
          const char* file;
          int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
          unsigned long code = ERR_get_error_line(&file,&line);
+#else
+         unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
          if ( code == 0 )
          {
             break;
@@ -2187,7 +2191,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
                const char* file;
                int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
                unsigned long code = ERR_get_error_line(&file,&line);
+#else
+               unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
                if ( code == 0 )
                {
                   break;
@@ -2356,7 +2364,11 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          const char* file;
          int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
          unsigned long code = ERR_get_error_line(&file,&line);
+#else
+         unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
          if ( code == 0 )
          {
             break;
@@ -2535,7 +2547,11 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                const char* file;
                int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
                unsigned long code = ERR_get_error_line(&file,&line);
+#else
+               unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
                if ( code == 0 )
                {
                   break;
