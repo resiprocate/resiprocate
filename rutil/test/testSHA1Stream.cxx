@@ -73,6 +73,13 @@ main(void)
    }
    {
       SHA1Stream str;
+      str << 'a';
+      str << 'b';
+      str << 'c';
+      assert(str.getHex() == "a9993e36" "4706816a" "ba3e2571" "7850c26c" "9cd0d89d");
+   }
+   {
+      SHA1Stream str;
       str << "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
       assert(str.getHex() == "84983e44" "1c3bd26e" "baae4aa1" "f95129e5" "e54670f1");
    }

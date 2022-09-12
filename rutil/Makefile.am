@@ -103,6 +103,7 @@ librutil_la_SOURCES = \
 
 if USE_SSL
 librutil_la_SOURCES += \
+	ssl/OpenSSLDeleter.cxx \
 	ssl/OpenSSLInit.cxx \
 	ssl/SHA1Stream.cxx
 endif
