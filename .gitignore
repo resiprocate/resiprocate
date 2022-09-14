@@ -5,6 +5,7 @@
 *.o
 *.lo
 *.la
+*.bak
 /Makefile
 /Makefile.in
 /.deps
@@ -21,6 +22,7 @@
 /stamp-h1
 /autom4te.cache
 /build-aux
+/packages
 /resiprocate.spec
 /resiprocate-[0-9]*.tar.gz
 /resiprocate-[0-9]*.zip

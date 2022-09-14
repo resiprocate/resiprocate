@@ -426,6 +426,7 @@
     <ClCompile Include="TupleMarkManager.cxx">
       <Filter>DNS</Filter>
     </ClCompile>
+    <ClCompile Include="TrickleIceContents.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ssl\WinSecurity.hxx" />
@@ -904,6 +905,7 @@
     <ClInclude Include="TupleMarkManager.hxx">
       <Filter>DNS</Filter>
     </ClInclude>
+    <ClInclude Include="TrickleIceContents.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf">
@@ -915,5 +917,6 @@
     <None Include="ParameterHash.gperf">
       <Filter>GPerfFiles</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
