@@ -5,7 +5,6 @@
 #include <new>
 #include <stdexcept>
 #include <algorithm>
-#include <limits>
 #include "rutil/ResipAssert.h"
 
 #if defined(HAVE_CONFIG_H)
