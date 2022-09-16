@@ -83,6 +83,15 @@ testSHA1Stream_SOURCES = testSHA1Stream.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
 
+if BUILD_PYTHON
+TESTS += testPython
+check_PROGRAMS += testPython
+testPython_SOURCES = testPython.cxx
+testPython_CPPFLAGS = $(DEPS_PYTHON_CFLAGS)
+LDADD += $(DEPS_PYTHON_LIBS)
+LDADD += -lpython$(DEPS_PYTHON_VERSION)
+endif
+
 noinst_HEADERS = TestSubsystemLogLevel.hxx
 
 EXTRA_PROGRAMS = fuzzUtil

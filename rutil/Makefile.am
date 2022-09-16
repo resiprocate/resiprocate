@@ -60,6 +60,7 @@ librutil_la_SOURCES = \
 	ParseException.cxx \
 	Poll.cxx \
 	PoolBase.cxx \
+	Plugin.cxx \
 	FdPoll.cxx \
 	RADIUSDigestAuthenticator.cxx \
 	RWMutex.cxx \
@@ -120,6 +121,40 @@ librutil_la_SOURCES += \
     ProtonThreadBase.cxx
 endif
 
+if BUILD_PYTHON
+librutil_la_CPPFLAGS = $(DEPS_PYTHON_CFLAGS)
+librutil_la_SOURCES += \
+	PyExtensionBase.cxx
+
+nodist_librutil_la_SOURCES = cxxextensions.c
+nodist_librutil_la_SOURCES += cxx_extensions.cxx
+nodist_librutil_la_SOURCES += cxxsupport.cxx
+nodist_librutil_la_SOURCES += IndirectPythonInterface.cxx
+nodist_librutil_la_SOURCES += cxx_exceptions.cxx
+
+librutil_la_LIBADD += $(DEPS_PYTHON_LIBS)
+librutil_la_LIBADD += -lpython$(DEPS_PYTHON_VERSION)
+
+# Copy files from PyCXX into the tree to workaround an automake bug
+# Discussed in the lists:
+#   http://list.resiprocate.org/archive/resiprocate-devel/msg09110.html
+#   http://lists.gnu.org/archive/html/automake/2016-06/msg00003.html
+cxx_exceptions.cxx:	$(PYCXX_SRCDIR)/cxx_exceptions.cxx
+	cp $(PYCXX_SRCDIR)/cxx_exceptions.cxx .
+
+cxxextensions.c:	$(PYCXX_SRCDIR)/cxxextensions.c
+	cp $(PYCXX_SRCDIR)/cxxextensions.c .
+
+cxx_extensions.cxx:	$(PYCXX_SRCDIR)/cxx_extensions.cxx
+	cp $(PYCXX_SRCDIR)/cxx_extensions.cxx .
+
+cxxsupport.cxx:	$(PYCXX_SRCDIR)/cxxsupport.cxx
+	cp $(PYCXX_SRCDIR)/cxxsupport.cxx .
+
+IndirectPythonInterface.cxx:	$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx
+	cp $(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx .
+endif
+
 rutilincludedir = $(includedir)/rutil
 nobase_rutilinclude_HEADERS = compat.hxx \
 	ResipAssert.h \
@@ -140,6 +175,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	CircularBuffer.hxx \
 	FiniteFifo.hxx \
 	ParseBuffer.hxx \
+	Plugin.hxx \
 	Log.hxx \
 	ThreadIf.hxx \
 	WinLeakCheck.hxx \
@@ -217,6 +253,8 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	DinkyPool.hxx \
 	ConsumerFifoBuffer.hxx \
 	ProtonThreadBase.hxx \
+	PyExtensionBase.hxx \
+	PyThreadSupport.hxx \
 	hep/HepAgent.hxx \
 	hep/ResipHep.hxx \
 	rtcp/re_rtp.h

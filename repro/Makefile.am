@@ -25,7 +25,7 @@ EXTRA_DIST += upgrade_mysql_reprodb.sql
 EXTRA_DIST += users.txt
 
 SUBDIRS = . test reprocmd accountingconsumers
-if BUILD_REPRO_DSO_PLUGINS
+if BUILD_DSO_PLUGINS
 SUBDIRS += plugins
 endif
 
@@ -45,7 +45,7 @@ repro_LDADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 lib_LTLIBRARIES = librepro.la
 
-if BUILD_REPRO_DSO_PLUGINS
+if BUILD_DSO_PLUGINS
 librepro_la_CXXFLAGS = -DREPRO_DSO_PLUGIN_DIR_DEFAULT='"@reproplugindir@"'
 endif
 librepro_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
@@ -103,6 +103,7 @@ librepro_la_SOURCES = \
 	XmlRpcServerBase.cxx \
 	OutboundTarget.cxx \
 	PersistentMessageQueue.cxx \
+	Plugin.cxx \
 	QValueTarget.cxx \
 	\
 	stateAgents/PresenceServer.cxx \
