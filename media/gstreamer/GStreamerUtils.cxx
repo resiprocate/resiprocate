@@ -2,6 +2,8 @@
 
 #ifdef USE_GSTREAMER
 
+#include <regex>
+
 #include <glib.h>
 #include <gst/gst.h>
 #include <gst/rtp/gstrtcpbuffer.h>
@@ -18,10 +20,9 @@
 using namespace resip;
 using namespace Glib;
 using namespace Gst;
+using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::GstSubsystem::GSTREAMER
-
-GstSubsystem GstSubsystem::GSTREAMER("GSTREAMER");
 
 extern "C"
 {
@@ -76,12 +77,145 @@ gst2resip_log_function(GstDebugCategory *category, GstDebugLevel level,
 
 } // extern "C"
 
-void resip::storeGstreamerGraph(RefPtr<Gst::Bin>& bin, const resip::Data& fileNamePrefix)
+RefPtr<Element>
+resip::buildTestSource(const Data& streamName)
+{
+   RefPtr<Element> testSrc;
+   if(streamName == "audio")
+   {
+      testSrc = Parse::create_bin("audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample", true);
+   }
+   else if(streamName == "video")
+   {
+      testSrc = Parse::create_bin("videotestsrc is-live=true pattern=ball ! videoconvert", true);
+   }
+   else
+   {
+      ErrLog(<<"unknown stream name: " << streamName);
+      resip_assert(0);
+   }
+   return testSrc;
+}
+
+MediaTypeName
+resip::getMediaTypeName(const RefPtr<Caps>& caps)
+{
+   if(!caps)
+   {
+      ErrLog(<<"caps is empty");
+      return "";
+   }
+
+   DebugLog(<<"getMediaTypeName: " << caps->to_string());
+
+   //return pad->get_stream_id();
+
+   string mediaType = caps->get_structure(0).get_name();
+   StackLog(<<"mediaType: " << mediaType);
+   if(regex_search(mediaType, regex("^video")))
+   {
+      return "video";
+   }
+   else if(regex_search(mediaType, regex("^audio")))
+   {
+      return "audio";
+   }
+   if(caps->get_structure(0).has_field("media"))
+   {
+      string mediaName;
+      caps->get_structure(0).get_field("media", mediaName);
+      StackLog(<<"mediaName: " << mediaName);
+      return mediaName.c_str();
+   }
+   return "";
+}
+
+int
+resip::getStreamIdFromPadName(const Glib::ustring padName)
+{
+   StackLog(<<"trying to extract streamId from pad name: " << padName);
+
+   // rtpbin
+   std::regex r("recv_rtp_src_(\\d+)_(\\d+)_(\\d+)");
+   std::smatch match;
+   const std::string& s = padName.raw();
+   if(std::regex_search(s.begin(), s.end(), match, r))
+   {
+      unsigned int streamId = atoi(match[1].str().c_str());
+      StackLog(<<"found streamId: " << streamId);
+      return streamId;
+   }
+
+   // webrtcbin
+   r = "src_(\\d+)";
+   if(std::regex_search(s.begin(), s.end(), match, r))
+   {
+      unsigned int streamId = atoi(match[1].str().c_str());
+      StackLog(<<"found streamId: " << streamId);
+      return streamId;
+   }
+
+   WarningLog(<<"pad name didn't match regex");
+   resip_assert(0);
+   return -1;
+}
+
+// FIXME - remove this, it is a temporary hack until
+// the code is consolidated in GstRtpManager
+Data
+resip::deduceKeyForPadName(const Glib::ustring padName)
+{
+   StackLog(<<"trying to extract pt from pad name");
+   std::regex r("recv_rtp_src_(\\d+)_(\\d+)_(\\d+)");
+   std::smatch match;
+   const std::string& s = padName.raw();
+   if (std::regex_search(s.begin(), s.end(), match, r))
+   {
+      unsigned int pt = atoi(match[3].str().c_str());
+      StackLog(<<"found payload type: " << pt);
+      switch(pt)
+      {
+      case 0: // FIXME
+      case 8:
+         return "audio";
+         break;
+      case 97:
+         return "video";
+         break;
+      default:
+         resip_assert(0);
+         break;
+      }
+   }
+
+   r = "src_(\\d+)";
+   if (std::regex_search(s.begin(), s.end(), match, r))
+   {
+      unsigned int srcId = atoi(match[1].str().c_str());
+      StackLog(<<"found srcId: " << srcId);
+      switch(srcId)
+      {
+      case 0: return "audio";
+      case 1: return "video";
+      default:
+         ErrLog(<<"unsupported srcId value: " << srcId);
+         resip_assert(0);
+      }
+   }
+
+   WarningLog(<<"pad name didn't match regex");
+   resip_assert(0);
+   return "";
+}
+
+void
+resip::storeGstreamerGraph(RefPtr<Gst::Bin>& bin, const resip::Data& fileNamePrefix)
 {
    GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(bin->gobj(), GST_DEBUG_GRAPH_SHOW_ALL, fileNamePrefix.c_str());
 }
 
-void resip::gstWebRTCSetDescription(Glib::RefPtr<Element> element, const gchar* signalName, GstWebRTCSessionDescription* gstwebrtcdesc)
+void
+resip::gstWebRTCSetDescription(Glib::RefPtr<Element> element, const gchar* signalName, GstWebRTCSessionDescription* gstwebrtcdesc)
 {
    GstPromise* promise = gst_promise_new();
    g_signal_emit_by_name (element->gobj(), signalName, gstwebrtcdesc, promise);
@@ -120,7 +254,8 @@ resip::createGstWebRTCSessionDescriptionFromSdpContents(GstWebRTCSDPType sdpType
    return gstwebrtc;
 }
 
-void resip::addGstreamerKeyframeProbe(const Glib::RefPtr<Gst::Pad>& pad, std::function<void()> onKeyframeRequired)
+void
+resip::addGstreamerKeyframeProbe(const Glib::RefPtr<Gst::Pad>& pad, std::function<void()> onKeyframeRequired)
 {
    pad->add_probe(PAD_PROBE_TYPE_EVENT_UPSTREAM,
             [onKeyframeRequired](const Glib::RefPtr<Gst::Pad>& pad, const Gst::PadProbeInfo& info)
@@ -141,7 +276,8 @@ void resip::addGstreamerKeyframeProbe(const Glib::RefPtr<Gst::Pad>& pad, std::fu
 
 // logic for inserting the Tee elements in the RTCP flow and
 // creating ghost pads to access the RTCP flow from the application
-bool addGstreamerRtcpMonitoringPadsInternal(RefPtr<Bin>& outerBin, RefPtr<Bin>& rtpbin, Gst::Iterator<Gst::Pad> it, ustring prefix)
+bool
+addGstreamerRtcpMonitoringPadsInternal(RefPtr<Bin>& outerBin, RefPtr<Bin>& rtpbin, Gst::Iterator<Gst::Pad> it, ustring prefix)
 {
    RefPtr<Caps> rtcpCaps = Gst::Caps::create_from_string("application/x-rtcp");
    RefPtr<Gst::PadTemplate> padTemplate = PadTemplate::create("src_%", PAD_SRC, PAD_REQUEST, rtcpCaps);
@@ -180,7 +316,8 @@ struct RTPSession;
 
 // stub function to proxy signal from C-style handler to C++
 typedef std::function<void(GstBuffer*)> RxRTCPCallback;
-void rxRtcpStub(GstElement* session, GstBuffer* buffer, void *u)
+void
+rxRtcpStub(GstElement* session, GstBuffer* buffer, void *u)
 {
    RxRTCPCallback &func = *static_cast<RxRTCPCallback*>(u);
    func(buffer);
@@ -188,13 +325,15 @@ void rxRtcpStub(GstElement* session, GstBuffer* buffer, void *u)
 
 // stub function to proxy signal from C-style handler to C++
 typedef std::function<gboolean(GstBuffer*, gboolean)> TxRTCPCallback;
-gboolean txRtcpStub(GstElement* session, GstBuffer* buffer, gboolean early, void *u)
+gboolean
+txRtcpStub(GstElement* session, GstBuffer* buffer, gboolean early, void *u)
 {
    TxRTCPCallback &func = *static_cast<TxRTCPCallback*>(u);
    return func(buffer, early);
 }
 
-guint processReceiverReports(DataStream& stream, GstRTCPPacket *_packet)
+guint
+processReceiverReports(DataStream& stream, GstRTCPPacket *_packet)
 {
    guint count, i;
 
@@ -226,7 +365,8 @@ guint processReceiverReports(DataStream& stream, GstRTCPPacket *_packet)
    return count;
 }
 
-void onSenderReport(DataStream& stream, GstRTCPPacket *_packet)
+void
+onSenderReport(DataStream& stream, GstRTCPPacket *_packet)
 {
    guint32 ssrc;
    guint64 ntptime;
@@ -250,7 +390,8 @@ void onSenderReport(DataStream& stream, GstRTCPPacket *_packet)
    processReceiverReports(stream, _packet);
 }
 
-void onReceiverReport(DataStream& stream, GstRTCPPacket *_packet)
+void
+onReceiverReport(DataStream& stream, GstRTCPPacket *_packet)
 {
    guint32 senderssrc;
 
@@ -263,7 +404,8 @@ void onReceiverReport(DataStream& stream, GstRTCPPacket *_packet)
    processReceiverReports(stream, _packet);
 }
 
-void onBuffer(GstBuffer *__buffer, const GenericIPAddress& source, const GenericIPAddress& destination, std::shared_ptr<HepAgent> hepAgent, const Data& correlationId)
+void
+onBuffer(GstBuffer *__buffer, const GenericIPAddress& source, const GenericIPAddress& destination, std::shared_ptr<HepAgent> hepAgent, const Data& correlationId)
 {
    if(!__buffer)
    {
@@ -357,7 +499,8 @@ void onBuffer(GstBuffer *__buffer, const GenericIPAddress& source, const Generic
    gst_rtcp_buffer_unmap(&_rtcp);
 }
 
-bool resip::addGstreamerRtcpMonitoringPads(Glib::RefPtr<Gst::Bin> bin, std::shared_ptr<HepAgent> hepAgent, const RtcpPeerSpecVector& peerSpecs, const Data& correlationId)
+bool
+resip::addGstreamerRtcpMonitoringPads(Glib::RefPtr<Gst::Bin> bin, std::shared_ptr<HepAgent> hepAgent, const RtcpPeerSpecVector& peerSpecs, const Data& correlationId)
 {
    if(!hepAgent)
    {
@@ -454,7 +597,8 @@ bool resip::addGstreamerRtcpMonitoringPads(Glib::RefPtr<Gst::Bin> bin, std::shar
    return true;
 }
 
-void resip::linkGstreamerRtcpHomer(Glib::RefPtr<Gst::Bin> bin, Glib::RefPtr<Gst::Pad> pad, std::shared_ptr<HepAgent> hepAgent, const RtcpPeerSpecVector& peerSpecs, const Data& correlationId)
+void
+resip::linkGstreamerRtcpHomer(Glib::RefPtr<Gst::Bin> bin, Glib::RefPtr<Gst::Pad> pad, std::shared_ptr<HepAgent> hepAgent, const RtcpPeerSpecVector& peerSpecs, const Data& correlationId)
 {
    // find index for tuple
    // std::bind the incoming/outgoing
@@ -508,14 +652,16 @@ void resip::linkGstreamerRtcpHomer(Glib::RefPtr<Gst::Bin> bin, Glib::RefPtr<Gst:
    appSink->sync_state_with_parent();
 }
 
-Tuple createRtcpTuple(const SdpContents::Session::Medium& m)
+Tuple
+createRtcpTuple(const SdpContents::Session::Medium& m)
 {
    auto& c = m.getConnections().front();
    TransportType tt = UDP;  // FIXME - check for valid m.protocol()
    return Tuple(c.getAddress(), m.firstRtcpPort(), tt);
 }
 
-RtcpPeerSpecVector resip::createRtcpPeerSpecs(const SdpContents& local, const SdpContents& remote)
+RtcpPeerSpecVector
+resip::createRtcpPeerSpecs(const SdpContents& local, const SdpContents& remote)
 {
    RtcpPeerSpecVector result;
 

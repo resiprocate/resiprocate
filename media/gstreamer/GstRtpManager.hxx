@@ -60,12 +60,16 @@ class GstRtpManager
 {
    public:
       GstRtpManager(const resip::Data& localAddress);
+      GstRtpManager(const resip::Data& localAddress, int portRangeMin, int portRangeMax);
       virtual ~GstRtpManager();
 
       const resip::Data& getLocalAddress() const { return mLocalAddress; };
       resip::RTPPortManager& getPortManager() { return mPortManager; };
 
       const CodecConfigMap& getCodecConfigMap() { return mCodecConfigMap; };
+
+      const resip::Data& getApplicationName() const { return mApplicationName; };
+      void setApplicationName(const resip::Data& applicationName) { mApplicationName = applicationName; };
 
    protected:
       virtual void initCodecConfigMap();
@@ -74,91 +78,7 @@ class GstRtpManager
       resip::Data mLocalAddress;
       resip::RTPPortManager mPortManager;
       CodecConfigMap mCodecConfigMap;
-};
-
-class GstRtpSession
-{
-   public:
-      GstRtpSession(GstRtpManager& rTPManager, bool webRTC);
-      virtual ~GstRtpSession();
-      virtual std::shared_ptr<resip::SdpContents> buildOffer(bool audio, bool video);
-      virtual std::shared_ptr<resip::SdpContents> buildAnswer(std::shared_ptr<resip::SdpContents> remoteOffer);
-      virtual void processAnswer(std::shared_ptr<resip::SdpContents> remoteAnswer);
-
-      virtual Glib::RefPtr<Gst::Caps> getCaps(resip::SdpContents::Session::Medium& m);
-      // FIXME - assumes only one medium for each name
-      virtual Glib::RefPtr<Gst::Caps> getCaps(const resip::Data& mediumName);
-
-      Glib::RefPtr<Gst::Bin> createOutgoingPipeline(const Glib::RefPtr<Gst::Caps> caps);
-      Glib::RefPtr<Gst::Bin> createDecodeBin(const resip::Data& streamKey, const Glib::ustring& srcPadName, bool isWebRTC);
-      Glib::RefPtr<Gst::Pad> createMediaSink(Glib::RefPtr<Gst::Caps> caps, unsigned int streamId);
-
-      virtual Glib::RefPtr<Gst::Bin> getMediaBin() { return mMediaBin; };
-      //virtual void setRtpTransportBin(Glib::RefPtr<Gst::Bin> bin);
-      virtual Glib::RefPtr<Gst::Bin> getRtpTransportBin();
-
-      // FIXME - use a signal handler to invoke this, make it private
-      virtual void onPlaying();
-
-      std::shared_ptr<resip::SdpContents> getLocalSdp() const { return mLocal; };
-      void setLocalSdp(std::shared_ptr<resip::SdpContents> local) { mLocal = local; };
-      std::shared_ptr<resip::SdpContents> getRemoteSdp() const { return mRemote; };
-      void setRemoteSdp(std::shared_ptr<resip::SdpContents> remote);
-
-      typedef std::vector<Glib::RefPtr<Gst::Caps>> CapsVector;
-      const CapsVector& getOutgoingCaps() const { return mOutgoingCaps; };
-      typedef std::vector<Glib::RefPtr<Gst::Pad>> PadVector;
-      const PadVector& getOutgoingPads() const { return mOutgoingPads; };
-
-      virtual bool isWebRTC() const { return mWebRTC; };
-
-      virtual void setKeyframeRequestHandler(std::function<void()> onKeyframeRequired) { mOnKeyframeRequired = onKeyframeRequired; };
-
-      virtual unsigned int getStreamCount();
-
-      virtual void initOutgoingBins();
-
-      virtual void initHomer(const resip::Data& correlationId, std::shared_ptr<resip::HepAgent> hepAgent);
-
-      virtual void addStream(Glib::RefPtr<Gst::Caps> caps);
-
-   private:
-      virtual void initRtpRxPorts();
-      virtual void initRtpTxPorts();
-      virtual void createRtpTransportBin();
-      virtual void createDecodeBinForStream(const Glib::RefPtr<Gst::Pad>& pad, unsigned int streamId, int pt);
-
-      const resip::Data& getLocalAddress() const;
-      unsigned int allocatePort();
-
-      virtual void initCaps(std::shared_ptr<resip::SdpContents> sdp, CapsVector& sessionCaps);
-
-      GstRtpManager& mRTPManager;
-      bool mWebRTC;
-
-      std::shared_ptr<resip::SdpContents> mLocal;
-      std::shared_ptr<resip::SdpContents> mRemote;
-
-      // contains the encode and decodes and the transport wrapper
-      Glib::RefPtr<Gst::Bin> mMediaBin;
-      // wraps the transport (webrtcbin or rtpbin)
-      Glib::RefPtr<Gst::Bin> mRtpTransportBin;
-
-      std::vector<Glib::RefPtr<Gst::Pad> > mSourcePads;
-      std::map<unsigned int, Glib::RefPtr<Gst::Element> > mSendSinks;
-      std::map<unsigned int, Glib::RefPtr<Gst::Element> > mSendRtcpSinks;
-
-      unsigned int mStreamCount = 0;
-      unsigned int mDecodes = 0;
-
-      std::function<void()> mOnKeyframeRequired;
-
-      CapsVector mOutgoingCaps;
-      PadVector mOutgoingPads;
-
-      // for HOMER / HEP / EEP
-      resip::Data mCorrelationId;
-      std::shared_ptr<resip::HepAgent> mHepAgent;
+      resip::Data mApplicationName = "reSIProcate";
 };
 
 }

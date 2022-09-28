@@ -5,6 +5,7 @@
 #include <map>
 
 #include <media/gstreamer/GstRtpManager.hxx>
+#include <media/gstreamer/GstRtpSession.hxx>
 
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
@@ -112,8 +113,6 @@ private:
    virtual bool initEndpointIfRequired(bool isWebRTC);
    //virtual void doIceGathering(gstreamer::ContinuationString sdpReady);
    //typedef Glib::ustring StreamKey;
-   typedef resip::Data MediaTypeName;
-   virtual MediaTypeName getMediaTypeName(const Glib::RefPtr<Gst::Caps>& caps) const;
    virtual bool isWebRTCSession() const;
    virtual void onMediaSourceAdded(const Glib::RefPtr<Gst::Pad>& pad);
    virtual Glib::RefPtr<Gst::Bin> createIncomingPipeline(Glib::RefPtr<Gst::Pad> pad);

@@ -23,6 +23,8 @@
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/Tuple.hxx"
 
+#include "GstSubsystem.hxx"
+
 extern "C"
 {
    resip::Log::Level
@@ -37,18 +39,6 @@ extern "C"
 
 namespace resip
 {
-
-class GstSubsystem : public resip::Subsystem
-{
-   public:
-      // Add new systems below
-      static GstSubsystem GSTREAMER;
-
-   private:
-      explicit GstSubsystem(const char* rhs) : resip::Subsystem(rhs) {};
-      explicit GstSubsystem(const resip::Data& rhs);
-      GstSubsystem& operator=(const resip::Data& rhs);
-};
 
 static const std::map<GstWebRTCICEConnectionState, const resip::Data> iCEConnectionStates =
          {
@@ -90,6 +80,16 @@ const Data& lookupGstreamerStateName(std::map<T, const Data> m, T v)
    }
    return it->second;
 };
+
+Glib::RefPtr<Gst::Element> buildTestSource(const Data& streamName);
+
+typedef resip::Data MediaTypeName;
+
+MediaTypeName getMediaTypeName(const Glib::RefPtr<Gst::Caps>& caps);
+
+int getStreamIdFromPadName(const Glib::ustring padName);
+
+resip::Data deduceKeyForPadName(const Glib::ustring padName);
 
 /*
  * Must set the environment variable GST_DEBUG_DUMP_DOT_DIR
