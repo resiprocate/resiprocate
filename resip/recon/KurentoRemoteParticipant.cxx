@@ -358,7 +358,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
             }
             else
             {
-                m.setPort(0);
+                //m.setPort(0);
             }
         }
          _answer->session().transformLocalHold(isHolding());
