@@ -240,7 +240,7 @@ target_include_directories(librepro PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(librepro PRIVATE ${CAJUN_INCLUDE_DIRS})
 target_include_directories(librepro PRIVATE ${BERKELEYDB_INCLUDE_DIRS})
 target_link_libraries(librepro PRIVATE ${BERKELEYDB_LIBRARIES})
-if(GROIP_FOUND)
+if(GEOIP_FOUND)
         target_link_libraries(librepro PRIVATE ${GEOIP_LIBRARIES})
 endif()
 
