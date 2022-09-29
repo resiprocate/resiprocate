@@ -465,6 +465,12 @@
     <ClCompile Include="SelectInterruptor.cxx" />
     <ClCompile Include="ServerProcess.cxx" />
     <ClCompile Include="Sha1.cxx" />
+    <ClCompile Include="ssl\OpenSSLDeleter.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="ssl\OpenSSLInit.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -560,6 +566,7 @@
     <ClInclude Include="SelectInterruptor.hxx" />
     <ClInclude Include="ServerProcess.hxx" />
     <ClInclude Include="Sha1.hxx" />
+    <ClInclude Include="ssl\OpenSSLDeleter.hxx" />
     <ClInclude Include="ssl\OpenSSLInit.hxx" />
     <ClInclude Include="ParseBuffer.hxx" />
     <ClInclude Include="ParseException.hxx" />

@@ -851,24 +851,21 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
    }
 }
 
-void 
+void
 Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   if (e.value() == 10061)
+   // Make sure we keep receiving if we get an ICMP error on a UDP socket
+   if (mLocalBinding.getTransportType() == StunTuple::UDP &&
+      (e.value() == asio::error::connection_reset ||
+       e.value() == asio::error::connection_refused))
    {
-      // Lower log leve for common error on session termination
       DebugLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
+      resip_assert(mTurnSocket.get());
+      mTurnSocket->turnReceive();
    }
    else
    {
       WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
-   }
-
-   // Make sure we keep receiving if we get an ICMP error on a UDP socket
-   if(e.value() == asio::error::connection_reset && mLocalBinding.getTransportType() == StunTuple::UDP)
-   {
-      resip_assert(mTurnSocket.get());
-      mTurnSocket->turnReceive();
    }
 }
 

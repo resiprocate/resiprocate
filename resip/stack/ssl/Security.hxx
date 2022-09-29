@@ -223,7 +223,7 @@ class BaseSecurity
        */
       SSL_CTX*       mTlsCtx;
       SSL_CTX*       mSslCtx;
-      static void dumpAsn(char*, Data);
+      static void dumpAsn(const char*, Data);
 
       CipherList mCipherList;
       Data mDefaultPrivateKeyPassPhrase;

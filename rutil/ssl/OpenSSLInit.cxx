@@ -75,7 +75,7 @@ OpenSSLInit::OpenSSLInit()
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 	CRYPTO_malloc_debug_init();
 	CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
-#elsif (OPENSSL_VERSION_NUMBER < 0x30000000L)
+#elif (OPENSSL_VERSION_NUMBER < 0x30000000L)
 	CRYPTO_set_mem_debug(1);
 #endif
 
