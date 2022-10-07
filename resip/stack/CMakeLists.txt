@@ -65,6 +65,7 @@ set(INCLUDES
    KeepAliveMessage.hxx
    KeepAlivePong.hxx
    LazyParser.hxx
+   MediaControlContents.hxx
    MarkListener.hxx
    MessageDecorator.hxx
    MessageFilterRule.hxx
@@ -248,6 +249,7 @@ add_library(resip
    UInt32Parameter.cxx
    InternalTransport.cxx
    LazyParser.cxx
+   MediaControlContents.cxx
    Message.cxx
    MessageWaitingContents.cxx
    gen/MethodHash.cxx

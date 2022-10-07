@@ -49,3 +49,13 @@ bin.prof.*
 
 /.idea
 /cmake-build-*
+
+CMakeCache.txt
+CPackConfig.cmake
+CPackSourceConfig.cmake
+**/CMakeFiles/
+**/CTestTestfile.cmake
+**/cmake_install.cmake
+**/lib*.so
+**/lib*.so.*
+**/Testing/

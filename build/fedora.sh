@@ -28,34 +28,44 @@ CFLAGS='-g -O2 -fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werro
 CPPFLAGS="-I/usr/include -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_DIGEST_LOGGING -DRECON_SDP_ENCODING_NAMES_CASE_HACK -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \
 CXXFLAGS='-g -O2 -fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive' \
 LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
-  ./configure \
-              ${DISTCC} \
-              --with-popt \
-              --enable-ipv6 \
-              --enable-dtls \
-              $RADIUS_LIB \
-              --with-ssl \
-              --enable-assert-syslog \
-              --with-c-ares \
-              --with-fmt \
-              --with-mysql \
-              --with-postgresql \
-              --with-repro \
-              --with-return \
-              --enable-repro-plugins \
-              --with-python \
-                DEPS_PYTHON_VERSION=`python3 -c "import sys; print('%d.%d' % (sys.version_info[0], sys.version_info[1]))"` \
-                DEPS_PYTHON_CFLAGS="`/usr/bin/python3-config --cflags`" \
-                DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
-                PYCXX_SRCDIR=/usr/src/CXX/Python3 \
-              --with-apps \
-              --with-recon \
-              --with-kurento \
-              --with-soci-postgresql \
-              --with-soci-mysql \
-              --with-qpid-proton \
-              --with-geoip \
-              --with-netsnmp \
-              --with-gstreamer
+  cmake ${DISTCC} \
+    -DWITH_SSL=ON \
+    -DWITH_C_ARES=ON \
+    -DBUILD_REPRO_DSO_PLUGINS=True \
+    -DBUILD_PYTHON=True \
+    -DUSE_SIPXTAPI=True \
+    -DUSE_KURENTO=True \
+    -DBUILD_QPID_PROTON=True \
+    -DBUILD_GSTREAMER=True \
+    .
+#  ./configure \
+#              ${DISTCC} \
+#              --with-popt \
+#              --enable-ipv6 \
+#              --enable-dtls \
+#              $RADIUS_LIB \
+#              --with-ssl \
+#              --enable-assert-syslog \
+#              --with-c-ares \
+#              --with-fmt \
+#              --with-mysql \
+#              --with-postgresql \
+#              --with-repro \
+#              --with-return \
+#              --enable-repro-plugins \
+#              --with-python \
+#                DEPS_PYTHON_VERSION=`python3 -c "import sys; print('%d.%d' % (sys.version_info[0], sys.version_info[1]))"` \
+#                DEPS_PYTHON_CFLAGS="`/usr/bin/python3-config --cflags`" \
+#                DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
+#                PYCXX_SRCDIR=/usr/src/CXX/Python3 \
+#              --with-apps \
+#              --with-recon \
+#              --with-kurento \
+#              --with-soci-postgresql \
+#              --with-soci-mysql \
+#              --with-qpid-proton \
+#              --with-geoip \
+#              --with-netsnmp \
+#              --with-gstreamer
 
 

@@ -40,6 +40,7 @@ target_link_libraries(reTurnClient ${OPENSSL_LIBRARIES} rutil)
 set_target_properties(reTurnClient PROPERTIES FOLDER reTurn)
 set_target_properties(reTurnClient PROPERTIES VERSION ${SO_RELEASE})
 
+install(TARGETS reTurnClient DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/reTurn/client ${INCLUDES})
 
 add_subdirectory(test)

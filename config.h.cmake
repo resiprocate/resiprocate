@@ -14,6 +14,11 @@
 #cmakedefine USE_POSTGRESQL 1
 #cmakedefine USE_MAXMIND_GEOIP
 #cmakedefine01 HAVE_CLOCK_GETTIME_MONOTONIC
+#cmakedefine DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20
+#cmakedefine USE_SIPXTAPI
+#cmakedefine USE_KURENTO
+#cmakedefine BUILD_GSTREAMER
+#cmakedefine SIPX_NO_RECORD 1
 
 // USE_IPV6
 // USE_DTLS

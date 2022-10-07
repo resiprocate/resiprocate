@@ -1,0 +1,141 @@
+
+set(INCLUDES
+   ReconSubsystem.hxx
+   LocalParticipant.hxx
+   MediaResourceCache.hxx
+   RelatedConversationSet.hxx
+   UserAgentServerAuthManager.hxx
+   ConversationManagerCmds.hxx
+   IMParticipantBase.hxx
+   UserAgentMasterProfile.hxx
+   RemoteParticipantDialogSet.hxx
+   RTPPortManager.hxx
+   SipXHelper.hxx
+   Conversation.hxx
+   UserAgentDialogSetFactory.hxx
+   UserAgentCmds.hxx
+   UserAgentRegistration.hxx
+   MediaEvent.hxx
+   MediaStackAdapter.hxx
+   DefaultDialogSet.hxx
+   Participant.hxx
+   UserAgentClientSubscription.hxx
+   UserAgentClientPublication.hxx
+   UserAgent.hxx
+   ConversationParticipantAssignment.hxx
+   RemoteParticipant.hxx
+   RemoteIMPagerParticipant.hxx
+   RemoteIMSessionParticipant.hxx
+   RemoteIMSessionParticipantDialogSet.hxx
+   MediaResourceParticipant.hxx
+   BridgeMixer.hxx
+   HandleTypes.hxx
+   MediaStreamEvent.hxx
+   ConversationProfile.hxx
+   ConversationManager.hxx
+   DtmfEvent.hxx
+   sdp/SdpMediaLine.hxx
+   sdp/SdpCodec.hxx
+   sdp/SdpHelperResip.hxx
+   sdp/SdpCandidatePair.hxx
+   sdp/SdpCandidate.hxx
+   sdp/Sdp.hxx
+   SipXMediaStackAdapter.hxx
+   SipXMediaInterface.hxx
+   SipXConversation.hxx
+   SipXBridgeMixer.hxx
+   SipXParticipant.hxx
+   SipXLocalParticipant.hxx
+   SipXMediaResourceParticipant.hxx
+   SipXRemoteParticipant.hxx
+   SipXRemoteParticipantDialogSet.hxx
+   FlowManagerSipXSocket.hxx
+   KurentoBridgeMixer.hxx
+   KurentoConversation.hxx
+   KurentoMediaStackAdapter.hxx
+   KurentoParticipant.hxx
+   KurentoRemoteParticipantDialogSet.hxx
+   KurentoRemoteParticipant.hxx
+)
+
+add_library(recon
+   BridgeMixer.cxx
+   Conversation.cxx
+   ConversationManager.cxx
+   ConversationParticipantAssignment.cxx
+   ConversationProfile.cxx
+   DefaultDialogSet.cxx
+   DtmfEvent.cxx
+   IMParticipantBase.cxx
+   LocalParticipant.cxx
+   MediaEvent.cxx
+   MediaStackAdapter.cxx
+   MediaResourceParticipant.cxx
+   MediaResourceCache.cxx
+   MediaStreamEvent.cxx
+   Participant.cxx
+   ReconSubsystem.cxx
+   RelatedConversationSet.cxx
+   RemoteParticipant.cxx
+   RemoteParticipantDialogSet.cxx
+   RemoteIMPagerParticipant.cxx
+   RemoteIMSessionParticipant.cxx
+   RemoteIMSessionParticipantDialogSet.cxx
+   RTPPortManager.cxx
+   UserAgent.cxx
+   UserAgentClientSubscription.cxx
+   UserAgentClientPublication.cxx
+   UserAgentDialogSetFactory.cxx
+   UserAgentMasterProfile.cxx
+   UserAgentRegistration.cxx
+   UserAgentServerAuthManager.cxx
+   ${INCLUDES}
+)
+
+target_add_conditional_sources(recon USE_SIPXTAPI
+   FlowManagerSipXSocket.cxx
+   SipXMediaStackAdapter.cxx
+   SipXMediaInterface.cxx
+   SipXConversation.cxx
+   SipXBridgeMixer.cxx
+   SipXParticipant.cxx
+   SipXLocalParticipant.cxx
+   SipXMediaResourceParticipant.cxx
+   SipXRemoteParticipant.cxx
+   SipXRemoteParticipantDialogSet.cxx
+   SipXHelper.cxx
+   sdp/Sdp.cxx
+   sdp/SdpCandidate.cxx
+   sdp/SdpCandidatePair.cxx
+   sdp/SdpCodec.cxx
+   sdp/SdpHelperResip.cxx
+   sdp/SdpMediaLine.cxx
+)
+
+target_add_conditional_sources(recon USE_KURENTO
+   KurentoBridgeMixer.cxx
+   KurentoConversation.cxx
+   KurentoMediaStackAdapter.cxx
+   KurentoParticipant.cxx
+   KurentoRemoteParticipant.cxx
+   KurentoRemoteParticipantDialogSet.cxx
+)
+
+target_include_directories(recon PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+target_include_directories(recon PUBLIC ${SIPXTAPI_INCLUDE_DIRS})
+target_link_libraries(recon PUBLIC dum)
+if(USE_SIPXTAPI)
+   target_link_libraries(recon PUBLIC reflow ${SIPXTAPI_LIBRARIES})
+endif()
+if(USE_KURENTO)
+   target_link_libraries(recon PUBLIC kurentoclient)
+endif()
+set_target_properties(recon PROPERTIES FOLDER recon VERSION ${SO_RELEASE})
+
+install(TARGETS recon DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/recon ${INCLUDES})
+
+add_subdirectory(MOHParkServer)
+
+add_subdirectory(test)
+

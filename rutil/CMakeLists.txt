@@ -9,6 +9,7 @@ set(INCLUDES
    ConfigParse.hxx
    CongestionManager.hxx
    GeneralCongestionManager.hxx
+   GStreamerUtils.hxx
    HeapInstanceCounter.hxx
    KeyValueStore.hxx
    FdSetIOObserver.hxx
@@ -65,6 +66,7 @@ set(INCLUDES
    GenericTimerQueue.hxx
    IntrusiveListElement.hxx
    ssl/SHA1Stream.hxx
+   ssl/OpenSSLDeleter.hxx
    ssl/OpenSSLInit.hxx
    CountStream.hxx
    Crc32.hxx
@@ -89,6 +91,7 @@ set(INCLUDES
    ProducerFifoBuffer.hxx
    DinkyPool.hxx
    ConsumerFifoBuffer.hxx
+   ProtonThreadBase.hxx
    hep/HepAgent.hxx
    hep/ResipHep.hxx
 )
@@ -163,8 +166,17 @@ add_library(rutil
 )
 
 target_add_conditional_sources(rutil OPENSSL_FOUND
+   ssl/OpenSSLDeleter.cxx
    ssl/OpenSSLInit.cxx
    ssl/SHA1Stream.cxx
+)
+
+target_add_conditional_sources(rutil BUILD_GSTREAMER
+   GStreamerUtils.cxx
+)
+
+target_add_conditional_sources(rutil BUILD_QPID_PROTON
+   ProtonThreadBase.cxx
 )
 
 target_add_conditional_sources(rutil WIN32
@@ -179,7 +191,11 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 target_include_directories(rutil PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
-target_link_libraries(rutil ${OPENSSL_LIBRARIES} ${ARES_LIBRARIES})
+target_include_directories(rutil PUBLIC ${GSTREAMERMM_INCLUDE_DIRS})
+target_include_directories(rutil PUBLIC ${QPIDPROTON_INCLUDE_DIRS})
+target_link_libraries(rutil ${OPENSSL_LIBRARIES} ${ARES_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(rutil ${GSTREAMERMM_LIBRARIES})
+target_link_libraries(rutil ${QPIDPROTON_LIBRARIES})
 set_target_properties(rutil PROPERTIES FOLDER rutil VERSION ${SO_RELEASE})
 
 install(TARGETS rutil DESTINATION ${CMAKE_INSTALL_LIBDIR})
