@@ -35,6 +35,7 @@ jobs:
             libpcre3-dev \
             libpopt-dev \
             libpq-dev \
+            postgresql-server-dev-all \
             libqpid-proton-cpp12-dev \
             libradcli-dev \
             libsipxtapi-dev \
@@ -43,6 +44,7 @@ jobs:
             libsrtp2-dev \
             libssl-dev \
             libtelepathy-qt5-dev \
+            libwebsocketpp-dev \
             libxerces-c-dev \
             make \
             perl \
