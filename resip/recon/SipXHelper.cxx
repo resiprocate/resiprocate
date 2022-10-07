@@ -89,7 +89,9 @@ void
 SipXHelper::setupPreQueueLoggingBridge(const resip::Data& appName)
 {
    OsSysLog::initialize(0, appName.c_str());
+#ifndef SIPX_NO_RECORD   // FIXME the line below requires latest sipXtapi code
    OsSysLog::setPreQueueCallbackFunction(sipXPreQueueLogHandler);
+#endif
    // Enable all logging types, it will be filtered by the reSIProcate logger,
    // application can reset to some other level if this is not desired.
    OsSysLog::setLoggingPriority(PRI_DEBUG);
