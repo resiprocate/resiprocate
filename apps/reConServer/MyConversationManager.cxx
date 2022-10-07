@@ -9,7 +9,7 @@
 #include "MyUserAgent.hxx"
 
 #include <rutil/Logger.hxx>
-#include <AppSubsystem.hxx>
+#include "AppSubsystem.hxx"
 
 #include <resip/recon/LocalParticipant.hxx>
 #include <resip/recon/RemoteParticipant.hxx>

@@ -26,8 +26,8 @@
   #include "config.h"
 #endif
 
-#include <rutil/Data.hxx>
-#include <resip/recon/InstantMessage.hxx>
+#include "rutil/Data.hxx"
+#include "resip/recon/InstantMessage.hxx"
 
 #include "Connection.hxx"
 

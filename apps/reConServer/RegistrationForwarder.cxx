@@ -7,7 +7,7 @@
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/SipMessage.hxx>
 #include <resip/stack/Tuple.hxx>
-#include <AppSubsystem.hxx>
+#include "AppSubsystem.hxx"
 
 #include "RegistrationForwarder.hxx"
 
