@@ -2,9 +2,9 @@
 #include "config.h"
 #endif
 
-#include "UserAgent.hxx"
-#include "ReconSubsystem.hxx"
-#include "SipXMediaStackAdapter.hxx"
+#include "resip/recon/UserAgent.hxx"
+#include "resip/recon/ReconSubsystem.hxx"
+#include "resip/recon/SipXMediaStackAdapter.hxx"
 
 #include <signal.h>
 #include "rutil/Log.hxx"

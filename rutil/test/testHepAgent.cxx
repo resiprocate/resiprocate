@@ -15,7 +15,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 // a sample packet extracted from Wireshark
-char packet1SenderReport[] = {
+static const unsigned char packet1SenderReport[] = {
   0x81, 0xc8, 0x00, 0x0c, 0xa1, 0xa4, 0x21, 0x46,
   0x00, 0x08, 0x4d, 0xdb, 0x24, 0x28, 0x4d, 0xfc,
   0xe2, 0x42, 0xa1, 0xec, 0x00, 0x00, 0x00, 0x3a,
@@ -53,7 +53,7 @@ main(int argc, char *argv[])
    // against other applications and log files.
 
    {
-      Data packet1(Data::Borrow, packet1SenderReport, sizeof(packet1SenderReport));
+      Data packet1(packet1SenderReport, sizeof(packet1SenderReport));
       Data json(agent.convertRTCPtoJSON(packet1));
       ErrLog(<<"got result: " << json);
 

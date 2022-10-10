@@ -22,7 +22,7 @@ HepAgent::HepAgent(const Data &captureHost, int capturePort, int captureAgentID)
    : mCaptureHost(captureHost), mCapturePort(capturePort), mCaptureAgentID(captureAgentID)
 {
    bool initV4Socket = true;
-   struct sockaddr myaddr;
+   struct sockaddr_storage myaddr;
    memset(&myaddr, 0, sizeof(myaddr));
    int sockaddrlen;
 #ifdef USE_IPV6
@@ -77,7 +77,7 @@ HepAgent::HepAgent(const Data &captureHost, int capturePort, int captureAgentID)
       throw std::runtime_error("Failed to set O_NONBLOCK");
    }
 
-   if(::bind(mSocket, &myaddr, sockaddrlen) < 0) 
+   if(::bind(mSocket, (struct sockaddr*)&myaddr, sockaddrlen) < 0)
    {
       ErrLog(<<"bind failed");
       throw std::runtime_error("bind failed");
