@@ -41,7 +41,8 @@ class Subsystem
       static Subsystem EEP;
       static Subsystem MEDIA;
       static Subsystem NONE; // default subsystem
-      static Subsystem PRESENCE; 
+      static Subsystem PRESENCE;
+      static Subsystem PYTHON;
       static Subsystem SDP;
       static Subsystem SIP;    // SIP Stack / Parser
       static Subsystem TEST;   

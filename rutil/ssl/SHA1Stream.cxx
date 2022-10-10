@@ -1,3 +1,5 @@
+#define NOMINMAX
+
 #include <cstddef>
 #include <cstring>
 #include <new>

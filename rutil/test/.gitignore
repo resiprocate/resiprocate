@@ -4,6 +4,8 @@
 /.deps
 /.libs
 
+/__pycache__
+
 /*.log
 /*.trs
 /testLogger*.txt

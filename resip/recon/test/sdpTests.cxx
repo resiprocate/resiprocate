@@ -2,10 +2,10 @@
 
 #include <iostream>
 
-#include <sdp/SdpCodec.hxx>
-#include <sdp/Sdp.hxx>
-#include <sdp/SdpMediaLine.hxx>
-#include <sdp/SdpHelperResip.hxx>
+#include "resip/recon/sdp/SdpCodec.hxx"
+#include "resip/recon/sdp/Sdp.hxx"
+#include "resip/recon/sdp/SdpMediaLine.hxx"
+#include "resip/recon/sdp/SdpHelperResip.hxx"
 
 #include <rutil/ParseBuffer.hxx>
 #include <resip/stack/Symbols.hxx>

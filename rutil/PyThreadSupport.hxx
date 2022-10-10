@@ -5,7 +5,7 @@
 #include <Python.h>
 #include <CXX/Objects.hxx>
 
-namespace repro
+namespace resip
 {
 
 class PyThreadSupport

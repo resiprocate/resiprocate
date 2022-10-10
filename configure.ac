@@ -241,11 +241,11 @@ AC_ARG_WITH(repro,
  [AC_DEFINE_UNQUOTED(BUILD_REPRO, , BUILD_REPRO)
  AM_CONDITIONAL(BUILD_REPRO, true)], )
 
-AC_ARG_ENABLE(repro-plugins,
-[  --enable-repro-plugins  Enable support for DSO plugins in repro],
- [AC_DEFINE_UNQUOTED(REPRO_DSO_PLUGINS, , REPRO_DSO_PLUGINS)
- AM_CONDITIONAL(BUILD_REPRO_DSO_PLUGINS, true)],
- AM_CONDITIONAL(BUILD_REPRO_DSO_PLUGINS, false))
+AC_ARG_ENABLE(dso-plugins,
+[  --enable-dso-plugins    Enable support for DSO plugins],
+ [AC_DEFINE_UNQUOTED(DSO_PLUGINS, , DSO_PLUGINS)
+ AM_CONDITIONAL(BUILD_DSO_PLUGINS, true)],
+ AM_CONDITIONAL(BUILD_DSO_PLUGINS, false))
 
 AC_SUBST([reproplugindir])
 reproplugindir='${pkglibdir}/repro/plugins'

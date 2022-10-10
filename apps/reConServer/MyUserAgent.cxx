@@ -8,7 +8,7 @@
 #include <rutil/Logger.hxx>
 
 #include <resip/stack/MessageFilterRule.hxx>
-#include <AppSubsystem.hxx>
+#include "AppSubsystem.hxx"
 
 #include "B2BCallManager.hxx"
 #include "MyUserAgent.hxx"

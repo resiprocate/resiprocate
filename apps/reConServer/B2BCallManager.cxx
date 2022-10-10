@@ -12,7 +12,7 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <AppSubsystem.hxx>
+#include "AppSubsystem.hxx"
 
 #ifdef USE_SOCI_POSTGRESQL
 #include "postgresql/soci-postgresql.h"

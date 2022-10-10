@@ -10,7 +10,7 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <AppSubsystem.hxx>
+#include "AppSubsystem.hxx"
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 

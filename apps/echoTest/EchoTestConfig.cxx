@@ -3,7 +3,7 @@
 
 #include "EchoTestConfig.hxx"
 
-#include <AppSubsystem.hxx>
+#include "AppSubsystem.hxx"
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::ECHOTEST
 
