@@ -38,8 +38,8 @@ reConServer_SOURCES += RegistrationForwarder.cxx
 reConServer_SOURCES += RegistrationForwarder.hxx
 reConServer_SOURCES += SubscriptionForwarder.cxx
 reConServer_SOURCES += SubscriptionForwarder.hxx
-reConServer_SOURCES += playback_prompt.h
-reConServer_SOURCES += record_prompt.h
+reConServer_SOURCES += ../../media/samples/playback_prompt.h
+reConServer_SOURCES += ../../media/samples/record_prompt.h
 if BUILD_QPID_PROTON
 reConServer_SOURCES += \
         ProtonCommandThread.cxx \
@@ -80,21 +80,4 @@ if USE_SOCI_MYSQL
 reConServer_LDADD += -lsoci_mysql -lmysqlclient
 endif
 reConServer_LDADD += -lfmt
-
-BUILT_SOURCES = playback_prompt.h record_prompt.h
-
-playback_prompt.h:
-	echo "#ifndef _playback_prompt_h_" > playback_prompt.h
-	echo "#define _playback_prompt_h_" >> playback_prompt.h
-	xxd -i -u playback_prompt.wav >> playback_prompt.h
-	sed  -i 's/_wav//g' playback_prompt.h
-	echo "#endif" >> playback_prompt.h
-
-record_prompt.h:
-	echo "#ifndef _record_prompt_h_" > record_prompt.h
-	echo "#define _record_prompt_h_" >> record_prompt.h
-	xxd -i -u record_prompt.wav >> record_prompt.h
-	sed  -i 's/_wav//g' record_prompt.h
-	echo "#endif" >> record_prompt.h
-
 

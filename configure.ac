@@ -439,6 +439,7 @@ AC_CONFIG_FILES([Makefile \
 	media/gstreamer/Makefile \
 	media/kurento/Makefile \
 	media/kurento/test/Makefile \
+	media/samples/Makefile \
 	])
 AC_OUTPUT
 

@@ -45,8 +45,8 @@ int _kbhit() {
 #include <os/OsSysLog.h>
 
 // Test Prompts for cache testing
-#include "playback_prompt.h"
-#include "record_prompt.h"
+#include "media/samples/playback_prompt.h"
+#include "media/samples/record_prompt.h"
 
 #include <resip/stack/PlainContents.hxx>
 #include <rutil/Log.hxx>

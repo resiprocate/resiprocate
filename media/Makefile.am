@@ -1,6 +1,7 @@
 
 SUBDIRS = kurento
 SUBDIRS += gstreamer
+SUBDIRS += samples
 
 lib_LTLIBRARIES = libresipmedia.la
 

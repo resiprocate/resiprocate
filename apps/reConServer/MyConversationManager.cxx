@@ -23,8 +23,8 @@
 #endif
 
 // Test Prompts for cache testing
-#include "playback_prompt.h"
-#include "record_prompt.h"
+#include "media/samples/playback_prompt.h"
+#include "media/samples/record_prompt.h"
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 

@@ -5,7 +5,5 @@
 /.libs
 
 /moc_*.cxx
-/playback_prompt.h
-/record_prompt.h
 
 /telepathy-resiprocate
