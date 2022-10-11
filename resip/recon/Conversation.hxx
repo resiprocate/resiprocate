@@ -84,6 +84,8 @@ protected:
    friend class BridgeMixer;
    friend class SipXBridgeMixer;
    friend class KurentoBridgeMixer;
+   friend class GstBridgeMixer;
+   friend class LibWebRTCBridgeMixer;
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
 
@@ -96,6 +98,8 @@ protected:
    friend class ConversationManager;
    friend class SipXMediaStackAdapter;
    friend class KurentoMediaStackAdapter;
+   friend class GstMediaStackAdapter;
+   friend class LibWebRTCMediaStackAdapter;
    BridgeMixer* getBridgeMixer() noexcept { return mBridgeMixer.get(); }
    std::shared_ptr<BridgeMixer> getBridgeMixerShared() { return mBridgeMixer; }
    virtual void setBridgeMixer(std::shared_ptr<BridgeMixer> mixer) { mBridgeMixer = mixer; }
@@ -133,6 +137,7 @@ private:
 /* ====================================================================
 
  Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

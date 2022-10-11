@@ -1,27 +1,57 @@
-#if !defined(RTPPortManager_hxx)
-#define RTPPortManager_hxx
 
-#include <deque>
+#include <rutil/Logger.hxx>
+#include <rutil/ResipAssert.h>
+#include <rutil/Subsystem.hxx>
+#include "RTPPortManager.hxx"
 
-namespace recon
+using namespace resip;
+using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::MEDIA
+
+RTPPortManager::RTPPortManager(int portRangeMin, int portRangeMax)
+ : mPortRangeMin(portRangeMin),
+   mPortRangeMax(portRangeMax)
 {
-
-class RTPPortManager
-{
-public:
-   RTPPortManager(int portRangeMin = 17000, int portRangeMax = 18000);
-   unsigned int allocateRTPPort();
-   void freeRTPPort(unsigned int port);
-
-private:
-   unsigned int mPortRangeMin;
-   unsigned int mPortRangeMax;
-   std::deque<unsigned int> mRTPPortFreeList;
-};
-
+   if(mPortRangeMin & 0x1)
+   {
+      mPortRangeMin++;
+   }
+   if(mPortRangeMax & 0x1)
+   {
+      mPortRangeMax--;
+   }
+   resip_assert(mPortRangeMax >= mPortRangeMin);
+   for(unsigned int i = mPortRangeMin; i <= mPortRangeMax;)
+   {
+      mRTPPortFreeList.push_back(i);
+      i=i+2;  // only add even ports
+   }
+   InfoLog(<<"RTPPortManager: min == " << mPortRangeMin << " max == " << mPortRangeMax);
 }
 
-#endif
+unsigned int
+RTPPortManager::allocateRTPPort()
+{
+   unsigned int port = 0;
+   if(!mRTPPortFreeList.empty())
+   {
+      port = mRTPPortFreeList.front();
+      mRTPPortFreeList.pop_front();
+   }
+   StackLog(<<"allocateRTPPort: port == " << port);
+   return port;
+}
+
+void
+RTPPortManager::freeRTPPort(unsigned int port)
+{
+   StackLog(<<"freeRTPPort: port == " << port);
+   resip_assert(port >= mPortRangeMin && port <= mPortRangeMax);
+   resip_assert((port & 0x1) == 0);
+   mRTPPortFreeList.push_back(port);
+}
+
 
 /* ====================================================================
 

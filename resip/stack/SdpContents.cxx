@@ -1154,11 +1154,11 @@ SdpContents::Session::encode(EncodeStream& s) const
    return s;
 }
 
-std::list<std::reference_wrapper<const SdpContents::Session::Medium>>
-SdpContents::Session::getMediaByType(const Data& type) const
+std::list<std::reference_wrapper<SdpContents::Session::Medium>>
+SdpContents::Session::getMediaByType(const Data& type)
 {
-   std::list<std::reference_wrapper<const SdpContents::Session::Medium>> r;
-   std::for_each(mMedia.cbegin(), mMedia.cend(), [&r, &type](const SdpContents::Session::Medium& m){
+   std::list<std::reference_wrapper<SdpContents::Session::Medium>> r;
+   std::for_each(mMedia.begin(), mMedia.end(), [&r, &type](SdpContents::Session::Medium& m){
       if(m.name() == type)
       {
          r.push_back(std::ref(m));

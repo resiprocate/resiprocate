@@ -1,34 +1,59 @@
-#ifndef RESIP_GSTREAMER_UTILS
-#define RESIP_GSTREAMER_UTILS
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef PYTHREAD_SUPPORT_HXX
+#define PYTHREAD_SUPPORT_HXX
 
-#ifdef BUILD_GSTREAMER
-#include <glibmm/main.h>
-#include <gstreamermm.h>
+#include <Python.h>
+#include <CXX/Objects.hxx>
 
-#include "rutil/Log.hxx"
-
-extern "C"
+namespace resip
 {
-   resip::Log::Level
-   gst_debug_level_to_severity_level (GstDebugLevel level);
 
-   void
-   gst2resip_log_function(GstDebugCategory *category, GstDebugLevel level,
-                      const gchar *file,
-                      const gchar *function, gint line, GObject *object,
-                      GstDebugMessage *message, gpointer user_data) G_GNUC_NO_INSTRUMENT;
+class PyThreadSupport
+{
+   public:
+      PyThreadSupport() : mState(PyGILState_Ensure()) {};
+      ~PyThreadSupport() { PyGILState_Release(mState); };
+
+   private:
+      PyGILState_STATE mState;
 };
-#endif
+
+class PyExternalUser
+{
+   public:
+      PyExternalUser(PyInterpreterState* interpreterState)
+       : mInterpreterState(interpreterState),
+         mThreadState(PyThreadState_New(mInterpreterState)) {};
+
+   class Use
+   {
+      public:
+         Use(PyExternalUser& user)
+          : mUser(user)
+         { PyEval_RestoreThread(mUser.getThreadState()); };
+         ~Use() { mUser.setThreadState(PyEval_SaveThread()); };
+      private:
+         PyExternalUser& mUser;
+   };
+
+   friend class Use;
+
+   protected:
+      PyThreadState* getThreadState() { return mThreadState; };
+      void setThreadState(PyThreadState* threadState) { mThreadState = threadState; };
+
+   private:
+      PyInterpreterState* mInterpreterState;
+      PyThreadState* mThreadState;
+};
+
+}
 
 #endif
 
 /* ====================================================================
  *
- * Copyright 2021 Daniel Pocock https://danielpocock.com  All rights reserved.
+ * Copyright 2013 Daniel Pocock http://danielpocock.com  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -62,3 +87,4 @@ extern "C"
  *
  *
  */
+

@@ -1,59 +1,11 @@
+#include "GstSubsystem.hxx"
 
-#ifndef PYTHREAD_SUPPORT_HXX
-#define PYTHREAD_SUPPORT_HXX
-
-#include <Python.h>
-#include <CXX/Objects.hxx>
-
-namespace repro
-{
-
-class PyThreadSupport
-{
-   public:
-      PyThreadSupport() : mState(PyGILState_Ensure()) {};
-      ~PyThreadSupport() { PyGILState_Release(mState); };
-
-   private:
-      PyGILState_STATE mState;
-};
-
-class PyExternalUser
-{
-   public:
-      PyExternalUser(PyInterpreterState* interpreterState)
-       : mInterpreterState(interpreterState),
-         mThreadState(PyThreadState_New(mInterpreterState)) {};
-
-   class Use
-   {
-      public:
-         Use(PyExternalUser& user)
-          : mUser(user)
-         { PyEval_RestoreThread(mUser.getThreadState()); };
-         ~Use() { mUser.setThreadState(PyEval_SaveThread()); };
-      private:
-         PyExternalUser& mUser;
-   };
-
-   friend class Use;
-
-   protected:
-      PyThreadState* getThreadState() { return mThreadState; };
-      void setThreadState(PyThreadState* threadState) { mThreadState = threadState; };
-
-   private:
-      PyInterpreterState* mInterpreterState;
-      PyThreadState* mThreadState;
-};
-
-}
-
-#endif
+resip::GstSubsystem resip::GstSubsystem::GSTREAMER("GSTREAMER");
 
 /* ====================================================================
  *
- * Copyright 2013 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -83,8 +35,5 @@ class PyExternalUser
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * ====================================================================
- *
  *
  */
-

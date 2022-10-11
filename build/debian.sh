@@ -54,7 +54,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
 #              --with-postgresql \
 #              --with-repro \
 #              --with-return \
-#              --enable-repro-plugins \
+#              --enable-dso-plugins \
 #              --with-python \
 #                DEPS_PYTHON_VERSION=`python3 -c "import sys; print('%d.%d' % (sys.version_info[0], sys.version_info[1]))"` \
 #                DEPS_PYTHON_CFLAGS="`/usr/bin/python3-config --cflags`" \
@@ -71,3 +71,5 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
 #              --with-geoip \
 #              --with-netsnmp \
 #              --with-gstreamer
+
+

@@ -130,6 +130,7 @@ public:
    virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
    virtual int onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
+   virtual void requestKeyframe() = 0;
    virtual void requestKeyframeFromPeer();
    // force a SIP re-INVITE to this RemoteParticipant
    virtual void reInvite();
@@ -141,6 +142,8 @@ protected:
    std::shared_ptr<resip::SdpContents> getLocalSdp() { return mLocalSdp; };
    void setRemoteSdp(const resip::SdpContents& sdp, bool answer=false);
    std::shared_ptr<resip::SdpContents> getRemoteSdp() { return mRemoteSdp; };
+   void setLocalSdpGathering(const resip::SdpContents& sdp);
+   std::shared_ptr<resip::SdpContents> getLocalSdpGathering() { return mLocalSdpGathering; };
 
    virtual bool mediaStackPortAvailable() = 0;
 
@@ -158,6 +161,8 @@ protected:
    virtual void conversationsConfirm();
 
    virtual std::chrono::duration<double> getKeyframeRequestInterval() const { return mKeyframeRequestInterval; }
+
+   virtual void onLocalIceCandidate(const resip::Data& candidate, unsigned int lineIndex, const resip::Data& mid);
 
 private:       
    void provideOffer(bool postOfferAccept, bool preferExistingSdp = false);
@@ -223,6 +228,8 @@ private:
    std::shared_ptr<resip::SdpContents> mLocalSdp;
    std::shared_ptr<resip::SdpContents> mRemoteSdp;
 
+   std::shared_ptr<resip::SdpContents> mLocalSdpGathering;
+
    std::chrono::time_point<std::chrono::steady_clock> mLastRemoteKeyframeRequest = std::chrono::steady_clock::now();
    std::chrono::duration<double> mKeyframeRequestInterval = std::chrono::milliseconds(1000);
 };
@@ -235,7 +242,8 @@ private:
 /* ====================================================================
 
  Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
- Copyright (c) 2021, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -461,7 +461,6 @@
     <ClCompile Include="FileSystem.cxx" />
     <ClCompile Include="GeneralCongestionManager.cxx" />
     <ClCompile Include="GenericIPAddress.cxx" />
-    <ClCompile Include="GStreamerUtils.cxx" />
     <ClCompile Include="HeapInstanceCounter.cxx" />
     <ClCompile Include="hep\HepAgent.cxx" />
     <ClCompile Include="hep\ResipHep.cxx" />
@@ -470,6 +469,7 @@
     <ClCompile Include="Lock.cxx" />
     <ClCompile Include="Log.cxx" />
     <ClCompile Include="MD5Stream.cxx" />
+    <ClCompile Include="Plugin.cxx" />
     <ClCompile Include="PoolBase.cxx" />
     <ClCompile Include="SelectInterruptor.cxx" />
     <ClCompile Include="ServerProcess.cxx" />
@@ -555,7 +555,6 @@
     <ClInclude Include="FiniteFifo.hxx" />
     <ClInclude Include="GeneralCongestionManager.hxx" />
     <ClInclude Include="GenericIPAddress.hxx" />
-    <ClInclude Include="GStreamerUtils.hxx" />
     <ClInclude Include="HashMap.hxx" />
     <ClInclude Include="HeapInstanceCounter.hxx" />
     <ClInclude Include="hep\HepAgent.hxx" />
@@ -570,6 +569,7 @@
     <ClInclude Include="MediaConstants.hxx" />
     <ClInclude Include="MD5Stream.hxx" />
     <ClInclude Include="Mutex.hxx" />
+    <ClInclude Include="Plugin.hxx" />
     <ClInclude Include="PoolBase.hxx" />
     <ClInclude Include="ProducerFifoBuffer.hxx" />
     <ClInclude Include="SelectInterruptor.hxx" />

@@ -14,14 +14,17 @@
 #include <resip/recon/LocalParticipant.hxx>
 #include <resip/recon/RemoteParticipant.hxx>
 #include <resip/recon/Conversation.hxx>
+#ifdef USE_GSTREAMER
+#include <resip/recon/GstRemoteParticipant.hxx>
+#endif
 #ifdef USE_KURENTO
 #include <media/kurento/Object.hxx>
 #include <resip/recon/KurentoRemoteParticipant.hxx>
 #endif
 
 // Test Prompts for cache testing
-#include "playback_prompt.h"
-#include "record_prompt.h"
+#include "media/samples/playback_prompt.h"
+#include "media/samples/record_prompt.h"
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 
@@ -35,7 +38,12 @@ MyConversationManager::MyConversationManager(const ReConServerConfig& config, bo
         mConfig(config),
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 
-#ifdef PREFER_KURENTO
+#ifdef PREFER_GSTREAMER
+   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<GstMediaStackAdapter>(*this);
+#elif PREFER_LIBWEBRTC
+   #error libWebRTC not fully implemented yet // FIXME
+   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<LibWebRTCMediaStackAdapter>(*this);
+#elif PREFER_KURENTO
    Data kurentoUri = config.getConfigData("KurentoURI", "ws://127.0.0.1:8888/kurento");
    shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<KurentoMediaStackAdapter>(*this, kurentoUri);
 #else
@@ -44,7 +52,7 @@ MyConversationManager::MyConversationManager(const ReConServerConfig& config, bo
       ? SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode : SipXMediaStackAdapter::sipXConversationMediaInterfaceMode;
    shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<SipXMediaStackAdapter>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false);
 #else
-   #error Need Kurento or sipXtapi
+   #error Need Gstreamer, libWebRTC, Kurento or sipXtapi
 #endif
 #endif
    setMediaStackAdapter(mediaStackAdapter);
@@ -318,6 +326,8 @@ MyConversationManager::displayInfo()
 
 /* ====================================================================
 
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2013-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

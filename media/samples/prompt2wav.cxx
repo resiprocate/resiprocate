@@ -1,69 +1,42 @@
-#include "GStreamerUtils.hxx"
 
-#ifdef BUILD_GSTREAMER
+#include <iostream>
+#include <fstream>
 
-#include "rutil/Logger.hxx"
-#include "rutil/Subsystem.hxx"
+#include "media/samples/playback_prompt.h"
+#include "media/samples/record_prompt.h"
 
-using namespace resip;
+using namespace std;
 
-extern "C"
+void write_out(const unsigned char* data, size_t count, const char *filename)
 {
-
-Log::Level
-gst_debug_level_to_severity_level (GstDebugLevel level)
-{
-   switch (level) 
-   {
-      case GST_LEVEL_ERROR:   return Log::Err;
-      case GST_LEVEL_WARNING: return Log::Warning;
-      case GST_LEVEL_FIXME:   return Log::Info;
-      case GST_LEVEL_INFO:    return Log::Info;
-      case GST_LEVEL_DEBUG:   return Log::Debug;
-      case GST_LEVEL_LOG:     return Log::Stack;
-      case GST_LEVEL_TRACE:   return Log::Stack;
-      default:                return Log::None;
-   }
+   ofstream o;
+   o.open(filename);
+   o.write((const char *)data, count);
+   o.close();
 }
 
-void
-gst2resip_log_function(GstDebugCategory *category, GstDebugLevel level,
-                   const gchar *file,
-                   const gchar *function, gint line, GObject *object,
-                   GstDebugMessage *message, gpointer user_data)
+int main(int argc, char* argv[])
 {
-   if (level > gst_debug_category_get_threshold (category) ) 
-   {
-      return;
-   }
+   // 1 channel, 8kHz 16bit PCM
+   //
+   // To play it back:
+   //
+   //    aplay -c 1 -f S16_LE -r 8000 /tmp/playback_prompt.raw
+   //
+   // To convert from raw to WAV:
+   //
+   //    sox -r 8k -e signed -b 16 -c 1 /tmp/playback_prompt.raw /tmp/playback_prompt.wav
 
-   Log::Level level_ = gst_debug_level_to_severity_level (level);
+   write_out(playback_prompt, sizeof(playback_prompt), "/tmp/playback_prompt.raw");
+   write_out(record_prompt, sizeof(record_prompt), "/tmp/record_prompt.raw");
 
-   if (level_ == Log::None) 
-   {
-      return;
-   }
-
-   Subsystem& system_ = Subsystem::APP;
-   do
-   {
-      if (genericLogCheckLevel(level_, system_))
-      {
-         resip::Log::Guard _resip_log_guard(level_, system_, file, line, function);
-         _resip_log_guard.asStream() << "[" << category->name << "]: ";
-         // FIXME - include the GObject *object with debug_object (object)
-         _resip_log_guard.asStream() << gst_debug_message_get (message);
-      }
-   }
-   while(false);
+   return 0;
 }
-
-} // extern "C"
-#endif
 
 /* ====================================================================
  *
- * Copyright 2021 Daniel Pocock https://danielpocock.com  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -97,3 +70,4 @@ gst2resip_log_function(GstDebugCategory *category, GstDebugLevel level,
  *
  *
  */
+

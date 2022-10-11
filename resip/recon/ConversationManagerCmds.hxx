@@ -14,6 +14,12 @@
 #ifdef USE_KURENTO
 #include "KurentoRemoteParticipant.hxx"
 #endif
+#ifdef USE_GSTREAMER
+#include "GstRemoteParticipant.hxx"
+#endif
+#ifdef USE_LIBWEBRTC
+#include "LibWebRTCRemoteParticipant.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
@@ -806,23 +812,15 @@ class RequestKeyframeCmd : public resip::DumCommandAdapter
       virtual Message* clone() const { return new RequestKeyframeCmd(*this); }
       virtual void executeCommand()
       {
-#ifdef USE_KURENTO
-         KurentoRemoteParticipant* remoteParticipant = dynamic_cast<KurentoRemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            std::shared_ptr<kurento::BaseRtpEndpoint> endpoint = remoteParticipant->getEndpoint();
-            if(endpoint->valid())
-            {
-               remoteParticipant->getEndpoint()->sendPictureFastUpdate([]{});
-            }
+            remoteParticipant->requestKeyframe();
          }
          else
          {
             WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle.");
          }
-#else
-         WarningLog(<<"not implemented");
-#endif
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
    private:
@@ -847,7 +845,7 @@ class RequestKeyframeFromPeerCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle.");
+            WarningLog(<< "RequestKeyframeFromPeerCmd: invalid remote participant handle.");
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
@@ -889,7 +887,8 @@ private:
 /* ====================================================================
 
  Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
- Copyright (c) 2021, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

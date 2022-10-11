@@ -11,7 +11,7 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
 
-#include "RTPPortManager.hxx"
+#include "media/RTPPortManager.hxx"
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
@@ -191,7 +191,7 @@ public:
    virtual void enableAutoGainControl(bool enable);
    virtual void enableNoiseReduction(bool enable);
    virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; }
-   virtual std::shared_ptr<RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
+   virtual std::shared_ptr<resip::RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
 
    virtual Conversation *createConversationInstance(ConversationHandle handle,
       RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
@@ -278,7 +278,7 @@ private:
    MediaInterfaceMode mMediaInterfaceMode;
    bool mEnableExtraPlayAndRecordResources;
 
-   std::shared_ptr<RTPPortManager> mRTPPortManager;
+   std::shared_ptr<resip::RTPPortManager> mRTPPortManager;
 
    // FlowManager Instance
    flowmanager::FlowManager mFlowManager;

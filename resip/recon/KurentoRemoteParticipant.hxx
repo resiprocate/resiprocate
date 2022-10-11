@@ -88,6 +88,8 @@ public:
    virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
    virtual bool onTrickleIce(resip::TrickleIceContents& trickleIce) override;
 
+   virtual void requestKeyframe() override;
+
 protected:
    virtual bool mediaStackPortAvailable();
 
@@ -125,6 +127,8 @@ public: // FIXME
 
 /* ====================================================================
 
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
