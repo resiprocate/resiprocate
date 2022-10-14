@@ -118,7 +118,7 @@ SipXMediaResourceParticipant::startResourceImpl()
          if(participant)
          {
             StackLog(<< "SipXMediaResourceParticipant::startResource: sending tone to sipX connection: " << participant->getMediaConnectionId());
-#if SIPX_NO_RECORD
+#ifdef SIPX_NO_RECORD
             // Start RFC4733 out-of-band tone
             UtlString encodeName(DEFAULT_ENCODE_RESOURCE_NAME);
             MpResourceTopology::replaceNumInName(encodeName, participant->getMediaConnectionId());
@@ -137,7 +137,7 @@ SipXMediaResourceParticipant::startResourceImpl()
       }
       else
       {
-#if SIPX_NO_RECORD
+#ifdef SIPX_NO_RECORD
          status = getMediaInterface()->getInterface()->startTone(toneid, TRUE /* local - unused */, TRUE /* remote - unused */);
 #else
          // Note:  We are passing rfc4733Enabled as false, since sipX will send RFC4733 to all active RTP connections, and they may be in entirely different recon conversations
@@ -166,7 +166,7 @@ SipXMediaResourceParticipant::startResourceImpl()
       InfoLog(<< "SipXMediaResourceParticipant playing, handle=" << mHandle << " filepath=" << filepath);
 
       SipXMediaInterface* mediaInterface = getMediaInterface().get();
-#if SIPX_NO_RECORD
+#ifdef SIPX_NO_RECORD
       OsStatus status = mediaInterface->getInterface()->playAudio(filepath.c_str(),
          isRepeat() ? TRUE : FALSE /* repeast? */,
          TRUE /* local - unused */, TRUE /* remote - unused */);
@@ -197,7 +197,7 @@ SipXMediaResourceParticipant::startResourceImpl()
       if (getConversationManager().getBufferFromMediaResourceCache(cacheKey, &buffer, &type))
       {
          SipXMediaInterface* mediaInterface = getMediaInterface().get();
-#if SIPX_NO_RECORD
+#ifdef SIPX_NO_RECORD
          OsStatus status = mediaInterface->getInterface()->playBuffer((char*)buffer->data(),
             buffer->size(),
             8000, /* rate */
