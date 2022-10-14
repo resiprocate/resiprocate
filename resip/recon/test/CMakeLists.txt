@@ -8,12 +8,8 @@ endfunction()
 test(sdpTests sdpTests.cxx)
 test(unitTests unitTests.cxx)
 
-# FIXME playback_prompt.h record_prompt.h
-
 add_executable(testUA
    testUA.cxx
-   playback_prompt.h
-   record_prompt.h
 )
 
 target_link_libraries(testUA recon)

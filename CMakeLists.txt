@@ -8,6 +8,8 @@ if(POLICY CMP0077)
    CMAKE_POLICY(SET CMP0077 NEW)
 endif(POLICY CMP0077)
 
+# FIXME - how to include suffix such as 1.13.0~alpha1 ?
+# https://cmake.org/cmake/help/latest/variable/PROJECT_VERSION.html
 project(resiprocate VERSION 1.13.0)
 
 include(GNUInstallDirs)
@@ -15,11 +17,82 @@ include(Utilities)
 
 enable_testing()
 
+option(ENABLE_LOG_REPOSITORY_DETAILS "Log repository revision and branch" TRUE)
+if(ENABLE_LOG_REPOSITORY_DETAILS)
+   execute_process(
+      COMMAND git describe --match="" --always --abbrev=40 --dirty
+      OUTPUT_VARIABLE RESIPROCATE_GIT_ID
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+   execute_process(
+      COMMAND git rev-parse --abbrev-ref HEAD
+      OUTPUT_VARIABLE RESIPROCATE_BRANCH_NAME
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+
+# https://cmake.org/cmake/help/latest/module/FindThreads.html
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+find_package(Threads)
+if(NOT Threads_FOUND)
+   exit()
+endif()
+if(CMAKE_USE_PTHREADS_INIT)
+   add_compile_definitions(_REENTRANT)
+   add_compile_options(-pthread)
+endif()
+
+set(REPRO_BUILD_REV ${PACKAGE_VERSION})
+set(REPRO_RELEASE_VERSION ${PACKAGE_VERSION})
+set(RESIP_SIP_MSG_MAX_BYTES 10485760)
+
+# https://cmake.org/cmake/help/latest/module/TestBigEndian.html
+# see also
+# https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_BYTE_ORDER.html
+include (TestBigEndian)
+test_big_endian(RESIP_BIG_ENDIAN)
+
 # Top-level user-settable variables (with defaults)
 # Those can be queried from the command line using "cmake -LH" and can be
 # specified on the command line, using cmake-gui or ccmake.
-option(WITH_SSL "Link against SSL libraries" TRUE)
 option(WITH_C_ARES "Link against libc-ares (rather than rutil/dns/ares)" FALSE)
+option(WITH_SSL "Link against SSL libraries" TRUE)
+#option(USE_POPT
+option(USE_SIGCOMP "Use OpenSigComp" FALSE)
+#option(USE_FMT
+option(VERSIONED_SONAME "Include Major.Minor version in SONAME" TRUE)
+option(ENABLE_ANDROID "Enable Android build" FALSE)
+option(USE_IPV6 "Enable IPv6" TRUE)
+option(USE_DTLS "Enable DTLS" TRUE)
+option(PEDANTIC_STACK "Enable pedantic behavior (fully parse all messages)" FALSE)
+# some systems may have a newer version of libpq that is not
+# compatible with the packaged version of soci_postgresql
+option(USE_SOCI_POSTGRESQL "Build recon with SOCI PostgreSQL support" FALSE)
+# can't have both MariaDB C client and SOCI MySQL at the same
+# time in some environments, e.g. CentOS 8.1
+option(USE_SOCI_MYSQL "Build recon with SOCI MySQL support" FALSE)
+option(USE_POSTGRESQL "Link against PostgreSQL client libraries" FALSE)
+option(USE_MAXMIND_GEOIP "Link against MaxMind GeoIP libraries" FALSE)
+option(RESIP_HAVE_RADCLI "Link against radcli RADIUS client library" FALSE)
+option(BUILD_REPRO "Build repro SIP proxy" TRUE)
+option(BUILD_DSO_PLUGINS "Build DSO plugins" TRUE)
+option(BUILD_RETURN "Build reTurn server" TRUE)
+option(BUILD_REND "Build rend" FALSE)
+option(BUILD_TFM "Build TFM, requires Netxx and cppunit" FALSE)
+option(BUILD_ICHAT_GW "Build iChat gateway, requires gloox" FALSE)
+option(BUILD_TELEPATHY_CM "Build Telepathy connection manager" FALSE)
+option(BUILD_RECON "Build reCon Conversation Manager library" FALSE)
+option(USE_SRTP1 "Use srtp 1.x instead of current version" FALSE)
+option(BUILD_RECONSERVER "Build reConServer" FALSE)
+option(USE_SIPXTAPI "Link against sipXtapi" FALSE)
+option(USE_KURENTO "Build Kurento client (requires websocketpp)" FALSE)
+option(USE_GSTREAMER "Link against Gstreamer" FALSE)
+option(USE_LIBWEBRTC "Link against LibWebRTC" FALSE)
+option(RECON_LOCAL_HW_TESTS "Attempt to use local audio hardware in unit tests" FALSE)
+option(DEFAULT_BRIDGE_MAX_IN_OUTPUTS "recon: Maximum connections on bridge" 20)
+option(BUILD_P2P "Build P2P, links against S2C and SSL, unfinished" FALSE)
+option(BUILD_PYTHON "Build components requiring Python" FALSE)
+option(BUILD_QPID_PROTON "Build components requiring qpid-proton (AMQP)" TRUE)
+option(RESIP_ASSERT_SYSLOG "Log assertion failures with Syslog" TRUE)
+
 if(WIN32)
    set(BUILD_SHARED_LIBS_DEFAULT OFF)
 else()
@@ -29,19 +102,11 @@ option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT
 
 set(CMAKE_CXX_STANDARD 11)
 
-if(USE_SIPXTAPI OR USE_KURENTO)
-   set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20)
-endif()
-
 ####################
 ### Dependencies ###
 ####################
 
 find_package(PkgConfig)
-
-# Threads
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-find_package(Threads)
 
 # ares
 if(WITH_C_ARES)
@@ -81,13 +146,6 @@ else()
    set(OPENSSL_FOUND FALSE)
 endif()
 
-# SRTP2
-# Debian: libsrtp2-dev
-find_package(srtp2)
-if(SRTP2_FOUND)
-   include_directories(SYSTEM ${SRTP2_INCLUDE_DIRS})
-endif()
-
 # popt
 # Debian: libpopt-dev
 if(WIN32)
@@ -104,53 +162,102 @@ else()
    endif()
 endif()
 
-# sigcomp
-# FIXME
-#find_package(OpenSigComp)
+# OpenSigComp
+if(USE_SIGCOMP)
+   if(WIN32)
+      add_subdirectory(contrib/opensigcomp)
+      set(OPENSIGCOMP_LIBRARIES opensigcomp)
+   else()
+      find_package(OpenSigComp)
+      include_directories(${OPENSIGCOMP_INCLUDE_DIRS})
+   endif()
+endif()
 
 # fmt
 # Debian: libfmt-dev
 find_package(fmt)
+if(fmt_FOUND)
+endif()
+
+if(NOT VERSIONED_SONAME)
+   set(CMAKE_PLATFORM_NO_VERSIONED_SONAME True)
+endif()
+
+function(option_def)
+   if(${ARGV0})
+      add_definitions(-D${ARGV0})
+   endif()
+endfunction()
+
+function(set_def)
+   set(${ARGV0} TRUE)
+   add_definitions(-D${ARGV0})
+endfunction()
+
+function(package_req)
+   if(${ARGV0})
+      find_package(${ARGV1} REQUIRED)
+   endif()
+endfunction()
+
+option_def(USE_IPV6)
+option_def(USE_DTLS)
+option_def(PEDANTIC_STACK)
 
 # MySQL
 # Debian: default-libmysqlclient-dev
 find_package(MySQL)
-if(MySQL_FOUND)
-   set(USE_MYSQL true)
-endif()
+package_req(USE_MYSQL MySQL)
 
 # soci (MySQL, PostgreSQL)
 # Debian: libsoci-dev
 # FIXME - hardcoded
 # FIXME - MySQL, PostgreSQL)
-set(SOCI_FOUND true)
-set(SOCI_INCLUDE_DIRS "/usr/include/soci")
-set(SOCI_LIBRARIES soci_core)
+if(USE_SOCI_POSTGRESQL OR USE_SOCI_MYSQL)
+   set(SOCI_FOUND true)
+   set(SOCI_INCLUDE_DIRS "/usr/include/soci")
+   set(SOCI_LIBRARIES soci_core)
+   option_def(USE_SOCI_POSTGRESQL)
+   option_def(USE_SOCI_MYSQL)
+endif()
 
 # PostgreSQL
 # Debian: libpq-dev postgresql-server-dev-all
-find_package(PostgreSQL)
-if(PostgreSQL_FOUND)
-   set(USE_POSTGRESQL true)
-endif()
+package_req(USE_POSTGRESQL PostgreSQL)
 
 # GeoIP
 # Debian: libgeoip-dev
-find_package(GeoIP)
-if(GeoIP_FOUND)
-   set(USE_MAXMIND_GEOIP true)
-endif()
+package_req(USE_MAXMIND_GEOIP GeoIP)
 
 # radcli (RADIUS client)
 # Debian: libradcli-dev
-pkg_check_modules(LIBRADIUS radcli)
-if(LIBRADIUS_FOUND)
-   set(USE_RADIUS_CLIENT true)
+if(RESIP_HAVE_RADCLI)
+   pkg_check_modules(LIBRADIUS radcli REQUIRED)
+   option_def(RESIP_HAVE_RADCLI)
+   set_def(USE_RADIUS_CLIENT)
 endif()
 
 # NetSNMP
 # Debian: libsnmp-dev
 pkg_check_modules(NETSNMP_AGENT netsnmp-agent)
+if(NETSNMP_AGENT_FOUND)
+   set_def(USE_NETSNMP)
+endif()
+
+option_def(BUILD_REPRO)
+
+if(BUILD_DSO_PLUGINS)
+   add_definitions(-DDSO_PLUGINS)
+   get_filename_component(INSTALL_REPRO_PLUGIN_DIR ${CMAKE_INSTALL_PKGLIBDIR}/repro/plugins ABSOLUTE)
+endif()
+
+get_filename_component(INSTALL_RETURN_PKGLIB_DIR ${CMAKE_INSTALL_PKGLIBDIR}/reTurn} ABSOLUTE)
+
+option_def(BUILD_RETURN)
+
+option_def(BUILD_REND)
+
+option_def(BUILD_TFM)
 
 # BerkeleyDb
 # Debian: libdb++-dev
@@ -194,33 +301,73 @@ if(BUILD_TELEPATHY_CM)
    find_package(TelepathyQt5)
 endif()
 
+# SRTP2
+# Debian: libsrtp2-dev
+if(USE_SRTP1)
+   find_package(srtp)
+   if(SRTP_FOUND)
+      include_directories(SYSTEM ${SRTP_INCLUDE_DIRS})
+   endif()
+else()
+   find_package(srtp2)
+   if(SRTP2_FOUND)
+      include_directories(SYSTEM ${SRTP2_INCLUDE_DIRS})
+   endif()
+endif()
+
 # sipXtapi
 # Debian: libsipxtapi-dev
 # FIXME - hardcoded
-set(SIPXTAPI_FOUND true)
-set(SIPXTAPI_INCLUDE_DIRS "/usr/include/sipxtapi")
-set(SIPXTAPI_LIBRARIES sipXport sipXsdp sipXmedia sipXmediaProcessing)
-set(SIPX_NO_RECORD true)
-# FIXME - WIN32:
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__pingtel_on_posix__")
+if(USE_SIPXTAPI)
+   option_def(USE_SIPXTAPI)
+   set(SIPXTAPI_FOUND true)
+   if(WIN32)
+      # FIXME
+      set(SIPXTAPI_LIBRARIES sipXport sipXsdp sipXmedia sipXmediaProcessing)
+   else()
+      set(SIPXTAPI_INCLUDE_DIRS "/usr/include/sipxtapi")
+      set(SIPXTAPI_LIBRARIES sipXport sipXsdp sipXmedia sipXmediaProcessing)
+      set(SIPX_NO_RECORD true)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__pingtel_on_posix__")
+   endif()
+endif()
+
+option_def(USE_KURENTO)
+
+# gstreamermm
+# Debian: libgstreamermm-1.0-dev
+if(USE_GSTREAMER)
+   option_def(USE_GSTREAMER)
+   pkg_check_modules(GSTREAMERMM gstreamermm-1.0 REQUIRED)
+
+   # gstwebrtc-1.0
+   # Debian: libgstreamer-plugins-bad1.0-dev
+   pkg_check_modules(GST_WEBRTC gstreamer-webrtc-1.0)
+endif()
+
+option_def(USE_LIBWEBRTC)
+
+option_def(RECON_LOCAL_HW_TESTS)
 
 # Python
 # Debian: python3-dev
-find_package(Python3 COMPONENTS Development)
-
-if(Python3_FOUND)
-   # PyCXX
-   # Debian: python3-cxx-dev
-   pkg_check_modules(PYCXX PyCXX)
+if(BUILD_PYTHON)
+   find_package(Python3 COMPONENTS Development REQUIRED)
+   if(Python3_FOUND)
+      # PyCXX
+      # Debian: python3-cxx-dev
+      pkg_check_modules(PYCXX PyCXX)
+   endif()
 endif()
 
 # Apache Qpid Proton
 # Debian: libqpid-proton-cpp12-dev
-pkg_check_modules(QPIDPROTON libqpid-proton-cpp)
+if(BUILD_QPID_PROTON)
+   pkg_check_modules(QPIDPROTON libqpid-proton-cpp REQUIRED)
+   option_def(BUILD_QPID_PROTON)
+endif()
 
-# gstreamermm
-# Debian: libgstreamermm-1.0-dev
-pkg_check_modules(GSTREAMERMM gstreamermm-1.0)
+option_def(RESIP_ASSERT_SYSLOG)
 
 # websocketpp
 # Debian: libwebsocketpp-dev
@@ -228,13 +375,6 @@ find_package(websocketpp)
 if(websocketpp_FOUND)
    include_directories(SYSTEM ${websocketpp_INCLUDE_DIRS})
 endif()
-
-# gperf
-set(GPERF_SIZE_TYPE "size_t")
-
-# epoll
-include(CheckIncludeFiles)
-check_include_files(sys/epoll.h HAVE_EPOLL)
 
 # monotonic clock
 include(CheckCSourceRuns)
@@ -250,6 +390,13 @@ check_c_source_runs("
 if(HAVE_CLOCK_GETTIME_MONOTONIC)
    add_definitions(-DHAVE_CLOCK_GETTIME_MONOTONIC)
 endif()
+
+# epoll
+include(CheckIncludeFiles)
+check_include_files(sys/epoll.h HAVE_EPOLL)
+
+# gperf
+set(GPERF_SIZE_TYPE "size_t")
 
 if(WIN32)
    add_definitions(-DNOMINMAX)
@@ -274,27 +421,22 @@ add_subdirectory(rutil)
 
 add_subdirectory(resip)
 
-if(BERKELEYDB_FOUND AND CAJUN_FOUND)
+if(BUILD_REPRO)
    add_subdirectory(repro)
-else()
-   message(STATUS "Missing libraries, will not build repro")
 endif()
 
-# FIXME - need Netxx in CMake
-#add_subdirectory(tfm)
+if(BUILD_TFM)
+   add_subdirectory(tfm)
+endif()
 
 add_subdirectory(media)
 
-if(OPENSSL_FOUND AND ASIO_FOUND AND Boost_FOUND)
+if(BUILD_RETURN)
    add_subdirectory(reTurn)
-else()
-   message(STATUS "Missing libraries, will not build reTurn")
 endif()
 
-if(OPENSSL_FOUND AND ASIO_FOUND AND Boost_FOUND AND SRTP2_FOUND)
+if(BUILD_RECON)
    add_subdirectory(reflow)
-else()
-   message(STATUS "Missing libraries, will not build reFlow")
 endif()
 
 if(BUILD_P2P)

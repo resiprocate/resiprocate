@@ -26,19 +26,48 @@ source build/distcc-setup
 
 # -Wweak-vtables : use with clang to find classes without a key function
 
-CFLAGS='-g -O0 -fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security' \
-CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/postgresql -I/usr/include/sipxtapi -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_DIGEST_LOGGING -DRECON_SDP_ENCODING_NAMES_CASE_HACK -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \
-CXXFLAGS='-g -O0 -fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive' \
+CFLAGS='-fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated' \
+CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/postgresql -I/usr/include/sipxtapi -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_FILE_OFFS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_DIGEST_LOGGING -DRECON_SDP_ENCODING_NAMES_CASE_HACK -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \
+CXXFLAGS='-fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -Wall -Wno-deprecated' \
 LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
   cmake ${DISTCC} \
-    -DWITH_SSL=ON \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" \
+    -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" \
     -DWITH_C_ARES=ON \
-    -DBUILD_REPRO_DSO_PLUGINS=True \
-    -DBUILD_PYTHON=True \
-    -DUSE_SIPXTAPI=True \
-    -DUSE_KURENTO=True \
-    -DBUILD_QPID_PROTON=True \
-    -DBUILD_GSTREAMER=True \
+    -DWITH_SSL=ON \
+    -DUSE_SIGCOMP=OFF \
+    -DVERSIONED_SONAME=ON \
+    -DENABLE_ANDROID=OFF \
+    -DUSE_IPV6=ON \
+    -DUSE_DTLS=ON \
+    -DPEDANTIC_STACK=OFF \
+    -DUSE_SOCI_POSTGRESQL=ON \
+    -DUSE_SOCI_MYSQL=ON \
+    -DUSE_POSTGRESQL=ON \
+    -DUSE_MAXMIND_GEOIP=ON \
+    -DRESIP_HAVE_RADCLI=ON \
+    -DBUILD_REPRO=ON \
+    -DBUILD_REPRO_DSO_PLUGINS=ON \
+    -DBUILD_RETURN=ON \
+    -DBUILD_REND=ON \
+    -DBUILD_TFM=OFF \
+    -DBUILD_ICHAT_GW=OFF \
+    -DBUILD_TELEPATHY_CM=OFF \
+    -DBUILD_RECON=ON \
+    -DUSE_SRTP1=OFF \
+    -DBUILD_RECONSERVER=ON \
+    -DUSE_SIPXTAPI=ON \
+    -DUSE_KURENTO=ON \
+    -DUSE_GSTREAMER=ON \
+    -DUSE_LIBWEBRTC=OFF \
+    -DRECON_LOCAL_HW_TESTS=OFF \
+    -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 \
+    -DBUILD_P2P=OFF \
+    -DBUILD_PYTHON=ON \
+    -DPYCXX_SRCDIR=/usr/src/CXX/Python3 \
+    -DBUILD_QPID_PROTON=ON \
+    -DRESIP_ASSERT_SYSLOG=ON \
     .
 #  ./configure \
 #              ${DISTCC} \

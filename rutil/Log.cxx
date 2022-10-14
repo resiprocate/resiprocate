@@ -22,9 +22,6 @@
 #include "rutil/Subsystem.hxx"
 #include "rutil/SysLogStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#ifdef ENABLE_LOG_REPOSITORY_DETAILS
-#include "rutil/Repository.hxx"
-#endif
 
 #ifdef USE_FMT
 #include <fmt/format.h>

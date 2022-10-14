@@ -9,7 +9,6 @@ set(INCLUDES
    IMParticipantBase.hxx
    UserAgentMasterProfile.hxx
    RemoteParticipantDialogSet.hxx
-   RTPPortManager.hxx
    SipXHelper.hxx
    Conversation.hxx
    UserAgentDialogSetFactory.hxx
@@ -56,6 +55,18 @@ set(INCLUDES
    KurentoParticipant.hxx
    KurentoRemoteParticipantDialogSet.hxx
    KurentoRemoteParticipant.hxx
+   GstBridgeMixer.hxx
+   GstConversation.hxx
+   GstMediaStackAdapter.hxx
+   GstParticipant.hxx
+   GstRemoteParticipantDialogSet.hxx
+   GstRemoteParticipant.hxx
+   LibWebRTCBridgeMixer.hxx
+   LibWebRTCConversation.hxx
+   LibWebRTCMediaStackAdapter.hxx
+   LibWebRTCParticipant.hxx
+   LibWebRTCRemoteParticipantDialogSet.hxx
+   LibWebRTCRemoteParticipant.hxx
 )
 
 add_library(recon
@@ -81,7 +92,6 @@ add_library(recon
    RemoteIMPagerParticipant.cxx
    RemoteIMSessionParticipant.cxx
    RemoteIMSessionParticipantDialogSet.cxx
-   RTPPortManager.cxx
    UserAgent.cxx
    UserAgentClientSubscription.cxx
    UserAgentClientPublication.cxx
@@ -121,6 +131,24 @@ target_add_conditional_sources(recon USE_KURENTO
    KurentoRemoteParticipantDialogSet.cxx
 )
 
+target_add_conditional_sources(recon USE_GSTREAMER
+   GstBridgeMixer.cxx
+   GstConversation.cxx
+   GstMediaStackAdapter.cxx
+   GstParticipant.cxx
+   GstRemoteParticipant.cxx
+   GstRemoteParticipantDialogSet.cxx
+)
+
+target_add_conditional_sources(recon USE_LIBWEBRTC
+   LibWebRTCBridgeMixer.cxx
+   LibWebRTCConversation.cxx
+   LibWebRTCMediaStackAdapter.cxx
+   LibWebRTCParticipant.cxx
+   LibWebRTCRemoteParticipant.cxx
+   LibWebRTCRemoteParticipantDialogSet.cxx
+)
+
 target_include_directories(recon PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 target_include_directories(recon PUBLIC ${SIPXTAPI_INCLUDE_DIRS})
 target_link_libraries(recon PUBLIC dum)
@@ -129,6 +157,9 @@ if(USE_SIPXTAPI)
 endif()
 if(USE_KURENTO)
    target_link_libraries(recon PUBLIC kurentoclient)
+endif()
+if(USE_GSTREAMER)
+   target_link_libraries(recon PUBLIC gstreamerutils)
 endif()
 set_target_properties(recon PROPERTIES FOLDER recon VERSION ${SO_RELEASE})
 

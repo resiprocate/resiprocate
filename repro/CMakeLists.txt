@@ -4,7 +4,7 @@ add_executable(repro-bin
         repro.cxx
         )
 
-target_link_libraries(repro-bin PRIVATE repro)
+target_link_libraries(repro-bin PUBLIC repro)
 
 set_target_properties(repro-bin PROPERTIES OUTPUT_NAME repro)
 
@@ -144,6 +144,7 @@ add_library(repro
    XmlRpcServerBase.cxx
    OutboundTarget.cxx
    PersistentMessageQueue.cxx
+   Plugin.cxx
    QValueTarget.cxx
 
    stateAgents/PresenceServer.cxx
@@ -180,33 +181,40 @@ target_add_conditional_sources(repro OPENSSL_FOUND
 )
 
 target_link_libraries(repro PUBLIC dum)
+if(BUILD_DSO_PLUGINS)
+   target_link_libraries(repro PUBLIC ${CMAKE_DL_LIBS})
+endif()
 
 target_include_directories(repro PUBLIC ${PROJECT_SOURCE_DIR})
 target_include_directories(repro PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(repro PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-target_include_directories(repro PRIVATE ${CAJUN_INCLUDE_DIRS})
-target_include_directories(repro PRIVATE ${BERKELEYDB_INCLUDE_DIRS})
-target_link_libraries(repro PRIVATE ${BERKELEYDB_LIBRARIES})
-if(GEOIP_FOUND)
-        target_link_libraries(repro PRIVATE ${GEOIP_LIBRARIES})
+target_include_directories(repro PUBLIC ${CAJUN_INCLUDE_DIRS})
+target_include_directories(repro PUBLIC ${BERKELEYDB_INCLUDE_DIRS})
+target_link_libraries(repro PUBLIC ${BERKELEYDB_LIBRARIES})
+if(USE_MAXMIND_GEOIP)
+   target_link_libraries(repro PUBLIC ${GEOIP_LIBRARY})
 endif()
 
 target_add_conditional_sources(repro MySQL_FOUND
         MySqlDb.cxx
         )
-target_link_libraries(repro PRIVATE ${MySQL_LIBRARIES})
-target_include_directories(repro PRIVATE ${MySQL_INCLUDE_DIRS})
+target_link_libraries(repro PUBLIC ${MySQL_LIBRARIES})
+target_include_directories(repro PUBLIC ${MySQL_INCLUDE_DIRS})
 
-target_add_conditional_sources(repro PostgreSQL_FOUND
+target_add_conditional_sources(repro USE_POSTGRESQL
         PostgreSqlDb.cxx
         )
-target_link_libraries(repro PRIVATE ${PostgreSQL_LIBRARIES})
-target_include_directories(repro PRIVATE ${PostgreSQL_INCLUDE_DIRS})
+
+# for some reason we can't use PostgreSQL_LIBRARIES here...
+target_link_libraries(repro PUBLIC PostgreSQL::PostgreSQL)
+
+target_include_directories(repro PUBLIC ${PostgreSQL_INCLUDE_DIR})
 
 if(BUILD_REPRO_DSO_PLUGINS)
    add_subdirectory(plugins)
 endif()
+
 add_subdirectory(accountingconsumers)
 add_subdirectory(reprocmd)
 add_subdirectory(test)

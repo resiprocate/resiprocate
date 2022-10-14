@@ -4,5 +4,5 @@ add_executable(queuetostream
 )
 
 target_include_directories(queuetostream PUBLIC ${BERKELEYDB_INCLUDE_DIRS})
-target_link_libraries(queuetostream PRIVATE repro ${BERKELEYDB_LIBRARIES})
+target_link_libraries(queuetostream PUBLIC repro)
 

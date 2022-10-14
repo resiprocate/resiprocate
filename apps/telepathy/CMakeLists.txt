@@ -11,8 +11,6 @@ set(INCLUDES
    TelepathyMasterProfile.hxx
    TelepathyParameters.hxx
    Protocol.hxx
-   playback_prompt.h
-   record_prompt.h
 )
 
 add_executable(telepathy-resiprocate
@@ -31,8 +29,6 @@ add_executable(telepathy-resiprocate
    telepathy-resiprocate.cxx
    ${INCLUDES}
 )
-
-# FIXME playback_prompt.h record_prompt.h qt
 
 target_include_directories(telepathy-resiprocate PRIVATE ${TELEPATHY_QT5_INCLUDE_DIR})
 target_include_directories(telepathy-resiprocate PRIVATE ${Qt5Core_INCLUDE_DIRS} ${Qt5DBus_INCLUDE_DIRS})

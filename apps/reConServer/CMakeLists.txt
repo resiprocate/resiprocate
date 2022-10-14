@@ -11,8 +11,6 @@ set(INCLUDES
    MyUserAgent.hxx
    RegistrationForwarder.hxx
    SubscriptionForwarder.hxx
-   playback_prompt.h
-   record_prompt.h
    ProtonCommandThread.hxx
 )
 
@@ -37,7 +35,7 @@ target_add_conditional_sources(reConServer BUILD_QPID_PROTON
    ProtonCommandThread.cxx
 )
 
-target_include_directories(reConServer PRIVATE ${SOCI_INCLUDE_DIRS})
+target_include_directories(reConServer PRIVATE ${SOCI_INCLUDE_DIRS} ${PostgreSQL_INCLUDE_DIR} ${MySQL_INCLUDE_DIRS})
 
 target_link_libraries(reConServer PUBLIC recon reflow ${SOCI_LIBRARIES})
 
@@ -49,8 +47,6 @@ endif()
 if(USE_SOCI_MYSQL)
    target_link_libraries(reConServer PUBLIC -lsoci_mysql -lmysqlclient)
 endif()
-
-# FIXME playback_prompt.h record_prompt.h
 
 install(TARGETS reConServer DESTINATION ${CMAKE_INSTALL_SBINDIR})
 

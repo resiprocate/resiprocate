@@ -9,7 +9,6 @@ set(INCLUDES
    ConfigParse.hxx
    CongestionManager.hxx
    GeneralCongestionManager.hxx
-   GStreamerUtils.hxx
    HeapInstanceCounter.hxx
    KeyValueStore.hxx
    FdSetIOObserver.hxx
@@ -73,6 +72,7 @@ set(INCLUDES
    vmd5.hxx
    XMLCursor.hxx
    PoolBase.hxx
+   Plugin.hxx
    FdPoll.hxx
    Time.hxx
    stun/Udp.hxx
@@ -92,6 +92,8 @@ set(INCLUDES
    DinkyPool.hxx
    ConsumerFifoBuffer.hxx
    ProtonThreadBase.hxx
+   PyExtensionBase.hxx
+   PyThreadSupport.hxx
    hep/HepAgent.hxx
    hep/ResipHep.hxx
 )
@@ -121,6 +123,7 @@ add_library(rutil
    ParseException.cxx
    Poll.cxx
    PoolBase.cxx
+   Plugin.cxx
    FdPoll.cxx
    RADIUSDigestAuthenticator.cxx
    RWMutex.cxx
@@ -171,12 +174,31 @@ target_add_conditional_sources(rutil OPENSSL_FOUND
    ssl/SHA1Stream.cxx
 )
 
-target_add_conditional_sources(rutil BUILD_GSTREAMER
-   GStreamerUtils.cxx
-)
-
 target_add_conditional_sources(rutil BUILD_QPID_PROTON
    ProtonThreadBase.cxx
+)
+
+function(copy_pycxx)
+   add_custom_command(
+      OUTPUT ${ARGV0}
+      COMMAND ${CMAKE_COMMAND} -E copy ${PYCXX_SRCDIR}/${ARGV1}${ARGV0} .
+   )
+endfunction()
+if(BUILD_PYTHON)
+   copy_pycxx(cxx_exceptions.cxx)
+   copy_pycxx(cxxextensions.c)
+   copy_pycxx(cxx_extensions.cxx)
+   copy_pycxx(cxxsupport.cxx)
+   copy_pycxx(IndirectPythonInterface.cxx ../)
+endif()
+
+target_add_conditional_sources(rutil BUILD_PYTHON
+   PyExtensionBase.cxx
+   cxxextensions.c
+   cxx_extensions.cxx
+   cxxsupport.cxx
+   IndirectPythonInterface.cxx
+   cxx_exceptions.cxx
 )
 
 target_add_conditional_sources(rutil WIN32
@@ -191,11 +213,15 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 target_include_directories(rutil PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
-target_include_directories(rutil PUBLIC ${GSTREAMERMM_INCLUDE_DIRS})
 target_include_directories(rutil PUBLIC ${QPIDPROTON_INCLUDE_DIRS})
+target_include_directories(rutil PUBLIC ${Python3_INCLUDE_DIRS} ${PYCXX_INCLUDE_DIRS})
 target_link_libraries(rutil ${OPENSSL_LIBRARIES} ${ARES_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(rutil ${GSTREAMERMM_LIBRARIES})
 target_link_libraries(rutil ${QPIDPROTON_LIBRARIES})
+target_link_libraries(rutil ${Python3_LIBRARIES} ${PYCXX_LIBRARIES})
+target_link_libraries(rutil ${LIBRADIUS_LIBRARIES})
+if(ENABLE_ANDROID)
+   target_link_libraries(rutil log)
+endif()
 set_target_properties(rutil PROPERTIES FOLDER rutil VERSION ${SO_RELEASE})
 
 install(TARGETS rutil DESTINATION ${CMAKE_INSTALL_LIBDIR})
