@@ -38,11 +38,11 @@ namespace resip
 template <int S>
 struct DataLocalSize
 {
-      explicit DataLocalSize(size_t) {}
+      explicit DataLocalSize(size_t) noexcept {}
 };
 
 // .bwc. Pack class Data; has to come before doxygen block though.
-#pragma pack(4)
+#pragma pack(push, 4)
 
 /**
   @brief An alternative to std::string, encapsulates an arbitrary buffer of 
@@ -88,7 +88,7 @@ class Data
    public:
       RESIP_HeapCount(Data);
 
-      typedef UInt32 size_type;
+      typedef uint32_t size_type;
 
       inline Data()
          : mBuf(mPreBuffer),
@@ -118,7 +118,7 @@ class Data
         @param capacity  The initial capacity of the buffer
 
         @param foo       This parameter is ignored; it is merely
-                         used to disambuguate this constructor
+                         used to disambiguate this constructor
                          from the constructor that takes a single
                          int. Always pass Data::Preallocate.
       */
@@ -138,7 +138,7 @@ class Data
         @param capacity  The initial capacity of the buffer
 
         @param foo       This parameter is ignored; it is merely
-                         used to disambuguate this constructor
+                         used to disambiguate this constructor
                          from the constructor that takes a single
                          int. Yes, it's ugly -- that's why it's
                          deprecated.
@@ -187,7 +187,7 @@ class Data
         that value. (E.g. "Data(75)" will create a Data
         with length=2, and contents of 0x37 0x35).
       */
-      explicit Data(Int32 value);
+      explicit Data(int32_t value);
 
       /**
         Converts the passed in value into ascii-decimal
@@ -195,7 +195,7 @@ class Data
         that value. (E.g. "Data(75)" will create a Data
         with length=2, and contents of 0x37 0x35).
       */
-      explicit Data(UInt32 value);
+      explicit Data(uint32_t value);
 
       /**
         Converts the passed in value into ascii-decimal
@@ -203,7 +203,7 @@ class Data
         that value. (E.g. "Data(75)" will create a Data
         with length=2, and contents of 0x37 0x35).
       */
-      explicit Data(UInt64 value);
+      explicit Data(uint64_t value);
 
 #ifndef RESIP_FIXED_POINT
       enum DoubleDigitPrecision 
@@ -548,7 +548,7 @@ class Data
       /**
         Checks whether the Data is empty.
       */
-      bool empty() const { return mSize == 0; }
+      bool empty() const noexcept { return mSize == 0; }
 
       /**
         Returns the number of bytes in this Data.
@@ -556,7 +556,7 @@ class Data
         @note This does NOT indicate the capacity of the
               underlying buffer.
       */
-      size_type size() const { return mSize; }
+      size_type size() const noexcept { return mSize; }
 
       /**
         Returns a pointer to the contents of this Data. This
@@ -565,7 +565,7 @@ class Data
 
         @note The value returned is NOT necessarily null-terminated.
       */
-      inline const char* data() const
+      const char* data() const noexcept
       {
          return mBuf;
       }
@@ -587,7 +587,7 @@ class Data
       /**
         Returns a pointer to the beginning of the buffer used by the Data.
       */
-      inline const char* begin() const
+      const char* begin() const noexcept
       {
          return mBuf;
       }
@@ -595,7 +595,7 @@ class Data
       /**
         Returns a pointer to the end of the buffer used by the Data.
       */
-      inline const char* end() const
+      const char* end() const noexcept
       {
          return mBuf + mSize;
       }
@@ -779,7 +779,7 @@ class Data
         unsigned 64-bit integer. Will strip leading whitespace.
         This method stops upon encountering the first non-decimal digit.
       */ 
-      UInt64 convertUInt64() const;
+      uint64_t convertUInt64() const;
 
       /**
         Returns true if this Data starts with the bytes indicated by
@@ -1001,8 +1001,8 @@ class Data
       friend class ::TestData;
       friend class MD5Buffer;
 };
-// reset alignment to default
-#pragma pack()
+// reset alignment to previous value
+#pragma pack(pop)
 
 
 class DataHelper {
@@ -1053,7 +1053,7 @@ inline bool isLessThanNoCase(const Data& left, const Data& right)
 template<class Predicate> EncodeStream& 
 Data::escapeToStream(EncodeStream& str, Predicate shouldEscape) const
 {
-   static char hex[] = "0123456789ABCDEF";
+   constexpr char hex[] = "0123456789ABCDEF";
 
    if (empty())
    {
@@ -1118,6 +1118,13 @@ operator+(const char* c, const Data& d)
 {
    return Data(c) + d;
 }
+
+bool operator==(const Data& lhs, const Data& rhs);
+bool operator==(const Data& lhs, const char* rhs);
+
+bool operator<(const Data& lhs, const Data& rhs);
+bool operator<(const Data& lhs, const char* rhs);
+bool operator<(const char* lhs, const Data& rhs);
 
 }
 

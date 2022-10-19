@@ -15,18 +15,21 @@ EXTRA_DIST += WinCompat.cxx
 EXTRA_DIST += msvc/*.h
 EXTRA_DIST += dns/LocalDns.cxx
 
-#AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES
-AM_CXXFLAGS = -I $(top_srcdir) 
+librutil_la_CXXFLAGS = -I $(top_srcdir)
 if USE_ARES
-AM_CXXFLAGS += -I $(top_srcdir)/rutil/dns/ares
+librutil_la_CXXFLAGS += -I $(top_srcdir)/rutil/dns/ares
 endif
 
 lib_LTLIBRARIES = librutil.la
 
 librutil_la_LIBADD = $(LIBSSL_LIBADD)
+if BUILD_QPID_PROTON
+librutil_la_LIBADD += -lqpid-proton-cpp
+endif
 librutil_la_LIBADD += $(LIBRADIUS_LIBADD)
 librutil_la_LIBADD += $(LIBARES_LIBADD)
 librutil_la_LIBADD += @LIBSTL_LIBADD@
+librutil_la_LIBADD += $(DEPS_FMT_LIBS)
 librutil_la_LIBADD += @LIBLOG_LIBADD@
 #librutil_la_LIBADD += -lrt
 librutil_la_LIBADD += @LIBPTHREAD_LIBADD@
@@ -37,9 +40,9 @@ librutil_la_SOURCES = \
 	AndroidLogger.cxx \
 	BaseException.cxx \
 	Coders.cxx \
-	Condition.cxx \
 	ConfigParse.cxx \
 	CountStream.cxx \
+        Crc32.cxx \
 	ServerProcess.cxx \
 	Data.cxx \
 	DataStream.cxx \
@@ -52,17 +55,16 @@ librutil_la_SOURCES = \
 	Lock.cxx \
 	Log.cxx \
 	MD5Stream.cxx \
-	Mutex.cxx \
 	NetNs.cxx \
 	ParseBuffer.cxx \
 	ParseException.cxx \
 	Poll.cxx \
 	PoolBase.cxx \
+	Plugin.cxx \
 	FdPoll.cxx \
 	RADIUSDigestAuthenticator.cxx \
 	RWMutex.cxx \
 	Random.cxx \
-	RecursiveMutex.cxx \
 	resipfaststreams.cxx \
 	SelectInterruptor.cxx \
 	Sha1.cxx \
@@ -102,8 +104,48 @@ librutil_la_SOURCES = \
 
 if USE_SSL
 librutil_la_SOURCES += \
+	ssl/OpenSSLDeleter.cxx \
 	ssl/OpenSSLInit.cxx \
 	ssl/SHA1Stream.cxx
+endif
+
+if BUILD_QPID_PROTON
+librutil_la_SOURCES += \
+    ProtonThreadBase.cxx
+endif
+
+if BUILD_PYTHON
+librutil_la_CPPFLAGS = $(DEPS_PYTHON_CFLAGS)
+librutil_la_SOURCES += \
+	PyExtensionBase.cxx
+
+nodist_librutil_la_SOURCES = cxxextensions.c
+nodist_librutil_la_SOURCES += cxx_extensions.cxx
+nodist_librutil_la_SOURCES += cxxsupport.cxx
+nodist_librutil_la_SOURCES += IndirectPythonInterface.cxx
+nodist_librutil_la_SOURCES += cxx_exceptions.cxx
+
+librutil_la_LIBADD += $(DEPS_PYTHON_LIBS)
+librutil_la_LIBADD += -lpython$(DEPS_PYTHON_VERSION)
+
+# Copy files from PyCXX into the tree to workaround an automake bug
+# Discussed in the lists:
+#   http://list.resiprocate.org/archive/resiprocate-devel/msg09110.html
+#   http://lists.gnu.org/archive/html/automake/2016-06/msg00003.html
+cxx_exceptions.cxx:	$(PYCXX_SRCDIR)/cxx_exceptions.cxx
+	cp $(PYCXX_SRCDIR)/cxx_exceptions.cxx .
+
+cxxextensions.c:	$(PYCXX_SRCDIR)/cxxextensions.c
+	cp $(PYCXX_SRCDIR)/cxxextensions.c .
+
+cxx_extensions.cxx:	$(PYCXX_SRCDIR)/cxx_extensions.cxx
+	cp $(PYCXX_SRCDIR)/cxx_extensions.cxx .
+
+cxxsupport.cxx:	$(PYCXX_SRCDIR)/cxxsupport.cxx
+	cp $(PYCXX_SRCDIR)/cxxsupport.cxx .
+
+IndirectPythonInterface.cxx:	$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx
+	cp $(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx .
 endif
 
 rutilincludedir = $(includedir)/rutil
@@ -120,22 +162,23 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	GeneralCongestionManager.hxx \
 	HeapInstanceCounter.hxx \
 	KeyValueStore.hxx \
-	SharedCount.hxx \
 	FdSetIOObserver.hxx \
 	Fifo.hxx \
 	CircularBuffer.hxx \
 	FiniteFifo.hxx \
 	ParseBuffer.hxx \
+	Plugin.hxx \
 	Log.hxx \
 	ThreadIf.hxx \
 	WinLeakCheck.hxx \
 	Random.hxx \
-	RecursiveMutex.hxx \
 	AsyncProcessHandler.hxx \
 	RADIUSDigestAuthenticator.hxx \
+	Repository.hxx \
 	RWMutex.hxx \
 	Subsystem.hxx \
 	Logger.hxx \
+	MediaConstants.hxx \
 	MD5Stream.hxx \
 	DnsUtil.hxx \
 	Timer.hxx \
@@ -144,7 +187,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	resipfaststreams.hxx \
 	Coders.hxx \
 	Sha1.hxx \
-	SharedPtr.hxx \
 	SelectInterruptor.hxx \
 	Socket.hxx \
 	dns/ExternalDnsFactory.hxx \
@@ -180,12 +222,12 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ssl/SHA1Stream.hxx \
 	ssl/OpenSSLInit.hxx \
 	CountStream.hxx \
+        Crc32.hxx \
 	vmd5.hxx \
 	XMLCursor.hxx \
 	PoolBase.hxx \
 	FdPoll.hxx \
 	Time.hxx \
-	Lockable.hxx \
 	stun/Udp.hxx \
 	stun/Stun.hxx \
 	SysLogBuf.hxx \
@@ -202,8 +244,25 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ProducerFifoBuffer.hxx \
 	DinkyPool.hxx \
 	ConsumerFifoBuffer.hxx \
+	ProtonThreadBase.hxx \
+	PyExtensionBase.hxx \
+	PyThreadSupport.hxx \
 	hep/HepAgent.hxx \
-	hep/ResipHep.hxx
+	hep/ResipHep.hxx \
+	rtcp/re_rtp.h
+
+Log.cxx:	Repository.hxx
+
+Repository.hxx:	.ALWAYS_REBUILD
+	echo "// Auto generated" > $@.tmp
+	echo "#ifndef __Repository_hxx" >> $@.tmp
+	echo "#define __Repository_hxx" >> $@.tmp
+	echo "#define RESIPROCATE_GIT_ID \"`git describe --match="" --always --abbrev=40 --dirty`\"" >> $@.tmp
+	echo "#define RESIPROCATE_BRANCH_NAME \"`git rev-parse --abbrev-ref HEAD`\"" >> $@.tmp
+	echo "#endif" >> $@.tmp
+	diff -q $@ $@.tmp || mv $@.tmp $@
+
+.ALWAYS_REBUILD:
 
 
 ##############################################################################

@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <memory>
+#include <utility>
 
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/BasicNonceHelper.hxx"
@@ -117,7 +118,7 @@ unsigned int Helper::hex2integer(const char* _s)
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {
-   std::auto_ptr<SipMessage> request(new SipMessage);
+   std::unique_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(method);
    rLine.uri() = target.uri();
    request->header(h_To) = target;
@@ -154,7 +155,7 @@ Helper::makeRegister(const NameAddr& to, const NameAddr& from)
 SipMessage*
 Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& contact)
 {
-   std::auto_ptr<SipMessage> request(new SipMessage);
+   std::unique_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(REGISTER);
 
    rLine.uri().scheme() = to.uri().scheme();
@@ -193,7 +194,7 @@ Helper::makeRegister(const NameAddr& to,const Data& transport)
 SipMessage*
 Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& contact)
 {
-   std::auto_ptr<SipMessage> request(new SipMessage);
+   std::unique_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(REGISTER);
 
    rLine.uri().scheme() = to.uri().scheme();
@@ -232,7 +233,7 @@ Helper::makePublish(const NameAddr& target, const NameAddr& from)
 SipMessage*
 Helper::makePublish(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   std::auto_ptr<SipMessage> request(new SipMessage);
+   std::unique_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(PUBLISH);
    rLine.uri() = target.uri();
 
@@ -262,7 +263,7 @@ Helper::makeMessage(const NameAddr& target, const NameAddr& from)
 SipMessage*
 Helper::makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   std::auto_ptr<SipMessage> request(new SipMessage);
+   std::unique_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(MESSAGE);
    rLine.uri() = target.uri();
 
@@ -293,7 +294,7 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from)
 SipMessage*
 Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   std::auto_ptr<SipMessage> request(new SipMessage);
+   std::unique_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(SUBSCRIBE);
    rLine.uri() = target.uri();
 
@@ -456,7 +457,7 @@ Helper::makeResponse(const SipMessage& request,
 {
    // .bwc. Exception safety. Catch/rethrow is dicey because we can't rethrow
    // resip::BaseException, since it is abstract.
-   std::auto_ptr<SipMessage> response(new SipMessage);
+   std::unique_ptr<SipMessage> response(new SipMessage);
 
    makeResponse(*response, request, responseCode, reason, hostname, warning);
 
@@ -478,7 +479,7 @@ Helper::makeResponse(const SipMessage& request,
 {
    // .bwc. Exception safety. Catch/rethrow is dicey because we can't rethrow
    // resip::BaseException, since it is abstract.
-   std::auto_ptr<SipMessage> response(new SipMessage);
+   std::unique_ptr<SipMessage> response(new SipMessage);
    
    makeResponse(*response, request, responseCode, reason, hostname, warning);
    return response.release();
@@ -497,7 +498,7 @@ Helper::makeRawResponse(Data& raw,
       encodeStream << "SIP/2.0 " << responseCode << " ";
       Data reason;
       getResponseCodeReason(responseCode, reason);
-      encodeStream << reason;
+      encodeStream << reason << Symbols::CRLF;
       msg.encodeSingleHeader(Headers::Via,encodeStream);
       msg.encodeSingleHeader(Headers::To,encodeStream);
       msg.encodeSingleHeader(Headers::From,encodeStream);
@@ -577,7 +578,7 @@ Helper::makeCancel(const SipMessage& request)
 {
    resip_assert(request.isRequest());
    resip_assert(request.header(h_RequestLine).getMethod() == INVITE);
-   std::auto_ptr<SipMessage> cancel(new SipMessage);
+   std::unique_ptr<SipMessage> cancel(new SipMessage);
 
    RequestLine rLine(CANCEL, request.header(h_RequestLine).getSipVersion());
    rLine.uri() = request.header(h_RequestLine).uri();
@@ -614,7 +615,7 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
    resip_assert (request.header(h_Vias).size() >= 1);
    resip_assert (request.header(h_RequestLine).getMethod() == INVITE);
    
-   std::auto_ptr<SipMessage> ack(new SipMessage);
+   std::unique_ptr<SipMessage> ack(new SipMessage);
 
    RequestLine rLine(ACK, request.header(h_RequestLine).getSipVersion());
    rLine.uri() = request.header(h_RequestLine).uri();
@@ -867,7 +868,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
 
             if (expiresDelta > 0)
             {
-               UInt64 now = Timer::getTimeSecs();
+               uint64_t now = Timer::getTimeSecs();
                if (x_nonce.getCreationTime() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
@@ -1023,7 +1024,7 @@ Helper::authenticateRequest(const SipMessage& request,
          
          if (expiresDelta > 0)
          {
-            UInt64 now = Timer::getTimeSecs();
+            uint64_t now = Timer::getTimeSecs();
             if (x_nonce.getCreationTime() + expiresDelta < now)
             {
                DebugLog(<< "Nonce has expired.");
@@ -1178,7 +1179,7 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
 
          if (expiresDelta > 0)
          {
-            UInt64 now = Timer::getTimeSecs();
+            uint64_t now = Timer::getTimeSecs();
             if (x_nonce.getCreationTime() + expiresDelta < now)
             {
                DebugLog(<< "Nonce has expired.");
@@ -1828,7 +1829,7 @@ Helper::gruuUserPart(const Data& instanceId,
                                          sep.size() + 1 
                                          + aor.size() ) % 8))
                                % 8));
-   auto_ptr <unsigned char> out(new unsigned char[token.size()]);
+   unique_ptr <unsigned char> out(new unsigned char[token.size()]);
    BF_cbc_encrypt((const unsigned char*)token.data(),
                   out.get(),
                   (long)token.size(),
@@ -1868,7 +1869,7 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
 
    const Data decoded = gruu.base64decode();
 
-   auto_ptr <unsigned char> out(new unsigned char[gruuUserPart.size()+1]);
+   unique_ptr <unsigned char> out(new unsigned char[gruuUserPart.size()+1]);
    BF_cbc_encrypt((const unsigned char*)decoded.data(),
                   out.get(),
                   (long)decoded.size(),
@@ -1887,36 +1888,12 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
                          pair.substr(pos+sep.size()));
 }
 #endif
-Helper::ContentsSecAttrs::ContentsSecAttrs()
-   : mContents(0),
-     mAttributes(0)
-{}
 
-Helper::ContentsSecAttrs::ContentsSecAttrs(std::auto_ptr<Contents> contents,
-                                           std::auto_ptr<SecurityAttributes> attributes)
-   : mContents(contents),
-     mAttributes(attributes)
+Helper::ContentsSecAttrs::ContentsSecAttrs(std::unique_ptr<Contents> contents,
+                                           std::unique_ptr<SecurityAttributes> attributes)
+   : mContents(std::move(contents)),
+     mAttributes(std::move(attributes))
 {}
-
-// !!bwc!! Yikes! Destructive copy c'tor! Are we _sure_ this is the 
-// intended behavior?
-Helper::ContentsSecAttrs::ContentsSecAttrs(const ContentsSecAttrs& rhs)
-   : mContents(rhs.mContents),
-     mAttributes(rhs.mAttributes)
-{}
-
-Helper::ContentsSecAttrs& 
-Helper::ContentsSecAttrs::operator=(const ContentsSecAttrs& rhs)
-{
-   if (&rhs != this)
-   {
-      // !!bwc!! Yikes! Destructive assignment operator! Are we _sure_ this is 
-      // the intended behavior?
-      mContents = rhs.mContents;
-      mAttributes = rhs.mAttributes;
-   }
-   return *this;
-}
 
 
 Contents*
@@ -2018,9 +1995,9 @@ Helper::extractFromPkcs7(const SipMessage& message,
          b = extractFromPkcs7Recurse(b, toAor, fromAor, attr, security);
       }
    }
-   std::auto_ptr<Contents> c(b);
-   std::auto_ptr<SecurityAttributes> a(attr);
-   return ContentsSecAttrs(c, a);
+   std::unique_ptr<Contents> c(b);
+   std::unique_ptr<SecurityAttributes> a(attr);
+   return ContentsSecAttrs(std::move(c), std::move(a));
 }
 
 Helper::FailureMessageEffect 
@@ -2196,8 +2173,7 @@ SdpContents* getSdpRecurse(Contents* tree)
    return 0;
 }
 
-static std::auto_ptr<SdpContents> emptysdp;
-auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
+unique_ptr<SdpContents> Helper::getSdp(Contents* tree)
 {
    if (tree) 
    {
@@ -2206,12 +2182,12 @@ auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
       if (sdp)
       {
          DebugLog(<< "Got sdp" << endl);
-         return auto_ptr<SdpContents>(static_cast<SdpContents*>(sdp->clone()));
+         return unique_ptr<SdpContents>(static_cast<SdpContents*>(sdp->clone()));
       }
    }
 
    //DebugLog(<< "No sdp" << endl);
-   return emptysdp;
+   return nullptr;
 }
 
 bool 

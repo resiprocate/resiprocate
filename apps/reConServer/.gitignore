@@ -1,17 +1,12 @@
 
+*.swp
+
 *.o
 *.lo
 *.la
 /Makefile
 /Makefile.in
-/aclocal.m4
-/build-aux
-/config.log
-/config.status
-/configure
-/autom4te.cache
-/INSTALL
+/.deps
+/.libs
 
 /reConServer
-/playback_prompt.h
-/record_prompt.h

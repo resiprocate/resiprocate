@@ -23,6 +23,7 @@ TESTS = \
 	testDnsUtil \
 	testFifo \
 	testFileSystem \
+	testHepAgent \
 	testInserter \
 	testIntrusiveList \
 	testLogger \
@@ -46,6 +47,7 @@ check_PROGRAMS = \
 	testDnsUtil \
 	testFifo \
 	testFileSystem \
+	testHepAgent \
 	testInserter \
 	testIntrusiveList \
 	testLogger \
@@ -68,6 +70,7 @@ testDataStream_SOURCES = testDataStream.cxx
 testDnsUtil_SOURCES = testDnsUtil.cxx
 testFifo_SOURCES = testFifo.cxx
 testFileSystem_SOURCES = testFileSystem.cxx
+testHepAgent_SOURCES = testHepAgent.cxx
 testInserter_SOURCES = testInserter.cxx
 testIntrusiveList_SOURCES = testIntrusiveList.cxx
 testLogger_SOURCES = testLogger.cxx TestSubsystemLogLevel.cxx
@@ -79,6 +82,15 @@ testRandomThread_SOURCES = testRandomThread.cxx
 testSHA1Stream_SOURCES = testSHA1Stream.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
+
+if BUILD_PYTHON
+TESTS += testPython
+check_PROGRAMS += testPython
+testPython_SOURCES = testPython.cxx
+testPython_CPPFLAGS = $(DEPS_PYTHON_CFLAGS)
+LDADD += $(DEPS_PYTHON_LIBS)
+LDADD += -lpython$(DEPS_PYTHON_VERSION)
+endif
 
 noinst_HEADERS = TestSubsystemLogLevel.hxx
 

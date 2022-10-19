@@ -524,7 +524,6 @@ myMain(int argc, char* argv[])
    bool encryp=false;
    bool sign=false;
    Data key("password");
-   bool useTls = true;
    bool noTls = false;
    bool noTcp = false;
    bool prefUdp = false;
@@ -567,10 +566,6 @@ myMain(int argc, char* argv[])
          i++;
          assert( i<argc );
          tlsDomain = Data(argv[i]);
-      }
-      else if (!strcmp(argv[i],"-ssl"))
-      {
-         useTls = false;
       }
       else if (!strcmp(argv[i],"-noTcp"))
       {
@@ -760,7 +755,6 @@ myMain(int argc, char* argv[])
               << " -port sets the UDP and TCP port to listen on" << endl
               << " -tlsPort sets the port to listen for TLS on" << endl
               << " -tlsDomain domainName - sets tls and dtls to act as tls server instead of client" << endl
-              << " -ssl - use ssl instead of tls" << endl
               << " -aor sets the proxy and user name to register with" << endl
               << " -aorPassword sets the password to use for registration" << endl
               << " -noRegister causes it not to register - by default the AOR is registered" << endl

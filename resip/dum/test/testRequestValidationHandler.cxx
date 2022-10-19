@@ -24,6 +24,7 @@
 
 #include <sstream>
 #include <time.h>
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
@@ -264,13 +265,13 @@ main (int argc, char** argv)
    //set up UAC
    SipStack stackUac;
    DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
-   dumUac->addTransport(UDP, 17298);
-   dumUac->addTransport(TCP, 17298);
+   stackUac.addTransport(UDP, 17298);
+   stackUac.addTransport(TCP, 17298);
 
-   SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);
-   auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
+   auto uacMasterProfile = std::make_shared<MasterProfile>();
+   std::unique_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
    dumUac->setMasterProfile(uacMasterProfile);
-   dumUac->setClientAuthManager(uacAuth);
+   dumUac->setClientAuthManager(std::move(uacAuth));
 
    TestInviteSessionHandler uac("UAC");
    dumUac->setInviteSessionHandler(&uac);
@@ -281,13 +282,13 @@ main (int argc, char** argv)
    //set up UAS
    SipStack stackUas;
    DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
-   dumUas->addTransport(UDP, 17299);
-   dumUas->addTransport(TCP, 17299);
+   stackUas.addTransport(UDP, 17299);
+   stackUas.addTransport(TCP, 17299);
    
-   SharedPtr<MasterProfile> uasMasterProfile(new MasterProfile);
-   std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
+   auto uasMasterProfile = std::make_shared<MasterProfile>();
+   std::unique_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
    dumUas->setMasterProfile(uasMasterProfile);
-   dumUas->setClientAuthManager(uasAuth);
+   dumUas->setClientAuthManager(std::move(uasAuth));
 
    dumUas->getMasterProfile()->setDefaultFrom(uasAor);
 
@@ -299,9 +300,9 @@ main (int argc, char** argv)
    dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, MESSAGE));
 
    // Second test: invalid scheme
-   SharedPtr<SipMessage> invalidSchemeMsg = dumUac->makeOutOfDialogRequest(uasAor, OPTIONS);
+   auto invalidSchemeMsg = dumUac->makeOutOfDialogRequest(uasAor, OPTIONS);
    invalidSchemeMsg->header(h_RequestLine).uri().scheme() = "tel";
-   dumUac->send(invalidSchemeMsg);
+   dumUac->send(std::move(invalidSchemeMsg));
 
    // !fjoanis! TODO: Add more tests
 

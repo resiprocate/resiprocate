@@ -2,7 +2,6 @@
 #define TURNASYNCSOCKETHANDLER_HXX
 
 #include <rutil/compat.hxx>
-#include <boost/shared_ptr.hpp>
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
@@ -10,6 +9,8 @@
 #include "reTurn/AsyncSocketBaseHandler.hxx"
 #include "reTurn/DataBuffer.hxx"
 #include "reTurn/StunTuple.hxx"
+
+#include <memory>
 
 namespace reTurn {
 
@@ -28,7 +29,7 @@ public:
    virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple) = 0; 
    virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple) = 0;
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken) = 0; 
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, uint64_t reservationToken) = 0; 
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
    virtual void onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime) = 0;
@@ -44,7 +45,7 @@ public:
    virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
    //virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size) = 0;
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data) = 0;
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data) = 0;
    virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
    virtual void onSendSuccess(unsigned int socketDesc) = 0;

@@ -46,11 +46,13 @@ class TransportSelectorThread : public ThreadIf
 
    protected:
       TransportSelector& mSelector;
-      std::auto_ptr<FdPollGrp> mPollGrp;
+      std::unique_ptr<FdPollGrp> mPollGrp;
 
 }; // class TransportSelectorThread
 
 } // namespace resip
+
+#undef RESIPROCATE_SUBSYSTEM
 
 #endif // include guard
 

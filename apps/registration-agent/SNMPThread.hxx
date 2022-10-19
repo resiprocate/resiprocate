@@ -1,33 +1,36 @@
 #ifndef SNMPTHREAD_HXX
 #define SNMPTHREAD_HXX
 
+#include <memory>
 #include <sstream>
 #include <string>
-
-#include "rutil/Data.hxx"
-#include "rutil/ThreadIf.hxx"
-#include "rutil/TimeLimitFifo.hxx"
-#include "resip/stack/Uri.hxx"
-#include "resip/dum/DialogUsageManager.hxx"
+#include <thread>
 
 namespace registrationagent {
 
-class SnmpThread : public resip::ThreadIf
+class SnmpThread
 {
 public:
-   SnmpThread(const resip::Data& socket);
-   ~SnmpThread();
+   SnmpThread(const std::string& socket);
+   virtual ~SnmpThread();
 
    virtual void thread();
    virtual void shutdown();
 
+   virtual void run();
+   virtual void join();
+
    void setAccountsTotal(const std::size_t& accountsTotal);
    void setAccountsFailed(const std::size_t& accountsFailed);
 
+   bool isShutdown() { return mShutdown; };
+
 private:
+   volatile bool mShutdown;
    std::size_t mAccountsTotal;
    std::size_t mAccountsFailed;
-   resip::Data mSocket;
+   std::string mSocket;
+   std::shared_ptr<std::thread> mThread;
 };
 
 } // namespace

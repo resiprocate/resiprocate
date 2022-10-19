@@ -1,15 +1,17 @@
 #include "PublicationCreator.hxx"
 #include "resip/stack/SipMessage.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 PublicationCreator::PublicationCreator(DialogUsageManager& dum,
                                        const NameAddr& target, 
-                                       SharedPtr<UserProfile> userProfile,
+                                       std::shared_ptr<UserProfile> userProfile,
                                        const Contents& body, 
                                        const Data& eventType, 
-                                       UInt32 expireSeconds )
-   : BaseCreator(dum, userProfile)
+                                       uint32_t expireSeconds )
+   : BaseCreator(dum, std::move(userProfile))
 {
    makeInitialRequest(target, PUBLISH);
 

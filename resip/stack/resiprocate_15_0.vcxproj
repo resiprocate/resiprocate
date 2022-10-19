@@ -55,7 +55,7 @@
     <ProjectGuid>{2A8BE839-6466-4001-B224-8F1C3168D04A}</ProjectGuid>
     <RootNamespace>resiprocate</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'" Label="Configuration">
@@ -553,6 +553,7 @@
     <ClCompile Include="InvalidContents.cxx" />
     <ClCompile Include="KeepAliveMessage.cxx" />
     <ClCompile Include="LazyParser.cxx" />
+    <ClCompile Include="MediaControlContents.cxx" />
     <ClCompile Include="Message.cxx" />
     <ClCompile Include="MessageFilterRule.cxx" />
     <ClCompile Include="MessageWaitingContents.cxx" />
@@ -655,6 +656,7 @@
     <ClCompile Include="TransportFailure.cxx" />
     <ClCompile Include="TransportSelector.cxx" />
     <ClCompile Include="TransportThread.cxx" />
+    <ClCompile Include="TrickleIceContents.cxx" />
     <ClCompile Include="TuIM.cxx" />
     <ClCompile Include="Tuple.cxx" />
     <ClCompile Include="TupleMarkManager.cxx" />
@@ -751,6 +753,7 @@
     <ClInclude Include="KeepAliveMessage.hxx" />
     <ClInclude Include="LazyParser.hxx" />
     <ClInclude Include="MarkListener.hxx" />
+    <ClInclude Include="MediaControlContents.hxx" />
     <ClInclude Include="Message.hxx" />
     <ClInclude Include="MessageFilterRule.hxx" />
     <ClInclude Include="MessageWaitingContents.hxx" />
@@ -834,6 +837,7 @@
     <ClInclude Include="TransportSelector.hxx" />
     <ClInclude Include="TransportSelectorThread.hxx" />
     <ClInclude Include="TransportThread.hxx" />
+    <ClInclude Include="TrickleIceContents.hxx" />
     <ClInclude Include="TuIM.hxx" />
     <ClInclude Include="Tuple.hxx" />
     <ClInclude Include="TupleMarkManager.hxx" />

@@ -1118,9 +1118,9 @@ class TestData
          }
 
          {
-            assert(Data(UInt64(0)) == "0");
-            assert(Data(UInt64(1)) == "1");
-            assert(Data(UInt64(18446744073709551615ULL)) == "18446744073709551615");  // 2^64 - 1
+            assert(Data(uint64_t(0)) == "0");
+            assert(Data(uint64_t(1)) == "1");
+            assert(Data(uint64_t(18446744073709551615ULL)) == "18446744073709551615");  // 2^64 - 1
          }
 
          {
@@ -1162,7 +1162,10 @@ class TestData
             assert(empt1 == "");
             assert("sdf" != empt1);
             assert(Data("SAfdsaf") != empt1);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wself-assign-overloaded"
             empt = empt;
+#pragma clang diagnostic pop
             empt = empt1;
             empt = "sdfasf";
          }
@@ -1300,7 +1303,7 @@ class TestData
             assert(c == "S");
          }         
          {
-            Data d((UInt64)235235);
+            Data d((uint64_t)235235);
             assert(d == "235235");
          }
  

@@ -2,10 +2,11 @@
 #define RESIP_HEPRTCPEVENTLOGGINGHANDLER_HXX
 
 #include "rutil/Data.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/hep/HepAgent.hxx"
 #include "reflow/RTCPEventLoggingHandler.hxx"
+
+#include <memory>
 
 namespace flowmanager
 {
@@ -13,17 +14,16 @@ namespace flowmanager
 class HEPRTCPEventLoggingHandler : public RTCPEventLoggingHandler
 {
    public:
-      HEPRTCPEventLoggingHandler(resip::SharedPtr<resip::HepAgent> agent);
-      virtual ~HEPRTCPEventLoggingHandler();
+      HEPRTCPEventLoggingHandler(std::shared_ptr<resip::HepAgent> agent);
 
-      virtual void outboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
-      virtual void inboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
+      virtual void outboundEvent(std::shared_ptr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
+      virtual void inboundEvent(std::shared_ptr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
+
+      std::shared_ptr<resip::HepAgent> getHepAgent() { return mHepAgent; }
    protected:
-      virtual void sendToHOMER(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
+      virtual void sendToHOMER(std::shared_ptr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
    private:
-      resip::SharedPtr<resip::HepAgent> mHepAgent;
-
-      static int32_t ntoh_cpl(const void *x);
+      std::shared_ptr<resip::HepAgent> mHepAgent;
 };
 
 

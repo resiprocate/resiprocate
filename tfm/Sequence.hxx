@@ -5,8 +5,6 @@
 #include <list>
 #include <set>
 #include <memory>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
 
 #include "rutil/Data.hxx"
 #include "resip/stack/ValueFifo.hxx"
@@ -16,7 +14,7 @@ class SequenceHandler;
 
 /**
    A Sequence specifies:
-   1. an intitial action
+   1. an initial action
    2. a list of expects
 
    Expects specify:
@@ -34,17 +32,17 @@ class SequenceHandler;
    }
 
    Derived TestEndPoints produce Events and queue them to the Sequence worker
-   thread via a fifo. These events may be spontaenous or transforms of other
-   kings of events (e.g. received a SIP message on the SIP tranceiver).
+   thread via a fifo. These events may be spontaneous or transforms of other
+   kings of events (e.g. received a SIP message on the SIP transceiver).
 
    The Sequence worker thread dequeues an event, scans for a matching Sequence
-   and executes the matching exepct's actions.
+   and executes the matching expect's actions.
 
    If there is no Sequence whose first expect matches the event, a failure is
    triggered.
 
    Sequences may branch, allowing expression of parallel event processing. Each
-   sub-Sequence is added to the active set of Sequences. The parent equence is
+   sub-Sequence is added to the active set of Sequences. The parent sequence is
    suspended until each of the sub-Sequences has completed.
 
  */
@@ -55,14 +53,19 @@ class SequenceClass : public AsciiGraphic
    public:
       friend class SequenceSet;
       // global SequenceSet for CPU tests (old interface)
-      static boost::shared_ptr<SequenceSet> CPUSequenceSet;
+      static std::shared_ptr<SequenceSet> CPUSequenceSet;
       static bool CPUSequenceSetCleanup;
 
       static void CPUSequenceSetup();
 
 #include "SequenceClassConstructorDecls.hxx"
 
+      SequenceClass(const SequenceClass&) = delete;
+      SequenceClass(SequenceClass&&) = delete;
       ~SequenceClass();
+
+      SequenceClass& operator=(const SequenceClass&) = delete;
+      SequenceClass& operator=(SequenceClass&&) = delete;
 
       friend class TestEndPoint::And;
 
@@ -77,8 +80,8 @@ class SequenceClass : public AsciiGraphic
       unsigned int mContainerBottom;
 
    protected:
-      bool isMatch(boost::shared_ptr<Event> event) const;
-      void handleEvent(boost::shared_ptr<Event> event);
+      bool isMatch(std::shared_ptr<Event> event) const;
+      void handleEvent(std::shared_ptr<Event> event);
       int size();
 
       // returns true iff there are no non-optional Expects and 
@@ -101,14 +104,14 @@ class SequenceClass : public AsciiGraphic
 
       friend class SequenceHandler;
    private:
-      void setSequenceSet(boost::shared_ptr<SequenceSet> set);
-      boost::shared_ptr<SequenceSet> getSequenceSet() const {return mSet;}
+      void setSequenceSet(std::shared_ptr<SequenceSet> set);
+      std::shared_ptr<SequenceSet> getSequenceSet() const noexcept { return mSet; }
 
       ActionBase* mAction;
       std::list<TestEndPoint::ExpectBase*> mExpects;
       std::list<TestEndPoint::ExpectBase*> mUsedExpects;
       unsigned int mHangAroundTimeMs;
-      boost::shared_ptr<SequenceSet> mSet;
+      std::shared_ptr<SequenceSet> mSet;
 
       // remember the linenumber of the Sequence
       int mLineNumber;
@@ -118,13 +121,9 @@ class SequenceClass : public AsciiGraphic
       unsigned int mBranchCount;
       ActionBase* mAfterAction;
       bool mTimingOut;
-      resip::ValueFifo< boost::shared_ptr<Event> >::TimerId mTimerId;
+      resip::ValueFifo<std::shared_ptr<Event>>::TimerId mTimerId;
 
       friend EncodeStream& operator<<(EncodeStream& s, const SequenceClass& sequence);
-
-      // no value semantics
-      SequenceClass(const SequenceClass& sequence);
-      SequenceClass& operator=(const SequenceClass&);
 };
 
 EncodeStream&
@@ -186,7 +185,7 @@ do                                                                              
 {                                                                                               \
    /* get rid of this sequence set before next run -- see Seq functions */                      \
    SequenceClass::CPUSequenceSetCleanup = true;                                                 \
-   boost::shared_ptr<SequenceSet> sset(SequenceClass::CPUSequenceSet);                          \
+   std::shared_ptr<SequenceSet> sset(SequenceClass::CPUSequenceSet);                          \
    sset->outputToInfo();                                                                        \
                                                                                                 \
    /* local forces order of evalulation */                                                      \

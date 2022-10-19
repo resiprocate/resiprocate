@@ -38,7 +38,7 @@ main(int argc, char** argv)
        );
      TestSupport::prettyPrint(txt,strlen(txt));
 
-     auto_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
+     unique_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
 
      cerr << *response << endl;
      

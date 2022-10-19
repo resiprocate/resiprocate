@@ -8,12 +8,13 @@
 #include <rutil/Fifo.hxx>
 #include <resip/stack/Tuple.hxx>
 #include <rutil/SelectInterruptor.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/ThreadIf.hxx>
 
 #ifdef BUILD_QPID_PROTON
-#include "repro/QpidProtonThread.hxx"
+#include "rutil/ProtonThreadBase.hxx"
 #endif
+
+#include <memory>
 
 /// This Class is used to implement a primitive form of RPC using loose XML formatting.
 /// The XML formatting used is specific to this implementation and is NOT currently intended to 
@@ -35,12 +36,10 @@ public:
       mResponseData(responseData),
       mIsFinal(isFinal) {}
 
-   ~ResponseInfo() {}
-
-   unsigned int getConnectionId() const { return mConnectionId; }
-   unsigned int getRequestId() const { return mRequestId; }
-   const resip::Data& getResponseData() const { return mResponseData; }
-   bool getIsFinal() const { return mIsFinal; }
+   unsigned int getConnectionId() const noexcept { return mConnectionId; }
+   unsigned int getRequestId() const noexcept { return mRequestId; }
+   const resip::Data& getResponseData() const noexcept { return mResponseData; }
+   bool getIsFinal() const noexcept { return mIsFinal; }
 
 private:
    unsigned int mConnectionId;
@@ -74,7 +73,7 @@ public:
    void sendEvent(unsigned int connectionId,
                   const resip::Data& eventData);
 
-   resip::SharedPtr<resip::ThreadIf> getThread();
+   std::shared_ptr<resip::ThreadIf> getThread();
 
 protected:
    virtual void handleRequest(unsigned int connectionId, 
@@ -89,9 +88,10 @@ private:
    bool mSane;
 
 #ifdef BUILD_QPID_PROTON
-   resip::SharedPtr<QpidProtonThread> mQpidProtonThread;
+   std::shared_ptr<resip::ProtonThreadBase> mQpidProtonThread;
+   std::shared_ptr<resip::ProtonThreadBase::ProtonSenderBase> mProtonSender;
 #else
-   resip::SharedPtr<resip::ThreadIf> mQpidProtonThread;
+   std::shared_ptr<resip::ThreadIf> mQpidProtonThread;
 #endif
 
    typedef std::map<unsigned int, XmlRpcConnection*> ConnectionMap;

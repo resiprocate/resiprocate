@@ -38,7 +38,7 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      AfterSocketCreationFuncPtr socketFunc,
                      Compression &compression) :
    mTuple(address),
-   mCongestionManager(0),
+   mCongestionManager(nullptr),
    mStateMachineFifo(rxFifo, 8),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
@@ -64,7 +64,7 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      const Data& netNs) :
    mInterface(intfc),
    mTuple(intfc, portNum, version, UNKNOWN_TRANSPORT, Data::Empty, netNs),
-   mCongestionManager(0),
+   mCongestionManager(nullptr),
    mStateMachineFifo(rxFifo,8),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
@@ -237,11 +237,11 @@ Transport::setTcpConnectState(const Data& tid, TcpConnectState::State state)
     }
 }
 
-std::auto_ptr<SendData>
+std::unique_ptr<SendData>
 Transport::makeSendData( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
 {
    resip_assert(dest.getPort() != -1);
-   std::auto_ptr<SendData> data(new SendData(dest, d, tid, sigcompId));
+   std::unique_ptr<SendData> data(new SendData(dest, d, tid, sigcompId));
    return data;
 }
 
@@ -254,7 +254,7 @@ Transport::makeFailedResponse(const SipMessage& msg,
 
   const Tuple& dest = msg.getSource();
 
-  std::auto_ptr<SipMessage> errMsg(Helper::makeResponse(msg,
+  std::unique_ptr<SipMessage> errMsg(Helper::makeResponse(msg,
                                                         responseCode,
                                                         warning ? warning : "Original request had no Vias"));
 
@@ -272,13 +272,13 @@ Transport::makeFailedResponse(const SipMessage& msg,
   // Calculate compartment ID for outbound message
   Data remoteSigcompId;
    setRemoteSigcompId(*errMsg,remoteSigcompId);
-  send(std::auto_ptr<SendData>(makeSendData(dest, encoded, Data::Empty, remoteSigcompId)));
+  send(makeSendData(dest, encoded, Data::Empty, remoteSigcompId));
 }
 
-std::auto_ptr<SendData>
-Transport::make503(SipMessage& msg, UInt16 retryAfter)
+std::unique_ptr<SendData>
+Transport::make503(SipMessage& msg, uint16_t retryAfter)
 {
-  std::auto_ptr<SendData> result;
+  std::unique_ptr<SendData> result;
   if (msg.isResponse()) return result;
 
    try
@@ -309,10 +309,10 @@ Transport::make503(SipMessage& msg, UInt16 retryAfter)
   return result;
 }
 
-std::auto_ptr<SendData>
+std::unique_ptr<SendData>
 Transport::make100(SipMessage& msg)
 {
-  std::auto_ptr<SendData> result;
+  std::unique_ptr<SendData> result;
   if (msg.isResponse()) return result;
 
    try
@@ -447,7 +447,7 @@ Transport::callSocketFunc(Socket sock)
 void
 Transport::pushRxMsgUp(SipMessage* message)
 {
-   SipMessageLoggingHandler* handler = getSipMessageLoggingHandler();
+   std::shared_ptr<SipMessageLoggingHandler> handler = getSipMessageLoggingHandler();
    if(handler)
    {
        handler->inboundMessage(message->getSource(), message->getReceivedTransportTuple(), *message);

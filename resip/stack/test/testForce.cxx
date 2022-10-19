@@ -99,7 +99,7 @@ main(int argc, char* argv[])
    
    Fifo<Message> txFifo;
 
-   auto_ptr<SipStack> stack( new SipStack );
+   unique_ptr<SipStack> stack( new SipStack );
 
    stack->addTransport(resip::UDP,sipPort);
    stack->addTransport(resip::TCP,sipPort);
@@ -111,7 +111,7 @@ main(int argc, char* argv[])
 
    InfoLog (<< "Creating messages");
 
-   auto_ptr<SipMessage> msg(new SipMessage);
+   unique_ptr<SipMessage> msg(new SipMessage);
 
    NameAddr contact;
    if (!contactUri)

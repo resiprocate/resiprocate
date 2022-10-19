@@ -18,14 +18,20 @@ class ClientRegistration: public NonDialogUsage
    public:
       //ClientRegistration(DialogUsageManager& dum, DialogSet& dialog,
       //SipMessage& req);
-      ClientRegistration(DialogUsageManager& dum, DialogSet& dialog, SharedPtr<SipMessage> req);
+      ClientRegistration(DialogUsageManager& dum, DialogSet& dialog, std::shared_ptr<SipMessage> req);
+      ClientRegistration(const ClientRegistration&) = delete;
+      ClientRegistration(ClientRegistration&&) = delete;
+
+      ClientRegistration& operator=(const ClientRegistration&) = delete;
+      ClientRegistration& operator=(ClientRegistration&&) = delete;
+
       ClientRegistrationHandle getHandle();
 
       /** Adds a registration binding, using the registration from the UserProfile */
       void addBinding(const NameAddr& contact);
 
       /** Adds a registration binding, using the specified registration time */
-      void addBinding(const NameAddr& contact, UInt32 registrationTime);
+      void addBinding(const NameAddr& contact, uint32_t registrationTime);
 
       /** Removes one particular binding */
       void removeBinding(const NameAddr& contact);
@@ -41,25 +47,25 @@ class ClientRegistration: public NonDialogUsage
 
       /** Request a manual refresh of the registration.  If 0 then default to using original 
           expires value (to remove use removeXXX() instead) */
-      void requestRefresh(UInt32 expires = 0);  
+      void requestRefresh(uint32_t expires = 0);  
       
       /** kills the usgage, does not unregister, call removeMyBindings to unregister */
       void stopRegistering(); 
       
       /** returns a list of contacts added by addBinding */
-      const NameAddrs& myContacts();
+      const NameAddrs& myContacts() const noexcept;
 
       /** returns a list of all contacts for this AOR - may include those added by other UA's */
-      const NameAddrs& allContacts();
+      const NameAddrs& allContacts() const noexcept;
 
       /** returns the number of seconds until the registration expires - relative, returns 0 if already expired */
-      UInt32 whenExpires() const; 
+      uint32_t whenExpires() const; 
       
       /** Calls removeMyBindings and ends usage when complete */
-      virtual void end();
+      void end() override;
 
       /** Returns true if a REGISTER request is currently pending and we are waiting for the SIP Response */
-      bool isRequestPending() { return mState != Registered && mState != RetryAdding && mState != RetryRefreshing; }
+      bool isRequestPending() const noexcept { return mState != Registered && mState != RetryAdding && mState != RetryRefreshing; }
 
       /**
        * Provide asynchronous method access by using command
@@ -68,12 +74,12 @@ class ClientRegistration: public NonDialogUsage
       virtual void endCommand();
 
 
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-   
-      virtual EncodeStream& dump(EncodeStream& strm) const;
+      void dispatch(const SipMessage& msg) override;
+      void dispatch(const DumTimeout& timer) override;
 
-      static void tagContact(NameAddr& contact, DialogUsageManager& dum, SharedPtr<UserProfile>& userProfile);
+      EncodeStream& dump(EncodeStream& strm) const override;
+
+      static void tagContact(NameAddr& contact, DialogUsageManager& dum, const std::shared_ptr<UserProfile>& userProfile);
 
    protected:
       virtual ~ClientRegistration();
@@ -91,8 +97,8 @@ class ClientRegistration: public NonDialogUsage
          None // for queued only
       } State;
 
-      SharedPtr<SipMessage> tryModification(ClientRegistration::State state);
-      void internalRequestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove use removeXXX() instead)
+      std::shared_ptr<SipMessage> tryModification(ClientRegistration::State state);
+      void internalRequestRefresh(uint32_t expires = 0);  // 0 defaults to using original expires value (to remove use removeXXX() instead)
       unsigned int checkProfileRetry(const SipMessage& msg);
       void tagContact(NameAddr& contact) const;
       unsigned long calculateExpiry(const SipMessage& reg200) const;
@@ -104,7 +110,7 @@ class ClientRegistration: public NonDialogUsage
       void flowTerminated();
 
       //SipMessage& mLastRequest;
-      SharedPtr<SipMessage> mLastRequest;
+      std::shared_ptr<SipMessage> mLastRequest;
       NameAddrs mMyContacts; // Contacts that this UA is requesting 
       NameAddrs mAllContacts; // All the contacts Registrar knows about 
       unsigned int mTimerSeq; // expected timer seq (all < are stale)
@@ -113,17 +119,13 @@ class ClientRegistration: public NonDialogUsage
       bool mEnding;
       bool mEndWhenDone;
       bool mUserRefresh;
-      UInt32 mRegistrationTime;
-      UInt64 mExpires;
-      UInt64 mRefreshTime;
+      uint32_t mRegistrationTime;
+      uint64_t mExpires;
+      uint64_t mRefreshTime;
       State mQueuedState;
-      SharedPtr<SipMessage> mQueuedRequest;
+      std::shared_ptr<SipMessage> mQueuedRequest;
 
       NetworkAssociation mNetworkAssociation;
-      
-      // disabled
-      ClientRegistration(const ClientRegistration&);
-      ClientRegistration& operator=(const ClientRegistration&);
 };
  
 }

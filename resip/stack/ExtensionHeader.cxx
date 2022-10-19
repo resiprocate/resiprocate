@@ -51,7 +51,7 @@ ExtensionHeader::Exception::Exception(const Data& msg, const Data& file, const i
 {}
 
 const char* 
-ExtensionHeader::Exception::name() const
+ExtensionHeader::Exception::name() const noexcept
 {
  return "ExtensionHeader::Exception"; 
 }

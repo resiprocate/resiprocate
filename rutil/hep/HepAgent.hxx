@@ -7,9 +7,10 @@
 #include "rutil/TransportType.hxx"
 #include "rutil/hep/ResipHep.hxx"
 #include "rutil/DataStream.hxx"
+#include "rutil/Subsystem.hxx"
 #include "rutil/Logger.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::EEP
 
 namespace resip
 {
@@ -25,6 +26,8 @@ class HepAgent
 
       HepAgent(const Data &captureHost, int capturePort, int captureAgentID);
       virtual ~HepAgent();
+      virtual Data convertRTCPtoJSON(const Data& rtcpRaw);
+      void sendRTCP(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const Data& rtcpRaw, const Data& correlationId);
       template <class T>
       void sendToHOMER(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const HEPEventType eventType, const T& msg, const Data& correlationId)
       {
@@ -156,13 +159,13 @@ class HepAgent
          hg->dst_port.data = htons(destinationPort);
          hg->dst_port.chunk.length = htons(sizeof(hg->dst_port));
 
-         UInt64 now = hepUnixTimestamp();
+         uint64_t now = hepUnixTimestamp();
 
          /* TIMESTAMP SEC */
          hg->time_sec.chunk.vendor_id = htons(0x0000);
          hg->time_sec.chunk.type_id   = htons(0x0009);
          hg->time_sec.chunk.length = htons(sizeof(hg->time_sec));
-         hg->time_sec.data = htonl(now / 1000000LL);
+         hg->time_sec.data = htonl((u_long)(now / 1000000LL));
 
          /* TIMESTAMP USEC */
          hg->time_usec.chunk.vendor_id = htons(0x0000);
@@ -215,7 +218,7 @@ class HepAgent
          hg = (struct hep_generic *)buf.data();
          hg->header.length = htons(afterPayload);
 
-         if(sendto(mSocket, buf.data(), buf.size(), 0, &mDestination.address, mDestination.length()) < 0)
+         if(sendToWire(buf))
          {
             int e = getErrno();
 #if defined(WIN32)
@@ -230,6 +233,8 @@ class HepAgent
          }
       }
 
+   protected:
+      virtual bool sendToWire(const Data& buf) const;
    private:
       Data mCaptureHost;
       int mCapturePort;
@@ -248,7 +253,8 @@ class HepAgent
 
 /* ====================================================================
  *
- * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

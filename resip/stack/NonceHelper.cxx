@@ -3,7 +3,7 @@
 
 using namespace resip;
 
-NonceHelper::Nonce::Nonce(UInt64 creationTime) : creationTime(creationTime) 
+NonceHelper::Nonce::Nonce(uint64_t creationTime) : creationTime(creationTime) 
 {
 }
 

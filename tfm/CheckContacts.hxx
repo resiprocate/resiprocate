@@ -2,7 +2,6 @@
 #define TFM_CheckContacts_hxx
 
 #include <set>
-#include <boost/shared_ptr.hpp>
 #include "tfm/ExpectAction.hxx"
 #include "resip/stack/NameAddr.hxx"
 
@@ -12,7 +11,7 @@ class CheckContacts : public ExpectAction
       CheckContacts(const std::set<resip::NameAddr>& contacts, unsigned int expiresHeader);
       bool compareContacts(const resip::NameAddr & s1, const resip::NameAddr & s2);
       using ExpectAction::operator();
-      virtual void operator()(boost::shared_ptr<Event> event);
+      virtual void operator()(std::shared_ptr<Event> event);
 
    private:
       std::set<resip::NameAddr> _contacts;

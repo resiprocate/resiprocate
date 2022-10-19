@@ -57,7 +57,7 @@ public:
    SdpCandidate(const char * foundation = 0,
                 unsigned int id = 0,
                 SdpCandidateTransportType transport = CANDIDATE_TRANSPORT_TYPE_NONE,
-                UInt64 priority = 0,
+                uint64_t priority = 0,
                 const char * connectionAddress = 0,
                 unsigned int port = 0,
                 SdpCandidateType candidateType = CANDIDATE_TYPE_NONE,
@@ -79,7 +79,7 @@ public:
    void setFoundation(const char * foundation) { mFoundation = foundation; }
    void setId(unsigned int id) { mId = id; }
    void setTransport(SdpCandidateTransportType transport) { mTransport = transport; }
-   void setPriority(UInt64 priority) { mPriority = priority; }
+   void setPriority(uint64_t priority) { mPriority = priority; }
    void setConnectionAddress(const char * connectionAddress) { mConnectionAddress = connectionAddress; }
    void setPort(unsigned int port) { mPort = port; }
    void setCandidateType(SdpCandidateType candidateType) { mCandidateType = candidateType; }
@@ -98,7 +98,7 @@ public:
    unsigned int getId() const { return mId; }
    SdpCandidateTransportType getTransport() const { return mTransport; }
    static SdpCandidateTransportType getCandidateTransportTypeFromString(const char * type);
-   UInt64 getPriority() const { return mPriority; }
+   uint64_t getPriority() const { return mPriority; }
    const resip::Data& getConnectionAddress() const { return mConnectionAddress; }
    unsigned int getPort() const { return mPort; }
    SdpCandidateType getCandidateType() const { return mCandidateType; }
@@ -112,7 +112,7 @@ private:
    resip::Data                mFoundation;
    unsigned int               mId;
    SdpCandidateTransportType  mTransport;
-   UInt64                     mPriority;
+   uint64_t                     mPriority;
    resip::Data                mConnectionAddress;
    unsigned int               mPort;
    SdpCandidateType           mCandidateType;

@@ -4,6 +4,8 @@
 /.deps
 /.libs
 
+/Repository.hxx
+
 /dns/.deps
 /dns/.dirstamp
 /hep/.deps
@@ -13,3 +15,8 @@
 /stun/.deps
 /stun/.dirstamp
 
+/IndirectPythonInterface.cxx
+/cxx_exceptions.cxx
+/cxx_extensions.cxx
+/cxxextensions.c
+/cxxsupport.cxx

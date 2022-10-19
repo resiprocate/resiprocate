@@ -531,10 +531,10 @@ main(int argc, char** argv)
    }
 
    // test integer() -- reject values exceeding minimum / maximum
-   if (sizeof(Int64) > sizeof(int))
+   if (sizeof(int64_t) > sizeof(int))
    {
-      std::vector<Int64> testValues;
-      for (Int64 i = 1; i < 133; ++i)
+      std::vector<int64_t> testValues;
+      for (int64_t i = 1; i < 133; ++i)
       {
          testValues.push_back(std::numeric_limits<int>::max() + i);
          testValues.push_back(std::numeric_limits<int>::min() - i);

@@ -287,7 +287,7 @@ ThreadIf::shutdown()
    if (!mShutdown)
    {
       mShutdown = true;
-      mShutdownCondition.signal();
+      mShutdownCondition.notify_one();
    }
 }
 
@@ -297,7 +297,7 @@ ThreadIf::waitForShutdown(int ms) const
    Lock lock(mShutdownMutex);
    if(!mShutdown)
    {
-      mShutdownCondition.wait(mShutdownMutex, ms);
+      mShutdownCondition.wait_for(lock, std::chrono::milliseconds(ms));
    }
    return mShutdown;
 }

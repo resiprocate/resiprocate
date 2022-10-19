@@ -25,6 +25,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <utility>
 
 using namespace std;
 using namespace resip;
@@ -94,15 +95,15 @@ int main(int argc, char *argv[])
    InfoLog(<< "user: " << user << ", passwd: " << passwd << ", realm: " << realm << "\n");
    
    // sip logic
-   SharedPtr<MasterProfile> profile(new MasterProfile);   
-   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
+   auto profile = std::make_shared<MasterProfile>();   
+   std::unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
 
    SipStack clientStack;
    DialogUsageManager clientDum(clientStack);
    clientDum.addTransport(UDP, port);
    clientDum.setMasterProfile(profile);
 
-   clientDum.setClientAuthManager(clientAuth);
+   clientDum.setClientAuthManager(std::move(clientAuth));
    clientDum.getMasterProfile()->addSupportedMethod(PUBLISH);
    clientDum.getMasterProfile()->addSupportedMimeType(PUBLISH,Pidf::getStaticType());
 
@@ -120,10 +121,10 @@ int main(int argc, char *argv[])
    pidf.setSimpleId(Random::getRandomHex(3));
 
    {
-      SharedPtr<SipMessage> pubMessage = clientDum.makePublication(naAor, profile,pidf,eventName,120);
+      auto pubMessage = clientDum.makePublication(naAor, profile,pidf,eventName,120);
       InfoLog( << "Generated publish: " << endl << *pubMessage );
       transCount++;
-      clientDum.send( pubMessage );
+      clientDum.send(std::move(pubMessage));
    }
 
    int nAttempts = 0;

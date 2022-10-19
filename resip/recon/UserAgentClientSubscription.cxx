@@ -16,7 +16,6 @@ using namespace std;
 UserAgentClientSubscription::UserAgentClientSubscription(UserAgent& userAgent, DialogUsageManager& dum, unsigned int handle)
 : AppDialogSet(dum),
   mUserAgent(userAgent),
-  mDum(dum),
   mSubscriptionHandle(handle),
   mLastNotifyHash(0),
   mEnded(false)

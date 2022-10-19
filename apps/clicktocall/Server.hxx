@@ -4,8 +4,7 @@
 #include <map>
 
 #include <resip/stack/TransactionUser.hxx>
-#include <resip/stack/InterruptableStackThread.hxx>
-#include <rutil/SelectInterruptor.hxx>
+#include <resip/stack/EventStackThread.hxx>
 #include <resip/stack/UdpTransport.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <resip/dum/DumShutdownHandler.hxx>
@@ -16,7 +15,6 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 #include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/Mutex.hxx>
 
 #include "ConfigParser.hxx"
@@ -26,6 +24,8 @@
 #include "WebAdminThread.hxx"
 #include "XmlRpcServer.hxx"
 #include "XmlRpcServerThread.hxx"
+
+#include <memory>
 
 #ifdef WIN32
    #define sleepMs(t) Sleep(t)
@@ -121,7 +121,7 @@ public:
    bool translateAddress(const resip::Data& address, resip::Data& translation, bool failIfNoRule=false);
 
 protected:
-   resip::SharedPtr<resip::MasterProfile>& getMasterProfile() { return mProfile; }
+   std::shared_ptr<resip::MasterProfile>& getMasterProfile() noexcept { return mProfile; }
 
    // Shutdown Handler ////////////////////////////////////////////////////////////
    void onDumCanBeDeleted();
@@ -178,7 +178,7 @@ protected:
    virtual void onExpiredByClient(resip::ServerSubscriptionHandle, const resip::SipMessage& sub, resip::SipMessage& notify);
    virtual void onExpired(resip::ServerSubscriptionHandle, resip::SipMessage& notify);
    virtual bool hasDefaultExpires() const;
-   virtual UInt32 getDefaultExpires() const;
+   virtual uint32_t getDefaultExpires() const;
 
    // OutOfDialogHandler //////////////////////////////////////////////////////////
    virtual void onSuccess(resip::ClientOutOfDialogReqHandle, const resip::SipMessage& response);
@@ -201,12 +201,13 @@ private:
    friend class ClickToCallCmd;
    void clickToCallImpl(const resip::Uri& initiator, const resip::Uri& destination, bool anchorCall, const XmlRpcInfo& xmlRpcInfo);
 
-   resip::SharedPtr<resip::MasterProfile> mProfile;
+   std::shared_ptr<resip::MasterProfile> mProfile;
    resip::Security* mSecurity;
-   resip::SelectInterruptor mSelectInterruptor;
+   resip::FdPollGrp *mPollGrp;
+   resip::EventThreadInterruptor *mEventInterruptor;
    resip::SipStack mStack;
    resip::DialogUsageManager mDum;
-   resip::InterruptableStackThread mStackThread;
+   resip::EventStackThread mStackThread;
    volatile bool mDumShutdown;
 
    typedef std::map<B2BSessionHandle, B2BSession*> B2BSessionMap;

@@ -7,7 +7,7 @@
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/SipMessage.hxx>
 #include <resip/stack/Tuple.hxx>
-#include <AppSubsystem.hxx>
+#include "AppSubsystem.hxx"
 
 #include "RegistrationForwarder.hxx"
 
@@ -46,12 +46,12 @@ RegistrationForwarder::~RegistrationForwarder()
 }
 
 bool
-RegistrationForwarder::process(resip::Lockable* mutex)
+RegistrationForwarder::process(resip::Mutex* mutex)
 {
    if (mFifo.messageAvailable())
    {
       resip::PtrLock lock(mutex);
-      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+      internalProcess(std::unique_ptr<Message>(mFifo.getNext()));
    }
    return mFifo.messageAvailable();
 }
@@ -64,7 +64,7 @@ RegistrationForwarder::name() const
 }
 
 void
-RegistrationForwarder::internalProcess(std::auto_ptr<Message> msg)
+RegistrationForwarder::internalProcess(std::unique_ptr<Message> msg)
 {
    // After a Stack ShutdownMessage has been received, don't do anything else in this TU
    if (mShutdownState == Shutdown)

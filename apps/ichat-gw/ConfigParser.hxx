@@ -5,7 +5,6 @@
 #include <resip/dum/MasterProfile.hxx>
 #include <rutil/dns/DnsStub.hxx>
 #include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
 
 
 namespace gateway

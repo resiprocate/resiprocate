@@ -49,7 +49,7 @@ public:
    const SdpCandidate& getLocalCandidate() const { return mLocalCandidate; }
    const SdpCandidate& getRemoteCandidate() const { return mRemoteCandidate; }
    SdpCandidatePairOffererType getOfferer() const { return mOfferer; }
-   UInt64 getPriority() const { return mPriority; }
+   uint64_t getPriority() const { return mPriority; }
    SdpCandidatePairCheckState getCheckState() const { return mCheckState; }
 
 private:
@@ -58,7 +58,7 @@ private:
    SdpCandidate mLocalCandidate;
    SdpCandidate mRemoteCandidate;
    SdpCandidatePairOffererType mOfferer;
-   UInt64     mPriority;
+   uint64_t     mPriority;
    SdpCandidatePairCheckState mCheckState;
 
    friend EncodeStream& operator<<(EncodeStream& strm, const SdpCandidatePair& );

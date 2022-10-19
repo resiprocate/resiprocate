@@ -225,8 +225,8 @@ Sdp::SdpGroup::getSemanticsFromString(const char * type)
 
 void 
 Sdp::setOriginatorInfo(const char* userName, 
-                       UInt64 sessionId, 
-                       UInt64 sessionVersion, 
+                       uint64_t sessionId, 
+                       uint64_t sessionVersion, 
                        SdpNetType netType, 
                        SdpAddressType addressType, 
                        const char* unicastAddress)
@@ -280,7 +280,7 @@ Sdp::getLocalFoundationId(SdpCandidate::SdpCandidateType candidateType,
 
    // Not found - insert
    char foundationId[15];
-   sprintf(foundationId, "%d", mFoundationIds.size() + 1);
+   sprintf(foundationId, "%ld", (long)mFoundationIds.size() + 1);
    mFoundationIds[foundationId] = sdpFoundation;
 
    return foundationId;

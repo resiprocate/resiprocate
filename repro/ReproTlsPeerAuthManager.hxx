@@ -1,7 +1,6 @@
 #if !defined(RESIP_REPROTLSPEERAUTHMANAGER_HXX)
 #define RESIP_REPROTLSPEERAUTHMANAGER_HXX
 
-#include "rutil/SharedPtr.hxx"
 #include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
 

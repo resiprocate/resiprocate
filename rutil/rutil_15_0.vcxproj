@@ -55,7 +55,7 @@
     <ProjectGuid>{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}</ProjectGuid>
     <RootNamespace>rutil</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'" Label="Configuration">
@@ -430,10 +430,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AbstractFifo.cxx" />
+    <ClCompile Include="Crc32.cxx" />
     <ClCompile Include="dns\AresDns.cxx" />
     <ClCompile Include="BaseException.cxx" />
     <ClCompile Include="Coders.cxx" />
-    <ClCompile Include="Condition.cxx" />
     <ClCompile Include="ConfigParse.cxx" />
     <ClCompile Include="CountStream.cxx" />
     <ClCompile Include="Data.cxx" />
@@ -442,6 +442,7 @@
     <ClCompile Include="dns\DnsCnameRecord.cxx" />
     <ClCompile Include="dns\DnsHostRecord.cxx" />
     <ClCompile Include="dns\DnsNaptrRecord.cxx" />
+    <ClCompile Include="dns\DnsResourceRecord.cxx" />
     <ClCompile Include="dns\DnsSrvRecord.cxx" />
     <ClCompile Include="dns\DnsStub.cxx" />
     <ClCompile Include="DnsUtil.cxx" />
@@ -459,11 +460,17 @@
     <ClCompile Include="Lock.cxx" />
     <ClCompile Include="Log.cxx" />
     <ClCompile Include="MD5Stream.cxx" />
-    <ClCompile Include="Mutex.cxx" />
+    <ClCompile Include="Plugin.cxx" />
     <ClCompile Include="PoolBase.cxx" />
     <ClCompile Include="SelectInterruptor.cxx" />
     <ClCompile Include="ServerProcess.cxx" />
     <ClCompile Include="Sha1.cxx" />
+    <ClCompile Include="ssl\OpenSSLDeleter.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="ssl\OpenSSLInit.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -475,7 +482,6 @@
     <ClCompile Include="Poll.cxx" />
     <ClCompile Include="dns\QueryTypes.cxx" />
     <ClCompile Include="Random.cxx" />
-    <ClCompile Include="RecursiveMutex.cxx" />
     <ClCompile Include="resipfaststreams.cxx" />
     <ClCompile Include="dns\RRCache.cxx" />
     <ClCompile Include="dns\RRList.cxx" />
@@ -506,6 +512,7 @@
     <ClInclude Include="AbstractFifo.hxx" />
     <ClInclude Include="CongestionManager.hxx" />
     <ClInclude Include="ConsumerFifoBuffer.hxx" />
+    <ClInclude Include="Crc32.hxx" />
     <ClInclude Include="DinkyPool.hxx" />
     <ClInclude Include="dns\AresCompat.hxx" />
     <ClInclude Include="dns\AresDns.hxx" />
@@ -548,23 +555,24 @@
     <ClInclude Include="IntrusiveListElement.hxx" />
     <ClInclude Include="dns\LocalDns.hxx" />
     <ClInclude Include="Lock.hxx" />
-    <ClInclude Include="Lockable.hxx" />
     <ClInclude Include="Log.hxx" />
     <ClInclude Include="Logger.hxx" />
+    <ClInclude Include="MediaConstants.hxx" />
     <ClInclude Include="MD5Stream.hxx" />
     <ClInclude Include="Mutex.hxx" />
+    <ClInclude Include="Plugin.hxx" />
     <ClInclude Include="PoolBase.hxx" />
     <ClInclude Include="ProducerFifoBuffer.hxx" />
     <ClInclude Include="SelectInterruptor.hxx" />
     <ClInclude Include="ServerProcess.hxx" />
     <ClInclude Include="Sha1.hxx" />
+    <ClInclude Include="ssl\OpenSSLDeleter.hxx" />
     <ClInclude Include="ssl\OpenSSLInit.hxx" />
     <ClInclude Include="ParseBuffer.hxx" />
     <ClInclude Include="ParseException.hxx" />
     <ClInclude Include="Poll.hxx" />
     <ClInclude Include="dns\QueryTypes.hxx" />
     <ClInclude Include="Random.hxx" />
-    <ClInclude Include="RecursiveMutex.hxx" />
     <ClInclude Include="ResipAssert.h" />
     <ClInclude Include="resipfaststreams.hxx" />
     <ClInclude Include="dns\RRCache.hxx" />
@@ -574,8 +582,6 @@
     <ClInclude Include="dns\RRVip.hxx" />
     <ClInclude Include="RWMutex.hxx" />
     <ClInclude Include="ssl\SHA1Stream.hxx" />
-    <ClInclude Include="SharedCount.hxx" />
-    <ClInclude Include="SharedPtr.hxx" />
     <ClInclude Include="Socket.hxx" />
     <ClInclude Include="StlPoolAllocator.hxx" />
     <ClInclude Include="stun\Stun.hxx" />

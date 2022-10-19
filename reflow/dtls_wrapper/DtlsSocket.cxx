@@ -11,10 +11,13 @@
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
 #include "bf_dwrap.hxx"
+
+#include <utility>
+
 using namespace std;
 using namespace dtls;
 
-const int SRTP_MASTER_KEY_BASE64_LEN = SRTP_MASTER_KEY_LEN * 4 / 3;
+//const int SRTP_MASTER_KEY_BASE64_LEN = SRTP_MASTER_KEY_LEN * 4 / 3;
 const int SRTP_MASTER_KEY_KEY_LEN = 16;
 const int SRTP_MASTER_KEY_SALT_LEN = 14;
 
@@ -40,8 +43,8 @@ int dummy_cb(int d, X509_STORE_CTX *x)
    return 1;
 }
 
-DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
-   mSocketContext(socketContext),
+DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
+   mSocketContext(std::move(socketContext)),
    mFactory(factory),
    mReadTimer(0),
    mSocketType(type), 
@@ -307,8 +310,8 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
 
    /* we assume that the default profile is in effect, for now */
    srtp_profile_t profile = srtp_profile_aes128_cm_sha1_80;
-   int key_len = srtp_profile_get_master_key_length(profile);
-   int salt_len = srtp_profile_get_master_salt_length(profile);
+   unsigned int key_len = srtp_profile_get_master_key_length(profile);
+   unsigned int salt_len = srtp_profile_get_master_salt_length(profile);
 
    /* get keys from srtp_key and initialize the inbound and outbound sessions */
    uint8_t *client_master_key_and_salt=new uint8_t[SRTP_MAX_KEY_LEN];

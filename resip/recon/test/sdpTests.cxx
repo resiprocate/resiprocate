@@ -1,21 +1,25 @@
+#include <cstdint>
+
 #include <iostream>
 
-#include <sdp/SdpCodec.hxx>
-#include <sdp/Sdp.hxx>
-#include <sdp/SdpMediaLine.hxx>
-#include <sdp/SdpHelperResip.hxx>
+#include "resip/recon/sdp/SdpCodec.hxx"
+#include "resip/recon/sdp/Sdp.hxx"
+#include "resip/recon/sdp/SdpMediaLine.hxx"
+#include "resip/recon/sdp/SdpHelperResip.hxx"
 
 #include <rutil/ParseBuffer.hxx>
 #include <resip/stack/Symbols.hxx>
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/HeaderFieldValue.hxx>
 
+#ifndef UINT64_C
 #ifdef WIN32
 #define UINT64_C(val) val##ui64
 #elif __GNUC__
 #define UINT64_C(val) val##ULL
 #else
 #error Unknown compiler for 64-bit integer constants.
+#endif
 #endif
 
 using namespace resip;

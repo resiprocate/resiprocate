@@ -6,8 +6,6 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -19,6 +17,8 @@
 #include "Flow.hxx"
 #include "MediaStream.hxx"
 #include "FlowDtlsSocketContext.hxx"
+
+#include <memory>
 
 using namespace flowmanager;
 using namespace resip;
@@ -126,8 +126,8 @@ Flow::Flow(asio::io_service& ioService,
            const StunTuple& localBinding, 
            MediaStream& mediaStream,
            bool forceCOMedia,
-           SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
-           resip::SharedPtr<FlowContext> context)
+           std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
+           std::shared_ptr<FlowContext> context)
   : mIOService(ioService),
 #ifdef USE_SSL
     mSslContext(sslContext),
@@ -136,8 +136,8 @@ Flow::Flow(asio::io_service& ioService,
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
     mForceCOMedia(forceCOMedia),
-    mRtcpEventLoggingHandler(rtcpEventLoggingHandler),
-    mFlowContext(context),
+    mRtcpEventLoggingHandler(std::move(rtcpEventLoggingHandler)),
+    mFlowContext(std::move(context)),
     mPrivatePeer(false),
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
@@ -155,19 +155,19 @@ Flow::Flow(asio::io_service& ioService,
    switch(mLocalBinding.getTransportType())
    {
    case StunTuple::UDP:
-      mTurnSocket.reset(new TurnAsyncUdpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
+      mTurnSocket = std::make_shared<TurnAsyncUdpSocket>(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort());
       break;
    case StunTuple::TCP:
-      mTurnSocket.reset(new TurnAsyncTcpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
+      mTurnSocket = std::make_shared<TurnAsyncTcpSocket>(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort());
       break;
 #ifdef USE_SSL
    case StunTuple::TLS:
-      mTurnSocket.reset(new TurnAsyncTlsSocket(mIOService, 
+      mTurnSocket = std::make_shared<TurnAsyncTlsSocket>(mIOService, 
                                                mSslContext, 
                                                false, // validateServerCertificateHostname - TODO - make this configurable
                                                this, 
                                                mLocalBinding.getAddress(), 
-                                               mLocalBinding.getPort()));
+                                               mLocalBinding.getPort());
 #endif
       break;
    default:
@@ -175,7 +175,7 @@ Flow::Flow(asio::io_service& ioService,
       resip_assert(false);
    }
 
-   if(mTurnSocket.get() && 
+   if (mTurnSocket && 
       mMediaStream.mNatTraversalMode != MediaStream::NoNatTraversal && 
       !mMediaStream.mStunUsername.empty() && 
       !mMediaStream.mStunPassword.empty())
@@ -202,7 +202,7 @@ Flow::~Flow()
  #endif //USE_SSL
 
    // Cleanup TurnSocket
-   if(mTurnSocket.get())
+   if (mTurnSocket)
    {
       mTurnSocket->disableTurnAsyncHandler();
       mTurnSocket->close();  
@@ -210,18 +210,18 @@ Flow::~Flow()
 }
 
 void 
-Flow::activateFlow(UInt64 reservationToken)
+Flow::activateFlow(uint64_t reservationToken)
 {
    mReservationToken = reservationToken;
    activateFlow(StunMessage::PropsNone);
 }
 
 void 
-Flow::activateFlow(UInt8 allocationProps)
+Flow::activateFlow(uint8_t allocationProps)
 {
    mAllocationProps = allocationProps;
 
-   if(mTurnSocket.get())
+   if (mTurnSocket)
    {
       if(mMediaStream.mNatTraversalMode != MediaStream::NoNatTraversal &&
          !mMediaStream.mNatTraversalServerHostname.empty())
@@ -247,14 +247,7 @@ Flow::getSelectSocketDescriptor()
 unsigned int 
 Flow::getSocketDescriptor()
 {
-   if(mTurnSocket.get() != 0)
-   {
-      return mTurnSocket->getSocketDescriptor();
-   }
-   else
-   {
-      return 0;
-   }
+   return mTurnSocket ? mTurnSocket->getSocketDescriptor() : 0;
 }
 
 // Turn Send Methods
@@ -359,7 +352,7 @@ Flow::receiveFrom(const asio::ip::address& address, unsigned short port, char* b
    bool done = false;
    asio::error_code errorCode;
 
-   UInt64 startTime = Timer::getTimeMs();
+   uint64_t startTime = Timer::getTimeMs();
    unsigned int recvTimeout;
    while(!done)
    {
@@ -509,7 +502,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
 void 
 Flow::setActiveDestination(const char* address, unsigned short port)
 {
-   if(mTurnSocket.get())
+   if (mTurnSocket)
    {
       asio::ip::address peerAddress = asio::ip::address::from_string(address);
 
@@ -616,7 +609,7 @@ Flow::getReflexiveTuple()
    return mReflexiveTuple; 
 } 
 
-UInt64 
+uint64_t 
 Flow::getReservationToken()
 {
    resip_assert(mFlowState == Ready);
@@ -701,7 +694,7 @@ Flow::onBindFailure(unsigned int socketDesc, const asio::error_code& e, const St
 }
 
 void 
-Flow::onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
+Flow::onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, uint64_t reservationToken)
 {
    InfoLog(<< "Flow::onAllocationSuccess: socketDesc=" << socketDesc << 
       ", reflexive=" << reflexiveTuple << 
@@ -808,9 +801,9 @@ Flow::onSendFailure(unsigned int socketDesc, const asio::error_code& e)
 }
 
 void 
-Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data)
+Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<reTurn::DataBuffer>& data)
 {
-   DebugLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
+   StackLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
 
    if(address != mTurnSocket->getConnectedAddress() || port != mTurnSocket->getConnectedPort())
    {
@@ -846,9 +839,11 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
    }
 #endif 
 
-   if(!mReceivedDataFifo.add(new ReceivedData(address, port, data), ReceivedDataFifo::EnforceTimeDepth))
+   ReceivedData* receivedData = new ReceivedData(address, port, data);
+   if(!mReceivedDataFifo.add(receivedData, ReceivedDataFifo::EnforceTimeDepth))
    {
-      WarningLog(<< "Flow::onReceiveSuccess: TimeLimitFifo is full - discarding data!  componentId=" << mComponentId);
+      WarningLog(<< "Flow::onReceiveSuccess: TimeLimitFifo is full (countDepth=" << mReceivedDataFifo.getCountDepth() << ", timeDepth=" << mReceivedDataFifo.getTimeDepth() << ") - discarding data!  socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
+      delete receivedData;
    }
    else
    {
@@ -856,16 +851,21 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
    }
 }
 
-void 
+void
 Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
-
    // Make sure we keep receiving if we get an ICMP error on a UDP socket
-   if(e.value() == asio::error::connection_reset && mLocalBinding.getTransportType() == StunTuple::UDP)
+   if (mLocalBinding.getTransportType() == StunTuple::UDP &&
+      (e.value() == asio::error::connection_reset ||
+       e.value() == asio::error::connection_refused))
    {
+      DebugLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
       resip_assert(mTurnSocket.get());
       mTurnSocket->turnReceive();
+   }
+   else
+   {
+      WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
    }
 }
 
@@ -927,8 +927,8 @@ Flow::createDtlsSocketClient(const StunTuple& endpoint)
    if(!dtlsSocket && mMediaStream.mDtlsFactory)
    {
       InfoLog(<< "Creating DTLS Client socket, componentId=" << mComponentId);
-      std::auto_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
-      dtlsSocket = mMediaStream.mDtlsFactory->createClient(socketContext);
+      std::unique_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
+      dtlsSocket = mMediaStream.mDtlsFactory->createClient(std::move(socketContext));
       dtlsSocket->startClient();
       mDtlsSockets[endpoint] = dtlsSocket;
    }
@@ -943,8 +943,8 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
    if(!dtlsSocket && mMediaStream.mDtlsFactory)
    {
       InfoLog(<< "Creating DTLS Server socket, componentId=" << mComponentId);
-      std::auto_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
-      dtlsSocket = mMediaStream.mDtlsFactory->createServer(socketContext);
+      std::unique_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
+      dtlsSocket = mMediaStream.mDtlsFactory->createServer(std::move(socketContext));
       mDtlsSockets[endpoint] = dtlsSocket;
    }
 
@@ -955,6 +955,7 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
 
 /* ====================================================================
 
+ Copyright (c) 2022, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

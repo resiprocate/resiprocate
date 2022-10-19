@@ -22,7 +22,7 @@ PresencePublicationHandler::onInitial(ServerPublicationHandle h,
                                   const SipMessage& pub, 
                                   const Contents* contents,
                                   const SecurityAttributes* attrs, 
-                                  UInt32 expires)
+                                  uint32_t expires)
 {
     if (h->getDocumentKey() == h->getPublisher())  // Ensures this is not a third party publication
     {
@@ -48,7 +48,7 @@ PresencePublicationHandler::onRefresh(ServerPublicationHandle h,
                                   const SipMessage& pub, 
                                   const Contents* contents,
                                   const SecurityAttributes* attrs,
-                                  UInt32 expires)
+                                  uint32_t expires)
 {
     if (h->getDocumentKey() == h->getPublisher())  // Ensures this is not a third party publication
     {
@@ -68,7 +68,7 @@ PresencePublicationHandler::onUpdate(ServerPublicationHandle h,
                                  const SipMessage& pub, 
                                  const Contents* contents,
                                  const SecurityAttributes* attrs,
-                                 UInt32 expires)
+                                 uint32_t expires)
 {
    if (h->getDocumentKey() == h->getPublisher())  // Ensures this is not a third party publication
    {
@@ -83,7 +83,7 @@ PresencePublicationHandler::onUpdate(ServerPublicationHandle h,
 }
 
 void 
-PresencePublicationHandler::onRemoved(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, UInt32 expires)
+PresencePublicationHandler::onRemoved(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, uint32_t expires)
 {
     InfoLog(<< "PresencePublicationHandler::onRemoved: etag=" << etag << ", expires=" << expires << ", msg=" << std::endl << pub);
 }

@@ -45,7 +45,6 @@ class ReproRADIUSServerAuthManager: public resip::RADIUSServerAuthManager
       virtual resip::AsyncBool requiresChallenge(const resip::SipMessage& msg);
 
    private:
-      resip::DialogUsageManager& mDum;
       AclStore&  mAclDb;
       bool mUseAuthInt;
       bool mRejectBadNonces;

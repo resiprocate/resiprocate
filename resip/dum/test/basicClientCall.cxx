@@ -22,6 +22,7 @@
 
 #include <sstream>
 #include <time.h>
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
@@ -38,13 +39,12 @@ class CallTimer : public resip::DumCommand
    public:
       CallTimer(BasicClientUserAgent& userAgent, BasicClientCall* call) : mUserAgent(userAgent), mCall(call) {}
       CallTimer(const CallTimer& rhs) : mUserAgent(rhs.mUserAgent), mCall(rhs.mCall) {}
-      ~CallTimer() {}
 
-      void executeCommand() { mUserAgent.onCallTimeout(mCall); }
+      void executeCommand() override { mUserAgent.onCallTimeout(mCall); }
 
-      resip::Message* clone() const { return new CallTimer(*this); }
-      EncodeStream& encode(EncodeStream& strm) const { strm << "CallTimer:"; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      resip::Message* clone() const override { return new CallTimer(*this); }
+      EncodeStream& encode(EncodeStream& strm) const override { strm << "CallTimer:"; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const override { return encode(strm); }
 
    private:
       BasicClientUserAgent& mUserAgent;
@@ -68,12 +68,12 @@ BasicClientCall::~BasicClientCall()
 }
 
 void 
-BasicClientCall::initiateCall(const Uri& target, SharedPtr<UserProfile> profile)
+BasicClientCall::initiateCall(const Uri& target, std::shared_ptr<UserProfile> profile)
 {
    SdpContents offer;
    makeOffer(offer);
-   SharedPtr<SipMessage> invite = mUserAgent.getDialogUsageManager().makeInviteSession(NameAddr(target), profile, &offer, this);
-   mUserAgent.getDialogUsageManager().send(invite);
+   auto invite = mUserAgent.getDialogUsageManager().makeInviteSession(NameAddr(target), profile, &offer, this);
+   mUserAgent.getDialogUsageManager().send(std::move(invite));
    mPlacedCall = true;
 }
 
@@ -103,11 +103,11 @@ BasicClientCall::timerExpired()
    }
 
    // start timer for next one
-   auto_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
-   mUserAgent.mStack->post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
+   std::unique_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
+   mUserAgent.mStack->post(std::move(timer), CallTimerTime, &mUserAgent.getDialogUsageManager());
 }
 
-SharedPtr<UserProfile> 
+std::shared_ptr<UserProfile>
 BasicClientCall::selectUASUserProfile(const SipMessage& msg)
 {
    return mUserAgent.getIncomingUserProfile(msg);
@@ -145,7 +145,7 @@ BasicClientCall::makeOffer(SdpContents& offer)
    offer = offerSdp;
 
    // Set sessionid and version for this offer
-   UInt64 currentTime = Timer::getTimeMicroSec();
+   uint64_t currentTime = Timer::getTimeMicroSec();
    offer.session().origin().getSessionId() = currentTime;
    offer.session().origin().getVersion() = currentTime;  
 }
@@ -188,8 +188,8 @@ BasicClientCall::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferA
          if(mPlacedCall)
          {
             // Restart Call Timer
-            auto_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
-            mUserAgent.mStack->post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
+            std::unique_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
+            mUserAgent.mStack->post(std::move(timer), CallTimerTime, &mUserAgent.getDialogUsageManager());
          }
 
          // Session to replace was found - end old session
@@ -257,8 +257,8 @@ BasicClientCall::onConnected(ClientInviteSessionHandle h, const SipMessage& msg)
       mInviteSessionHandle = h->getSessionHandle();  
 
       // start call timer
-      auto_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
-      mUserAgent.mStack->post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
+      std::unique_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
+      mUserAgent.mStack->post(std::move(timer), CallTimerTime, &mUserAgent.getDialogUsageManager());
    }
    else
    {
@@ -441,7 +441,7 @@ BasicClientCall::onRemoteSdpChanged(InviteSessionHandle h, const SipMessage& msg
    /// called when a modified SDP is received in a 2xx response to a
    /// session-timer reINVITE. Under normal circumstances where the response
    /// SDP is unchanged from current remote SDP no handler is called
-   /// There is not much we can do about this.  If session timers are used then they are managed seperately per leg
+   /// There is not much we can do about this.  If session timers are used then they are managed separately per leg
    /// and we have no real mechanism to notify the other peer of new SDP without starting a new offer/answer negotiation
    InfoLog(<< "onRemoteSdpChanged: msg=" << msg << ", sdp=" << sdp);
 
@@ -556,7 +556,7 @@ BasicClientCall::onFlowTerminated(InviteSessionHandle h)
       // The flow terminated - try an Invite (with Replaces) to recover the call
       BasicClientCall *replacesCall = new BasicClientCall(mUserAgent);      
 
-      // Copy over flag that indicates wether original call was placed or received
+      // Copy over flag that indicates whether original call was placed or received
       replacesCall->mPlacedCall = mPlacedCall;  
 
       // Note:  We want to end this call since it is to be replaced.  Normally the endpoint
@@ -572,8 +572,8 @@ BasicClientCall::onFlowTerminated(InviteSessionHandle h)
 
       SdpContents offer;
       replacesCall->makeOffer(offer);
-      SharedPtr<SipMessage> invite = mUserAgent.getDialogUsageManager().makeInviteSession(inviteWithReplacesTarget, h, getUserProfile(), &offer, replacesCall);
-      mUserAgent.getDialogUsageManager().send(invite);
+      auto invite = mUserAgent.getDialogUsageManager().makeInviteSession(inviteWithReplacesTarget, h, getUserProfile(), &offer, replacesCall);
+      mUserAgent.getDialogUsageManager().send(std::move(invite));
    }
 }
 
@@ -593,7 +593,7 @@ void
 BasicClientCall::onNonDialogCreatingProvisional(AppDialogSetHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onNonDialogCreatingProvisional: msg=" << msg.brief());
-   if(isUACConnected()) return;  // Ignore provionals if already connected
+   if(isUACConnected()) return;  // Ignore provisionals if already connected
 
    // Handle message here
 }

@@ -42,7 +42,7 @@ class TestUser : public TestSipEndPoint
                      const std::set<resip::NameAddr>& contacts,
                      bool doOutbound);
 
-            virtual boost::shared_ptr<resip::SipMessage> go();
+            virtual std::shared_ptr<resip::SipMessage> go();
             virtual resip::Data toString() const;
 
          private:
@@ -57,7 +57,7 @@ class TestUser : public TestSipEndPoint
          public:
             RemoveAllRegistrationBindings(TestUser *endPoint);
 
-            virtual boost::shared_ptr<resip::SipMessage> go();
+            virtual std::shared_ptr<resip::SipMessage> go();
             virtual resip::Data toString() const;
       };
       friend class RemoveAllRegistrationBindings;
@@ -78,7 +78,7 @@ class TestUser : public TestSipEndPoint
    protected:
       resip::Data mAuthName;
       resip::Data mPassword;
-      boost::shared_ptr<resip::SipMessage> mRegistration;
+      std::shared_ptr<resip::SipMessage> mRegistration;
       unsigned int mNonceCount;
    private:
       // disabled

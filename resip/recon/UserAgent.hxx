@@ -1,16 +1,12 @@
 #if !defined(UserAgent_hxx)
 #define UserAgent_hxx
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-
-#include "InstantMessage.hxx"
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "UserAgentMasterProfile.hxx"
 #include "HandleTypes.hxx"
 
-#include <resip/stack/InterruptableStackThread.hxx>
+#include <resip/stack/EventStackThread.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <resip/dum/RegistrationHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
@@ -19,8 +15,9 @@
 #include <resip/dum/PublicationHandler.hxx>
 #include <rutil/SelectInterruptor.hxx>
 #include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/Mutex.hxx>
+
+#include <memory>
 
 namespace recon
 {
@@ -79,7 +76,7 @@ public:
                                 connected.  To enable this behavior call:
                                 Connection::setEnablePostConnectSocketFuncCall();
    */
-   UserAgent(ConversationManager* conversationManager, resip::SharedPtr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0, resip::SharedPtr<InstantMessage> instantMessage=resip::SharedPtr<InstantMessage>());
+   UserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0);
    virtual ~UserAgent();
 
    /**
@@ -165,7 +162,7 @@ public:
      @param defaultOutgoing Set to true to set this profile as the default 
                             profile to use for outbound calls.
    */
-   ConversationProfileHandle addConversationProfile(resip::SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing=true); // thread safe
+   ConversationProfileHandle addConversationProfile(std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing=true); // thread safe
 
    /**
      Sets an existing Conversation Profile to the default profile to 
@@ -277,6 +274,8 @@ public:
     */
    const char* sendMessage(const resip::NameAddr& destination, const resip::Data& msg, const resip::Mime& mimeType);
 
+   std::shared_ptr<UserAgentMasterProfile> getUserAgentMasterProfile() const noexcept;
+
 protected:
    resip::SipStack& getSipStack() { return mStack; };
    resip::DialogUsageManager& getDialogUsageManager();
@@ -308,16 +307,13 @@ protected:
    virtual void onFailure(resip::ClientPublicationHandle h, const resip::SipMessage& status);
 
    // UserProfile selection for incoming and outgoing calls, override to customize
-   resip::SharedPtr<ConversationProfile> getDefaultOutgoingConversationProfile();
+   std::shared_ptr<ConversationProfile> getDefaultOutgoingConversationProfile();
    // Returns the ConversationProfile for a specific media address
-   resip::SharedPtr<ConversationProfile> getConversationProfileByMediaAddress(const resip::Data& mediaAddress);
-   virtual resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
-   // Return the ConversationProfile suitable for creating an INVITE from a REFER
-   virtual resip::SharedPtr<ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
-   resip::SharedPtr<UserAgentMasterProfile> getUserAgentMasterProfile();
+   std::shared_ptr<ConversationProfile> getConversationProfileByMediaAddress(const resip::Data& mediaAddress);
+   virtual std::shared_ptr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
 
-private:
    friend class ConversationManager;
+   friend class SipXMediaStackAdapter;
    friend class UserAgentShutdownCmd;
    friend class AddConversationProfileCmd;
    friend class SetDefaultOutgoingConversationProfileCmd;
@@ -332,13 +328,18 @@ private:
    //        loop only
    friend class UserAgentServerAuthManager;
    friend class RemoteParticipant;
+   friend class RemoteIMPagerParticipant;
+   friend class SipXRemoteParticipant;
+   friend class RemoteIMSessionParticipant;
    friend class DefaultDialogSet;
    friend class RemoteParticipantDialogSet;
+   friend class SipXRemoteParticipantDialogSet;
+   friend class RemoteIMSessionParticipantDialogSet;
 
    void addTransports();
    void post(resip::ApplicationMessage& message, unsigned int ms=0);
    void shutdownImpl(); 
-   void addConversationProfileImpl(ConversationProfileHandle handle, resip::SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing=true);
+   void addConversationProfileImpl(ConversationProfileHandle handle, std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing=true);
    void setDefaultOutgoingConversationProfileImpl(ConversationProfileHandle handle);
    void destroyConversationProfileImpl(ConversationProfileHandle handle);
    void createSubscriptionImpl(SubscriptionHandle handle, const resip::Data& eventType, const resip::NameAddr& target, unsigned int subscriptionTime, const resip::Mime& mimeType);
@@ -367,7 +368,7 @@ private:
    void unregisterPublication(UserAgentClientPublication *);
 
    // Conversation Profile Storage
-   typedef std::map<ConversationProfileHandle, resip::SharedPtr<ConversationProfile> > ConversationProfileMap;
+   typedef std::map<ConversationProfileHandle, std::shared_ptr<ConversationProfile> > ConversationProfileMap;
    ConversationProfileMap mConversationProfiles;
    resip::Mutex mConversationProfileHandleMutex;
    ConversationProfileHandle mCurrentConversationProfileHandle;
@@ -381,13 +382,13 @@ private:
    void unregisterRegistration(UserAgentRegistration *);
 
    ConversationManager* mConversationManager;
-   resip::SharedPtr<UserAgentMasterProfile> mProfile;
-   resip::SharedPtr<InstantMessage> mInstantMessage;
+   std::shared_ptr<UserAgentMasterProfile> mProfile;
    resip::Security* mSecurity;
-   resip::SelectInterruptor mSelectInterruptor;
+   resip::FdPollGrp *mPollGrp;
+   resip::EventThreadInterruptor *mEventInterruptor;
    resip::SipStack mStack;
    resip::DialogUsageManager mDum;
-   resip::InterruptableStackThread mStackThread;
+   resip::EventStackThread mStackThread;
    volatile bool mDumShutdown;
 
 };
@@ -399,8 +400,9 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2016-2022, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2016, SIP Spectrum, Inc.
 
  All rights reserved.
 

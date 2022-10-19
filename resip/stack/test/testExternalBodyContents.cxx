@@ -40,7 +40,7 @@ main(int argc, char* argv[])
               "Content-Length: 11\r\n");
      try
      {
-        auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+        unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
         Contents* body = msg->getContents();
 
         assert(body != 0);
@@ -69,7 +69,7 @@ main(int argc, char* argv[])
                "Content-Length: 35\r\n"
                "\r\n"
                "INVITE sip:bob@biloxi.com SIP/2.0\r\n");
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       Contents* body = msg->getContents();
 

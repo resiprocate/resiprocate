@@ -25,8 +25,8 @@ using namespace resip;
 #ifdef BOOST_ASIO_HAS_STD_CHRONO
 using namespace std::chrono;
 #else
-#include <boost/chrono.hpp>
-using namespace boost::chrono;
+#include <chrono>
+using namespace std::chrono;
 #endif
 
 namespace reTurn {
@@ -39,6 +39,7 @@ asio::ip::address TurnSocket::UnspecifiedIpAddress = asio::ip::address::from_str
 
 TurnSocket::TurnSocket(const asio::ip::address& address, unsigned short port) : 
    mLocalBinding(StunTuple::None /* Set properly by sub class */, address, port),
+   mSoftware(SOFTWARE_STRING),
    mHaveAllocation(false),
    mActiveDestination(0),
    mReadTimer(mIOService),
@@ -122,6 +123,23 @@ TurnSocket::setUsernameAndPassword(const char* username, const char* password, b
    }
 }
 
+void
+TurnSocket::setSoftware(const char* software)
+{
+   mSoftware = software;
+
+   const uint32_t unpaddedSize = mSoftware.size();
+   if(unpaddedSize > 0)
+   {
+      // Pad size to a multiple of 4, to help compatibility with older clients
+      const uint32_t remainder  = unpaddedSize % 4,
+                   paddedSize = remainder ? unpaddedSize + 4 - remainder : unpaddedSize;
+
+      while(mSoftware.size() < paddedSize)
+         mSoftware.append(" ", 1);
+   }
+}
+
 asio::error_code 
 TurnSocket::bindRequest()
 {
@@ -168,7 +186,7 @@ asio::error_code
 TurnSocket::createAllocation(unsigned int lifetime,
                              unsigned int bandwidth,
                              unsigned char requestedProps, 
-                             UInt64 reservationToken,
+                             uint64_t reservationToken,
                              StunTuple::TransportType requestedTransportType)
 {
    asio::error_code errorCode;
@@ -550,21 +568,14 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       unsigned short channelNumber = remotePeer.getChannel();
       channelNumber = htons(channelNumber);
       memcpy(&framing[0], &channelNumber, 2);
-      if(mLocalBinding.getTransportType() == StunTuple::UDP)
-      {
-         // No size in header for UDP
-         framing[2] = 0x00;
-         framing[3] = 0x00;
-      }
-      else
-      {
-         UInt16 turnDataSize = size;
-         turnDataSize = htons(turnDataSize);
-         memcpy((void*)&framing[2], &turnDataSize, 2);
-      }
+
+      uint16_t turnDataSize = size;
+      turnDataSize = htons(turnDataSize);
+      memcpy((void*)&framing[2], &turnDataSize, 2);
+
       std::vector<asio::const_buffer> bufs;
       bufs.push_back(asio::buffer(framing, sizeof(framing)));
-      bufs.push_back(asio::buffer(buffer, size));
+      bufs.push_back(asio::buffer(buffer, size));  // TODO !SLG! - if sending over TCP/TLS then message must be padded to be on a 4 byte boundary
 
       return rawWrite(bufs);
    }
@@ -653,7 +664,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
             RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
             if(remotePeer)
             {
-               UInt16 dataLen;
+               uint16_t dataLen;
                memcpy(&dataLen, &mReadBuffer[2], 2);
                dataLen = ntohs(dataLen);
    
@@ -762,13 +773,8 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          remoteTuple.setTransportType(mRelayTuple.getTransportType());
          StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress[0]);
 
-         RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
-         if(!remotePeer)
-         {
-            // Remote Peer not found - discard data
-            WarningLog(<< "Data received from unknown RemotePeer - discarding");
-            return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
-         }
+         // Should we record all the remoteTuples we have sent to before, and reject this message if
+         // not from one of the those endpoints?
 
          if(stunMessage.mTurnData->size() > size)
          {
@@ -821,7 +827,10 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          }
 
          // Add Software Attribute
-         response.setSoftware(SOFTWARE_STRING);
+         if(!mSoftware.empty())
+         {
+            response.setSoftware(mSoftware.c_str());
+         }
 
          // send bind response to local client
          unsigned int bufferSize = 512;  // enough room for Stun Header + XorMapped Address (v6) or Unknown Attributes + Software Attribute;
@@ -860,7 +869,7 @@ TurnSocket::startReadTimer(unsigned int timeout)
    if(timeout != 0)
    {
       mReadTimer.expires_from_now(milliseconds(timeout));
-      mReadTimer.async_wait(boost::bind(&TurnSocket::handleRawReadTimeout, this, asio::placeholders::error));
+      mReadTimer.async_wait(std::bind(&TurnSocket::handleRawReadTimeout, this, std::placeholders::_1));
    }
 }
 
@@ -929,7 +938,10 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
    unsigned int readsize = 0;
 
    // Add Software Attribute
-   request.setSoftware(SOFTWARE_STRING);
+   if(!mSoftware.empty())
+   {
+      request.setSoftware(mSoftware.c_str());
+   }
 
    if(addAuthInfo && !mUsername.empty() && !mHmacKey.empty())
    {

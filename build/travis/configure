@@ -2,32 +2,59 @@
 
 set -e
 
+PYTHON_MAJOR_VERSION=`python3 -V | cut -f2 -d' ' | cut -f1,2 -d.`
+
+PYCFG_CFLAGS=`/usr/bin/python3-config --cflags`
+if [ "x$TRAVIS_COMPILER" = "xclang" ];
+then
+  PYCFG_CFLAGS=`echo "${PYCFG_CFLAGS}" | sed -e 's!-specs=/usr/share/dpkg/no-pie-compile.specs!!g'`
+fi
+
+WARNING_CONFIG="-Wno-unknown-pragmas"
+
+# this makes the build more strict:
+# any warning will become an error,
+# as an error, it will fail the build
+WARNING_CONFIG="-Werror  ${WARNING_CONFIG}"
+
+RADIUS_LIB=--with-radcli
+
 # Notes:
-#   we don't enable ichat-gw because of https://www.resiprocate.org/bugzilla/show_bug.cgi?id=133
+# - please keep the order of parameters synchronized with build/debian.sh
+#   so we can easily diff the configuration.
+# - we don't enable ichat-gw because of https://www.resiprocate.org/bugzilla/show_bug.cgi?id=133
 #     (compile fails on clang)
 ./configure \
-  --enable-assert-syslog \
   --with-popt \
+  --enable-ipv6 \
+  --enable-dtls \
+  $RADIUS_LIB \
   --with-ssl \
+  --enable-assert-syslog \
+  --with-c-ares \
+  --with-fmt \
   --with-mysql \
   --with-postgresql \
-  --with-apps \
-  --with-telepathy \
-  --enable-dtls \
-  --enable-ipv6 \
-  --with-radcli \
-  --with-qpid-proton \
   --with-repro \
   --with-return \
   --enable-repro-plugins \
-  DEPS_PYTHON_CFLAGS="`/usr/bin/python3.7-config --cflags`" \
-  DEPS_PYTHON_LIBS="`/usr/bin/python3.7-config --ldflags`" \
-  PYCXX_SRCDIR=/usr/share/python3.7/CXX/Python3 \
   --with-python \
-  --with-rend \
+  DEPS_PYTHON_VERSION="${PYTHON_MAJOR_VERSION}" \
+  DEPS_PYTHON_CFLAGS="${PYCFG_CFLAGS}" \
+  DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
+  PYCXX_SRCDIR=/usr/share/python${PYTHON_MAJOR_VERSION}/CXX/Python3 \
+  --with-apps \
   --with-recon \
+  --with-sipxtapi \
+  --with-kurento \
+  --with-soci-postgresql \
+  --with-soci-mysql \
+  --with-qpid-proton \
+  --with-geoip \
   --with-netsnmp \
-  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \
+  --with-gstreamer \
+  --with-rend \
+  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags` ${WARNING_CONFIG}" \
   CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
-  --with-c-ares
+  "${@}"
 

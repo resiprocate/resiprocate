@@ -1,11 +1,10 @@
-#include <vector>
-
-#include "rutil/SharedPtr.hxx"
 #include "resip/dum/TargetCommand.hxx"
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/DumFeatureChain.hxx"
 #include "resip/stack/Message.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#include <utility>
 
 using namespace resip;
 using namespace std;
@@ -24,11 +23,11 @@ class GuardFeature : public DumFeature
 };
 
 DumFeatureChain::DumFeatureChain(DialogUsageManager& dum,
-                                 const FeatureList& features,
+                                 FeatureList features,
                                  TargetCommand::Target& target)
-   :mFeatures(features)
+   : mFeatures(std::move(features))
 {
-   mFeatures.push_back(SharedPtr<DumFeature>(new GuardFeature(dum, target)));
+   mFeatures.emplace_back(std::make_shared<GuardFeature>(dum, target));
    for (FeatureList::size_type i = 0; i < mFeatures.size(); ++i)
    {
       mActiveFeatures.push_back(true);

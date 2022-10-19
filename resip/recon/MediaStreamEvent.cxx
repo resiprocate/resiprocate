@@ -9,19 +9,32 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
+namespace recon {
+
+EncodeStream&
+MediaStreamReadyEvent::ReTurnParams::encode(EncodeStream& strm) const
+{
+   strm << "MediaStreamReadyEvent::ReTurnParams: rtpTuple: " << mRtpTuple << " rtcpTuple=" << mRtcpTuple;
+   return strm;
+}
+
+EncodeStream&
+MediaStreamReadyEvent::ReTurnParams::encodeBrief(EncodeStream& strm) const
+{
+   return encode(strm);
+}
+
 MediaStreamReadyEvent::MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, 
-                                             const reTurn::StunTuple& rtpTuple, 
-                                             const reTurn::StunTuple& rtcpTuple) : 
+                                             std::shared_ptr<StreamParams> streamParams) :
    mRemoteParticipantDialogSet(remoteParticipantDialogSet),
-   mRtpTuple(rtpTuple),
-   mRtcpTuple(rtcpTuple)
+   mStreamParams(streamParams)
 {
 }
 
 void 
 MediaStreamReadyEvent::executeCommand()
 {
-   mRemoteParticipantDialogSet.processMediaStreamReadyEvent(mRtpTuple, mRtcpTuple);
+   mRemoteParticipantDialogSet.processMediaStreamReadyEvent(mStreamParams);
 }
 
 resip::Message* 
@@ -34,7 +47,7 @@ MediaStreamReadyEvent::clone() const
 EncodeStream& 
 MediaStreamReadyEvent::encode(EncodeStream& strm) const
 {
-   strm << "MediaStreamReadyEvent: rtpTuple: " << mRtpTuple << " rtcpTuple=" << mRtcpTuple;
+   strm << "MediaStreamReadyEvent: streamParams: " << mStreamParams;
    return strm;
 }
 
@@ -78,9 +91,17 @@ MediaStreamErrorEvent::encodeBrief(EncodeStream& strm) const
    return encode(strm);
 }
 
+EncodeStream&
+operator<<(EncodeStream& strm, const MediaStreamReadyEvent::StreamParams& params)
+{
+   return params.encode(strm);
+}
+
+}
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

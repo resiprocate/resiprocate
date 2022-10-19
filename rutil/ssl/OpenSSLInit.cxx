@@ -69,14 +69,19 @@ OpenSSLInit::OpenSSLInit()
 	CRYPTO_set_dynlock_lock_callback(::resip_OpenSSLInit_dynLockFunction);
 #endif
 
+/* The OpenSSL memory leak checking has been deprecated since
+   OpenSSL v3.0.  OpenSSL developers recommend that we rely
+   on modern compilers to provide the same functionality. */
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 	CRYPTO_malloc_debug_init();
 	CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
-#else
+#elif (OPENSSL_VERSION_NUMBER < 0x30000000L)
 	CRYPTO_set_mem_debug(1);
 #endif
 
+#if (OPENSSL_VERSION_NUMBER < 0x30000000L) || defined(LIBRESSL_VERSION_NUMBER)
 	CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
+#endif
 
 	SSL_library_init();
 	SSL_load_error_strings();

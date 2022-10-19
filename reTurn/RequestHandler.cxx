@@ -202,9 +202,9 @@ RequestHandler::checkNonce(const Data& nonce)
       DebugLog(<< "Invalid nonce. Expected timestamp terminator.");
       return NotValid;
    }
-   UInt64 now = Timer::getTimeMs()/1000;
+   uint64_t now = Timer::getTimeMs()/1000;
    Data creationTimeData;
-   UInt64 creationTime;
+   uint64_t creationTime;
    pb.data(creationTimeData, anchor);
    creationTime = creationTimeData.convertUInt64();
    if((now-creationTime) <= getConfig().mNonceLifetime)
@@ -357,7 +357,7 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
       changeTuple.setTransportType(request.mLocalTuple.getTransportType());
       changeTuple.setAddress(request.mLocalTuple.getAddress() == mPrim3489Address ? mAlt3489Address : mPrim3489Address);
       changeTuple.setPort(request.mLocalTuple.getPort() == mPrim3489Port ? mAlt3489Port : mPrim3489Port);
-      UInt32 changeRequest = request.mHasChangeRequest ? request.mChangeRequest : 0;
+      uint32_t changeRequest = request.mHasChangeRequest ? request.mChangeRequest : 0;
 
       if(changeRequest & StunMessage::ChangeIpFlag && changeRequest & StunMessage::ChangePortFlag)
       {
@@ -561,7 +561,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
 
    allocationTuple.setPort(port);
 
-   UInt32 lifetime = getConfig().mDefaultAllocationLifetime;
+   uint32_t lifetime = getConfig().mDefaultAllocationLifetime;
    if(request.mHasTurnLifetime)
    {
       // Check if the requested value is greater than the server max
@@ -596,7 +596,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
          return RespondFromReceiving;
       }
    }
-   catch(asio::system_error e)
+   catch (const asio::system_error& e)
    {
       // TODO - handle port in use error better - try to allocate a new port or something?
       ErrLog(<< "Error allocating socket for allocation.  Sending 500. Sender=" << request.mRemoteTuple);
@@ -680,7 +680,7 @@ RequestHandler::processTurnRefreshRequest(TurnAllocationManager& turnAllocationM
       return RespondFromReceiving;
    }
 
-   UInt32 lifetime = getConfig().mDefaultAllocationLifetime;
+   uint32_t lifetime = getConfig().mDefaultAllocationLifetime;
    if(request.mHasTurnLifetime)
    {
       // Check if the requested value is greater than the server max
@@ -876,12 +876,12 @@ RequestHandler::processTurnSendIndication(TurnAllocationManager& turnAllocationM
    // Shouldn't have more than one xor-peer-address attribute in this request
    StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress[0]);
 
-   boost::shared_ptr<DataBuffer> data(new DataBuffer(request.mTurnData->data(), request.mTurnData->size()));
+   const auto data = std::make_shared<DataBuffer>(request.mTurnData->data(), request.mTurnData->size());
    allocation->sendDataToPeer(remoteAddress, data, false /* isFramed? */);
 }
 
 void 
-RequestHandler::processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data)
+RequestHandler::processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, const std::shared_ptr<DataBuffer>& data)
 {
    TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(localTuple, remoteTuple));
 

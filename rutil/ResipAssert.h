@@ -109,6 +109,22 @@
 
 #endif // defined(WIN32) && defined(LOG_EVENT_AND_ASSERT)
 
+/* Need to use resip_assert_not_null() due to the compiler warning
+ *
+ *        warning: the compiler can assume that the
+ *        address of ‘rhs’ will never be NULL [-Waddress]
+ *
+ * Tried to suppress the warning with _Pragma("GCC diagnostic ignored...")
+ * but that didn't make the warning go away.
+ *
+ * Therefore, using the cast to void* to suppress that warning.
+ */
+
+#define resip_assert_not_null(x)                    \
+{                                                   \
+   resip_assert(((void*)(x)) != 0);                 \
+}
+
 #endif // __ASSERTION_H
 
 /* ====================================================================

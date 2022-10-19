@@ -85,8 +85,8 @@ public:
    void setEntity(const Uri& entity) { checkParsed(); mEntity = entity; }
    const Uri& getEntity() const { checkParsed(); return mEntity; }
 
-   void setVersion(UInt32 version) { checkParsed(); mVersion = version; }
-   UInt32 getVersion() const { checkParsed(); return mVersion; }
+   void setVersion(uint32_t version) { checkParsed(); mVersion = version; }
+   uint32_t getVersion() const { checkParsed(); return mVersion; }
 
    void setDialogInfoState(DialogInfoState dialogInfoState) { checkParsed(); mDialogInfoState = dialogInfoState; }
    DialogInfoState getDialogInfoState() const { checkParsed(); return mDialogInfoState; }
@@ -95,8 +95,19 @@ public:
    class Dialog
    {
    public:
+      class DialogIdInfo
+      {
+      public:
+         DialogIdInfo() {}
+         DialogIdInfo(const Data& callId, const Data& localTag, const Data& remoteTag) :
+            mCallId(callId), mLocalTag(localTag), mRemoteTag(remoteTag) {}
+         Data mCallId;
+         Data mLocalTag;
+         Data mRemoteTag;
+      };
+
       Dialog() : mDirection(MaxOrUnsetDirection), mState(Trying), mStateEvent(MaxOrUnsetDialogStateEvent), mStateCode(0), mDuration(0),
-         mHasDuration(false) {}
+         mHasDuration(false), mAppearance(0), mHasAppearance(false), mExclusive(false), mHasExclusive(false) {}
 
       // Accesors for data
       void setId(const Data& id) { mId = id; }
@@ -123,16 +134,17 @@ public:
       void setStateCode(const int& stateCode) { mStateCode = stateCode; }
       const int& getStateCode() const { return mStateCode; }
 
-      void setDuration(const UInt32& duration) { mDuration = duration; mHasDuration = true; }
+      void setDuration(const uint32_t& duration) { mDuration = duration; mHasDuration = true; }
       void clearDuration() { mDuration = 0; mHasDuration = false; }
       bool hasDuration() const { return mHasDuration; }
-      const UInt32& getDuration() const { return mDuration; }
+      const uint32_t& getDuration() const { return mDuration; }
 
       void setReplacesInfo(const Data& callId, const Data& localTag, const Data& remoteTag) 
-         { mReplacesCallId = callId; mReplacesLocalTag = localTag; mReplacesRemoteTag = remoteTag; }
-      const Data& getReplacesCallId() const { return mReplacesCallId; }
-      const Data& getReplacesLocalTag() const { return mReplacesLocalTag; }
-      const Data& getReplacesRemoteTag() const { return mReplacesRemoteTag; }
+         { mReplaces.mCallId = callId; mReplaces.mLocalTag = localTag; mReplaces.mRemoteTag = remoteTag; }
+      const Dialog::DialogIdInfo& getReplaces() const { return mReplaces; }
+      const Data& getReplacesCallId() const { return mReplaces.mCallId; }
+      const Data& getReplacesLocalTag() const { return mReplaces.mLocalTag; }
+      const Data& getReplacesRemoteTag() const { return mReplaces.mRemoteTag; }
 
       void setReferredBy(const NameAddr& referredBy) { mReferredBy = referredBy; }
       const NameAddr& getReferredBy() const { return mReferredBy; }
@@ -141,6 +153,29 @@ public:
       void setRouteSet(const NameAddrs& routes) { mRouteSet = routes; }
       void clearRouteSet() { mRouteSet.clear(); }
       const NameAddrs& getRouteSet() const { return mRouteSet; }
+
+      // RFC7463 Elements
+      void setAppearance(unsigned int appearanceNum) { mAppearance = appearanceNum; mHasAppearance = true; }
+      void clearAppearance() { mAppearance = 0; mHasAppearance = false; }
+      bool hasAppearance() const { return mHasAppearance; }
+      bool getAppearance() const { return mAppearance; }
+
+      void setExclusive(bool exclusive) { mExclusive = exclusive; mHasExclusive = true; }
+      void clearExclusive() { mExclusive = false; mHasExclusive = false; }
+      bool hasExclusive() const { return mHasExclusive; }
+      bool getExclusive() const { return mExclusive; }
+
+      void addReplacedDialog(const Data& callId, const Data& localTag, const Data& remoteTag)
+         { mReplacedDialogs.push_back(DialogIdInfo(callId, localTag, remoteTag)); }
+      void addReplacedDialog(const Dialog::DialogIdInfo& dialogIdInfo) { mReplacedDialogs.push_back(dialogIdInfo); }
+      void clearReplacedDialogs() { mReplacedDialogs.clear(); }
+      const std::list<Dialog::DialogIdInfo>& getReplacedDialogs() const { return mReplacedDialogs; }
+
+      void addJoinedDialog(const Data& callId, const Data& localTag, const Data& remoteTag)
+         { mJoinedDialogs.push_back(DialogIdInfo(callId, localTag, remoteTag)); }
+      void addJoinedDialog(const Dialog::DialogIdInfo& dialogIdInfo) { mJoinedDialogs.push_back(dialogIdInfo); }
+      void clearJoinedDialogs() { mJoinedDialogs.clear(); }
+      const std::list<Dialog::DialogIdInfo>& getJoinedDialogs() const { return mJoinedDialogs; }
 
       class Participant
       {
@@ -165,10 +200,10 @@ public:
          const Data& getSessionDescription() const { return mSessionDescription; }
          const Data& getSessionDescriptionType() const { return mSessionDescriptionType; }
 
-         void setCSeq(const UInt32& cseq) { mCSeq = cseq; mHasCSeq = true; }
+         void setCSeq(const uint32_t& cseq) { mCSeq = cseq; mHasCSeq = true; }
          void clearCSeq() { mCSeq = 0; mHasCSeq = false; }
          bool hasCSeq() const { return mHasCSeq; }
-         const UInt32& getCSeq() const { return mCSeq; }
+         const uint32_t& getCSeq() const { return mCSeq; }
 
       private:
          NameAddr mIdentity;
@@ -176,13 +211,13 @@ public:
          TargetParams mTargetParams;
          Data mSessionDescription;
          Data mSessionDescriptionType;
-         UInt32 mCSeq;
+         uint32_t mCSeq;
          bool mHasCSeq;
 
          friend class Dialog;
          friend class DialogInfoContents;
          EncodeStream& encode(EncodeStream& str, const char* baseElementName, const Data& indent) const;
-         void parse(XMLCursor& xml);
+         void parse(XMLCursor& xml, const Data& namespacePrefix);
          void parseParam(XMLCursor& xml);
       };
 
@@ -211,12 +246,10 @@ public:
       DialogStateEvent mStateEvent;
       int mStateCode;
 
-      UInt32 mDuration;
+      uint32_t mDuration;
       bool mHasDuration;
 
-      Data mReplacesCallId;
-      Data mReplacesLocalTag;
-      Data mReplacesRemoteTag;
+      DialogIdInfo mReplaces;
 
       NameAddr mReferredBy;
 
@@ -224,6 +257,14 @@ public:
 
       Participant mLocalParticipant;
       Participant mRemoteParticipant;
+
+      // RFC7463 specific elements
+      unsigned int mAppearance;
+      bool mHasAppearance;
+      bool mExclusive;
+      bool mHasExclusive;
+      std::list<DialogIdInfo> mReplacedDialogs;
+      std::list<DialogIdInfo> mJoinedDialogs;
 
       std::multimap<Data, Data> mExtraDialogElements;
 
@@ -246,18 +287,22 @@ public:
    static DialogStateEvent dialogStateEventStringToEnum(const Data& dialogStateEventString);
    static const char* directionToString(const Direction& direction);
    static Direction directionStringToEnum(const Data& directionString);
+   static bool compareTag(const Data& tagName, const Data& compareToTagNoPrefix, const Data& namespacePrefix);
 
 private:
 
    static EncodeStream& encodeNameAddrElement(EncodeStream& str, const char* elementName, const NameAddr& nameAddr);
    void parseDialog(XMLCursor& xml);
+   static bool parseDialogIdInfo(XMLCursor& xml, Dialog::DialogIdInfo& dialogIdInfo);
    static bool parseUriValue(XMLCursor& xml, Uri& uri);
    static bool parseNameAddrElement(XMLCursor& xml, NameAddr& nameAddr);
 
    // Base DialogInfoContents data members
+   Data mBaseDialogInfoNamespacePrefix;
+   Data mSharedAppearanceDialogInfoNamespacePrefix;
    Data mIndent;
    Uri mEntity;
-   UInt32 mVersion;
+   uint32_t mVersion;
    DialogInfoState mDialogInfoState;
 
    DialogList mDialogs;
@@ -271,7 +316,7 @@ static bool invokeDialogInfoContentsInit = DialogInfoContents::init();
 
 /* ====================================================================
 *
-* Copyright (c) 2016 SIP Spectrum, Inc.  All rights reserved.
+* Copyright (c) 2016-2021 SIP Spectrum, Inc. www.sipspectrum.com
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions

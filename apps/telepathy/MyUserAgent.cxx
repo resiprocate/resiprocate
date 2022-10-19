@@ -36,14 +36,16 @@
 
 #include "MyUserAgent.hxx"
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-tr::MyUserAgent::MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile, tr::Connection& connection, SharedPtr<MyInstantMessage> instantMessage) :
-   UserAgent(conversationManager, profile, 0, instantMessage), mConnection(connection)
+tr::MyUserAgent::MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile, tr::Connection& connection, std::shared_ptr<MyInstantMessage> instantMessage) :
+   UserAgent(conversationManager, std::move(profile), 0, std::move(instantMessage)), mConnection(connection)
 {
 }
 

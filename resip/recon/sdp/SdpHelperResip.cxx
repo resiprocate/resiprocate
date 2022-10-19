@@ -285,7 +285,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
          std::list<SdpMediaLine::SdpPotentialConfiguration>::iterator pcfgIt = pcfgList.begin();
          for(;pcfgIt != pcfgList.end(); pcfgIt++)
          {
-            SdpMediaLine::SdpTransportProtocolType potentialTransportType;
+            SdpMediaLine::SdpTransportProtocolType potentialTransportType = SdpMediaLine::PROTOCOL_TYPE_NONE;
             if(pcfgIt->getTransportId() != 0)
             {
                // Find corresponding transport capability
@@ -310,7 +310,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
             SdpContents::Session potentialSession(*resipSession);  // create a session copy that we can modify
             
             // Find the corresponding medium entry in the copy
-            SdpContents::Session::Medium* potentialMedium;
+            SdpContents::Session::Medium* potentialMedium = 0;
             std::list<SdpContents::Session::Medium>& potentialMedias = potentialSession.media();
             std::list<SdpContents::Session::Medium>::iterator potMedIt;
             for(potMedIt = potentialMedias.begin(); potMedIt != potentialMedias.end(); potMedIt++)
@@ -881,7 +881,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
          unsigned int componentId;
          Data token;
          SdpCandidate::SdpCandidateTransportType transport;
-         UInt64 priority;
+         uint64_t priority;
          Data address;
          unsigned int port;
          SdpCandidate::SdpCandidateType candidateType = SdpCandidate::CANDIDATE_TYPE_NONE;

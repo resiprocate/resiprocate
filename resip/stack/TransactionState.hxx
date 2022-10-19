@@ -31,7 +31,7 @@ class TransactionState : public DnsHandler
    public:
       RESIP_HeapCount(TransactionState);
 
-      static UInt64 DnsGreylistDurationMs;  // The amount of time to greylist a DNS entry for after receiving a transport error
+      static uint64_t DnsGreylistDurationMs;  // The amount of time to greylist a DNS entry for after receiving a transport error
 
       static void process(TransactionController& controller,
                            TransactionMessage* message); 
@@ -175,9 +175,9 @@ class TransactionState : public DnsHandler
       Tuple mResponseTarget; // used to reply to requests
 
       // used when the DnsResult moves to another transport on failure. Only
-      // used for outgoing stateful, so auto_ptr for space efficiency.
-      std::auto_ptr<NameAddr> mOriginalContact;
-      std::auto_ptr<Via> mOriginalVia;
+      // used for outgoing stateful, so unique_ptr for space efficiency.
+      std::unique_ptr<NameAddr> mOriginalContact;
+      std::unique_ptr<Via> mOriginalVia;
 
       const Data mId;
       const MethodTypes mMethod;
@@ -194,12 +194,13 @@ class TransactionState : public DnsHandler
       int mFailureSubCode;
       bool mTcpConnectTimerStarted;
 
-      static UInt32 StatelessIdCounter;
+      static uint32_t StatelessIdCounter;
       
       friend EncodeStream& operator<<(EncodeStream& strm, const TransactionState& state);
       friend class TransactionController;
 };
 
+EncodeStream& operator<<(EncodeStream& strm, const TransactionState& state);
 
 }
 

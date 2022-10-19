@@ -2,10 +2,11 @@
 #define RESIP_NONDIALOGUSAGE_HXX
 
 #include "rutil/BaseException.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/BaseUsage.hxx"
 #include "resip/dum/Handles.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -19,18 +20,18 @@ class NameAddr;
 class NonDialogUsage : public BaseUsage
 {
    public:
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
-            Exception(const Data& msg,const Data& file,int line);
-            virtual const char* name() const;
+            Exception(const Data& msg, const Data& file, int line);
+            const char* name() const noexcept override;
       };
 
-      AppDialogSetHandle getAppDialogSet();
-      SharedPtr<UserProfile> getUserProfile();
+      AppDialogSetHandle getAppDialogSet() const;
+      std::shared_ptr<UserProfile> getUserProfile() const noexcept;
       //virtual void send(SipMessage& msg);
-      virtual void send(SharedPtr<SipMessage> msg);
-      virtual void sendCommand(SharedPtr<SipMessage> msg);
+      virtual void send(std::shared_ptr<SipMessage> msg);
+      virtual void sendCommand(std::shared_ptr<SipMessage> msg);
 
    protected:
       NonDialogUsage(DialogUsageManager& dum, DialogSet& dialogSet);

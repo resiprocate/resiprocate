@@ -47,8 +47,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-UInt64 TransactionState::DnsGreylistDurationMs = 32000;  // default to 32 seconds, application can override
-UInt32 TransactionState::StatelessIdCounter = 0;
+uint64_t TransactionState::DnsGreylistDurationMs = 32000;  // default to 32 seconds, application can override
+uint32_t TransactionState::StatelessIdCounter = 0;
 
 TransactionState::TransactionState(TransactionController& controller, Machine m, 
                                    State s, const Data& id, MethodTypes method, const Data& methodText, TransactionUser* tu) : 
@@ -1001,9 +1001,9 @@ TransactionState::saveOriginalContactAndVia(const SipMessage& sip)
    if(sip.exists(h_Contacts) && sip.const_header(h_Contacts).size() == 1 &&
       sip.const_header(h_Contacts).front().isWellFormed())
    {
-      mOriginalContact = std::auto_ptr<NameAddr>(new NameAddr(sip.header(h_Contacts).front()));
+      mOriginalContact = std::unique_ptr<NameAddr>(new NameAddr(sip.header(h_Contacts).front()));
    }
-   mOriginalVia = std::auto_ptr<Via>(new Via(sip.header(h_Vias).front()));
+   mOriginalVia = std::unique_ptr<Via>(new Via(sip.header(h_Vias).front()));
 }
 
 void TransactionState::restoreOriginalContactAndVia()
@@ -2803,7 +2803,7 @@ TransactionState::sendToTU(TransactionMessage* msg)
                SipMessage* response(Helper::makeResponse(*sipMsg, 503));
                delete sipMsg;
                
-               UInt16 retryAfter=mController.mTuSelector.getExpectedWait(mTransactionUser);
+               uint16_t retryAfter=mController.mTuSelector.getExpectedWait(mTransactionUser);
                response->header(h_RetryAfter).value()=retryAfter;
                response->setFromTU();
                if(mMethod==INVITE)

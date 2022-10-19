@@ -85,16 +85,6 @@ UserAuthInfo::setA1(const resip::Data& a1)
    mA1 = a1;
 }
 
-Data 
-UserAuthInfo::brief() const
-{  
-   Data buffer;
-   DataStream strm(buffer);
-   strm << "UserAuthInfo " << mUser << " @ " << mRealm << " A1=" << mA1;
-   strm.flush();
-   return buffer;
-}
-
 resip::Message* 
 UserAuthInfo::clone() const
 {
@@ -104,7 +94,7 @@ UserAuthInfo::clone() const
 EncodeStream& 
 UserAuthInfo::encode(EncodeStream& strm) const
 {
-   strm << brief();
+   strm << "UserAuthInfo " << mUser << " @ " << mRealm << " A1=" << mA1;
    return strm;
 }
 

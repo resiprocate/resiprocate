@@ -27,17 +27,17 @@ NotifyContents::NotifyContents(Pidf::Tuple tuples[])
 }
 
 bool 
-NotifyContents::operator()(boost::shared_ptr<Event> event)
+NotifyContents::operator()(std::shared_ptr<Event> event)
 {
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
    resip_assert(sipEvent);
-   boost::shared_ptr<resip::SipMessage> msg = sipEvent->getMessage();
+   std::shared_ptr<resip::SipMessage> msg = sipEvent->getMessage();
    
    return (*this)(msg);
 }
 
 bool
-NotifyContents::operator()(boost::shared_ptr<resip::SipMessage> msg)
+NotifyContents::operator()(std::shared_ptr<resip::SipMessage> msg)
 {
    if (!msg->getContents())
    {
@@ -133,8 +133,8 @@ NotifyContents::operator()(boost::shared_ptr<resip::SipMessage> msg)
 
 // conditioners
 
-boost::shared_ptr<SipMessage>& 
-simulateRefresh(boost::shared_ptr<SipMessage>& msg)
+std::shared_ptr<SipMessage>&
+simulateRefresh(std::shared_ptr<SipMessage>& msg)
 { 
    msg->setContents(0);
    msg->header(h_SIPIfMatch).value() = "2134";

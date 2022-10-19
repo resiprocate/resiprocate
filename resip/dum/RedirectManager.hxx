@@ -24,7 +24,7 @@ class DialogSet;
 class RedirectManager
 {
    public:   
-      class Ordering : public std::binary_function<const NameAddr&, const NameAddr&, bool>
+      class Ordering
       {
          public:
             virtual ~Ordering() {}

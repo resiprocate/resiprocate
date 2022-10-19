@@ -8,6 +8,8 @@
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
 
+#include "../SipXMediaStackAdapter.hxx"
+
 #ifdef WIN32
    #define sleepMs(t) Sleep(t)
 #else
@@ -58,8 +60,8 @@ public:
    recon::UserAgent* getMyUserAgent() { return mMyUserAgent; }
 
    // Legacy API's that assume one set of settings for MOH and Park - return first defined MOH and ParkSettings
-   MOHManager& getMOHManager() { assert(mMOHManagerMap.size() != 0);  return *mMOHManagerMap.begin()->second; }
-   ParkManager& getParkManager() { assert(mParkManagerMap.size() != 0);  return *mParkManagerMap.begin()->second; }
+   MOHManager& getMOHManager() { resip_assert(mMOHManagerMap.size() != 0);  return *mMOHManagerMap.begin()->second; }
+   ParkManager& getParkManager() { resip_assert(mParkManagerMap.size() != 0);  return *mParkManagerMap.begin()->second; }
 
    void getActiveCallsInfo(CallInfoList& callInfos);
 
@@ -89,11 +91,11 @@ protected:
 private:
    friend class MOHManager;
    friend class ParkManager;
-   void buildSessionCapabilities(resip::SdpContents& sessionCaps);
+   virtual void buildSessionCapabilities(resip::SdpContents& sessionCaps);
 
    bool mIsV6Avail;
    recon::UserAgent* mMyUserAgent;
-   resip::SharedPtr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
+   std::shared_ptr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
 
    typedef std::map<unsigned long, MOHManager*> MOHManagerMap;
    MOHManagerMap mMOHManagerMap;

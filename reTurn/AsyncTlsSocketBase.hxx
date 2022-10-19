@@ -9,7 +9,6 @@
 
 #include <asio.hpp>
 #include <asio/ssl.hpp>
-#include <boost/bind.hpp>
 
 #include "AsyncSocketBase.hxx"
 
@@ -18,30 +17,29 @@ namespace reTurn {
 class AsyncTlsSocketBase : public AsyncSocketBase
 {
 public:
-   AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::context& context, bool validateServerCertificateHostname); 
-   virtual ~AsyncTlsSocketBase();
+   AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::context& context, bool validateServerCertificateHostname);
 
-   virtual unsigned int getSocketDescriptor();
+   unsigned int getSocketDescriptor() override;
 
-   virtual asio::error_code bind(const asio::ip::address& address, unsigned short port);
-   virtual void connect(const std::string& address, unsigned short port);  
+   asio::error_code bind(const asio::ip::address& address, unsigned short port) override;
+   void connect(const std::string& address, unsigned short port) override;
 
    void doHandshake();
 
-   virtual void transportReceive();
-   virtual void transportFramedReceive();
-   virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
-   virtual void transportClose();
+   void transportReceive() override;
+   void transportFramedReceive() override;
+   void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers) override;
+   void transportClose() override;
 
-   virtual const asio::ip::address getSenderEndpointAddress();
-   virtual unsigned short getSenderEndpointPort();
+   asio::ip::address getSenderEndpointAddress() override;
+   unsigned short getSenderEndpointPort() override;
 
 protected:
-   virtual void handleReadHeader(const asio::error_code& e);
-   virtual void handleServerHandshake(const asio::error_code& e);
-   virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
-   virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
-   virtual void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
+   void handleReadHeader(const asio::error_code& e) override;
+   void handleServerHandshake(const asio::error_code& e) override;
+   void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
+   void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
+   void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
    virtual bool validateServerCertificateHostname();
 
    virtual void onServerHandshakeSuccess() { resip_assert(false); }

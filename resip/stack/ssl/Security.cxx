@@ -113,7 +113,7 @@ static int
 verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 {
    char cBuf1[257];
-   char cBuf2[501];
+   char cBuf2[1024];
    X509 *pErrCert;
    int iErr = 0;
    int iDepth = 0;
@@ -124,7 +124,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    if (NULL != pErrCert)
       X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
 
-   snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
+   snprintf(cBuf2, 1023, ", iErr='%s' depth=%d %s\n", X509_verify_cert_error_string(iErr), iDepth, cBuf1);
    if(!iInCode)
    {
       ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(X509_STORE_CTX_get_error(pInStore)) << cBuf2 );
@@ -215,7 +215,7 @@ Security::loadCADirectory(const Data& _dir)
             loadCAFile(fileName);
          }
       }
-      catch (Exception& e)
+      catch (const BaseException& e)
       {
          ErrLog(<< "loadCADirectory: Some problem reading " << *it << ": " << e);
       }
@@ -320,7 +320,7 @@ Security::preload()
                attemptedToLoad = false;
             }
          }
-         catch (Exception& e)
+         catch (const BaseException& e)
          {
             ErrLog(<< "Some problem reading " << fileName << ": " << e);
          }
@@ -674,9 +674,14 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
       BaseSecurity*  mutable_this = const_cast<BaseSecurity*>(this);
       mutable_this->addCertPEM(type, aor, certPEM, false);
    }
-   catch (Exception& e)
+   catch (const BaseException& e)
    {
       ErrLog(<<"Caught exception: " << e);
+      return   false;
+   }
+   catch (const std::exception& e)
+   {
+      ErrLog(<<"Caught exception: " << e.what());
       return   false;
    }
    catch (...)
@@ -962,7 +967,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
          char buffer[120];
          unsigned long err = ERR_get_error();
          ERR_error_string(err, buffer);
-         if(ERR_GET_LIB(err) == ERR_LIB_EVP && ERR_GET_FUNC(err) == EVP_F_EVP_DECRYPTFINAL_EX && ERR_GET_REASON(err) == EVP_R_BAD_DECRYPT)
+         if(ERR_GET_LIB(err) == ERR_LIB_EVP && ERR_GET_REASON(err) == EVP_R_BAD_DECRYPT)
          {
             ErrLog(<< "Could not read private key (error=" << buffer << ") - likely incorrect password provided, may load correctly when transports are added with appropriate password");
          }
@@ -1166,7 +1171,14 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    mRootSslCerts = X509_STORE_new();
    resip_assert(mRootTlsCerts && mRootSslCerts);
 
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
    if (!mTlsCtx)
    {
       ErrLog(<< "SSL_CTX_new failed, dumping OpenSSL error stack:");
@@ -1580,7 +1592,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    X509_add_ext( cert, ext, -1);
    X509_EXTENSION_free(ext);
    
-   static char CA_FALSE[] = "CA:FALSE";
+   static const char CA_FALSE[] = "CA:FALSE";
    ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, CA_FALSE);
    ret = X509_add_ext( cert, ext, -1);
    resip_assert(ret);
@@ -1688,7 +1700,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    resip_assert( size > 0 );
 
    Data outData(outBuf,size);
-   static char RESIP_SIGN_OUT_SIG[] = "resip-sign-out-sig";
+   static const char RESIP_SIGN_OUT_SIG[] = "resip-sign-out-sig";
    Security::dumpAsn(RESIP_SIGN_OUT_SIG,outData);
 
    Pkcs7SignedContents* sigBody = new Pkcs7SignedContents( outData );
@@ -1799,7 +1811,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    InfoLog( << "Encrypted body size is " << outData.size() );
    InfoLog( << "Encrypted body is <" << outData.escaped() << ">" );
 
-   static char RESIP_ENCRYPT_OUT[] = "resip-encrypt-out";
+   static const char RESIP_ENCRYPT_OUT[] = "resip-encrypt-out";
    Security::dumpAsn(RESIP_ENCRYPT_OUT, outData);
 
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
@@ -1907,10 +1919,10 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    Data enc = res.base64encode();
 
-   static char IDENTITY_IN[] = "identity-in";
-   static char IDENTITY_IN_HASH[] = "identity-in-hash";
-   static char IDENTITY_IN_RSA[] = "identity-in-rsa";
-   static char IDENTITY_IN_BASE64[] = "identity-in-base64";
+   static const char IDENTITY_IN[] = "identity-in";
+   static const char IDENTITY_IN_HASH[] = "identity-in-hash";
+   static const char IDENTITY_IN_RSA[] = "identity-in-rsa";
+   static const char IDENTITY_IN_BASE64[] = "identity-in-base64";
 
    Security::dumpAsn(IDENTITY_IN, in );
    Security::dumpAsn(IDENTITY_IN_HASH, hashRes );
@@ -1974,10 +1986,10 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 
    DebugLog( << "rsa verify result is " << ret  );
 
-   static char IDENTITY_OUT_MSG[] = "identity-out-msg";
-   static char IDENTITY_OUT_BASE64[] = "identity-out-base64";
-   static char IDENTITY_OUT_SIG[] = "identity-out-sig";
-   static char IDENTITY_OUT_HASH[] = "identity-out-hash";
+   static const char IDENTITY_OUT_MSG[] = "identity-out-msg";
+   static const char IDENTITY_OUT_BASE64[] = "identity-out-base64";
+   static const char IDENTITY_OUT_SIG[] = "identity-out-sig";
+   static const char IDENTITY_OUT_HASH[] = "identity-out-hash";
 
    Security::dumpAsn(IDENTITY_OUT_MSG, in );
    Security::dumpAsn(IDENTITY_OUT_BASE64,sigBase64);
@@ -1991,7 +2003,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 void
 BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
 {
-   auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
+   unique_ptr<SecurityAttributes> sec(new SecurityAttributes);
    X509* cert=NULL;
    
    try
@@ -2037,7 +2049,7 @@ BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
       sec->setIdentity(msg.const_header(h_From).uri().getAor());
       sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
    }
-   msg.setSecurityAttributes(sec);
+   msg.setSecurityAttributes(std::move(sec));
 }
 
 
@@ -2057,7 +2069,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    DebugLog( << "uncode body = <" << text.escaped() << ">" );
    DebugLog( << "uncode body size = " << text.size() );
 
-   static char RESIP_ASN_DECRYPT[] = "resip-asn-decrypt";
+   static const char RESIP_ASN_DECRYPT[] = "resip-asn-decrypt";
    Security::dumpAsn(RESIP_ASN_DECRYPT, text );
 
    BIO* in = BIO_new_mem_buf( (void*)text.c_str(), (int)text.size());
@@ -2079,7 +2091,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
          const char* file;
          int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
          unsigned long code = ERR_get_error_line(&file,&line);
+#else
+         unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
          if ( code == 0 )
          {
             break;
@@ -2175,7 +2191,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
                const char* file;
                int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
                unsigned long code = ERR_get_error_line(&file,&line);
+#else
+               unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
                if ( code == 0 )
                {
                   break;
@@ -2315,8 +2335,8 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    InfoLog( << "text <"    << textData.escaped() << ">" );
    InfoLog( << "signature <" << sigData.escaped() << ">" );
 
-   static char RESIP_ASN_UNCODE_SIGNED_TEXT[] = "resip-asn-uncode-signed-text";
-   static char RESIP_ASN_UNCODE_SIGNED_SIG[] = "resip-asn-uncode-signed-sig";
+   static const char RESIP_ASN_UNCODE_SIGNED_TEXT[] = "resip-asn-uncode-signed-text";
+   static const char RESIP_ASN_UNCODE_SIGNED_SIG[] = "resip-asn-uncode-signed-sig";
 
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_TEXT, textData );
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_SIG, sigData );
@@ -2344,7 +2364,11 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          const char* file;
          int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
          unsigned long code = ERR_get_error_line(&file,&line);
+#else
+         unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
          if ( code == 0 )
          {
             break;
@@ -2523,7 +2547,11 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                const char* file;
                int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
                unsigned long code = ERR_get_error_line(&file,&line);
+#else
+               unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
                if ( code == 0 )
                {
                   break;
@@ -3066,7 +3094,7 @@ BaseSecurity::isSelfSigned(const X509 *cert)
 }
 
 void
-BaseSecurity::dumpAsn( char* name, Data data)
+BaseSecurity::dumpAsn(const char* name, Data data)
 {
 #if 0 // for debugging
    resip_assert(name);
@@ -3154,6 +3182,8 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       BIO_free(bio);
    }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
 #ifndef SSL_CTRL_SET_ECDH_AUTO
 #define SSL_CTRL_SET_ECDH_AUTO 94
 #endif
@@ -3189,6 +3219,10 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       WarningLog(<<"unable to initialize ECDH: SSL_CTX_ctrl failed, OPENSSL_NO_ECDH defined or repro was compiled with an old OpenSSL version");
 #endif
    }
+
+#endif
+
+
 }
 
 #endif

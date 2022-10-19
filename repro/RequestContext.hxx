@@ -34,8 +34,8 @@ class RequestContext
       virtual ~RequestContext();
 
       virtual void process(resip::TransactionTerminated& msg);
-      virtual void process(std::auto_ptr<resip::SipMessage> sip);
-      virtual void process(std::auto_ptr<resip::ApplicationMessage> app);
+      virtual void process(std::unique_ptr<resip::SipMessage> sip);
+      virtual void process(std::unique_ptr<resip::ApplicationMessage> app);
       
       virtual void handleSelfAimedStrayAck(resip::SipMessage* sip);
       virtual bool handleMissingResponseVias(resip::SipMessage* response);  // return true to continue processing
@@ -67,14 +67,11 @@ class RequestContext
 
       virtual void forwardAck200(const resip::SipMessage& ack);
       void postAck200Done();
-      
-      void updateTimerC();
-      bool mInitialTimerCSet;
 
       void setSessionCreatedEventSent() { mSessionCreatedEventSent = true; }
       void setSessionEstablishedEventSent() { mSessionEstablishedEventSent = true; }
 
-      void postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds);
+      void postTimedMessage(std::unique_ptr<resip::ApplicationMessage> msg,int seconds);
 
       // Accessor for per-requset extensible state storage for monkeys
       resip::KeyValueStore& getKeyValueStore() { return mKeyValueStore; }
@@ -104,7 +101,6 @@ class RequestContext
       bool mTopRouteFlowTupleSet;       // Provided so caller can avoid needing to compare mTopRouteFlowTuple to and empty Tuple() to check if set or not
       resip::Tuple mTopRouteFlowTuple;  // extracted from mTopRoute if valid Flow-Token is present
       ResponseContext mResponseContext;
-      int mTCSerial;
       bool mSessionCreatedEventSent;
       bool mSessionEstablishedEventSent;
       resip::KeyValueStore mKeyValueStore;

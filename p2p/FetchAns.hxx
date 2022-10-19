@@ -3,7 +3,8 @@
 
 #include "Message.hxx"
 #include "AbstractValue.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
 
 namespace p2p
 {
@@ -11,13 +12,13 @@ namespace p2p
 class FetchAns : public Message
 {
    public:
-      typedef std::list<resip::SharedPtr<AbstractValue> > AbstractValues;
+      typedef std::list<std::shared_ptr<AbstractValue>> AbstractValues;
       virtual MessageType getMessageType() const { return Message::FetchAnsType; }
 
       AbstractValues& values();
       const AbstractValues& values() const;
 
-      std::auto_ptr<Event> event()
+      std::unique_ptr<Event> event()
       {
          return wrap(this);
       }

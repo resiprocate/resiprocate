@@ -16,7 +16,6 @@ using namespace std;
 UserAgentClientPublication::UserAgentClientPublication(UserAgent& userAgent, DialogUsageManager& dum, unsigned int handle)
 : AppDialogSet(dum),
   mUserAgent(userAgent),
-  mDum(dum),
   mPublicationHandle(handle),
   mEnded(false)
 {

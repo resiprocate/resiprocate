@@ -39,7 +39,7 @@
     <ProjectGuid>{DBFE5A68-5C53-40F8-BA7E-26EF7CDE9686}</ProjectGuid>
     <RootNamespace>tfm</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'" Label="Configuration">
@@ -416,15 +416,13 @@
     <ClInclude Include="..\repro\WebAdminThread.hxx" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\contrib\cppunit\src\cppunit\cppunit_14_0.vcxproj">
+    <ProjectReference Include="..\contrib\cppunit\src\cppunit\cppunit_15_0.vcxproj">
       <Project>{d23d6465-7ea9-45fd-9784-54dbf8a1a5ce}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\contrib\Netxx-0.3.2\netxx_14_0.vcxproj">
+    <ProjectReference Include="..\contrib\Netxx-0.3.2\netxx_15_0.vcxproj">
       <Project>{9f26ed15-437c-4a8a-9062-75bf0e5a0f39}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\contrib\popt\popt_14_0.vcxproj">
+    <ProjectReference Include="..\contrib\popt\popt_15_0.vcxproj">
       <Project>{25d97d59-9407-af5e-355d-b60a17ae3567}</Project>
     </ProjectReference>
   </ItemGroup>

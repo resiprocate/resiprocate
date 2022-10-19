@@ -64,7 +64,7 @@ LocationServer::process(RequestContext& context)
    {
       TargetPtrList batch;
       std::map<resip::Data,resip::ContactList> outboundBatch;
-      UInt64 now = Timer::getTimeSecs();
+      uint64_t now = Timer::getTimeSecs();
       for(resip::ContactList::iterator i  = contacts.begin(); i != contacts.end(); ++i)
       {
          resip::ContactInstanceRecord contact = *i;
@@ -138,7 +138,7 @@ LocationServer::process(RequestContext& context)
          async->user() = inputUri.user();
          async->realm() = inputUri.host();
          async->domain() = inputUri.host();
-         std::auto_ptr<ApplicationMessage> app(async);
+         std::unique_ptr<ApplicationMessage> app(async);
          mUserInfoDispatcher->post(app);
          return WaitingForEvent;
       }

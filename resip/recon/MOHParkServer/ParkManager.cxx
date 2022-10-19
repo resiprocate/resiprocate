@@ -10,6 +10,8 @@
 #include <rutil/Logger.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -68,7 +70,7 @@ ParkManager::initializeConversationProfile(const NameAddr& uri, const Data& pass
       mConversationProfileHandle = 0;
    }
 
-   SharedPtr<ConversationProfile> parkConversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(mServer.mUserAgentMasterProfile));
+   auto parkConversationProfile = std::make_shared<ConversationProfile>(mServer.mUserAgentMasterProfile);
    parkConversationProfile->setDefaultRegistrationTime(registrationTime);  
    parkConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
    parkConversationProfile->setDefaultFrom(uri);
@@ -87,7 +89,7 @@ ParkManager::initializeConversationProfile(const NameAddr& uri, const Data& pass
    parkConversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
    parkConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
    mServer.buildSessionCapabilities(parkConversationProfile->sessionCaps());   
-   mConversationProfileHandle = mServer.mMyUserAgent->addConversationProfile(parkConversationProfile);
+   mConversationProfileHandle = mServer.mMyUserAgent->addConversationProfile(std::move(parkConversationProfile));
    mParkUri = uri;
 }
 
@@ -118,8 +120,8 @@ ParkManager::initializeOrbitConversationProfiles(unsigned long orbitStart,
 
    for(unsigned long orbit = mOrbitRangeStart; orbit < mOrbitRangeStart + mNumOrbits; orbit++)
    {
-      SharedPtr<ConversationProfile> orbitConversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(mServer.mUserAgentMasterProfile));
-      Data orbitData((UInt64)orbit);
+      auto orbitConversationProfile = std::make_shared<ConversationProfile>(mServer.mUserAgentMasterProfile);
+      Data orbitData((uint64_t)orbit);
       orbitConversationProfile->setDefaultRegistrationTime(registrationTime);  
       orbitConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
       orbitConversationProfile->setDefaultFrom(uri);
@@ -139,7 +141,7 @@ ParkManager::initializeOrbitConversationProfiles(unsigned long orbitStart,
       orbitConversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
       orbitConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
       mServer.buildSessionCapabilities(orbitConversationProfile->sessionCaps());      
-      mOrbitProfiles[orbit] = mServer.mMyUserAgent->addConversationProfile(orbitConversationProfile);
+      mOrbitProfiles[orbit] = mServer.mMyUserAgent->addConversationProfile(std::move(orbitConversationProfile));
 
       // If orbit is free - add to free list
       if(mOrbits.find(orbit) == mOrbits.end())      
@@ -307,7 +309,7 @@ ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessa
          mFreeOrbitList.push_back(freeorbit);
          InfoLog(PARKLOG_PREFIX << "parkParticipant: no valid orbit specified (orbit=" << orbit << ") redirecting to free orbit=" << freeorbit);
          NameAddr destination(mParkUri);
-         destination.uri().param(p_orbit) = Data((UInt64)freeorbit);
+         destination.uri().param(p_orbit) = Data((uint64_t)freeorbit);
          mServer.redirectParticipant(participantHandle, destination);
       }
       else
@@ -419,7 +421,7 @@ ParkManager::getActiveCallsInfo(CallInfoList& callInfos)
        {
           callInfos.push_back(ActiveCallInfo((*it2)->mParkedUri, 
                                              (*it2)->mParkerUri, 
-                                             Data("Parked at " + Data((UInt64)(it->first))), 
+                                             Data("Parked at " + Data((uint64_t)(it->first))), 
                                              (*it2)->mParticipantHandle, 
                                              it->second->mConversationHandle));
        }

@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "ConnectionManager.hxx"
 

@@ -11,8 +11,6 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
 #include <rutil/Data.hxx>
 #include <rutil/Mutex.hxx>
@@ -25,6 +23,10 @@
 #include "reTurn/ChannelManager.hxx"
 #include "reTurn/AsyncSocketBase.hxx"
 #include "TurnAsyncSocketHandler.hxx"
+
+#include <functional>
+#include <memory>
+#include <utility>
 
 #define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable
                      // Should also be calculation this on the fly
@@ -64,19 +66,22 @@ public:
    // Sets the local HmacKey, used to check the integrity of incoming STUN messages
    void setLocalPassword(const char* password);
 
+   // Software attribute
+   void setSoftware(const char* software);
+
    void connect(const std::string& address, unsigned short port);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    void bindRequest();
 
    // ICE connectivity check
-   void connectivityCheck(const StunTuple& targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
+   void connectivityCheck(const StunTuple& targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
 
    // Turn Allocation Methods
    void createAllocation(unsigned int lifetime = UnspecifiedLifetime,
                          unsigned int bandwidth = UnspecifiedBandwidth,
                          unsigned char requestedPortProps = StunMessage::PropsNone, 
-                         UInt64 reservationToken = UnspecifiedToken,
+                         uint64_t reservationToken = UnspecifiedToken,
                          StunTuple::TransportType requestedTransportType = StunTuple::None);
    void refreshAllocation(unsigned int lifetime);
    void destroyAllocation();
@@ -85,17 +90,17 @@ public:
    void setActiveDestination(const asio::ip::address& address, unsigned short port);
    void clearActiveDestination();
 
-   asio::ip::address& getConnectedAddress() { return mAsyncSocketBase.getConnectedAddress(); }
-   unsigned short getConnectedPort() { return mAsyncSocketBase.getConnectedPort(); }
+   asio::ip::address& getConnectedAddress() noexcept { return mAsyncSocketBase.getConnectedAddress(); }
+   unsigned short getConnectedPort() const noexcept { return mAsyncSocketBase.getConnectedPort(); }
 
    // Turn Send Methods
-   virtual void send(const char* buffer, unsigned int size);  // framed
-   virtual void sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);  // framed
+   virtual void send(const char* buffer, size_t size);  // framed
+   virtual void sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, size_t size);  // framed
 
-   virtual void sendUnframed(boost::shared_ptr<DataBuffer>& data);  // Send unframed data
-   virtual void sendFramed(boost::shared_ptr<DataBuffer>& data);
-   virtual void sendToUnframed(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
-   virtual void sendToFramed(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void sendUnframed(const std::shared_ptr<DataBuffer>& data);  // Send unframed data
+   virtual void sendFramed(const std::shared_ptr<DataBuffer>& data);
+   virtual void sendToUnframed(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
+   virtual void sendToFramed(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
 
    // Receive Methods
    //asio::error_code receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
@@ -104,11 +109,11 @@ public:
    virtual void close();
    virtual void turnReceive();
 
-   virtual void setOnBeforeSocketClosedFp(boost::function<void(unsigned int)> fp);
+   virtual void setOnBeforeSocketClosedFp(AsyncSocketBase::BeforeClosedHandler fp);
 
 protected:
 
-   void handleReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   void handleReceivedData(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
 
    asio::io_service& mIOService;
    TurnAsyncSocketHandler* mTurnAsyncSocketHandler;
@@ -122,6 +127,9 @@ protected:
    resip::Data mHmacKey;
    resip::Data mRealm;
    resip::Data mNonce;
+
+   // Attributes
+   resip::Data mSoftware;
 
    // Used to check integrity of incoming STUN messages
    resip::Data mLocalHmacKey;
@@ -143,7 +151,7 @@ private:
    resip::Mutex mMutex;
 
    // Request map (for retransmissions)
-   class RequestEntry : public boost::enable_shared_from_this<RequestEntry>
+   class RequestEntry : public std::enable_shared_from_this<RequestEntry>
    {
    public:
       RequestEntry(asio::io_service& ioService, TurnAsyncSocket* turnAsyncSocket, StunMessage* requestMessage, unsigned int rc, unsigned int retrans_iterval_ms, const StunTuple* dest=NULL);
@@ -163,7 +171,7 @@ private:
       const unsigned int mRc;
       const unsigned int mRetransIntervalMs;
    };
-   typedef std::map<UInt128, boost::shared_ptr<RequestEntry> > RequestMap;
+   typedef std::map<UInt128, std::shared_ptr<RequestEntry>> RequestMap;
    RequestMap mActiveRequestMap;
    friend class RequestEntry;
    void requestTimeout(UInt128 tid);
@@ -175,34 +183,36 @@ private:
    template < typename P, typename F > class weak_bind
    {
    public:
-      // !jjg! WARNING! if you are using boost::bind(..) to create the second
+      // !jjg! WARNING! if you are using std::bind(..) to create the second
       // argument for this constructor BE CAREFUL that you are passing 'this' and
       // not 'shared_from_this()' to the bind(..) -- otherwise you will defeat the
       // purpose of this class holding a weak_ptr
-      weak_bind<P,F>( boost::weak_ptr<P> parent, boost::function<F> func )
-         : mParent( parent ), mFunction( func ) {}
+      weak_bind<P,F>(std::weak_ptr<P> parent, std::function<F> func)
+         : mParent(std::move(parent)), mFunction(std::move(func))
+      {
+      }
 
       void operator()()
       {
-         if ( boost::shared_ptr< P > ptr = mParent.lock() )
+         if (std::shared_ptr<P> ptr = mParent.lock())
          {
-            if ( !mFunction.empty() )
+            if (mFunction)
                mFunction();
          }
       }
 
       void operator()(const asio::error_code& e)
       {
-         if ( boost::shared_ptr< P > ptr = mParent.lock() )
+         if (std::shared_ptr<P> ptr = mParent.lock())
          {
-            if ( !mFunction.empty() )
+            if (mFunction)
                mFunction(e);
          }
       }
 
    private:
-      boost::weak_ptr< P > mParent;
-      boost::function< F > mFunction;
+      std::weak_ptr<P> mParent;
+      std::function<F> mFunction;
    };
 
    asio::steady_timer mAllocationTimer;
@@ -219,27 +229,28 @@ private:
    void doRequestSharedSecret();
    void doSetUsernameAndPassword(resip::Data* username, resip::Data* password, bool shortTermAuth);
    void doSetLocalPassword(resip::Data* password);
+   void doSetSoftware(resip::Data* software);
    void doBindRequest();
-   void doConnectivityCheck(StunTuple* targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
+   void doConnectivityCheck(StunTuple* targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
    void doCreateAllocation(unsigned int lifetime = UnspecifiedLifetime,
                            unsigned int bandwidth = UnspecifiedBandwidth,
                            unsigned char requestedPortProps = StunMessage::PropsNone, 
-                           UInt64 reservationToken = 0,
+                           uint64_t reservationToken = 0,
                            StunTuple::TransportType requestedTransportType = StunTuple::None);
    void doRefreshAllocation(unsigned int lifetime);
    void doDestroyAllocation();
    void doSetActiveDestination(const asio::ip::address& address, unsigned short port);
    void doClearActiveDestination();
-   void doSendFramed(boost::shared_ptr<DataBuffer>& data);
-   void doSendToFramed(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   void doSendFramed(const std::shared_ptr<DataBuffer>& data);
+   void doSendToFramed(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    void doClose();
    void actualClose();
    void doChannelBinding(RemotePeer& remotePeer);
 
-   StunMessage* createNewStunMessage(UInt16 stunclass, UInt16 method, bool addAuthInfo=true);
+   StunMessage* createNewStunMessage(uint16_t stunclass, uint16_t method, bool addAuthInfo=true);
    void sendStunMessage(StunMessage* request, bool reTransmission=false, unsigned int numRetransmits=UDP_MAX_RETRANSMITS, unsigned int retrans_iterval_ms=DEFAULT_RETRANS_INTERVAL_MS, const StunTuple* targetAddress=NULL);
-   void sendToRemotePeer(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer>& data);
-   void sendOverChannel(unsigned short channel, boost::shared_ptr<DataBuffer>& data);  // send with turn framing
+   void sendToRemotePeer(RemotePeer& remotePeer, const std::shared_ptr<DataBuffer>& data);
+   void sendOverChannel(unsigned short channel, const std::shared_ptr<DataBuffer>& data);  // send with turn framing
 
    asio::error_code handleStunMessage(StunMessage& stunMessage);
    asio::error_code handleDataInd(StunMessage& stunMessage);

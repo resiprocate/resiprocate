@@ -1,7 +1,9 @@
 #ifndef MYUSERAGENT_HXX
 #define MYUSERAGENT_HXX
 
+#ifdef USE_SIPXTAPI
 #include <os/OsIntTypes.h>
+#endif
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
@@ -9,7 +11,6 @@
 
 #include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <resip/stack/Dispatcher.hxx>
 #include <resip/recon/UserAgent.hxx>
 
@@ -17,32 +18,38 @@
 #include "RegistrationForwarder.hxx"
 #include "SubscriptionForwarder.hxx"
 
+#include <memory>
+#include <utility>
+
 namespace reconserver
 {
 
 class MyUserAgent : public recon::UserAgent
 {
 public:
-   MyUserAgent(resip::ConfigParse& configParse, recon::ConversationManager* conversationManager, resip::SharedPtr<recon::UserAgentMasterProfile> profile);
+   MyUserAgent(reconserver::ReConServerConfig& configParse, recon::ConversationManager* conversationManager, std::shared_ptr<recon::UserAgentMasterProfile> profile);
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
    virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
    virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
-   virtual resip::SharedPtr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);
-   virtual resip::SharedPtr<recon::ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
+   virtual std::shared_ptr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);
+   virtual std::shared_ptr<recon::ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
    virtual void process(int timeoutMs);
 
-   virtual void addIncomingFeature(resip::SharedPtr<resip::DumFeature> f) { getDialogUsageManager().addIncomingFeature(f); };
+   virtual void addIncomingFeature(std::shared_ptr<resip::DumFeature> f) { getDialogUsageManager().addIncomingFeature(std::move(f)); };
 
-   virtual resip::SharedPtr<resip::Dispatcher> initDispatcher(std::auto_ptr<resip::Worker> prototype,
+   virtual std::shared_ptr<resip::Dispatcher> initDispatcher(std::unique_ptr<resip::Worker> prototype,
                   int workers=2,
                   bool startImmediately=true);
+
+protected:
+   friend class MyConversationManager;
 
 private:
    friend class B2BCallManager;
 
    unsigned int mMaxRegLoops;
-   resip::SharedPtr<RegistrationForwarder> mRegistrationForwarder;
-   resip::SharedPtr<SubscriptionForwarder> mSubscriptionForwarder;
+   std::shared_ptr<RegistrationForwarder> mRegistrationForwarder;
+   std::shared_ptr<SubscriptionForwarder> mSubscriptionForwarder;
 
    B2BCallManager *getB2BCallManager();
 };

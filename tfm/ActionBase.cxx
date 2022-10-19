@@ -23,7 +23,7 @@ ActionBase::addNext(ActionBase* action)
 }
       
 void 
-ActionBase::exec(boost::shared_ptr<Event> event)
+ActionBase::exec(std::shared_ptr<Event> event)
 {
    (*this)(event);
    if (mNext != 0)

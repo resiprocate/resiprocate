@@ -113,10 +113,10 @@ main(int arc, char** argv)
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
       
-      auto_ptr<SipMessage> request(TestSupport::makeMessage(txt.c_str()));      
+      unique_ptr<SipMessage> request(TestSupport::makeMessage(txt.c_str()));
 
       Data realm = "localhost";
-      auto_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, false));
+      unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, false));
 
       assert(challenge->exists(h_ProxyAuthenticates));
       assert(challenge->header(h_ProxyAuthenticates).size() == 1);

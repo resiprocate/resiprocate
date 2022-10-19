@@ -22,7 +22,9 @@
 #include "resip/stack/WsConnectionValidator.hxx"
 #include "resip/stack/WsCookieContextFactory.hxx"
 #include "rutil/dns/DnsStub.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
+#include <utility>
 
 /**
     Let external applications know that this version of the stack
@@ -272,7 +274,7 @@ class SipStack : public FdSetIOObserver
         @details For instance, the stack cannot process messages because
         there are no transports associated with the stack.
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             /**
@@ -290,7 +292,7 @@ class SipStack : public FdSetIOObserver
             /**
               @brief what gets called instead of the pure virtual in the base
               */
-            const char* name() const { return "SipStack::Exception"; }
+            const char* name() const noexcept override { return "SipStack::Exception"; }
       };
 
       /**
@@ -301,11 +303,11 @@ class SipStack : public FdSetIOObserver
                                       you can call setSipMessageLoggingHandler on the
                                       Transport pointer returned from addTransport
 
-         @param handler               SharedPtr to a handler to call for inbound and
+         @param handler               std::shared_ptr to a handler to call for inbound and
                                       outbound SIP messages for all transports added
                                       after calling this.
       */
-      void setTransportSipMessageLoggingHandler(SharedPtr<Transport::SipMessageLoggingHandler> handler) { mTransportSipMessageLoggingHandler = handler; }
+      void setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept { mTransportSipMessageLoggingHandler = std::move(handler); }
 
       /**
          Used by the application to add in a new built-in transport.  The transport is
@@ -364,9 +366,9 @@ class SipStack : public FdSetIOObserver
                               const Data& certificateFilename = "", const Data& privateKeyFilename = "",
                               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                               bool useEmailAsSIP = false,
-                              SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
-                              SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(),
-                              const Data& netns = Data::Empty
+                              std::shared_ptr<WsConnectionValidator> = nullptr,
+                              std::shared_ptr<WsCookieContextFactory> = nullptr,
+                              const Data& netNs = Data::Empty
                              );
 
       /**
@@ -376,7 +378,7 @@ class SipStack : public FdSetIOObserver
           @param transport Pointer to an externally created transport.  SipStack
                            assumes ownership.
       */
-      void addTransport(std::auto_ptr<Transport> transport);
+      void addTransport(std::unique_ptr<Transport> transport);
 
       /**
           Used to remove a previously added transport.
@@ -472,14 +474,14 @@ class SipStack : public FdSetIOObserver
       */
       void send(const SipMessage& msg, TransactionUser* tu=0);
 
-      void send(std::auto_ptr<SipMessage> msg, TransactionUser* tu = 0);
+      void send(std::unique_ptr<SipMessage> msg, TransactionUser* tu = 0);
       
       /** @brief this is only if you want to send to a destination not in the route.
           @note You probably don't want to use it. */
-      void sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu=0);
+      void sendTo(std::unique_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu=0);
       /** @brief this is only if you want to send to a destination not in the route.
           @note You probably don't want to use it. */
-      void sendTo(std::auto_ptr<SipMessage> msg, const Tuple& tuple, TransactionUser* tu=0);
+      void sendTo(std::unique_ptr<SipMessage> msg, const Tuple& tuple, TransactionUser* tu=0);
 
       /**
           @brief send a message to a destination not in the route
@@ -543,7 +545,7 @@ class SipStack : public FdSetIOObserver
 
           @param tu    TransactionUser to post to.
       */
-      void post(std::auto_ptr<ApplicationMessage> message,
+      void post(std::unique_ptr<ApplicationMessage> message,
                 unsigned int secondsLater,
                 TransactionUser* tu=0);
 
@@ -559,7 +561,7 @@ class SipStack : public FdSetIOObserver
 
           @param tu      TransactionUser to post to.
       */
-      void postMS(const std::auto_ptr<ApplicationMessage> message,
+      void postMS(std::unique_ptr<ApplicationMessage> message,
                   unsigned int ms,
                   TransactionUser* tu=0);
 
@@ -570,7 +572,7 @@ class SipStack : public FdSetIOObserver
           
           @param message ApplicationMessage to post
       */
-      void post(std::auto_ptr<ApplicationMessage> message);
+      void post(std::unique_ptr<ApplicationMessage> message);
 
       /**
           @brief Makes the message available to the TU later
@@ -1190,7 +1192,7 @@ class SipStack : public FdSetIOObserver
 
       unsigned int mNextTransportKey;
 
-      SharedPtr<Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
+      std::shared_ptr<Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
 
       friend class Executive;
       friend class StatelessHandler;

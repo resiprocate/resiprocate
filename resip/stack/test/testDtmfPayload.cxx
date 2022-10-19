@@ -69,7 +69,10 @@ main(int argc, char* argv[])
       try
       {
          DtmfPayloadContents payload(hfv, type);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
          char button = payload.dtmfPayload().getButton();
+#pragma GCC diagnostic pop
          ErrLog(<<"Failed to detect a bad DTMF signal");
          assert(0);
       }

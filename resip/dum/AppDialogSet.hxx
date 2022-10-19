@@ -8,6 +8,8 @@
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/DumCommand.hxx"
 
+#include <memory>
+
 namespace resip
 {
 
@@ -23,11 +25,15 @@ class AppDialogSet : public Handled
       virtual void destroy();
 
       virtual void end();
+      virtual void end(const Data& endReason);  // Adds a Reason (RFC3326) header if this results in a BYE or CANCEL
+      virtual void end(const ParserContainer<Token>& endReasons); // Adds Reason (RFC3326) header(s) if this results in a BYE or CANCEL
 
       // Asynchronously calls end() through a DUM command
       virtual void endCommand();
-      
-      virtual SharedPtr<UserProfile> getUserProfile();
+      virtual void endCommand(const Data& reason); // Adds a Reason (RFC3326) header if this results in a BYE or CANCEL
+      virtual void endCommand(const ParserContainer<Token>& endReasons); // Adds Reason (RFC3326) header(s) if this results in a BYE or CANCEL
+
+      virtual std::shared_ptr<UserProfile> getUserProfile();
 
       virtual AppDialog* createAppDialog(const SipMessage&);
 
@@ -43,8 +49,10 @@ class AppDialogSet : public Handled
       class AppDialogSetEndCommand : public DumCommandAdapter
       {
       public:
-         AppDialogSetEndCommand(const AppDialogSetHandle& dialogSet)
-            : mAppDialogSet(dialogSet)
+         AppDialogSetEndCommand(const AppDialogSetHandle& dialogSet, const Data& userEndReason = Data::Empty, ParserContainer<Token> userEndReasons = ParserContainer<Token>())
+            : mAppDialogSet(dialogSet),
+              mUserEndReason(userEndReason),
+              mUserEndReasons(userEndReasons)
          {
          }
       
@@ -52,7 +60,18 @@ class AppDialogSet : public Handled
          {
             if(mAppDialogSet.isValid())
             {
-               mAppDialogSet->end();
+               if (mUserEndReasons.size() > 0)
+               {
+                  mAppDialogSet->end(mUserEndReasons);
+               }
+               else if(mUserEndReason.size() > 0)
+               {
+                  mAppDialogSet->end(mUserEndReason);
+               }
+               else
+               {
+                  mAppDialogSet->end();
+               }
             }
          }
       
@@ -62,6 +81,8 @@ class AppDialogSet : public Handled
          }
       private:
          AppDialogSetHandle mAppDialogSet;
+         Data mUserEndReason;
+         ParserContainer<Token> mUserEndReasons;
       };
 
       AppDialogSet(DialogUsageManager& dum);
@@ -71,7 +92,7 @@ class AppDialogSet : public Handled
       // This is called by the DialogUsageManager to select an userProfile to assign to a UAS DialogSet.
       // The application should not call this directly, but should override it, in order to assign 
       // an userProfile other than the MasterProfile
-      virtual SharedPtr<UserProfile> selectUASUserProfile(const SipMessage&); 
+      virtual std::shared_ptr<UserProfile> selectUASUserProfile(const SipMessage&); 
 
    private:
       /// Prepare for association with a different dialog set id.  Need this

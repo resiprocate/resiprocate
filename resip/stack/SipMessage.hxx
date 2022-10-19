@@ -25,7 +25,6 @@
 #include "rutil/StlPoolAllocator.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
-#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
@@ -199,7 +198,7 @@ class SipMessage : public TransactionMessage
       /**
       @brief Base exception for SipMessage related exceptions
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             /**
@@ -212,7 +211,7 @@ class SipMessage : public TransactionMessage
             @brief returns the class name of the exception instance
             @return the class name of the instance
             */
-            const char* name() const { return "SipMessage::Exception"; }
+            const char* name() const noexcept override { return "SipMessage::Exception"; }
       };
 
       /// Mark message as internally generated
@@ -495,19 +494,19 @@ class SipMessage : public TransactionMessage
         **/
       Contents* getContents() const;
       /// Removes the contents from the message
-      std::auto_ptr<Contents> releaseContents();
+      std::unique_ptr<Contents> releaseContents();
 
       /// @brief Set the contents of the message
       /// @param contents to store in the message
       void setContents(const Contents* contents);
       /// @brief Set the contents of the message
       /// @param contents to store in the message
-      void setContents(std::auto_ptr<Contents> contents);
+      void setContents(std::unique_ptr<Contents> contents);
 
       /// @internal transport interface
       void setStartLine(const char* start, int len); 
 
-      void setBody(const char* start, UInt32 len); 
+      void setBody(const char* start, uint32_t len); 
       
       /// Add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
@@ -536,7 +535,7 @@ class SipMessage : public TransactionMessage
 
       void addBuffer(char* buf);
 
-      UInt64 getCreatedTimeMicroSec() const {return mCreatedTime;}
+      uint64_t getCreatedTimeMicroSec() const {return mCreatedTime;}
 
       /// deal with a notion of an "out-of-band" forced target for SIP routing
       void setForceTarget(const Uri& uri);
@@ -553,19 +552,19 @@ class SipMessage : public TransactionMessage
       const CookieList& getWsCookies() const { return mWsCookies; }
       void setWsCookies(const CookieList& wsCookies) { mWsCookies = wsCookies; }
 
-      SharedPtr<WsCookieContext> getWsCookieContext() const { return mWsCookieContext; }
-      void setWsCookieContext(SharedPtr<WsCookieContext> wsCookieContext) { mWsCookieContext = wsCookieContext; }
+      std::shared_ptr<WsCookieContext> getWsCookieContext() const noexcept { return mWsCookieContext; }
+      void setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext) noexcept { mWsCookieContext = std::move(wsCookieContext); }
 
       Data getCanonicalIdentityString() const;
       
       SipMessage& mergeUri(const Uri& source);      
 
-      void setSecurityAttributes(std::auto_ptr<SecurityAttributes>);
-      const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
+      void setSecurityAttributes(std::unique_ptr<SecurityAttributes>) noexcept;
+      const SecurityAttributes* getSecurityAttributes() const noexcept { return mSecurityAttributes.get(); }
 
       /// @brief Call a MessageDecorator to process the message before it is
       /// sent to the transport
-      void addOutboundDecorator(std::auto_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
+      void addOutboundDecorator(std::unique_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
       void clearOutboundDecorators();
       void callOutboundDecorators(const Tuple &src, 
                                     const Tuple &dest,
@@ -716,7 +715,7 @@ class SipMessage : public TransactionMessage
       bool mInvalid;
       resip::Data* mReason;
       
-      UInt64 mCreatedTime;
+      uint64_t mCreatedTime;
 
       // used when next element is a strict router OR 
       // client forces next hop OOB
@@ -732,9 +731,9 @@ class SipMessage : public TransactionMessage
       CookieList mWsCookies;
 
       // parsed cookie authentication elements associated with this message from the WebSocket Upgrade request
-      SharedPtr<WsCookieContext> mWsCookieContext;
+      std::shared_ptr<WsCookieContext> mWsCookieContext;
 
-      std::auto_ptr<SecurityAttributes> mSecurityAttributes;
+      std::unique_ptr<SecurityAttributes> mSecurityAttributes;
 
       std::vector<MessageDecorator*> mOutboundDecorators;
 

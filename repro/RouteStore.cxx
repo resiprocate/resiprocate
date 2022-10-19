@@ -441,7 +441,7 @@ RouteStore::buildKey(const resip::Data& method,
    // multiple entries with the same method,event and matchingPattern.  This is desirable in 
    // cases where you want multiple destinations for a particular route.
    // Old Format:  Data pKey = method+":"+event+":"+matchingPattern;
-   Data pKey = ";" + Data((Int32)order) + ":" + method + " : " + event + " : " + matchingPattern;
+   Data pKey = ";" + Data((int32_t)order) + ":" + method + " : " + event + " : " + matchingPattern;
    return pKey;
 }
 

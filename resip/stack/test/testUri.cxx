@@ -50,7 +50,7 @@ main(int argc, char* argv[])
 
 
        
-       auto_ptr<SipMessage> msg(Helper::makeRegister(alice,alice,aliceContact));
+       unique_ptr<SipMessage> msg(Helper::makeRegister(alice,alice,aliceContact));
 
        cout << *msg << endl;
 

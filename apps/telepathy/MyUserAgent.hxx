@@ -37,7 +37,7 @@ class MyUserAgent : public QObject, public recon::UserAgent, public resip::Threa
 {
    Q_OBJECT
 public:
-   MyUserAgent(recon::ConversationManager* conversationManager, resip::SharedPtr<recon::UserAgentMasterProfile> profile, Connection& connection, resip::SharedPtr<MyInstantMessage> instantMessage);
+   MyUserAgent(recon::ConversationManager* conversationManager, std::shared_ptr<recon::UserAgentMasterProfile> profile, Connection& connection, std::shared_ptr<MyInstantMessage> instantMessage);
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
    virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
    virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);

@@ -82,7 +82,7 @@ protected:
    virtual void addDomains(resip::TransactionUser& tu);
    virtual bool addTransports(bool& allTransportsSpecifyRecordRoute);
    // Override this and examine the processor name to selectively add custom processors before or after the standard ones
-   virtual void addProcessor(repro::ProcessorChain& chain, std::auto_ptr<repro::Processor> processor);
+   virtual void addProcessor(repro::ProcessorChain& chain, std::unique_ptr<repro::Processor> processor);
    virtual void makeRequestProcessorChain(repro::ProcessorChain& chain);
    virtual void makeResponseProcessorChain(repro::ProcessorChain& chain);
    virtual void makeTargetProcessorChain(repro::ProcessorChain& chain);
@@ -126,10 +126,10 @@ protected:
    std::list<CommandServer*> mCommandServerList;
    CommandServerThread* mCommandServerThread;
    resip::CongestionManager* mCongestionManager;
-   std::vector<Plugin*> mPlugins;
+   std::shared_ptr<ReproPluginManager> mPluginManager;
    typedef std::map<unsigned int, resip::NameAddr> TransportRecordRouteMap;
    TransportRecordRouteMap mStartupTransportRecordRoutes;
-   resip::SharedPtr<resip::DomainMatcher> mDomainMatcher;
+   std::shared_ptr<resip::DomainMatcher> mDomainMatcher;
    resip::Data mDefaultRealm;
 };
 

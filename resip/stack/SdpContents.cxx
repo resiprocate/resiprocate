@@ -2,7 +2,10 @@
 #include "config.h"
 #endif
 
+#include <algorithm>
+
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/TrickleIceContents.hxx"
 #include "resip/stack/Helper.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/DataStream.hxx"
@@ -14,6 +17,18 @@
 
 using namespace resip;
 using namespace std;
+
+const SdpContents::Session::Direction SdpContents::Session::Direction::INACTIVE("inactive", false, false);
+const SdpContents::Session::Direction SdpContents::Session::Direction::SENDONLY("sendonly", true, false);
+const SdpContents::Session::Direction SdpContents::Session::Direction::RECVONLY("recvonly", false, true);
+const SdpContents::Session::Direction SdpContents::Session::Direction::SENDRECV("sendrecv", true, true);
+
+const std::map<Data, std::reference_wrapper<const SdpContents::Session::Direction>> SdpContents::Session::Direction::directions = {
+                           SdpContents::Session::Direction::INACTIVE.tuple(),
+                           SdpContents::Session::Direction::SENDONLY.tuple(),
+                           SdpContents::Session::Direction::RECVONLY.tuple(),
+                           SdpContents::Session::Direction::SENDRECV.tuple()
+                  };
 
 const SdpContents SdpContents::Empty;
 
@@ -252,8 +267,8 @@ SdpContents::Session::Origin::operator=(const Origin& rhs)
 
 
 SdpContents::Session::Origin::Origin(const Data& user,
-                                     const UInt64& sessionId,
-                                     const UInt64& version,
+                                     const uint64_t& sessionId,
+                                     const uint64_t& version,
                                      AddrType addr,
                                      const Data& address)
    : mUser(user),
@@ -1139,6 +1154,19 @@ SdpContents::Session::encode(EncodeStream& s) const
    return s;
 }
 
+std::list<std::reference_wrapper<SdpContents::Session::Medium>>
+SdpContents::Session::getMediaByType(const Data& type)
+{
+   std::list<std::reference_wrapper<SdpContents::Session::Medium>> r;
+   std::for_each(mMedia.begin(), mMedia.end(), [&r, &type](SdpContents::Session::Medium& m){
+      if(m.name() == type)
+      {
+         r.push_back(std::ref(m));
+      }
+   });
+   return r;
+}
+
 void
 SdpContents::Session::addEmail(const Email& email)
 {
@@ -1210,6 +1238,276 @@ const list<Data>&
 SdpContents::Session::getValues(const Data& key) const
 {
    return mAttributeHelper.getValues(key);
+}
+
+const SdpContents::Session::Direction&
+SdpContents::Session::getDirection() const
+{
+   for(const Direction& k : Direction::ordered())
+   {
+      if(exists(k.name()))
+      {
+         return k;
+      }
+   }
+
+   return Direction::SENDRECV;
+}
+
+const SdpContents::Session::Direction&
+SdpContents::Session::Medium::getDirection() const
+{
+   for(const Direction& k : Direction::ordered())
+   {
+      if(exists(k.name()))
+      {
+         return k;
+      }
+   }
+
+   if(mSession)
+   {
+      return mSession->getDirection();
+   }
+   else
+   {
+      return Direction::SENDRECV;
+   }
+}
+
+
+const SdpContents::Session::Direction&
+SdpContents::Session::Medium::getDirection(const Direction& sessionDefault) const
+{
+   for(const Direction& k : Direction::ordered())
+   {
+      if(exists(k.name()))
+      {
+         return k;
+      }
+   }
+
+   return sessionDefault;
+}
+
+SdpContents::Session::DirectionList
+SdpContents::Session::getDirections() const
+{
+   SdpContents::Session::DirectionList directions;
+   const Direction& sessionDefault = getDirection();
+
+   for(auto& m : mMedia)
+   {
+      directions.push_back(m.getDirection(sessionDefault).cref);
+   }
+
+   return directions;
+}
+
+SdpContents::Session::DirectionList
+SdpContents::Session::getNetDirections(const SdpContents& remote) const
+{
+   SdpContents::Session::DirectionList localDirections = getDirections();
+   SdpContents::Session::DirectionList remoteDirections = remote.session().getDirections();
+
+   if(localDirections.size() != remoteDirections.size())
+   {
+      WarningLog(<<"SDP media count mismatch: local = " << localDirections.size()
+               << " and remote = " << remoteDirections.size());
+   }
+
+   SdpContents::Session::DirectionList result;
+   auto iLocal = localDirections.cbegin();
+   auto iRemote = remoteDirections.cbegin();
+   while(iLocal != localDirections.cend() && iRemote != remoteDirections.cend())
+   {
+      const Direction& _iLocal = *iLocal;
+      const Direction& _iRemote = *iRemote;
+      if(_iLocal == Direction::INACTIVE || _iRemote == Direction::INACTIVE)
+      {
+         result.push_back(Direction::INACTIVE.cref);
+      }
+      else if(_iLocal == Direction::SENDONLY)
+      {
+         result.push_back(Direction::SENDONLY.cref);
+      }
+      else if(_iLocal == Direction::RECVONLY || _iRemote == Direction::SENDONLY)
+      {
+         result.push_back(Direction::RECVONLY.cref);
+      }
+      else if(_iRemote == Direction::RECVONLY)
+      {
+         result.push_back(Direction::SENDONLY.cref);
+      }
+      else
+      {
+         result.push_back(Direction::SENDRECV.cref);
+      }
+
+      iLocal++;
+      iRemote++;
+   }
+
+   return result;
+}
+
+const SdpContents::Session::Direction&
+SdpContents::Session::getDirection(const std::set<Data> types,
+               const std::set<Data> protocolTypes) const
+{
+   const Direction& sessionDefault = getDirection();
+
+   std::set<Data> directions;
+   for(const auto& m : mMedia)
+   {
+      if((types.empty() || types.find(m.name())!=types.end()) &&
+         (protocolTypes.empty() || protocolTypes.find(m.protocol())!=protocolTypes.end()) &&
+         m.getConnections().size() > 0 &&
+         m.port() != 0)
+      {
+         directions.insert(m.getDirection(sessionDefault).name());
+      }
+   }
+
+   // Identify the strongest direction attribute in the result set
+   for(const Direction& k : Direction::ordered())
+   {
+      if(directions.find(k.name()) != directions.end())
+      {
+         return k;
+      }
+   }
+   return sessionDefault;
+}
+
+std::set<Data>
+SdpContents::Session::getMediaStreamLabels() const
+{
+   std::set<Data> labels;
+   for (std::list<resip::SdpContents::Session::Medium>::const_iterator it = mMedia.cbegin(); it != mMedia.cend(); it++)
+   {
+      const resip::SdpContents::Session::Medium& m = *it;
+      if(m.name().caseInsensitiveTokenCompare("video") && m.exists("label"))
+      {
+         const std::list<Data>& _labels = m.getValues("label");
+         labels.insert(_labels.begin(), _labels.end());
+      }
+   }
+   return labels;
+}
+
+bool
+SdpContents::Session::isWebRTC() const
+{
+   std::set<resip::Data> mediumTransports;
+   for(SdpContents::Session::MediumContainer::const_iterator it = mMedia.cbegin();
+         it != mMedia.cend();
+         it++)
+   {
+      const SdpContents::Session::Medium& m = *it;
+      mediumTransports.insert(m.protocol());
+   }
+   return std::find(mediumTransports.cbegin(),
+      mediumTransports.end(),
+      "RTP/SAVPF") != mediumTransports.end();
+}
+
+bool
+SdpContents::Session::isTrickleIceSupported() const
+{
+   if(!exists("ice-options"))
+   {
+      return false;
+   }
+   auto opts = getValues("ice-options");
+   for(auto opt = opts.cbegin(); opt != opts.cend(); opt++)
+   {
+      if(*opt == "trickle")
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+void
+SdpContents::Session::transformCOMedia(const Data& setupDirection, const Data& cOMediaAttribute)
+{
+   for(SdpContents::Session::MediumContainer::iterator it = mMedia.begin();
+         it != mMedia.end();
+         it++)
+   {
+      SdpContents::Session::Medium& m = *it;
+      m.port() = 9;
+      m.addAttribute(cOMediaAttribute, setupDirection);
+   }
+}
+
+void
+SdpContents::Session::transformLocalHold(bool holding)
+{
+   SdpContents::Session::MediumContainer::iterator it = mMedia.begin();
+   for(;it != mMedia.end(); it++)
+   {
+      SdpContents::Session::Medium& m = *it;
+      if(holding)
+      {
+         if(m.exists("sendrecv"))
+         {
+            m.clearAttribute("sendrecv");
+            m.addAttribute("sendonly");
+         }
+         if(m.exists("recvonly"))
+         {
+            m.clearAttribute("recvonly");
+            m.addAttribute("inactive");
+         }
+      }
+      else
+      {
+         if(m.exists("sendonly"))
+         {
+            m.clearAttribute("sendonly");
+            m.addAttribute("sendrecv");
+         }
+         if(m.exists("inactive"))
+         {
+            m.clearAttribute("inactive");
+            m.addAttribute("recvonly");
+         }
+      }
+   }
+}
+
+const SdpContents::Session::Medium*
+SdpContents::Session::getMediumByMid(const Data& mid) const
+{
+   for(auto _m = mMedia.cbegin(); _m != mMedia.end(); _m++)
+   {
+      if(_m->exists("mid") && _m->getValues("mid").front() == mid)
+      {
+         return &(*_m);
+      }
+   }
+   return nullptr;
+}
+
+std::shared_ptr<TrickleIceContents>
+SdpContents::Session::makeIceFragment(const Data& fragment,
+               unsigned int lineIndex, const Data& mid)
+{
+   std::shared_ptr<TrickleIceContents> ret;
+   const Medium* m = getMediumByMid(mid);
+   if(m && m->exists("ice-ufrag") && m->exists("ice-pwd"))
+   {
+      ret = std::make_shared<TrickleIceContents>();
+      ret->addAttribute(Data("ice-ufrag"), m->getValues("ice-ufrag").front());
+      ret->addAttribute(Data("ice-pwd"), m->getValues("ice-pwd").front());
+      Medium _m(m->name(), m->port(), m->multicast(), m->protocol());
+      _m.addAttribute("candidate", fragment.substr(strlen("candidate:")));
+      ret->addMedium(_m);
+   }
+   return ret;
 }
 
 SdpContents::Session::Medium::Medium(const Data& name,
@@ -1858,7 +2156,7 @@ Codec::CodecMap& Codec::getStaticCodecs()
       //
       // Build map of static codecs as defined in RFC 3551
       //
-      sStaticCodecs = std::auto_ptr<CodecMap>(new CodecMap);
+      sStaticCodecs = std::unique_ptr<CodecMap>(new CodecMap);
 
       // Audio codecs
       sStaticCodecs->insert(make_pair(0,Codec("PCMU",0,8000)));
@@ -1936,7 +2234,7 @@ const Codec Codec::TelephoneEvent("telephone-event", 101, 8000);
 const Codec Codec::FrfDialedDigit("frf-dialed-event",102, 8000);
 
 bool Codec::sStaticCodecsCreated = false;
-std::auto_ptr<Codec::CodecMap> Codec::sStaticCodecs;
+std::unique_ptr<Codec::CodecMap> Codec::sStaticCodecs;
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

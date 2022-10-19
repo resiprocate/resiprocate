@@ -79,7 +79,7 @@ class MyAsyncProcessor : public AsyncProcessor
             // Dispatch async request to worker thread pool
             MyAsyncProcessorAsyncMessage* async = new MyAsyncProcessorAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy());
             async->mDataRequiredToCallBlockingFunction = "foo";
-            mAsyncDispatcher->post(std::auto_ptr<ApplicationMessage>(async));
+            mAsyncDispatcher->post(std::unique_ptr<ApplicationMessage>(async));
             return WaitingForEvent;
          }
       }

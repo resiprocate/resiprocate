@@ -14,7 +14,7 @@ class RROverlay;
 class DnsCnameRecord : public DnsResourceRecord
 {
    public:
-      class CnameException : public BaseException
+      class CnameException final : public BaseException
       {
          public:
             CnameException(const Data& msg, const Data& file, const int line)
@@ -22,7 +22,7 @@ class DnsCnameRecord : public DnsResourceRecord
             {
             }
             
-            const char* name() const { return "CnameException"; }
+            const char* name() const noexcept override { return "CnameException"; }
       };
 
       DnsCnameRecord(const RROverlay&);

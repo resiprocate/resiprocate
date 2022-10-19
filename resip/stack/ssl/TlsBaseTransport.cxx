@@ -65,7 +65,14 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
          break;
       case SecurityTypes::TLSv1:
          DebugLog(<<"Using TLSv1_method");
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
          mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
          break;
       default:
          throw invalid_argument("Unrecognised SecurityTypes::SSLType value");
@@ -152,7 +159,7 @@ TlsBaseTransport::setPeerCertificateVerificationCallback(
 Connection* 
 TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
-   resip_assert(this);
+   resip_assert_not_null(this);
    Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
                                         tlsDomain(), mSslType, mCompression );
    return conn;

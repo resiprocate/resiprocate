@@ -5,7 +5,6 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/bind.hpp>
 
 #include "AsyncSocketBase.hxx"
 
@@ -14,21 +13,20 @@ namespace reTurn {
 class AsyncUdpSocketBase : public AsyncSocketBase
 {
 public:
-   AsyncUdpSocketBase(asio::io_service& ioService); 
-   virtual ~AsyncUdpSocketBase();
+   explicit AsyncUdpSocketBase(asio::io_service& ioService);
 
-   virtual unsigned int getSocketDescriptor();
+   unsigned int getSocketDescriptor() override;
 
-   virtual asio::error_code bind(const asio::ip::address& address, unsigned short port);
-   virtual void connect(const std::string& address, unsigned short port);  
+   asio::error_code bind(const asio::ip::address& address, unsigned short port) override;
+   void connect(const std::string& address, unsigned short port) override;
 
-   virtual void transportReceive();
-   virtual void transportFramedReceive();
-   virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
-   virtual void transportClose();
+   void transportReceive() override;
+   void transportFramedReceive() override;
+   void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers) override;
+   void transportClose() override;
 
-   virtual const asio::ip::address getSenderEndpointAddress();
-   virtual unsigned short getSenderEndpointPort();
+   asio::ip::address getSenderEndpointAddress() override;
+   unsigned short getSenderEndpointPort() override;
 
 protected:
    asio::ip::udp::socket mSocket;
@@ -37,8 +35,8 @@ protected:
    /// Endpoint info for current sender
    asio::ip::udp::endpoint mSenderEndpoint;
 
-   virtual void handleUdpResolve(const asio::error_code& ec,
-                                 asio::ip::udp::resolver::iterator endpoint_iterator);
+   void handleUdpResolve(const asio::error_code& ec,
+                         asio::ip::udp::resolver::iterator endpoint_iterator) override;
 
 private:
 

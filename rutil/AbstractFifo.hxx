@@ -66,14 +66,14 @@ class FifoStatsInterface
          several), 3 might indicate a particular TU's fifo, etc.
          These are intended for use by CongestionManager only.
       */
-      inline UInt8 getRole() const {return mRole;}
+      inline uint8_t getRole() const {return mRole;}
 
       /**
          @internal
          Set this fifo's role-number.
          @see getRole()
       */
-      inline void setRole(UInt8 role) {mRole=role;}
+      inline void setRole(uint8_t role) {mRole=role;}
 
       /**
          Sets the description for this fifo. This is used in the logging for
@@ -94,7 +94,7 @@ class FifoStatsInterface
 
    protected:
       Data mDescription;
-      UInt8 mRole;
+      uint8_t mRole;
 };
 
 /**
@@ -221,7 +221,7 @@ class AbstractFifo : public FifoStatsInterface
          // Wait util there are messages available.
          while (mFifo.empty())
          {
-            mCondition.wait(mMutex);
+            mCondition.wait(lock);
          }
 
          // Return the first message on the fifo.
@@ -261,8 +261,8 @@ class AbstractFifo : public FifoStatsInterface
             return true;
          }
 
-         const UInt64 begin(Timer::getTimeMs());
-         const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
+         const auto begin = std::chrono::steady_clock::now();
+         const auto end = begin + std::chrono::milliseconds(ms);
          Lock lock(mMutex); (void)lock;
          onFifoPolled();
 
@@ -273,16 +273,14 @@ class AbstractFifo : public FifoStatsInterface
             {
                return false;
             }
-            const UInt64 now(Timer::getTimeMs());
+            auto now = std::chrono::steady_clock::now();
             if(now >= end)
             {
                 return false;
             }
       
-            unsigned int timeout((unsigned int)(end - now));
-                    
             // bail if total wait time exceeds limit
-            bool signaled = mCondition.wait(mMutex, timeout);
+            bool signaled = mCondition.wait_until(lock, end) == std::cv_status::no_timeout;
             if (!signaled)
             {
                return false;
@@ -306,7 +304,7 @@ class AbstractFifo : public FifoStatsInterface
          resip_assert(other.empty());
          while (mFifo.empty())
          {
-            mCondition.wait(mMutex);
+            mCondition.wait(lock);
          }
 
          if(mFifo.size() <= max)
@@ -335,8 +333,8 @@ class AbstractFifo : public FifoStatsInterface
          }
 
          resip_assert(other.empty());
-         const UInt64 begin(Timer::getTimeMs());
-         const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
+         const auto begin = std::chrono::steady_clock::now();
+         const auto end = begin + std::chrono::milliseconds(ms); // !kh! ms should've been unsigned :(
          Lock lock(mMutex); (void)lock;
          onFifoPolled();
 
@@ -347,16 +345,14 @@ class AbstractFifo : public FifoStatsInterface
             {
                return false;
             }
-            const UInt64 now(Timer::getTimeMs());
+            const auto now = std::chrono::steady_clock::now();
             if(now >= end)
             {
                 return false;
             }
 
-            unsigned int timeout((unsigned int)(end - now));
-                    
             // bail if total wait time exceeds limit
-            bool signaled = mCondition.wait(mMutex, timeout);
+            bool signaled = mCondition.wait_until(lock, end) == std::cv_status::no_timeout;
             if (!signaled)
             {
                return false;
@@ -385,7 +381,7 @@ class AbstractFifo : public FifoStatsInterface
       {
          Lock lock(mMutex); (void)lock;
          mFifo.push_back(item);
-         mCondition.signal();
+         mCondition.notify_one();
          onMessagePushed(1);
          return mFifo.size();
       }
@@ -408,7 +404,7 @@ class AbstractFifo : public FifoStatsInterface
                items.pop_front();
             }
          }
-         mCondition.signal();
+         mCondition.notify_one();
          onMessagePushed((int)size);
          return mFifo.size();
       }
@@ -420,13 +416,13 @@ class AbstractFifo : public FifoStatsInterface
       /** @brief condition for waiting on new queue items */
       Condition mCondition;
 
-      mutable UInt64 mLastSampleTakenMicroSec;
-      mutable UInt32 mCounter;
-      mutable UInt32 mAverageServiceTimeMicroSec;
+      mutable uint64_t mLastSampleTakenMicroSec;
+      mutable uint32_t mCounter;
+      mutable uint32_t mAverageServiceTimeMicroSec;
       // std::deque has to perform some amount of traversal to calculate its 
       // size; we maintain this count so that it can be queried without locking, 
       // in situations where it being off by a small amount is ok.
-      UInt32 mSize;
+      uint32_t mSize;
 
       virtual void onFifoPolled()
       {
@@ -435,18 +431,18 @@ class AbstractFifo : public FifoStatsInterface
             mCounter &&
             (mCounter >= 64 || mFifo.empty()))
          {
-            UInt64 now(Timer::getTimeMicroSec());
-            UInt64 diff = now-mLastSampleTakenMicroSec;
+            uint64_t now(Timer::getTimeMicroSec());
+            uint64_t diff = now-mLastSampleTakenMicroSec;
 
             if(mCounter >= 4096)
             {
-               mAverageServiceTimeMicroSec=(UInt32)resipIntDiv(diff, mCounter);
+               mAverageServiceTimeMicroSec=(uint32_t)resipIntDiv(diff, mCounter);
             }
             else // fifo got emptied; merge into a rolling average
             {
                // .bwc. This is a moving average with period 64, round to 
                // nearest int.
-               mAverageServiceTimeMicroSec=(UInt32)resipIntDiv(
+               mAverageServiceTimeMicroSec=(uint32_t)resipIntDiv(
                      diff+((4096-mCounter)*mAverageServiceTimeMicroSec),
                      4096U);
             }

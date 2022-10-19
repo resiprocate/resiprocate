@@ -11,7 +11,7 @@
 #include "reflow/FlowManagerSubsystem.hxx"
 #include "reflow/HEPRTCPEventLoggingHandler.hxx"
 
-#include "reflow/rtcp/re_rtp.h"
+#include <utility>
 
 using namespace flowmanager;
 using namespace resip;
@@ -20,129 +20,45 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
-HEPRTCPEventLoggingHandler::HEPRTCPEventLoggingHandler(SharedPtr<HepAgent> agent)
+HEPRTCPEventLoggingHandler::HEPRTCPEventLoggingHandler(std::shared_ptr<HepAgent> agent)
    : mHepAgent(agent)
 {
-   if(!agent.get())
+   if (!mHepAgent)
    {
       ErrLog(<<"agent must not be NULL");
       throw std::runtime_error("agent must not be NULL");
    }
 }
 
-HEPRTCPEventLoggingHandler::~HEPRTCPEventLoggingHandler()
-{
-}
-
 void
-HEPRTCPEventLoggingHandler::outboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
+HEPRTCPEventLoggingHandler::outboundEvent(std::shared_ptr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
 {
    sendToHOMER(context, source, destination, event);
 }
 
 void
-HEPRTCPEventLoggingHandler::inboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
+HEPRTCPEventLoggingHandler::inboundEvent(std::shared_ptr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
 {
    sendToHOMER(context, source, destination, event);
 }
 
-int32_t
-HEPRTCPEventLoggingHandler::ntoh_cpl(const void *x)
-{
-   unsigned char c[4];
-   uint32_t *v = reinterpret_cast<uint32_t *>(c);
-
-   memcpy(c, x, 4);
-
-   // replace the fraction lost (8 bits) by sign of the 24 bit value
-   c[0] = (c[1] & 0x80) ? 0xff : 0;
-
-   return (int32_t)(ntohl(*v));
-}
-
 void
-HEPRTCPEventLoggingHandler::sendToHOMER(resip::SharedPtr<FlowContext> context, const StunTuple& source, const StunTuple& destination, const Data& event)
+HEPRTCPEventLoggingHandler::sendToHOMER(std::shared_ptr<FlowContext> context, const StunTuple& source, const StunTuple& destination, const Data& event)
 {
    GenericIPAddress _source, _destination;
 
    source.toSockaddr(&_source.address);
    destination.toSockaddr(&_destination.address);
 
-   const struct rtcp_msg* msg = reinterpret_cast<const struct rtcp_msg*>(event.data());
-
-   Data json;
-   DataStream stream(json);
-
-   StackLog(<<"RTCP packet type: " << msg->hdr.pt << " len " << (ntohs(msg->hdr.length)*2) << " bytes");
-   
-   stream << "{";
-
-   switch (msg->hdr.pt)
-   {
-      case RTCP_SR:
-         stream << "\"sender_information\":{"
-                << "\"ntp_timestamp_sec\":" << ntohl(msg->r.sr.ntp_sec) << ","
-                << "\"ntp_timestamp_usec\":" << ntohl(msg->r.sr.ntp_frac) << ","
-                << "\"octets\":" << ntohl(msg->r.sr.osent) << ","
-                << "\"rtp_timestamp\":" << ntohl(msg->r.sr.rtp_ts) << ","
-                << "\"packets\":" << ntohl(msg->r.sr.psent)
-                << "},";
-         if(msg->hdr.count > 0)
-         {
-            const struct rtcp_rr *rr = reinterpret_cast<const struct rtcp_rr*>(&msg->r.sr.rrv);
-            stream << "\"ssrc\":" << ntohl(msg->r.sr.ssrc) << ","
-                   << "\"type\":" << msg->hdr.pt << ","
-                   << "\"report_blocks\":["
-                   << "{"
-                      << "\"source_ssrc\":" << ntohl(rr->ssrc) << ","
-                      << "\"highest_seq_no\":" << ntohl(rr->last_seq) << ","
-                      << "\"fraction_lost\":" << +(reinterpret_cast<const uint8_t *>(&rr->fraction_lost_32))[0] << ","  // 8 bits
-                      << "\"ia_jitter\":" << ntohl(rr->jitter) << ","
-                      << "\"packets_lost\":" << ntoh_cpl(&rr->fraction_lost_32) << ","
-                      << "\"lsr\":" << ntohl(rr->lsr) << ","
-                      << "\"dlsr\":" << ntohl(rr->dlsr)
-                   << "}"
-                   << "],\"report_count\":1";
-         }
-         break;
-
-      case RTCP_RR:
-         if(msg->hdr.count > 0)
-         {
-            const struct rtcp_rr *rr = reinterpret_cast<const struct rtcp_rr*>(&msg->r.rr.rrv);
-            stream << "\"ssrc\":" << ntohl(msg->r.rr.ssrc) << ","
-                   << "\"type\":" << msg->hdr.pt << ","
-                   << "\"report_blocks\":["
-                   << "{"
-                      << "\"source_ssrc\":" << ntohl(rr->ssrc) << ","
-                      << "\"highest_seq_no\":" << ntohl(rr->last_seq) << ","
-                      << "\"fraction_lost\":" << +(reinterpret_cast<const uint8_t *>(&rr->fraction_lost_32))[0] << "," // 8 bits
-                      << "\"ia_jitter\":" << ntohl(rr->jitter) << ","
-                      << "\"packets_lost\":" << ntoh_cpl(&rr->fraction_lost_32) << ","
-                      << "\"lsr\":" << ntohl(rr->lsr) << ","
-                      << "\"dlsr\":" << ntohl(rr->dlsr)
-                   << "}"
-                   << "],\"report_count\":1";
-         }
-         break;
-
-      default:
-         DebugLog(<<"unhandled RTCP packet type: " << msg->hdr.pt);
-   }
-
-   stream << "}";
-   stream.flush();
-   StackLog(<<"constructed RTCP JSON: " << json);
-
    Data correlationId;
-   if(context.get())
+   if (context)
    {
       correlationId = context->getSipCallId();
    }
 
-   mHepAgent->sendToHOMER<Data>(resip::UDP,
+   mHepAgent->sendRTCP(resip::UDP,
       _source, _destination,
-      HepAgent::RTCP_JSON, json,
+      event,
       correlationId);
 }
 

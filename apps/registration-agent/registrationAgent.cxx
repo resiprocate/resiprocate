@@ -37,6 +37,8 @@
 #include "UserRegistrationClient.hxx"
 #include "KeyedFile.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONAGENT
 
 #define DEFAULT_CONFIG_FILE "registrationAgent.config"
@@ -48,8 +50,8 @@ using namespace std;
 class MyClientRegistrationAgent : public ServerProcess
 {
    public:
-      MyClientRegistrationAgent() {};
-      ~MyClientRegistrationAgent() {};
+      MyClientRegistrationAgent() = default;
+      ~MyClientRegistrationAgent() = default;
 
       void run(int argc, char **argv)
       {
@@ -73,10 +75,7 @@ class MyClientRegistrationAgent : public ServerProcess
             daemonize();
          }
 
-         Data loggingType = cfg.getConfigData("LoggingType", "cout", true);
-         Data logLevel = cfg.getConfigData("LogLevel", "INFO", true);
-         Data logFilename = cfg.getConfigData("LogFilename", "registrationAgent.log", true);
-         Log::initialize(loggingType, logLevel, argv[0], logFilename.c_str(), 0);
+         Log::initialize(cfg, argv[0]);
 
          InfoLog(<<"Starting client registration agent");
 
@@ -116,14 +115,14 @@ class MyClientRegistrationAgent : public ServerProcess
          {
             security->addCAFile(caFile);
          }
-         mStack.reset(new SipStack(security));
+         mStack = std::make_shared<SipStack>(security);
 #else
-         mStack.reset(new SipStack());
+         mStack = std::make_shared<SipStack>();
 #endif
 
-         mClientDum.reset(new DialogUsageManager(*mStack));
-         SharedPtr<MasterProfile> profile(new MasterProfile);
-         auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
+         mClientDum = std::make_shared<DialogUsageManager>(*mStack);
+         const auto profile = std::make_shared<MasterProfile>();
+         std::unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
 
          mStack->addTransport(UDP, 0, V4);
          // mStack->addTransport(UDP, 0, V6);
@@ -144,15 +143,15 @@ class MyClientRegistrationAgent : public ServerProcess
          }
 
          mClientDum->setMasterProfile(profile);
-         mClientDum->setClientAuthManager(clientAuth);
+         mClientDum->setClientAuthManager(std::move(clientAuth));
          mClientDum->getMasterProfile()->setDefaultRegistrationTime(cfg.getConfigInt("RegistrationExpiry", 3600));
          // Retry every 60 seconds after a hard failure:
          mClientDum->getMasterProfile()->setDefaultRegistrationRetryTime(60);
          mClientDum->getMasterProfile()->setUserAgent("reSIProcate registrationAgent");
 
          // keep alive test.
-         auto_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
-         mClientDum->setKeepAliveManager(keepAlive);
+         std::unique_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
+         mClientDum->setKeepAliveManager(std::move(keepAlive));
 
          profile->setRportEnabled(rport);
 
@@ -166,10 +165,10 @@ class MyClientRegistrationAgent : public ServerProcess
             profile->setOutboundProxy(_outboundProxy);
          }
 
-         SharedPtr<UserAccountFileRowHandler> rowHandler(new UserAccountFileRowHandler(*mClientDum));
-         mKeyedFile.reset(new KeyedFile(cfg.getConfigData("UserAccountFile", "users.txt", false), SharedPtr<KeyedFileRowHandler>(rowHandler, dynamic_cast_tag())));
+         const auto rowHandler = std::make_shared<UserAccountFileRowHandler>(*mClientDum);
+         mKeyedFile = std::make_shared<KeyedFile>(cfg.getConfigData("UserAccountFile", "users.txt", false), rowHandler);
          mKeyedFile->setSharedPtr(mKeyedFile);
-         mClientHandler.reset(new UserRegistrationClient(mKeyedFile));
+         mClientHandler = std::make_shared<UserRegistrationClient>(mKeyedFile);
          mClientDum->setClientRegistrationHandler(mClientHandler.get());
          rowHandler->setUserRegistrationClient(mClientHandler);
          mKeyedFile->doReload();
@@ -177,15 +176,17 @@ class MyClientRegistrationAgent : public ServerProcess
          Data brokerURL(cfg.getConfigData("BrokerURL", "", true));
          if(!brokerURL.empty())
          {
+            mProton.reset(new ProtonThreadBase());
             mCmd.reset(new CommandThread(brokerURL.c_str()));
-            mCmd->run();
+            mProton->addReceiver(mCmd);
+            mProton->run();
          }
 
          // FIXME - conditional start
          Data snmpSocket(cfg.getConfigData("SNMPMasterSocket", "", true));
          if(!snmpSocket.empty())
          {
-            mSnmp.reset(new SnmpThread(snmpSocket));
+            mSnmp.reset(new SnmpThread(snmpSocket.c_str()));
             mSnmp->run();
          }
 
@@ -193,8 +194,8 @@ class MyClientRegistrationAgent : public ServerProcess
 
          if(mCmd.get())
          {
-            mCmd->shutdown();
-            mCmd->join();
+            mProton->shutdown();
+            mProton->join();
          }
 
          if(mSnmp.get())
@@ -229,12 +230,13 @@ class MyClientRegistrationAgent : public ServerProcess
       }
 
    private:
-      SharedPtr<SipStack> mStack;
-      SharedPtr<DialogUsageManager> mClientDum;
-      SharedPtr<KeyedFile> mKeyedFile;
-      SharedPtr<UserRegistrationClient> mClientHandler;
-      SharedPtr<CommandThread> mCmd;
-      SharedPtr<SnmpThread> mSnmp;
+      std::shared_ptr<SipStack> mStack;
+      std::shared_ptr<DialogUsageManager> mClientDum;
+      std::shared_ptr<KeyedFile> mKeyedFile;
+      std::shared_ptr<UserRegistrationClient> mClientHandler;
+      std::shared_ptr<ProtonThreadBase> mProton;
+      std::shared_ptr<CommandThread> mCmd;
+      std::shared_ptr<SnmpThread> mSnmp;
 
 };
 
@@ -247,7 +249,8 @@ main(int argc, char** argv)
 
 /* ====================================================================
  *
- * Copyright 2012 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (C) 2012-2022 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

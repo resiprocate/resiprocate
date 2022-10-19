@@ -2,9 +2,6 @@
 EXTRA_DIST = ca.pem
 EXTRA_DIST += *.vcxproj
 
-AM_CXXFLAGS = -DASIO_HAS_BOOST_BIND
-AM_CXXFLAGS += -DBOOST_ASIO_HAS_STD_CHRONO
-
 LDADD = ../libreTurnClient.la
 LDADD += ../../libreTurnCommon.la
 LDADD += ../../../rutil/librutil.la
