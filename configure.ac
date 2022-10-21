@@ -125,7 +125,9 @@ AC_ARG_WITH(popt,
 
 AC_ARG_WITH(sigcomp,
 [  --with-sigcomp          Link against Open SigComp libraries for SigComp],
- AC_DEFINE_UNQUOTED(USE_SIGCOMP, , USE_SIGCOMP), )
+ [AC_DEFINE_UNQUOTED(USE_SIGCOMP, , USE_SIGCOMP),
+ AC_SUBST(LIBOPENSIGCOMP_LIBADD, "-lopensigcomp")],
+ [ AC_SUBST(LIBOPENSIGCOMP_LIBADD, "")])
 
 AM_CONDITIONAL(USE_FMT, false)
 AC_ARG_WITH(fmt,

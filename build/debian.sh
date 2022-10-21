@@ -60,6 +60,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-qpid-proton \
               --with-geoip \
               --with-netsnmp \
+              --with-sigcomp \
               --with-gstreamer
 
 
