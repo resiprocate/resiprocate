@@ -520,7 +520,7 @@ UdpTransport::processRxParseSip(char* buffer, int len, const Tuple& sender)
 
       if (nack)
       {
-         mTxFifo.add(new SendData(tuple,
+         mTxFifo.add(new SendData(sender,
                                   Data(nack->getDatagramMessage(),
                                        nack->getDatagramLength()),
                                   Data::Empty,
