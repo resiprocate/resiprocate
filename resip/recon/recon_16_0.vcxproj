@@ -166,6 +166,7 @@
     <Lib />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\media\RTPPortManager.cxx" />
     <ClCompile Include="BridgeMixer.cxx" />
     <ClCompile Include="Conversation.cxx" />
     <ClCompile Include="ConversationManager.cxx" />
@@ -214,6 +215,7 @@
     <ClCompile Include="UserAgentServerAuthManager.cxx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\media\RTPPortManager.hxx" />
     <ClInclude Include="BridgeMixer.hxx" />
     <ClInclude Include="Conversation.hxx" />
     <ClInclude Include="ConversationManager.hxx" />
@@ -223,12 +225,6 @@
     <ClInclude Include="DefaultDialogSet.hxx" />
     <ClInclude Include="DtmfEvent.hxx" />
     <ClInclude Include="FlowManagerSipXSocket.hxx" />
-    <ClInclude Include="KurentoBridgeMixer.hxx" />
-    <ClInclude Include="KurentoConversation.hxx" />
-    <ClInclude Include="KurentoMediaStackAdapter.hxx" />
-    <ClInclude Include="KurentoParticipant.hxx" />
-    <ClInclude Include="KurentoRemoteParticipantDialogSet.hxx" />
-    <ClInclude Include="KurentoRemoteParticipant.hxx" />
     <ClInclude Include="IMParticipantBase.hxx" />
     <ClInclude Include="RemoteIMSessionParticipant.hxx" />
     <ClInclude Include="RemoteIMSessionParticipantDialogSet.hxx" />
