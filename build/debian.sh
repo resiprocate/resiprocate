@@ -50,6 +50,8 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
                 DEPS_PYTHON_CFLAGS="`/usr/bin/python3-config --cflags`" \
                 DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
                 PYCXX_SRCDIR=/usr/src/CXX/Python3 \
+              --with-rend \
+              --with-tfm \
               --with-apps \
               --with-ichat-gw \
               --with-recon \
@@ -59,8 +61,8 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-soci-mysql \
               --with-qpid-proton \
               --with-geoip \
-              --with-netsnmp \
               --with-sigcomp \
+              --with-netsnmp \
               --with-gstreamer
 
 
