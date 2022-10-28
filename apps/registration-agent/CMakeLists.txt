@@ -26,3 +26,6 @@ target_link_libraries(registrationAgent PUBLIC dum ${NETSNMP_AGENT_LIBRARIES})
 
 install(TARGETS registrationAgent DESTINATION ${CMAKE_INSTALL_SBINDIR})
 
+install(FILES REG-AGENT-MIB.txt DESTINATION ${CMAKE_INSTALL_MIBDIR})
+
+install(FILES registrationAgent.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)

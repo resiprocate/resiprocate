@@ -29,3 +29,6 @@ add_executable(MOHParkServer
 )
 
 target_link_libraries(MOHParkServer PUBLIC recon)
+
+install(TARGETS MOHParkServer DESTINATION ${CMAKE_INSTALL_SBINDIR})
+

@@ -26,3 +26,6 @@ add_executable(prompt2wav
    prompt2wav.cxx
    ${INCLUDES}
 )
+
+install(TARGETS prompt2wav DESTINATION ${CMAKE_INSTALL_BINDIR})
+

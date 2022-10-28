@@ -27,7 +27,7 @@ add_executable(reConServer
    MyUserAgent.cxx
    RegistrationForwarder.cxx
    SubscriptionForwarder.cxx
-   ${INCLUDE}
+   ${INCLUDES}
 )
 
 
@@ -37,7 +37,7 @@ target_add_conditional_sources(reConServer BUILD_QPID_PROTON
 
 target_include_directories(reConServer PRIVATE ${SOCI_INCLUDE_DIRS} ${PostgreSQL_INCLUDE_DIR} ${MySQL_INCLUDE_DIRS})
 
-target_link_libraries(reConServer PUBLIC recon reflow ${SOCI_LIBRARIES})
+target_link_libraries(reConServer PUBLIC recon ${SOCI_LIBRARIES})
 
 # FIXME
 if(USE_SOCI_POSTGRESQL)
@@ -45,8 +45,9 @@ if(USE_SOCI_POSTGRESQL)
 endif()
 
 if(USE_SOCI_MYSQL)
-   target_link_libraries(reConServer PUBLIC -lsoci_mysql -lmysqlclient)
+   target_link_libraries(reConServer PUBLIC -lsoci_mysql ${MySQL_LIBRARIES})
 endif()
 
 install(TARGETS reConServer DESTINATION ${CMAKE_INSTALL_SBINDIR})
 
+install(FILES reConServer.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)

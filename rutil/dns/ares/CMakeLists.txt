@@ -48,7 +48,7 @@ if(APPLE)
    target_link_libraries(resipares PRIVATE "-framework SystemConfiguration")
 endif()
 
-set_target_properties(resipares PROPERTIES VERSION ${SO_RELEASE})
+version_libname(resipares)
 set_target_properties(resipares PROPERTIES FOLDER ares)
 
 install(TARGETS resipares DESTINATION ${CMAKE_INSTALL_LIBDIR})

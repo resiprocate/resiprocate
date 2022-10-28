@@ -34,7 +34,9 @@ add_executable(clicktocall
    ${INCLUDES}
 )
 
-target_include_directories(clicktocall PRIVATE ${LIBPCRE_INCLUDE_DIRS})
-target_link_libraries(clicktocall PUBLIC dum ${LIBPCRE_LIBRARIES})
+target_include_directories(clicktocall PRIVATE ${PCRE_INCLUDE_DIRS})
+target_link_libraries(clicktocall PUBLIC dum ${PCRE_LIBRARIES})
 
 install(TARGETS clicktocall DESTINATION ${CMAKE_INSTALL_SBINDIR})
+
+install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/clicktocall ${INCLUDES})

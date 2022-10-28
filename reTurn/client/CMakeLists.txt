@@ -12,16 +12,6 @@ set(INCLUDES
 )
 
 add_library(reTurnClient
-   ../AsyncSocketBase.cxx
-   ../AsyncTcpSocketBase.cxx
-   ../AsyncTlsSocketBase.cxx
-   ../AsyncUdpSocketBase.cxx
-   ../ChannelManager.cxx
-   ../DataBuffer.cxx
-   ../RemotePeer.cxx
-   ../ReTurnSubsystem.cxx
-   ../StunMessage.cxx
-   ../StunTuple.cxx
    TurnAsyncSocket.cxx
    TurnAsyncSocketHandler.cxx
    TurnAsyncTcpSocket.cxx
@@ -35,10 +25,9 @@ add_library(reTurnClient
    ${INCLUDES}
 )
 
-target_include_directories(reTurnClient PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/reTurn>)
-target_link_libraries(reTurnClient ${OPENSSL_LIBRARIES} rutil)
+target_link_libraries(reTurnClient reTurnCommon)
 set_target_properties(reTurnClient PROPERTIES FOLDER reTurn)
-set_target_properties(reTurnClient PROPERTIES VERSION ${SO_RELEASE})
+version_libname(reTurnClient)
 
 install(TARGETS reTurnClient DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/reTurn/client ${INCLUDES})

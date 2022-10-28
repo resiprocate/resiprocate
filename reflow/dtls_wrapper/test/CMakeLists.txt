@@ -1,13 +1,13 @@
 function(manual_test)
    add_executable(${ARGV})
    set_target_properties(${ARGV0} PROPERTIES FOLDER reflow/Tests)
-   target_link_libraries(${ARGV0} reflow rutil ${OPENSSL_LIBRARIES} ${SRTP_LIBRARIES})
+   target_link_libraries(${ARGV0} reflow)
 endfunction()
 
 function(test)
    test_base(${ARGV})
    set_target_properties(${ARGV0} PROPERTIES FOLDER reflow/Tests)
-   target_link_libraries(${ARGV0} reflow rutil ${OPENSSL_LIBRARIES} ${SRTP_LIBRARIES})
+   target_link_libraries(${ARGV0} reflow)
 endfunction()
 
 set(SHARED_SRC

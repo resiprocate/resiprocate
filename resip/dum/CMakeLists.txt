@@ -198,15 +198,9 @@ target_add_conditional_sources(dum OPENSSL_FOUND
    ssl/EncryptionManager.cxx
 )
 
-if(WIN32)
-   target_link_libraries(dum winmm)
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-   target_link_libraries(dum rt)
-endif()
-
 target_include_directories(dum PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
-target_link_libraries(dum ${OPENSSL_LIBRARIES} rutil resip ${ARES_LIBRARIES})
-set_target_properties(dum PROPERTIES VERSION ${SO_RELEASE})
+target_link_libraries(dum resip)
+version_libname(dum)
 set_target_properties(dum PROPERTIES FOLDER resip)
 
 install(TARGETS dum DESTINATION ${CMAKE_INSTALL_LIBDIR})

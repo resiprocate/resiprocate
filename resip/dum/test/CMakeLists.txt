@@ -1,12 +1,12 @@
 function(manual_test)
    add_executable(${ARGV})
-   target_link_libraries(${ARGV0} rutil resip dum ${POPT_LIBRARIES})
+   target_link_libraries(${ARGV0} dum ${POPT_LIBRARIES})
    set_target_properties(${ARGV0} PROPERTIES FOLDER resip/Tests)
 endfunction()
 
 function(test)
    test_base(${ARGV})
-   target_link_libraries(${ARGV0} rutil resip dum ${POPT_LIBRARIES})
+   target_link_libraries(${ARGV0} dum ${POPT_LIBRARIES})
    set_target_properties(${ARGV0} PROPERTIES FOLDER resip/Tests)
 endfunction()
 

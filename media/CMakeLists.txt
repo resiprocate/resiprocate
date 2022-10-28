@@ -17,6 +17,7 @@ add_library(resipmedia
 )
 
 target_link_libraries(resipmedia PUBLIC rutil)
+version_libname(resipmedia)
 
 install(TARGETS resipmedia DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/media ${INCLUDES})

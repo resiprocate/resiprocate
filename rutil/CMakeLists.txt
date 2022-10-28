@@ -6,6 +6,7 @@ set(INCLUDES
    wince/WceCompat.hxx
    SysLogStream.hxx
    AsyncID.hxx
+   AsyncBool.hxx
    ConfigParse.hxx
    CongestionManager.hxx
    GeneralCongestionManager.hxx
@@ -22,12 +23,15 @@ set(INCLUDES
    Random.hxx
    AsyncProcessHandler.hxx
    RADIUSDigestAuthenticator.hxx
+   Repository.hxx
    RWMutex.hxx
    Subsystem.hxx
    Logger.hxx
+   MediaConstants.hxx
    MD5Stream.hxx
    DnsUtil.hxx
    Timer.hxx
+   DigestStream.hxx
    TransportType.hxx
    resipfaststreams.hxx
    Coders.hxx
@@ -96,6 +100,7 @@ set(INCLUDES
    PyThreadSupport.hxx
    hep/HepAgent.hxx
    hep/ResipHep.hxx
+   rtcp/re_rtp.h
 )
 
 add_library(rutil
@@ -213,6 +218,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 target_include_directories(rutil PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+target_include_directories(rutil PUBLIC ${ARES_INCLUDE_DIRS})
 target_include_directories(rutil PUBLIC ${QPIDPROTON_INCLUDE_DIRS})
 target_include_directories(rutil PUBLIC ${Python3_INCLUDE_DIRS} ${PYCXX_INCLUDE_DIRS})
 target_link_libraries(rutil ${OPENSSL_LIBRARIES} ${ARES_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
@@ -222,7 +228,8 @@ target_link_libraries(rutil ${LIBRADIUS_LIBRARIES})
 if(ENABLE_ANDROID)
    target_link_libraries(rutil log)
 endif()
-set_target_properties(rutil PROPERTIES FOLDER rutil VERSION ${SO_RELEASE})
+set_target_properties(rutil PROPERTIES FOLDER rutil)
+version_libname(rutil)
 
 install(TARGETS rutil DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/rutil ${INCLUDES})

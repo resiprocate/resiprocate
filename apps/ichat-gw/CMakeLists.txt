@@ -30,9 +30,11 @@ add_executable(ichat-gw
    ${INCLUDES}
 )
 
-target_include_directories(ichat-gw PRIVATE ${LIBPCRE_INCLUDE_DIRS})
-target_link_libraries(ichat-gw PUBLIC dum ${LIBPCRE_LIBRARIES})
+target_include_directories(ichat-gw PRIVATE ${PCRE_INCLUDE_DIRS})
+target_link_libraries(ichat-gw PUBLIC dum ${PCRE_LIBRARIES})
 
 install(TARGETS ichat-gw DESTINATION ${CMAKE_INSTALL_SBINDIR})
+
+install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/ichat-gw ${INCLUDES})
 
 add_subdirectory(jabberconnector)

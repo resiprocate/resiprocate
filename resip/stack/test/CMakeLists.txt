@@ -1,12 +1,12 @@
 function(manual_test)
    add_executable(${ARGV})
-   target_link_libraries(${ARGV0} rutil resip ${POPT_LIBRARIES})
+   target_link_libraries(${ARGV0} resip ${POPT_LIBRARIES})
    set_target_properties(${ARGV0} PROPERTIES FOLDER resip/ManualTests)
 endfunction()
 
 function(test)
    test_base(${ARGV})
-   target_link_libraries(${ARGV0} rutil resip ${POPT_LIBRARIES})
+   target_link_libraries(${ARGV0} resip ${POPT_LIBRARIES})
    set_target_properties(${ARGV0} PROPERTIES FOLDER resip/Tests)
 endfunction()
 
@@ -70,6 +70,6 @@ endif()
 
 if(DEFINED ENV{LIB_FUZZING_ENGINE})
    add_executable(fuzzStack EXCLUDE_FROM_ALL fuzzStack.cxx TestSupport.cxx)
-   target_link_libraries(fuzzStack rutil resip ${POPT_LIBRARIES} $ENV{LIB_FUZZING_ENGINE})
+   target_link_libraries(fuzzStack resip ${POPT_LIBRARIES} $ENV{LIB_FUZZING_ENGINE})
    set_target_properties(fuzzStack PROPERTIES FOLDER resip/Fuzzing)
 endif()

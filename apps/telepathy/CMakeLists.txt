@@ -1,3 +1,6 @@
+
+add_subdirectory(data)
+
 set(INCLUDES
    Common.hxx
    Connection.hxx

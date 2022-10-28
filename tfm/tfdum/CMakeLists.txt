@@ -1,7 +1,7 @@
 function(test)
    test_base(${ARGV})
    set_target_properties(${ARGV0} PROPERTIES FOLDER tfm/repro)
-   target_link_libraries(${ARGV0} rutil tfm tfmrepro)
+   target_link_libraries(${ARGV0} tfdum)
    set_tests_properties(${ARGV0} PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
@@ -59,6 +59,8 @@ add_library(tfdum
    TfdTestSipEndPoint.cxx
    ${INCLUDES}
 )
+
+target_link_libraries(tfdum PUBLIC tfmrepro)
 
 test(TestLamba TestLamba.cxx)
 test(dumTests dumTests.cxx)

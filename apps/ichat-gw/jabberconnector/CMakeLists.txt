@@ -17,3 +17,4 @@ add_executable(ichat-gw-jc
    ${INCLUDES}
 )
 
+install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/ichat-gw-jc ${INCLUDES})

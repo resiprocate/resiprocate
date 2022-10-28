@@ -13,3 +13,6 @@ add_executable(testUA
 )
 
 target_link_libraries(testUA recon)
+
+install(TARGETS testUA DESTINATION ${CMAKE_INSTALL_BINDIR})
+

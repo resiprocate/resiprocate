@@ -161,7 +161,7 @@ endif()
 if(USE_GSTREAMER)
    target_link_libraries(recon PUBLIC gstreamerutils)
 endif()
-set_target_properties(recon PROPERTIES FOLDER recon VERSION ${SO_RELEASE})
+version_libname(recon)
 
 install(TARGETS recon DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/recon ${INCLUDES})

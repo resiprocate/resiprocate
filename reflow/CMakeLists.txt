@@ -11,6 +11,7 @@ set(INCLUDES
    HEPRTCPEventLoggingHandler.hxx
    MediaStream.hxx
    RTCPEventLoggingHandler.hxx
+   Srtp2Helper.hxx
    dtls_wrapper/bf_dwrap.hxx
    dtls_wrapper/DtlsFactory.hxx
    dtls_wrapper/DtlsSocket.hxx
@@ -36,11 +37,11 @@ add_library(reflow
 
 target_include_directories(reflow PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/reflow/dtls_wrapper>)
 target_include_directories(reflow PUBLIC ${SRTP2_INCLUDE_DIRS})
-target_link_libraries(reflow rutil reTurnClient ${SRTP2_LIBRARIES})
+target_link_libraries(reflow reTurnClient ${SRTP2_LIBRARIES})
 set_target_properties(reflow PROPERTIES FOLDER reflow)
-set_target_properties(reflow PROPERTIES VERSION ${SO_RELEASE})
+version_libname(reflow)
 
-install(TARGETS reflow DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS reflow DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/reflow ${INCLUDES})
 
 add_subdirectory(dtls_wrapper/test)

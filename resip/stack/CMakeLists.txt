@@ -32,6 +32,7 @@ set(INCLUDES
    DnsInterface.hxx
    DnsResult.hxx
    DnsResultMessage.hxx
+   DomainMatcher.hxx
    DtlsMessage.hxx
    DtmfPayloadContents.hxx
    Embedded.hxx
@@ -155,6 +156,7 @@ set(INCLUDES
    Transport.hxx
    TransportSelector.hxx
    TransportThread.hxx
+   TrickleIceContents.hxx
    TuIM.hxx
    Tuple.hxx
    TupleMarkManager.hxx
@@ -384,15 +386,12 @@ target_add_conditional_sources(resip TRUE
 )
 
 if(WIN32)
-   target_link_libraries(resip winmm)
    if(WITH_SSL)
       target_link_libraries(resip crypt32 Ncrypt)
    endif()
    # For whatever historical reason, on Windows the name of the library is not
    # resip but resiprocate.
    set_target_properties(resip PROPERTIES OUTPUT_NAME resiprocate)
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-   target_link_libraries(resip rt)
 elseif(APPLE)
    target_link_libraries(resip "-framework CoreFoundation")
    target_link_libraries(resip "-framework CoreServices")
@@ -400,8 +399,8 @@ elseif(APPLE)
 endif()
 
 target_include_directories(resip PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
-target_link_libraries(resip ${OPENSSL_LIBRARIES} rutil ${ARES_LIBRARIES})
-set_target_properties(resip PROPERTIES VERSION ${SO_RELEASE})
+target_link_libraries(resip ${opensigcomp_LIBRARIES} rutil)
+version_libname(resip)
 set_target_properties(resip PROPERTIES FOLDER resip)
 
 install(TARGETS resip DESTINATION ${CMAKE_INSTALL_LIBDIR})

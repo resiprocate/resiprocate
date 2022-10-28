@@ -1,14 +1,15 @@
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/reproInfo.hxx" [=[#include "config.h"]=])
 
 add_executable(repro-bin
-        repro.cxx
-        )
+   repro.cxx
+   )
 
 target_link_libraries(repro-bin PUBLIC repro)
 
 set_target_properties(repro-bin PROPERTIES OUTPUT_NAME repro)
 
 install(TARGETS repro-bin DESTINATION ${CMAKE_INSTALL_SBINDIR})
+install(FILES doc/repro.8 doc/reprocmd.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
 
 set(INCLUDES
    AbstractDb.hxx
@@ -197,19 +198,25 @@ if(USE_MAXMIND_GEOIP)
 endif()
 
 target_add_conditional_sources(repro MySQL_FOUND
-        MySqlDb.cxx
-        )
+   MySqlDb.cxx
+   )
 target_link_libraries(repro PUBLIC ${MySQL_LIBRARIES})
 target_include_directories(repro PUBLIC ${MySQL_INCLUDE_DIRS})
 
 target_add_conditional_sources(repro USE_POSTGRESQL
-        PostgreSqlDb.cxx
-        )
+   PostgreSqlDb.cxx
+   )
 
 # for some reason we can't use PostgreSQL_LIBRARIES here...
 target_link_libraries(repro PUBLIC PostgreSQL::PostgreSQL)
 
+version_libname(repro)
+
 target_include_directories(repro PUBLIC ${PostgreSQL_INCLUDE_DIR})
+
+install(TARGETS repro DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/repro ${INCLUDES})
 
 if(BUILD_REPRO_DSO_PLUGINS)
    add_subdirectory(plugins)

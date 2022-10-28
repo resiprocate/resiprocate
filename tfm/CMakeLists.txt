@@ -109,8 +109,9 @@ add_library(tfm
 )
 
 target_include_directories(tfm PUBLIC )
-target_link_libraries(tfm rutil resip dum)
+target_link_libraries(tfm dum ${Netxx_LIBRARIES} ${CPPUNIT_LIBRARIES})
 set_target_properties(tfm PROPERTIES FOLDER tfm)
-set_target_properties(tfm PROPERTIES VERSION ${SO_RELEASE})
+version_libname(tfm)
 
+install(TARGETS tfm DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
