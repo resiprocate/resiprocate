@@ -7,6 +7,7 @@ AM_CXXFLAGS = -I $(top_srcdir)
 
 lib_LTLIBRARIES = libtfmrepro.la
 
+libtfmrepro_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 libtfmrepro_la_LIBADD = ../libtfm.la
 libtfmrepro_la_LIBADD += ../../repro/librepro.la
 
