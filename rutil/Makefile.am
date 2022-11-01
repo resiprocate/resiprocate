@@ -219,6 +219,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	NetNs.hxx \
 	GenericTimerQueue.hxx \
 	IntrusiveListElement.hxx \
+	ssl/OpenSSLDeleter.hxx \
 	ssl/SHA1Stream.hxx \
 	ssl/OpenSSLInit.hxx \
 	CountStream.hxx \

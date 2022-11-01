@@ -246,7 +246,10 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 	
    while ( size > 0 )
    {
-      // !jf! should check that there are enough bytes left in the buffer
+      if (size < sizeof(StunAtrHdr))
+      {
+         return false;
+      }
 		
       StunAtrHdr* attr = reinterpret_cast<StunAtrHdr*>(body);
 		
