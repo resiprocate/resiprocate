@@ -357,13 +357,17 @@ AC_ARG_WITH(python,
  AM_CONDITIONAL(BUILD_PYTHON, true)
  PKG_CHECK_MODULES([DEPS_PYTHON], [python3 >= 3.6])
  AC_SUBST(DEPS_PYTHON_VERSION)
- AC_SUBST(PYCXX_SRCDIR)
- if [ ! test -e "${PYCXX_SRCDIR}/cxx_extensions.cxx" ];
+ if [ test -z "${PYCXX_SRCDIR}" ];
  then
-  echo "Can't find \${PYCXX_SRCDIR}/cxx_extensions.cxx"
+  PYCXX_SRCDIR=`pkg-config PyCXX --variable=srcdir`
+ fi
+ if [ ! test -e "${PYCXX_SRCDIR}/IndirectPythonInterface.cxx" ];
+ then
+  echo "Can't find \${PYCXX_SRCDIR}/IndirectPythonInterface.cxx"
   echo "Please check PYCXX_SRCDIR is defined correctly (current value: ${PYCXX_SRCDIR})"
   exit 1
  fi
+ AC_SUBST(PYCXX_SRCDIR)
 ], )
 
 AM_CONDITIONAL(BUILD_QPID_PROTON, false)
