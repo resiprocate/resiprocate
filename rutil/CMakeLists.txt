@@ -184,17 +184,18 @@ target_add_conditional_sources(rutil BUILD_QPID_PROTON
 )
 
 function(copy_pycxx)
+   get_filename_component(BASE_FILENAME ${ARGV0} NAME)
    add_custom_command(
-      OUTPUT ${ARGV0}
-      COMMAND ${CMAKE_COMMAND} -E copy ${PYCXX_SRCDIR}/${ARGV1}${ARGV0} .
+      OUTPUT ${BASE_FILENAME}
+      COMMAND ${CMAKE_COMMAND} -E copy ${PYCXX_SRCDIR}/${ARGV0} .
    )
 endfunction()
 if(BUILD_PYTHON)
-   copy_pycxx(cxx_exceptions.cxx)
-   copy_pycxx(cxxextensions.c)
-   copy_pycxx(cxx_extensions.cxx)
-   copy_pycxx(cxxsupport.cxx)
-   copy_pycxx(IndirectPythonInterface.cxx ../)
+   copy_pycxx(Python3/cxx_exceptions.cxx)
+   copy_pycxx(Python3/cxxextensions.c)
+   copy_pycxx(Python3/cxx_extensions.cxx)
+   copy_pycxx(Python3/cxxsupport.cxx)
+   copy_pycxx(IndirectPythonInterface.cxx)
 endif()
 
 target_add_conditional_sources(rutil BUILD_PYTHON
@@ -204,6 +205,15 @@ target_add_conditional_sources(rutil BUILD_PYTHON
    cxxsupport.cxx
    IndirectPythonInterface.cxx
    cxx_exceptions.cxx
+)
+
+set_source_files_properties(
+   cxxextensions.c
+   cxx_extensions.cxx
+   cxxsupport.cxx
+   IndirectPythonInterface.cxx
+   cxx_exceptions.cxx
+   PROPERTIES GENERATED TRUE
 )
 
 target_add_conditional_sources(rutil WIN32

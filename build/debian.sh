@@ -27,8 +27,8 @@ source build/distcc-setup
 # -Wweak-vtables : use with clang to find classes without a key function
 
 CFLAGS='-fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated' \
-CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/postgresql -I/usr/include/sipxtapi -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_FILE_OFFS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_DIGEST_LOGGING -DRECON_SDP_ENCODING_NAMES_CASE_HACK -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \
 CXXFLAGS='-fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -Wall -Wno-deprecated' \
+CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/postgresql -I/usr/include/sipxtapi -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_FILE_OFFS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_DIGEST_LOGGING -DRECON_SDP_ENCODING_NAMES_CASE_HACK -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \
 LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
   cmake ${DISTCC} \
     -DCMAKE_BUILD_TYPE=Debug \
@@ -69,7 +69,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
     -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 \
     -DBUILD_P2P=OFF \
     -DBUILD_PYTHON=ON \
-    -DPYCXX_SRCDIR=/usr/src/CXX/Python3 \
+    -DPYCXX_SRCDIR=/usr/src/CXX \
     -DBUILD_QPID_PROTON=ON \
     -DRESIP_ASSERT_SYSLOG=ON \
     .
@@ -92,7 +92,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
 #                DEPS_PYTHON_VERSION=`python3 -c "import sys; print('%d.%d' % (sys.version_info[0], sys.version_info[1]))"` \
 #                DEPS_PYTHON_CFLAGS="`/usr/bin/python3-config --cflags`" \
 #                DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
-#                PYCXX_SRCDIR=/usr/src/CXX/Python3 \
+#                PYCXX_SRCDIR=/usr/src/CXX \
 #              --with-rend \
 #              --with-tfm \
 #              --with-apps \

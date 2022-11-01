@@ -12,6 +12,22 @@ endif(POLICY CMP0077)
 # https://cmake.org/cmake/help/latest/variable/PROJECT_VERSION.html
 project(resiprocate VERSION 1.13.0)
 
+# Warning: CMAKE_BUILD_TYPE
+#
+# Using CMAKE_BUILD_TYPE=Debug will create a build without the NDEBUG flag
+#
+# Any other CMAKE_BUILD_TYPE appears to set NDEBUG sometimes
+# Some documentation suggest that CMAKE_BUILD_TYPE=RelWithDebInfo will
+# not set the NDEBUG flag but this appears to be inconsistent.
+#
+# reSIProcate makes extensive use of assert()
+# assert() is disabled by NDEBUG
+# Application code should not rely on NDEBUG for any purpose, its only
+# purpose is for disabling assert()
+#
+# https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html#variable:CMAKE_BUILD_TYPE
+#
+
 # shared library versioning
 
 #set(SO_ABI "0.0.0")
@@ -125,10 +141,13 @@ option(RESIP_ASSERT_SYSLOG "Log assertion failures with Syslog" TRUE)
 #
 if(WIN32)
    set(BUILD_SHARED_LIBS_DEFAULT OFF)
+   set(USE_CONTRIB_DEFAULT ON)
 else()
    set(BUILD_SHARED_LIBS_DEFAULT ON)
+   set(USE_CONTRIB_DEFAULT OFF)
 endif()
 option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT})
+option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -241,7 +260,7 @@ endif()
 # popt
 if(USE_POPT)
    # Debian: libpopt-dev
-   if(WIN32)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/popt)
       set(POPT_LIBRARIES popt)
       set(POPT_INCLUDE_DIRS contrib/popt)
@@ -254,7 +273,7 @@ endif()
 
 # OpenSigComp
 if(USE_SIGCOMP)
-   if(WIN32)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/opensigcomp)
       set(opensigcomp_LIBRARIES opensigcomp)
    else()
@@ -265,7 +284,7 @@ endif()
 # fmt
 # Debian: libfmt-dev
 if(USE_FMT)
-   if(WIN32)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/fmt)
    else()
       find_package(fmt REQUIRED)
@@ -284,7 +303,7 @@ option_def(PEDANTIC_STACK)
 # MySQL
 # Debian: default-libmysqlclient-dev
 if(USE_MYSQL)
-   if(WIN32)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/MySQLConnectorC)
    else()
       find_package(MySQL REQUIRED)
@@ -306,7 +325,7 @@ endif()
 # PostgreSQL
 # Debian: libpq-dev postgresql-server-dev-all
 if(USE_POSTGRESQL)
-   if(WIN32)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/psql)
    else()
       find_package(PostgreSQL REQUIRED)
@@ -316,7 +335,7 @@ endif()
 # GeoIP
 # Debian: libgeoip-dev
 if(USE_MAXMIND_GEOIP)
-   if(WIN32)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/GeoIP)
    else()
       find_package(GeoIP REQUIRED)
@@ -326,7 +345,7 @@ endif()
 # radcli (RADIUS client)
 # Debian: libradcli-dev
 if(RESIP_HAVE_RADCLI)
-   if(WIN32)
+   if(USE_CONTRIB)
       do_fail_win32("radcli")
    else()
       pkg_check_modules(LIBRADIUS radcli REQUIRED)
@@ -338,7 +357,7 @@ endif()
 # NetSNMP
 # Debian: libsnmp-dev
 if(USE_NETSNMP)
-   if(WIN32)
+   if(USE_CONTRIB)
       do_fail_win32("netsnmp")
    else()
       pkg_check_modules(NETSNMP_AGENT netsnmp-agent REQUIRED)
@@ -367,7 +386,7 @@ option_def(BUILD_TFM)
 # Netxx
 # Debian: libnetxx-dev
 if(USE_NETXX)
-   if(WIN32)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/Netxx-0.3.2)
       set(Netxx_LIBRARIES Netxx)
    else()
@@ -378,7 +397,7 @@ endif()
 # cppunit
 # Debian: libcppunit-dev
 if(USE_CPPUNIT)
-   if(WIN32)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/cppunit)
       set(CPPUNIT_LIBRARIES cppunit)
    else()
@@ -389,7 +408,7 @@ endif()
 # BerkeleyDb
 # Debian: libdb++-dev
 if(USE_BDB)
-   if(WIN32)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/db)
    else()
       find_package(BerkeleyDb REQUIRED)
@@ -400,7 +419,7 @@ endif()
 # PCRE
 # Debian: libpcre3-dev
 if(USE_PCRE)
-  if(WIN32)
+  if(USE_CONTRIB)
     add_subdirectory(contrib/pcre)
     set(PCRE_LIBRARIES pcre)
   else()
@@ -412,7 +431,7 @@ endif()
 # Debian: libcajun-dev
 #set(CAJUN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun/include")
 if(USE_CAJUN)
-   if(WIN32)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/cajun)
    else()
       find_package(cajun REQUIRED)
@@ -423,7 +442,7 @@ endif()
 # Debian: libasio-dev
 # modern ASIO requires C++11
 if(USE_ASIO)
-   if(WIN32)
+   if(USE_CONTRIB)
       set(ASIO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/asio")
    else()
       find_package(ASIO REQUIRED)
@@ -460,15 +479,8 @@ endif()
 # Debian: libsipxtapi-dev
 if(USE_SIPXTAPI)
    option_def(USE_SIPXTAPI)
-   find_library(sipXport_LIBRARIES sipXport REQUIRED)
-   find_library(sipXsdp_LIBRARIES sipXsdp REQUIRED)
-   find_library(sipXmedia_LIBRARIES sipXmedia REQUIRED)
-   find_library(sipXmediaProcessing_LIBRARIES sipXmediaProcessing REQUIRED)
-   set(SIPXTAPI_LIBRARIES ${sipXport_LIBRARIES} ${sipXsdp_LIBRARIES} ${sipXmedia_LIBRARIES} ${sipXmediaProcessing_LIBRARIES})
-   set(SIPXTAPI_FOUND true)
+   find_package(sipXtapi REQUIRED)
    if(NOT WIN32)
-      # FIXME - hardcoded paths
-      set(SIPXTAPI_INCLUDE_DIRS "/usr/include/sipxtapi")
       set(SIPX_NO_RECORD true)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__pingtel_on_posix__")
    endif()
@@ -480,7 +492,7 @@ option_def(USE_KURENTO)
 # Debian: libgstreamermm-1.0-dev
 if(USE_GSTREAMER)
    option_def(USE_GSTREAMER)
-   pkg_check_modules(GSTREAMERMM gstreamermm-1.0 REQUIRED)
+   pkg_check_modules(GSTREAMERMM_1_0 gstreamermm-1.0 REQUIRED)
 
    # gstwebrtc-1.0
    # Debian: libgstreamer-plugins-bad1.0-dev
@@ -492,13 +504,15 @@ option_def(USE_LIBWEBRTC)
 option_def(RECON_LOCAL_HW_TESTS)
 
 # Python
-# Debian: python3-dev
+# Debian: python3-dev python3-cxx-dev
 if(BUILD_PYTHON)
    find_package(Python3 COMPONENTS Development REQUIRED)
-   if(Python3_FOUND)
-      # PyCXX
-      # Debian: python3-cxx-dev
-      pkg_check_modules(PYCXX PyCXX REQUIRED)
+   pkg_check_modules(PYCXX PyCXX REQUIRED)
+   if(NOT PYCXX_SRCDIR)
+      pkg_get_variable(PYCXX_SRCDIR PyCXX srcdir)
+      if(NOT PYCXX_SRCDIR)
+         message(FATAL_ERROR "Failed to obtain PyCXX srcdir automatically, please set it manually or disable BUILD_PYTHON")
+      endif()
    endif()
 endif()
 
