@@ -29,7 +29,7 @@ SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager,
    // Add the available sipX resources.  Note:  This list must match what is provided by the sipX CpTopologyGraphImpl
    // default initial resources, plus any customizations done in SipXMediaStackAdapter::addExtraPlayAndRecordResourcesToTopology
    mMediaResourceAllocations[MediaResourceParticipant::Tone].push_back(MediaResourceAllocationInfo(DEFAULT_TONE_GEN_RESOURCE_NAME));
-   mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(DEFAULT_FROM_FILE_RESOURCE_NAME));  // Note:  File resource also tracks Cache type
+   mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(DEFAULT_FROM_FILE_RESOURCE_NAME));  // Note:  File resource also tracks Cache and Buffer types
    mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(DEFAULT_RECORDER_RESOURCE_NAME));
    SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(conversationManager.getMediaStackAdapter());
    if (mediaStackAdapter.extraPlayAndRecordResourcesEnabled())
@@ -117,7 +117,8 @@ SipXMediaInterface::getParticipantHandleForMediaResource(MediaResourceParticipan
 // ensure mutex is grabbed before calling
 std::list<SipXMediaInterface::MediaResourceAllocationInfo>& SipXMediaInterface::getAllocationResourceInfos(MediaResourceParticipant::ResourceType resourceType)
 {
-   if (resourceType == MediaResourceParticipant::Cache)
+   if (resourceType == MediaResourceParticipant::Cache ||
+       resourceType == MediaResourceParticipant::Buffer)
    {
       // Cache and File resources are the same sipX resource, track both under the File type
       resourceType = MediaResourceParticipant::File;

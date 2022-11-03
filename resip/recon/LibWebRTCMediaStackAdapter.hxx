@@ -180,7 +180,7 @@ public:
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode) override;
    virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle) override;
-   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl) override;
+   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer) override;
    virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
    virtual RemoteParticipant *createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
    virtual RemoteParticipantDialogSet *createRemoteParticipantDialogSetInstance(
@@ -266,7 +266,7 @@ private:
 
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2022, Daniel Pocock https://danielpocock.com
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
