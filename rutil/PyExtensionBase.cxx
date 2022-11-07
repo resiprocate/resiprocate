@@ -26,8 +26,8 @@ using namespace resip;
 PyExtensionBase::PyExtensionBase(const resip::Data& exportModuleName)
  : Py::ExtensionModule<PyExtensionBase>(exportModuleName.c_str()),
    mExportModuleName(exportModuleName),
-   mLogPrefix(mExportModuleName),
-   mThreadState(0)
+   mThreadState(nullptr),
+   mLogPrefix(mExportModuleName)
 {
 }
 
