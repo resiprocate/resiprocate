@@ -7,6 +7,7 @@ namespace resip
 {
 
 struct OpenSSLDeleter {
+   void operator()(EVP_CIPHER_CTX* ctx) const noexcept;
    void operator()(EVP_MD_CTX* ctx) const noexcept;
 };
 
