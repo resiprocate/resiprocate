@@ -221,9 +221,12 @@ PyExtensionBase::init(const resip::Data& pyPath)
    //mThreadState = PyGILState_GetThisThreadState();
    mThreadState = PyThreadState_GET();
 
-   //mInterpreterState = mThreadState->interp;
+#if PY_VERSION_HEX < 0x03090000
+   mInterpreterState = mThreadState->interp;
+#else
    //mInterpreterState = PyThreadState_GetInterpreter(mThreadState);
    mInterpreterState = PyInterpreterState_Get();
+#endif
 
    if(!onStartup())
    {
