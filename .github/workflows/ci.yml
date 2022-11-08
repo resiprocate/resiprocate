@@ -55,7 +55,7 @@ jobs:
             xxd
 
       - name: Checkout source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Bootstrap
         run: ./build/travis/bootstrap
