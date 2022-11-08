@@ -3,12 +3,7 @@
 set -e
 
 PYTHON_MAJOR_VERSION=`python3 -V | cut -f2 -d' ' | cut -f1,2 -d.`
-
-PYCFG_CFLAGS=`/usr/bin/python3-config --cflags`
-if [ "x$TRAVIS_COMPILER" = "xclang" ];
-then
-  PYCFG_CFLAGS=`echo "${PYCFG_CFLAGS}" | sed -e 's!-specs=/usr/share/dpkg/no-pie-compile.specs!!g'`
-fi
+PYCFG_CFLAGS=`/usr/bin/python3-config --cflags | sed -e 's!-specs=/usr/share/dpkg/no-pie-compile.specs!!g'`
 
 WARNING_CONFIG="-Wno-unknown-pragmas"
 
