@@ -31,6 +31,7 @@ jobs:
             libcppunit-dev \
             libdb++-dev \
             libfmt-dev/buster-backports \
+            libgeoip-dev \
             libgloox-dev \
             libgstreamermm-1.0-dev \
             libpcre3-dev \
