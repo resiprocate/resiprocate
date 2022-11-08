@@ -319,7 +319,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          std::unique_ptr<SdpContents> _answer(new SdpContents(hfv, type));
 
          SdpContents::Session::MediumContainer::iterator it = _answer->session().media().begin();
-         _answer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", 2048));
+         // _answer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", 2048));
          bool audiobw = false;
          bool videobw = false;
 
@@ -331,20 +331,20 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
             {
                 m.setBandwidth(SdpContents::Session::Bandwidth("TIAS", 1792000));
                 videobw = true;
-                auto codecs = m.codecs();
-                m.clearCodecs();
-                for (auto codec : codecs)
-                {
-                   if (codec.getName() == Data("H264"))
-                   {
-                      auto codecParameters = codec.parameters();
-                      string fmtpString = string(codecParameters.c_str());
-                      fmtpString = replaceParameter(fmtpString, "max-fs=", "3600");
-                      fmtpString = replaceParameter(fmtpString, "profile-level-id=", "14", 4);
-                      Codec c = Codec(Data(codec.getName()), codec.payloadType(), codec.getRate(), Data(fmtpString));
-                      m.addCodec(c);
-                   }
-                }
+               //  auto codecs = m.codecs();
+               //  m.clearCodecs();
+               //  for (auto codec : codecs)
+               //  {
+               //     if (codec.getName() == Data("H264"))
+               //     {
+               //        auto codecParameters = codec.parameters();
+               //        string fmtpString = string(codecParameters.c_str());
+               //        fmtpString = replaceParameter(fmtpString, "max-fs=", "3600");
+               //        fmtpString = replaceParameter(fmtpString, "profile-level-id=", "14", 4);
+               //        Codec c = Codec(Data(codec.getName()), codec.payloadType(), codec.getRate(), Data(fmtpString));
+               //        m.addCodec(c);
+               //     }
+               //  }
                 //m.addAttribute("max-recv-ssrc:* 1");
                 //m.addAttribute("rtcp-fb", "* nack pli");
                 //m.addAttribute("rtcp-fb", "* ccm fir");
