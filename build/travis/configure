@@ -19,6 +19,17 @@ WARNING_CONFIG="-Werror  ${WARNING_CONFIG}"
 
 RADIUS_LIB=--with-radcli
 
+BLEEDING_EDGE_REPRO_FEATURES="--with-sipxtapi --with-kurento --with-gstreamer"
+if [[ -e /etc/os-release ]]
+then
+  source /etc/os-release
+  if [[ "${VERSION_CODENAME}" == "buster" ]]
+  then
+    # those features do not compile on Debian Buster
+    BLEEDING_EDGE_REPRO_FEATURES=""
+  fi
+fi
+
 # Notes:
 # - please keep the order of parameters synchronized with build/debian.sh
 #   so we can easily diff the configuration.
@@ -45,15 +56,13 @@ RADIUS_LIB=--with-radcli
   PYCXX_SRCDIR=/usr/share/python${PYTHON_MAJOR_VERSION}/CXX/Python3 \
   --with-apps \
   --with-recon \
-  --with-sipxtapi \
-  --with-kurento \
   --with-soci-postgresql \
   --with-soci-mysql \
   --with-qpid-proton \
   --with-geoip \
   --with-netsnmp \
-  --with-gstreamer \
   --with-rend \
+  ${BLEEDING_EDGE_REPRO_FEATURES} \
   CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags` ${WARNING_CONFIG}" \
   CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
   "${@}"
