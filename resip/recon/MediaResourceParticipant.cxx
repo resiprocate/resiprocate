@@ -26,15 +26,18 @@ static const Data cacheScheme("cache");
 static const Data httpScheme("http");
 static const Data httpsScheme("https");
 static const Data recordScheme("record");
+static const Data bufferScheme("buffer");
 
 static const resip::ExtensionParameter p_repeat("repeat");
 static const resip::ExtensionParameter p_prefetch("prefetch");
 
 MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
                                                    ConversationManager& conversationManager,
-                                                   const Uri& mediaUrl)
+                                                   const Uri& mediaUrl,
+                                                   const std::shared_ptr<Data>& audioBuffer)
 : Participant(partHandle, ConversationManager::ParticipantType_MediaResource, conversationManager),
   mMediaUrl(mediaUrl),
+  mAudioBuffer(audioBuffer),
   mRepeat(false),
   mPrefetch(false),
   mDurationMs(0),
@@ -69,6 +72,10 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
       {
          mResourceType = Record;
       }
+      else if (isEqualNoCase(mMediaUrl.scheme(), bufferScheme))
+      {
+         mResourceType = Buffer;
+      }
    }
    catch(BaseException &e)
    {
@@ -98,7 +105,8 @@ MediaResourceParticipant::hasOutput()
       mResourceType == File ||
       mResourceType == Cache ||
       mResourceType == Http ||
-      mResourceType == Https;
+      mResourceType == Https ||
+      mResourceType == Buffer;
 }
 
 void 
@@ -176,7 +184,7 @@ MediaResourceParticipant::destroyParticipant()
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

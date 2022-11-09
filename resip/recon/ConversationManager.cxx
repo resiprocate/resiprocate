@@ -161,12 +161,12 @@ ConversationManager::createRemoteIMSessionParticipant(const resip::NameAddr& des
 }
 
 ParticipantHandle 
-ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl)
+ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl, const std::shared_ptr<Data>& audioBuffer)
 {
    if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = getNewParticipantHandle();
 
-   CreateMediaResourceParticipantCmd* cmd = new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl);
+   CreateMediaResourceParticipantCmd* cmd = new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl, audioBuffer);
    post(cmd);
 
    return partHandle;
@@ -439,14 +439,14 @@ void
 ConversationManager::requestKeyframe(ParticipantHandle partHandle, std::chrono::duration<double> duration)
 {
    RequestKeyframeCmd cmd(this, partHandle);
-   post(cmd, std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
+   post(cmd, (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
 }
 
 void
 ConversationManager::requestKeyframeFromPeer(ParticipantHandle partHandle, std::chrono::duration<double> duration)
 {
    RequestKeyframeFromPeerCmd cmd(this, partHandle);
-   post(cmd, std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
+   post(cmd, (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
 }
 
 void 

@@ -14,6 +14,7 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
+          echo "deb http://deb.debian.org/debian buster-backports main" > /etc/apt/sources.list.d/backports.list
           apt-get update -qq
           apt-get install -qq \
             autoconf-archive \
@@ -29,7 +30,8 @@ jobs:
             libcajun-dev \
             libcppunit-dev \
             libdb++-dev \
-            libfmt-dev \
+            libfmt-dev/buster-backports \
+            libgeoip-dev \
             libgloox-dev \
             libgstreamermm-1.0-dev \
             libpcre3-dev \
@@ -53,7 +55,7 @@ jobs:
             xxd
 
       - name: Checkout source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Bootstrap
         run: ./build/travis/bootstrap
