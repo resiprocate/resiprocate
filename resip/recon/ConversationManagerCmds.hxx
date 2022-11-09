@@ -256,17 +256,19 @@ class CreateMediaResourceParticipantCmd : public resip::DumCommandAdapter
       CreateMediaResourceParticipantCmd(ConversationManager* conversationManager, 
                                         ParticipantHandle partHandle,
                                         ConversationHandle convHandle,
-                                        const resip::Uri& mediaUrl) 
+                                        const resip::Uri& mediaUrl,
+                                        const std::shared_ptr<resip::Data>& audioBuffer)
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mConvHandle(convHandle),
-           mMediaUrl(mediaUrl) {}
+           mMediaUrl(mediaUrl),
+           mAudioBuffer(audioBuffer) {}
       virtual void executeCommand()
       {
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation)
          {
-            MediaResourceParticipant* mediaResourceParticipant = mConversationManager->getMediaStackAdapter().createMediaResourceParticipantInstance(mPartHandle, mMediaUrl);
+            MediaResourceParticipant* mediaResourceParticipant = mConversationManager->getMediaStackAdapter().createMediaResourceParticipantInstance(mPartHandle, mMediaUrl, mAudioBuffer);
             if(mediaResourceParticipant)
             {
                conversation->addParticipant(mediaResourceParticipant);
@@ -290,6 +292,7 @@ class CreateMediaResourceParticipantCmd : public resip::DumCommandAdapter
       ParticipantHandle mPartHandle;
       ConversationHandle mConvHandle;
       resip::Uri mMediaUrl;
+      std::shared_ptr<resip::Data> mAudioBuffer;
 };
 
 class CreateLocalParticipantCmd : public resip::DumCommandAdapter

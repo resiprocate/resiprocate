@@ -240,7 +240,7 @@ GstMediaStackAdapter::createLocalParticipantInstance(ParticipantHandle partHandl
 }
 
 MediaResourceParticipant *
-GstMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl)
+GstMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer)
 {
    return 0; // FIXME Gst - implement MediaResourceParticipant in Gst
 }
@@ -292,7 +292,7 @@ GstMediaStackAdapter::initializeDtlsFactory(const resip::Data& defaultAoR)
 
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2022, Daniel Pocock https://danielpocock.com
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
