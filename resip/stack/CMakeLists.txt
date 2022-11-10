@@ -360,6 +360,7 @@ set(GPERF_OPTS -C -D -E -L C++ -t --key-positions='*' --compare-strncmp)
 #        to ${PROJECT_BINARY_DIR}
 function(run_gperf)
    add_custom_command(
+      DEPENDS ${ARGV0}.gperf
       OUTPUT gen/${ARGV0}.cxx
       COMMAND gperf ${GPERF_OPTS} ${ARGV1} -Z ${ARGV0} ${ARGV0}.gperf > gen/${ARGV0}.cxx
    )

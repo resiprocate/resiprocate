@@ -10,7 +10,6 @@ add_executable(echoTest
    ${INCLUDES}
 )
 
-# FIXME - gstreamer
 target_include_directories(echoTest PRIVATE ${GSTREAMERMM_1_0_INCLUDE_DIRS})
 target_link_libraries(echoTest dum gstreamerutils)
 

@@ -23,7 +23,6 @@ set(INCLUDES
    Random.hxx
    AsyncProcessHandler.hxx
    RADIUSDigestAuthenticator.hxx
-   Repository.hxx
    RWMutex.hxx
    Subsystem.hxx
    Logger.hxx

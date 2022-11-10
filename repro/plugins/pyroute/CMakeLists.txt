@@ -4,7 +4,7 @@ set(INCLUDES
    PyRouteProcessor.hxx
 )
 
-add_library(pyroute
+add_library(pyroute MODULE
    PyRoutePlugin.cxx
    PyRouteWorker.cxx
    PyRouteProcessor.cxx

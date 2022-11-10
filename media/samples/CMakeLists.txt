@@ -4,6 +4,7 @@
 #        to ${PROJECT_BINARY_DIR}
 function(wav_to_header)
    add_custom_command(
+      DEPENDS ${ARGV0}.wav
       OUTPUT ${ARGV0}.h
       COMMAND sox ${ARGV0}.wav -r 8k -e signed -b 16 -c 1 ${ARGV0}.raw
       COMMAND xxd -i -u ${ARGV0}.raw ${ARGV0}.h.0
@@ -27,5 +28,6 @@ add_executable(prompt2wav
    ${INCLUDES}
 )
 
-install(TARGETS prompt2wav DESTINATION ${CMAKE_INSTALL_BINDIR})
+# don't need to install this, it is only used during development
+#install(TARGETS prompt2wav DESTINATION ${CMAKE_INSTALL_BINDIR})
 

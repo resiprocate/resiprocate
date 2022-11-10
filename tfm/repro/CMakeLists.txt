@@ -21,6 +21,7 @@ add_library(tfmrepro
 )
 
 target_link_libraries(tfmrepro PUBLIC repro tfm ${POPT_LIBRARIES})
+version_libname(tfmrepro)
 
 test(sanityTests sanityTests.cxx)
 

@@ -35,6 +35,7 @@ set(SO_RELEASE "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 
 include(GNUInstallDirs)
 include(Utilities)
+include(CheckStructHasMember)
 
 enable_testing()
 
@@ -57,8 +58,8 @@ if(NOT Threads_FOUND)
    exit()
 endif()
 if(CMAKE_USE_PTHREADS_INIT)
-   add_compile_definitions(_REENTRANT)
-   add_compile_options(-pthread)
+   add_definitions(-D__REENTRANT)
+   add_definitions(-pthread)
 endif()
 
 set(REPRO_BUILD_REV ${PACKAGE_VERSION})
@@ -70,6 +71,11 @@ set(RESIP_SIP_MSG_MAX_BYTES 10485760)
 # https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_BYTE_ORDER.html
 include (TestBigEndian)
 test_big_endian(RESIP_BIG_ENDIAN)
+
+CHECK_STRUCT_HAS_MEMBER(sockaddr_in sin_len arpa/inet.h HAVE_sockaddr_in_len)
+if(HAVE_sockaddr_in_len)
+   add_definitions(-DHAVE_sockaddr_in_len)
+endif()
 
 # Top-level user-settable variables (with defaults)
 # Those can be queried from the command line using "cmake -LH" and can be
@@ -184,8 +190,14 @@ function(version_libname)
    # https://discourse.libsdl.org/t/patches-dynamic-library-name-should-it-be-libsdl2-2-0-so-or-libsdl2-so/19400/8
    if(VERSIONED_SONAME)
       set_target_properties(${ARGV0} PROPERTIES OUTPUT_NAME ${ARGV0}-${SO_RELEASE})
+      file(CREATE_LINK lib${ARGV0}-${SO_RELEASE}.so ${CMAKE_CURRENT_BINARY_DIR}/lib${ARGV0}.so RESULT ${ARGV0}-IGNORE SYMBOLIC)
+      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib${ARGV0}.so DESTINATION ${CMAKE_INSTALL_LIBDIR})
    endif()
 endfunction()
+
+if(NOT VERSIONED_SONAME)
+   set(CMAKE_PLATFORM_NO_VERSIONED_SONAME True)
+endif()
 
 ################################
 ### Per-program dependencies ###
@@ -292,10 +304,6 @@ if(USE_FMT)
    set_def(USE_FMT)
 endif()
 
-if(NOT VERSIONED_SONAME)
-   set(CMAKE_PLATFORM_NO_VERSIONED_SONAME True)
-endif()
-
 option_def(USE_IPV6)
 option_def(USE_DTLS)
 option_def(PEDANTIC_STACK)
@@ -344,6 +352,8 @@ endif()
 
 # radcli (RADIUS client)
 # Debian: libradcli-dev
+# FIXME: do we need to support alternatives like
+# freeradius-client and radiusclient-ng?
 if(RESIP_HAVE_RADCLI)
    if(USE_CONTRIB)
       do_fail_win32("radcli")
@@ -360,6 +370,7 @@ if(USE_NETSNMP)
    if(USE_CONTRIB)
       do_fail_win32("netsnmp")
    else()
+      # net-snmp-config --agent-libs
       pkg_check_modules(NETSNMP_AGENT netsnmp-agent REQUIRED)
    endif()
    set_def(USE_NETSNMP)
@@ -382,6 +393,10 @@ option_def(BUILD_RETURN)
 option_def(BUILD_REND)
 
 option_def(BUILD_TFM)
+
+# BUILD_APPS has been omitted
+
+option_def(BUILD_ICHAT_GW)
 
 # Netxx
 # Debian: libnetxx-dev
@@ -456,14 +471,19 @@ if(USE_BOOST)
 endif()
 
 if(BUILD_TELEPATHY_CM)
+   option_def(BUILD_TELEPATHY_CM)
    set(USE_QT5)
 endif()
 
 # Telepathy-Qt
 # Debian: libtelepathy-qt5-dev
 if(USE_QT5)
+   # PKG_CHECK_MODULES([QT5], [Qt5Core, Qt5DBus Qt5Network])
+   # PKG_CHECK_MODULES([TP_QT5], [TelepathyQt5, TelepathyQt5Service])])
    find_package(TelepathyQt5 REQUIRED)
 endif()
+
+option_def(BUILD_RECON)
 
 # SRTP2
 # Debian: libsrtp2-dev
@@ -525,6 +545,15 @@ endif()
 
 option_def(RESIP_ASSERT_SYSLOG)
 
+# FIXME
+# The AC_SEARCH_LIBS macro from autotools doesn't
+# appear to have an equivalent in CMake.
+# If we need to link against nsl or socket then it
+# needs to be specified manuall on the CMake command line.
+# AC_SEARCH_LIBS(gethostbyname, nsl)
+# AC_SEARCH_LIBS(socket, socket)
+
+
 # websocketpp
 # Debian: libwebsocketpp-dev
 if(USE_WEBSOCKETPP)
@@ -549,6 +578,10 @@ endif()
 # epoll
 include(CheckIncludeFiles)
 check_include_files(sys/epoll.h HAVE_EPOLL)
+
+# HAVE_LIBDL from autotools obsolete,
+# now we use CMAKE_DL_LIBS to include the library
+# when necessary
 
 # gperf
 set(GPERF_SIZE_TYPE "size_t")
@@ -596,11 +629,24 @@ endif()
 
 add_subdirectory(apps)
 
+# Create spec file for RPM packaging
+# The tarball containing a spec file can be fed directly
+# to the rpmbuild command.
+configure_file(
+   resiprocate.spec.in
+   resiprocate.spec
+   @ONLY)
+
 # Add 'make dist' command for creating release tarball
 set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set (CPACK_SOURCE_GENERATOR "TGZ")
 set (CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CPACK_PACKAGE_VERSION}")
+
+# pax appears to be the default, we need it due to some filenames
+#set (COMPRESSION_OPTIONS --format=pax)
+
 list(APPEND CPACK_SOURCE_IGNORE_FILES "/\\\\.git/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.gitignore")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "/CMakeFiles/")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "/_CPack_Packages/")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.deps/")
@@ -610,6 +656,10 @@ list(APPEND CPACK_SOURCE_IGNORE_FILES "/.*\\\\.zip")
 list(APPEND CPACK_SOURCE_IGNORE_FILES ".*\\\\.o")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "lib.*\\\\.so*")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "/CMakeCache.txt")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/contrib/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/debian/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "Makefile")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/config.h$")
 
 include (CPack)
 add_custom_target (dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)

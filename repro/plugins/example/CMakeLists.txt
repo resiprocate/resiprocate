@@ -1,5 +1,5 @@
 
-add_library(example
+add_library(example MODULE
    ExamplePlugin.cxx
 )
 

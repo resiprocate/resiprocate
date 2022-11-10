@@ -6,7 +6,7 @@ License: VSL
 Url: http://www.resiprocate.org
 Source: https://www.resiprocate.org/files/pub/reSIProcate/releases/%name-%version.tar.gz
 BuildRequires: gcc-c++
-BuildRequires: libtool automake autoconf
+BuildRequires: cmake
 %define build_return 0%{?fedora} >= 30 || 0%{?rhel} >= 8
 %if %build_return
 BuildRequires: asio-devel >= 1.12.0
@@ -204,10 +204,54 @@ RETURN_CFG=--with-return
 %endif
 %define use_srtp1 0%{?rhel} == 8
 %if %use_srtp1
-SRTP1=--with-srtp1
+SRTP1=-DUSE_SRTP1=ON
+%else
+SRTP1=-DUSE_SRTP1=OFF
 %endif
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D_REENTRANT -I/usr/include/soci" %configure --with-c-ares --with-fmt --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} ${RETURN_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_VERSION=${PYVERSION} DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python3 --enable-assert-syslog --with-netsnmp --with-qpid-proton --with-recon --with-kurento ${SRTP1}
+CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -I/usr/include/soci"
+%cmake \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" \
+    -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" \
+    -DWITH_C_ARES=ON \
+    -DWITH_SSL=ON \
+    -DUSE_POPT=ON \
+    -DUSE_SIGCOMP=OFF \
+    -DUSE_FMT=ON \
+    -DVERSIONED_SONAME=ON \
+    -DENABLE_ANDROID=OFF \
+    -DUSE_IPV6=ON \
+    -DUSE_DTLS=ON \
+    -DPEDANTIC_STACK=OFF \
+    -DUSE_MYSQL=ON \
+    -DUSE_SOCI_POSTGRESQL=ON \
+    -DUSE_SOCI_MYSQL=ON \
+    -DUSE_POSTGRESQL=ON \
+    -DUSE_MAXMIND_GEOIP=OFF \
+    -DRESIP_HAVE_RADCLI=ON \
+    -DUSE_NETSNMP=ON \
+    -DBUILD_REPRO=ON \
+    -DBUILD_REPRO_DSO_PLUGINS=ON \
+    -DBUILD_RETURN=ON \
+    -DBUILD_REND=OFF \
+    -DBUILD_TFM=OFF \
+    -DBUILD_ICHAT_GW=OFF \
+    -DBUILD_TELEPATHY_CM=OFF \
+    -DBUILD_RECON=ON \
+    ${SRTP1} \
+    -DBUILD_RECONSERVER=ON \
+    -DUSE_SIPXTAPI=OFF \
+    -DUSE_KURENTO=ON \
+    -DUSE_GSTREAMER=OFF \
+    -DUSE_LIBWEBRTC=OFF \
+    -DRECON_LOCAL_HW_TESTS=OFF \
+    -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 \
+    -DBUILD_P2P=OFF \
+    -DBUILD_PYTHON=ON \
+    -DPYCXX_SRCDIR=/usr/src/CXX \
+    -DBUILD_QPID_PROTON=ON \
+    -DRESIP_ASSERT_SYSLOG=ON
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 rm -rf resip/stack/gen/*.cxx
