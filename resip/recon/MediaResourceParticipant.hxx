@@ -48,12 +48,14 @@ public:
       Cache,
       Http,
       Https,
-      Record
+      Record,
+      Buffer
    } ResourceType;
 
    MediaResourceParticipant(ParticipantHandle partHandle,
       ConversationManager& conversationManager,
-      const resip::Uri& mediaUrl);  
+      const resip::Uri& mediaUrl,
+      const std::shared_ptr<resip::Data>& audioBuffer);
    virtual ~MediaResourceParticipant();
 
    virtual void startResource();
@@ -76,11 +78,12 @@ protected:
    virtual void setRunning(bool running) { mRunning = running; }
    virtual bool isDestroying() { return mDestroying; }
    virtual void setDestroying(bool destroying) { mDestroying = destroying; }
-
+   virtual const std::shared_ptr<resip::Data>& getAudioBuffer() { return mAudioBuffer; }
 
 private:
    resip::Uri mMediaUrl;
    ResourceType mResourceType;
+   std::shared_ptr<resip::Data> mAudioBuffer; // only set if type is buffer playback
 
    // Play settings
    bool mRepeat;
@@ -98,7 +101,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

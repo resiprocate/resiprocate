@@ -1,0 +1,17 @@
+
+add_subdirectory(clicktocall)
+add_subdirectory(sipdial)
+if(BUILD_ICHAT_GW)
+   add_subdirectory(ichat-gw)
+endif()
+if(BUILD_TELEPATHY_CM)
+   add_subdirectory(telepathy)
+endif()
+if(BUILD_RECONSERVER)
+   add_subdirectory(reConServer)
+endif()
+if(NETSNMP_AGENT_FOUND)
+   add_subdirectory(registration-agent)
+endif()
+add_subdirectory(echoTest)
+

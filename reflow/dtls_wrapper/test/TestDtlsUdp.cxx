@@ -12,6 +12,8 @@
 
 #include <memory.h>
 
+#include <boost/predef/other/endian.h>
+
 #include <openssl/ssl.h>
 #include <openssl/srtp.h>
 
@@ -202,8 +204,8 @@ TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int le
 
    if(useSrtp)
    {
-      int r=srtp_protect(srtpOut,(unsigned char *)hdr,&l);
-      assert(r==0);
+      srtp_err_status_t r=srtp_protect(srtpOut,(unsigned char *)hdr,&l);
+      assert(r==srtp_err_status_ok);
    }
    write((unsigned char *)hdr,l);
 
@@ -219,8 +221,8 @@ TestDtlsUdpSocketContext::recvRtpData(unsigned char *in, unsigned int inlen, uns
 
    if(useSrtp)
    {
-      int r=srtp_unprotect(srtpIn,hdr,&len_int);
-      assert(r==0);
+      srtp_err_status_t r=srtp_unprotect(srtpIn,hdr,&len_int);
+      assert(r==srtp_err_status_ok);
       inlen=(unsigned int)len_int;
    }
 

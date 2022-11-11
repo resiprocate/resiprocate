@@ -11,6 +11,11 @@
 namespace resip
 {
 
+void OpenSSLDeleter::operator()(EVP_CIPHER_CTX* ctx) const noexcept
+{
+   EVP_CIPHER_CTX_free(ctx);
+}
+
 void OpenSSLDeleter::operator()(EVP_MD_CTX* ctx) const noexcept
 {
    EVP_MD_CTX_free(ctx);

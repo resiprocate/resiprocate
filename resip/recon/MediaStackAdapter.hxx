@@ -69,7 +69,7 @@ public:
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode) = 0;
    virtual LocalParticipant* createLocalParticipantInstance(ParticipantHandle partHandle) = 0;
-   virtual MediaResourceParticipant* createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl) = 0;
+   virtual MediaResourceParticipant* createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer) = 0;
    virtual RemoteParticipant* createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
    virtual RemoteParticipant* createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
    virtual RemoteParticipantDialogSet* createRemoteParticipantDialogSetInstance(

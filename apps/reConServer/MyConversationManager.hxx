@@ -19,15 +19,15 @@
 namespace reconserver
 {
 
-#ifdef USE_GSTREAMER
+#if defined(USE_GSTREAMER)
 #define PREFER_GSTREAMER
-#elif USE_LIBWEBRTC
+#elif defined(USE_LIBWEBRTC)
 #define PREFER_LIBWEBRTC
-#elif USE_KURENTO
+#elif defined(USE_KURENTO)
 #define PREFER_KURENTO
 // FIXME: hard-coded to use Kurento when selected at compile time
 #else
-#ifdef USE_SIPXTAPI
+#if defined(USE_SIPXTAPI)
 #define PREFER_SIPXTAPI
 #else
 #error No media stack enabled

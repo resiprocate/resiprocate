@@ -234,7 +234,7 @@ KurentoMediaStackAdapter::createLocalParticipantInstance(ParticipantHandle partH
 }
 
 MediaResourceParticipant *
-KurentoMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl)
+KurentoMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer)
 {
    return 0; // FIXME Kurento - implement MediaResourceParticipant in Kurento
 }
@@ -291,7 +291,7 @@ KurentoMediaStackAdapter::initializeDtlsFactory(const resip::Data& defaultAoR)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

@@ -38,12 +38,12 @@ MyConversationManager::MyConversationManager(const ReConServerConfig& config, bo
         mConfig(config),
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 
-#ifdef PREFER_GSTREAMER
+#if defined(PREFER_GSTREAMER)
    shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<GstMediaStackAdapter>(*this);
-#elif PREFER_LIBWEBRTC
+#elif defined(PREFER_LIBWEBRTC)
    #error libWebRTC not fully implemented yet // FIXME
    shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<LibWebRTCMediaStackAdapter>(*this);
-#elif PREFER_KURENTO
+#elif defined(PREFER_KURENTO)
    Data kurentoUri = config.getConfigData("KurentoURI", "ws://127.0.0.1:8888/kurento");
    shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<KurentoMediaStackAdapter>(*this, kurentoUri);
 #else

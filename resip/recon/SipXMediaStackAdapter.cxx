@@ -536,9 +536,9 @@ SipXMediaStackAdapter::createLocalParticipantInstance(ParticipantHandle partHand
 }
 
 MediaResourceParticipant *
-SipXMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl)
+SipXMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer)
 {
-   return new SipXMediaResourceParticipant(partHandle, getConversationManager(), *this, mediaUrl);
+   return new SipXMediaResourceParticipant(partHandle, getConversationManager(), *this, mediaUrl, audioBuffer);
 }
 
 RemoteParticipant *
@@ -617,7 +617,7 @@ SipXMediaStackAdapter::initializeDtlsFactory(const resip::Data& defaultAoR)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

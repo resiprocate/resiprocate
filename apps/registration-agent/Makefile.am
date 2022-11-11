@@ -2,7 +2,6 @@
 EXTRA_DIST = registration-agent.init
 EXTRA_DIST += registrationAgent.config
 EXTRA_DIST += registration-agent.service
-EXTRA_DIST += send-cmd.py
 EXTRA_DIST += users.txt
 EXTRA_DIST += mib2c-skeleton
 EXTRA_DIST += README.txt

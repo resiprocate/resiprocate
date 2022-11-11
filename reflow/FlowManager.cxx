@@ -86,8 +86,8 @@ FlowManager::FlowManager()
 #endif 
 
    // Initialize SRTP 
-   err_status_t status = srtp_init();
-   if(status && status != err_status_bad_param)  // Note: err_status_bad_param happens if srtp_init is called twice - we allow this for test programs
+   srtp_err_status_t status = srtp_init();
+   if(status && status != srtp_err_status_bad_param)  // Note: err_status_bad_param happens if srtp_init is called twice - we allow this for test programs
    {
       ErrLog(<< "Unable to initialize SRTP engine, error code=" << status);
       throw FlowManagerException("Unable to initialize SRTP engine", __FILE__, __LINE__);

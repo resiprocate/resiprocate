@@ -918,10 +918,10 @@ ConnectionBase::decompressNewBytes(int bytesRead)
                 *mSigcompFramer, uncompressed, 65536, sc)) > 0)
   {
     DebugLog (<< "Uncompressed Connection-oriented message");
-    mMessage = new SipMessage(mWho.transport);
+    mMessage = new SipMessage(&mTransport->getTuple());
 
     mMessage->setSource(mWho);
-    mMessage->setTlsDomain(mWho.transport->tlsDomain());
+    mMessage->setTlsDomain(mTransport->tlsDomain());
 
 #ifdef USE_SSL
     // Set TlsPeerName if message is from TlsConnection

@@ -132,20 +132,23 @@ librutil_la_LIBADD += -lpython$(DEPS_PYTHON_VERSION)
 # Discussed in the lists:
 #   http://list.resiprocate.org/archive/resiprocate-devel/msg09110.html
 #   http://lists.gnu.org/archive/html/automake/2016-06/msg00003.html
-cxx_exceptions.cxx:	$(PYCXX_SRCDIR)/cxx_exceptions.cxx
-	cp $(PYCXX_SRCDIR)/cxx_exceptions.cxx .
 
-cxxextensions.c:	$(PYCXX_SRCDIR)/cxxextensions.c
-	cp $(PYCXX_SRCDIR)/cxxextensions.c .
+PYCXX_SRCDIR_I = $(PYCXX_SRCDIR)/Python3
 
-cxx_extensions.cxx:	$(PYCXX_SRCDIR)/cxx_extensions.cxx
-	cp $(PYCXX_SRCDIR)/cxx_extensions.cxx .
+cxx_exceptions.cxx:	$(PYCXX_SRCDIR_I)/cxx_exceptions.cxx
+	cp $< .
 
-cxxsupport.cxx:	$(PYCXX_SRCDIR)/cxxsupport.cxx
-	cp $(PYCXX_SRCDIR)/cxxsupport.cxx .
+cxxextensions.c:	$(PYCXX_SRCDIR_I)/cxxextensions.c
+	cp $< .
 
-IndirectPythonInterface.cxx:	$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx
-	cp $(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx .
+cxx_extensions.cxx:	$(PYCXX_SRCDIR_I)/cxx_extensions.cxx
+	cp $< .
+
+cxxsupport.cxx:	$(PYCXX_SRCDIR_I)/cxxsupport.cxx
+	cp $< .
+
+IndirectPythonInterface.cxx:	$(PYCXX_SRCDIR)/IndirectPythonInterface.cxx
+	cp $< .
 endif
 
 rutilincludedir = $(includedir)/rutil
@@ -219,6 +222,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	NetNs.hxx \
 	GenericTimerQueue.hxx \
 	IntrusiveListElement.hxx \
+	ssl/OpenSSLDeleter.hxx \
 	ssl/SHA1Stream.hxx \
 	ssl/OpenSSLInit.hxx \
 	CountStream.hxx \

@@ -11,7 +11,6 @@ EXTRA_DIST = ca.pem
 EXTRA_DIST += doc
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
 EXTRA_DIST += MOHParkServer.config
-EXTRA_DIST += music.wav
 
 LDADD = ../librecon.la
 LDADD += ../../../reflow/libreflow.la

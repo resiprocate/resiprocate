@@ -135,7 +135,7 @@ MediaStream::createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cr
       return false;
    }
 
-   err_status_t status;
+   srtp_err_status_t status;
    Lock lock(mMutex);
    if(mSRTPSessionOutCreated)
    {
@@ -200,7 +200,7 @@ MediaStream::createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cry
       return false;
    }
 
-   err_status_t status;
+   srtp_err_status_t status;
    Lock lock(mMutex);
    if(mSRTPSessionInCreated)
    {
@@ -256,11 +256,11 @@ MediaStream::createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cry
    return true;
 }
 
-err_status_t 
+srtp_err_status_t
 MediaStream::srtpProtect(void* data, int* size, bool rtcp)
 {
    Lock lock(mMutex);
-   err_status_t status = err_status_no_ctx;
+   srtp_err_status_t status = srtp_err_status_no_ctx;
    if(mSRTPSessionOutCreated)
    {
       if(rtcp)
@@ -275,11 +275,11 @@ MediaStream::srtpProtect(void* data, int* size, bool rtcp)
    return status;
 }
 
-err_status_t 
+srtp_err_status_t
 MediaStream::srtpUnprotect(void* data, int* size, bool rtcp)
 {
    Lock lock(mMutex);
-   err_status_t status = err_status_no_ctx;
+   srtp_err_status_t status = srtp_err_status_no_ctx;
    if(mSRTPSessionInCreated)
    {
       if(rtcp)

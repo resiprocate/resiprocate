@@ -37,9 +37,10 @@ static const resip::ExtensionParameter p_format("format");
 SipXMediaResourceParticipant::SipXMediaResourceParticipant(ParticipantHandle partHandle,
                                                    ConversationManager& conversationManager,
                                                    SipXMediaStackAdapter& sipXMediaStackAdapter,
-                                                   const Uri& mediaUrl)
+                                                   const Uri& mediaUrl,
+                                                   const std::shared_ptr<Data>& audioBuffer)
 : Participant(partHandle, ConversationManager::ParticipantType_MediaResource, conversationManager),
-  MediaResourceParticipant(partHandle, conversationManager, mediaUrl),
+  MediaResourceParticipant(partHandle, conversationManager, mediaUrl, audioBuffer),
   SipXParticipant(partHandle, ConversationManager::ParticipantType_MediaResource, conversationManager, sipXMediaStackAdapter),
   mStreamPlayer(0),
   mPortOnBridge(-1)
@@ -224,6 +225,55 @@ SipXMediaResourceParticipant::startResourceImpl()
       else
       {
          WarningLog(<< "SipXMediaResourceParticipant::startResource media not found in cache, key: " << getMediaUrl().host());
+      }
+   }
+   break;
+
+   case Buffer:
+   {
+      Data audioBufferType = getMediaUrl().host();
+
+      InfoLog(<< "SipXMediaResourceParticipant playing, handle=" << mHandle << " audioBufferType=" << audioBufferType);
+
+      if (resip::isEqualNoCase("RAW_PCM_16", audioBufferType))
+      {
+         Data* buffer = getAudioBuffer().get();
+
+         if (buffer && buffer->size() > 0)
+         {
+            SipXMediaInterface* mediaInterface = getMediaInterface().get();
+#ifdef SIPX_NO_RECORD
+            OsStatus status = mediaInterface->getInterface()->playBuffer((char*)buffer->data(),
+               buffer->size(),
+               8000, /* rate */
+               0,  // RAW_PCM_16 = 0 - always correct for SipXMedia:  see sipXTapi.h: SIPX_AUDIO_DATA_FORMAT
+               isRepeat() ? TRUE : FALSE /* repeat? */,
+               TRUE /* local - unused */, TRUE /* remote - unused */);
+#else
+            OsStatus status = mediaInterface->getInterface()->playBuffer(mSipXResourceName.c_str(),
+               (char*)buffer->data(),
+               buffer->size(),
+               8000, /* rate */
+               0,  // RAW_PCM_16 = 0 - always correct for SipXMedia:  see sipXTapi.h: SIPX_AUDIO_DATA_FORMAT
+               isRepeat() ? TRUE : FALSE /* repeat? */);
+#endif
+            if (status == OS_SUCCESS)
+            {
+               setRunning(true);
+            }
+            else
+            {
+               WarningLog(<< "SipXMediaResourceParticipant::startResource error calling playAudio: " << status);
+            }
+         }
+         else
+         {
+            WarningLog(<< "SipXMediaResourceParticipant::startResource buffer type, but no audio buffer was provided.");
+         }
+      }
+      else
+      {
+         WarningLog(<< "SipXMediaResourceParticipant::startResource buffer type is not recognized: " << audioBufferType);
       }
    }
    break;
@@ -555,7 +605,7 @@ SipXMediaResourceParticipant::playerFailed(MpPlayerEvent& event)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
