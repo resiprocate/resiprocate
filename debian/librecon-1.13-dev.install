@@ -1,4 +1,8 @@
+usr/include/media
 usr/include/recon
 usr/include/reflow
+usr/lib/*/libresipmedia.so
+usr/lib/*/libkurentoclient.so
+usr/lib/*/libgstreamerutils.so
 usr/lib/*/librecon.so
 usr/lib/*/libreflow.so

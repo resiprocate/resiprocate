@@ -1,3 +1,9 @@
+resiprocate (1:1.13.0-1~debify11+1) debify-bullseye; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Fri, 11 Nov 2022 11:05:19 +0100
+
 resiprocate (1:1.12.0-1) unstable; urgency=medium
 
   * New upstream release.

@@ -67,7 +67,52 @@ PYVERSION=3
 PYVERSION_EXACT=`python3 -V | cut -f2 -d' ' | cut -f1-2 -d.`
 
 override_dh_auto_configure:
-	dh_auto_configure -- $(CFG_ARGS) DEPS_PYTHON_CFLAGS="`/usr/bin/python$(PYVERSION)-config --cflags`" DEPS_PYTHON_LIBS="`/usr/bin/python$(PYVERSION)-config --ldflags`" PYCXX_SRCDIR=/usr/share/python$(PYVERSION_EXACT)/CXX/Python3
+	#dh_auto_configure -- $(CFG_ARGS) DEPS_PYTHON_CFLAGS="`/usr/bin/python$(PYVERSION)-config --cflags`" DEPS_PYTHON_LIBS="`/usr/bin/python$(PYVERSION)-config --ldflags`" PYCXX_SRCDIR=/usr/share/python$(PYVERSION_EXACT)/CXX/Python3
+	#cmake \
+	dh_auto_configure -- \
+    -DENABLE_LOG_REPOSITORY_DETAILS=OFF \
+    -DRUN_GPERF=ON \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" \
+    -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" \
+    -DWITH_C_ARES=ON \
+    -DWITH_SSL=ON \
+    -DUSE_POPT=ON \
+    -DUSE_SIGCOMP=ON \
+    -DUSE_FMT=OFF \
+    -DVERSIONED_SONAME=ON \
+    -DENABLE_ANDROID=OFF \
+    -DUSE_IPV6=ON \
+    -DUSE_DTLS=ON \
+    -DPEDANTIC_STACK=OFF \
+    -DUSE_MYSQL=ON \
+    -DUSE_SOCI_POSTGRESQL=ON \
+    -DUSE_SOCI_MYSQL=ON \
+    -DUSE_POSTGRESQL=ON \
+    -DUSE_MAXMIND_GEOIP=ON \
+    -DRESIP_HAVE_RADCLI=ON \
+    -DUSE_NETSNMP=ON \
+    -DBUILD_REPRO=ON \
+    -DBUILD_REPRO_DSO_PLUGINS=ON \
+    -DBUILD_RETURN=ON \
+    -DBUILD_REND=ON \
+    -DBUILD_TFM=OFF \
+    -DBUILD_ICHAT_GW=OFF \
+    -DBUILD_TELEPATHY_CM=OFF \
+    -DBUILD_RECON=ON \
+    -DUSE_SRTP1=OFF \
+    -DBUILD_RECONSERVER=ON \
+    -DUSE_SIPXTAPI=ON \
+    -DUSE_KURENTO=ON \
+    -DUSE_GSTREAMER=ON \
+    -DUSE_LIBWEBRTC=OFF \
+    -DRECON_LOCAL_HW_TESTS=OFF \
+    -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 \
+    -DBUILD_P2P=OFF \
+    -DBUILD_PYTHON=ON \
+    -DPYCXX_SRCDIR=/usr/src/CXX \
+    -DBUILD_QPID_PROTON=ON \
+    -DRESIP_ASSERT_SYSLOG=ON
 ifeq ($(DEB_HOST_ARCH_OS),kfreebsd)
 # this is due to a problem with the test case rather than the stack itself
 # upstream is investigating
@@ -75,7 +120,7 @@ ifeq ($(DEB_HOST_ARCH_OS),kfreebsd)
 endif
 
 override_dh_auto_build:
-	rm resip/stack/gen/*.cxx
+	#rm -f resip/stack/gen/*.cxx
 	dh_auto_build --parallel
 
 # let the test cases run
