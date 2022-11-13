@@ -253,11 +253,9 @@ TlsConnection::checkState()
             StackLog( << "BIO not connected, try later");
             return mTlsState;
 
-#if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
          case SSL_ERROR_WANT_ACCEPT:
             StackLog( << "TLS connection want accept" );
             return mTlsState;
-#endif
 
          case SSL_ERROR_WANT_X509_LOOKUP:
             DebugLog( << "Try later / SSL_ERROR_WANT_X509_LOOKUP");
