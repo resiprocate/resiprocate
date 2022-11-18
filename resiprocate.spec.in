@@ -17,6 +17,10 @@ BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
 BuildRequires: fmt-devel
 BuildRequires: gperf
+BuildRequires: gstreamer1-devel
+BuildRequires: gstreamer1-plugins-base-devel
+BuildRequires: gstreamer1-plugins-bad-free-devel
+BuildRequires: gstreamermm-devel
 %if 0%{?fedora} >= 34 || 0%{?rhel} >= 8
 BuildRequires: libdb-cxx-devel
 %endif
@@ -53,7 +57,11 @@ BuildRequires: xerces-c-devel
 BuildRequires: net-snmp-devel
 BuildRequires: qpid-proton-cpp-devel
 BuildRequires: soci-devel
+BuildRequires: soci-mysql-devel
 BuildRequires: soci-postgresql-devel
+BuildRequires: sox
+# vim-common contains the xxd utility
+BuildRequires: vim-common
 BuildRequires: websocketpp-devel
 Requires: openssl >= 1.1.0
 %if %use_systemd
@@ -440,6 +448,7 @@ fi
 %{_libdir}/libreflow-*.so
 %{_libdir}/librepro-*.so
 %{_libdir}/libresip-*.so
+%{_libdir}/libresipmedia-*.so
 %if %build_return
 %{_libdir}/libreTurnClient-*.so
 %{_libdir}/libreTurnCommon-*.so
@@ -456,9 +465,9 @@ fi
 %dir %{_includedir}/reTurn/client/
 %endif
 %dir %{_includedir}/recon/
+%dir %{_includedir}/recon/sdp/
 %dir %{_includedir}/reflow/
 %dir %{_includedir}/reflow/dtls_wrapper/
-%dir %{_includedir}/reflow/rtcp/
 %dir %{_includedir}/repro/
 %dir %{_includedir}/repro/monkeys/
 %dir %{_includedir}/repro/stateAgents/
@@ -469,20 +478,22 @@ fi
 %dir %{_includedir}/resip/stack/ssl/
 %dir %{_includedir}/rutil/
 %dir %{_includedir}/rutil/dns/
+%dir %{_includedir}/rutil/rtcp/
 %dir %{_includedir}/rutil/ssl/
 %dir %{_includedir}/rutil/stun/
 %dir %{_includedir}/rutil/wince/
 %dir %{_includedir}/sipdial/
 %{_includedir}/clicktocall/*.hxx
-%dir %{_includedir}/media/kurento/*.hxx
+%{_includedir}/media/*.hxx
+%{_includedir}/media/kurento/*.hxx
 %if %build_return
 %{_includedir}/reTurn/*.hxx
 %{_includedir}/reTurn/client/*.hxx
 %endif
 %{_includedir}/recon/*.hxx
+%{_includedir}/recon/*/*.hxx
 %{_includedir}/reflow/*.hxx
 %{_includedir}/reflow/dtls_wrapper/*.hxx
-%{_includedir}/reflow/rtcp/*.h
 %{_includedir}/repro/*.hxx
 %{_includedir}/repro/*/*.hxx
 %{_includedir}/resip/dum/*.hxx
@@ -492,6 +503,7 @@ fi
 %{_includedir}/rutil/*.hxx
 %{_includedir}/rutil/*.h
 %{_includedir}/rutil/*/*.hxx
+%{_includedir}/rutil/*/*.h
 %{_includedir}/sipdial/*.hxx
 %{_libdir}/libdum.so
 %{_libdir}/libkurentoclient.so
@@ -499,6 +511,7 @@ fi
 %{_libdir}/libreflow.so
 %{_libdir}/librepro.so
 %{_libdir}/libresip.so
+%{_libdir}/libresipmedia.so
 %if %build_return
 %{_libdir}/libreTurnClient.so
 %{_libdir}/libreTurnCommon.so

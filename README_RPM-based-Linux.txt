@@ -99,7 +99,15 @@ Install reSIProcate build environment dependencies
                    xerces-c-devel \
                    net-snmp-devel \
                    qpid-proton-cpp-devel \
-                   soci-devel soci-postgresql-devel
+                   soci-devel soci-postgresql-devel soci-mysql-devel \
+                   vim-common \
+                   sox \
+                   fmt-devel \
+                   websocketpp-devel \
+                   gstreamer1-devel \
+                   gstreamer1-plugins-base-devel \
+                   gstreamer1-plugins-bad-free-devel \
+                   gstreamermm-devel
 
 Manually create some dependencies
 ---------------------------------
