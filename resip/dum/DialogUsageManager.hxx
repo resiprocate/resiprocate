@@ -289,8 +289,14 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process.
       bool hasEvents() const;
+
+      // process methods that take an optional lock when processing occurs
       bool process(Mutex* mutex = NULL);  // non-blocking
       bool process(int timeoutMs, Mutex* mutex = NULL);   // Specify -1 for infinte timeout
+
+      // process methods that take a recursive lock when processing occurs
+      bool process(RecursiveMutex& mutex);  // non-blocking
+      bool process(int timeoutMs, RecursiveMutex& mutex);   // Specify -1 for infinte timeout
 
       AppDialogHandle findAppDialog(const DialogId& id);
       AppDialogSetHandle findAppDialogSet(const DialogSetId& id);
