@@ -7,7 +7,11 @@ LDADD = ../librecon.la
 if USE_KURENTO
 LDADD += ../../../media/kurento/libkurentoclient.la
 endif
+if USE_GSTREAMER
+LDADD += $(GSTREAMERMM_1_0_LIBS) -lgstwebrtc-1.0
+endif
 LDADD += ../../../reflow/libreflow.la
+LDADD += ../../../media/libresipmedia.la
 # These need to be included for static linking, and we need to be able
 # to configure the runtime location to find them for dynamic loading
 #LDADD += ../../../../sipXtapi/sipXmediaLib/src/mp/codecs/plgl16/codec_l16.la
@@ -34,7 +38,7 @@ check_PROGRAMS += \
 	sdpTests \
 	unitTests
 
-testUA_SOURCES = testUA.cxx playback_prompt.h record_prompt.h
+testUA_SOURCES = testUA.cxx ../../../media/samples/playback_prompt.h ../../../media/samples/record_prompt.h
 sdpTests_SOURCES = sdpTests.cxx
 unitTests_SOURCES = unitTests.cxx
 testUA_LDADD = -lsipXport

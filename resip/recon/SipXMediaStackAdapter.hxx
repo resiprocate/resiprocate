@@ -11,7 +11,7 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
 
-#include "RTPPortManager.hxx"
+#include "media/RTPPortManager.hxx"
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
@@ -191,14 +191,14 @@ public:
    virtual void enableAutoGainControl(bool enable);
    virtual void enableNoiseReduction(bool enable);
    virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; }
-   virtual std::shared_ptr<RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
+   virtual std::shared_ptr<resip::RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
 
    virtual Conversation *createConversationInstance(ConversationHandle handle,
       RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode) override;
    virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle) override;
-   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl) override;
+   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer) override;
    virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
    virtual RemoteParticipant *createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
    virtual RemoteParticipantDialogSet *createRemoteParticipantDialogSetInstance(
@@ -278,7 +278,7 @@ private:
    MediaInterfaceMode mMediaInterfaceMode;
    bool mEnableExtraPlayAndRecordResources;
 
-   std::shared_ptr<RTPPortManager> mRTPPortManager;
+   std::shared_ptr<resip::RTPPortManager> mRTPPortManager;
 
    // FlowManager Instance
    flowmanager::FlowManager mFlowManager;
@@ -303,7 +303,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

@@ -170,6 +170,12 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdp
    sdpReady(valid, std::move(_answer));
 }
 
+void
+RemoteIMSessionParticipant::requestKeyframe()
+{
+   WarningLog(<<"requestKeyframe not implemented");  // FIXME
+}
+
 
 /* ====================================================================
 

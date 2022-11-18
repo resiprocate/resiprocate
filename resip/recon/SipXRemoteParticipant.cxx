@@ -1211,6 +1211,12 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
    }
 }
 
+void
+SipXRemoteParticipant::requestKeyframe()
+{
+   WarningLog(<<"requestKeyframe not implemented for this media stack"); // FIXME
+}
+
 bool
 SipXRemoteParticipant::mediaStackPortAvailable()
 {
@@ -1221,7 +1227,8 @@ SipXRemoteParticipant::mediaStackPortAvailable()
 /* ====================================================================
 
  Copyright (c) 2021, SIP Spectrum, Inc.
- Copyright (c) 2021, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

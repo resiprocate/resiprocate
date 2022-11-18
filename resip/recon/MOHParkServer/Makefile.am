@@ -16,6 +16,10 @@ EXTRA_DIST += music.wav
 LDADD = ../librecon.la
 LDADD += ../../../reflow/libreflow.la
 LDADD += ../../../reTurn/client/libreTurnClient.la
+LDADD += ../../../media/libresipmedia.la
+if USE_GSTREAMER
+LDADD += $(GSTREAMERMM_1_0_LIBS) -lgstwebrtc-1.0
+endif
 LDADD += ../../../resip/dum/libdum.la
 LDADD += ../../../resip/stack/libresip.la
 LDADD += ../../../rutil/librutil.la

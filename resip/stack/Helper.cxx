@@ -6,7 +6,9 @@
 #include <iomanip>
 #include <algorithm>
 #include <memory>
+#include <new>
 #include <utility>
+#include <vector>
 
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/BasicNonceHelper.hxx"
@@ -32,6 +34,7 @@
 
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
+#include "rutil/ssl/OpenSSLDeleter.hxx"
 #endif
 
 using namespace resip;
@@ -1795,7 +1798,13 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
 }
 
 #if defined(USE_SSL) && !defined(OPENSSL_NO_BF)
+#include <openssl/opensslv.h>
 #include <openssl/blowfish.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/evp.h>
+#include <openssl/params.h>
+#include <openssl/core_names.h>
+#endif
 
 static const Data sep("[]");
 static const Data pad("\0\0\0\0\0\0\0", 7);
@@ -1818,9 +1827,6 @@ Helper::gruuUserPart(const Data& instanceId,
    ivec[6] = '\x7D';
    ivec[7] = '\x51';
 
-   BF_KEY fish;
-   BF_set_key(&fish, (int)key.size(), (const unsigned char*)key.data());
-
    const Data salt(resip::Random::getRandomHex(saltBytes));
 
    const Data token(salt + instanceId + sep + aor + '\0' +
@@ -1829,18 +1835,72 @@ Helper::gruuUserPart(const Data& instanceId,
                                          sep.size() + 1 
                                          + aor.size() ) % 8))
                                % 8));
-   unique_ptr <unsigned char> out(new unsigned char[token.size()]);
+   std::vector<unsigned char> out;
+
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+   out.resize(token.size());
+
+   BF_KEY fish;
+   BF_set_key(&fish, (int)key.size(), (const unsigned char*)key.data());
+
    BF_cbc_encrypt((const unsigned char*)token.data(),
-                  out.get(),
+                  &out[0],
                   (long)token.size(),
                   &fish,
-                  ivec, 
+                  ivec,
                   BF_ENCRYPT);
+#else
+   const EVP_CIPHER* pCipher = EVP_bf_cbc();
+   std::size_t out_size = token.size();
+   int block_size = EVP_CIPHER_get_block_size(pCipher);
+   if (block_size > 1)
+   {
+      std::size_t tail_size = out_size % block_size;
+      if (tail_size > 0)
+         out_size += block_size - tail_size;
+   }
+   out.resize(out_size);
 
-   return GRUU + Data(out.get(),token.size()).base64encode(true/*safe URL*/);
+   std::unique_ptr<EVP_CIPHER_CTX, OpenSSLDeleter> pCipherCtx(EVP_CIPHER_CTX_new());
+   if (!pCipherCtx)
+      throw std::bad_alloc();
+
+   std::size_t keylen = key.size();
+   const OSSL_PARAM params[] = {
+      OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_KEYLEN, &keylen),
+      OSSL_PARAM_construct_end()
+   };
+   int res = EVP_EncryptInit_ex2(pCipherCtx.get(), pCipher,
+      reinterpret_cast<const unsigned char*>(key.data()), ivec, params);
+   if (res <= 0)
+      throw std::runtime_error("Failed to initialize encryption context");
+
+   resip_assert(static_cast<unsigned int>(EVP_CIPHER_CTX_get_iv_length(pCipherCtx.get())) <= sizeof(ivec));
+
+   int outlen = static_cast<int>(out_size);
+   res = EVP_EncryptUpdate(pCipherCtx.get(), out.data(), &outlen,
+      reinterpret_cast<const unsigned char*>(token.data()), token.size());
+   if (res > 0)
+   {
+      resip_assert(static_cast<unsigned int>(outlen) <= out_size);
+      int outlen2 = static_cast<int>(out_size - outlen);
+      res = EVP_EncryptFinal_ex(pCipherCtx.get(), out.data() + outlen, &outlen2);
+      if (res > 0)
+      {
+         outlen += outlen2;
+         resip_assert(static_cast<unsigned int>(outlen) <= out_size);
+         out.resize(static_cast<unsigned int>(outlen));
+      }
+   }
+
+   if (res <= 0)
+      throw std::runtime_error("Failed to encrypt GRUU user part");
+#endif
+
+   return GRUU + Data(out.data(), out.size()).base64encode(true/*safe URL*/);
 }
 
-std::pair<Data,Data> 
+std::pair<Data, Data>
 Helper::fromGruuUserPart(const Data& gruuUserPart,
                          const Data& key)
 {
@@ -1855,33 +1915,69 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
    ivec[6] = '\x7D';
    ivec[7] = '\x51';
 
-   static const std::pair<Data, Data> empty;
-
    if (gruuUserPart.size() < GRUU.size())
    {
-      return empty;
+      return std::pair<Data, Data>();
    }
 
    const Data gruu = gruuUserPart.substr(GRUU.size());
+   const Data decoded = gruu.base64decode();
+   std::vector<unsigned char> out(gruuUserPart.size() + 1);
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
    BF_KEY fish;
    BF_set_key(&fish, (int)key.size(), (const unsigned char*)key.data());
 
-   const Data decoded = gruu.base64decode();
-
-   unique_ptr <unsigned char> out(new unsigned char[gruuUserPart.size()+1]);
    BF_cbc_encrypt((const unsigned char*)decoded.data(),
-                  out.get(),
+                  &out[0],
                   (long)decoded.size(),
                   &fish,
-                  ivec, 
+                  ivec,
                   BF_DECRYPT);
-   const Data pair(out.get(), decoded.size());
+#else
+   std::unique_ptr<EVP_CIPHER_CTX, OpenSSLDeleter> pCipherCtx(EVP_CIPHER_CTX_new());
+   if (!pCipherCtx)
+      throw std::bad_alloc();
+
+   std::size_t keylen = key.size();
+   const OSSL_PARAM params[] = {
+       OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_KEYLEN, &keylen),
+       OSSL_PARAM_construct_end()
+   };
+   int res = EVP_DecryptInit_ex2(pCipherCtx.get(), EVP_bf_cbc(),
+      reinterpret_cast<const unsigned char*>(key.data()), ivec, params);
+   if (res <= 0)
+      throw std::runtime_error("Failed to initialize decryption context");
+
+   resip_assert(static_cast<unsigned int>(EVP_CIPHER_CTX_get_iv_length(pCipherCtx.get())) <= sizeof(ivec));
+
+   const std::size_t out_size = out.size();
+   int outlen = static_cast<int>(out_size);
+   res = EVP_DecryptUpdate(pCipherCtx.get(), out.data(), &outlen,
+      reinterpret_cast<const unsigned char*>(decoded.data()), decoded.size());
+   if (res > 0)
+   {
+      resip_assert(static_cast<unsigned int>(outlen) <= out_size);
+      int outlen2 = static_cast<int>(out_size - outlen);
+      res = EVP_DecryptFinal_ex(pCipherCtx.get(), out.data() + outlen, &outlen2);
+      if (res > 0)
+      {
+         outlen += outlen2;
+         resip_assert(static_cast<unsigned int>(outlen) <= out_size);
+         out.resize(static_cast<unsigned int>(outlen));
+      }
+   }
+
+   if (res <= 0)
+      throw std::runtime_error("Failed to decrypt GRUU user part");
+#endif
+
+   const Data pair(out.data(), out.size());
 
    Data::size_type pos = pair.find(sep);
    if (pos == Data::npos)
    {
-      return empty;
+      return std::pair<Data, Data>();
    }
 
    return std::make_pair(pair.substr(2*saltBytes, pos), // strip out the salt

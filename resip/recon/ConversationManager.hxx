@@ -258,14 +258,14 @@ public:
                          ;duration parameter specified max recording length in Ms
                          ;append parameter specifies to append to an existing recording
                          ;silencetime parameter specifies ms of silence to end recording
+     buffer:<type> - For sipXtapi the only allowed type is RAW_PCM_16, the sampling rate
+                         is expected to be 8khz.
 
      optional arguments are: [;duration=<duration>][;repeat]
 
      @note 'repeat' option only makes sense for file and cache playback
-     @note audio files may be AU, WAV or RAW formats.  Audiofiles
-           should be 16bit mono, 8khz, PCM to avoid runtime conversion.
-     @note http referenced audio files must be WAV files,
-           16 or 8bit, 8Khz, Mono.
+     @note audio files may be AU, WAV or RAW formats.  Audiofiles should be 16bit mono, 8khz, PCM to avoid runtime conversion.
+     @note http referenced audio files must be WAV files, 16 or 8bit, 8Khz, Mono.
 
      Sample mediaUrls:
         tone:0                             - play DTMF tone 0 until participant is destroyed
@@ -279,13 +279,15 @@ public:
         record:recording.wav               - records all participants audio mixed togehter in a WAV file, must be manually destroyed
         record:recording.wav;duration=30000;silencetime=5000 - records all participants audio mixed togehter in a WAV file, for up to 5 mins, stop 
                                                                automatically when voice is missing for 5 seconds
+        buffer:RAW_PCM_16;repeat           - plays the audio from the provided audioBuffer parameter, repeating when complete until participant is destroyed
 
      @param convHandle Handle of the conversation to create the MediaParticipant in
      @param mediaUrl   Url of media to play.  See above.
+     @param audioBuffer - Shared_ptr to a data object containing the raw audio buffer to play out.  Only provide this parameter if using buffer: as the mediaUrl scheme
 
      @return A handle to the newly created media participant
    */
-   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const resip::Uri& mediaUrl);
+   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer = std::shared_ptr<resip::Data>());
 
    /**
      Creates a new local participant in the specified conversation (if supported).

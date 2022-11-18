@@ -10,20 +10,6 @@
 #include <syslog.h>
 #endif
 
-#ifdef REPRO_DSO_PLUGINS
-
-// in an autotools build, this is defined using pkglibdir
-#ifndef REPRO_DSO_PLUGIN_DIR_DEFAULT
-#define REPRO_DSO_PLUGIN_DIR_DEFAULT ""
-#endif
-
-// This is the UNIX way of doing DSO, an alternative implementation
-// for Windows needs to include the relevant Windows headers here
-// and implement the loader code further below
-#include <dlfcn.h>
-
-#endif
-
 #include "rutil/ResipAssert.h"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
@@ -527,9 +513,9 @@ ReproRunner::onReload()
    mSipStack->onReload();
    // Let the plugins know
    std::vector<Plugin*>::iterator it;
-   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+   if(mPluginManager)
    {
-      (*it)->onReload();
+      mPluginManager->onReload();
    }
 }
 
@@ -592,69 +578,8 @@ ReproRunner::loadPlugins()
    std::vector<Data> pluginNames;
    mProxyConfig->getConfigValue("LoadPlugins", pluginNames);
 
-#ifdef REPRO_DSO_PLUGINS
-   if(pluginNames.empty())
-   {
-      DebugLog(<<"LoadPlugins not specified, not attempting to load any plugins");
-      return true;
-   }
-
-   const Data& pluginDirectory = mProxyConfig->getConfigData("PluginDirectory", REPRO_DSO_PLUGIN_DIR_DEFAULT, true);
-   if(pluginDirectory.empty())
-   {
-      ErrLog(<<"LoadPlugins specified but PluginDirectory not specified, can't load plugins");
-      return false;
-   }
-   for(std::vector<Data>::iterator it = pluginNames.begin(); it != pluginNames.end(); it++)
-   {
-      void *dlib;
-      // FIXME:
-      // - not all platforms use the .so extension
-      // - detect and use correct directory separator charactor
-      // - do we need to support relative paths here?
-      // - should we use the filename prefix 'lib', 'mod' or something else?
-      Data name = pluginDirectory + '/' + "lib" + *it + ".so";
-      dlib = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
-      if(!dlib)
-      {
-         ErrLog(<< "Failed to load plugin " << *it << " (" << name << "): " << dlerror());
-         return false;
-      }
-      ReproPluginDescriptor* desc = (ReproPluginDescriptor*)dlsym(dlib, "reproPluginDesc");
-      if(!desc)
-      {
-         ErrLog(<< "Failed to find reproPluginDesc in plugin " << *it << " (" << name << "): " << dlerror());
-         return false;
-      }
-      if(!(desc->mPluginApiVersion == REPRO_DSO_PLUGIN_API_VERSION))
-      {
-         ErrLog(<< "Failed to load plugin " << *it << " (" << name << "): found version " << desc->mPluginApiVersion << ", expecting version " << REPRO_DSO_PLUGIN_API_VERSION);
-      }
-      DebugLog(<<"Trying to instantiate plugin " << *it);
-      // Instantiate the plugin object and add it to our runtime environment
-      Plugin* plugin = desc->creationFunc();
-      if(!plugin)
-      {
-         ErrLog(<< "Failed to instantiate plugin " << *it << " (" << name << ")");
-         return false;
-      }
-      if(!plugin->init(*mSipStack, mProxyConfig))
-      {
-         ErrLog(<< "Failed to initialize plugin " << *it << " (" << name << ")");
-         return false;
-      }
-      mPlugins.push_back(plugin);
-   }
-   return true;
-#else
-   if(!pluginNames.empty())
-   {
-      ErrLog(<<"LoadPlugins specified but repro not compiled with plugin DSO support");
-      return false;
-   }
-   DebugLog(<<"Not compiled with plugin DSO support");
-   return true;
-#endif
+   mPluginManager.reset(new ReproPluginManager(*mSipStack, mProxyConfig));
+   return mPluginManager->loadPlugins(pluginNames);
 }
 
 void
@@ -1213,9 +1138,9 @@ ReproRunner::createProxy()
    mMonkeys = new ProcessorChain(Processor::REQUEST_CHAIN);
    makeRequestProcessorChain(*mMonkeys);
    InfoLog(<< *mMonkeys);
-   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+   if(mPluginManager)
    {
-      (*it)->onRequestProcessorChainPopulated(*mMonkeys);
+      mPluginManager->onRequestProcessorChainPopulated(*mMonkeys);
    }
 
    // Make Lemurs
@@ -1223,9 +1148,9 @@ ReproRunner::createProxy()
    mLemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
    makeResponseProcessorChain(*mLemurs);
    InfoLog(<< *mLemurs);
-   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+   if(mPluginManager)
    {
-      (*it)->onResponseProcessorChainPopulated(*mLemurs);
+      mPluginManager->onResponseProcessorChainPopulated(*mLemurs);
    }
 
    // Make Baboons
@@ -1233,9 +1158,9 @@ ReproRunner::createProxy()
    mBaboons = new ProcessorChain(Processor::TARGET_CHAIN);
    makeTargetProcessorChain(*mBaboons);
    InfoLog(<< *mBaboons);
-   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+   if(mPluginManager)
    {
-      (*it)->onTargetProcessorChainPopulated(*mBaboons);
+      mPluginManager->onTargetProcessorChainPopulated(*mBaboons);
    }
 
    // Create main Proxy class
@@ -2051,6 +1976,8 @@ ReproRunner::operator()(resip::StatisticsMessage &statsMessage)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2022, Daniel Pocock https://danielpocock.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

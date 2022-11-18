@@ -1000,7 +1000,7 @@ class SdpContents : public Contents
               * @param type the type
               * @return Media lines
               */
-            std::list<std::reference_wrapper<const Medium>> getMediaByType(const Data& type) const;
+            std::list<std::reference_wrapper<Medium>> getMediaByType(const Data& type);
 
             /** @brief add an e= (email) line to session
               * 

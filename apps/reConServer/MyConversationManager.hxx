@@ -19,11 +19,15 @@
 namespace reconserver
 {
 
-#ifdef USE_KURENTO
+#if defined(USE_GSTREAMER)
+#define PREFER_GSTREAMER
+#elif defined(USE_LIBWEBRTC)
+#define PREFER_LIBWEBRTC
+#elif defined(USE_KURENTO)
 #define PREFER_KURENTO
 // FIXME: hard-coded to use Kurento when selected at compile time
 #else
-#ifdef USE_SIPXTAPI
+#if defined(USE_SIPXTAPI)
 #define PREFER_SIPXTAPI
 #else
 #error No media stack enabled
@@ -78,6 +82,8 @@ protected:
 
 /* ====================================================================
 
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2013-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

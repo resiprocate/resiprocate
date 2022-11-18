@@ -292,8 +292,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="playback_prompt.h" />
-    <ClInclude Include="record_prompt.h" />
+    <ClInclude Include="..\..\..\media\samples\playback_prompt.h" />
+    <ClInclude Include="..\..\..\media\samples\record_prompt.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

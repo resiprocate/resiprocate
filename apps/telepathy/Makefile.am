@@ -17,9 +17,7 @@
 
 SUBDIRS = . data
 
-EXTRA_DIST = playback_prompt.wav
-EXTRA_DIST += record_prompt.wav
-EXTRA_DIST += resiprocate.manager
+EXTRA_DIST = resiprocate.manager
 EXTRA_DIST += resiprocate.service
 
 #AM_CXXFLAGS = -DUSE_ARES
@@ -75,21 +73,4 @@ noinst_HEADERS = Common.hxx \
 
 moc_%.cxx:	%.hxx
 	QT_SELECT=qt5 moc $< -o $@
-
-BUILT_SOURCES = playback_prompt.h record_prompt.h
-
-playback_prompt.h:
-	echo "#ifndef _playback_prompt_h_" > playback_prompt.h
-	echo "#define _playback_prompt_h_" >> playback_prompt.h
-	xxd -i -u playback_prompt.wav >> playback_prompt.h
-	sed  -i 's/_wav//g' playback_prompt.h
-	echo "#endif" >> playback_prompt.h
-
-record_prompt.h:
-	echo "#ifndef _record_prompt_h_" > record_prompt.h
-	echo "#define _record_prompt_h_" >> record_prompt.h
-	xxd -i -u record_prompt.wav >> record_prompt.h
-	sed  -i 's/_wav//g' record_prompt.h
-	echo "#endif" >> record_prompt.h
-
 

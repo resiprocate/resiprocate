@@ -196,19 +196,8 @@ KurentoRemoteParticipant::doIceGathering(kurento::ContinuationString sdpReady)
       {
          return;
       }
-      // FIXME - if we are waiting for a previous INFO to be confirmed,
-      //         aggregate the candidates into a vector and send them in bulk
-      auto ice = getLocalSdp()->session().makeIceFragment(Data(_event->getCandidate()),
+      onLocalIceCandidate(Data(_event->getCandidate()),
          _event->getLineIndex(), Data(_event->getId()));
-      if(ice.get())
-      {
-         StackLog(<<"about to send " << *ice);
-         info(*ice);
-      }
-      else
-      {
-         WarningLog(<<"failed to create ICE fragment for mid: " << _event->getId());
-      }
    });
 
    std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
@@ -633,10 +622,24 @@ KurentoRemoteParticipant::onTrickleIce(resip::TrickleIceContents& trickleIce)
    return true;
 }
 
+void
+KurentoRemoteParticipant::requestKeyframe()
+{
+   if(mEndpoint->valid())
+   {
+      mEndpoint->sendPictureFastUpdate([]{});
+   }
+   else
+   {
+      WarningLog(<<"can't request keyframe, mEndpoint not valid");
+   }
+}
+
 /* ====================================================================
 
  Copyright (c) 2021, SIP Spectrum, Inc.
- Copyright (c) 2021, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -4,6 +4,8 @@
 /.deps
 /.libs
 
+/__pycache__
+
 /IndirectPythonInterface.cxx
 /cxx_exceptions.cxx
 /cxx_extensions.cxx

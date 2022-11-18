@@ -477,6 +477,7 @@
     <ClCompile Include="monkeys\LocationServer.cxx" />
     <ClCompile Include="OutboundTarget.cxx" />
     <ClCompile Include="monkeys\OutboundTargetHandler.cxx" />
+    <ClCompile Include="Plugin.cxx" />
     <ClCompile Include="stateAgents\PresencePublicationHandler.cxx" />
     <ClCompile Include="stateAgents\PresenceServer.cxx" />
     <ClCompile Include="stateAgents\PresenceSubscriptionHandler.cxx" />
@@ -555,6 +556,7 @@
     <ClInclude Include="monkeys\LocationServer.hxx" />
     <ClInclude Include="OutboundTarget.hxx" />
     <ClInclude Include="monkeys\OutboundTargetHandler.hxx" />
+    <ClInclude Include="Plugin.hxx" />
     <ClInclude Include="stateAgents\PresencePublicationHandler.hxx" />
     <ClInclude Include="stateAgents\PresenceServer.hxx" />
     <ClInclude Include="stateAgents\PresenceSubscriptionHandler.hxx" />

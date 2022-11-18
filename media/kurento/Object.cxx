@@ -181,7 +181,7 @@ Object::onSubscribeSuccess(ContinuationVoid c, const json::Object& message)
 void
 Object::onVoidSuccess(ContinuationVoid c, const json::Object& message)
 {
-   if(message.Find(JSON_RPC_ERROR) != message.end())
+   if(message.Find(JSON_RPC_ERROR) != message.End())
    {
       json::String errorMessage = message[JSON_RPC_ERROR][JSON_RPC_ERROR_MESSAGE];
       ErrLog(<<"Error from Kurento: " << errorMessage.Value());
@@ -194,7 +194,7 @@ Object::onVoidSuccess(ContinuationVoid c, const json::Object& message)
 void
 Object::onStringSuccess(ContinuationString c, const json::Object& message)
 {
-   if(message.Find(JSON_RPC_ERROR) != message.end())
+   if(message.Find(JSON_RPC_ERROR) != message.End())
    {
       json::String errorMessage = message[JSON_RPC_ERROR][JSON_RPC_ERROR_MESSAGE];
       ErrLog(<<"Error from Kurento: " << errorMessage.Value());

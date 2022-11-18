@@ -65,14 +65,11 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
          break;
       case SecurityTypes::TLSv1:
          DebugLog(<<"Using TLSv1_method");
-#ifndef WIN32
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-         mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
-#ifndef WIN32
-#pragma GCC diagnostic pop
-#endif
+         mDomainCtx = mSecurity->createDomainCtx(TLS_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+         if (mDomainCtx) {
+            SSL_CTX_set_min_proto_version(mDomainCtx, TLS1_VERSION);
+            SSL_CTX_set_max_proto_version(mDomainCtx, TLS1_VERSION);
+         }
          break;
       default:
          throw invalid_argument("Unrecognised SecurityTypes::SSLType value");

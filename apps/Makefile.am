@@ -16,6 +16,6 @@ SUBDIRS += registration-agent
 endif
 endif
 
-if BUILD_GSTREAMER
+if USE_GSTREAMER
 SUBDIRS += echoTest
 endif

@@ -24,6 +24,7 @@
     <ClCompile Include="OutboundTarget.cxx" />
     <ClCompile Include="monkeys\OutboundTargetHandler.cxx" />
     <ClCompile Include="PersistentMessageQueue.cxx" />
+    <ClCompile Include="Plugin.cxx" />
     <ClCompile Include="stateAgents\PrivateKeyPublicationHandler.cxx" />
     <ClCompile Include="stateAgents\PrivateKeySubscriptionHandler.cxx" />
     <ClCompile Include="Processor.cxx" />
@@ -93,6 +94,7 @@
     <ClInclude Include="OutboundTarget.hxx" />
     <ClInclude Include="monkeys\OutboundTargetHandler.hxx" />
     <ClInclude Include="PersistentMessageQueue.hxx" />
+    <ClInclude Include="Plugin.hxx" />
     <ClInclude Include="stateAgents\PrivateKeyPublicationHandler.hxx" />
     <ClInclude Include="stateAgents\PrivateKeySubscriptionHandler.hxx" />
     <ClInclude Include="Processor.hxx" />

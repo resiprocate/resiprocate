@@ -11,6 +11,8 @@ noinst_HEADERS += EchoTestConfig.hxx
 
 echoTest_CXXFLAGS = $(GSTREAMERMM_1_0_CFLAGS)
 echoTest_LDADD = $(GSTREAMERMM_1_0_LIBS) $(LDADD)
+echoTest_LDADD += ../../media/gstreamer/libgstreamerutils.la
+echoTest_LDADD += ../../media/libresipmedia.la
 echoTest_LDADD += ../../resip/dum/libdum.la
 echoTest_LDADD += ../../resip/stack/libresip.la
 echoTest_LDADD += ../../rutil/librutil.la

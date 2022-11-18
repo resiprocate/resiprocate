@@ -1054,6 +1054,38 @@ RemoteParticipant::processReferNotify(ClientSubscriptionHandle h, const SipMessa
    }
 }
 
+void
+RemoteParticipant::onLocalIceCandidate(const resip::Data& candidate, unsigned int lineIndex, const resip::Data& mid)
+{
+   // FIXME - ensure we do this on correct thread
+
+   shared_ptr<SdpContents> localSdp = getLocalSdp();
+   if(!localSdp)
+   {
+      localSdp = mLocalSdpGathering;
+   }
+   if(!localSdp)
+   {
+      WarningLog(<<"localSdp not available, can't create ICE SDP fragment");
+      return;
+   }
+
+   // FIXME - if we are waiting for a previous INFO to be confirmed,
+   //         aggregate the candidates into a vector and send them in bulk
+
+   auto ice = localSdp->session().makeIceFragment(Data(candidate),
+            lineIndex, mid);
+   if(ice.get())
+   {
+      StackLog(<<"about to send " << *ice);
+      info(*ice);
+   }
+   else
+   {
+      WarningLog(<<"failed to create ICE fragment for mid: " << mid);
+   }
+}
+
 void 
 RemoteParticipant::provideOffer(bool postOfferAccept, bool preferExistingSdp)
 {
@@ -1152,6 +1184,7 @@ RemoteParticipant::setLocalSdp(const resip::SdpContents& sdp)
 {
    InfoLog(<< "setLocalSdp: handle=" << mHandle << ", localSdp=" << sdp);
    mLocalSdp.reset(new SdpContents(sdp));
+   mLocalSdpGathering.reset();
 }
 
 void 
@@ -1163,6 +1196,13 @@ RemoteParticipant::setRemoteSdp(const resip::SdpContents& sdp, bool answer)
    {
       mLocalSdp = mDialogSet.getProposedSdp();
    }
+}
+
+void
+RemoteParticipant::setLocalSdpGathering(const resip::SdpContents& sdp)
+{
+   InfoLog(<< "setLocalSdpGathering: handle=" << mHandle << ", localSdpGathering=" << sdp);
+   mLocalSdpGathering.reset(new SdpContents(sdp));
 }
 
 void 
@@ -1921,7 +1961,8 @@ RemoteParticipant::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, 
 /* ====================================================================
 
  Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
- Copyright (c) 2021, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

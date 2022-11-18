@@ -8,7 +8,7 @@
 #include <resip/stack/SipMessage.hxx>
 #include <resip/stack/Tuple.hxx>
 #include <resip/stack/Uri.hxx>
-#include <AppSubsystem.hxx>
+#include "AppSubsystem.hxx"
 
 #include "SubscriptionForwarder.hxx"
 
