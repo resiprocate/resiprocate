@@ -359,24 +359,27 @@ set(GPERF_OPTS -C -D -E -L C++ -t --key-positions='*' --compare-strncmp)
 #        and if we don't run gperf, we should copy the cached versions
 #        to ${PROJECT_BINARY_DIR}
 function(run_gperf)
-   add_custom_command(
-      DEPENDS ${ARGV0}.gperf
-      OUTPUT gen/${ARGV0}.cxx
-      COMMAND gperf ${GPERF_OPTS} ${ARGV1} -Z ${ARGV0} ${ARGV0}.gperf > gen/${ARGV0}.cxx
-   )
+   file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gen)
+   if(RUN_GPERF)
+      add_custom_command(
+         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${ARGV0}.gperf
+         OUTPUT gen/${ARGV0}.cxx
+         COMMAND gperf ${GPERF_OPTS} ${ARGV1} -Z ${ARGV0} ${CMAKE_CURRENT_SOURCE_DIR}/${ARGV0}.gperf > ${CMAKE_CURRENT_BINARY_DIR}/gen/${ARGV0}.cxx
+      )
+   else()
+      file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/gen/${ARGV0}.cxx DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/gen)
+   endif()
 endfunction()
 
 # With autotools, we would not run gperf automatically on every build.
 # It is not always available on every platform.
 # With CMake, we now take the inverse approach, it is run on every build
 # but it can be disabled by changing RUN_GPERF to False
-if(RUN_GPERF)
-   run_gperf(DayOfWeekHash)
-   run_gperf(HeaderHash --ignore-case)
-   run_gperf(MethodHash)
-   run_gperf(MonthHash)
-   run_gperf(ParameterHash --ignore-case)
-endif()
+run_gperf(DayOfWeekHash)
+run_gperf(HeaderHash --ignore-case)
+run_gperf(MethodHash)
+run_gperf(MonthHash)
+run_gperf(ParameterHash --ignore-case)
 
 target_add_conditional_sources(resip TRUE
    gen/DayOfWeekHash.cxx

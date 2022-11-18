@@ -152,9 +152,7 @@ target_add_conditional_sources(recon USE_LIBWEBRTC
 target_include_directories(recon PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 target_include_directories(recon PUBLIC ${SIPXTAPI_INCLUDE_DIRS})
 target_link_libraries(recon PUBLIC dum)
-if(USE_SIPXTAPI)
-   target_link_libraries(recon PUBLIC reflow ${SIPXTAPI_LIBRARIES})
-endif()
+target_link_libraries(recon PUBLIC reflow ${SIPXTAPI_LIBRARIES})
 if(USE_KURENTO)
    target_link_libraries(recon PUBLIC kurentoclient)
 endif()
@@ -166,7 +164,10 @@ version_libname(recon)
 install(TARGETS recon DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/recon ${INCLUDES})
 
-add_subdirectory(MOHParkServer)
-
-add_subdirectory(test)
+# FIXME - revise the code in these directories to eliminate
+# dependency on sipXtapi
+if(USE_SIPXTAPI)
+   add_subdirectory(MOHParkServer)
+   add_subdirectory(test)
+endif()
 

@@ -83,6 +83,7 @@ cmake \
     -DPYCXX_SRCDIR=/usr/src/CXX \
     -DBUILD_QPID_PROTON=ON \
     -DRESIP_ASSERT_SYSLOG=ON \
+    -DREGENERATE_MEDIA_SAMPLES=ON \
     .
 #autoreconf --install && \
 #  ./configure --with-popt --enable-ipv6 --enable-dtls --with-radcli --with-ssl \

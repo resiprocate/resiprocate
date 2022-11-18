@@ -20,8 +20,6 @@ set -e
 RADIUS_LIB=--with-radcli
 #RADIUS_LIB=--with-freeradius
 
-autoreconf --install
-
 source build/distcc-setup
 
 CFLAGS='-fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated' \
@@ -67,38 +65,8 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
     -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 \
     -DBUILD_P2P=OFF \
     -DBUILD_PYTHON=ON \
-    -DPYCXX_SRCDIR=/usr/src/CXX \
     -DBUILD_QPID_PROTON=ON \
     -DRESIP_ASSERT_SYSLOG=ON \
     .
-#  ./configure \
-#              ${DISTCC} \
-#              --with-popt \
-#              --enable-ipv6 \
-#              --enable-dtls \
-#              $RADIUS_LIB \
-#              --with-ssl \
-#              --enable-assert-syslog \
-#              --with-c-ares \
-#              --with-fmt \
-#              --with-mysql \
-#              --with-postgresql \
-#              --with-repro \
-#              --with-return \
-#              --enable-dso-plugins \
-#              --with-python \
-#                DEPS_PYTHON_VERSION=`python3 -c "import sys; print('%d.%d' % (sys.version_info[0], sys.version_info[1]))"` \
-#                DEPS_PYTHON_CFLAGS="`/usr/bin/python3-config --cflags`" \
-#                DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
-#                PYCXX_SRCDIR=/usr/src/CXX \
-#              --with-apps \
-#              --with-recon \
-#              --with-kurento \
-#              --with-soci-postgresql \
-#              --with-soci-mysql \
-#              --with-qpid-proton \
-#              --with-geoip \
-#              --with-netsnmp \
-#              --with-gstreamer
 
 

@@ -82,7 +82,7 @@ Install reSIProcate build environment dependencies
 
   sudo dnf install git \
                    gcc-c++ \
-                   libtool automake autoconf \
+                   cmake \
                    python3-devel python3-pycxx-devel \
                    libdb-cxx libdb-cxx-devel \
                    cppunit cppunit-devel \
@@ -191,8 +191,8 @@ the repository:
 Configuring the source tree
 ---------------------------
 
-The project is currently built using GNU Autotools.  We provide a
-wrapper script for autotools on each major GNU/Linux distribution.
+The project is currently built using CMake.  We provide a
+wrapper script for CMake on each major GNU/Linux distribution.
 
 The wrapper script for Fedora and RHEL-based systems is:
 
@@ -209,7 +209,7 @@ system, you need to add the configure switch:
 Compiling the code in the source tree
 -------------------------------------
 
-After running the autotools configure command or using the wrapper
+After running the CMake configure command or using the wrapper
 script described above, it is possible to start compiling the code.
 To compile with 65 threads, on a system with 64 CPU cores, you could
 use the following command:
@@ -219,18 +219,16 @@ use the following command:
 Running the unit tests
 ----------------------
 
-The autotools "make check" target is used.
+The CMake "make test" target is used.
 
-  make check
+  make test
 
 Running the binaries or unit tests in the GDB debugger
 ------------------------------------------------------
 
-To use the debugger, we need help from libtool to match
-the binary and libraries in our source tree.  gdb will not
-work if you try to run it directly.  Here is an example:
+Here is an example:
 
-  libtool --mode=execute gdb --args \
+  gdb --args \
       apps/reConServer/reConServer \
       apps/reConServer/reConServer.config
 
@@ -248,6 +246,6 @@ Create a reSIProcate release tarball:
 Finally, tell rpmbuild to compile the tarball to RPMs.  rpmbuild
 uses the spec file resiprocate.spec inside the tarball:
 
-  rpmbuild -tb resiprocate-1.13.0~alpha1.tar.gz
+  rpmbuild -tb resiprocate-1.13.0.tar.gz
 
 

@@ -121,6 +121,11 @@ option(BUILD_P2P "Build P2P, links against S2C and SSL, unfinished" FALSE)
 option(BUILD_PYTHON "Build components requiring Python" FALSE)
 option(BUILD_QPID_PROTON "Build components requiring qpid-proton (AMQP)" TRUE)
 option(RESIP_ASSERT_SYSLOG "Log assertion failures with Syslog" TRUE)
+option(REGENERATE_MEDIA_SAMPLES "Regenerate the header files containing raw audio samples (requires sox, xxd)" TRUE)
+
+# This must be enabled when building with the Android ndkports tools.
+# It should not be enabled for any other case.
+option(USE_NDKPORTS_HACKS "Android ndkports build: use hardcoded paths to dependencies" FALSE)
 
 #
 # Libtool / autotools is able to build both the static and shared
@@ -259,8 +264,26 @@ endif()
 
 # OpenSSL
 if(WITH_SSL)
-   # SSL support is requested, so make it mandatory when calling find_package
-   find_package(OpenSSL REQUIRED)
+   if(USE_NDKPORTS_HACKS)
+      if(NOT ANDROID_ABI)
+         message(FATAL_ERROR "ndkports hack requested but ANDROID_ABI not set")
+      endif()
+      #set(distribution_DIR ${CMAKE_SOURCE_DIR}/../../../../distribution)
+      #set(OPENSSL_ROOT_DIR ${distribution_DIR}/openssl/${ANDROID_ABI})
+      set(OPENSSL_ROOT_DIR /src/openssl/build/port/aar/prefab/modules)
+
+      set(CRYPTO_LIBRARIES_DIR "${OPENSSL_ROOT_DIR}/crypto/libs/android.${ANDROID_ABI}")
+      set(SSL_LIBRARIES_DIR "${OPENSSL_ROOT_DIR}/ssl/libs/android.${ANDROID_ABI}")
+      set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT_DIR}/ssl/include)
+      set(OPENSSL_LIBRARIES
+            "${SSL_LIBRARIES_DIR}/libssl.so"
+            "${CRYPTO_LIBRARIES_DIR}/libcrypto.so")
+      # FIXME - check if those libraries and headers really exist
+      set(OPENSSL_FOUND TRUE)
+   else()
+      # SSL support is requested, so make it mandatory when calling find_package
+      find_package(OpenSSL REQUIRED)
+   endif()
    set_def(USE_SSL)
 else()
    # Explicitly set OPENSSL_FOUND to false since we didn't even run

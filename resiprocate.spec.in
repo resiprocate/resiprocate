@@ -1,5 +1,5 @@
-Name: @PACKAGE@
-Version: @VERSION@
+Name: @CMAKE_PROJECT_NAME@
+Version: @PROJECT_VERSION@
 Release: 1%{?dist}
 Summary: SIP and TURN stacks, with SIP proxy and TURN server implementations
 License: VSL
@@ -218,7 +218,11 @@ SRTP1=-DUSE_SRTP1=OFF
 %endif
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
 CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -I/usr/include/soci"
+# FIXME - enable FMT
+# FIXME - enable GStreamer - requires gst-webrtc header tweak
 %cmake \
+    -DENABLE_LOG_REPOSITORY_DETAILS=OFF \
+    -DRUN_GPERF=ON \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" \
     -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" \
@@ -226,7 +230,7 @@ CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir
     -DWITH_SSL=ON \
     -DUSE_POPT=ON \
     -DUSE_SIGCOMP=OFF \
-    -DUSE_FMT=ON \
+    -DUSE_FMT=OFF \
     -DVERSIONED_SONAME=ON \
     -DENABLE_ANDROID=OFF \
     -DUSE_IPV6=ON \
@@ -257,16 +261,12 @@ CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir
     -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 \
     -DBUILD_P2P=OFF \
     -DBUILD_PYTHON=ON \
-    -DPYCXX_SRCDIR=/usr/src/CXX \
     -DBUILD_QPID_PROTON=ON \
     -DRESIP_ASSERT_SYSLOG=ON
-sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
-sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
-rm -rf resip/stack/gen/*.cxx
-make %{?_smp_mflags}
+%cmake_build
 
 %install
-make DESTDIR=%{buildroot} install
+%cmake_install
 %if %use_systemd
 install -p -D -m644 repro/pkg/common/repro.service %{buildroot}%{_unitdir}/repro.service
 install -p -D -m644 apps/reConServer/pkg/common/reconserver.service %{buildroot}%{_unitdir}/reconserver.service

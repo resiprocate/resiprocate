@@ -13,5 +13,7 @@ endif()
 if(NETSNMP_AGENT_FOUND)
    add_subdirectory(registration-agent)
 endif()
-add_subdirectory(echoTest)
+if(USE_GSTREAMER)
+   add_subdirectory(echoTest)
+endif()
 
