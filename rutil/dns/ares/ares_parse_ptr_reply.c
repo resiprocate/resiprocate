@@ -23,7 +23,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #ifndef __CYGWIN__
-#  include <arpa/nameser.h>
+#  include "ares_nameser.h"
 #endif
 #include <netdb.h>
 #endif
