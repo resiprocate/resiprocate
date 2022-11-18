@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "ares.h"
-#include <arpa/nameser.h>
+#include "ares_nameser.h"
 
 // Entrypoint for Clang's libfuzzer, exercising query creation.
 int LLVMFuzzerTestOneInput(const unsigned char *data,

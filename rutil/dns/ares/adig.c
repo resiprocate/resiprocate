@@ -24,7 +24,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <arpa/nameser.h>
+#include "ares_nameser.h"
 #include <unistd.h>
 #include <netdb.h>
 #endif

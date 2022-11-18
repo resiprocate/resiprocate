@@ -54,9 +54,9 @@ extern "C" {
 #endif
 
 #if defined(__APPLE__)
-#include <arpa/nameser.h>
+#include "ares_nameser.h"
 #if !defined(MAC_OS_X_VERSION_MIN_REQUIRED) || (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_2)
-#include <arpa/nameser_compat.h>
+#include "ares_nameser.h"
 #endif
 #endif
 
@@ -261,7 +261,10 @@ extern 	void ares_free_errmem(char *mem);
 #define T_MAILA         254             /* transfer mail agent records */
 #define T_ANY           255             /* wildcard match */
 
-
+/* These are now defined in ares_nameserv.h
+   Some compilers error when the macro is redefined so
+   we disable them without the macro LEGACY_DEFINES */
+#ifdef LEGACY_DEFINES
 #define C_IN 1
 #define C_CHAOS 3
 #define C_HS 4
@@ -294,6 +297,7 @@ extern 	void ares_free_errmem(char *mem);
 
 #define QUERY 0
 #define MAXLABEL 63
+#endif
 
 #endif
 

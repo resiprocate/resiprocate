@@ -32,7 +32,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #ifndef __CYGWIN__
-#  include <arpa/nameser.h>
+#  include "ares_nameser.h"
 #endif
 #include <unistd.h>
 #include <errno.h>
@@ -496,7 +496,7 @@ static int init_by_defaults_andriod_nameservers(ares_channel channel)
 #ifdef USE_IPV6
          else
          {
-            rc = inet_pton(AF_INET6, props_dns[i], &channel->servers[j].addr6.s_addr);
+            rc = inet_pton(AF_INET6, props_dns[i], &channel->servers[j].addr6.s6_addr);
             if(rc == 1)
             {
                channel->servers[j].family = AF_INET6;
