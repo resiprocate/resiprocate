@@ -69,5 +69,6 @@
     <None Include="reTurnServer.config">
       <Filter>config</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
