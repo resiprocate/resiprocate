@@ -28,8 +28,6 @@
 #include "rutil/FileSystem.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-#include "rutil/ssl/SHA1Stream.hxx"
-
 #if !defined(WIN32)
 #include <sys/types.h>
 #include <sys/uio.h>
@@ -1824,7 +1822,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    if ( !rsa )
    {
-      ErrLog( << "Private key (type=" << EVP_PKEY_id(pKey) <<"for "
+      ErrLog( << "Private key (type=" << EVP_PKEY_id(pKey) << ") for "
               << signerDomain << " is not of type RSA" );
       throw Exception("No RSA private key when computing identity",__FILE__,__LINE__);
    }
@@ -1832,50 +1830,25 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    resip_assert( rsa );
 
    unsigned char result[4096];
-   int resultSize = sizeof(result);
-   resip_assert( resultSize >= RSA_size(rsa) );
+   unsigned int resultSize = sizeof(result);
+   resip_assert( static_cast<int>(resultSize) >= RSA_size(rsa) );
 
-   SHA1Stream sha;
-   sha << in;
-   Data hashRes =  sha.getBin();
-   DebugLog( << "hash of string is 0x" << hashRes.hex() );
+   unsigned char digest[EVP_MAX_MD_SIZE];
+   unsigned int digestSize = sizeof(digest);
+   if (!EVP_Digest(in.data(), in.size(), digest, &digestSize, EVP_sha256(), NULL))
+   {
+      ErrLog( << "Failed to compute digest of identity" );
+      throw Exception("Failed to compute digest of identity",__FILE__, __LINE__);
+   }
+   DebugLog( << "hash of string is 0x" << Data(digest, digestSize).hex() );
 
-#if 1
-   int r = RSA_sign(NID_sha256, (unsigned char *)hashRes.data(), (unsigned int)hashRes.size(),
-                    result, (unsigned int*)( &resultSize ),
-            rsa);
+   int r = RSA_sign(NID_sha256, digest, digestSize, result, &resultSize, rsa);
    if( r != 1 )
    {
       ErrLog(<< "RSA_sign failed with return " << r);
       resip_assert(0);
       return Data::Empty;
    }
-#else
-   resultSize = RSA_private_encrypt(hashResLen, hashRes,
-                                    result, rsa, RSA_PKCS1_PADDING);
-   if ( resultSize == -1 )
-   {
-      DebugLog( << "Problem doing RSA encrypt for identity");
-      while (1)
-      {
-         const char* file;
-         int line;
-
-         unsigned long code = ERR_get_error_line(&file,&line);
-         if ( code == 0 )
-         {
-            break;
-         }
-
-         char buf[256];
-         ERR_error_string_n(code,buf,sizeof(buf));
-         ErrLog( << buf  );
-         InfoLog( << "Error code = " << code << " file="<<file<<" line=" << line );
-      }
-
-      return Data::Empty;
-   }
-#endif
 
    Data res(result,resultSize);
    DebugLog( << "rsa encrypt of hash is 0x"<< res.hex() );
@@ -1888,7 +1861,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    static const char IDENTITY_IN_BASE64[] = "identity-in-base64";
 
    Security::dumpAsn(IDENTITY_IN, in );
-   Security::dumpAsn(IDENTITY_IN_HASH, hashRes );
+   Security::dumpAsn(IDENTITY_IN_HASH, Data(digest, digestSize) );
    Security::dumpAsn(IDENTITY_IN_RSA,res);
    Security::dumpAsn(IDENTITY_IN_BASE64,enc);
 
@@ -1917,10 +1890,15 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    Data sig = sigBase64.base64decode();
    DebugLog( << "decoded sig is 0x"<< sig.hex() );
 
-   SHA1Stream sha;
-   sha << in;
-   Data hashRes =  sha.getBin();
-   DebugLog( << "hash of string is 0x" << hashRes.hex() );
+   unsigned char digest[EVP_MAX_MD_SIZE];
+   unsigned int digestSize = sizeof(digest);
+
+   if (!EVP_Digest(in.data(), in.size(), digest, &digestSize, EVP_sha256(), NULL))
+   {
+      ErrLog( << "Failed to compute digest of identity" );
+      throw Exception("Failed to compute digest of identity",__FILE__, __LINE__);
+   }
+   DebugLog( << "hash of string is 0x" << Data(digest, digestSize).hex() );
 
    EVP_PKEY* pKey = X509_get_pubkey( cert );
    resip_assert( pKey );
@@ -1928,25 +1906,9 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
    resip_assert( rsa );
 
-#if 1
-   int ret = RSA_verify(NID_sha256, (unsigned char *)hashRes.data(),
-                        (unsigned int)hashRes.size(), (unsigned char*)sig.data(), (unsigned int)sig.size(),
+   int ret = RSA_verify(NID_sha256, digest,
+                        digestSize, (unsigned char*)sig.data(), (unsigned int)sig.size(),
                         rsa);
-#else
-   unsigned char result[4096];
-   int resultSize = sizeof(result);
-   resip_assert( resultSize >= RSA_size(rsa) );
-
-   resultSize = RSA_public_decrypt(sig.size(),(unsigned char*)sig.data(),
-                                   result, rsa, RSA_PKCS1_PADDING );
-   resip_assert( resultSize != -1 );
-   //assert( resultSize == SHA_DIGEST_LENGTH );
-   Data recievedHash(result,resultSize);
-   dumpAsn("identity-out-decrypt", recievedHash );
-
-   bool ret =  ( computedHash == recievedHash );
-#endif
-
    DebugLog( << "rsa verify result is " << ret  );
 
    static const char IDENTITY_OUT_MSG[] = "identity-out-msg";
@@ -1957,7 +1919,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    Security::dumpAsn(IDENTITY_OUT_MSG, in );
    Security::dumpAsn(IDENTITY_OUT_BASE64,sigBase64);
    Security::dumpAsn(IDENTITY_OUT_SIG, sig);
-   Security::dumpAsn(IDENTITY_OUT_HASH, hashRes );
+   Security::dumpAsn(IDENTITY_OUT_HASH, Data(digest, digestSize) );
 
    return (ret != 0);
 }
