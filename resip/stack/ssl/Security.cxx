@@ -1835,14 +1835,15 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    unsigned char digest[EVP_MAX_MD_SIZE];
    unsigned int digestSize = sizeof(digest);
-   if (!EVP_Digest(in.data(), in.size(), digest, &digestSize, EVP_sha256(), NULL))
+   auto digestType = EVP_sha256();
+   if (!EVP_Digest(in.data(), in.size(), digest, &digestSize, digestType, NULL))
    {
       ErrLog( << "Failed to compute digest of identity" );
       throw Exception("Failed to compute digest of identity",__FILE__, __LINE__);
    }
    DebugLog( << "hash of string is 0x" << Data(digest, digestSize).hex() );
 
-   int r = RSA_sign(NID_sha256, digest, digestSize, result, &resultSize, rsa);
+   int r = RSA_sign(EVP_MD_nid(digestType), digest, digestSize, result, &resultSize, rsa);
    if( r != 1 )
    {
       ErrLog(<< "RSA_sign failed with return " << r);
@@ -1892,8 +1893,9 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 
    unsigned char digest[EVP_MAX_MD_SIZE];
    unsigned int digestSize = sizeof(digest);
+   auto digestType = EVP_sha256();
 
-   if (!EVP_Digest(in.data(), in.size(), digest, &digestSize, EVP_sha256(), NULL))
+   if (!EVP_Digest(in.data(), in.size(), digest, &digestSize, digestType, NULL))
    {
       ErrLog( << "Failed to compute digest of identity" );
       throw Exception("Failed to compute digest of identity",__FILE__, __LINE__);
@@ -1906,7 +1908,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
    resip_assert( rsa );
 
-   int ret = RSA_verify(NID_sha256, digest,
+   int ret = RSA_verify(EVP_MD_nid(digestType), digest,
                         digestSize, (unsigned char*)sig.data(), (unsigned int)sig.size(),
                         rsa);
    DebugLog( << "rsa verify result is " << ret  );
