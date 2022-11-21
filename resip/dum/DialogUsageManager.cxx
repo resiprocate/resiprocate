@@ -1761,6 +1761,65 @@ DialogUsageManager::process(int timeoutMs, resip::Mutex* mutex)
    return mFifo.messageAvailable();
 }
 
+// return true if there is more to do
+bool
+DialogUsageManager::process(resip::RecursiveMutex& mutex)
+{
+   if (mFifo.messageAvailable())
+   {
+      resip::RecursiveLock lock(mutex);
+#ifdef RESIP_DUM_THREAD_DEBUG
+      mThreadDebugKey = mHiddenThreadDebugKey;
+#endif
+      internalProcess(std::unique_ptr<Message>(mFifo.getNext()));
+#ifdef RESIP_DUM_THREAD_DEBUG
+      // .bwc. Thread checking is disabled if mThreadDebugKey is 0; if the app 
+      // is using this mutex-locked process() call, we only enable thread-
+      // checking while the mutex is locked. Accesses from another thread while 
+      // the mutex is not locked are probably intentional. However, if the app 
+      // accesses the DUM inappropriately anyway, we'll probably detect it if 
+      // it happens during the internalProcess() call.
+      mHiddenThreadDebugKey = mThreadDebugKey;
+      mThreadDebugKey = 0;
+#endif
+   }
+   return mFifo.messageAvailable();
+}
+
+bool
+DialogUsageManager::process(int timeoutMs, resip::RecursiveMutex& mutex)
+{
+   std::unique_ptr<Message> message;
+
+   if (timeoutMs == -1)
+   {
+      message.reset(mFifo.getNext());
+   }
+   else
+   {
+      message.reset(mFifo.getNext(timeoutMs));
+   }
+   if (message.get())
+   {
+      resip::RecursiveLock lock(mutex);
+#ifdef RESIP_DUM_THREAD_DEBUG
+      mThreadDebugKey = mHiddenThreadDebugKey;
+#endif
+      internalProcess(std::move(message));
+#ifdef RESIP_DUM_THREAD_DEBUG
+      // .bwc. Thread checking is disabled if mThreadDebugKey is 0; if the app 
+      // is using this mutex-locked process() call, we only enable thread-
+      // checking while the mutex is locked. Accesses from another thread while 
+      // the mutex is not locked are probably intentional. However, if the app 
+      // accesses the DUM inappropriately anyway, we'll probably detect it if 
+      // it happens during the internalProcess() call.
+      mHiddenThreadDebugKey = mThreadDebugKey;
+      mThreadDebugKey = 0;
+#endif
+   }
+   return mFifo.messageAvailable();
+}
+
 bool
 DialogUsageManager::validateRequestURI(const SipMessage& request)
 {
