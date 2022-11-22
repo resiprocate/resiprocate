@@ -161,12 +161,12 @@ ConversationManager::createRemoteIMSessionParticipant(const resip::NameAddr& des
 }
 
 ParticipantHandle 
-ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl, const std::shared_ptr<Data>& audioBuffer)
+ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl, const std::shared_ptr<Data>& audioBuffer, void* recordingCircularBuffer)
 {
    if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = getNewParticipantHandle();
 
-   CreateMediaResourceParticipantCmd* cmd = new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl, audioBuffer);
+   CreateMediaResourceParticipantCmd* cmd = new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl, audioBuffer, recordingCircularBuffer);
    post(cmd);
 
    return partHandle;

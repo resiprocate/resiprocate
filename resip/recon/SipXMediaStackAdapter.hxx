@@ -193,15 +193,15 @@ public:
    virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; }
    virtual std::shared_ptr<resip::RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
 
-   virtual Conversation *createConversationInstance(ConversationHandle handle,
+   virtual Conversation* createConversationInstance(ConversationHandle handle,
       RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode) override;
-   virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle) override;
-   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer) override;
-   virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
-   virtual RemoteParticipant *createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
-   virtual RemoteParticipantDialogSet *createRemoteParticipantDialogSetInstance(
+   virtual LocalParticipant* createLocalParticipantInstance(ParticipantHandle partHandle) override;
+   virtual MediaResourceParticipant* createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& playAudioBuffer, void* recordingCircularBuffer) override;
+   virtual RemoteParticipant* createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
+   virtual RemoteParticipant* createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
+   virtual RemoteParticipantDialogSet* createRemoteParticipantDialogSetInstance(
          ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
          std::shared_ptr<ConversationProfile> conversationProfile = nullptr) override;
 
@@ -213,7 +213,7 @@ public:
    virtual bool extraPlayAndRecordResourcesEnabled() { return mEnableExtraPlayAndRecordResources; }
 
 protected:
-   virtual void setUserAgent(UserAgent *userAgent) override;
+   virtual void setUserAgent(UserAgent* userAgent) override;
 
 private:
    void init(int defaultSampleRate = 0, int maxSampleRate = 0);
