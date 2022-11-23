@@ -2038,30 +2038,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    (void)BIO_flush(in);
 
    int type=OBJ_obj2nid(pkcs7->type);
-   switch (type)
-   {
-      case NID_pkcs7_signed:
-         InfoLog( << "data is pkcs7 signed" );
-         break;
-      case NID_pkcs7_signedAndEnveloped:
-         InfoLog( << "data is pkcs7 signed and enveloped" );
-         break;
-      case NID_pkcs7_enveloped:
-         InfoLog( << "data is pkcs7 enveloped" );
-         break;
-      case NID_pkcs7_data:
-         InfoLog( << "data i pkcs7 data" );
-         break;
-      case NID_pkcs7_encrypted:
-         InfoLog( << "data is pkcs7 encrypted " );
-         break;
-      case NID_pkcs7_digest:
-         InfoLog( << "data is pkcs7 digest" );
-         break;
-      default:
-         InfoLog( << "Unknown pkcs7 type" );
-         break;
-   }
+   InfoLog( << "data is " << OBJ_nid2ln(type) );
 
    STACK_OF(X509)* certs = sk_X509_new_null();
    resip_assert( certs );
@@ -2311,30 +2288,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    (void)BIO_flush(in);
 
    int type=OBJ_obj2nid(pkcs7->type);
-   switch (type)
-   {
-      case NID_pkcs7_signed:
-         InfoLog( << "data is pkcs7 signed" );
-         break;
-      case NID_pkcs7_signedAndEnveloped:
-         InfoLog( << "data is pkcs7 signed and enveloped" );
-         break;
-      case NID_pkcs7_enveloped:
-         InfoLog( << "data is pkcs7 enveloped" );
-         break;
-      case NID_pkcs7_data:
-         InfoLog( << "data is pkcs7 data" );
-         break;
-      case NID_pkcs7_encrypted:
-         InfoLog( << "data is pkcs7 encrypted " );
-         break;
-      case NID_pkcs7_digest:
-         InfoLog( << "data is pkcs7 digest" );
-         break;
-      default:
-         InfoLog( << "Unknown pkcs7 type" );
-         break;
-   }
+   InfoLog( << "data is " << OBJ_nid2ln(type) );
 
    STACK_OF(X509)* certs = 0;
    certs = sk_X509_new_null();
