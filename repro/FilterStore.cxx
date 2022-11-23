@@ -35,17 +35,19 @@ FilterStore::FilterStore(AbstractDb& db):
       filter.pcond1 = 0;
       filter.pcond2 = 0;
       
-      int flags = REG_EXTENDED;
+      std::regex_constants::syntax_option_type flags = std::regex_constants::extended;
       if(filter.filterRecord.mActionData.find("$") == Data::npos)
       {
-         flags |= REG_NOSUB;
+         flags |= std::regex_constants::nosubs;
       }
 
       if(!filter.filterRecord.mCondition1Regex.empty())
       {
-         filter.pcond1 = new regex_t;
-         int ret = regcomp(filter.pcond1, filter.filterRecord.mCondition1Regex.c_str(), flags);
-         if(ret != 0)
+         try
+         {
+            filter.pcond1 = new std::regex(filter.filterRecord.mCondition1Regex.c_str(), flags);
+         }
+         catch (std::regex_error& ex)
          {
             delete filter.pcond1;
             ErrLog( << "Condition1Regex has invalid match expression: "
@@ -56,9 +58,11 @@ FilterStore::FilterStore(AbstractDb& db):
 
       if(!filter.filterRecord.mCondition2Regex.empty())
       {
-         filter.pcond2 = new regex_t;
-         int ret = regcomp(filter.pcond2, filter.filterRecord.mCondition2Regex.c_str(), flags);
-         if(ret != 0)
+         try
+         {
+            filter.pcond2 = new std::regex(filter.filterRecord.mCondition2Regex.c_str(), flags);
+         }
+         catch (std::regex_error& ex)
          {
             delete filter.pcond2;
             ErrLog( << "Condition2Regex has invalid match expression: "
@@ -81,12 +85,10 @@ FilterStore::~FilterStore()
    {
       if (i->pcond1)
       {
-         regfree(i->pcond1);
          delete i->pcond1;
       }
       if (i->pcond2)
       {
-         regfree(i->pcond2);
          delete i->pcond2;
       }
    }
@@ -131,16 +133,18 @@ FilterStore::addFilter(const resip::Data& cond1Header,
    filter.key = key;
    filter.pcond1 = 0;
    filter.pcond2 = 0;
-   int flags = REG_EXTENDED;
+   std::regex_constants::syntax_option_type flags = std::regex_constants::extended;
    if(filter.filterRecord.mActionData.find("$") == Data::npos)
    {
-      flags |= REG_NOSUB;
+      flags |= std::regex_constants::nosubs;
    }
    if(!filter.filterRecord.mCondition1Regex.empty())
    {
-      filter.pcond1 = new regex_t;
-      int ret = regcomp(filter.pcond1, filter.filterRecord.mCondition1Regex.c_str(), flags);
-      if(ret != 0)
+      try
+      {
+         filter.pcond1 = new std::regex(filter.filterRecord.mCondition1Regex.c_str(), flags);
+      }
+      catch (std::regex_error& ex)
       {
          delete filter.pcond1;
          filter.pcond1 = 0;
@@ -148,9 +152,11 @@ FilterStore::addFilter(const resip::Data& cond1Header,
    }
    if(!filter.filterRecord.mCondition2Regex.empty())
    {
-      filter.pcond2 = new regex_t;
-      int ret = regcomp(filter.pcond2, filter.filterRecord.mCondition2Regex.c_str(), flags);
-      if(ret != 0)
+      try
+      {
+         filter.pcond2 = new std::regex(filter.filterRecord.mCondition2Regex.c_str(), flags);
+      }
+      catch (std::regex_error& ex)
       {
          delete filter.pcond2;
          filter.pcond2 = 0;
@@ -214,12 +220,10 @@ FilterStore::eraseFilter(const resip::Data& key)
             it++;
             if(i->pcond1)
             {
-               regfree(i->pcond1);
                delete i->pcond1;
             }
             if(i->pcond2)
             {
-               regfree(i->pcond2);
                delete i->pcond2;
             }
             mFilterOperators.erase(i);
@@ -361,19 +365,16 @@ FilterStore::getHeaderFromSipMessage(const SipMessage& msg, const Data& headerNa
 }
 
 bool 
-FilterStore::applyRegex(int conditionNum, const Data& header, const Data& match, regex_t *regex, Data& rewrite)
+FilterStore::applyRegex(int conditionNum, const Data& header, const Data& match, std::regex *_regex, Data& rewrite)
 {
-   int ret;
    resip_assert(conditionNum < 10);
    
    // TODO - !cj! www.pcre.org looks like it has better performance
    // !mbg! is this true now that the compiled regexp is used?
 
-   const int nmatch=10;  // replacements $x1-$x9 are allowed, where x is the condition number
-   regmatch_t pmatch[nmatch];
+   std::cmatch matches; // replacements $x1-$x9 are allowed, where x is the condition number
 
-   ret = regexec(regex, header.c_str(), nmatch, pmatch, 0/*eflags*/);
-   if (ret != 0)
+   if(!std::regex_match(header.c_str(), matches, *_regex))
    {
       // did not match 
       return false;
@@ -383,39 +384,35 @@ FilterStore::applyRegex(int conditionNum, const Data& header, const Data& match,
 
    if (rewrite.find("$") != Data::npos)
    {
-      for (int i=1; i<nmatch; i++)
+      for (int i=1; i<matches.size(); i++)
       {
-         if (pmatch[i].rm_so != -1)
+         Data subExp(matches[i]);
+         DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+
+         Data result;
          {
-            Data subExp(header.substr(pmatch[i].rm_so,
-                                      pmatch[i].rm_eo-pmatch[i].rm_so));
-            DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+            DataStream s(result);
+            ParseBuffer pb(rewrite);
 
-            Data result;
+            while (true)
             {
-               DataStream s(result);
-               ParseBuffer pb(rewrite);
-
-               while (true)
+               const char* a = pb.position();
+               pb.skipToChars(Data("$") + char('0' + conditionNum) + char('0' + i));
+               if (pb.eof())
                {
-                  const char* a = pb.position();
-                  pb.skipToChars(Data("$") + char('0' + conditionNum) + char('0' + i));
-                  if (pb.eof())
-                  {
-                     s << pb.data(a);
-                     break;
-                  }
-                  else
-                  {
-                     s << pb.data(a);
-                     pb.skipN(3);
-                     s <<  subExp;
-                  }
+                  s << pb.data(a);
+                  break;
                }
-               s.flush();
+               else
+               {
+                  s << pb.data(a);
+                  pb.skipN(3);
+                  s <<  subExp;
+               }
             }
-            rewrite = result;
+            s.flush();
          }
+         rewrite = result;
       }
    }
    return true;
