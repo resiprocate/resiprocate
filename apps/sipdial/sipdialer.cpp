@@ -21,7 +21,7 @@ Data getFullFilename()
    resip_assert(home_drive); // FIXME
    char *home_path = getenv("HOMEPATH");
    resip_assert(home_path); // FIXME
-   Data full_filename(string(home_drive) + string(home_dir) + string("\sipdial\sipdial.cfg"));
+   Data full_filename(string(home_drive) + string(home_path) + string("\sipdial\sipdial.cfg"));
    return full_filename;
 #else   
    char *home_dir = getenv("HOME");

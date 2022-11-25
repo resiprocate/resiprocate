@@ -71,13 +71,15 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
    mDefaultDistance(config.getConfigUnsignedLong("GeoProximityDefaultDistance", 0)),
    mLoadBalanceEqualDistantTargets(config.getConfigBool("LoadBalanceEqualDistantTargets", true))
 {
-   int flags = REG_EXTENDED | REG_NOSUB;
+   std::regex_constants::syntax_option_type flags = std::regex_constants::extended | std::regex_constants::nosubs;
 
    if(!mRUriRegularExpressionData.empty())
    {
-      mRUriRegularExpression = new regex_t;
-      int ret = regcomp(mRUriRegularExpression, mRUriRegularExpressionData.c_str(), flags);
-      if( ret != 0 )
+      try
+      {
+         mRUriRegularExpression = new regex(mRUriRegularExpressionData.c_str(), flags);
+      }
+      catch(std::regex_error& ex)
       {
          delete mRUriRegularExpression;
          ErrLog( << "GeoProximityRequestUriFilter rule has invalid match expression: "
@@ -163,7 +165,6 @@ GeoProximityTargetSorter::~GeoProximityTargetSorter()
 {
    if(mRUriRegularExpression)
    {
-      regfree(mRUriRegularExpression);
       delete mRUriRegularExpression;
       mRUriRegularExpression = 0;
    }
@@ -211,7 +212,7 @@ GeoProximityTargetSorter::process(RequestContext &rc)
          {
             if(mRUriRegularExpression)
             {
-               if(regexec(mRUriRegularExpression, Data::from(rc.getOriginalRequest().header(h_RequestLine).uri()).c_str(), 0 /*ignored*/, 0 /*ignored*/, 0/*eflags*/) != 0)
+               if(!std::regex_match(Data::from(rc.getOriginalRequest().header(h_RequestLine).uri()).c_str(), *mRUriRegularExpression))
                {
                   // did not match 
                   DebugLog( << "GeoProximityTargetSorter: Skipped - request URI "<< rc.getOriginalRequest().header(h_RequestLine).uri() << " did not match.");

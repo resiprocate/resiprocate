@@ -52,6 +52,7 @@ jobs:
             perl \
             python3-cxx-dev \
             python3-dev \
+            sox \
             xxd
 
       - name: Checkout source

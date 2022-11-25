@@ -44,27 +44,18 @@
 
 #include <sys/types.h>
 #include <openssl/opensslv.h>
-#if !defined(LIBRESSL_VERSION_NUMBER)
-#include <openssl/e_os2.h>
-#endif
+#include <openssl/bn.h>
+#include <openssl/dh.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/pkcs7.h>
 #include <openssl/ossl_typ.h>
+#include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-
-inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *x)
-{
-    return ASN1_STRING_data(const_cast< ASN1_STRING* >(x));
-}
-
-#endif // OPENSSL_VERSION_NUMBER < 0x10100000L
 
 using namespace resip;
 using namespace std;
@@ -378,11 +369,7 @@ int pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 SSL_CTX* 
 Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename, const Data& privateKeyPassPhrase)
 {
-#if (OPENSSL_VERSION_NUMBER >= 0x1000000fL )
    SSL_CTX* ctx = SSL_CTX_new(method);
-#else
-   SSL_CTX* ctx = SSL_CTX_new((SSL_METHOD*)method);
-#endif
    resip_assert(ctx);
 
    X509_STORE* x509Store = X509_STORE_new();
@@ -520,12 +507,7 @@ BaseSecurity::addCertDER (PEMType type,
 
    X509* cert = 0;
 
-#if (OPENSSL_VERSION_NUMBER < 0x0090800fL )
-   unsigned char* in = (unsigned char*)certDER.data();
-#else
    unsigned const char* in = (unsigned const char*)certDER.data();
-#endif
-
    if (d2i_X509(&cert,&in,(long)certDER.size()) == 0)
    {
       ErrLog(<< "Could not read DER certificate from " << certDER );
@@ -1171,14 +1153,7 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    mRootSslCerts = X509_STORE_new();
    resip_assert(mRootTlsCerts && mRootSslCerts);
 
-#ifndef WIN32
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-   mTlsCtx = SSL_CTX_new( TLSv1_method() );
-#ifndef WIN32
-#pragma GCC diagnostic pop
-#endif
+   mTlsCtx = SSL_CTX_new( TLS_method() );
    if (!mTlsCtx)
    {
       ErrLog(<< "SSL_CTX_new failed, dumping OpenSSL error stack:");
@@ -1189,6 +1164,8 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
          ErrLog(<< "OpenSSL error stack: " << errBuf);
       }
    }
+   SSL_CTX_set_min_proto_version(mTlsCtx, TLS1_VERSION);
+   SSL_CTX_set_max_proto_version(mTlsCtx, TLS1_VERSION);
    resip_assert(mTlsCtx);
 
    SSL_CTX_set_default_passwd_cb(mTlsCtx, pem_passwd_cb);
@@ -1520,9 +1497,6 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    // Make sure that necessary algorithms exist:
    resip_assert(EVP_sha256());
 
-#if OPENSSL_VERSION_NUMBER < 0x00908000l
-   RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
-#else
    RSA* rsa = NULL;
    {
       BIGNUM *e = BN_new();
@@ -1542,7 +1516,6 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
       if (r)
          RSA_free(r);
     }
-#endif
    resip_assert(rsa);    // couldn't make key pair
    
    EVP_PKEY* privkey = EVP_PKEY_new();
@@ -1578,8 +1551,8 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    resip_assert(ret);
    
    const long duration = 60*60*24*expireDays;   
-   X509_gmtime_adj(X509_get_notBefore(cert),0);
-   X509_gmtime_adj(X509_get_notAfter(cert), duration);
+   X509_gmtime_adj(X509_getm_notBefore(cert),0);
+   X509_gmtime_adj(X509_getm_notAfter(cert), duration);
    
    ret = X509_set_pubkey(cert, privkey);
    resip_assert(ret);
@@ -1772,18 +1745,8 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 // if you think you need to change the following few lines, please email fluffy
 // the value of OPENSSL_VERSION_NUMBER ( in opensslv.h ) and the signature of
 // PKCS_encrypt found ( in pkcs7.h ) and the OS you are using
-#if (  OPENSSL_VERSION_NUMBER > 0x009060ffL )
-//   const EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
    const EVP_CIPHER* cipher =  EVP_aes_128_cbc(); 
-#else
-   //const EVP_CIPHER* cipher = EVP_enc_null();
-   EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
-#endif
    resip_assert( cipher );
-
-#if (OPENSSL_VERSION_NUMBER < 0x0090705fL )
-#warning PKCS7_encrypt() is broken in OpenSSL 0.9.7d
-#endif
 
    PKCS7* pkcs7 = PKCS7_encrypt( certs, in, cipher, flags);
    if ( !pkcs7 )
@@ -2010,11 +1973,7 @@ BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
    {
       if ( !certDer.empty() )
       {
-#if (OPENSSL_VERSION_NUMBER < 0x0090800fL )
-         unsigned char* in = (unsigned char*)certDer.data();
-#else
          unsigned const char* in = (unsigned const char*)certDer.data();
-#endif
          if (d2i_X509(&cert,&in,(long)certDer.size()) == 0)
          {
             DebugLog(<< "Could not read DER certificate from " << certDer );
@@ -3170,9 +3129,6 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
          else
          {
             long options = SSL_OP_CIPHER_SERVER_PREFERENCE |
-#if !defined(OPENSSL_NO_ECDH) && OPENSSL_VERSION_NUMBER >= 0x10000000L
-                           SSL_OP_SINGLE_ECDH_USE |
-#endif
                            SSL_OP_SINGLE_DH_USE;
             options = SSL_CTX_set_options(ctx, options);
             DebugLog(<<"DH parameters loaded, PFS cipher-suites enabled");
@@ -3181,48 +3137,6 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       }
       BIO_free(bio);
    }
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-
-#ifndef SSL_CTRL_SET_ECDH_AUTO
-#define SSL_CTRL_SET_ECDH_AUTO 94
-#endif
-
-   // FIXME: add WarningLog statements to the block below if it fails
-
-   /* SSL_CTX_set_ecdh_auto(ctx,on) requires OpenSSL 1.0.2 which wraps: */
-   if (SSL_CTX_ctrl(ctx, SSL_CTRL_SET_ECDH_AUTO, 1, NULL))
-   {
-      DebugLog(<<"ECDH initialized");
-   }
-   else
-   {
-#if !defined(OPENSSL_NO_ECDH) && OPENSSL_VERSION_NUMBER >= 0x10000000L
-      EC_KEY* ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-      if (ecdh != NULL)
-      {
-         if (SSL_CTX_set_tmp_ecdh(ctx, ecdh))
-         {
-	    DebugLog(<<"ECDH initialized");
-	 }
-         else
-         {
-            WarningLog(<<"unable to initialize ECDH: SSL_CTX_set_tmp_ecdh failed");
-         }
-         EC_KEY_free(ecdh);
-      }
-      else
-      {
-         WarningLog(<<"unable to initialize ECDH: EC_KEY_new_by_curve_name failed");
-      }
-#else
-      WarningLog(<<"unable to initialize ECDH: SSL_CTX_ctrl failed, OPENSSL_NO_ECDH defined or repro was compiled with an old OpenSSL version");
-#endif
-   }
-
-#endif
-
-
 }
 
 #endif

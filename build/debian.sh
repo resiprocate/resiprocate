@@ -24,6 +24,11 @@ source build/distcc-setup
 
 # -Wweak-vtables : use with clang to find classes without a key function
 
+# For using the rutil/dns/ares library,
+# add this to CPPFLAGS, the includes must come before /usr/include:
+# -I`pwd`/rutil/dns/ares -DHAVE_ARPA_NAMESER_H -DHAVE_ARPA_NAMESER_COMPAT_H
+# and remove -lcares from LDFLAGS
+
 CFLAGS='-fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated' \
 CXXFLAGS='-fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -Wall -Wno-deprecated' \
 CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/postgresql -I/usr/include/sipxtapi -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_FILE_OFFS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_DIGEST_LOGGING -DRECON_SDP_ENCODING_NAMES_CASE_HACK -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \
