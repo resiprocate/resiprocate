@@ -273,8 +273,8 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    resip_assert(ret);
    
    const long duration = 60*60*24*expireDays;   
-   X509_gmtime_adj(X509_get_notBefore(cert),0);
-   X509_gmtime_adj(X509_get_notAfter(cert), duration);
+   X509_gmtime_adj(X509_getm_notBefore(cert),0);
+   X509_gmtime_adj(X509_getm_notAfter(cert), duration);
    
    ret = X509_set_pubkey(cert, privkey);
    resip_assert(ret);
