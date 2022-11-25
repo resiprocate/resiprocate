@@ -126,7 +126,9 @@ protected:
    std::list<CommandServer*> mCommandServerList;
    CommandServerThread* mCommandServerThread;
    resip::CongestionManager* mCongestionManager;
+#ifdef DSO_PLUGINS
    std::shared_ptr<ReproPluginManager> mPluginManager;
+#endif
    typedef std::map<unsigned int, resip::NameAddr> TransportRecordRouteMap;
    TransportRecordRouteMap mStartupTransportRecordRoutes;
    std::shared_ptr<resip::DomainMatcher> mDomainMatcher;

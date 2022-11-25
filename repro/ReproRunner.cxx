@@ -512,11 +512,12 @@ ReproRunner::onReload()
 {
    mSipStack->onReload();
    // Let the plugins know
-   std::vector<Plugin*>::iterator it;
+#ifdef DSO_PLUGINS
    if(mPluginManager)
    {
       mPluginManager->onReload();
    }
+#endif
 }
 
 void
@@ -578,8 +579,13 @@ ReproRunner::loadPlugins()
    std::vector<Data> pluginNames;
    mProxyConfig->getConfigValue("LoadPlugins", pluginNames);
 
+#ifdef DSO_PLUGINS
    mPluginManager.reset(new ReproPluginManager(*mSipStack, mProxyConfig));
    return mPluginManager->loadPlugins(pluginNames);
+#else
+   CritLog(<< "LoadPlugins is specified in the configuration but repro was compiled without plugin support");
+   return false;
+#endif
 }
 
 void
@@ -1126,8 +1132,6 @@ ReproRunner::createProxy()
                                                  numAsyncProcessorWorkerThreads);
    }
 
-   std::vector<Plugin*>::iterator it;
-
    // Create proxy processor chains
    /* Explanation:  "Monkeys" are processors which operate on incoming requests
                     "Lemurs"  are processors which operate on incoming responses
@@ -1138,30 +1142,36 @@ ReproRunner::createProxy()
    mMonkeys = new ProcessorChain(Processor::REQUEST_CHAIN);
    makeRequestProcessorChain(*mMonkeys);
    InfoLog(<< *mMonkeys);
+#ifdef DSO_PLUGINS
    if(mPluginManager)
    {
       mPluginManager->onRequestProcessorChainPopulated(*mMonkeys);
    }
+#endif
 
    // Make Lemurs
    resip_assert(!mLemurs);
    mLemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
    makeResponseProcessorChain(*mLemurs);
    InfoLog(<< *mLemurs);
+#ifdef DSO_PLUGINS
    if(mPluginManager)
    {
       mPluginManager->onResponseProcessorChainPopulated(*mLemurs);
    }
+#endif
 
    // Make Baboons
    resip_assert(!mBaboons);
    mBaboons = new ProcessorChain(Processor::TARGET_CHAIN);
    makeTargetProcessorChain(*mBaboons);
    InfoLog(<< *mBaboons);
+#ifdef DSO_PLUGINS
    if(mPluginManager)
    {
       mPluginManager->onTargetProcessorChainPopulated(*mBaboons);
    }
+#endif
 
    // Create main Proxy class
    resip_assert(!mProxy);
