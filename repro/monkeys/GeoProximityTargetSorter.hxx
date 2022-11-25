@@ -3,11 +3,7 @@
 
 #ifndef RESIP_FIXED_POINT
 
-#ifdef WIN32
-#include <pcreposix.h>
-#else
-#include <regex.h>
-#endif
+#include <regex>
 
 #include "repro/Processor.hxx"
 #include "repro/ResponseContext.hxx"
@@ -100,7 +96,7 @@ class GeoProximityTargetSorter : public Processor
       double calculateDistance(double latitude1, double longitude1, double latitude2, double longitude2);
 
       resip::Data mRUriRegularExpressionData;
-      regex_t* mRUriRegularExpression;
+      std::regex* mRUriRegularExpression;
 
       unsigned long mDefaultDistance;
       bool mLoadBalanceEqualDistantTargets;

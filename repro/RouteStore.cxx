@@ -35,14 +35,16 @@ RouteStore::RouteStore(AbstractDb& db):
       
       if(!route.routeRecord.mMatchingPattern.empty())
       {
-         int flags = REG_EXTENDED;
+         std::regex_constants::syntax_option_type flags = std::regex_constants::extended;
          if(route.routeRecord.mRewriteExpression.find("$") == Data::npos)
          {
-            flags |= REG_NOSUB;
+            flags |= std::regex_constants::nosubs;
          }
-         route.preq = new regex_t;
-         int ret = regcomp(route.preq, route.routeRecord.mMatchingPattern.c_str(), flags);
-         if(ret != 0)
+         try
+         {
+            route.preq = new std::regex(route.routeRecord.mMatchingPattern.c_str(), flags);
+         }
+         catch (std::regex_error& e)
          {
             delete route.preq;
             ErrLog(<< "Routing rule has invalid match expression: "
@@ -84,7 +86,6 @@ RouteStore::~RouteStore()
    {
       if ( i->preq )
       {
-         regfree ( i->preq );
          delete i->preq;
 
          // !abr! Can't modify elements in a set
@@ -126,14 +127,16 @@ RouteStore::addRoute(const resip::Data& method,
    route.preq = 0;
    if( !route.routeRecord.mMatchingPattern.empty() )
    {
-     int flags = REG_EXTENDED;
+     std::regex_constants::syntax_option_type flags = std::regex_constants::extended;
      if( route.routeRecord.mRewriteExpression.find("$") == Data::npos )
      {
-       flags |= REG_NOSUB;
+       flags |= std::regex_constants::nosubs;
      }
-     route.preq = new regex_t;
-     int ret = regcomp( route.preq, route.routeRecord.mMatchingPattern.c_str(), flags );
-     if( ret != 0 )
+     try
+     {
+        route.preq = new std::regex(route.routeRecord.mMatchingPattern.c_str(), flags);
+     }
+     catch (std::regex_error& e)
      {
        delete route.preq;
        route.preq = 0;
@@ -195,7 +198,6 @@ RouteStore::eraseRoute(const resip::Data& key )
             it++;
             if ( i->preq )
             {
-               regfree ( i->preq );
                delete i->preq;
 
                // !abr! Can't modify elements in a set
@@ -341,7 +343,6 @@ RouteStore::process(const resip::Uri& ruri,
       const Data& match = rec.mMatchingPattern;
       if ( it->preq ) 
       {
-         int ret;
          // TODO - !cj! www.pcre.org looks like it has better performance
          // !mbg! is this true now that the compiled regexp is used?
          Data uri;
@@ -351,11 +352,9 @@ RouteStore::process(const resip::Uri& ruri,
             s.flush();
          }
          
-         const int nmatch=10;
-         regmatch_t pmatch[nmatch];
+         std::cmatch matches;
          
-         ret = regexec(it->preq, uri.c_str(), nmatch, pmatch, 0/*eflags*/);
-         if ( ret != 0 )
+         if(!std::regex_match(uri.c_str(), matches, *it->preq))
          {
             // did not match 
             DebugLog( << "  Skipped - request URI "<< uri << " did not match " << match );
@@ -367,40 +366,36 @@ RouteStore::process(const resip::Uri& ruri,
          
          if ( rewrite.find("$") != Data::npos )
          {
-            for ( int i=1; i<nmatch; i++)
+            for ( int i=1; i<matches.size(); i++)
             {
-               if ( pmatch[i].rm_so != -1 )
+               Data subExp(matches[i]);
+               DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+
+               Data result;
                {
-                  Data subExp(uri.substr(pmatch[i].rm_so,
-                                         pmatch[i].rm_eo-pmatch[i].rm_so));
-                  DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+                  DataStream s(result);
 
-                  Data result;
-                  {
-                     DataStream s(result);
-
-                     ParseBuffer pb(target);
+                  ParseBuffer pb(target);
                      
-                     while (true)
+                  while (true)
+                  {
+                     const char* a = pb.position();
+                     pb.skipToChars( Data("$") + char('0'+i) );
+                     if ( pb.eof() )
                      {
-                        const char* a = pb.position();
-                        pb.skipToChars( Data("$") + char('0'+i) );
-                        if ( pb.eof() )
-                        {
-                           s << pb.data(a);
-                           break;
-                        }
-                        else
-                        {
-                           s << pb.data(a);
-                           pb.skipN(2);
-                           s <<  subExp;
-                        }
+                        s << pb.data(a);
+                        break;
                      }
-                     s.flush();
+                     else
+                     {
+                        s << pb.data(a);
+                        pb.skipN(2);
+                        s <<  subExp;
+                     }
                   }
-                  target = result;
+                  s.flush();
                }
+               target = result;
             }
          }
          

@@ -77,9 +77,11 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
    Data mimeTypeFilterRegex = config.getConfigData("MessageSiloMimeTypeFilterRegex", "application\\/im\\-iscomposing\\+xml", false);
    if(!destFilterRegex.empty())
    {
-      mDestFilterRegex= new regex_t;
-      int ret = regcomp(mDestFilterRegex, destFilterRegex.c_str(), REG_EXTENDED | REG_NOSUB);
-      if( ret != 0 )
+      try
+      {
+         mDestFilterRegex = new std::regex(destFilterRegex.c_str(), std::regex_constants::extended | std::regex_constants::nosubs);
+      }
+      catch (std::regex_error& e)
       {
          delete mDestFilterRegex;
          ErrLog( << "MessageSilo has invalid destination filter regular expression: " << destFilterRegex);
@@ -88,9 +90,11 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
    }
    if(!mimeTypeFilterRegex.empty())
    {
-      mMimeTypeFilterRegex= new regex_t;
-      int ret = regcomp(mMimeTypeFilterRegex, mimeTypeFilterRegex.c_str(), REG_EXTENDED | REG_NOSUB);
-      if( ret != 0 )
+      try
+      {
+         mMimeTypeFilterRegex= new std::regex(mimeTypeFilterRegex.c_str(), std::regex_constants::extended | std::regex_constants::nosubs);
+      }
+      catch (std::regex_error& e)
       {
          delete mMimeTypeFilterRegex;
          ErrLog( << "MessageSilo has invalid mime-type filter regular expression: " << mimeTypeFilterRegex);
@@ -104,13 +108,11 @@ MessageSilo::~MessageSilo()
    // Clean up pcre memory
    if(mDestFilterRegex)
    {
-      regfree(mDestFilterRegex);
       delete mDestFilterRegex;
       mDestFilterRegex = 0;
    }
    if(mMimeTypeFilterRegex)
    {
-      regfree(mMimeTypeFilterRegex);
       delete mMimeTypeFilterRegex;
       mMimeTypeFilterRegex = 0;
    }
@@ -155,8 +157,7 @@ MessageSilo::process(RequestContext& context)
          async->mMimeType = Data::from(contents->getType());
          if (mMimeTypeFilterRegex)
          {
-            int ret = regexec(mMimeTypeFilterRegex, async->mMimeType.c_str(), 0, 0, 0/*eflags*/);
-            if (ret == 0)
+            if(std::regex_match(async->mMimeType.c_str(), *mMimeTypeFilterRegex))
             {
                // match 
                DebugLog( << " MESSAGE not silo'd due to Mime-Type filter: " << async->mMimeType);
@@ -178,8 +179,7 @@ MessageSilo::process(RequestContext& context)
          async->mDestUri = originalRequest.header(h_To).uri().getAOR(false /* addPort? */);
          if (mDestFilterRegex)
          {
-            int ret = regexec(mDestFilterRegex, async->mDestUri.c_str(), 0, 0, 0/*eflags*/);
-            if (ret == 0)
+            if(std::regex_match(async->mDestUri.c_str(), *mDestFilterRegex))
             {
                // match 
                DebugLog( << " MESSAGE not silo'd due to destination filter: " << async->mDestUri);

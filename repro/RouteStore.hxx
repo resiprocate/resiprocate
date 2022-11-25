@@ -1,11 +1,7 @@
 #if !defined(REPRO_ROUTESTORE_HXX)
 #define REPRO_ROUTESTORE_HXX
 
-#ifdef WIN32
-#include <pcreposix.h>
-#else
-#include <regex.h>
-#endif
+#include <regex>
 
 #include <set>
 
@@ -71,7 +67,7 @@ class RouteStore
       {
          public:
             Key key;
-            regex_t *preq;
+            std::regex *preq;
             AbstractDb::RouteRecord routeRecord;
             bool operator<(const RouteOp&) const;
       };
