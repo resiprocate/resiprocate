@@ -3,10 +3,10 @@
 #define ARES_NAMESER_H
 
 #ifdef HAVE_ARPA_NAMESER_H
-#  include "ares_nameser.h"
+#  include <arpa/nameser.h>
 #endif
 #ifdef HAVE_ARPA_NAMESER_COMPAT_H
-#  include "ares_nameser.h"
+#  include <arpa/nameser_compat.h>
 #endif
 
 /* ============================================================================
