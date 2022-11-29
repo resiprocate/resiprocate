@@ -145,7 +145,6 @@ add_library(repro
    XmlRpcServerBase.cxx
    OutboundTarget.cxx
    PersistentMessageQueue.cxx
-   Plugin.cxx
    QValueTarget.cxx
 
    stateAgents/PresenceServer.cxx
@@ -181,6 +180,10 @@ target_add_conditional_sources(repro OPENSSL_FOUND
    stateAgents/PrivateKeySubscriptionHandler.cxx
 )
 
+target_add_conditional_sources(repro BUILD_DSO_PLUGINS
+   Plugin.cxx
+)
+
 target_link_libraries(repro PUBLIC dum)
 if(BUILD_DSO_PLUGINS)
    target_link_libraries(repro PUBLIC ${CMAKE_DL_LIBS})
@@ -192,7 +195,9 @@ target_include_directories(repro PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 target_include_directories(repro PUBLIC ${CAJUN_INCLUDE_DIRS})
 target_include_directories(repro PUBLIC ${BERKELEYDB_INCLUDE_DIRS})
+target_include_directories(repro PUBLIC ${PCRE_INCLUDE_DIRS})
 target_link_libraries(repro PUBLIC ${BERKELEYDB_LIBRARIES})
+target_link_libraries(repro PUBLIC ${PCRE_LIBRARIES})
 if(USE_MAXMIND_GEOIP)
    target_link_libraries(repro PUBLIC ${GEOIP_LIBRARY})
 endif()
@@ -207,8 +212,10 @@ target_add_conditional_sources(repro USE_POSTGRESQL
    PostgreSqlDb.cxx
    )
 
-# for some reason we can't use PostgreSQL_LIBRARIES here...
-target_link_libraries(repro PUBLIC PostgreSQL::PostgreSQL)
+if(USE_POSTGRESQL)
+   # for some reason we can't use PostgreSQL_LIBRARIES here...
+   target_link_libraries(repro PUBLIC PostgreSQL::PostgreSQL)
+endif()
 
 version_libname(repro)
 
@@ -218,7 +225,7 @@ install(TARGETS repro DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/repro ${INCLUDES})
 
-if(BUILD_REPRO_DSO_PLUGINS)
+if(BUILD_DSO_PLUGINS)
    add_subdirectory(plugins)
 endif()
 

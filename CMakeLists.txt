@@ -106,6 +106,7 @@ option(BUILD_DSO_PLUGINS "Build DSO plugins" TRUE)
 option(BUILD_RETURN "Build reTurn server" TRUE)
 option(BUILD_REND "Build rend" FALSE)
 option(BUILD_TFM "Build TFM, requires Netxx and cppunit" FALSE)
+option(BUILD_CLICKTOCALL "Build Click to call application" FALSE)
 option(BUILD_ICHAT_GW "Build iChat gateway, requires gloox" FALSE)
 option(BUILD_TELEPATHY_CM "Build Telepathy connection manager" FALSE)
 option(BUILD_RECON "Build reCon Conversation Manager library" FALSE)
@@ -153,9 +154,11 @@ option(USE_NDKPORTS_HACKS "Android ndkports build: use hardcoded paths to depend
 if(WIN32)
    set(BUILD_SHARED_LIBS_DEFAULT OFF)
    set(USE_CONTRIB_DEFAULT ON)
+   set(USE_NUGET ON)
 else()
    set(BUILD_SHARED_LIBS_DEFAULT ON)
    set(USE_CONTRIB_DEFAULT OFF)
+   set(USE_NUGET OFF)
 endif()
 option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT})
 option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
@@ -208,6 +211,9 @@ endif()
 ### Per-program dependencies ###
 ################################
 
+set(USE_PCRE FALSE)
+set(USE_WEBSOCKETPP FALSE)
+
 if(BUILD_REPRO)
    set(USE_BDB TRUE)
    set(USE_PCRE TRUE)
@@ -233,12 +239,17 @@ if(USE_KURENTO)
    set(USE_WEBSOCKETPP TRUE)
 endif()
 
+if(BUILD_CLICKTOCALL)
+   set(USE_PCRE TRUE)
+endif()
 
 ####################
 ### Dependencies ###
 ####################
 
-find_package(PkgConfig REQUIRED)
+if(NOT USE_CONTRIB)
+   find_package(PkgConfig REQUIRED)
+endif()
 
 # ares
 if(WITH_C_ARES)
@@ -262,9 +273,52 @@ else()
    set(ARES_LIBRARIES resipares)
 endif()
 
+if("${CMAKE_EXE_LINKER_FLAGS}" STREQUAL "/machine:x64")
+   set(WIN_ARCH "x64")
+else()
+   set(WIN_ARCH "w32")
+endif()
+
+# Download NuGet Package Manager and ensure it is in %PATH%
+# before running CMake
+if(USE_NUGET)
+   find_program(NUGET_EXE NAMES nuget.exe REQUIRED)
+endif()
+
+function(nuget_inst)
+   exec_program(${NUGET_EXE}
+      ARGS install "${ARGV1}" -Version ${ARGV2} -ExcludeVersion -OutputDirectory ${CMAKE_BINARY_DIR}/packages
+      )
+   set(${ARGV0}_TARGETS ${CMAKE_BINARY_DIR}/packages/${ARGV1}/build/native/${ARGV1}.targets PARENT_SCOPE)
+
+   set(PKG_TOP "${CMAKE_BINARY_DIR}/packages/${ARGV1}/build/native")
+   set(PKG_LIB "${PKG_TOP}/lib/${WIN_ARCH}/Debug")  # FIXME
+
+   set(${ARGV0}_ROOT_DIR "${PKG_TOP}" PARENT_SCOPE)
+
+   # These vary a lot from one package to the next.  We
+   # set them to some common default values but in many
+   # cases the subsequent code needs to override these
+   # values with package-specific values.
+   set(${ARGV0}_INCLUDE_DIRS "${PKG_TOP}/include" PARENT_SCOPE)
+   set(${ARGV0}_LIBRARIES_DIR "${PKG_LIB}" PARENT_SCOPE)
+endfunction()
+
 # OpenSSL
 if(WITH_SSL)
-   if(USE_NDKPORTS_HACKS)
+   if(USE_NUGET)
+      nuget_inst(OPENSSL "zeroc.openssl.v142" "1.1.1.2")
+      message("Using ${OPENSSL_ROOT_DIR} and ${OPENSSL_LIBRARIES}")
+      # this is an argument to FindOpenSSL
+      # https://cmake.org/cmake/help/latest/module/FindOpenSSL.html
+      set(OPENSSL_USE_STATIC_LIBS True)
+#      set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_LIBRARIES}/libcrypto.lib")
+      set(OPENSSL_LIBRARIES
+            "${OPENSSL_LIBRARIES_DIR}/libssl.lib"
+            "${OPENSSL_LIBRARIES_DIR}/libcrypto.lib")
+      # FIXME - check if those libraries and headers really exist
+      set(OPENSSL_FOUND TRUE)
+   elseif(USE_NDKPORTS_HACKS)
       if(NOT ANDROID_ABI)
          message(FATAL_ERROR "ndkports hack requested but ANDROID_ABI not set")
       endif()
@@ -282,7 +336,7 @@ if(WITH_SSL)
       set(OPENSSL_FOUND TRUE)
    else()
       # SSL support is requested, so make it mandatory when calling find_package
-      find_package(OpenSSL REQUIRED)
+      find_package(OpenSSL REQUIRED) # HINTS ${OPENSSL_LIBRARIES})
    endif()
    set_def(USE_SSL)
 else()
@@ -293,8 +347,8 @@ else()
 endif()
 
 # popt
+# Debian: libpopt-dev
 if(USE_POPT)
-   # Debian: libpopt-dev
    if(USE_CONTRIB)
       add_subdirectory(contrib/popt)
       set(POPT_LIBRARIES popt)
@@ -446,7 +500,19 @@ endif()
 # BerkeleyDb
 # Debian: libdb++-dev
 if(USE_BDB)
-   if(USE_CONTRIB)
+   if(USE_NUGET)
+      #nuget_inst(BERKELEYDB "BerkeleyDB-4_8_30-Cpp" "4.8.30.2")
+      #set(BERKELEYDB_LIBRARIES_DIR "${BERKELEYDB_ROOT_DIR}/bin")
+      #set(BERKELEYDB_LIBRARIES
+      #      "${BERKELEYDB_LIBRARIES_DIR}/lib/${WIN_ARCH}/Debug/libdb48d.lib")
+      # https://www.nuget.org/packages/berkeley.db.v140
+      nuget_inst(BERKELEYDB "berkeley.db.v140" "5.3.28.3")
+      set(BERKELEYDB_LIBRARIES_DIR "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/Debug")
+      set(BERKELEYDB_LIBRARIES
+            "${BERKELEYDB_LIBRARIES_DIR}/libdb53d.lib")
+      # FIXME - check if those libraries and headers really exist
+      set(BERKELEYDB_FOUND TRUE)
+   elseif(USE_CONTRIB)
       add_subdirectory(contrib/db)
    else()
       find_package(BerkeleyDb REQUIRED)
@@ -456,21 +522,40 @@ endif()
 
 # PCRE
 # Debian: libpcre3-dev
+# FIXME - deprecate PCRE in favour of C++11 <regex>
 if(USE_PCRE)
-  if(USE_CONTRIB)
-    add_subdirectory(contrib/pcre)
-    set(PCRE_LIBRARIES pcre)
-  else()
-    pkg_check_modules(PCRE REQUIRED libpcre)
-  endif()
+   if(USE_NUGET)
+      nuget_inst(PCRE "pcre" "8.33.0.1")
+      if(BUILD_SHARED_LIBS)
+         set(WIN_LIB_LINKING "dynamic")
+      else()
+         set(WIN_LIB_LINKING "static")
+         add_definitions(-DPCRE_STATIC)
+      endif()
+      set(PCRE_LIBRARIES_DIR "${PCRE_ROOT_DIR}/lib/v110/${WIN_ARCH}/Debug/${WIN_LIB_LINKING}/utf8")
+      set(PCRE_LIBRARIES
+              "${PCRE_LIBRARIES_DIR}/pcre8.lib")
+      # FIXME - check if those libraries and headers really exist
+      if(NOT EXISTS "${PCRE_LIBRARIES}")
+         message(FATAL_ERROR "could not find ${PCRE_LIBRARIES}")
+      endif()
+      set(PCRE_FOUND TRUE)
+   elseif(USE_CONTRIB)
+      add_subdirectory(contrib/pcre)
+      set(PCRE_LIBRARIES pcre)
+   else()
+      pkg_check_modules(PCRE REQUIRED libpcre)
+   endif()
 endif()
 
 # Cajun
 # Debian: libcajun-dev
-#set(CAJUN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun/include")
 if(USE_CAJUN)
    if(USE_CONTRIB)
-      add_subdirectory(contrib/cajun)
+      # FIXME: convert Cajun to CMake build system
+      # FIXME: include Cajun as a Git submodule or NuGet
+      #add_subdirectory(contrib/cajun)
+      set(CAJUN_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun/include")
    else()
       find_package(cajun REQUIRED)
    endif()
@@ -481,6 +566,7 @@ endif()
 # modern ASIO requires C++11
 if(USE_ASIO)
    if(USE_CONTRIB)
+      # FIXME: include asio as a Git submodule or NuGet
       set(ASIO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/asio")
    else()
       find_package(ASIO REQUIRED)
@@ -490,7 +576,16 @@ endif()
 # Boost
 # Debian: libboost-all-dev
 if(USE_BOOST)
-   find_package(Boost REQUIRED)
+   if(USE_NUGET)
+      nuget_inst(BOOST "boost" "1.80.0")
+      message("Using ${BOOST_ROOT_DIR} and ${BOOST_LIBRARIES}")
+      set(BOOST_LIBRARIES
+            "${BOOST_LIBRARIES_DIR}/libboostcore.lib")
+      # FIXME - check if those libraries and headers really exist
+      set(BOOST_FOUND TRUE)
+   else()
+      find_package(Boost REQUIRED)
+   endif()
 endif()
 
 if(BUILD_TELEPATHY_CM)
@@ -514,7 +609,13 @@ if(USE_SRTP)
    if(USE_SRTP1)
       find_package(srtp REQUIRED)
    else()
-      find_package(srtp2 REQUIRED)
+      # FIXME - not in NuGet, not CMake native
+      if(USE_CONTRIB)
+         add_subdirectory("contrib/srtp")
+         set(SRTP_FOUND TRUE)
+      else()
+         find_package(srtp2 REQUIRED)
+      endif()
    endif()
 endif()
 
@@ -562,7 +663,17 @@ endif()
 # Apache Qpid Proton
 # Debian: libqpid-proton-cpp12-dev
 if(BUILD_QPID_PROTON)
-   pkg_check_modules(QPIDPROTON libqpid-proton-cpp REQUIRED)
+   if(USE_NUGET)
+      # FIXME - they only publish the C API, need full C++ API
+      nuget_inst(QPIDPROTON "Apache.Qpid.Proton" "1.0.0-M6")
+      message("Using ${QPIDPROTON_ROOT_DIR} and ${QPIDPROTON_LIBRARIES}")
+      set(QPIDPROTON_LIBRARIES
+            "${QPIDPROTON_LIBRARIES_DIR}/libqpidproton.lib")
+      # FIXME - check if those libraries and headers really exist
+      set(QPIDPROTON_FOUND TRUE)
+   else()
+      pkg_check_modules(QPIDPROTON libqpid-proton-cpp REQUIRED)
+   endif()
    option_def(BUILD_QPID_PROTON)
 endif()
 
@@ -576,11 +687,19 @@ option_def(RESIP_ASSERT_SYSLOG)
 # AC_SEARCH_LIBS(gethostbyname, nsl)
 # AC_SEARCH_LIBS(socket, socket)
 
-
 # websocketpp
 # Debian: libwebsocketpp-dev
 if(USE_WEBSOCKETPP)
-   find_package(websocketpp REQUIRED)
+   if(USE_NUGET)
+      nuget_inst(WEBSOCKETPP "websocketpp-mtk.repack" "0.7.0-mtk19")
+      message("Using ${WEBSOCKETPP_ROOT_DIR} and ${WEBSOCKETPP_LIBRARIES}")
+      set(WEBSOCKETPP_LIBRARIES
+            "${WEBSOCKETPP_LIBRARIES_DIR}/libwebsocketpp.lib")
+      # FIXME - check if those libraries and headers really exist
+      set(WEBSOCKETPP_FOUND TRUE)
+   else()
+      find_package(websocketpp REQUIRED)
+   endif()
 endif()
 
 # monotonic clock

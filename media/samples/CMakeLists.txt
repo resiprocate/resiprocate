@@ -32,6 +32,8 @@ add_executable(prompt2wav
    ${INCLUDES}
 )
 
+target_include_directories(prompt2wav PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
 # don't need to install this, it is only used during development
 #install(TARGETS prompt2wav DESTINATION ${CMAKE_INSTALL_BINDIR})
 

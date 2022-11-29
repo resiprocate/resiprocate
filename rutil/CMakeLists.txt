@@ -127,7 +127,6 @@ add_library(rutil
    ParseException.cxx
    Poll.cxx
    PoolBase.cxx
-   Plugin.cxx
    FdPoll.cxx
    RADIUSDigestAuthenticator.cxx
    RWMutex.cxx
@@ -182,6 +181,10 @@ target_add_conditional_sources(rutil BUILD_QPID_PROTON
    ProtonThreadBase.cxx
 )
 
+target_add_conditional_sources(rutil BUILD_DSO_PLUGINS
+   Plugin.cxx
+)
+
 function(copy_pycxx)
    get_filename_component(BASE_FILENAME ${ARGV0} NAME)
    add_custom_command(
@@ -220,24 +223,28 @@ target_add_conditional_sources(rutil WIN32
    WinCompat.cxx
 )
 
+# %HOME...%\source\repos\resiprocate\builds\packages\zeroc.openssl.v142\build\native\bin\x64\Debug
+
 if(WIN32)
-   target_link_libraries(rutil winmm)
+   target_link_libraries(rutil PUBLIC winmm)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-   target_link_libraries(rutil rt)
+   target_link_libraries(rutil PUBLIC rt)
 endif()
 
 target_include_directories(rutil PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 target_include_directories(rutil PUBLIC ${ARES_INCLUDE_DIRS})
 target_include_directories(rutil PUBLIC ${QPIDPROTON_INCLUDE_DIRS})
 target_include_directories(rutil PUBLIC ${Python3_INCLUDE_DIRS} ${PYCXX_INCLUDE_DIRS})
-target_include_directories(rutil PUBLIC ${OPENSSL_INCLUDE_DIR})
-target_link_libraries(rutil ${OPENSSL_LIBRARIES} ${ARES_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(rutil ${QPIDPROTON_LIBRARIES})
-target_link_libraries(rutil ${Python3_LIBRARIES} ${PYCXX_LIBRARIES})
-target_link_libraries(rutil ${LIBRADIUS_LIBRARIES})
-target_link_libraries(rutil ${FMT_LIBRARIES})
+target_include_directories(rutil PUBLIC ${OPENSSL_INCLUDE_DIRS})
+#target_link_libraries(rutil ${OPENSSL_TARGETS})
+target_link_libraries(rutil PUBLIC ${OPENSSL_LIBRARIES})
+target_link_libraries(rutil PUBLIC ${ARES_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(rutil PUBLIC ${QPIDPROTON_LIBRARIES})
+target_link_libraries(rutil PUBLIC ${Python3_LIBRARIES} ${PYCXX_LIBRARIES})
+target_link_libraries(rutil PUBLIC ${LIBRADIUS_LIBRARIES})
+target_link_libraries(rutil PUBLIC ${FMT_LIBRARIES})
 if(ENABLE_ANDROID)
-   target_link_libraries(rutil log)
+   target_link_libraries(rutil PUBLIC log)
 endif()
 set_target_properties(rutil PROPERTIES FOLDER rutil)
 version_libname(rutil)

@@ -1,5 +1,7 @@
 
-add_subdirectory(clicktocall)
+if(BUILD_CLICKTOCALL)
+   add_subdirectory(clicktocall)
+endif()
 add_subdirectory(sipdial)
 if(BUILD_ICHAT_GW)
    add_subdirectory(ichat-gw)
