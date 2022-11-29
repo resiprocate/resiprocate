@@ -365,7 +365,9 @@ SipXMediaResourceParticipant::startResourceImpl()
             mSipXResourceName.c_str(),
             *mRecordingCircularBuffer,
             format,
-            recordingBufferNotificationWatermark);
+            recordingBufferNotificationWatermark,
+            getDurationMs() /* maxTime Ms */,
+            silenceTimeMs /* silenceLength Ms, -1 to disable */);
 
          if (status == OS_SUCCESS)
          {
