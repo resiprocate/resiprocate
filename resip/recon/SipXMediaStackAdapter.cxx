@@ -536,9 +536,9 @@ SipXMediaStackAdapter::createLocalParticipantInstance(ParticipantHandle partHand
 }
 
 MediaResourceParticipant *
-SipXMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer)
+SipXMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& playAudioBuffer, void* recordingCircularBuffer)
 {
-   return new SipXMediaResourceParticipant(partHandle, getConversationManager(), *this, mediaUrl, audioBuffer);
+   return new SipXMediaResourceParticipant(partHandle, getConversationManager(), *this, mediaUrl, playAudioBuffer, recordingCircularBuffer);
 }
 
 RemoteParticipant *

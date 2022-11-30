@@ -234,7 +234,7 @@ KurentoMediaStackAdapter::createLocalParticipantInstance(ParticipantHandle partH
 }
 
 MediaResourceParticipant *
-KurentoMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer)
+KurentoMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer, void* recordingCircularBuffer)
 {
    return 0; // FIXME Kurento - implement MediaResourceParticipant in Kurento
 }
