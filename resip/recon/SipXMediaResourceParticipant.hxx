@@ -80,7 +80,11 @@ private:
    resip::Data mSipXResourceName;
    MpStreamPlayer* mStreamPlayer;
    int mPortOnBridge;
+#ifndef SIPX_NO_RECORD
    CircularBufferPtr* mRecordingCircularBuffer;
+#else
+   void* mRecordingCircularBuffer;
+#endif
 };
 
 }

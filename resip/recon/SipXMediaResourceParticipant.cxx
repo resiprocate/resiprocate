@@ -21,7 +21,9 @@
 #undef ssrc_t  
 #include <mp/MprEncode.h>
 #include <mp/MpStreamPlayer.h>
+#ifndef SIPX_NO_RECORD
 #include <utl/CircularBufferPtr.h>
+#endif
 
 using namespace recon;
 using namespace resip;
@@ -46,9 +48,19 @@ SipXMediaResourceParticipant::SipXMediaResourceParticipant(ParticipantHandle par
   SipXParticipant(partHandle, ConversationManager::ParticipantType_MediaResource, conversationManager, sipXMediaStackAdapter),
   mStreamPlayer(0),
   mPortOnBridge(-1),
+#ifndef SIPX_NO_RECORD
   mRecordingCircularBuffer((CircularBufferPtr*)recordingCircularBuffer)
+#else
+  mRecordingCircularBuffer(nullptr)
+#endif
 {
    InfoLog(<< "SipXMediaResourceParticipant created, handle=" << mHandle << " url=" << getMediaUrl());
+#ifdef SIPX_NO_RECORD
+   if(recordingCircularBuffer != 0)
+   {
+      ErrLog(<< "recordingCircularBuffer specified but recon is not compiled with support for CircularBuffer");
+   }
+#endif
 }
 
 SipXMediaResourceParticipant::~SipXMediaResourceParticipant()
