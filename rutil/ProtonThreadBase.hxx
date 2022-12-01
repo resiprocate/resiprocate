@@ -7,6 +7,7 @@
 #include "ThreadIf.hxx"
 #include "TimeLimitFifo.hxx"
 
+#include <proton/connection.hpp>
 #include <proton/function.hpp>
 #include <proton/messaging_handler.hpp>
 #include <proton/receiver.hpp>
@@ -34,9 +35,10 @@ public:
       std::string mUrl;
       proton::receiver mReceiver;
       proton::work_queue* mWorkQueue;
-      resip::TimeLimitFifo<json::Object> mFifo;
+      resip::TimeLimitFifo<proton::message> mFifo;
+      std::unique_ptr<json::Object> getBodyAsJSON(const proton::message &m);
    protected:
-      resip::TimeLimitFifo<json::Object>& getFifo() { return mFifo; };
+      resip::TimeLimitFifo<proton::message>& getFifo() { return mFifo; };
    };
 
    class ProtonSenderBase
@@ -61,34 +63,43 @@ public:
    ProtonThreadBase(std::chrono::duration<long int> mRetryDelay = std::chrono::seconds(2));
    virtual ~ProtonThreadBase();
 
-   void addReceiver(std::shared_ptr<ProtonReceiverBase> rx) { mReceivers.push_back(rx); };
-   void addSender(std::shared_ptr<ProtonSenderBase> tx) { mSenders.push_back(tx); };
+   void addReceiver(std::shared_ptr<ProtonReceiverBase> rx);
+   void addSender(std::shared_ptr<ProtonSenderBase> tx);
 
-   void on_container_start(proton::container &c);
-   void on_connection_open(proton::connection &conn);
-   void on_receiver_open(proton::receiver &);
-   void on_receiver_close(proton::receiver &);
-   void on_sender_open(proton::sender &);
-   void on_sender_close(proton::sender &);
-   void on_transport_error(proton::transport &t);
-   void on_message(proton::delivery &d, proton::message &m);
-   void on_sendable(proton::sender &s);
-   void on_tracker_accept(proton::tracker &t);
+   std::shared_ptr<ProtonSenderBase> getSenderForReply(const std::string& replyTo);
 
-   virtual void thread();
-   virtual void shutdown();
+   void on_container_start(proton::container &c) override;
+   void on_connection_open(proton::connection &conn) override;
+   void on_receiver_open(proton::receiver &) override;
+   void on_receiver_close(proton::receiver &) override;
+   void on_sender_open(proton::sender &) override;
+   void on_sender_close(proton::sender &) override;
+   void on_transport_error(proton::transport &t) override;
+   void on_message(proton::delivery &d, proton::message &m) override;
+   void on_sendable(proton::sender &s) override;
+   void on_tracker_accept(proton::tracker &t) override;
+
+   virtual void thread() override;
+   virtual void shutdown() override;
 
 
 private:
    bool checkSenderShutdown();
    void doShutdown();
 
+   void openReceiver(std::shared_ptr<ProtonReceiverBase> rx);
+   void openSender(std::shared_ptr<ProtonSenderBase> tx);
+
    std::chrono::duration<long int> mRetryDelay;
 
    std::shared_ptr<proton::container> mContainer;
+   proton::connection mConnection;
+   bool mConnected;
 
    std::vector<std::shared_ptr<ProtonReceiverBase>> mReceivers;
    std::vector<std::shared_ptr<ProtonSenderBase>> mSenders;
+
+   bool mStarted = false;
 };
 
 } // namespace

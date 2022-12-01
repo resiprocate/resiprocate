@@ -29,10 +29,20 @@ CommandServer::CommandServer(ReproRunner& reproRunner,
                              Data ipAddr,
                              int port, 
                              IpVersion version) :
-   XmlRpcServerBase(port, version, ipAddr),
+   XmlRpcHandler(std::make_shared<XmlRpcSocketServer>(*this, port, version, ipAddr)),
    mReproRunner(reproRunner)
 {
 }
+
+#ifdef BUILD_QPID_PROTON
+CommandServer::CommandServer(ReproRunner& reproRunner,
+                             const resip::Data& brokerUrl,
+                             bool broadcast) :
+   XmlRpcHandler(std::make_shared<XmlRpcProtonServer>(*this, brokerUrl, broadcast)),
+   mReproRunner(reproRunner)
+{
+}
+#endif
 
 CommandServer::~CommandServer()
 {
@@ -54,7 +64,7 @@ CommandServer::sendResponse(unsigned int connectionId,
       ss << responseData.xmlCharDataEncode();
       ss << "    </Data>" << Symbols::CRLF;
    }
-   XmlRpcServerBase::sendResponse(connectionId, requestId, ss.str().c_str(), resultCode >= 200 /* isFinal */);
+   mRpc->sendResponse(connectionId, requestId, ss.str().c_str(), resultCode >= 200 /* isFinal */);
 }
 
 void 
@@ -751,7 +761,9 @@ CommandServer::handleRemoveTransportRequest(unsigned int connectionId, unsigned 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
- * 
+ * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (c) 2022 Software Freedom Institute SA https://softwarefreedom.institute
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
