@@ -351,7 +351,7 @@ SipXMediaInterface::post(const OsMsg& msg)
          InfoLog( << "MediaInterface: received MI_NOTF_TONE_DETECT_OFF, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORDER_CIRCULARBUFFER_WATERMARK_REACHED:
-         InfoLog(<< "MediaInterface: received MI_NOTF_RECORDER_CIRCULARBUFFER_WATERMARK_REACHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         WarningLog(<< "MediaInterface: received MI_NOTF_RECORDER_CIRCULARBUFFER_WATERMARK_REACHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_INPUT_DEVICE_NOT_PRESENT:
          InfoLog(<< "MediaInterface: received MI_NOTF_INPUT_DEVICE_NOT_PRESENT, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());

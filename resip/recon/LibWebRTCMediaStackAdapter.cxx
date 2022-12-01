@@ -230,7 +230,7 @@ LibWebRTCMediaStackAdapter::createLocalParticipantInstance(ParticipantHandle par
 }
 
 MediaResourceParticipant *
-LibWebRTCMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer)
+LibWebRTCMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer, void* recordingCircularBuffer)
 {
    return 0; // FIXME LibWebRTC - implement MediaResourceParticipant in LibWebRTC
 }

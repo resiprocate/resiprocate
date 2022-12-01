@@ -58,7 +58,8 @@ public:
       ConversationManager& conversationManager,
       SipXMediaStackAdapter& sipXMediaStackAdapter,
       const resip::Uri& mediaUrl,
-      const std::shared_ptr<resip::Data>& audioBuffer);
+      const std::shared_ptr<resip::Data>& playAudioBuffer,
+      void* recordingCircularBuffer);
    virtual ~SipXMediaResourceParticipant();
 
    virtual void startResourceImpl();
@@ -79,6 +80,7 @@ private:
    resip::Data mSipXResourceName;
    MpStreamPlayer* mStreamPlayer;
    int mPortOnBridge;
+   CircularBufferPtr* mRecordingCircularBuffer;
 };
 
 }
