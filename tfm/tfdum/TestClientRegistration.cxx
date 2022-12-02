@@ -8,8 +8,7 @@
 
 #include "resip/dum/Handles.hxx"
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
+#include <functional>
 
 #include "rutil/Logger.hxx"
 
@@ -26,7 +25,7 @@ CommonAction*
 TestClientRegistration::addBinding(const resip::NameAddr& contact)
 {
    return new CommonAction(mUa, "addBinding",
-                           boost::bind(&ClientRegistration::addBinding, boost::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), boost::ref(mHandle)),
+                           std::bind(&ClientRegistration::addBinding, std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle)),
                                        contact));
 }
 
@@ -34,7 +33,7 @@ CommonAction*
 TestClientRegistration::addBinding(const resip::NameAddr& contact, int registrationTime)
 {
    return new CommonAction(mUa, "addBinding",
-                           boost::bind(&ClientRegistration::addBinding, boost::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), boost::ref(mHandle)),
+                           std::bind(&ClientRegistration::addBinding, std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle)),
                                        contact, registrationTime));
 }
 
@@ -42,7 +41,7 @@ CommonAction*
 TestClientRegistration::removeBinding(const resip::NameAddr& contact)
 {
    return new CommonAction(mUa, "removeBinding",
-                           boost::bind(&ClientRegistration::removeBinding, boost::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), boost::ref(mHandle)),
+                           std::bind(&ClientRegistration::removeBinding, std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle)),
                                        contact));
 }
 
@@ -50,7 +49,7 @@ CommonAction*
 TestClientRegistration::removeAll(bool stopRegisteringWhenDone)
 {
    return new CommonAction(mUa, "removeAll", 
-                           boost::bind(&ClientRegistration::removeAll, boost::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), boost::ref(mHandle)),
+                           std::bind(&ClientRegistration::removeAll, std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle)),
                                        stopRegisteringWhenDone));
 }
 
@@ -58,7 +57,7 @@ CommonAction*
 TestClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 {
    return new CommonAction(mUa, "removeMyBindings", 
-                           boost::bind(&ClientRegistration::removeMyBindings, boost::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), boost::ref(mHandle)),
+                           std::bind(&ClientRegistration::removeMyBindings, std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle)),
                                        stopRegisteringWhenDone));
 }
 
@@ -66,7 +65,7 @@ CommonAction*
 TestClientRegistration::requestRefresh(int expires)
 {
    return new CommonAction(mUa, "requestRefresh", 
-                           boost::bind(&ClientRegistration::requestRefresh, boost::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), boost::ref(mHandle)),
+                           std::bind(&ClientRegistration::requestRefresh, std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle)),
                                        expires));
 }
 
@@ -74,14 +73,14 @@ CommonAction*
 TestClientRegistration::stopRegistering()
 {
    return new CommonAction(mUa, "stopRegistering", 
-                           boost::bind(&ClientRegistration::stopRegistering, boost::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), boost::ref(mHandle))));
+                           std::bind(&ClientRegistration::stopRegistering, std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle))));
 }
 
 CommonAction* 
 TestClientRegistration::end()
 {
    return new CommonAction(mUa, "end", 
-                           boost::bind(&ClientRegistration::end, boost::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), boost::ref(mHandle))));
+                           std::bind(&ClientRegistration::end, std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle))));
 }
 
 bool 

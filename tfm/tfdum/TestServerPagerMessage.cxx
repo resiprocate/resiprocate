@@ -8,8 +8,7 @@
 
 #include "resip/dum/Handles.hxx"
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
+#include <functional>
 
 #include "rutil/Logger.hxx"
 
@@ -26,8 +25,8 @@ SendingAction<ServerPagerMessageHandle>*
 TestServerPagerMessage::accept(int statusCode)
 {
    return new SendingAction<ServerPagerMessageHandle>(mUa, mHandle, "accept", 
-                                                      boost::bind(&ServerPagerMessage::accept, 
-                                                                  boost::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), boost::ref(mHandle)), statusCode), 
+                                                      std::bind(&ServerPagerMessage::accept, 
+                                                                  std::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), std::ref(mHandle)), statusCode), 
                                                       NoAdornment::instance());
 }
 
@@ -35,8 +34,8 @@ SendingAction<ServerPagerMessageHandle>*
 TestServerPagerMessage::reject(int responseCode)
 {
    return new SendingAction<ServerPagerMessageHandle>(mUa, mHandle, "reject",
-                                                      boost::bind(&ServerPagerMessage::reject, 
-                                                                  boost::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), boost::ref(mHandle)), 
+                                                      std::bind(&ServerPagerMessage::reject, 
+                                                                  std::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), std::ref(mHandle)), 
                                                                   responseCode),
                                                       NoAdornment::instance());
 }
@@ -44,14 +43,14 @@ TestServerPagerMessage::reject(int responseCode)
 CommonAction* 
 TestServerPagerMessage::end()
 {
-   return new CommonAction(mUa, "end", boost::bind(&ServerPagerMessage::endCommand, boost::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), boost::ref(mHandle))));
+   return new CommonAction(mUa, "end", std::bind(&ServerPagerMessage::endCommand, std::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), std::ref(mHandle))));
 }
  
 CommonAction* 
 TestServerPagerMessage::send(std::shared_ptr<SipMessage> msg)
 {
    return new CommonAction(mUa, "send", 
-                           boost::bind(&ServerPagerMessage::sendCommand, boost::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), boost::ref(mHandle)), 
+                           std::bind(&ServerPagerMessage::sendCommand, std::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), std::ref(mHandle)), 
                                        msg));
 }
 

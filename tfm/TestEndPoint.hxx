@@ -3,7 +3,6 @@
 
 #include <iosfwd>
 #include <exception>
-#include <boost/lexical_cast.hpp>
 #include <list>
 
 #include "rutil/Data.hxx"
