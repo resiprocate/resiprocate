@@ -8,8 +8,7 @@
 
 #include "resip/dum/Handles.hxx"
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
+#include <functional>
 
 #include "rutil/Logger.hxx"
 
@@ -32,14 +31,14 @@ CommonAction*
 TestClientPublication::refresh(unsigned int expiration)
 {
    return new CommonAction(mUa, "refresh", 
-                           boost::bind(&ClientPublication::refresh, boost::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), boost::ref(mHandle)), expiration));
+                           std::bind(&ClientPublication::refresh, std::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), std::ref(mHandle)), expiration));
 }
 
 CommonAction*
 TestClientPublication::update(const resip::Contents* body)
 {
    return new CommonAction(mUa, "update", 
-                           boost::bind(&ClientPublication::update, boost::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), boost::ref(mHandle)), body));
+                           std::bind(&ClientPublication::update, std::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), std::ref(mHandle)), body));
 
 }
 
@@ -47,7 +46,7 @@ TestClientPublication::update(const resip::Contents* body)
 CommonAction* 
 TestClientPublication::end()
 {
-   return new CommonAction(mUa, "end", boost::bind(&ClientPublication::end, boost::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), boost::ref(mHandle))));
+   return new CommonAction(mUa, "end", std::bind(&ClientPublication::end, std::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), std::ref(mHandle))));
 }
 
 bool 

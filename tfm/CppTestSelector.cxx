@@ -1,6 +1,7 @@
 #include "CppTestSelector.hxx"
+#include <cstring>
 #include <iostream>
-#include <boost/algorithm/string.hpp>
+#include <regex>
 
 
 using namespace std;
@@ -162,17 +163,19 @@ void CommandLineSelector::GetUserSelection(std::vector<std::string>& names, std:
 
    size_t startFrom = 0;
 
-   if(boost::istarts_with(mPattern, L">="))
+   std::wstring prefix1 = L">=";
+   std::wstring prefix2 = L">";
+   if(std::equal(prefix1.begin(), prefix1.end(), mPattern.begin()))
    {
       string pattern = mPattern;
-      boost::algorithm::ireplace_all(pattern, ">=", "");
+      pattern = std::regex_replace(pattern, std::regex(">="), "");
 
       startFrom = atoi(pattern.c_str());
    }
-   else if(boost::istarts_with(mPattern, L">"))
+   else if(std::equal(prefix2.begin(), prefix2.end(), mPattern.begin()))
    {
       string pattern = mPattern;
-      boost::algorithm::ireplace_all(pattern, ">", "");
+      pattern = std::regex_replace(pattern, std::regex(">"), "");
 
       startFrom = atoi(pattern.c_str());
       if(startFrom > 0)
@@ -201,7 +204,7 @@ void CommandLineSelector::GetUserSelection(std::vector<std::string>& names, std:
 
       bool topLevel = (name.find_first_of("::") == (name.find_last_of("::") - 1));
 
-      if(boost::contains(name, mPattern))
+      if(name.find(mPattern) != std::string::npos)
       {
          if(topLevel)
          {

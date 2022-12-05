@@ -39,11 +39,9 @@
 #include "tfm/TestProxy.hxx"
 #include "tfm/TestUser.hxx"
 
-#include <boost/version.hpp>
 #include <utility>
 
 using namespace resip;
-using namespace boost;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST

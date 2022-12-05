@@ -2,7 +2,7 @@
 #define BindPointerAction_hxx
 
 #include "rutil/Data.hxx"
-#include <boost/function.hpp>
+#include <functional>
 #include "tfm/ActionBase.hxx"
 #include <XsLib/h/CXsRefPtr.h>
 

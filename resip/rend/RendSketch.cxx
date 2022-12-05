@@ -4,8 +4,6 @@
     Written by Kennard White (Logitech, Inc.), 2010..2011
 **/
 
-// #include "boost/intrusive/list.hpp"
-
 #include "rutil/Logger.hxx"
 // #include "rutil/Random.hxx"
 

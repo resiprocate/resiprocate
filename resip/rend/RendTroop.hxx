@@ -7,7 +7,7 @@
 **/
 
 #include "boost/intrusive/list.hpp"
-#include "boost/function.hpp"
+#include <functional>
 
 // #include "RendAcct.hxx"
 #include "RendReport.hxx"	// for enum RendSessionMood
@@ -303,7 +303,7 @@ public:
       return -10;
    }
 
-   typedef boost::function<RendSessionMood (RendHandleMoodCxt&)> RendHandleMoodFnc;
+   typedef std::function<RendSessionMood (RendHandleMoodCxt&)> RendHandleMoodFnc;
    virtual int checkAge(RendTimeUs now, RendHandleMoodFnc handler,
                         RendSessionMood mood,
                         int failAge, bool failAll,
