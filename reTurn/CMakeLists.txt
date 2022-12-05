@@ -68,6 +68,7 @@ add_executable(reTurnServer
    ${INCLUDES}
 )
 
+target_include_directories(reTurnCommon PUBLIC ${ASIO_INCLUDE_DIRS})
 target_include_directories(reTurnCommon PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(reTurnCommon rutil)
 set_target_properties(reTurnCommon PROPERTIES FOLDER reTurn)

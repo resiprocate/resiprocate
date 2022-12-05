@@ -1,0 +1,66 @@
+@echo off
+
+rem Put NuGet.exe in the %HOME...%\bin folder
+rem and CMake will find it
+set PATH=%HOMEDRIVE%%HOMEPATH%\bin;%PATH%
+
+rem To see a list of generators supported by CMake,
+rem use the command
+rem
+rem      cmake -h
+rem
+rem and the list appears at the end of the help output.
+
+rem To select target architecture:
+rem   -A Win32    or
+rem   -A x64
+
+rem Do we need to set any flags for the Windows build?
+rem -DCMAKE_CXX_FLAGS="%CPPFLAGS% %CXXFLAGS%"
+rem -DCMAKE_C_FLAGS="%CPPFLAGS% %CFLAGS%"
+
+cmake^
+ -B Builds^
+ -G "Visual Studio 16 2019"^
+ -A Win32^
+ -DCMAKE_BUILD_TYPE=Debug^
+ -DWITH_C_ARES=OFF^
+ -DWITH_SSL=ON^
+ -DUSE_POPT=OFF^
+ -DUSE_SIGCOMP=OFF^
+ -DUSE_FMT=OFF^
+ -DVERSIONED_SONAME=OFF^
+ -DENABLE_ANDROID=OFF^
+ -DUSE_IPV6=ON^
+ -DUSE_DTLS=ON^
+ -DPEDANTIC_STACK=OFF^
+ -DUSE_MYSQL=ON^
+ -DUSE_SOCI_POSTGRESQL=OFF^
+ -DUSE_SOCI_MYSQL=OFF^
+ -DUSE_POSTGRESQL=OFF^
+ -DUSE_MAXMIND_GEOIP=OFF^
+ -DRESIP_HAVE_RADCLI=OFF^
+ -DUSE_NETSNMP=OFF^
+ -DBUILD_REPRO=ON^
+ -DBUILD_DSO_PLUGINS=OFF^
+ -DBUILD_RETURN=ON^
+ -DBUILD_REND=OFF^
+ -DBUILD_TFM=OFF^
+ -DBUILD_CLICKTOCALL=OFF^
+ -DBUILD_ICHAT_GW=OFF^
+ -DBUILD_TELEPATHY_CM=OFF^
+ -DBUILD_RECON=ON^
+ -DUSE_SRTP1=OFF^
+ -DBUILD_RECONSERVER=OFF^
+ -DUSE_SIPXTAPI=OFF^
+ -DUSE_KURENTO=OFF^
+ -DUSE_GSTREAMER=OFF^
+ -DUSE_LIBWEBRTC=OFF^
+ -DRECON_LOCAL_HW_TESTS=OFF^
+ -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20^
+ -DBUILD_P2P=OFF^
+ -DBUILD_PYTHON=OFF^
+ -DBUILD_QPID_PROTON=OFF^
+ -DRESIP_ASSERT_SYSLOG=OFF^
+ -DUSE_CONTRIB=ON^
+ -DREGENERATE_MEDIA_SAMPLES=OFF

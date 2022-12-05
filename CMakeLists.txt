@@ -231,7 +231,7 @@ endif()
 
 if(BUILD_RETURN)
    set(USE_ASIO TRUE)
-   set(USE_BOOST TRUE)
+   #set(USE_BOOST TRUE)  # Dependency has been replaced by C++11
 endif()
 
 if(USE_KURENTO)
@@ -276,7 +276,7 @@ endif()
 if("${CMAKE_EXE_LINKER_FLAGS}" STREQUAL "/machine:x64")
    set(WIN_ARCH "x64")
 else()
-   set(WIN_ARCH "w32")
+   set(WIN_ARCH "Win32")
 endif()
 
 # Download NuGet Package Manager and ensure it is in %PATH%
@@ -389,7 +389,14 @@ option_def(PEDANTIC_STACK)
 # Debian: default-libmysqlclient-dev
 if(USE_MYSQL)
    if(USE_CONTRIB)
-      add_subdirectory(contrib/MySQLConnectorC)
+      # There is a pre-compiled MySQL client binary in contrib
+      # so we hardcode the paths to the headers and binary
+      # artifacts.
+      #add_subdirectory(contrib/MySQLConnectorC)
+      set(MySQL_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/contrib/MySQLConnectorC")
+      set(MySQL_INCLUDE_DIRS "${MySQL_ROOT}/include")
+      set(MySQL_LIBRARIES "${MySQL_ROOT}/lib/debug/libmysql.lib")
+      set(MySQL_FOUND TRUE)
    else()
       find_package(MySQL REQUIRED)
    endif()
@@ -421,7 +428,9 @@ endif()
 # Debian: libgeoip-dev
 if(USE_MAXMIND_GEOIP)
    if(USE_CONTRIB)
-      add_subdirectory(contrib/GeoIP)
+      # FIXME - update reSIProcate for libmaxminddb - successor to GeoIP
+      message(FATAL_ERROR "GeoIP has been deprecated upstream, see https://github.com/maxmind/geoip-api-c")
+      #add_subdirectory(contrib/GeoIP)
    else()
       find_package(GeoIP REQUIRED)
    endif()
@@ -567,7 +576,7 @@ endif()
 if(USE_ASIO)
    if(USE_CONTRIB)
       # FIXME: include asio as a Git submodule or NuGet
-      set(ASIO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/asio")
+      set(ASIO_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/asio")
    else()
       find_package(ASIO REQUIRED)
    endif()
@@ -612,6 +621,11 @@ if(USE_SRTP)
       # FIXME - not in NuGet, not CMake native
       if(USE_CONTRIB)
          add_subdirectory("contrib/srtp")
+         #set(libsrtp2_INCLUDE_DIRS "${libsrtp2_INCLUDE_DIRS}")
+         #set(libsrtp2_LIBRARIES "${libsrtp2_LIBRARIES}")
+         # FIXME - these shouldn't be hard-coded, need to fix the above variables
+         set(SRTP2_INCLUDE_DIRS "${libsrtp2_SOURCE_DIR}/include")
+         set(SRTP2_LIBRARIES "${libsrtp2_BINARY_DIR}/contrib/srtp/${CMAKE_BUILD_TYPE}/srtp2.lib")
          set(SRTP_FOUND TRUE)
       else()
          find_package(srtp2 REQUIRED)

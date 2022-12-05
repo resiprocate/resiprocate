@@ -17,7 +17,9 @@ add_library(kurentoclient
    ${INCLUDES}
 )
 
-target_include_directories(kurentoclient PUBLIC ${ASIO_INCLUDE_DIRS} ${WEBSOCKETPP_INCLUDE_DIRS})
+target_include_directories(kurentoclient PUBLIC ${ASIO_INCLUDE_DIRS})
+target_include_directories(kurentoclient PUBLIC ${WEBSOCKETPP_INCLUDE_DIRS})
+target_include_directories(kurentoclient PUBLIC ${CAJUN_INCLUDE_DIRS})
 target_link_libraries(kurentoclient rutil)
 set_target_properties(kurentoclient PROPERTIES FOLDER kurentoclient)
 version_libname(kurentoclient)
