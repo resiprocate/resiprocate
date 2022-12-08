@@ -219,6 +219,11 @@ HttpBase::process(FdSet& fdset)
 
 void HttpBase::setPage( const Data& page, int pageNumber, int response, const Mime& type )
 {
+   if(pageNumber < 0)
+   {
+      return;
+   }
+
    for ( int i=0 ; i<MaxConnections; i++)
    {
       if ( mConnection[i] )

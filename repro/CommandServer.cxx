@@ -18,6 +18,7 @@
 #include "repro/XmlRpcConnection.hxx"
 #include "repro/ReproRunner.hxx"
 #include "repro/CommandServer.hxx"
+#include "repro/WebAdmin.hxx"
 
 using namespace repro;
 using namespace resip;
@@ -28,18 +29,22 @@ using namespace std;
 CommandServer::CommandServer(ReproRunner& reproRunner,
                              Data ipAddr,
                              int port, 
-                             IpVersion version) :
+                             IpVersion version,
+                             WebAdmin* webAdmin) :
    XmlRpcHandler(std::make_shared<XmlRpcSocketServer>(*this, port, version, ipAddr)),
-   mReproRunner(reproRunner)
+   mReproRunner(reproRunner),
+   mWebAdmin(webAdmin)
 {
 }
 
 #ifdef BUILD_QPID_PROTON
 CommandServer::CommandServer(ReproRunner& reproRunner,
                              const resip::Data& brokerUrl,
-                             bool broadcast) :
+                             bool broadcast,
+                             WebAdmin* webAdmin) :
    XmlRpcHandler(std::make_shared<XmlRpcProtonServer>(*this, brokerUrl, broadcast)),
-   mReproRunner(reproRunner)
+   mReproRunner(reproRunner),
+   mWebAdmin(webAdmin)
 {
 }
 #endif
@@ -134,6 +139,10 @@ CommandServer::handleRequest(unsigned int connectionId, unsigned int requestId, 
       else if(isEqualNoCase(xml.getTag(), "RemoveTransport"))
       {
          handleRemoveTransportRequest(connectionId, requestId, xml);
+      }
+      else if(isEqualNoCase(xml.getTag(), "HttpRequest"))
+      {
+         handleHttpRequest(connectionId, requestId, xml);
       }
       else 
       {
@@ -753,6 +762,103 @@ CommandServer::handleRemoveTransportRequest(unsigned int connectionId, unsigned 
    Data text("Transport remove requested: transportKey=");
    text += Data(transportKey);
    sendResponse(connectionId, requestId, Data::Empty, 200, text);
+}
+
+void
+CommandServer::handleHttpRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml)
+{
+   InfoLog(<< "CommandServer::handleHttpRequest");
+
+   // Check for Parameters
+   std::map<Data, Data> m;
+   std::set<Data> keys;
+   xmlToMap(m, keys, xml);
+
+   if(!mWebAdmin)
+   {
+      // FIXME - do this without binding the WebAdmin instance to a port
+      ErrLog(<<"at least one WebAdmin instance must be configured, even if it is only bound to localhost");
+      sendResponse(connectionId, requestId, Data::Empty, 400, "WebAdmin not available.");
+      return;
+   }
+
+   try
+   {
+      Data& user = m["User"];
+      Data& password = m["Password"];
+      Data uri;
+      DataStream s(uri);
+      s << "/" << m["Page"] << ".html";
+      bool firstParam = true;
+      for(const auto& n : m)
+      {
+         const Data& k = n.first;
+         const Data& v = n.second;
+         if(k == "User" || k == "Password" || k == "Page")
+         {
+            continue;
+         }
+         s << (firstParam ? "?" : "&") << k << "=";
+         v.urlEncode(s);
+         firstParam = false;
+      }
+      s.flush();
+      int pageNumber = -1; // FIXME - add logic for handling response
+      mWebAdmin->buildPage(uri, pageNumber, user, password);
+      sendResponse(connectionId, requestId, Data::Empty, 200, "HTTP Request processed, response ignored");
+   }
+   catch(std::exception& e)
+   {
+      sendResponse(connectionId, requestId, Data::Empty, 400, "Exception.");
+      return;
+   }
+}
+
+void
+CommandServer::xmlToMap(std::map<Data, Data>& m, std::set<Data> keys, resip::XMLCursor& xml)
+{
+   // Check for Parameters
+   if(xml.firstChild())
+   {
+      if(isEqualNoCase(xml.getTag(), "request"))
+      {
+         if(xml.firstChild())
+         {
+            while(true)
+            {
+               const Data& key = xml.getTag();
+               if(!keys.empty() && keys.find(key) == keys.end())
+               {
+                  ErrLog(<<"unexpected key: " << key);
+                  m.clear();
+                  return;
+               }
+               if(xml.firstChild())
+               {
+                  const Data& value = xml.getValue();
+                  m[key] = value;
+                  xml.parent();
+               }
+               else
+               {
+                  ErrLog(<<"no value for key: " << key);
+               }
+               if(!xml.nextSibling())
+               {
+                  // break on no more sibilings
+                  break;
+               }
+            }
+            xml.parent();
+         }
+      }
+      xml.parent();
+   }
+   if(!keys.empty() && (m.size() < keys.size()))
+   {
+      ErrLog(<<"some keys not found");
+      m.clear();
+   }
 }
 
 

@@ -1395,6 +1395,12 @@ ReproRunner::createCommandServer()
    mProxyConfig->getConfigValue("CommandBindAddress", commandServerBindAddresses);
    int commandPort = mProxyConfig->getConfigInt("CommandPort", 5081);
 
+   WebAdmin* webAdmin = 0;
+   if(!mWebAdminList.empty())
+   {
+      webAdmin = mWebAdminList.front();
+   }
+
    if(commandPort != 0)
    {
       if(commandServerBindAddresses.empty())
@@ -1413,7 +1419,7 @@ ReproRunner::createCommandServer()
       {
          if(mUseV4 && DnsUtil::isIpV4Address(*it))
          {
-            CommandServer* pCommandServerV4 = new CommandServer(*this, *it, commandPort, V4);
+            CommandServer* pCommandServerV4 = new CommandServer(*this, *it, commandPort, V4, webAdmin);
 
             if(pCommandServerV4->isSane())
             {
@@ -1428,7 +1434,7 @@ ReproRunner::createCommandServer()
 
          if(mUseV6 && DnsUtil::isIpV6Address(*it))
          {
-            CommandServer* pCommandServerV6 = new CommandServer(*this, *it, commandPort, V6);
+            CommandServer* pCommandServerV6 = new CommandServer(*this, *it, commandPort, V6, webAdmin);
 
             if(pCommandServerV6->isSane())
             {
@@ -1448,7 +1454,7 @@ ReproRunner::createCommandServer()
    mProxyConfig->getConfigValue("CommandQueue", commandServerQueues);
    for(Data& brokerUrl : commandServerQueues)
    {
-      CommandServer* pCommandServerQueue = new CommandServer(*this, brokerUrl, false);
+      CommandServer* pCommandServerQueue = new CommandServer(*this, brokerUrl, false, webAdmin);
       if(pCommandServerQueue->isSane())
       {
          mCommandServerList.push_back(pCommandServerQueue);
@@ -1464,7 +1470,7 @@ ReproRunner::createCommandServer()
    mProxyConfig->getConfigValue("CommandEventTopic", commandServerTopics);
    for(Data& brokerUrl : commandServerTopics)
    {
-      CommandServer* pCommandServerTopic = new CommandServer(*this, brokerUrl, true);
+      CommandServer* pCommandServerTopic = new CommandServer(*this, brokerUrl, true, webAdmin);
       if(pCommandServerTopic->isSane())
       {
          mCommandServerList.push_back(pCommandServerTopic);

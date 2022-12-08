@@ -18,6 +18,7 @@ class SipStack;
 namespace repro
 {
 class ReproRunner;
+class WebAdmin;
 
 class CommandServer: public XmlRpcHandler,
                      public resip::GetDnsCacheDumpHandler
@@ -26,9 +27,10 @@ public:
    CommandServer(ReproRunner& reproRunner,
                  resip::Data ipAddr,
                  int port, 
-                 resip::IpVersion version);
+                 resip::IpVersion version,
+                 WebAdmin* webAdmin);
 #ifdef BUILD_QPID_PROTON
-   CommandServer(ReproRunner& reproRunner, const resip::Data& brokerUrl, bool broadcast);
+   CommandServer(ReproRunner& reproRunner, const resip::Data& brokerUrl, bool broadcast, WebAdmin* webAdmin);
 #endif
    virtual ~CommandServer();
 
@@ -63,8 +65,12 @@ private:
    void handleRestartRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleAddTransportRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleRemoveTransportRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleHttpRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+
+   void xmlToMap(std::map<resip::Data, resip::Data>& m, std::set<resip::Data> keys, resip::XMLCursor& xml);
 
    ReproRunner& mReproRunner;
+   WebAdmin* mWebAdmin;
    resip::Mutex mStatisticsWaitersMutex;
    typedef std::list<std::pair<unsigned int, unsigned int> > StatisticsWaitersList;
    StatisticsWaitersList mStatisticsWaiters;
