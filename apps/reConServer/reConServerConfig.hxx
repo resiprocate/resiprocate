@@ -22,7 +22,8 @@ public:
    typedef enum
    {
       None,
-      B2BUA
+      B2BUA,
+      Python
    } Application;
 
    ReConServerConfig();

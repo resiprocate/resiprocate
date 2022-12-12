@@ -41,6 +41,7 @@ class PyExtensionBase : public Py::ExtensionModule<PyExtensionBase>
    protected:
       virtual void initMethods();
       virtual void appendPath(const resip::Data& path);
+      virtual bool checkPyArgs(const resip::Data& method, const Py::Tuple &args, unsigned int minArgs, unsigned int maxArgs);
       virtual bool logPythonErrorIfAny();
       virtual std::unique_ptr<Py::Module> loadModule(const resip::Data& moduleName);
       virtual void importModule(PyObject *pyModule, const resip::Data& moduleImport);

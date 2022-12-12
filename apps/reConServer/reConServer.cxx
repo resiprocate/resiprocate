@@ -45,6 +45,9 @@ int _kbhit() {
 #include "reConServer.hxx"
 #include "MyMessageDecorator.hxx"
 #include "MyConversationManager.hxx"
+#ifdef BUILD_PYTHON
+#include "PyConversationManager.hxx"
+#endif
 #include "B2BCallManager.hxx"
 #include "CDRFile.hxx"
 #include "RegistrationForwarder.hxx"
@@ -1337,6 +1340,14 @@ ReConServerProcess::main (int argc, char** argv)
                b2BCallManager = new B2BCallManager(reConServerConfig, defaultSampleRate, maximumSampleRate, mCDRFile);
                mConversationManager.reset(b2BCallManager);
             }
+            break;
+         case ReConServerConfig::Python:
+#ifdef BUILD_PYTHON
+            mConversationManager = std::unique_ptr<PyConversationManager>(new PyConversationManager(reConServerConfig, localAudioEnabled, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
+#else
+            CritLog(<<"Not compiled with Python support");
+            resip_assert(0);
+#endif
             break;
          default:
             resip_assert(0);

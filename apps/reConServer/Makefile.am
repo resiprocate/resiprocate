@@ -45,12 +45,23 @@ reConServer_SOURCES += \
         ProtonCommandThread.cxx \
         ProtonCommandThread.hxx
 endif
+if BUILD_PYTHON
+reConServer_SOURCES += PyConversationManager.cxx
+reConServer_SOURCES += PyConversationManager.hxx
+endif
 
 reConServer_LDADD = ../../resip/recon/librecon.la
 reConServer_LDADD += ../../reflow/libreflow.la
 reConServer_LDADD += ../../media/libresipmedia.la
 if BUILD_QPID_PROTON
 reConServer_LDADD += -lqpid-proton-cpp
+endif
+if BUILD_PYTHON
+reConServer_CXXFLAGS += $(DEPS_PYTHON_CFLAGS)
+reConServer_LDADD += $(DEPS_PYTHON_LIBS)
+# this isn't included in the output from python3-config --ldflags
+# so we set it explicitly
+reConServer_LDADD += -lpython$(DEPS_PYTHON_VERSION)
 endif
 if USE_SIPXTAPI
 reConServer_LDADD += -lsipXsdp

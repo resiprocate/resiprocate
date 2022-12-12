@@ -41,6 +41,7 @@ public:
    MyConversationManager(const ReConServerConfig& config, bool localAudioEnabled, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
    virtual ~MyConversationManager() {};
 
+   // reConServer invokes this method after both ConversationManager and UserAgent constructed
    virtual void startup();
    
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle) override;
