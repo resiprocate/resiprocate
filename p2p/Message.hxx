@@ -62,9 +62,9 @@ class Message : public Signable
          FailureResponseType = 0xFFFF
       };
 
-      static const UInt8 MessageVersion;
-      static const UInt8 MessageTtl;
-      static const UInt32 MessageReloToken;
+      static const uint8_t MessageVersion;
+      static const uint8_t MessageTtl;
+      static const uint32_t MessageReloToken;
 
 
       void setOverlayName(const resip::Data &overlayName);
@@ -94,7 +94,7 @@ class Message : public Signable
       JoinAns* makeJoinResponse(const resip::Data &overlaySpecific = resip::Data::Empty);
       UpdateAns* makeUpdateResponse(const resip::Data &overlaySpecific);
       LeaveAns* makeLeaveResponse();
-      ConnectAns* makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates);
+      ConnectAns* makeConnectResponse(const resip::Data &frag, const resip::Data &password, uint16_t application, const resip::Data &role, const std::vector<Candidate> &candidates);
 
       resip::Data getRequestMessageBody() const;
       
@@ -103,13 +103,13 @@ class Message : public Signable
       static Message *parse(const resip::Data &message);
 
       // TTL
-      UInt8 getTTL() const;
+      uint8_t getTTL() const;
       void decrementTTL();
-      void setTTL(UInt8 ttl);
+      void setTTL(uint8_t ttl);
 
-      UInt32 getOverlay() const;
-      UInt64 getTransactionId() const;
-      UInt16 getFlags() const; 
+      uint32_t getOverlay() const;
+      uint64_t getTransactionId() const;
+      uint16_t getFlags() const; 
       void pushVia(const DestinationId& node);
       void pushDestinationId(const DestinationId& did);
 
@@ -121,7 +121,7 @@ class Message : public Signable
       DestinationId nextDestination() const;
       void popNextDestinationId(); 
       
-      virtual std::auto_ptr<Event> event() = 0;
+      virtual std::unique_ptr<Event> event() = 0;
       
       virtual resip::Data brief() const =0;
       

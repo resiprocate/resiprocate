@@ -36,7 +36,11 @@ inline bool handleOpenSSLErrorQueue(int ret, unsigned long err, const char* op)
       const char* file;
       int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
       unsigned long code = ERR_get_error_line(&file,&line);
+#else
+      unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
       if ( code == 0 )
       {
          break;
@@ -249,11 +253,9 @@ TlsConnection::checkState()
             StackLog( << "BIO not connected, try later");
             return mTlsState;
 
-#if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
          case SSL_ERROR_WANT_ACCEPT:
             StackLog( << "TLS connection want accept" );
             return mTlsState;
-#endif
 
          case SSL_ERROR_WANT_X509_LOOKUP:
             DebugLog( << "Try later / SSL_ERROR_WANT_X509_LOOKUP");

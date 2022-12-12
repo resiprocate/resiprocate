@@ -4,7 +4,7 @@
 
 #ifdef USE_SSL 
 
-#include <boost/bind.hpp>
+#include <functional>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -19,6 +19,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
+using namespace std::chrono;
+
 FlowDtlsTimerContext::FlowDtlsTimerContext(asio::io_service& ioService) :
   mIOService(ioService) 
 {
@@ -27,10 +29,10 @@ FlowDtlsTimerContext::FlowDtlsTimerContext(asio::io_service& ioService) :
 void 
 FlowDtlsTimerContext::addTimer(dtls::DtlsTimer *timer, unsigned int durationMs) 
 {
-   resip::SharedPtr<asio::deadline_timer> deadlineTimer(new asio::deadline_timer(mIOService));
-   deadlineTimer->expires_from_now(boost::posix_time::milliseconds(durationMs));
-   deadlineTimer->async_wait(boost::bind(&FlowDtlsTimerContext::handleTimeout, this, timer, asio::placeholders::error));
-   mDeadlineTimers[timer] = deadlineTimer;
+   auto deadlineTimer = std::make_shared<asio::steady_timer>(mIOService);
+   deadlineTimer->expires_from_now(milliseconds(durationMs));
+   deadlineTimer->async_wait(std::bind(&FlowDtlsTimerContext::handleTimeout, this, timer, std::placeholders::_1));
+   mDeadlineTimers[timer] = std::move(deadlineTimer);
    //InfoLog(<< "FlowDtlsTimerContext: starting timer for " << durationMs << "ms.");
 }    
 

@@ -21,7 +21,7 @@ main(int argc, char* argv[])
       Aor aor("sip:speedy_AT_home.com@whistler.gloo.net:5062");
       assert(aor.scheme() == "sip");
       assert(aor.user() == "speedy_AT_home.com");
-      assert(aor.port() = 5062);
+      assert(aor.port() == 5062);
       assert(aor.host() == "whistler.gloo.net");
       std::cerr << "aor.value() = " << aor.value() << std::endl;
       assert(aor.value() == "sip:speedy_AT_home.com@whistler.gloo.net:5062");
@@ -32,7 +32,7 @@ main(int argc, char* argv[])
       Aor aor(uri);
       assert(aor.scheme() == "sip");
       assert(aor.user() == "speedy_AT_home.com");
-      assert(aor.port() = 5062);
+      assert(aor.port() == 5062);
       assert(aor.host() == "whistler.gloo.net");
       std::cerr << "aor.value() = " << aor.value() << std::endl;
       assert(aor.value() == "sip:speedy_AT_home.com@whistler.gloo.net:5062");

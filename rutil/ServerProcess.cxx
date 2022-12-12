@@ -34,7 +34,9 @@ signalHandler(int signo)
    _instance->onSignal(signo);
 }
 
-ServerProcess::ServerProcess() : mPidFile(""),
+ServerProcess::ServerProcess(std::chrono::milliseconds waitPeriod)
+ : mWaitPeriod(waitPeriod),
+   mPidFile(""),
    mFinished(false),
    mReceivedHUP(false)
 {
@@ -311,7 +313,7 @@ ServerProcess::mainLoop()
 void
 ServerProcess::doWait()
 {
-   sleepMs(1000);
+   sleepMs(mWaitPeriod.count());
 }
 
 void

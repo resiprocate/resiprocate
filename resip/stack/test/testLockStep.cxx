@@ -56,7 +56,7 @@ class Client : public ThreadIf
    
          from.uri().user() = count;
          {
-            auto_ptr<SipMessage> message(Helper::makeInvite( dest, from, from));
+            unique_ptr<SipMessage> message(Helper::makeInvite( dest, from, from));
             mStack.send(*message);
          }
          
@@ -66,18 +66,14 @@ class Client : public ThreadIf
          
          while(true)
          {
-            FdSet fdset;
-            mStack.buildFdSet(fdset);
-            int err = fdset.selectMilliSeconds(5);
-            assert (err != -1);
-            mStack.process(fdset);
+            mStack.process(5);
             
             SipMessage* received = mStack.receive();
             if (received)
             {
                InfoLog (<< "Client received: " << received->brief());
                
-               auto_ptr<SipMessage> forDel(received);
+               unique_ptr<SipMessage> forDel(received);
                if ( (received->isResponse()) )
                {
                   if ( received->header(h_StatusLine).responseCode() == 200 )
@@ -95,10 +91,10 @@ class Client : public ThreadIf
                      dlog.createDialogAsUAC(*received);
                         
                      DebugLog(<< "making ack.");
-                     auto_ptr<SipMessage> ack(dlog.makeAck(*received) );
+                     unique_ptr<SipMessage> ack(dlog.makeAck(*received) );
                         
                      DebugLog(<< "making bye.");
-                     auto_ptr<SipMessage> bye(dlog.makeBye());
+                     unique_ptr<SipMessage> bye(dlog.makeBye());
                         
                      DebugLog(<< "Sending ack: << " << endl << *ack);
                      mStack.send(*ack);
@@ -135,32 +131,28 @@ class Server : public ThreadIf
 
          while(true)
          {
-            FdSet fdset;
-            mStack.buildFdSet(fdset);
-            int err = fdset.selectMilliSeconds(5);
-            assert (err != -1);
-            mStack.process(fdset);
+            mStack.process(5);
             
             SipMessage* received = mStack.receive();
             if (received)
             {
-               auto_ptr<SipMessage> forDel(received);
+               unique_ptr<SipMessage> forDel(received);
                InfoLog ( << "Server recieved: " << received->brief());
                MethodTypes meth = received->header(h_RequestLine).getMethod();
                if ( meth == INVITE )
                {
                   Data localTag = Helper::computeTag(4);
-                  auto_ptr<SipMessage> msg180(Helper::makeResponse(*received, 180, dest));
+                  unique_ptr<SipMessage> msg180(Helper::makeResponse(*received, 180, dest));
                   msg180->header(h_To).param(p_tag) = localTag;
                   mStack.send( *msg180);
                   
-                  auto_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, dest));
+                  unique_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, dest));
                   msg200->header(h_To).param(p_tag) = localTag;
                   mStack.send(*msg200);
                }
                if ( meth == BYE)
                {
-                  auto_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, dest));
+                  unique_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, dest));
                   InfoLog (<< "stack2 got bye - send 200 : " << *msg200 );   
                
                   mStack.send(*msg200);

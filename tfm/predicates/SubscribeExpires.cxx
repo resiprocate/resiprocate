@@ -19,17 +19,17 @@ bool approxEqual(int x, int y)
 }
 
 bool 
-SubscribeExpires::operator()(boost::shared_ptr<Event> event)
+SubscribeExpires::operator()(std::shared_ptr<Event> event)
 {
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
    resip_assert(sipEvent);
-   boost::shared_ptr<resip::SipMessage> msg = sipEvent->getMessage();
+   std::shared_ptr<resip::SipMessage> msg = sipEvent->getMessage();
    
    return (*this)(msg);
 }
 
 bool
-SubscribeExpires::operator()(boost::shared_ptr<resip::SipMessage> msg)
+SubscribeExpires::operator()(std::shared_ptr<resip::SipMessage> msg)
 {
    //CerrLog(<< "SubscribeExpires::operator() " << *msg);
    if (!msg->exists(h_SubscriptionState))

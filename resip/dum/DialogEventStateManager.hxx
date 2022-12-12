@@ -16,12 +16,18 @@ namespace resip
  */
 class DialogEventStateManager
 {
-   public:
+public:
    typedef std::vector<DialogEventInfo> DialogEventInfos;
+
+   DialogEventStateManager(const DialogEventStateManager&) = delete;
+   DialogEventStateManager(DialogEventStateManager&&) = delete;
+   virtual ~DialogEventStateManager() = default;
+
+   DialogEventStateManager& operator=(const DialogEventStateManager&) = delete;
+   DialogEventStateManager& operator=(DialogEventStateManager&&) = delete;
+
    DialogEventInfos getDialogEventInfo() const;
    DialogEventInfos getDialogEventInfo(const Uri& entityUri, bool bMatchRemoteIdentityOnly = false) const;
-
-   virtual ~DialogEventStateManager();
 
 private:
       DialogEventStateManager();
@@ -77,13 +83,10 @@ private:
    friend class InviteSession;
    friend class DialogSet;
 
-   // disabled
-   DialogEventStateManager(const DialogEventStateManager& orig);
-
    // .jjg. we'll only have the DialogSetId if we aren't yet in the 'early' state;
    // once we get to early, we'll remove the DialogSetId in favour of the DialogId.
    // The comparator/key of the map must have an ordering so that a key can be
-   // contructed which points to the beginning of a dialogSet.  This could be done by
+   // constructed which points to the beginning of a dialogSet.  This could be done by
    // no remote tag being always, which might be the existing behaviour, but
    // shouldn't be relied on.
    std::map<DialogId, DialogEventInfo*, DialogIdComparator> mDialogIdToEventInfo;

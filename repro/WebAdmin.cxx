@@ -237,6 +237,7 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("settings.html")) &&
       ( pageName != Data("restart.html") ) &&  
       ( pageName != Data("logLevel.html") ) &&
+      ( pageName != Data("reloadcerts.html") ) &&
       ( pageName != Data("user.html")  ) )
    { 
       setPage( resip::Data::Empty, pageNumber, 301 );
@@ -426,6 +427,7 @@ WebAdmin::buildPage( const Data& uri,
       if ( pageName == Data("settings.html"))    buildSettingsSubPage(s);
       if ( pageName == Data("restart.html"))     buildRestartSubPage(s);
       if ( pageName == Data("logLevel.html"))    buildLogLevelSubPage(s);
+      if ( pageName == Data("reloadcerts.html")) buildReloadCertsSubPage(s);
       
       s << mPageOutlinePost;
       s.flush();
@@ -1764,7 +1766,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
       "</tr>" << endl;
   
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    RegistrationPersistenceManager::UriList aors;
    mRegDb.getAors(aors);
    for ( RegistrationPersistenceManager::UriList::const_iterator 
@@ -1780,7 +1782,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       {
          if(i->mRegExpires > now)
          {
-            UInt64 secondsRemaining = i->mRegExpires - now;
+            uint64_t secondsRemaining = i->mRegExpires - now;
 
             s << "<tr>" << endl
               << "  <td>" ;
@@ -1905,7 +1907,7 @@ WebAdmin::buildPublicationsSubPage(DataStream& s)
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl <<
       "</tr>" << endl;
 
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    mPubDb.lockDocuments();
    PublicationPersistenceManager::KeyToETagMap& publications = mPubDb.getDocuments();
    // Iterate through keys
@@ -1919,7 +1921,7 @@ WebAdmin::buildPublicationsSubPage(DataStream& s)
       {
          if (eTagIt->second.mExpirationTime > now)
          {
-            UInt64 secondsRemaining = eTagIt->second.mExpirationTime - now;
+            uint64_t secondsRemaining = eTagIt->second.mExpirationTime - now;
 
             s << "<tr>" << endl
                << "  <td>";
@@ -1986,7 +1988,7 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
        mProxy.getStack().getDnsCacheDump(make_pair(0, 0), this);
        // Retrieving DNS cache is asyncronous
        // Use condition variable to wait for DNS results to be returned in onDnsCacheDumpRetrieved
-       mDnsCacheCondition.wait(mDnsCacheMutex);
+       mDnsCacheCondition.wait(lock);
        s << "<pre>" << mDnsCache << "</pre>"
          << endl;
    }
@@ -2038,6 +2040,12 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
            << "  <input type=\"submit\" name=\"action\" value=\"Restart Proxy\"/>" << endl
            << "</form>" << endl;
    }
+
+#ifdef USE_SSL
+   s << "<form id=\"reloadCerts\" method=\"get\" action=\"reloadcerts.html\" name=\"reloadcerts\">" << endl
+       << "  <input type=\"submit\" name=\"action\" value=\"Reload Certificates\"/>" << endl
+       << "</form>" << endl;
+#endif
 }
 
 void 
@@ -2052,7 +2060,7 @@ WebAdmin::onDnsCacheDumpRetrieved(std::pair<unsigned long, unsigned long> key, c
    {
       mDnsCache = dnsEntryStrings;
    }
-   mDnsCacheCondition.signal();
+   mDnsCacheCondition.notify_one();
 }
 
 void
@@ -2136,6 +2144,13 @@ WebAdmin::buildLogLevelSubPage(resip::DataStream& s)
       WarningLog(<<"no log level specified");
       s << "ERROR: No level specified." << endl;
    }
+}
+
+void
+WebAdmin::buildReloadCertsSubPage(resip::DataStream& s)
+{
+    mProxy.getStack().reloadCertificates();
+    s << "Reloaded certificates." << endl;
 }
 
 Data 

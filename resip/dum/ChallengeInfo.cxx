@@ -36,16 +36,6 @@ ChallengeInfo::isChallengeRequired() const
    return mChallengeRequired;
 }
 
-Data
-ChallengeInfo::brief() const
-{
-   Data buffer;
-   DataStream strm(buffer);
-   strm << "ChallengeInfo " << mFailed << " : " << mChallengeRequired;
-   strm.flush();
-   return buffer;
-}
-
 resip::Message*
 ChallengeInfo::clone() const
 {
@@ -55,7 +45,7 @@ ChallengeInfo::clone() const
 std::ostream&
 ChallengeInfo::encode(std::ostream& strm) const
 {
-   strm << brief();
+   strm << "ChallengeInfo " << mFailed << " : " << mChallengeRequired;
    return strm;
 }
 

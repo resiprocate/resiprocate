@@ -33,7 +33,7 @@ class GenericTimerQueue
             {
                return mWhen < rhs.mWhen;
             }
-            UInt64 mWhen;
+            uint64_t mWhen;
             E* mEvent;
       };
            
@@ -103,16 +103,16 @@ class GenericTimerQueue
       {
          if (!mTimers.empty())
          {
-            UInt64 next = mTimers.begin()->mWhen;
-            UInt64 now = Timer::getTimeMs();
+            uint64_t next = mTimers.begin()->mWhen;
+            uint64_t now = Timer::getTimeMs();
             if (now > next) 
             {
                return 0;
             }
             else
             {
-               UInt64 ret64 = next - now;
-               if ( ret64 > UInt64(INT_MAX) )
+               uint64_t ret64 = next - now;
+               if ( ret64 > uint64_t(INT_MAX) )
                {
                   return INT_MAX;
                }

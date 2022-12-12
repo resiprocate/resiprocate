@@ -10,7 +10,7 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <AppSubsystem.hxx>
+#include "AppSubsystem.hxx"
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 
@@ -18,10 +18,16 @@ using namespace resip;
 using namespace recon;
 using namespace reconserver;
 
+// FIXME - do all the file IO on another thread so that we
+//         don't block the B2BUA
+// FIXME - handle any exceptions within this class so that
+//         the process isn't impacted
 CDRFile::CDRFile(const resip::Data& filename)
-    : mSep(',')
+    : mSep(','),
+      mFilename(filename),
+      mRotate(false)
 {
-   mFile.open(filename.c_str(), std::ios::app);
+   mFile.open(mFilename.c_str(), std::ios::app);
 }
 
 CDRFile::~CDRFile()
@@ -30,8 +36,15 @@ CDRFile::~CDRFile()
 }
 
 void
-CDRFile::log(SharedPtr <B2BCall> call)
+CDRFile::log(std::shared_ptr<B2BCall> call)
 {
+   if(mRotate)
+   {
+      StackLog(<<"rotating the CDR file");
+      mFile.close();
+      mFile.open(mFilename.c_str(), std::ios::app);
+      mRotate = false;
+   }
    logString(call->getB2BCallID());
    logString(call->getCaller());
    logString(call->getCallee());
@@ -71,6 +84,12 @@ CDRFile::log(SharedPtr <B2BCall> call)
    }
    logString(disposition);
    logNumeric(call->getResponseCode(), true);
+}
+
+void
+CDRFile::rotateLog()
+{
+   mRotate = true;
 }
 
 void
@@ -116,7 +135,7 @@ CDRFile::logTimestamp(const uint64_t& t, bool last)
    char msbuf[5];
    /* Dividing (without remainder) by 1000 rounds the microseconds
       measure to the nearest millisecond. */
-   snprintf(msbuf, 5, ".%3.3ld", millis);
+   snprintf(msbuf, 5, ".%3.3d", millis);
 
    int datebufCharsRemaining = datebufSize - (int)strlen(datebuf);
 #if defined(WIN32) && defined(_M_ARM)
@@ -136,13 +155,13 @@ CDRFile::logTimestamp(const uint64_t& t, bool last)
 void
 CDRFile::logTimediff(const uint64_t& d, bool last)
 {
-   logString(Data((UInt64)(d / 1000)), last, false);
+   logString(Data((uint64_t)(d / 1000)), last, false);
 }
 
 void
 CDRFile::logNumeric(int s, bool last)
 {
-   logString(Data((Int32)s), last, false);
+   logString(Data((int32_t)s), last, false);
 }
 
 

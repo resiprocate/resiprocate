@@ -1,4 +1,4 @@
-/* C++ code produced by gperf version 3.0.3 */
+/* C++ code produced by gperf version 3.1 */
 /* Command-line: gperf -C -D -E -L C++ -t --key-positions='*' --compare-strncmp -Z MethodHash MethodHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -25,7 +25,7 @@
       && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
       && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
 /* The character set is not based on ISO-646.  */
-#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
+#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
 #endif
 
 #line 1 "MethodHash.gperf"
@@ -43,13 +43,13 @@ struct methods { const char *name; MethodTypes type; };
 class MethodHash
 {
 private:
-  static inline unsigned int hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, size_t len);
 public:
-  static const struct methods *in_word_set (const char *str, unsigned int len);
+  static const struct methods *in_word_set (const char *str, size_t len);
 };
 
 inline unsigned int
-MethodHash::hash (register const char *str, register unsigned int len)
+MethodHash::hash (const char *str, size_t len)
 {
   static const unsigned char asso_values[] =
     {
@@ -80,43 +80,43 @@ MethodHash::hash (register const char *str, register unsigned int len)
       35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
       35, 35, 35, 35, 35, 35
     };
-  register int hval = len;
+  unsigned int hval = len;
 
   switch (hval)
     {
       default:
-        hval += asso_values[(unsigned char)str[8]];
+        hval += asso_values[static_cast<unsigned char>(str[8])];
       /*FALLTHROUGH*/
       case 8:
-        hval += asso_values[(unsigned char)str[7]];
+        hval += asso_values[static_cast<unsigned char>(str[7])];
       /*FALLTHROUGH*/
       case 7:
-        hval += asso_values[(unsigned char)str[6]];
+        hval += asso_values[static_cast<unsigned char>(str[6])];
       /*FALLTHROUGH*/
       case 6:
-        hval += asso_values[(unsigned char)str[5]];
+        hval += asso_values[static_cast<unsigned char>(str[5])];
       /*FALLTHROUGH*/
       case 5:
-        hval += asso_values[(unsigned char)str[4]];
+        hval += asso_values[static_cast<unsigned char>(str[4])];
       /*FALLTHROUGH*/
       case 4:
-        hval += asso_values[(unsigned char)str[3]];
+        hval += asso_values[static_cast<unsigned char>(str[3])];
       /*FALLTHROUGH*/
       case 3:
-        hval += asso_values[(unsigned char)str[2]];
+        hval += asso_values[static_cast<unsigned char>(str[2])];
       /*FALLTHROUGH*/
       case 2:
-        hval += asso_values[(unsigned char)str[1]];
+        hval += asso_values[static_cast<unsigned char>(str[1])];
       /*FALLTHROUGH*/
       case 1:
-        hval += asso_values[(unsigned char)str[0]];
+        hval += asso_values[static_cast<unsigned char>(str[0])];
         break;
     }
   return hval;
 }
 
 const struct methods *
-MethodHash::in_word_set (register const char *str, register unsigned int len)
+MethodHash::in_word_set (const char *str, size_t len)
 {
   enum
     {
@@ -172,15 +172,15 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = hash (str, len);
+      unsigned int key = hash (str, len);
 
-      if (key <= MAX_HASH_VALUE && key >= 0)
+      if (key <= MAX_HASH_VALUE)
         {
-          register int index = lookup[key];
+          int index = lookup[key];
 
           if (index >= 0)
             {
-              register const char *s = wordlist[index].name;
+              const char *s = wordlist[index].name;
 
               if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
                 return &wordlist[index];

@@ -1,7 +1,7 @@
 # $Id$
 
 EXTRA_DIST = ReadMe.txt
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcxproj
 
 SUBDIRS = .
 SUBDIRS += dtls_wrapper/test
@@ -12,8 +12,14 @@ AM_CXXFLAGS = -I $(top_srcdir)
 lib_LTLIBRARIES = libreflow.la
 libreflow_la_LIBADD = ../reTurn/client/libreTurnClient.la
 libreflow_la_LIBADD += ../rutil/librutil.la
+if USE_SIPXTAPI
 libreflow_la_LIBADD += -lsipXmediaProcessing
+endif
+if USE_SRTP1
 libreflow_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
+else
+libreflow_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp2
+endif
 libreflow_la_LIBADD += @LIBSTL_LIBADD@
 libreflow_la_LIBADD += @LIBPTHREAD_LIBADD@
 libreflow_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
@@ -44,11 +50,11 @@ nobase_reflowinclude_HEADERS = ErrorCode.hxx \
 	HEPRTCPEventLoggingHandler.hxx \
 	MediaStream.hxx \
 	RTCPEventLoggingHandler.hxx \
+	Srtp2Helper.hxx \
 	dtls_wrapper/bf_dwrap.hxx \
 	dtls_wrapper/DtlsFactory.hxx \
 	dtls_wrapper/DtlsSocket.hxx \
-	dtls_wrapper/DtlsTimer.hxx \
-	rtcp/re_rtp.h
+	dtls_wrapper/DtlsTimer.hxx
 
 ##############################################################################
 # 

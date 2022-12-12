@@ -113,7 +113,7 @@ public:
             Uri uri;
             Data group;
             DeprecatedDialog* presDialog; 
-            UInt64 mNextTimeToSubscribe;
+            uint64_t mNextTimeToSubscribe;
             bool online;
             Data status;
             
@@ -172,7 +172,7 @@ public:
 
       // registration information
       DeprecatedDialog mRegistrationDialog;
-      UInt64 mNextTimeToRegister;
+      uint64_t mNextTimeToRegister;
       Data   mRegistrationPassword;
       unsigned int mLastAuthCSeq; // This is the CSeq of the last registration message
                             // sent that included digest authorization information 

@@ -54,7 +54,6 @@ class UserAgentClientPublication : public resip::AppDialogSet
    
    private:       
       UserAgent &mUserAgent;
-      resip::DialogUsageManager &mDum;
       PublicationHandle mPublicationHandle;
       bool mEnded;
 };

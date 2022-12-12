@@ -125,7 +125,7 @@ void Producer::thread()
    cerr << "Producer running..." << endl;
 #endif
 
-   for (UInt32 n = 0; n < 0x1ffff; n++) 
+   for (uint32_t n = 0; n < 0x1ffff; n++) 
    {
       if (mFifo.wouldAccept(TimeLimitFifo<Foo>::EnforceTimeDepth))
       {
@@ -161,9 +161,9 @@ main()
    {
       cerr << "!! test getNext(ms) empty fifo timing" << endl;
       Fifo<Foo> fifo;
-      UInt64 begin(Timer::getTimeMs());
+      uint64_t begin(Timer::getTimeMs());
       fifo.getNext(2000);
-      UInt64 end(Timer::getTimeMs());
+      uint64_t end(Timer::getTimeMs());
       cerr << begin << " " << end << " " << end-begin << endl;      
       
       int offMark = 2000 - (end - begin);

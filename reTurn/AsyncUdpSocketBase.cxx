@@ -1,4 +1,4 @@
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "AsyncUdpSocketBase.hxx"
 #include "AsyncSocketBaseHandler.hxx"
@@ -15,10 +15,6 @@ AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_service& ioService)
    : AsyncSocketBase(ioService),
      mSocket(ioService),
      mResolver(ioService)
-{
-}
-
-AsyncUdpSocketBase::~AsyncUdpSocketBase() 
 {
 }
 
@@ -58,15 +54,11 @@ AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::udp::resolver::query query(address, service.c_str());
-#else
-   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
-#endif
+   asio::ip::udp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
    mResolver.async_resolve(query,
-        boost::bind(&AsyncSocketBase::handleUdpResolve, shared_from_this(),
-                    asio::placeholders::error,
-                    asio::placeholders::iterator));
+        std::bind(&AsyncSocketBase::handleUdpResolve, shared_from_this(),
+                    std::placeholders::_1,
+                    std::placeholders::_2));
 }
 
 void 
@@ -75,7 +67,7 @@ AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
 {
    if (!ec)
    {
-      // Use the first endpoint in the list. 
+      // Use the first endpoint in the list.
       // Nothing to do for UDP except store the connected address/port
       mConnected = true;
       mConnectedAddress = endpoint_iterator->endpoint().address();
@@ -89,7 +81,7 @@ AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
    }
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncUdpSocketBase::getSenderEndpointAddress() 
 { 
    return mSenderEndpoint.address(); 
@@ -107,14 +99,14 @@ AsyncUdpSocketBase::transportSend(const StunTuple& destination, std::vector<asio
    //InfoLog(<< "AsyncUdpSocketBase::transportSend " << buffers.size() << " buffer(s) to " << destination << " - buf1 size=" << buffer_size(buffers.front()));
    mSocket.async_send_to(buffers, 
                          asio::ip::udp::endpoint(destination.getAddress(), destination.getPort()), 
-                         boost::bind(&AsyncUdpSocketBase::handleSend, shared_from_this(), asio::placeholders::error));
+                         std::bind(&AsyncUdpSocketBase::handleSend, shared_from_this(), std::placeholders::_1));
 }
 
 void 
 AsyncUdpSocketBase::transportReceive()
 {
    mSocket.async_receive_from(asio::buffer((void*)mReceiveBuffer->data(), RECEIVE_BUFFER_SIZE), mSenderEndpoint,
-               boost::bind(&AsyncUdpSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+               std::bind(&AsyncUdpSocketBase::handleReceive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void 

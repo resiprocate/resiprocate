@@ -5,7 +5,7 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "TurnSocket.hxx"
 

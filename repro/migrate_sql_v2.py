@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: latin-1 -*-
 #
 # migrates data from legacy database to new database
@@ -64,7 +64,7 @@ def migrate_table(cur_legacy, cur_v2, table_name):
         else:
             placeholders = ",".join(["%s"]*len(row))
             insert = "INSERT INTO %s VALUES (%s)" % (table_name, placeholders)
-        print insert
+        print(insert)
         cur_v2.execute(insert, tuple(_row))
 
 # Program entry point / start here

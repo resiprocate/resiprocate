@@ -7,7 +7,7 @@
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/SipMessage.hxx>
 #include <resip/stack/Tuple.hxx>
-#include <AppSubsystem.hxx>
+#include "AppSubsystem.hxx"
 
 #include "MyMessageDecorator.hxx"
 
@@ -52,24 +52,37 @@ MyMessageDecorator::decorateMessage(SipMessage &msg,
          this at the last moment before sending it to the wire
          and that is why it is substituted here in a MessageDecorator.
       */
-      SdpContents::Session::Connection& c = sdp->session().connection();
-      StackLog(<<"session connection address = " << c.getAddress());
-      if(c.getAddress() == "0.0.0.0")
+      const std::list<Data>& iceOpts = sdp->session().getValues("ice-options");
+      if(std::find(iceOpts.begin(), iceOpts.end(), "trickle") != iceOpts.end())
       {
-         Data newAddr = Tuple::inet_ntop(source);
-         StackLog(<<"replacing session connection address with " << newAddr);
-         c.setAddress(newAddr);
+         StackLog(<<"Not modifying the SDP as ICE is in use");
       }
-      std::list<SdpContents::Session::Connection>& mc = sdp->session().media().front().getMediumConnections();
-      std::list<SdpContents::Session::Connection>::iterator it = mc.begin();
-      for( ; it != mc.end(); it++)
+      else
       {
-         SdpContents::Session::Connection& _mc = *it;
-         if(_mc.getAddress() == "0.0.0.0")
+         if(!sdp->session().isConnection())
+         {
+            ErrLog(<<"SDP is missing the connection parameter");
+            return;
+         }
+         SdpContents::Session::Connection& c = sdp->session().connection();
+         StackLog(<<"session connection address = " << c.getAddress());
+         if(c.getAddress() == "0.0.0.0")
          {
             Data newAddr = Tuple::inet_ntop(source);
-            StackLog(<<"replacing media stream connection address with " << newAddr);
-            _mc.setAddress(newAddr);
+            StackLog(<<"replacing session connection address with " << newAddr);
+            c.setAddress(newAddr);
+         }
+         std::list<SdpContents::Session::Connection>& mc = sdp->session().media().front().getMediumConnections();
+         std::list<SdpContents::Session::Connection>::iterator it = mc.begin();
+         for( ; it != mc.end(); it++)
+         {
+            SdpContents::Session::Connection& _mc = *it;
+            if(_mc.getAddress() == "0.0.0.0")
+            {
+               Data newAddr = Tuple::inet_ntop(source);
+               StackLog(<<"replacing media stream connection address with " << newAddr);
+               _mc.setAddress(newAddr);
+            }
          }
       }
    }

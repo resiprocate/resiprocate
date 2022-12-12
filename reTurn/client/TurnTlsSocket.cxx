@@ -4,7 +4,7 @@
 #endif
 
 #ifdef USE_SSL
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "TurnTlsSocket.hxx"
 #include <openssl/opensslv.h>
@@ -14,15 +14,6 @@
 #include "../ReTurnSubsystem.hxx"
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-
-inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *x)
-{
-    return ASN1_STRING_data(const_cast< ASN1_STRING* >(x));
-}
-
-#endif // OPENSSL_VERSION_NUMBER < 0x10100000L
 
 using namespace std;
 
@@ -63,13 +54,9 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
    // Get a list of endpoints corresponding to the server name.
    asio::ip::tcp::resolver resolver(mIOService);
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::tcp::resolver::query query(address, service.c_str());   
-#else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
-#endif
+   asio::ip::tcp::resolver::query query(mSocket.lowest_layer().local_endpoint().protocol(), address, service.c_str());
    asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   asio::ip::tcp::resolver::iterator end;
+   const asio::ip::tcp::resolver::iterator end;
 
    // Try each endpoint until we successfully establish a connection.
    asio::error_code errorCode = asio::error::host_not_found;
@@ -82,7 +69,7 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
          DebugLog(<< "Connected!");
          mSocket.handshake(asio::ssl::stream_base::client, errorCode);
          if(!errorCode)
-         {  
+         {
             DebugLog(<< "Handshake complete!");
 
             // Validate that hostname in cert matches connection hostname
@@ -225,14 +212,14 @@ void
 TurnTlsSocket::readHeader()
 {
    asio::async_read(mSocket, asio::buffer(mReadBuffer, 4),
-                    boost::bind(&TurnTlsSocket::handleReadHeader, this, asio::placeholders::error));
+                    std::bind(&TurnTlsSocket::handleReadHeader, this, std::placeholders::_1));
 }
 
 void 
 TurnTlsSocket::readBody(unsigned int len)
 {
    asio::async_read(mSocket, asio::buffer(&mReadBuffer[4], len),
-                    boost::bind(&TurnTlsSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+                    std::bind(&TurnTlsSocket::handleRawRead, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void

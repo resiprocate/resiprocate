@@ -47,7 +47,7 @@ class ConnectionBase
       virtual Transport* transport() const;
 
       Tuple& who() { return mWho; }
-      const UInt64& whenLastUsed() { return mLastUsed; }
+      const uint64_t& whenLastUsed() { return mLastUsed; }
       void resetLastUsed() { mLastUsed = Timer::getTimeMs(); }
 
       enum { ChunkSize = 8192 }; // !jf! what is the optimal size here?
@@ -83,7 +83,7 @@ class ConnectionBase
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();
-      char* getWriteBufferForExtraBytes(int currentPos, int extraBytes);
+      char* getWriteBufferForExtraBytes(int bytesRead, int extraBytes);
       
       // for avoiding copies in external transports--not used in core resip
       void setBuffer(char* bytes, int count);
@@ -100,7 +100,7 @@ class ConnectionBase
       ConnectionBase(const Connection&);
       ConnectionBase& operator=(const Connection&);
       bool scanMsgHeader(int bytesRead);
-      std::auto_ptr<Data> makeWsHandshakeResponse();
+      std::unique_ptr<Data> makeWsHandshakeResponse();
       bool isUsingSecWebSocketKey();
       bool isUsingDeprecatedSecWebSocketKeys();
    protected:
@@ -124,7 +124,7 @@ class ConnectionBase
       WsFrameExtractor mWsFrameExtractor;
 
       static char connectionStates[MAX][32];
-      UInt64 mLastUsed;
+      uint64_t mLastUsed;
       ConnState mConnState;
       MsgHeaderScanner mMsgHeaderScanner;
 

@@ -19,17 +19,15 @@ namespace resip
 class BaseException : public std::exception
 {
    public:
-      virtual const char* name() const = 0;
+      virtual const char* name() const noexcept = 0;
 
-      const Data& getMessage() const {return message;}
-      virtual const char* what() const throw() {return message.data();}
+      const Data& getMessage() const noexcept { return message; }
+      const char* what() const noexcept override { return message.data(); }
       
    protected:
       BaseException(const Data& msg,
                     const Data& file,
                     int line);
-
-      virtual ~BaseException() throw();
       
       resip::Data message;
       resip::Data fileName;
@@ -40,6 +38,11 @@ class BaseException : public std::exception
 #endif
       friend std::ostream& operator<<(std::ostream& strm, const BaseException& e);
 };
+
+#ifndef RESIP_USE_STL_STREAMS
+EncodeStream& operator<<(EncodeStream& strm, const BaseException& e);
+#endif
+std::ostream& operator<<(std::ostream& strm, const BaseException& e);
  
 }
 

@@ -37,11 +37,11 @@ class WinCompat
 
       static Version getVersion();
 
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
-            Exception(const Data& msg, const Data& file, const int line);
-            const char* name() const { return "TransportException"; }
+            Exception(const Data& msg, const Data& file, int line);
+            const char* name() const noexcept override { return "TransportException"; }
       };
 
       static GenericIPAddress determineSourceInterface(const GenericIPAddress& destination);

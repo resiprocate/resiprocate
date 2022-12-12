@@ -14,10 +14,15 @@ class ClientInviteSession : public InviteSession
    public:
       ClientInviteSession(DialogUsageManager& dum,
                           Dialog& dialog,
-                          SharedPtr<SipMessage> request,
+                          std::shared_ptr<SipMessage> request,
                           const Contents* initialOffer,
                           DialogUsageManager::EncryptionLevel level,
                           ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());
+      ClientInviteSession(const ClientInviteSession&) = delete;
+      ClientInviteSession(ClientInviteSession&&) = delete;
+
+      ClientInviteSession& operator=(const ClientInviteSession&) = delete;
+      ClientInviteSession& operator=(ClientInviteSession&&) = delete;
 
       ClientInviteSessionHandle getHandle();
 
@@ -25,29 +30,30 @@ class ClientInviteSession : public InviteSession
       /** Called to set the offer that will be used in the next message that
           sends an offer.  For a UAC in an early dialog, this can be used to send
           an UPDATE request with an offer. */
-      virtual void provideOffer (const Contents& offer);
-      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative);
+      void provideOffer(const Contents& offer) override;
+      void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative) override;
 
-      /** Similar to provideOffer - called to set the answer to be signalled to
+      /** Similar to provideOffer - called to set the answer to be signaled to
           the peer. May result in message being sent synchronously depending on
           the state. */
-      virtual void provideAnswer (const Contents& answer);
+      void provideAnswer(const Contents& answer) override;
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
-      virtual void end(const Data& userReason);
-      virtual void end(EndReason reason);
-      virtual void end();
+      void end(const Data& userReason) override;
+      void end(const ParserContainer<Token>& endReasons) override;
+      void end(EndReason reason) override;
+      void end() override;
 
       /** Rejects an offer at the SIP level.  For a UAC in an early dialog 
           this typically only makes sense, when rejecting an UPDATE request
           that contains an offer in an early dialog. */
-      virtual void reject (int statusCode, WarningCategory *warning = 0);
+      void reject (int statusCode, WarningCategory *warning = nullptr) override;
 
       const Contents& getEarlyMedia() const;
       
    private:
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
+      void dispatch(const SipMessage& msg) override;
+      void dispatch(const DumTimeout& timer) override;
 
       void dispatchStart (const SipMessage& msg);
       void dispatchEarly (const SipMessage& msg);
@@ -85,17 +91,13 @@ class ClientInviteSession : public InviteSession
       void onProvisionalAspect(ClientInviteSessionHandle c, const SipMessage& msg);
       void onFailureAspect(ClientInviteSessionHandle c, const SipMessage& msg);
 
-      std::auto_ptr<Contents> mEarlyMedia;
+      std::unique_ptr<Contents> mEarlyMedia;
 
       RAckCategory mRelRespInfo;
       unsigned int mStaleCallTimerSeq;
       unsigned int mCancelledTimerSeq;
       ServerSubscriptionHandle mServerSub;
       bool mAllowOfferInPrack;
-
-      // disabled
-      ClientInviteSession(const ClientInviteSession&);
-      ClientInviteSession& operator=(const ClientInviteSession&);
 
       friend class Dialog;
 };

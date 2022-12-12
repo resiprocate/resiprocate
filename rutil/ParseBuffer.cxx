@@ -247,7 +247,9 @@ ParseBuffer::skipToChars(const char* cs)
 
    const char* rpos;
    const char* cpos;
-   while (mPosition < mEnd)
+   // Checking mPosition >= mEnd - l +1 is unnecessary because there won't be
+   // enough bytes left to find [cs].
+   while (mPosition < mEnd - l + 1)
    {
       rpos = mPosition;
       cpos = cs;
@@ -262,6 +264,8 @@ ParseBuffer::skipToChars(const char* cs)
       return CurrentPosition(*this);
      skip: ;
    }
+   // Advance to the end since we didn't find a match.
+   mPosition = mEnd;
    return CurrentPosition(*this);
 }
 
@@ -700,12 +704,12 @@ ParseBuffer::integer()
     return num;
 }
 
-UInt8
+uint8_t
 ParseBuffer::uInt8()
 {
    const char* begin=mPosition;
-   UInt8 num = 0;
-   UInt8 last = 0;
+   uint8_t num = 0;
+   uint8_t last = 0;
    while (!eof() && isdigit(*mPosition))
    {
       last = num;
@@ -726,11 +730,11 @@ ParseBuffer::uInt8()
 
 
 //!dcm! -- merge these, ask about length checks
-UInt32
+uint32_t
 ParseBuffer::uInt32()
 {
    const char* begin=mPosition;
-   UInt32 num = 0;
+   uint32_t num = 0;
    while (!eof() && isdigit(*mPosition))
    {
       num = num*10 + (*mPosition-'0');
@@ -767,11 +771,11 @@ ParseBuffer::uInt32()
    return num;
 }
 
-UInt64
+uint64_t
 ParseBuffer::uInt64()
 {
    const char* begin=mPosition;
-   UInt64 num = 0;
+   uint64_t num = 0;
    while (!eof() && isdigit(*mPosition))
    {
       num = num*10 + (*mPosition-'0');

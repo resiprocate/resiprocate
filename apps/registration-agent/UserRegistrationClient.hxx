@@ -16,10 +16,9 @@ class UserRegistrationClient : public resip::ClientRegistrationHandler
 {
 
 public:
-   UserRegistrationClient(resip::SharedPtr<KeyedFile> keyedFile);
-   virtual ~UserRegistrationClient();
+   UserRegistrationClient(std::shared_ptr<KeyedFile> keyedFile);
 
-   void addUserAccount(const resip::Uri& aor, resip::SharedPtr<UserAccount> userAccount);
+   void addUserAccount(const resip::Uri& aor, std::shared_ptr<UserAccount> userAccount);
    void removeUserAccount(const resip::Uri& aor);
 
    void setContact(const resip::Uri& aor, const resip::Data& newContact, const time_t expires = 0, const std::vector<resip::Data>& route = std::vector<resip::Data>());
@@ -31,13 +30,17 @@ public:
    virtual int onRequestRetry(resip::ClientRegistrationHandle, int retrySeconds, const resip::SipMessage& response);
    virtual bool onRefreshRequired(resip::ClientRegistrationHandle, const resip::SipMessage& lastRequest);
 
+   virtual std::size_t getAccountsTotal() const { return mKeyedFile->getLineCount(); };
+   virtual std::size_t getAccountsFailed() const { return mFailedAccounts.size(); };
+
 protected:
-   resip::SharedPtr<UserAccount> userAccountForMessage(const resip::SipMessage& m);
-   resip::SharedPtr<UserAccount> userAccountForAoR(const resip::Uri& aor);
+   std::shared_ptr<UserAccount> userAccountForMessage(const resip::SipMessage& m);
+   std::shared_ptr<UserAccount> userAccountForAoR(const resip::Uri& aor);
 
 private:
-   resip::SharedPtr<KeyedFile> mKeyedFile;
-   std::map<resip::Uri, resip::SharedPtr<UserAccount> > mAccounts;
+   std::shared_ptr<KeyedFile> mKeyedFile;
+   std::map<resip::Uri, std::shared_ptr<UserAccount> > mAccounts;
+   std::set<std::shared_ptr<UserAccount> > mFailedAccounts;
 };
 
 } // namespace

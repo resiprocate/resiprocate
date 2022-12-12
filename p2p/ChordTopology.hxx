@@ -11,6 +11,8 @@
 #include "p2p/Message.hxx"
 #include "p2p/TopologyAPI.hxx"
 
+#include <memory>
+
 namespace p2p
 {
 
@@ -69,7 +71,7 @@ class ChordTopology : public TopologyAPI
       virtual ResourceId resourceId( const resip::Data& resourceName );
 
       // not public api
-      virtual void post(std::auto_ptr<Event> message);
+      virtual void post(std::unique_ptr<Event> message);
               
    private:
       
@@ -78,7 +80,7 @@ class ChordTopology : public TopologyAPI
       std::vector<NodeId> mNextTable;
       bool mJoined;
 
-      typedef std::map<UInt64, Message* > PendingResponseMap;
+      typedef std::map<uint64_t, Message* > PendingResponseMap;
       PendingResponseMap mPendingResponses;
 
       bool addNewNeighbors(  const std::vector<NodeId>& nodes, bool adjustNextOnly ); // return true if
@@ -89,8 +91,8 @@ class ChordTopology : public TopologyAPI
       
       // Attach subsystem
       void attach(const NodeId &attachTo);
-      void startCandidateCollection(const UInt64 tid, const NodeId &id);
-      virtual void candidatesCollected( UInt64 tid, 
+      void startCandidateCollection(const uint64_t tid, const NodeId &id);
+      virtual void candidatesCollected( uint64_t tid, 
                                         const NodeId& node, 
                                         unsigned short appId, 
                                         std::vector<Candidate>& candidates);

@@ -37,7 +37,9 @@ class QValueTargetHandler : public Processor
       
       virtual void removeTerminated(std::list<resip::Data>& queue,
                                     const ResponseContext& rsp) const;
-   
+
+      void setCancelBetweenForkGroups(bool enabled);
+
    protected:
       ForkBehavior mForkBehavior;
       bool mCancelBetweenForkGroups;

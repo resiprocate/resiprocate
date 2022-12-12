@@ -19,6 +19,7 @@
 #include "rutil/ParseBuffer.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
 //#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
+#include <utility>
 
 using namespace resip;
 using namespace std;
@@ -303,7 +304,7 @@ SipMessage::make(const Data& data, bool isExternal)
       // it doesn't need a new buffer in UDP b/c there
       // will only be one datagram per buffer. (1:1 strict)
 
-      msg->setBody(buffer+used,UInt32(len-used));
+      msg->setBody(buffer+used,uint32_t(len-used));
       //DebugLog(<<"added " << len-used << " byte body");
    }
 
@@ -748,7 +749,7 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
 #endif
    }
 
-   for (UInt8 i = 0; i < Headers::MAX_HEADERS; i++)
+   for (uint8_t i = 0; i < Headers::MAX_HEADERS; i++)
    {
       if (i != Headers::ContentLength) // !dlb! hack...
       {
@@ -790,7 +791,7 @@ EncodeStream&
 SipMessage::encodeEmbedded(EncodeStream& str) const
 {
    bool first = true;
-   for (UInt8 i = 0; i < Headers::MAX_HEADERS; i++)
+   for (uint8_t i = 0; i < Headers::MAX_HEADERS; i++)
    {
       if (i != Headers::ContentLength)
       {
@@ -911,7 +912,7 @@ SipMessage::setStartLine(const char* st, int len)
 }
 
 void 
-SipMessage::setBody(const char* start, UInt32 len)
+SipMessage::setBody(const char* start, uint32_t len)
 {
    if(checkContentLength)
    {
@@ -939,7 +940,7 @@ SipMessage::setBody(const char* start, UInt32 len)
             header(h_ContentLength).value()=len;
          }
          
-         UInt32 contentLength=const_header(h_ContentLength).value();
+         uint32_t contentLength=const_header(h_ContentLength).value();
          
          if(len > contentLength)
          {
@@ -991,7 +992,7 @@ SipMessage::setRawBody(const HeaderFieldValue& body)
 
 
 void
-SipMessage::setContents(auto_ptr<Contents> contents)
+SipMessage::setContents(unique_ptr<Contents> contents)
 {
    Contents* contentsP = contents.release();
 
@@ -1041,11 +1042,11 @@ SipMessage::setContents(const Contents* contents)
 { 
    if (contents)
    {
-      setContents(auto_ptr<Contents>(contents->clone()));
+      setContents(unique_ptr<Contents>(contents->clone()));
    }
    else
    {
-      setContents(auto_ptr<Contents>(0));
+      setContents(unique_ptr<Contents>());
    }
 }
 
@@ -1103,17 +1104,17 @@ SipMessage::getContents() const
    return mContents;
 }
 
-auto_ptr<Contents>
+unique_ptr<Contents>
 SipMessage::releaseContents()
 {
    Contents* c=getContents();
-   // .bwc. auto_ptr owns the Contents. No other references allowed!
-   auto_ptr<Contents> ret(c ? c->clone() : 0);
-   setContents(std::auto_ptr<Contents>(0));
+   // .bwc. unique_ptr owns the Contents. No other references allowed!
+   unique_ptr<Contents> ret(c ? c->clone() : nullptr);
+   setContents(nullptr);
 
-   if (ret.get() != 0 && !ret->isWellFormed())
+   if (ret != nullptr && !ret->isWellFormed())
    {
-      ret.reset(0);
+      ret.reset();
    }
 
    return ret;
@@ -1206,7 +1207,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
       HeaderFieldValueList* hfvl=0;
       if (mHeaderIndices[header] == 0)
       {
-         mHeaderIndices[header] = mHeaders.size();
+         mHeaderIndices[header] = (short)mHeaders.size();
          mHeaders.push_back(getEmptyHfvl());
          hfvl=mHeaders.back();
       }
@@ -1348,7 +1349,7 @@ SipMessage::ensureHeaders(Headers::Type type)
       // create the list with a new component
       mHeaders.push_back(getEmptyHfvl());
       hfvl=mHeaders.back();
-      mHeaderIndices[type]=mHeaders.size()-1;
+      mHeaderIndices[type]= (short)mHeaders.size()-1;
    }
 
    return hfvl;
@@ -1376,7 +1377,7 @@ SipMessage::ensureHeader(Headers::Type type)
       // create the list with a new component
       mHeaders.push_back(getEmptyHfvl());
       hfvl=mHeaders.back();
-      mHeaderIndices[type]=mHeaders.size()-1;
+      mHeaderIndices[type]=(short)mHeaders.size()-1;
       mHeaders.back()->push_back(0,0,false);
    }
 
@@ -1573,7 +1574,7 @@ defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 defineMultiHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
 defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244");
 
-defineHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 3455");
+defineMultiHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 7315"); // section 5.4.
 defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455");
 defineHeader(PChargingFunctionAddresses, "P-Charging-Function-Addresses", Token, "RFC 3455");
 defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", TokenOrQuotedStringCategory, "RFC 3455");
@@ -1599,7 +1600,7 @@ SipMessage::setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerT
    HeaderFieldValueList* copy=0;
    if (mHeaderIndices[headerType] == 0)
    {
-      mHeaderIndices[headerType]=mHeaders.size();
+      mHeaderIndices[headerType]=(short)mHeaders.size();
       copy=getCopyHfvl(*hfvs);
       mHeaders.push_back(copy);
    }
@@ -1728,9 +1729,9 @@ SipMessage::mergeUri(const Uri& source)
 }
 
 void 
-SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec)
+SipMessage::setSecurityAttributes(std::unique_ptr<SecurityAttributes> sec) noexcept
 {
-   mSecurityAttributes = sec;
+   mSecurityAttributes = std::move(sec);
 }
 
 void
@@ -1782,7 +1783,7 @@ SipMessage::copyOutboundDecoratorsToStackCancel(SipMessage& cancel)
   {
      if((*i)->copyToStackCancels())
      {
-        cancel.addOutboundDecorator(std::auto_ptr<MessageDecorator>((*i)->clone()));
+        cancel.addOutboundDecorator(std::unique_ptr<MessageDecorator>((*i)->clone()));
      }    
   }
 }
@@ -1796,7 +1797,7 @@ SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
   {
      if((*i)->copyToStackFailureAcks())
      {
-        ack.addOutboundDecorator(std::auto_ptr<MessageDecorator>((*i)->clone()));
+        ack.addOutboundDecorator(std::unique_ptr<MessageDecorator>((*i)->clone()));
      }    
   }
 }

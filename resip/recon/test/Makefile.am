@@ -1,10 +1,17 @@
 
 EXTRA_DIST = ca.pem
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcxproj
 EXTRA_DIST += testua_readme.txt
 
 LDADD = ../librecon.la
+if USE_KURENTO
+LDADD += ../../../media/kurento/libkurentoclient.la
+endif
+if USE_GSTREAMER
+LDADD += $(GSTREAMERMM_1_0_LIBS) -lgstwebrtc-1.0
+endif
 LDADD += ../../../reflow/libreflow.la
+LDADD += ../../../media/libresipmedia.la
 # These need to be included for static linking, and we need to be able
 # to configure the runtime location to find them for dynamic loading
 #LDADD += ../../../../sipXtapi/sipXmediaLib/src/mp/codecs/plgl16/codec_l16.la
@@ -18,22 +25,29 @@ LDADD += $(LIBSSL_LIBADD) @LIBPTHREAD_LIBADD@
 
 AM_CPPFLAGS = -I$(top_srcdir)/resip/recon
 
-TESTS = sdpTests
-# disabled - doesn't run without local audio hardware:
-# lt-unitTests: mp/MpOss.cpp:828: static void* MpOss::soundCardIoWrapper(void*): Assertion `res == 0' failed.
-#TESTS += unitTests
+TESTS =
+bin_PROGRAMS =
+check_PROGRAMS =
 
-bin_PROGRAMS = testUA
+if USE_SIPXTAPI
 
-check_PROGRAMS = \
+TESTS += sdpTests
+TESTS += unitTests
+bin_PROGRAMS += testUA
+check_PROGRAMS += \
 	sdpTests \
 	unitTests
 
-testUA_SOURCES = testUA.cxx playback_prompt.h record_prompt.h
+testUA_SOURCES = testUA.cxx ../../../media/samples/playback_prompt.h ../../../media/samples/record_prompt.h
 sdpTests_SOURCES = sdpTests.cxx
 unitTests_SOURCES = unitTests.cxx
 testUA_LDADD = -lsipXport
+if USE_KURENTO
+testUA_LDADD += -lboost_system
+endif
 testUA_LDADD += $(LDADD)
+
+endif
 
 
 

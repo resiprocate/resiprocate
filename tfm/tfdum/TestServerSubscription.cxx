@@ -75,7 +75,7 @@ TestServerSubscription::end()
 }
  
 CommonAction* 
-TestServerSubscription::send(resip::SharedPtr<SipMessage> msg)
+TestServerSubscription::send(std::shared_ptr<SipMessage> msg)
 {
    return new CommonAction(mUa, "send", 
                            boost::bind(&ServerSubscription::send, boost::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), boost::ref(mHandle)), 

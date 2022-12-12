@@ -5,7 +5,7 @@
 #ifdef USE_SSL
 
 #include "TlsServer.hxx"
-#include <boost/bind.hpp>
+#include <functional>
 #include <rutil/Data.hxx>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
@@ -28,7 +28,7 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
                         asio::ssl::context::no_sslv2 | // Disable SSL v2.
                         asio::ssl::context::single_dh_use);  // enforce recalculation of the DH key for eatch session
    
-   mContext.set_password_callback(boost::bind(&TlsServer::getPassword, this));
+   mContext.set_password_callback(std::bind(&TlsServer::getPassword, this));
 
    // Use a certificate chain from a file.
    mContext.use_certificate_chain_file(mRequestHandler.getConfig().mTlsServerCertificateFilename.c_str(), ec);
@@ -83,7 +83,7 @@ void
 TlsServer::start()
 {
    mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
-   mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+   mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), std::bind(&TlsServer::handleAccept, this, std::placeholders::_1));
 }
 
 std::string 
@@ -100,7 +100,7 @@ TlsServer::handleAccept(const asio::error_code& e)
       mConnectionManager.start(mNewConnection);
 
       mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
-      mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+      mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), std::bind(&TlsServer::handleAccept, this, std::placeholders::_1));
    }
    else
    {
@@ -109,7 +109,7 @@ TlsServer::handleAccept(const asio::error_code& e)
       {
          // Retry if too many open files (ie. out of socket descriptors)
          mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
-         mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+         mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), std::bind(&TlsServer::handleAccept, this, std::placeholders::_1));
       }
    }
 }

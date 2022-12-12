@@ -28,7 +28,6 @@
 #   include "rutil/NetNs.hxx"
 #endif
 
-using std::auto_ptr;
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DNS
@@ -271,7 +270,7 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const
    // bytes for V6, and 14 extra bytes for V4. 
    // V6: sin6_len(1), sin6_flowinfo(4), flowId(4), onlyUseExistingConnection(1)
    // V4: sin_family(2 instead of 1), sin_zero(8), flowId(4), onlyUseExistingConnection(1)
-   UInt32 rawToken[TOKEN_SIZE];
+   uint32_t rawToken[TOKEN_SIZE];
    memset(&rawToken, 0, TOKEN_SIZE * 4);
 
    rawToken[0] = tuple.mFlowKey;
@@ -339,7 +338,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
       return Tuple();
    }
 
-   const UInt32* rawToken=reinterpret_cast<const UInt32*>(binaryFlowToken.data());
+   const uint32_t* rawToken=reinterpret_cast<const uint32_t*>(binaryFlowToken.data());
 
    FlowKey mFlowKey=rawToken[0];
    TransportKey transportKey=rawToken[1];
@@ -348,7 +347,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
 
    bool isRealFlow = (rawToken[2] & 0x00000010 ? true : false);
 
-   UInt8 temp = (TransportType)((rawToken[2] & 0x00000F00) >> 8);
+   uint8_t temp = (TransportType)((rawToken[2] & 0x00000F00) >> 8);
    if(temp >= MAX_TRANSPORT)
    {
       DebugLog(<<"Garbage transport type in flow token: " << temp );
@@ -356,7 +355,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    }
    TransportType type = (TransportType)temp;
 
-   UInt16 port= (rawToken[2] >> 16);
+   uint16_t port= (rawToken[2] >> 16);
 
    // Now that we have the version we can do a more accurate check on the size
    if(!((version==V4 && salt.empty() && binaryFlowToken.size()==(TOKEN_SIZE-3)*4) ||
@@ -390,7 +389,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    {
       netNs = NetNs::getNetNsName(netNsId);
    }
-   catch(NetNs::Exception e)
+   catch (const NetNs::Exception& e)
    {
        ErrLog(<< "Tuple binary token contained netns id: " << netNsId << "which does not exist." 
                << e);
@@ -543,6 +542,7 @@ Tuple::ipVersion() const
 static Tuple v4privateaddrbase1("10.0.0.0",0,UNKNOWN_TRANSPORT);
 static Tuple v4privateaddrbase2("172.16.0.0",0,UNKNOWN_TRANSPORT);
 static Tuple v4privateaddrbase3("192.168.0.0",0,UNKNOWN_TRANSPORT);
+static Tuple v4sharedaddrbase1("100.64.0.0",0,UNKNOWN_TRANSPORT);
 
 #ifdef USE_IPV6
 static Tuple v6privateaddrbase("fc00::",0,UNKNOWN_TRANSPORT);
@@ -553,10 +553,11 @@ Tuple::isPrivateAddress() const
 {
    if(ipVersion()==V4)
    {
-      // RFC 1918
+      // RFC 1918 & RFC 6598
       return isEqualWithMask(v4privateaddrbase1,8,true,true) ||  // 10.0.0.0        -   10.255.255.255  (10/8 prefix)
              isEqualWithMask(v4privateaddrbase2,12,true,true) || // 172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
              isEqualWithMask(v4privateaddrbase3,16,true,true) || // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
+             isEqualWithMask(v4sharedaddrbase1,10,true,true) ||  // 100.64.0.0      -   100.127.255.255 (100.64/110 prefix)
              isLoopback();
    }
 #ifdef USE_IPV6
@@ -859,8 +860,8 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
 
          if(ignorePort || addr1->sin6_port == addr2->sin6_port)
          {
-            UInt32 mask6part;
-            UInt32 temp;
+            uint32_t mask6part;
+            uint32_t temp;
             bool match=true;
             for(int i = 3; i >= 0; i--)
             {
@@ -892,8 +893,8 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
                if((*((unsigned long*)&addr1->sin6_addr.__u6_addr.__u6_addr32[i]) & htonl(mask6part)) != 
                   (*((unsigned long*)&addr2->sin6_addr.__u6_addr.__u6_addr32[i]) & htonl(mask6part)))				  
 #else
-               if((*((UInt32*)&addr1->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)) != 
-                  (*((UInt32*)&addr2->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)))
+               if((*((uint32_t*)&addr1->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)) != 
+                  (*((uint32_t*)&addr2->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)))
 #endif
                {
                   match=false;

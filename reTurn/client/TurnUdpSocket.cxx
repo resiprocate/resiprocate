@@ -31,20 +31,16 @@ TurnUdpSocket::connect(const std::string& address, unsigned short port)
    // Get a list of endpoints corresponding to the server name.
    asio::ip::udp::resolver resolver(mIOService);
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::udp::resolver::query query(address, service.c_str());   
-#else
-   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
-#endif
+   asio::ip::udp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
    asio::ip::udp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   asio::ip::udp::resolver::iterator end;
+   const asio::ip::udp::resolver::iterator end;
 
    // Use first endpoint in list
    if(endpoint_iterator == end)
    {
       return asio::error::host_not_found;
    }
-   
+
    // Nothing to do for UDP except store the remote endpoint
    mRemoteEndpoint = endpoint_iterator->endpoint();
 
@@ -77,7 +73,7 @@ TurnUdpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::
 {
    startReadTimer(timeout);
 
-   mSocket.async_receive_from(asio::buffer(mReadBuffer, sizeof(mReadBuffer)), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+   mSocket.async_receive_from(asio::buffer(mReadBuffer, sizeof(mReadBuffer)), mSenderEndpoint, 0, std::bind(&TurnUdpSocket::handleRawRead, this, std::placeholders::_1, std::placeholders::_2));
 
    // Wait for timer and read to end
    mIOService.run();

@@ -1,6 +1,6 @@
 # $Id$
 
-EXTRA_DIST = *.vcxproj *.vcxproj.filters
+EXTRA_DIST = *.vcxproj
 EXTRA_DIST += fullHeaders.bytes
 
 #AM_CXXFLAGS = -DUSE_ARES
@@ -27,9 +27,11 @@ check_PROGRAMS = \
 	BasicCall \
 	basicMessage \
 	basicClient \
+	limpc \
         testContactInstanceRecord \
         testPubDocument \
-	testRequestValidationHandler
+	testRequestValidationHandler \
+	treg
 
 SHARED_SRCS = CommandLineParser.cxx UserAgent.cxx RegEventClient.cxx basicClientCall.cxx basicClientCmdLineParser.cxx basicClientUserAgent.cxx
 
@@ -37,9 +39,11 @@ basicRegister_SOURCES = basicRegister.cxx $(SHARED_SRCS)
 BasicCall_SOURCES = BasicCall.cxx $(SHARED_SRCS)
 basicMessage_SOURCES = basicMessage.cxx $(SHARED_SRCS)
 basicClient_SOURCES = basicClient.cxx $(SHARED_SRCS)
+limpc_SOURCES = limpc.cxx $(SHARED_SRCS)
 testContactInstanceRecord_SOURCES = testContactInstanceRecord.cxx 
 testPubDocument_SOURCES = testPubDocument.cxx 
 testRequestValidationHandler_SOURCES = testRequestValidationHandler.cxx $(SHARED_SRCS)
+treg_SOURCES = treg.cxx $(SHARED_SRCS)
 
 noinst_HEADERS = basicClientCall.hxx \
 	basicClientCmdLineParser.hxx \

@@ -2,8 +2,9 @@
 #define RESIP_REGISTRATIONHANDLER_HXX
 
 #include "resip/dum/Handles.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "resip/dum/ContactInstanceRecord.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -16,7 +17,7 @@ class ClientRegistrationHandler
 {
    public:
       virtual ~ClientRegistrationHandler() { }
-      /// Called when registraion succeeds or each time it is sucessfully
+      /// Called when registration succeeds or each time it is successfully
       /// refreshed (manual refreshes only). 
       virtual void onSuccess(ClientRegistrationHandle, const SipMessage& response)=0;
 
@@ -47,7 +48,7 @@ class ClientRegistrationHandler
 class ServerRegistrationHandler
 {
    public:
-      virtual ~ServerRegistrationHandler() {}
+      virtual ~ServerRegistrationHandler() = default;
 
       /// Called when registration is refreshed
       virtual void onRefresh(ServerRegistrationHandle, const SipMessage& reg)=0;
@@ -66,15 +67,15 @@ class ServerRegistrationHandler
       virtual void onQuery(ServerRegistrationHandle, const SipMessage& reg)=0;
 
       /// When processing a REGISTER request, return the desired expires value when processing the "Expires" header.
-      ///@param expires Set this to the desired expiration value for the set of contacts that do not explicitely 
+      ///@param expires Set this to the desired expiration value for the set of contacts that do not explicitly 
       ///   set the "expires" param.  
       ///@param returnCode If the REGISTER should be rejected, use this return code.  A value of 423 will result in
       ///the Min-Expires header added to the response.
       ///
       virtual void getGlobalExpires(const SipMessage& msg, 
-                                    SharedPtr<MasterProfile> masterProfile, 
-                                    UInt32 &expires, 
-                                    UInt32 &returnCode);
+                                    const std::shared_ptr<MasterProfile>& masterProfile, 
+                                    uint32_t &expires, 
+                                    uint32_t &returnCode);
 
       /// When processing a REGISTER request, return the desired expires value by processing this contact's expires
       /// parameter.  If the expires value is not modified in this function the global expires will be used.
@@ -83,9 +84,9 @@ class ServerRegistrationHandler
       ///   the Min-Expires header added to the response.
       ///
       virtual void getContactExpires(const NameAddr &contact, 
-                                     SharedPtr<MasterProfile> masterProfile, 
-                                     UInt32 &expires, 
-                                     UInt32 &returnCode);
+                                     const std::shared_ptr<MasterProfile>& masterProfile, 
+                                     uint32_t &expires, 
+                                     uint32_t &returnCode);
 
        /** If true, the registration processing will use the async* functions here and will not use the RegistrationPersistenceManager.
         */
@@ -107,8 +108,8 @@ class ServerRegistrationHandler
        */
       virtual void asyncUpdateContacts(ServerRegistrationHandle,
                                        const Uri& aor,
-                                       std::auto_ptr<ContactPtrList> modifiedContactList, 
-                                       std::auto_ptr<ContactRecordTransactionLog> transactionLog)
+                                       std::unique_ptr<ContactPtrList> modifiedContactList,
+                                       std::unique_ptr<ContactRecordTransactionLog> transactionLog)
       {
       }
 
@@ -117,7 +118,7 @@ class ServerRegistrationHandler
       */
       virtual void asyncRemoveExpired(ServerRegistrationHandle, 
                                       const resip::Uri& aor,
-                                      std::auto_ptr<resip::ContactPtrList> contacts)
+                                      std::unique_ptr<resip::ContactPtrList> contacts)
       {
       }
 };

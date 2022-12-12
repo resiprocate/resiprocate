@@ -32,7 +32,6 @@ man3_MANS = \
 
 EXTRA_DIST = $(man3_MANS)
 EXTRA_DIST += *.vcxproj
-EXTRA_DIST += *.vcxproj.filters
 
 EXTRA_PROGRAMS = adig ahost aresfuzz aresfuzzname
 

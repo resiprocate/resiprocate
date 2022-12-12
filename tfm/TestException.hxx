@@ -13,8 +13,8 @@ class TestException : public resip::BaseException
    public:
       TestException(const resip::Data& msg,
                     const resip::Data& file,
-                    const int line);
-      virtual const char* name() const;
+                    int line);
+      const char* name() const noexcept override;
 };
 
 #endif

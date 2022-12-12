@@ -48,10 +48,7 @@ main(int argc, char* argv[])
    while(true)
    {
       {
-         FdSet fdset; 
-         serverStack.buildFdSet(fdset);
-         fdset.selectMilliSeconds(50);
-         serverStack.process(fdset);
+         serverStack.process(50);
       }
       
       SipMessage* msg = serverStack.receive();
@@ -65,10 +62,7 @@ main(int argc, char* argv[])
       delete msg;
       
       {
-         FdSet fdset; 
-         clientStack.buildFdSet(fdset);
-         fdset.selectMilliSeconds(50);
-         clientStack.process(fdset);
+         clientStack.process(50);
       }
 
       msg = clientStack.receive();

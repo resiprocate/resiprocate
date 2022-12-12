@@ -22,12 +22,14 @@
 #include "repro/RequestContext.hxx"
 #include "resip/stack/Worker.hxx"
 
+#include "rutil/PyThreadSupport.hxx"
+
 #include "PyRouteWorker.hxx"
-#include "PyThreadSupport.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace repro;
+using namespace resip;
 
 PyRouteWork::PyRouteWork(Processor& proc,
                   const resip::Data& tid,
@@ -62,26 +64,20 @@ PyRouteWork::encodeBrief(EncodeStream& ostr) const
    return encode(ostr);
 }
 
-PyRouteWorker::PyRouteWorker(PyInterpreterState* interpreterState, Py::Callable& action)
-    : mInterpreterState(interpreterState),
-      mPyUser(0),
+PyRouteWorker::PyRouteWorker(PyExtensionBase& py, Py::Callable& action)
+    : mPy(py),
       mAction(action)
 {
 }
 
 PyRouteWorker::~PyRouteWorker()
 {
-   if(mPyUser)
-   {
-      delete mPyUser;
-   }
 }
 
 PyRouteWorker*
 PyRouteWorker::clone() const
 {
-   PyRouteWorker* worker = new PyRouteWorker(*this);
-   worker->mPyUser = 0;
+   PyRouteWorker* worker = new PyRouteWorker(mPy, mAction);
    return worker;
 }
 
@@ -89,7 +85,7 @@ void
 PyRouteWorker::onStart()
 {
    DebugLog(<< "creating new PyThreadState");
-   mPyUser = new PyExternalUser(mInterpreterState);
+   mPyUser = mPy.createPyExternalUser();
 }
 
 bool
@@ -201,7 +197,7 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    // will be selected by the stack
    if(response.isNumeric())
    {
-      Py::Int responseCode(response);
+      Py::Long responseCode(response);
       work->mResponseCode = responseCode;
       work->mResponseMessage = "";
       return true;
@@ -232,7 +228,7 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
          work->mResponseCode = 500;
          return true;
       }
-      Py::Int responseCode(err[0]);
+      Py::Long responseCode(err[0]);
       Py::String responseMessage;
       if(err.size() > 1)
       {
@@ -302,7 +298,8 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
 
 /* ====================================================================
  *
- * Copyright 2013 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2013-2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

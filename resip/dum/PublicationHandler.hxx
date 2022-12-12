@@ -18,7 +18,7 @@ class ClientPublicationHandler
    public:
       virtual ~ClientPublicationHandler() {}
 
-      /// Called when the publication succeeds or each time it is sucessfully
+      /// Called when the publication succeeds or each time it is successfully
       /// refreshed.
       virtual void onSuccess(ClientPublicationHandle, const SipMessage& status)=0;
 
@@ -48,23 +48,23 @@ class ServerPublicationHandler
                              const SipMessage& pub,
                              const Contents* contents,
                              const SecurityAttributes* attrs,
-                             UInt32 expires)=0;
+                             uint32_t expires)=0;
       virtual void onExpired(ServerPublicationHandle, const Data& etag)=0;
       virtual void onRefresh(ServerPublicationHandle, const Data& etag,
                              const SipMessage& pub,
                              const Contents* contents,
                              const SecurityAttributes* attrs,
-                             UInt32 expires)=0;
+                             uint32_t expires)=0;
       virtual void onUpdate(ServerPublicationHandle,
                             const Data& etag,
                             const SipMessage& pub,
                             const Contents* contents,
                             const SecurityAttributes* attrs,
-                            UInt32 expires)=0;
+                            uint32_t expires)=0;
       virtual void onRemoved(ServerPublicationHandle,
                              const Data& etag,
                              const SipMessage& pub,
-                             UInt32 expires)=0;
+                             uint32_t expires)=0;
 
       const Mimes& getSupportedMimeTypes() const;
 };

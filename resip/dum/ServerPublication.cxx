@@ -8,13 +8,15 @@
 #include "resip/stack/SecurityAttributes.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 ServerPublication::ServerPublication(DialogUsageManager& dum,  
                                      const Data& etag,
                                      const SipMessage& msg)
    : BaseUsage(dum),
-     mLastResponse(new SipMessage), 
+     mLastResponse(std::make_shared<SipMessage>()), 
      mEtag(etag),
      mEventType(msg.header(h_Event).value()),
      mDocumentKey(msg.header(h_RequestLine).uri().getAor()),
@@ -71,7 +73,7 @@ ServerPublication::updateMatchingSubscriptions()
 }
 
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerPublication::accept(int statusCode)
 {
    Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
@@ -80,7 +82,7 @@ ServerPublication::accept(int statusCode)
    return mLastResponse;   
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerPublication::reject(int statusCode)
 {
    Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
@@ -184,7 +186,7 @@ ServerPublication::dispatch(const DumTimeout& msg)
 }
 
 void 
-ServerPublication::send(SharedPtr<SipMessage> response)
+ServerPublication::send(std::shared_ptr<SipMessage> response)
 {
    resip_assert(response->isResponse());
    response->header(h_SIPETag).value() = mEtag;
@@ -195,18 +197,18 @@ ServerPublication::send(SharedPtr<SipMessage> response)
    }
    else
    {
-      UInt32 expires = response->header(h_Expires).value();  // ServerPublicationHandler may have changed expiration time
+      uint32_t expires = response->header(h_Expires).value();  // ServerPublicationHandler may have changed expiration time
       mDum.addTimer(DumTimeout::Publication, expires, getBaseHandle(), ++mTimerSeq);
 
       if (mDum.mPublicationPersistenceManager)
       {
          // Add document to persistence manager
-         UInt64 now = Timer::getTimeSecs();
+         uint64_t now = Timer::getTimeSecs();
          mDum.mPublicationPersistenceManager->addUpdateDocument(mEventType, mDocumentKey, mEtag, now + expires, mLastBody.mContents.get(), mLastBody.mAttributes.get());
       }
 
       // If we don't have a contents then it was a refresh (note:  Unpublishes don't go through here)
-      if (mLastBody.mContents.get())
+      if (mLastBody.mContents)
       {
          // Notify all matching subscriptions of new document
          // Note: we do this after all uses of mLastBody, since calling this will release the contents stored in mLastBody

@@ -7,6 +7,8 @@
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/Compression.hxx"
 
+#include <array>
+
 namespace osc { class Stack; }
 
 namespace resip
@@ -14,7 +16,7 @@ namespace resip
 class UdpTransport;
 
 /** Interface functor for external unrecognized datagram handling.
-  * User can catch datagram messages recevied that are not recognized by
+  * User can catch datagram messages received that are not recognized by
   * the stack.
   */
 class ExternalUnknownDatagramHandler {
@@ -25,7 +27,7 @@ public:
     * @param transport contains a pointer to the specific UdpTransport object that
     *                  received the unknown packet.
     * @param unknownDatagram contains the actual contents of unknown data received. */
-   virtual void operator()(UdpTransport* transport, const Tuple& source, std::auto_ptr<Data> unknownDatagram) = 0;
+   virtual void operator()(UdpTransport* transport, const Tuple& source, std::unique_ptr<Data> unknownDatagram) = 0;
 };
 
 /**
@@ -61,7 +63,7 @@ public:
                 IpVersion version,
                 StunSetting stun,
                 const Data& interfaceObj,
-                AfterSocketCreationFuncPtr socketFunc = 0,
+                AfterSocketCreationFuncPtr socketFunc = nullptr,
                 Compression &compression = Compression::Disabled,
                 unsigned transportFlags = 0);
    virtual  ~UdpTransport();
@@ -80,11 +82,19 @@ public:
    // virtual Socket getPollSocket() const;
    virtual void processPollEvent(FdPollEventMask mask);
 
-   static const int MaxBufferSize = 8192;
+   static constexpr int MaxMessageSize = 65535;
 
    // STUN client functionality
+   enum StunResult
+   {
+       StunResultUnknown,
+       StunResultSuccess,
+       StunResultNoResponse,
+       StunResultResponseParseFailed
+   };
+
    bool stunSendTest(const Tuple& dest);
-   bool stunResult(Tuple& mappedAddress);
+   StunResult stunResult(Tuple& mappedAddress);
 
    /// Installs a handler for the unknown datagrams arriving on the udp transport.
    void setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler);
@@ -92,8 +102,9 @@ public:
 protected:
 
    void processRxAll();
-   int processRxRecv(char*& buffer, Tuple& sender);
-   bool processRxParse(char *buffer, int len, Tuple& sender);
+   int processRxRecv(Tuple& sender);
+   void processRxParse(int len, const Tuple& sender);
+   void processRxParseSip(char* buffer, int len, const Tuple& sender);
    void processTxAll();
    void processTxOne(SendData *data);
    void updateEvents();
@@ -109,15 +120,20 @@ protected:
    unsigned mRxMsgCnt;
    unsigned mRxKeepaliveCnt;
    unsigned mRxTransactionCnt;
+   std::array<char, MaxMessageSize> mRxBuffer{};
 private:
-   char* mRxBuffer;
+#ifdef USE_SIGCOMP
+   std::array<char, MaxMessageSize> mRxUncompressedBuffer{};
+#endif
    MsgHeaderScanner mMsgHeaderScanner;
    mutable resip::Mutex  myMutex;
    Tuple mStunMappedAddress;
-   bool mStunSuccess;
+   
+   StunResult mStunResult;
+   StunSetting mStunSetting;
+
    ExternalUnknownDatagramHandler* mExternalUnknownDatagramHandler;
    bool mInWritable;
-   bool mInActiveWrite;
 };
 
 }

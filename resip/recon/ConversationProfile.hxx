@@ -26,6 +26,12 @@ public:
 
    ConversationProfile(); 
 
+   enum MediaEndpointMode
+   {
+      Base,
+      WebRTC
+   };
+
    enum NatTraversalMode
    {
       NoNatTraversal,
@@ -39,7 +45,9 @@ public:
    {
       NoSecureMedia, // Will accept secure media offers, but will not offer secure media in calls placed
       Srtp,       // SRTP with keying outside of media stream - ie. SDES key negotiation via SDP
-      SrtpDtls    // SRTP with DTLS key negotiation
+      SrtpReq,
+      SrtpDtls,    // SRTP with DTLS key negotiation
+      SrtpDtlsReq
    };
 
    enum SecureMediaCryptoSuite
@@ -55,7 +63,7 @@ public:
                         class, then the setting will "fall through" to 
                         the base profile
    */  
-   ConversationProfile(resip::SharedPtr<resip::Profile> baseProfile);  
+   ConversationProfile(std::shared_ptr<resip::Profile> baseProfile);  
 
    /**
      Get the conversation profile handle.  Returns 0 if called before adding
@@ -130,6 +138,23 @@ public:
    */
    virtual bool& challengeOODReferRequests() { return mChallengeOODReferRequests; }
    virtual const bool challengeOODReferRequests() const { return mChallengeOODReferRequests; }
+
+   /**
+     Get/set whether to use delayed media mode (INVITE without SDP offer)
+     when making an outgoing call.
+
+     @return bool True if delayed media mode is used.
+    */
+   virtual bool& delayedMediaOutboundMode() { return mDelayedMediaOutboundMode; }
+   virtual const bool delayedMediaOutboundMode() const { return mDelayedMediaOutboundMode; }
+
+   /**
+     Get/Set the type of Media endpoint.
+     Base      - traditional RTP endpoint, relies on other settings in this profile
+     WebRTC    - WebRTC endpoint, ignores many of the profile settings
+   */
+   virtual MediaEndpointMode& mediaEndpointMode() { return mMediaEndpointMode; }
+   virtual const MediaEndpointMode mediaEndpointMode() const { return mMediaEndpointMode; }
 
    /** 
      Get/Set the secure media mode that will be used for sending/receiving media packets.
@@ -244,6 +269,8 @@ private:
    bool mAllowPriorityAutoAnswer;
    bool mChallengeAutoAnswerRequests;
    bool mChallengeOODReferRequests;
+   bool mDelayedMediaOutboundMode;
+   MediaEndpointMode mMediaEndpointMode;
    SecureMediaMode mSecureMediaMode;
    bool mSecureMediaRequired;
    SecureMediaCryptoSuite mDefaultSecureMediaCryptoSuite;
@@ -262,6 +289,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

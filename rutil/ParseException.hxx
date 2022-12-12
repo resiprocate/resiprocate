@@ -13,16 +13,15 @@ namespace resip
 
    @see ParseBuffer
 */
-class ParseException : public BaseException
+class ParseException final : public BaseException
 {
    public:
       ParseException(const Data& msg, 
                      const Data& context, 
                      const Data& file, 
-                     const int line);
-      ~ParseException() throw();
-      const char* name() const;
-      const Data& getContext() const;
+                     int line);
+      const char* name() const noexcept override;
+      const Data& getContext() const noexcept;
 
    private:
       Data mContext;

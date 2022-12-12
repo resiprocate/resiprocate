@@ -64,7 +64,7 @@ DialogEventExpect::getTimeout() const
 }
 
 void
-DialogEventExpect::onEvent(TestEndPoint& endPoint, boost::shared_ptr<Event> event)
+DialogEventExpect::onEvent(TestEndPoint& endPoint, std::shared_ptr<Event> event)
 {
    mExpectAction->exec(event);
 }
@@ -97,7 +97,7 @@ DialogEventExpect::output(ostream& s) const
 
 
 bool
-DialogEventExpect::isMatch(boost::shared_ptr<Event> event) const
+DialogEventExpect::isMatch(std::shared_ptr<Event> event) const
 {
    
    bool matches = match(event);
@@ -115,7 +115,7 @@ DialogEventExpect::isMatch(boost::shared_ptr<Event> event) const
 //!dcm! TODO quiter, but information is lost; save what is now StackLog and use
 //!in explainMismatch
 bool
-DialogEventExpect::match(boost::shared_ptr<Event> event) const
+DialogEventExpect::match(std::shared_ptr<Event> event) const
 {
    StackLog (<< "matching: " << *event);
    DialogEventHandlerEvent* dumEvent = dynamic_cast<DialogEventHandlerEvent*>(event.get());
@@ -152,11 +152,11 @@ DialogEventExpect::match(boost::shared_ptr<Event> event) const
 }
 
 resip::Data
-DialogEventExpect::explainMismatch(boost::shared_ptr<Event> event) const
+DialogEventExpect::explainMismatch(std::shared_ptr<Event> event) const
 {
    DialogEventHandlerEvent* dumEvent = dynamic_cast<DialogEventHandlerEvent*>(event.get());
    resip_assert(dumEvent);
-   //boost::shared_ptr<SipMessage> msg = dumEvent->getMessage();
+   //std::shared_ptr<SipMessage> msg = dumEvent->getMessage();
 
    return mMismatchComplaints;
 }
@@ -176,7 +176,7 @@ DialogEventExpect::Exception::getName() const
 }
 
 const char* 
-DialogEventExpect::Exception::name() const 
+DialogEventExpect::Exception::name() const noexcept
 {
    return "DialogEventExpect::Exception";
 }

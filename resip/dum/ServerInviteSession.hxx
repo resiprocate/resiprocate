@@ -13,6 +13,13 @@ class ServerInviteSession: public InviteSession
 {
    public:
       typedef Handle<ServerInviteSession> ServerInviteSessionHandle;
+
+      ServerInviteSession(const ServerInviteSession&) = delete;
+      ServerInviteSession(ServerInviteSession&&) = delete;
+
+      ServerInviteSession& operator=(const ServerInviteSession&) = delete;
+      ServerInviteSession& operator=(ServerInviteSession&&) = delete;
+
       ServerInviteSessionHandle getHandle();
 
       /** send a 3xx */
@@ -39,13 +46,14 @@ class ServerInviteSession: public InviteSession
           reinvite with no body to be sent.  */
       virtual void requestOffer();
 
-      /** Similar to provideOffer - called to set the answer to be signalled to
+      /** Similar to provideOffer - called to set the answer to be signaled to
           the peer. May result in message being sent synchronously depending on
           the state. */
       virtual void provideAnswer(const Contents& answer);
 
       /** Makes the specific dialog end. Will send a 480. */
       virtual void end(const Data& userReason);
+      virtual void end(const ParserContainer<Token>& endReasons);
       virtual void end(EndReason reason);
       virtual void end();
 
@@ -105,21 +113,17 @@ class ServerInviteSession: public InviteSession
 
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
-      // disabled
-      ServerInviteSession(const ServerInviteSession&);
-      ServerInviteSession& operator=(const ServerInviteSession&);
-
       // stores the original request
       const SipMessage mFirstRequest;
-      SharedPtr<SipMessage> m1xx; // for 1xx retransmissions
+      std::shared_ptr<SipMessage> m1xx; // for 1xx retransmissions
       unsigned long mCurrentRetransmit1xxSeq;
       
       // UAS Prack members
       unsigned int mLocalRSeq;
-      SharedPtr<SipMessage> mUnacknowledgedReliableProvisional; // We won't send a new reliable provisional until the previous one is acknowledge - used for re-transmissions
+      std::shared_ptr<SipMessage> mUnacknowledgedReliableProvisional; // We won't send a new reliable provisional until the previous one is acknowledge - used for re-transmissions
       std::deque< std::pair<int, bool> > mQueuedResponses;
       bool mAnswerSentReliably;
-      SharedPtr<SipMessage> mPrackWithOffer; // for 1xx retransmissions
+      std::shared_ptr<SipMessage> mPrackWithOffer; // for 1xx retransmissions
 };
 
 }

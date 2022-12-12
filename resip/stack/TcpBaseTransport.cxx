@@ -357,7 +357,7 @@ TcpBaseTransport::processAllWriteRequests()
             return;
          }
          resip_assert(conn->getSocket() != INVALID_SOCKET);
-         data->destination.mFlowKey = conn->getSocket();
+         data->destination.mFlowKey = (FlowKey)conn->getSocket();  // Note: https://stackoverflow.com/questions/1953639/is-it-safe-to-cast-socket-to-int-under-win64
       }
 
       if (conn == 0)

@@ -4,7 +4,8 @@
 #include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Lock.hxx>
-#include <rutil/SharedPtr.hxx>
+
+#include <memory>
 
 namespace registrationagent {
 
@@ -13,25 +14,25 @@ class KeyedFile;
 class KeyedFileLine
 {
 public:
-   KeyedFileLine(resip::SharedPtr<KeyedFile> keyedFile, const resip::Data& key);
+   KeyedFileLine(std::shared_ptr<KeyedFile> keyedFile, const resip::Data& key);
    virtual ~KeyedFileLine() {};
    const resip::Data& getKey();
    virtual const int paramCount() = 0;
    virtual const resip::Data& getParam(const int index) = 0;
-   virtual void onLineRemoved(resip::SharedPtr<KeyedFileLine> sp);
+   virtual void onLineRemoved(std::shared_ptr<KeyedFileLine> sp);
    virtual void onFileReload(const std::vector<resip::Data>& columns) = 0;
 protected:
    void readyForDeletion() { mSharedPtr.reset(); };
 private:
-   resip::SharedPtr<KeyedFile> mKeyedFile;
+   std::shared_ptr<KeyedFile> mKeyedFile;
    const resip::Data mKey;
-   resip::SharedPtr<KeyedFileLine> mSharedPtr;
+   std::shared_ptr<KeyedFileLine> mSharedPtr;
 };
 
 class BasicKeyedFileLine : public KeyedFileLine
 {
 public:
-   BasicKeyedFileLine(resip::SharedPtr<KeyedFile> keyedFile, const resip::Data& key, const std::vector<resip::Data>& columns);
+   BasicKeyedFileLine(std::shared_ptr<KeyedFile> keyedFile, const resip::Data& key, const std::vector<resip::Data>& columns);
    virtual ~BasicKeyedFileLine() {};
    virtual const int paramCount() { return mColumns.size(); };
    virtual const resip::Data& getParam(const int index);
@@ -45,31 +46,33 @@ private:
 class KeyedFileRowHandler
 {
 public:
-   virtual resip::SharedPtr<KeyedFileLine> onNewLine(resip::SharedPtr<KeyedFile> keyedFile, const resip::Data& key, const std::vector<resip::Data>& columns) = 0;
+   virtual std::shared_ptr<KeyedFileLine> onNewLine(std::shared_ptr<KeyedFile> keyedFile, const resip::Data& key, const std::vector<resip::Data>& columns) = 0;
 };
 
 class KeyedFile
 {
 
 public:
-   KeyedFile(const resip::Data& filename, resip::SharedPtr<KeyedFileRowHandler> rowHandler, const int minimumColumns = 1, const int maximumColumns = -1);
+   KeyedFile(const resip::Data& filename, std::shared_ptr<KeyedFileRowHandler> rowHandler, const int minimumColumns = 1, const int maximumColumns = -1);
    virtual ~KeyedFile();
-   void setSharedPtr(resip::SharedPtr<KeyedFile> sp) { mSharedPtr = sp; };
+   void setSharedPtr(std::shared_ptr<KeyedFile> sp) { mSharedPtr = sp; };
 
    virtual void doReload();
 
-   resip::SharedPtr<KeyedFileLine> getByKey(const resip::Data& key);
+   std::shared_ptr<KeyedFileLine> getByKey(const resip::Data& key);
+
+   std::size_t getLineCount();
 
 private:
    void readFile();
 
    resip::Data mFilename;
-   resip::SharedPtr<KeyedFileRowHandler> mRowHandler;
+   std::shared_ptr<KeyedFileRowHandler> mRowHandler;
    int mMinimumColumns, mMaximumColumns;
-   resip::SharedPtr<KeyedFile> mSharedPtr;
+   std::shared_ptr<KeyedFile> mSharedPtr;
 
    resip::Mutex mLinesMutex;
-   std::map<resip::Data, resip::SharedPtr<KeyedFileLine> > mLines;
+   std::map<resip::Data, std::shared_ptr<KeyedFileLine> > mLines;
 };
 
 } // namespace

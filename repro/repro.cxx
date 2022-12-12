@@ -20,7 +20,7 @@ using namespace std;
 /*
    Extending Repro by adding custom processors to the chain is as easy as overriding one of the 
    ReproRunner class virtual methods:
-   virtual void addProcessor(repro::ProcessorChain& chain, std::auto_ptr<repro::Processor> processor);
+   virtual void addProcessor(repro::ProcessorChain& chain, std::unique_ptr<repro::Processor> processor);
    virtual void makeRequestProcessorChain(repro::ProcessorChain& chain);
    virtual void makeResponseProcessorChain(repro::ProcessorChain& chain);
    virtual void makeTargetProcessorChain(repro::ProcessorChain& chain);
@@ -61,12 +61,12 @@ using namespace std;
       virtual ~MyReproRunner() {}
    
    protected:
-      virtual void addProcessor(repro::ProcessorChain& chain, std::auto_ptr<repro::Processor> processor)
+      virtual void addProcessor(repro::ProcessorChain& chain, std::unique_ptr<repro::Processor> processor)
       {
          if(processor->getName() == "LocationServer")
          {
             // Add MyCustomProcessor before LocationServer
-            addProcessor(chain, std::auto_ptr<Processor>(new MyCustomProcessor(*mProxyConfig)));
+            addProcessor(chain, std::unique_ptr<Processor>(new MyCustomProcessor(*mProxyConfig)));
          }
          ReproRunner::addProcessor(chain, processor);  // call base class implementation
       }

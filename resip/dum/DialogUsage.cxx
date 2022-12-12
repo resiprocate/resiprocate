@@ -11,13 +11,13 @@
 
 using namespace resip;
 
-DialogUsage::Exception::Exception(const Data& msg,const Data& file,int line)
+DialogUsage::Exception::Exception(const Data& msg, const Data& file, const int line)
    : BaseException(msg, file, line)
 {
 }
 
 const char*
-DialogUsage::Exception::name() const
+DialogUsage::Exception::name() const noexcept
 {
    return "DialogUsage::Exception";
 }
@@ -34,9 +34,9 @@ DialogUsage::~DialogUsage()
 }
 
 AppDialogSetHandle 
-DialogUsage::getAppDialogSet()
+DialogUsage::getAppDialogSet() const
 {
-   if (mDialog.mDialogSet.mAppDialogSet == 0)
+   if (mDialog.mDialogSet.mAppDialogSet == nullptr)
    {
       ErrLog(<< "mDialog.mDialogSet.mAppDialogSet is NULL!!!");
       return AppDialogSetHandle();
@@ -45,31 +45,37 @@ DialogUsage::getAppDialogSet()
 }
 
 AppDialogHandle 
-DialogUsage::getAppDialog()
+DialogUsage::getAppDialog() const
 {
    return mDialog.mAppDialog->getHandle();
 }
 
 const NameAddr&
-DialogUsage::myAddr() const
+DialogUsage::myAddr() const noexcept
 {
    return mDialog.mLocalNameAddr;
 }
 
 const NameAddr&
-DialogUsage::peerAddr() const
+DialogUsage::peerAddr() const noexcept
 {
    return mDialog.mRemoteNameAddr;
 }
 
 const NameAddr&
-DialogUsage::remoteTarget() const
+DialogUsage::remoteTarget() const noexcept
 {
    return mDialog.mRemoteTarget;
 }
 
+const NameAddr&
+DialogUsage::pendingRemoteTarget() const
+{
+    return mDialog.mPendingRemoteTarget;
+}
+
 const NameAddrs&
-DialogUsage::getRouteSet() const
+DialogUsage::getRouteSet() const noexcept
 {
     return mDialog.mRouteSet;
 }
@@ -86,24 +92,24 @@ DialogUsage::getCallId() const
    return mDialog.getId().getCallId();
 }
 
-SharedPtr<UserProfile> 
-DialogUsage::getUserProfile() 
+std::shared_ptr<UserProfile>
+DialogUsage::getUserProfile() const
 {
    return mDialog.mDialogSet.getUserProfile();
 }
 
 void 
-DialogUsage::send(SharedPtr<SipMessage> msg)
+DialogUsage::send(std::shared_ptr<SipMessage> msg)
 {
    // give app an chance to adorn the message.
    onReadyToSend(*msg);
-   mDialog.send(msg);
+   mDialog.send(std::move(msg));
 }
 
 void
-DialogUsage::sendCommand(SharedPtr<SipMessage> message)
+DialogUsage::sendCommand(std::shared_ptr<SipMessage> message)
 {   
-   mDum.post(new DialogUsageSendCommand(*this, message));
+   mDum.post(new DialogUsageSendCommand(*this, std::move(message)));
 }
 
 

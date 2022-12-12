@@ -125,7 +125,8 @@ CREATE TABLE IF NOT EXISTS filter (
 --        to regular columns as it can't be used in read-only mode,
 --        the code needs to be changed to perform read and write
 --        queries directly on the new table
---
+--        Depends on:
+--        https://www.resiprocate.org/bugzilla/show_bug.cgi?id=154
 
 
 CREATE TABLE IF NOT EXISTS siloavp (
@@ -313,7 +314,7 @@ CREATE VIEW filtersavp AS
 --
 -- see:
 --    repro/SiloStore.cxx buildKey     -> attr
---        (UInt64)originalSendTime ":" + tid
+--        (uint64_t)originalSendTime ":" + tid
 --    repro/AbstractDb.cxx getSecondaryKey               attr2
 --        destUri
 --    repro/AbstractDb.cxx decodeSiloRecord -> value

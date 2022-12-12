@@ -136,7 +136,7 @@ class XMLCursor
       void parseNextRootChild();
 
 
-      std::auto_ptr<Node> mRoot;
+      std::unique_ptr<Node> mRoot;
       Node* mCursor;
 
       //bool isEmpty;

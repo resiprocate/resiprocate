@@ -23,7 +23,7 @@ typedef std::pair<resip::Data, resip::Data> RealmUserPair;
 class ReTurnConfig : public resip::ConfigParse
 {
 public:
-   class Exception : public resip::BaseException
+   class Exception final : public resip::BaseException
    {
       public:
          Exception(const resip::Data& msg,
@@ -31,7 +31,7 @@ public:
                    const int line)
             : resip::BaseException(msg, file, line) {}            
       protected:
-         virtual const char* name() const { return "ReTurnConfig::Exception"; }
+         const char* name() const noexcept override { return "ReTurnConfig::Exception"; }
    };
    
    ReTurnConfig();
@@ -78,11 +78,6 @@ public:
    resip::Data mUsersDatabaseFilename;
    bool mUserDatabaseHashedPasswords;
 
-   resip::Data mLoggingType;
-   resip::Data mSyslogFacility;
-   resip::Data mLoggingLevel;
-   resip::Data mLoggingFilename;
-   unsigned int mLoggingFileMaxLineCount;
    bool mDaemonize;
    resip::Data mPidFile;
    resip::Data mRunAsUser;
@@ -90,7 +85,7 @@ public:
 
    bool isUserNameValid(const resip::Data& username,  const resip::Data& realm) const;
    resip::Data getHa1ForUsername(const resip::Data& username, const resip::Data& realm) const;
-   std::auto_ptr<UserAuthData> getUser(const resip::Data& userName, const resip::Data& realm) const;
+   std::unique_ptr<UserAuthData> getUser(const resip::Data& userName, const resip::Data& realm) const;
    void addUser(const resip::Data& username, const resip::Data& password, const resip::Data& realm);
    void authParse(const resip::Data& accountDatabaseFilename);
 
@@ -113,7 +108,7 @@ class ReTurnUserFileScanner
       static bool mHup;
       int mLoopInterval;
       time_t mNextFileCheck;
-      asio::deadline_timer mTimer;
+      asio::steady_timer mTimer;
 
       bool hasUserFileChanged();
       void timeout(const asio::error_code& e);

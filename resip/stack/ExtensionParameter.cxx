@@ -31,7 +31,7 @@ ExtensionParameter::Exception::Exception(const Data& msg, const Data& file, cons
 {}
 
 const char* 
-ExtensionParameter::Exception::name() const
+ExtensionParameter::Exception::name() const noexcept
 {
  return "ExtensionParameter::Exception"; 
 }

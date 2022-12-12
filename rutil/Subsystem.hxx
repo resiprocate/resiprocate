@@ -38,8 +38,11 @@ class Subsystem
       static Subsystem CONTENTS;
       static Subsystem DNS;
       static Subsystem DUM;
+      static Subsystem EEP;
+      static Subsystem MEDIA;
       static Subsystem NONE; // default subsystem
-      static Subsystem PRESENCE; 
+      static Subsystem PRESENCE;
+      static Subsystem PYTHON;
       static Subsystem SDP;
       static Subsystem SIP;    // SIP Stack / Parser
       static Subsystem TEST;   
@@ -47,6 +50,7 @@ class Subsystem
       static Subsystem TRANSPORT;
       static Subsystem STATS;
       static Subsystem REPRO;
+      static Subsystem QPIDPROTON;
       
       const Data& getSubsystem() const;
       Log::Level getLevel() const { return mLevel; }
@@ -61,6 +65,8 @@ class Subsystem
 
       friend EncodeStream& operator<<(EncodeStream& strm, const Subsystem& ss);
 };
+
+EncodeStream& operator<<(EncodeStream& strm, const Subsystem& ss);
 
 
 // in order to have subsystems in your application, subclass from this class

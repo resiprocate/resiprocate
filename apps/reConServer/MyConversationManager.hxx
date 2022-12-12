@@ -1,54 +1,79 @@
 #ifndef MYCONVERSATIONMANAGER_HXX
 #define MYCONVERSATIONMANAGER_HXX
 
+#ifdef USE_SIPXTAPI
 #include <os/OsIntTypes.h>
+#endif
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
 #endif
 
 #include <rutil/Data.hxx>
-#include <resip/recon/ConversationManager.hxx>
+#ifdef USE_SIPXTAPI
+#include <resip/recon/SipXMediaStackAdapter.hxx>
+#endif
+
+#include "reConServerConfig.hxx"
 
 namespace reconserver
 {
+
+#if defined(USE_GSTREAMER)
+#define PREFER_GSTREAMER
+#elif defined(USE_LIBWEBRTC)
+#define PREFER_LIBWEBRTC
+#elif defined(USE_KURENTO)
+#define PREFER_KURENTO
+// FIXME: hard-coded to use Kurento when selected at compile time
+#else
+#if defined(USE_SIPXTAPI)
+#define PREFER_SIPXTAPI
+#else
+#error No media stack enabled
+#endif
+#endif
 
 class MyConversationManager : public recon::ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled, recon::ConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
+   MyConversationManager(const ReConServerConfig& config, bool localAudioEnabled, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
    virtual ~MyConversationManager() {};
 
    virtual void startup();
    
-   virtual recon::ConversationHandle createConversation();
-   virtual recon::ParticipantHandle createRemoteParticipant(recon::ConversationHandle convHandle, resip::NameAddr& destination, recon::ConversationManager::ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
-   virtual recon::ParticipantHandle createMediaResourceParticipant(recon::ConversationHandle convHandle, const resip::Uri& mediaUrl);
-   virtual recon::ParticipantHandle createLocalParticipant();
-   virtual void onConversationDestroyed(recon::ConversationHandle convHandle);
-   virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle);
-   virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up);
-   virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile);
-   virtual void onRequestOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, recon::ConversationProfile& conversationProfile);
-   virtual void onParticipantTerminated(recon::ParticipantHandle partHandle, unsigned int statusCode);
-   virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   virtual void onConversationDestroyed(recon::ConversationHandle convHandle) override;
+   virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle) override;
+   virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up) override;
+   virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile) override;
+   virtual void onRequestOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, recon::ConversationProfile& conversationProfile) override;
+   virtual void onParticipantTerminated(recon::ParticipantHandle partHandle, unsigned int statusCode) override;
+   virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg) override;
    virtual void onRelatedConversation(recon::ConversationHandle relatedConvHandle, recon::ParticipantHandle relatedPartHandle,
-                                      recon::ConversationHandle origConvHandle, recon::ParticipantHandle origPartHandle);
-   virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
-   virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
-   virtual void onParticipantRedirectSuccess(recon::ParticipantHandle partHandle);
-   virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode);
-   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held);
+                                      recon::ConversationHandle origConvHandle, recon::ParticipantHandle origPartHandle) override;
+   virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg) override;
+   virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg) override;
+   virtual void onParticipantConnectedConfirmed(recon::ParticipantHandle partHandle, const resip::SipMessage& msg) override;
+   virtual void onParticipantRedirectSuccess(recon::ParticipantHandle partHandle) override;
+   virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode) override;
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override;
    virtual void displayInfo();
 
+   typedef std::function<void(const resip::Data& event)> EventListener;
+   virtual void setEventListener(EventListener eventListener) { mEventListener = eventListener; };
+
+   recon::ConversationHandle getRoom(const resip::Data& roomName);
+   void inviteToRoom(const resip::Data& roomName, const resip::NameAddr& destination);
+
 protected:
-   std::list<recon::ConversationHandle> mConversationHandles;
-   std::list<recon::ParticipantHandle> mLocalParticipantHandles;
-   std::list<recon::ParticipantHandle> mRemoteParticipantHandles;
-   std::list<recon::ParticipantHandle> mMediaParticipantHandles;
-   bool mLocalAudioEnabled;
+   virtual const ReConServerConfig& getConfig() const { return mConfig; };
+   virtual void notifyEvent(const resip::Data& event) { if(mEventListener) {mEventListener(event);} };
+   ReConServerConfig mConfig;
+   typedef std::map<resip::Data, recon::ConversationHandle> RoomMap;
+   RoomMap mRooms;
    bool mAutoAnswerEnabled;
+   EventListener mEventListener;
 };
 
 }
@@ -57,6 +82,8 @@ protected:
 
 /* ====================================================================
 
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2013-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

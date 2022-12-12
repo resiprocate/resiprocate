@@ -44,6 +44,8 @@
 #include "resip/stack/ssl/WssTransport.hxx"
 #endif
 
+#include <utility>
+
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 )
 #endif
@@ -311,6 +313,21 @@ SipStack::shutdownAndJoinThreads()
    mInternalThreadsRunning=false;
 }
 
+void
+SipStack::onReload()
+{
+   reloadCertificates();
+}
+
+void
+SipStack::reloadCertificates()
+{
+   for(SecureTransportMap::iterator itS = mSecureTransports.begin(); itS != mSecureTransports.end(); itS++)
+   {
+      itS->second->onReload();
+   }
+}
+
 Transport*
 SipStack::addTransport( TransportType protocol,
                         int port,
@@ -324,8 +341,8 @@ SipStack::addTransport( TransportType protocol,
                         const Data& certificateFilename, const Data& privateKeyFilename,
                         SecurityTypes::TlsClientVerificationMode cvm,
                         bool useEmailAsSIP,
-                        SharedPtr<WsConnectionValidator> wsConnectionValidator,
-                        SharedPtr<WsCookieContextFactory> wsCookieContextFactory,
+                        std::shared_ptr<WsConnectionValidator> wsConnectionValidator,
+                        std::shared_ptr<WsCookieContextFactory> wsCookieContextFactory,
                         const Data& netNs)
 {
    resip_assert(!mShuttingDown);
@@ -468,12 +485,12 @@ SipStack::addTransport( TransportType protocol,
              << ": " << e);
       throw;
    }
-   addTransport(std::auto_ptr<Transport>(transport));
+   addTransport(std::unique_ptr<Transport>(transport));
    return transport;
 }
 
 void
-SipStack::addTransport(std::auto_ptr<Transport> transport)
+SipStack::addTransport(std::unique_ptr<Transport> transport)
 {
    // Ensure we will be able to add the transport in the transport selector by ensure we
    // don't have any transport collisions.  Note:  We store two set's here in order to 
@@ -552,7 +569,7 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    }
 
    // Set Sip Message Logging Handler if one was provided
-   if(mTransportSipMessageLoggingHandler.get())
+   if (mTransportSipMessageLoggingHandler)
    {
        transport->setSipMessageLoggingHandler(mTransportSipMessageLoggingHandler);
    }
@@ -560,12 +577,12 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    if(mProcessingHasStarted)
    {
        // Stack is running.  Need to queue add request for TransactionController Thread
-       mTransactionController->addTransport(transport);
+       mTransactionController->addTransport(std::move(transport));
    }
    else
    {
        // Stack isn't running yet - just add transport directly on transport selector from this thread
-       mTransactionController->transportSelector().addTransport(transport, false /* isStackRunning */); 
+       mTransactionController->transportSelector().addTransport(std::move(transport), false /* isStackRunning */); 
    }
 }
 
@@ -835,7 +852,7 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
 }
 
 void
-SipStack::send(std::auto_ptr<SipMessage> msg, TransactionUser* tu)
+SipStack::send(std::unique_ptr<SipMessage> msg, TransactionUser* tu)
 {
    DebugLog (<< "SEND: " << msg->brief());
 
@@ -849,7 +866,7 @@ SipStack::send(std::auto_ptr<SipMessage> msg, TransactionUser* tu)
 }
 
 void
-SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu)
+SipStack::sendTo(std::unique_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu)
 {
    if (tu) msg->setTransactionUser(tu);
    msg->setForceTarget(uri);
@@ -859,7 +876,7 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser*
 }
 
 void
-SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
+SipStack::sendTo(std::unique_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
 {
    resip_assert(!mShuttingDown);
 
@@ -910,7 +927,7 @@ SipStack::checkAsyncProcessHandler()
 }
 
 void
-SipStack::post(std::auto_ptr<ApplicationMessage> message)
+SipStack::post(std::unique_ptr<ApplicationMessage> message)
 {
    resip_assert(!mShuttingDown);
    mTuSelector.add(message.release(), TimeLimitFifo<Message>::InternalElement);
@@ -947,16 +964,16 @@ SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
 }
 
 void
-SipStack::post(std::auto_ptr<ApplicationMessage> message,
+SipStack::post(std::unique_ptr<ApplicationMessage> message,
                unsigned int secondsLater,
                TransactionUser* tu)
 {
-   postMS(message, secondsLater*1000, tu);
+   postMS(std::move(message), secondsLater*1000, tu);
 }
 
 
 void
-SipStack::postMS( std::auto_ptr<ApplicationMessage> message,
+SipStack::postMS( std::unique_ptr<ApplicationMessage> message,
                   unsigned int ms,
                   TransactionUser* tu)
 {

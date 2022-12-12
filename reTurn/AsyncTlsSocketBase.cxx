@@ -4,8 +4,7 @@
 #endif
 
 #ifdef USE_SSL
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <functional>
 
 #include <openssl/opensslv.h>
 #include <openssl/x509.h>
@@ -18,15 +17,6 @@
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-
-inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *x)
-{
-    return ASN1_STRING_data(const_cast< ASN1_STRING* >(x));
-}
-
-#endif // OPENSSL_VERSION_NUMBER < 0x10100000L
-
 using namespace std;
 
 namespace reTurn {
@@ -36,10 +26,6 @@ AsyncTlsSocketBase::AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::c
    mSocket(ioService, context),
    mResolver(ioService),
    mValidateServerCertificateHostname(validateServerCertificateHostname)
-{
-}
-
-AsyncTlsSocketBase::~AsyncTlsSocketBase() 
 {
 }
 
@@ -71,20 +57,16 @@ AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::tcp::resolver::query query(address, service.c_str());   
-#else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
-#endif
+   asio::ip::tcp::resolver::query query(mSocket.lowest_layer().local_endpoint().protocol(), address, service.c_str());
    mResolver.async_resolve(query,
-        boost::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
-                    asio::placeholders::error,
-                    asio::placeholders::iterator));
+        std::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
+                    std::placeholders::_1,
+                    std::placeholders::_2));
 }
 
 void 
 AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
-                                  asio::ip::tcp::resolver::iterator endpoint_iterator)
+                                     asio::ip::tcp::resolver::iterator endpoint_iterator)
 {
    if (!ec)
    {
@@ -92,8 +74,8 @@ AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
       // will be tried until we successfully establish a connection.
       //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
       mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            asio::placeholders::error, endpoint_iterator));
+                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
+                            std::placeholders::_1, endpoint_iterator));
    }
    else
    {
@@ -109,8 +91,8 @@ AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
    {
       // The connection was successful - now do handshake.
       mSocket.async_handshake(asio::ssl::stream_base::client, 
-                              boost::bind(&AsyncSocketBase::handleClientHandshake, shared_from_this(), 
-                                          asio::placeholders::error, endpoint_iterator));
+                              std::bind(&AsyncSocketBase::handleClientHandshake, shared_from_this(), 
+                                          std::placeholders::_1, endpoint_iterator));
    }
    else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
    {
@@ -118,8 +100,8 @@ AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
       asio::error_code ec;
       mSocket.lowest_layer().close(ec);
       mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            asio::placeholders::error, endpoint_iterator));
+                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
+                            std::placeholders::_1, endpoint_iterator));
    }
    else
    {
@@ -155,8 +137,8 @@ AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
       asio::error_code ec;
       mSocket.lowest_layer().close(ec);
       mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            asio::placeholders::error, endpoint_iterator));
+                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
+                            std::placeholders::_1, endpoint_iterator));
    }
    else
    {
@@ -264,7 +246,7 @@ void
 AsyncTlsSocketBase::doHandshake()
 {
    mSocket.async_handshake(asio::ssl::stream_base::server, 
-                           boost::bind(&AsyncSocketBase::handleServerHandshake, shared_from_this(), asio::placeholders::error));  
+                           std::bind(&AsyncSocketBase::handleServerHandshake, shared_from_this(), std::placeholders::_1));  
 }
 
 void 
@@ -284,7 +266,7 @@ AsyncTlsSocketBase::handleServerHandshake(const asio::error_code& e)
    }
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncTlsSocketBase::getSenderEndpointAddress() 
 { 
    return mConnectedAddress; 
@@ -301,14 +283,14 @@ AsyncTlsSocketBase::transportSend(const StunTuple& destination, std::vector<asio
 {
    // Note: destination is ignored for TLS
    asio::async_write(mSocket, buffers, 
-                     boost::bind(&AsyncTlsSocketBase::handleSend, shared_from_this(), asio::placeholders::error));
+                     std::bind(&AsyncTlsSocketBase::handleSend, shared_from_this(), std::placeholders::_1));
 }
 
 void 
 AsyncTlsSocketBase::transportReceive()
 {
    mSocket.async_read_some(asio::buffer((void*)mReceiveBuffer->data(), RECEIVE_BUFFER_SIZE),
-                           boost::bind(&AsyncTlsSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+                           std::bind(&AsyncTlsSocketBase::handleReceive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 
 }
 
@@ -316,7 +298,7 @@ void
 AsyncTlsSocketBase::transportFramedReceive()
 {
    asio::async_read(mSocket, asio::buffer((void*)mReceiveBuffer->data(), 4),
-                    boost::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), asio::placeholders::error));
+                    std::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), std::placeholders::_1));
 }
 
 void 
@@ -347,7 +329,7 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
       */
 
       // Note:  For both StunMessages and ChannelData messages the length in bytes 3 and 4
-      UInt16 dataLen;
+      uint16_t dataLen;
       memcpy(&dataLen, &(*mReceiveBuffer)[2], 2);
       dataLen = ntohs(dataLen);
 
@@ -356,10 +338,10 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
          dataLen += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
       }
 
-      if(dataLen+4 < RECEIVE_BUFFER_SIZE)
+      if (dataLen + 4U < RECEIVE_BUFFER_SIZE)
       {
          asio::async_read(mSocket, asio::buffer(&(*mReceiveBuffer)[4], dataLen),
-                          boost::bind(&AsyncTlsSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, dataLen+4));
+                          std::bind(&AsyncTlsSocketBase::handleReceive, shared_from_this(), std::placeholders::_1, dataLen+4));
       }
       else
       {

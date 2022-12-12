@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <cassert>
+#include <utility>
 
 //main is way down at the bottom.
 
@@ -100,8 +101,8 @@ class DummyTU : public resip::TransactionUser
          mStack=stack;
          mStack->registerTransactionUser(*this);
          DummyWorker* dw = new DummyWorker;
-         std::auto_ptr<repro::Worker> worker(dw);
-         mDispatcher = new repro::Dispatcher(worker,mStack,3,false);
+         std::unique_ptr<repro::Worker> worker(dw);
+         mDispatcher = new repro::Dispatcher(std::move(worker),mStack,3,false);
       }
 
       virtual ~DummyTU()
@@ -115,7 +116,8 @@ class DummyTU : public resip::TransactionUser
          DummyWorkMessage* lost = new DummyWorkMessage(this);
          
          //Dispatcher should not be accepting work yet
-         assert(!mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(lost)));
+         std::unique_ptr<resip::ApplicationMessage> appMessage(lost);
+         assert(!mDispatcher->post(appMessage));
                   
          mDispatcher->startAll();
          
@@ -124,10 +126,10 @@ class DummyTU : public resip::TransactionUser
          DummyWorkMessage* c = new DummyWorkMessage(this,"C");
          DummyWorkMessage* d = new DummyWorkMessage(this,"D");
          
-         std::auto_ptr<resip::ApplicationMessage> aa(a);
-         std::auto_ptr<resip::ApplicationMessage> ab(b);
-         std::auto_ptr<resip::ApplicationMessage> ac(c);
-         std::auto_ptr<resip::ApplicationMessage> ad(d);
+         std::unique_ptr<resip::ApplicationMessage> aa(a);
+         std::unique_ptr<resip::ApplicationMessage> ab(b);
+         std::unique_ptr<resip::ApplicationMessage> ac(c);
+         std::unique_ptr<resip::ApplicationMessage> ad(d);
          
          assert(mDispatcher->post(aa));
          assert(mDispatcher->post(ab));
@@ -169,7 +171,8 @@ class DummyTU : public resip::TransactionUser
          lost = new DummyWorkMessage(this,"");
          
          //We stopped the thread bank, it should not be accepting work.
-         assert(!mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(lost)));
+         std::unique_ptr<resip::ApplicationMessage> appMessage(lost);
+         assert(!mDispatcher->post(appMessage));
          
          mDispatcher->resume();
          
@@ -183,11 +186,16 @@ class DummyTU : public resip::TransactionUser
          wasteTime4->wait=true;
          
          assert(mDispatcher->fifoCountDepth()==0);
+
+         std::unique_ptr<resip::ApplicationMessage> appMessage1(wasteTime1);
+         std::unique_ptr<resip::ApplicationMessage> appMessage2(wasteTime2);
+         std::unique_ptr<resip::ApplicationMessage> appMessage3(wasteTime3);
+         std::unique_ptr<resip::ApplicationMessage> appMessage4(wasteTime4);
          
-         mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(wasteTime1));
-         mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(wasteTime2));
-         mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(wasteTime3));
-         mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(wasteTime4));
+         mDispatcher->post(appMessage1);
+         mDispatcher->post(appMessage2);
+         mDispatcher->post(appMessage3);
+         mDispatcher->post(appMessage4);
          mDispatcher->stop();
          
          usleep(1000);
@@ -219,16 +227,19 @@ class DummyTU : public resip::TransactionUser
          clog3->wait=true;
          
          //Three threads in the bank, each waiting for 1 sec
-         mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(clog1));
-         mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(clog2));
-         mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(clog3));
+         std::unique_ptr<resip::ApplicationMessage> appMessage1(clog1);
+         std::unique_ptr<resip::ApplicationMessage> appMessage2(clog2);
+         std::unique_ptr<resip::ApplicationMessage> appMessage3(clog3);
+         mDispatcher->post(appMessage1);
+         mDispatcher->post(appMessage2);
+         mDispatcher->post(appMessage3);
 
          usleep(100);
          
          for(i=0;i<1000;i++)
          {
             DummyWorkMessage* pummel = new DummyWorkMessage(this);
-            std::auto_ptr<resip::ApplicationMessage>batter(pummel);
+            std::unique_ptr<resip::ApplicationMessage>batter(pummel);
             assert(mDispatcher->post(batter));
          }
 
@@ -252,7 +263,8 @@ class DummyTU : public resip::TransactionUser
          
          
          lost = new DummyWorkMessage(this);
-         assert(!(mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(lost))));
+         std::unique_ptr<resip::ApplicationMessage> appMessage4(lost);
+         assert(!(mDispatcher->post(appMessage4)));
          
          
          
@@ -260,14 +272,15 @@ class DummyTU : public resip::TransactionUser
          
          
          DummyWorker* dw = new DummyWorker;
-         std::auto_ptr<repro::Worker> worker(dw);
+         std::unique_ptr<repro::Worker> worker(dw);
          //Stack ptr set to null.
-         mDispatcher = new repro::Dispatcher(worker,0,3,true);
+         mDispatcher = new repro::Dispatcher(std::move(worker), 0, 3, true);
          
          std::cout << "The following error message is intentional." << std::endl;
          
          lost = new DummyWorkMessage(this);
-         assert(mDispatcher->post(std::auto_ptr<resip::ApplicationMessage>(lost)));
+         std::unique_ptr<resip::ApplicationMessage> appMessage4(lost);
+         assert(mDispatcher->post(appMessage4));
          
          assert(!(msg=mFifo.getNext(100)));
          

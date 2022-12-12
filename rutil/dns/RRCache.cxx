@@ -153,7 +153,7 @@ RRCache::lookup(const Data& target,
                 Result& records, 
                 int& status)
 {
-   records.empty();
+   records.clear();
    status = 0;
    RRList* key = new RRList(target, type);
    RRSet::iterator it = mRRSet.find(key);
@@ -238,7 +238,7 @@ RRCache::purge()
 void 
 RRCache::logCache()
 {
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); )
    {
       if (now >= (*it)->absoluteExpiry())
@@ -257,7 +257,7 @@ RRCache::logCache()
 void 
 RRCache::getCacheDump(Data& dnsCacheDump)
 {
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    DataStream strm(dnsCacheDump);
    for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); )
    {

@@ -11,7 +11,7 @@ CountDown::CountDownDec::CountDownDec(CountDown* countdown) : _countdown(countdo
 CountDown::CountDownDec::~CountDownDec()
 {}
 
-void CountDown::CountDownDec::operator()(boost::shared_ptr<Event> event)
+void CountDown::CountDownDec::operator()(std::shared_ptr<Event> event)
 {
    _countdown->_count--;
 }
@@ -27,7 +27,7 @@ resip::Data CountDown::toString() const
    return _description + " " + resip::Data(_count);
 }
 
-bool CountDown::passes(boost::shared_ptr<Event>)
+bool CountDown::passes(std::shared_ptr<Event>)
 {
    return (_count == 0);
 }

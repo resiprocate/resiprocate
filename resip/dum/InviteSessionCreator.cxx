@@ -6,22 +6,23 @@
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/DumHelper.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
                                            const NameAddr& target,
-                                           SharedPtr<UserProfile> userProfile,
+                                           std::shared_ptr<UserProfile> userProfile,
                                            const Contents* initial,
                                            DialogUsageManager::EncryptionLevel level,
                                            const Contents* alternative,
                                            ServerSubscriptionHandle serverSub)
-   : BaseCreator(dum, userProfile),
-     mState(Initialized),
+   : BaseCreator(dum, std::move(userProfile)),
      mServerSub(serverSub),
      mEncryptionLevel(level)
 {
    makeInitialRequest(target, INVITE);
-   if (userProfile->isAnonymous())
+   if (mUserProfile->isAnonymous())
    {
       mLastRequest->header(h_Privacys).push_back(PrivacyCategory(Symbols::id));
    }
@@ -29,15 +30,15 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
    DumHelper::setOutgoingEncryptionLevel(*mLastRequest, level);
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
-      resip_assert(userProfile.get());
-      if(userProfile->getDefaultSessionTime() >= 90)
+      resip_assert(mUserProfile.get());
+      if(mUserProfile->getDefaultSessionTime() >= 90)
       {
-         getLastRequest()->header(h_SessionExpires).value() = userProfile->getDefaultSessionTime();
+         getLastRequest()->header(h_SessionExpires).value() = mUserProfile->getDefaultSessionTime();
          getLastRequest()->header(h_MinSE).value() = 90;  // Absolute minimum specified by RFC4028
       }
    }
 
-   std::auto_ptr<Contents> initialOffer;
+   std::unique_ptr<Contents> initialOffer;
    if (initial)
    {
       if (alternative)
@@ -51,7 +52,7 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
       {
          initialOffer.reset(initial->clone());
       }
-      getLastRequest()->setContents(initialOffer);
+      getLastRequest()->setContents(std::move(initialOffer));
    }
    //100rel 
    switch(mDum.getMasterProfile()->getUacReliableProvisionalMode())
@@ -71,10 +72,6 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
    }
 }
 
-InviteSessionCreator::~InviteSessionCreator()
-{
-}
-
 void
 InviteSessionCreator::end()
 {
@@ -89,7 +86,7 @@ InviteSessionCreator::dispatch(const SipMessage& msg)
 }
 
 const Contents*
-InviteSessionCreator::getInitialOffer()
+InviteSessionCreator::getInitialOffer() const
 {
    return getLastRequest()->getContents();
 }

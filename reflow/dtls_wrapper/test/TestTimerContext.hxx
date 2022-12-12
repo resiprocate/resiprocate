@@ -12,12 +12,12 @@ class TestTimerContext: public DtlsTimerContext{
      TestTimerContext();
      ~TestTimerContext();
      void addTimer(DtlsTimer *timer, unsigned int seq);
-     UInt64 getRemainingTime();
+     uint64_t getRemainingTime();
      void updateTimer();
      int select(resip::FdSet& fdSet);
 
      DtlsTimer *mTimer;
-     UInt64 mExpiryTime;
+     uint64_t mExpiryTime;
 };
 
 }

@@ -15,7 +15,7 @@ TupleMarkManager::getMarkType(const Tuple& tuple)
    
    if(i!=mList.end())
    {
-      UInt64 now=Timer::getTimeMs();
+      uint64_t now=Timer::getTimeMs();
       if(i->first.mExpiry > now)
       {
          return i->second;
@@ -24,7 +24,7 @@ TupleMarkManager::getMarkType(const Tuple& tuple)
       {
          mList.erase(i);
          // ?bwc? Should we do this?
-         UInt64 expiry = 0;
+         uint64_t expiry = 0;
          MarkType mark = OK;
          notifyListeners(tuple,expiry,mark);
       }
@@ -33,7 +33,7 @@ TupleMarkManager::getMarkType(const Tuple& tuple)
    return OK;
 }
 
-void TupleMarkManager::mark(const Tuple& tuple,UInt64 expiry,MarkType mark)
+void TupleMarkManager::mark(const Tuple& tuple,uint64_t expiry,MarkType mark)
 {
    // .amr. Notify listeners first so they can change the entry if they want
    notifyListeners(tuple,expiry,mark);
@@ -52,7 +52,7 @@ void TupleMarkManager::unregisterMarkListener(MarkListener* listener)
 }
 
 void
-TupleMarkManager::notifyListeners(const resip::Tuple& tuple, UInt64& expiry, MarkType& mark)
+TupleMarkManager::notifyListeners(const resip::Tuple& tuple, uint64_t& expiry, MarkType& mark)
 {
    for(Listeners::iterator i = mListeners.begin(); i!=mListeners.end(); ++i)
    {
@@ -60,7 +60,7 @@ TupleMarkManager::notifyListeners(const resip::Tuple& tuple, UInt64& expiry, Mar
    }
 }
 
-TupleMarkManager::ListEntry::ListEntry(const Tuple& tuple, UInt64 expiry)
+TupleMarkManager::ListEntry::ListEntry(const Tuple& tuple, uint64_t expiry)
    : mTuple(tuple),
    mExpiry(expiry)
 {}

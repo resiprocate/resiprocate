@@ -7,7 +7,7 @@
 using namespace resip;
 using namespace repro;
 
-class ExamplePlugin : public Plugin
+class ExamplePlugin : public repro::Plugin
 {
    public:
       ExamplePlugin(){};
@@ -45,12 +45,12 @@ class ExamplePlugin : public Plugin
 extern "C" {
 
 static
-Plugin* instantiate()
+std::shared_ptr<resip::Plugin> instantiate()
 {
-   return new ExamplePlugin();
+   return std::make_shared<ExamplePlugin>();
 }
 
-ReproPluginDescriptor reproPluginDesc =
+PluginDescriptor reproPluginDesc =
 {
    REPRO_DSO_PLUGIN_API_VERSION,
    &instantiate
@@ -60,7 +60,8 @@ ReproPluginDescriptor reproPluginDesc =
 
 /* ====================================================================
  *
- * Copyright 2013 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2013-2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

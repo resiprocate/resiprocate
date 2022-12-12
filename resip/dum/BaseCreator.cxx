@@ -6,22 +6,21 @@
 #include "resip/dum/DumHelper.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
-BaseCreator::BaseCreator(DialogUsageManager& dum, 
-                         const SharedPtr<UserProfile>& userProfile)
-   : mLastRequest(new SipMessage),
+BaseCreator::BaseCreator(DialogUsageManager& dum, std::shared_ptr<UserProfile> userProfile)
+   : mLastRequest(std::make_shared<SipMessage>()),
      mDum(dum),
-     mUserProfile(userProfile)
-{}
+     mUserProfile(std::move(userProfile))
+{
+}
 
-BaseCreator::~BaseCreator()
-{}
-
-SharedPtr<SipMessage>
-BaseCreator::getLastRequest()
+std::shared_ptr<SipMessage>
+BaseCreator::getLastRequest() const noexcept
 {
    return mLastRequest;
 }
@@ -34,8 +33,8 @@ BaseCreator::getLastRequest() const
 }
 */
 
-SharedPtr<UserProfile>
-BaseCreator::getUserProfile()
+std::shared_ptr<UserProfile>
+BaseCreator::getUserProfile() const noexcept
 {
    return mUserProfile;
 }

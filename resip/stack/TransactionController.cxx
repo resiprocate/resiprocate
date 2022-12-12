@@ -182,7 +182,7 @@ TransactionController::send(SipMessage* msg)
    {
       // Need to 503 this.
       SipMessage* resp(Helper::makeResponse(*msg, 503));
-      resp->header(h_RetryAfter).value()=(UInt32)mStateMacFifo.expectedWaitTimeMilliSec()/1000;
+      resp->header(h_RetryAfter).value()=(uint32_t)mStateMacFifo.expectedWaitTimeMilliSec()/1000;
       resp->setTransactionUser(msg->getTransactionUser());
       mTuSelector.add(resp, TimeLimitFifo<Message>::InternalElement);
       delete msg;
@@ -266,9 +266,9 @@ TransactionController::cancelClientInviteTransaction(const Data& tid, const resi
 }
 
 void 
-TransactionController::addTransport(std::auto_ptr<Transport> transport)
+TransactionController::addTransport(std::unique_ptr<Transport> transport)
 {
-   mStateMacFifo.add(new AddTransport(transport));
+   mStateMacFifo.add(new AddTransport(std::move(transport)));
 }
 
 void 

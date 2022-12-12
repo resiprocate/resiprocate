@@ -21,7 +21,31 @@ class Message;
 class MediaStreamReadyEvent : public resip::DumCommand
 {
    public:
-      MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, const reTurn::StunTuple& rtpTuple, const reTurn::StunTuple& rtcpTuple);
+
+      class StreamParams
+      {
+      public:
+         StreamParams() {};
+         virtual ~StreamParams() {};
+         virtual EncodeStream& encode(EncodeStream& strm) const = 0;
+      };
+
+      class ReTurnParams : public StreamParams
+      {
+      public:
+         ReTurnParams(const reTurn::StunTuple& rtpTuple, const reTurn::StunTuple& rtcpTuple)
+          : mRtpTuple(rtpTuple), mRtcpTuple(rtcpTuple) {};
+         virtual ~ReTurnParams() {};
+         const reTurn::StunTuple& getRtpTuple() { return mRtpTuple; };
+         const reTurn::StunTuple& getRtcpTuple() { return mRtcpTuple; };
+         EncodeStream& encode(EncodeStream& strm) const;
+         EncodeStream& encodeBrief(EncodeStream& strm) const;
+      private:
+         reTurn::StunTuple mRtpTuple;
+         reTurn::StunTuple mRtcpTuple;
+      };
+
+      MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, std::shared_ptr<StreamParams> streamParams);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -30,8 +54,7 @@ class MediaStreamReadyEvent : public resip::DumCommand
 
    private:
       RemoteParticipantDialogSet& mRemoteParticipantDialogSet;
-      reTurn::StunTuple mRtpTuple;
-      reTurn::StunTuple mRtcpTuple;
+      std::shared_ptr<StreamParams> mStreamParams;
 };
 
 class MediaStreamErrorEvent : public resip::DumCommand
@@ -48,6 +71,9 @@ class MediaStreamErrorEvent : public resip::DumCommand
       RemoteParticipantDialogSet& mRemoteParticipantDialogSet;
       unsigned int mErrorCode;
 };
+
+EncodeStream& operator<<(EncodeStream& strm, const MediaStreamReadyEvent::StreamParams& params);
+
 }
 
 #endif
@@ -55,6 +81,7 @@ class MediaStreamErrorEvent : public resip::DumCommand
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

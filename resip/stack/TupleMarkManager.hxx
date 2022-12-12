@@ -27,7 +27,7 @@ class TupleMarkManager
 
       MarkType getMarkType(const Tuple& tuple);
       
-      void mark(const Tuple& tuple,UInt64 expiry,MarkType mark);
+      void mark(const Tuple& tuple,uint64_t expiry,MarkType mark);
       void registerMarkListener(MarkListener*);
       void unregisterMarkListener(MarkListener*);
 
@@ -36,7 +36,7 @@ class TupleMarkManager
       class ListEntry
       {
          public:
-            ListEntry(const Tuple& tuple, UInt64 expiry);
+            ListEntry(const Tuple& tuple, uint64_t expiry);
             ListEntry(const ListEntry& orig);
             ~ListEntry();
             bool operator<(const ListEntry& rhs) const;
@@ -44,7 +44,7 @@ class TupleMarkManager
             bool operator==(const ListEntry& rhs) const;
             
             Tuple mTuple;
-            UInt64 mExpiry;
+            uint64_t mExpiry;
          private:
             ListEntry();
       };
@@ -55,7 +55,7 @@ class TupleMarkManager
       typedef std::set<MarkListener*> Listeners;
       Listeners mListeners;
       
-      void notifyListeners(const resip::Tuple& tuple, UInt64& expiry, MarkType& mark);
+      void notifyListeners(const resip::Tuple& tuple, uint64_t& expiry, MarkType& mark);
 };
 
 }

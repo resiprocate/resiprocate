@@ -19,8 +19,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-UInt64 ConnectionManager::MinimumGcAge = 1;  // in milliseconds
-UInt64 ConnectionManager::MinimumGcHeadroom = 0;
+uint64_t ConnectionManager::MinimumGcAge = 1;  // in milliseconds
+uint64_t ConnectionManager::MinimumGcHeadroom = 0;
 bool ConnectionManager::EnableAgressiveGc = false;
 
 ConnectionManager::ConnectionManager() : 
@@ -241,10 +241,10 @@ ConnectionManager::removeConnection(Connection* connection)
 
 // release excessively old connections (free up file descriptors)
 unsigned int
-ConnectionManager::gc(UInt64 relThreshold, unsigned int maxToRemove)
+ConnectionManager::gc(uint64_t relThreshold, unsigned int maxToRemove)
 {
-   UInt64 curTimeMs = Timer::getTimeMs();
-   UInt64 threshold = curTimeMs - relThreshold;
+   uint64_t curTimeMs = Timer::getTimeMs();
+   uint64_t threshold = curTimeMs - relThreshold;
    DebugLog(<< "recycling connections not used in last " << relThreshold/1000.0 << " seconds");
 
    // Look through non-flow-timer connections and close those using the passed in relThreshold
@@ -410,7 +410,10 @@ ConnectionManager::process(FdSet& fdset)
 
       if (fdset.readyToWrite(currConnection->getSocket()))
       {
-         currConnection->performWrites();
+         if (!currConnection->performWrites())
+         {
+            delete currConnection;
+         }
       }
       else if (fdset.hasException(currConnection->getSocket()))
       {

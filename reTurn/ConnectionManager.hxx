@@ -2,7 +2,6 @@
 #define CONNECTION_MANAGER_HXX
 
 #include <set>
-#include <boost/noncopyable.hpp>
 #include "AsyncSocketBase.hxx"
 
 namespace reTurn {
@@ -10,9 +9,13 @@ namespace reTurn {
 /// Manages open connections so that they may be cleanly stopped when the server
 /// needs to shut down.
 class ConnectionManager
-  : private boost::noncopyable
 {
 public:
+   // noncopyable
+   ConnectionManager() {};
+   ConnectionManager(const ConnectionManager&) = delete;
+   ConnectionManager& operator=(const ConnectionManager&) = delete;
+
   /// Add the specified connection to the manager and start it.
    void start(ConnectionPtr c);
 

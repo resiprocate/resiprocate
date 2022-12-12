@@ -21,30 +21,6 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-
-static void *OPENSSL_zalloc(size_t num)
-{
-    void *ret = OPENSSL_malloc(num);
-
-    if (ret != NULL)
-        memset(ret, 0, num);
-    return ret;
-}
-
-static EVP_MD_CTX *EVP_MD_CTX_new(void)
-{
-    return (EVP_MD_CTX*)OPENSSL_zalloc(sizeof(EVP_MD_CTX));
-}
-
-static void EVP_MD_CTX_free(EVP_MD_CTX *ctx)
-{
-    EVP_MD_CTX_cleanup(ctx);
-    OPENSSL_free(ctx);
-}
-
-#endif
-
 // the destructor in BaseSecurity started crashing on the Mac and Windows
 // at Revision 5785. The crash can be reproduced by creating 2 security
 // objects, one after another.
@@ -143,7 +119,10 @@ main(int argc, const char** argv)
    assert(Security::parseSSLType("SSLv23") == SecurityTypes::SSLv23);
    try
    {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
       SecurityTypes::SSLType val = BaseSecurity::parseSSLType("BigBrotherIsWatching");
+#pragma GCC diagnostic pop
       assert(0); // should have thrown an exception
    }
    catch (const invalid_argument& ia) { } // ignore, expected exception
@@ -152,7 +131,10 @@ main(int argc, const char** argv)
    assert(Security::parseOpenSSLCTXOption("SSL_OP_NO_SSLv3") == SSL_OP_NO_SSLv3);
    try
    {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
       SecurityTypes::SSLType val = BaseSecurity::parseSSLType("BigBrotherIsWatching");
+#pragma GCC diagnostic pop
       assert(0); // should have thrown an exception
    }
    catch (const invalid_argument& ia) { } // ignore, expected exception

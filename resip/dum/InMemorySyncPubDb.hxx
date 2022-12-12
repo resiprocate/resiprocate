@@ -20,12 +20,12 @@ public:
       SyncServer,
       AllChanges
    } HandlerMode;
-   InMemorySyncPubDbHandler(HandlerMode mode = SyncServer) : mMode(mode) {}
-   virtual ~InMemorySyncPubDbHandler(){}
-   HandlerMode getMode() { return mMode; }
-   virtual void onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes) = 0;
-   virtual void onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated) = 0;
-   virtual void onInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes) {}
+   explicit InMemorySyncPubDbHandler(HandlerMode mode = SyncServer) : mMode(mode) {}
+   virtual ~InMemorySyncPubDbHandler() = default;
+   HandlerMode getMode() const noexcept { return mMode; }
+   virtual void onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes) = 0;
+   virtual void onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated) = 0;
+   virtual void onInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes) {}
 protected:
    HandlerMode mMode;
 };
@@ -43,8 +43,8 @@ class InMemorySyncPubDb : public PublicationPersistenceManager
 {
 public:
 
-   InMemorySyncPubDb(bool syncEnabled = false);
-   virtual ~InMemorySyncPubDb();
+   explicit InMemorySyncPubDb(bool syncEnabled = false);
+   virtual ~InMemorySyncPubDb() = default;
 
    virtual void addHandler(InMemorySyncPubDbHandler* handler);
    virtual void removeHandler(InMemorySyncPubDbHandler* handler);
@@ -52,20 +52,20 @@ public:
 
    // PublicationPersistenceManager Methods
    virtual void addUpdateDocument(const PubDocument& document);
-   virtual bool removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated, bool syncPublication = false);
+   virtual bool removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated, bool syncPublication = false);
    virtual bool getMergedETags(const Data& eventType, const Data& documentKey, ETagMerger& merger, Contents* destination);
    virtual bool documentExists(const Data& eventType, const Data& documentKey, const Data& eTag);
-   virtual bool checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated);
+   virtual bool checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated);
    virtual void lockDocuments();
    virtual KeyToETagMap& getDocuments();  // Ensure you lock before calling this and unlock when done
    virtual void unlockDocuments();
 
 protected:
 
-   void invokeOnDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes);
-   void invokeOnDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated);
-   void invokeOnInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes);
-   bool shouldEraseDocument(PubDocument& document, UInt64 now);
+   void invokeOnDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes);
+   void invokeOnDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated);
+   void invokeOnInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes);
+   bool shouldEraseDocument(PubDocument& document, uint64_t now);
    bool mSyncEnabled;
    typedef std::list<InMemorySyncPubDbHandler*> HandlerList;
    HandlerList mHandlers;  // use list over set to preserve add order

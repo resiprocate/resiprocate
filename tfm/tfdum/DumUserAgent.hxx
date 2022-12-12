@@ -34,7 +34,7 @@
 #include "DumEvent.hxx"
 #include "DumExpect.hxx"
 
-#include "rutil/SharedPtr.hxx"
+#include <memory>
 
 class TestProxy;
 class DumUaAction;
@@ -53,9 +53,9 @@ class DumUserAgent : public EndPoint,
                      public resip::DialogEventHandler
 {
    public:
-      DumUserAgent(resip::SharedPtr<resip::MasterProfile> profile);
+      DumUserAgent(std::shared_ptr<resip::MasterProfile> profile);
 
-      DumUserAgent(resip::SharedPtr<resip::MasterProfile> profile,
+      DumUserAgent(std::shared_ptr<resip::MasterProfile> profile,
                    TestProxy* proxy);
 
       ~DumUserAgent();
@@ -91,9 +91,9 @@ class DumUserAgent : public EndPoint,
       const resip::Data& getInstanceId() const;
       resip::Uri getContact() const;
 
-      static resip::SharedPtr<resip::MasterProfile> makeProfile(const resip::Uri& aor, const resip::Data& password);
+      static std::shared_ptr<resip::MasterProfile> makeProfile(const resip::Uri& aor, const resip::Data& password);
 
-      resip::SharedPtr<resip::MasterProfile> getProfile() const 
+      std::shared_ptr<resip::MasterProfile> getProfile() const noexcept
       {
          return mProfile;
       }
@@ -102,7 +102,7 @@ class DumUserAgent : public EndPoint,
 
       // special handling required for UAC Prack scenario - must call provideOffer from 
       // onAnswer callback in order to get Offer to be provided in first PRACK
-      ExpectAction* setOfferToProvideInNextOnAnswerCallback(boost::shared_ptr<resip::SdpContents> offer);
+      ExpectAction* setOfferToProvideInNextOnAnswerCallback(std::shared_ptr<resip::SdpContents> offer);
 
 //      DumUaAction* start();
       DumUaAction* shutdownUa();
@@ -133,7 +133,7 @@ class DumUserAgent : public EndPoint,
       DumUaAction* referNoReferSub(const resip::NameAddr& target, const resip::NameAddr& referTo);
       DumUaAction* referNoReferSubWithoutReferSubHeader(const resip::NameAddr& target, const resip::NameAddr& referTo);
 
-      DumUaAction* send(resip::SharedPtr<resip::SipMessage> msg);
+      DumUaAction* send(std::shared_ptr<resip::SipMessage> msg);
 
       class From : public MessageMatcher
       {
@@ -142,7 +142,7 @@ class DumUserAgent : public EndPoint,
             From(TestProxy* proxy);
             //From(const resip::Uri& contact);
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
 
          private:
@@ -157,7 +157,7 @@ class DumUserAgent : public EndPoint,
          public:
             HasInstanceId() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
 
          private:
@@ -168,7 +168,7 @@ class DumUserAgent : public EndPoint,
          public:
             NoInstanceId() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
       };
       */
@@ -177,7 +177,7 @@ class DumUserAgent : public EndPoint,
       {
          public:
             FindMatchingDialogToReplace(DumUserAgent& dua);
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
 
          private:
@@ -189,7 +189,7 @@ class DumUserAgent : public EndPoint,
          public:
             HasRinstance() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
 
          private:
@@ -200,7 +200,7 @@ class DumUserAgent : public EndPoint,
          public:
             NoRinstance() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
       };
 
@@ -209,7 +209,7 @@ class DumUserAgent : public EndPoint,
          public:
             HasMethodsParam() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
 
          private:
@@ -220,7 +220,7 @@ class DumUserAgent : public EndPoint,
          public:
             NoMethodsParam() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
       };
 
@@ -452,14 +452,14 @@ class DumUserAgent : public EndPoint,
       /*
       //actions from ClintPagerMessage
       DumUaAction* getMessageRequest();
-      DumUaAction* page(std::auto_ptr<resip::Contents> contenst, resip::DialogUsageManager::EncryptionLevel level=resip::DialogUsageManager::None);
+      DumUaAction* page(std::unique_ptr<resip::Contents> contenst, resip::DialogUsageManager::EncryptionLevel level=resip::DialogUsageManager::None);
       DumUaAction* endClientPagerMsg();
       
       //actions from ServerPagerMessage
       DumUaAction* acceptServerPagerMsg(int statusCode = 200);
       DumUaAction* rejectServerPagerMsg(int statusCode);
       DumUaAction* endServerPagerMsg();
-      DumUaAction* sendServerPagerMsg(resip::SharedPtr<resip::SipMessage> msg);
+      DumUaAction* sendServerPagerMsg(std::shared_ptr<resip::SipMessage> msg);
       */
 
       //actions from ClientOutOfDialogReq
@@ -471,7 +471,7 @@ class DumUserAgent : public EndPoint,
       DumUaAction* rejectServerOutOfDialogReq(int statusCode);
       DumUaAction* endServerOutOfDialogReq();
       DumUaAction* answerOptions();
-	  DumUaAction* sendServerOutOfDialogReq(resip::SharedPtr<resip::SipMessage>
+	  DumUaAction* sendServerOutOfDialogReq(std::shared_ptr<resip::SipMessage>
       msg);
       */
 
@@ -560,11 +560,11 @@ class DumUserAgent : public EndPoint,
       virtual void onNewSubscriptionFromRefer(resip::ServerSubscriptionHandle, const resip::SipMessage& sub);
       virtual void onTerminated(resip::ServerSubscriptionHandle);
       virtual bool hasDefaultExpires() const { return true; }
-      virtual UInt32 getDefaultExpires() const { return 60; }
+      virtual uint32_t getDefaultExpires() const { return 60; }
 
       // ClientPagerMessageHandler
       virtual void onSuccess(resip::ClientPagerMessageHandle, const resip::SipMessage& status);
-      virtual void onFailure(resip::ClientPagerMessageHandle, const resip::SipMessage& status, std::auto_ptr<resip::Contents> contents);
+      virtual void onFailure(resip::ClientPagerMessageHandle, const resip::SipMessage& status, std::unique_ptr<resip::Contents> contents);
 
       // ServerPagerMessageHandler
       virtual void onMessageArrived(resip::ServerPagerMessageHandle, const resip::SipMessage& message);
@@ -590,7 +590,7 @@ class DumUserAgent : public EndPoint,
 
       //void handleEvent(Event* eventRaw);      
 
-      resip::SharedPtr<resip::MasterProfile> mProfile;
+      std::shared_ptr<resip::MasterProfile> mProfile;
       resip::Security* mSecurity;
       resip::FdPollGrp* mPollGrp;
       resip::EventThreadInterruptor* mInterruptor;
@@ -619,7 +619,7 @@ private:
 
       // special handling required for UAC Prack scenario - must call provideOffer from 
       // onAnswer callback in order to get Offer to be provided in first PRACK
-      boost::shared_ptr<resip::SdpContents> mOfferToProvideInNextOnAnswerCallback;
+      std::shared_ptr<resip::SdpContents> mOfferToProvideInNextOnAnswerCallback;
 
       typedef std::set<TestUsage*> TestUsages;
       TestUsages mTestUsages;

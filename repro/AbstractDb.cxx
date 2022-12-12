@@ -957,13 +957,13 @@ AbstractDb::eraseSiloRecord(const Key& key)
 }
 
 void 
-AbstractDb::cleanupExpiredSiloRecords(UInt64 now, unsigned long expirationTime)
+AbstractDb::cleanupExpiredSiloRecords(uint64_t now, unsigned long expirationTime)
 {
    AbstractDb::Key key = dbFirstKey(SiloTable);  // Iterate on primary key
    // Iterate through all silo records - retrieve Original send time embedded into the 
    // primary key and see if the record has expired.
    Data originalSendTimeData;
-   UInt64 originalSendTime;
+   uint64_t originalSendTime;
    while(!key.empty())
    {
       ParseBuffer pb(key);

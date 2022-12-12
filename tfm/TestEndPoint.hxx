@@ -4,10 +4,7 @@
 #include <iosfwd>
 #include <exception>
 #include <boost/lexical_cast.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
 #include <list>
-#include <boost/function.hpp>
 
 #include "rutil/Data.hxx"
 
@@ -16,6 +13,9 @@
 #include "tfm/Event.hxx"
 #include "tfm/ActionBase.hxx"
 #include "tfm/ExpectAction.hxx"
+
+#include <functional>
+#include <memory>
 
 //!dcm! -- deprecate this further
 #define checkEchoName(_fn) check1(_fn, #_fn)
@@ -28,7 +28,7 @@ class TestEndPoint
 {
    public:
 
-      class GlobalFailure : public TestException
+      class GlobalFailure final : public TestException
       {
          public:
             GlobalFailure(const resip::Data& msg, const resip::Data& file, int line);
@@ -36,35 +36,36 @@ class TestEndPoint
       };
 
       TestEndPoint() ;
-      virtual ~TestEndPoint();
+      virtual ~TestEndPoint() = default;
 
       virtual void clean() = 0;
       virtual resip::Data getName() const = 0;
       static int DebugTimeMult();
       
-      boost::weak_ptr<SequenceSet> getSequenceSet() const;
-      void setSequenceSet(boost::shared_ptr<SequenceSet> set);
+      std::weak_ptr<SequenceSet> getSequenceSet() const noexcept;
+      void setSequenceSet(std::shared_ptr<SequenceSet> set);
       bool operator==(const TestEndPoint& endPoint) const;
       
       class Action : public ActionBase
       {
          public:
             Action();
-            virtual ~Action();
+            Action(const Action&) = delete;
+            Action(Action&&) = delete;
+            virtual ~Action() = default;
+
+            Action& operator=(const Action&) = delete;
+            Action& operator=(Action&&) = delete;
+
             virtual void operator()() = 0;
 
-            virtual void operator()(boost::shared_ptr<Event> event);
-            
-         private:
-            Action(const Action&);
-            Action& operator=(const Action&);
+            virtual void operator()(std::shared_ptr<Event> event);
       };
       
       class EndPointAction : public Action
       {
          public:
             explicit EndPointAction(TestEndPoint* endPoint);
-            virtual ~EndPointAction();
             using Action::operator();
             virtual void operator()();
             virtual void operator()(TestEndPoint& endPoint) = 0;
@@ -86,7 +87,7 @@ class TestEndPoint
       {
          public:
             using ExpectAction::operator();
-            virtual void operator()(boost::shared_ptr<Event> event);
+            virtual void operator()(std::shared_ptr<Event> event);
             virtual resip::Data toString() const { return "NoAction";}
       };
       ExpectAction* noAction();
@@ -96,7 +97,7 @@ class TestEndPoint
          public:
             Note(TestEndPoint* endPoint, const char* message);
             virtual void operator()();
-            virtual void operator()(boost::shared_ptr<Event> event);
+            virtual void operator()(std::shared_ptr<Event> event);
             virtual resip::Data toString() const;
          private:
             TestEndPoint* mEndPoint;
@@ -108,10 +109,10 @@ class TestEndPoint
       {
          public:
             explicit Pause(int msec, TestEndPoint* endPoint);
-            virtual void exec(boost::shared_ptr<Event> event);
+            virtual void exec(std::shared_ptr<Event> event);
             virtual void exec();
             virtual void operator()() { resip_assert(0); }
-            virtual void operator()(boost::shared_ptr<Event> event) { resip_assert(0); }
+            virtual void operator()(std::shared_ptr<Event> event) { resip_assert(0); }
             virtual resip::Data toString() const;
 
          private:
@@ -124,8 +125,8 @@ class TestEndPoint
       class ExpectPreCon
       {
          public:
-            virtual ~ExpectPreCon() {}
-            virtual bool passes(boost::shared_ptr<Event> event) = 0;
+            virtual ~ExpectPreCon() = default;
+            virtual bool passes(std::shared_ptr<Event> event) = 0;
             virtual resip::Data toString() const = 0;
       };
 
@@ -133,39 +134,39 @@ class TestEndPoint
       {
          public:
             virtual resip::Data toString() const { return "Always true";}
-            virtual bool passes(boost::shared_ptr<Event>) { return true; }
+            virtual bool passes(std::shared_ptr<Event>) { return true; }
       };
 
       class ExpectBase : public AsciiGraphic
       {
          public:
-            class Exception : public TestException
+            class Exception final : public TestException
             {
                public:
                   Exception(const resip::Data& msg,
                             const resip::Data& file,
-                            const int line);
-                  virtual resip::Data getName() const ;
+                            int line);
+                  virtual resip::Data getName() const;
             };
 
          public:
             ExpectBase();
-            virtual ~ExpectBase();
+            virtual ~ExpectBase() = default;
 
             virtual TestEndPoint* getEndPoint() const = 0;
             /// determine if the event matches
-            virtual bool isMatch(boost::shared_ptr<Event> event) const = 0;
-            virtual resip::Data explainMismatch(boost::shared_ptr<Event> event) const = 0;
+            virtual bool isMatch(std::shared_ptr<Event> event) const = 0;
+            virtual resip::Data explainMismatch(std::shared_ptr<Event> event) const = 0;
             
             /// allow derived Expects to handle multiple messages
 
             // execute given the response
-            virtual void onEvent(TestEndPoint& endPoint, boost::shared_ptr<Event> event) = 0;
+            virtual void onEvent(TestEndPoint& endPoint, std::shared_ptr<Event> event) = 0;
             virtual resip::Data getMsgTypeString() const = 0;
             virtual unsigned int getTimeout() const = 0;
 
             virtual bool queue(SequenceClass* parent);
-            virtual void setSequenceSet(boost::shared_ptr<SequenceSet> set);
+            virtual void setSequenceSet(std::shared_ptr<SequenceSet> set);
             virtual EncodeStream& output(EncodeStream& s) const;
             virtual void prettyPrint(EncodeStream& str, bool& previousActive, int ind) const;
 
@@ -176,24 +177,24 @@ class TestEndPoint
             bool mIsOptional;
       };
 
-      class AssertException : public resip::BaseException
+      class AssertException final : public resip::BaseException
       {
          public:
             AssertException(const resip::Data& msg,
                             const resip::Data& file,
-                            const int line);
-            virtual resip::Data getName() const ;
-            virtual const char* name() const ;
+                            int line);
+            virtual resip::Data getName() const;
+            virtual const char* name() const noexcept;
       };
 
-      typedef boost::function<bool (boost::shared_ptr<Event>) > PredicateFn;
+      typedef std::function<bool(std::shared_ptr<Event>)> PredicateFn;
       // general assertion mechanism -- allows general functor
       class Assert : public ExpectAction
       {
          public:
             Assert(TestEndPoint* from, PredicateFn fn, const resip::Data& label) ;
             using ExpectAction::operator();
-            virtual void operator()(boost::shared_ptr<Event> event);
+            virtual void operator()(std::shared_ptr<Event> event);
             virtual resip::Data toString() const;
          private:
             TestEndPoint& mEndPoint;
@@ -203,13 +204,13 @@ class TestEndPoint
       friend class Assert;
       ExpectAction* check1(PredicateFn fn, resip::Data label);
 
-      typedef boost::function<void (boost::shared_ptr<Event>) > ExecFn;
+      typedef std::function<void(std::shared_ptr<Event>)> ExecFn;
       class Execute : public ExpectAction
       {
          public:
             Execute(TestEndPoint* from, ExecFn fn, const resip::Data& label) ;
             using ExpectAction::operator();
-            virtual void operator()(boost::shared_ptr<Event> event);
+            virtual void operator()(std::shared_ptr<Event> event);
             virtual resip::Data toString() const;
          private:
             TestEndPoint& mEndPoint;
@@ -227,15 +228,15 @@ class TestEndPoint
             /// no associated endPoint
             virtual TestEndPoint* getEndPoint() const { return 0;}
             /// match if any sub-sequence matches
-            virtual bool isMatch(boost::shared_ptr<Event> event) const;
-            virtual resip::Data explainMismatch(boost::shared_ptr<Event> event) const;
+            virtual bool isMatch(std::shared_ptr<Event> event) const;
+            virtual resip::Data explainMismatch(std::shared_ptr<Event> event) const;
 
-            virtual void onEvent(TestEndPoint& endPoint, boost::shared_ptr<Event> event);
+            virtual void onEvent(TestEndPoint& endPoint, std::shared_ptr<Event> event);
             /// done when all Sub-Sequences are done
 
             virtual bool queue(SequenceClass* parent);
 
-            virtual void setSequenceSet(boost::shared_ptr<SequenceSet> set);
+            virtual void setSequenceSet(std::shared_ptr<SequenceSet> set);
             
             /// never appears in output, but is called
             virtual resip::Data getMsgTypeString() const { return "And";}
@@ -272,7 +273,7 @@ class TestEndPoint
       TestEndPoint(const TestEndPoint&);
       TestEndPoint& operator=(const TestEndPoint&);
 
-      boost::weak_ptr<SequenceSet> mSequenceSet;
+      std::weak_ptr<SequenceSet> mSequenceSet;
 };
 
 EncodeStream& operator<<(EncodeStream& s, const TestEndPoint&);

@@ -5,22 +5,24 @@
 #include "rutil/Random.hxx"
 #include "rutil/Logger.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, 
                                          const NameAddr& target, 
-                                         SharedPtr<UserProfile> userProfile, 
-                                         UInt32 registrationTime)
-   : BaseCreator(dum, userProfile)
+                                         std::shared_ptr<UserProfile> userProfile, 
+                                         uint32_t registrationTime)
+   : BaseCreator(dum, std::move(userProfile))
 {
    makeInitialRequest(target, target, REGISTER);
    mLastRequest->header(h_RequestLine).uri().user() = Data::Empty;
    mLastRequest->header(h_Expires).value() = registrationTime;
 
    // Tag Contact with rInstance, InstanceId, regId, and/or methods parameter according to profile settings
-   ClientRegistration::tagContact(mLastRequest->header(h_Contacts).front(), dum, userProfile);
+   ClientRegistration::tagContact(mLastRequest->header(h_Contacts).front(), dum, mUserProfile);
    
    DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
 }

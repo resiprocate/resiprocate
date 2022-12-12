@@ -116,7 +116,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
 
 bool 
 getMessage( resip::Socket fd, char* buf, int* len,
-            UInt32* srcIp, unsigned short* srcPort,
+            uint32_t* srcIp, unsigned short* srcPort,
             bool verbose)
 {
    resip_assert( fd != INVALID_SOCKET );

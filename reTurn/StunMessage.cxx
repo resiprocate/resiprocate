@@ -3,11 +3,10 @@
   #include "config.h"
 #endif
 
-#include <boost/crc.hpp>
-
 #include "StunMessage.hxx"
 
 #include <rutil/compat.hxx>
+#include <rutil/Crc32.hxx>
 #include <rutil/Timer.hxx>
 #include <rutil/Random.hxx>
 #include <rutil/DataStream.hxx>
@@ -168,7 +167,7 @@ StunMessage::init()
 }
 
 void 
-StunMessage::createHeader(UInt16 stunclass, UInt16 method)
+StunMessage::createHeader(uint16_t stunclass, uint16_t method)
 {
    mClass = stunclass;
    mMethod = method;
@@ -282,7 +281,7 @@ StunMessage::setTurnData(const char* data, unsigned int len)
 }
 
 void 
-StunMessage::setIcePriority(UInt32 priority)
+StunMessage::setIcePriority(uint32_t priority)
 {
    mHasIcePriority = true;
    mIcePriority = priority;
@@ -390,14 +389,14 @@ StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddres
    body++;  // Skip pad
    result.family = *body++;
 
-   UInt16 nport;
+   uint16_t nport;
    memcpy(&nport, body, 2); body+=2;
    result.port = ntohs(nport);
 
    if (result.family == IPv4Family)
    {		
-      UInt32 naddr;
-      memcpy(&naddr, body, sizeof(UInt32)); body+=sizeof(UInt32);
+      uint32_t naddr;
+      memcpy(&naddr, body, sizeof(uint32_t)); body+=sizeof(uint32_t);
       result.addr.ipv4 = ntohl(naddr);
       // Note:  addr.ipv4 is stored in host byte order
       return true;
@@ -430,7 +429,7 @@ StunMessage::stunParseAtrEvenPort( char* body, unsigned int hdrLen,  TurnAtrEven
 }
 
 bool 
-StunMessage::stunParseAtrUInt32( char* body, unsigned int hdrLen,  UInt32& result )
+StunMessage::stunParseAtrUInt32( char* body, unsigned int hdrLen,  uint32_t& result )
 {
    if ( hdrLen != 4 )
    {
@@ -446,7 +445,7 @@ StunMessage::stunParseAtrUInt32( char* body, unsigned int hdrLen,  UInt32& resul
 }
 
 bool 
-StunMessage::stunParseAtrUInt64( char* body, unsigned int hdrLen,  UInt64& result )
+StunMessage::stunParseAtrUInt64( char* body, unsigned int hdrLen,  uint64_t& result )
 {
    if ( hdrLen != 8 )
    {
@@ -896,7 +895,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
          case TurnChannelNumber:
             if(!mHasTurnChannelNumber)
             {
-               UInt32 channelNumber;
+               uint32_t channelNumber;
                mHasTurnChannelNumber = true;
                if(stunParseAtrUInt32( body, attrLen, channelNumber) == false)
                {
@@ -1014,7 +1013,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             if(!mHasTurnRequestedTransport)
             {
                mHasTurnRequestedTransport = true;
-               UInt32 requestedTransport;
+               uint32_t requestedTransport;
                if (stunParseAtrUInt32( body, attrLen, requestedTransport) == false)
                {
                   WarningLog(<< "problem parsing turn requested transport");
@@ -1188,7 +1187,7 @@ operator<<( EncodeStream& strm, const StunMessage::StunAtrAddress& addr)
 {
    if(addr.family == StunMessage::IPv6Family)
    {
-      asio::ip::address_v6::bytes_type bytes;
+      asio::ip::address_v6::bytes_type bytes = {};
       memcpy(bytes.data(), &addr.addr.ipv6, bytes.size());
       asio::ip::address_v6 addrv6(bytes);
 
@@ -1196,7 +1195,7 @@ operator<<( EncodeStream& strm, const StunMessage::StunAtrAddress& addr)
    }
    else
    {
-      UInt32 ip = addr.addr.ipv4;
+      uint32_t ip = addr.addr.ipv4;
       strm << ((int)(ip>>24)&0xFF) << ".";
       strm << ((int)(ip>>16)&0xFF) << ".";
       strm << ((int)(ip>> 8)&0xFF) << ".";
@@ -1285,27 +1284,27 @@ operator<<(EncodeStream& os, const StunMessage::StunMsgHdr& h)
 }
 
 char* 
-StunMessage::encode16(char* buf, UInt16 data)
+StunMessage::encode16(char* buf, uint16_t data)
 {
-   UInt16 ndata = htons(data);
-   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(UInt16));
-   return buf + sizeof(UInt16);
+   uint16_t ndata = htons(data);
+   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(uint16_t));
+   return buf + sizeof(uint16_t);
 }
 
 char* 
-StunMessage::encode32(char* buf, UInt32 data)
+StunMessage::encode32(char* buf, uint32_t data)
 {
-   UInt32 ndata = htonl(data);
-   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(UInt32));
-   return buf + sizeof(UInt32);
+   uint32_t ndata = htonl(data);
+   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(uint32_t));
+   return buf + sizeof(uint32_t);
 }
 
 char*
-StunMessage::encode64(char* buf, const UInt64 data)
+StunMessage::encode64(char* buf, const uint64_t data)
 {
-   UInt64 ndata = hton64(data);
-   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(UInt64));
-   return buf + sizeof(UInt64);
+   uint64_t ndata = hton64(data);
+   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(uint64_t));
+   return buf + sizeof(uint64_t);
 }
 
 char* 
@@ -1318,10 +1317,10 @@ StunMessage::encode(char* buf, const char* data, unsigned int length)
 char* 
 StunMessage::encodeTurnData(char *ptr, const resip::Data* td)
 {
-   UInt16 padsize = (UInt16)td->size() % 4 == 0 ? 0 : 4 - ((UInt16)td->size() % 4);
+   uint16_t padsize = (uint16_t)td->size() % 4 == 0 ? 0 : 4 - ((uint16_t)td->size() % 4);
 
    ptr = encode16(ptr, TurnData);
-   ptr = encode16(ptr, (UInt16)td->size());
+   ptr = encode16(ptr, (uint16_t)td->size());
    memcpy(ptr, td->data(), td->size());
    ptr += td->size();
    memset(ptr, 0, padsize);  // zero out padded data (note: this is not required by the RFC)
@@ -1329,7 +1328,7 @@ StunMessage::encodeTurnData(char *ptr, const resip::Data* td)
 }
 
 char*
-StunMessage::encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value)
+StunMessage::encodeAtrUInt32(char* ptr, uint16_t type, uint32_t value)
 {
    ptr = encode16(ptr, type);
    ptr = encode16(ptr, 4);
@@ -1338,7 +1337,7 @@ StunMessage::encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value)
 }
 
 char*
-StunMessage::encodeAtrUInt64(char* ptr, UInt16 type, UInt64 value)
+StunMessage::encodeAtrUInt64(char* ptr, uint16_t type, uint64_t value)
 {
    ptr = encode16(ptr, type);
    ptr = encode16(ptr, 8);
@@ -1347,7 +1346,7 @@ StunMessage::encodeAtrUInt64(char* ptr, UInt16 type, UInt64 value)
 }
 
 char*
-StunMessage::encodeAtrXorAddress(char* ptr, UInt16 type, const StunAtrAddress& atr)
+StunMessage::encodeAtrXorAddress(char* ptr, uint16_t type, const StunAtrAddress& atr)
 {
    StunAtrAddress xorAtr;
    applyXorToAddress(atr, xorAtr);
@@ -1355,11 +1354,11 @@ StunMessage::encodeAtrXorAddress(char* ptr, UInt16 type, const StunAtrAddress& a
 }
 
 char* 
-StunMessage::encodeAtrAddress(char* ptr, UInt16 type, const StunAtrAddress& atr)
+StunMessage::encodeAtrAddress(char* ptr, uint16_t type, const StunAtrAddress& atr)
 {
    ptr = encode16(ptr, type);
    ptr = encode16(ptr, atr.family == IPv6Family ? 20 : 8);
-   *ptr++ = (UInt8)0;  // pad
+   *ptr++ = (uint8_t)0;  // pad
    *ptr++ = atr.family;
    ptr = encode16(ptr, atr.port);
    if(atr.family == IPv6Family)
@@ -1381,10 +1380,10 @@ char*
 StunMessage::encodeAtrError(char* ptr, const StunAtrError& atr)
 {
    resip_assert(atr.reason);
-   UInt16 padsize = (unsigned int)atr.reason->size() % 4 == 0 ? 0 : 4 - ((unsigned int)atr.reason->size() % 4);
+   uint16_t padsize = (unsigned int)atr.reason->size() % 4 == 0 ? 0 : 4 - ((unsigned int)atr.reason->size() % 4);
 
    ptr = encode16(ptr, ErrorCode);
-   ptr = encode16(ptr, 4 + (UInt16)atr.reason->size()); 
+   ptr = encode16(ptr, 4 + (uint16_t)atr.reason->size()); 
    ptr = encode16(ptr, 0); // pad
    *ptr++ = atr.errorClass & 0x7;  // first 3 bits only
    *ptr++ = atr.number;
@@ -1396,7 +1395,7 @@ StunMessage::encodeAtrError(char* ptr, const StunAtrError& atr)
 char* 
 StunMessage::encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr)
 {
-   UInt16 padsize = (2*atr.numAttributes) % 4 == 0 ? 0 : 4 - ((2*atr.numAttributes) % 4);
+   uint16_t padsize = (2*atr.numAttributes) % 4 == 0 ? 0 : 4 - ((2*atr.numAttributes) % 4);
    ptr = encode16(ptr, UnknownAttribute);
    ptr = encode16(ptr, 2*atr.numAttributes);
    for (int i=0; i<atr.numAttributes; i++)
@@ -1407,11 +1406,11 @@ StunMessage::encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr)
 }
 
 char* 
-StunMessage::encodeAtrString(char* ptr, UInt16 type, const Data* atr, UInt16 maxBytes)
+StunMessage::encodeAtrString(char* ptr, uint16_t type, const Data* atr, uint16_t maxBytes)
 {
    resip_assert(atr);
-   UInt16 size = atr->size() > maxBytes ? maxBytes : (UInt16)atr->size();
-   UInt16 padsize = size % 4 == 0 ? 0 : 4 - (size % 4);
+   uint16_t size = atr->size() > maxBytes ? maxBytes : (uint16_t)atr->size();
+   uint16_t padsize = size % 4 == 0 ? 0 : 4 - (size % 4);
 	
    ptr = encode16(ptr, type);
    ptr = encode16(ptr, size);  
@@ -1550,7 +1549,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasTurnChannelNumber)
    {
       StackLog(<< "Encoding Turn ChannelNumber: " << mTurnChannelNumber);
-      ptr = encodeAtrUInt32(ptr, TurnChannelNumber, UInt32(mTurnChannelNumber << 16));
+      ptr = encodeAtrUInt32(ptr, TurnChannelNumber, uint32_t(mTurnChannelNumber << 16));
    }
    if (mHasTurnLifetime)
    {
@@ -1588,7 +1587,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasTurnRequestedTransport)
    {
       StackLog(<< "Encoding Turn RequestedTransport: " << (int)mTurnRequestedTransport);
-      ptr = encodeAtrUInt32(ptr, TurnRequestedTransport, UInt32(mTurnRequestedTransport << 24));
+      ptr = encodeAtrUInt32(ptr, TurnRequestedTransport, uint32_t(mTurnRequestedTransport << 24));
    }   
    if (mHasTurnDontFragment)
    {
@@ -1609,7 +1608,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasTurnRequestedAddressFamily)
    {
       StackLog(<< "Encoding Turn RequestedAddressFamily: " << mTurnRequestedAddressFamily);
-      ptr = encodeAtrUInt32(ptr, TurnRequestedAddressFamily, UInt32(mTurnRequestedAddressFamily << 16));
+      ptr = encodeAtrUInt32(ptr, TurnRequestedAddressFamily, uint32_t(mTurnRequestedAddressFamily << 16));
    }
    if (mHasIcePriority)
    {
@@ -1634,7 +1633,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    }
 
    // Update Length in header now - needed in message integrity calculations
-   UInt16 msgSize = ptr - buf - sizeof(StunMsgHdr);
+   uint16_t msgSize = ptr - buf - sizeof(StunMsgHdr);
    if(mHasMessageIntegrity) msgSize += 24;  // 4 (attribute header) + 20 (attribute value)
    encode16(lengthp, msgSize);
 
@@ -1655,9 +1654,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasFingerprint)
    {
       StackLog(<< "Calculating fingerprint for data of size " << ptr-buf);
-      boost::crc_32_type stun_crc;
-      stun_crc.process_bytes(buf, ptr-buf); // Calculate CRC across entire message, except the fingerprint attribute
-      UInt32 fingerprint = stun_crc.checksum() ^ STUN_CRC_FINAL_XOR;
+      uint32_t fingerprint = crc32_fast(buf, ptr-buf) ^ STUN_CRC_FINAL_XOR;
       ptr = encodeAtrUInt32(ptr, Fingerprint, fingerprint);
    }
 
@@ -1672,7 +1669,7 @@ StunMessage::stunEncodeFramedMessage(char* buf, unsigned int bufLen)
    // Add Frame Header info
    buf[0] = 0; // Channel 0 for Stun Messages
    buf[1] = 0; 
-   UInt16 frameSize = htons(size);
+   uint16_t frameSize = htons(size);
    memcpy(&buf[2], (void*)&frameSize, 2);  // size is not needed if udp - but should be harmless
    return size+4;
 }
@@ -1702,10 +1699,10 @@ StunMessage::computeHmac(char* hmac, const char* input, int length, const char* 
 void
 StunMessage::createUsernameAndPassword()
 {
-   UInt64 time = resip::Timer::getTimeSecs();
+   uint64_t time = resip::Timer::getTimeSecs();
    time -= (time % 20*60);  // rounded time - current time modulo 20 minutes
-   //UInt64 hitime = time >> 32;
-   //UInt64 lotime = time & 0xFFFFFFFF;
+   //uint64_t hitime = time >> 32;
+   //uint64_t lotime = time & 0xFFFFFFFF;
 
    mHasUsername = true;
    if(!mUsername)
@@ -1844,11 +1841,11 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
 
       // Store original stun message length from mBuffer 
       char *lengthposition = (char*)mBuffer.data() + 2;
-      UInt16 originalLength;
+      uint16_t originalLength;
       memcpy(&originalLength, lengthposition, 2);
 
       // Update stun message length in mBuffer for calculation
-      UInt16 tempLength = htons(mMessageIntegrityMsgLength);
+      uint16_t tempLength = htons(mMessageIntegrityMsgLength);
       memcpy(lengthposition, &tempLength, 2);
 
       // Calculate HMAC
@@ -1881,17 +1878,17 @@ StunMessage::checkFingerprint()
    if(mHasFingerprint)
    {
       StackLog(<< "Calculating fingerprint to check for data of size " << mBuffer.size() - 8);
-      boost::crc_32_type stun_crc;
-      stun_crc.process_bytes(mBuffer.data(), mBuffer.size()-8); // Calculate CRC across entire message, except the fingerprint attribute
 
-      unsigned long crc = stun_crc.checksum() ^ STUN_CRC_FINAL_XOR;
+      // Calculate CRC across entire message, except the fingerprint attribute
+      unsigned long crc_checksum = crc32_fast(mBuffer.data(), mBuffer.size()-8);
+      unsigned long crc = crc_checksum ^ STUN_CRC_FINAL_XOR;
       if(crc == mFingerprint)
       {
          return true;
       }
       else
       {
-         WarningLog(<< "Fingerprint=" << mFingerprint << " does not match CRC=" << stun_crc.checksum());
+         WarningLog(<< "Fingerprint=" << mFingerprint << " does not match CRC=" << crc_checksum);
          return false;
       }
    }

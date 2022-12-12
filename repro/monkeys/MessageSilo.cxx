@@ -15,6 +15,8 @@
 
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
@@ -136,7 +138,7 @@ MessageSilo::process(RequestContext& context)
       {
          // Create async message now, so we can use it's storage and avoid some copies
          AsyncAddToSiloMessage* async = new AsyncAddToSiloMessage(*this, context.getTransactionId(), &context.getProxy());
-         std::auto_ptr<ApplicationMessage> async_ptr(async);
+         std::unique_ptr<ApplicationMessage> async_ptr(async);
 
          // Check Max ContentLength setting
          async->mMessageBody = contents->getBodyData();
@@ -257,9 +259,9 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
                   ContactInstanceRecord& rec = *contactIt;
 
                   // Removed contacts can be in the list, but they will be expired, don't send to them
-                  if(rec.mRegExpires > (UInt64)now)  
+                  if(rec.mRegExpires > (uint64_t)now)  
                   {
-                     std::auto_ptr<SipMessage> msg(new SipMessage);
+                     std::unique_ptr<SipMessage> msg(new SipMessage);
                      RequestLine rLine(MESSAGE);
                      rLine.uri() = rec.mContact.uri();
                      msg->header(h_RequestLine) = rLine;
@@ -306,7 +308,7 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
                      PlainContents contents(hfv, type);
                      msg->setContents(&contents);  // need to clone since body data isn't owned by message yet
 
-                     mAsyncDispatcher->mStack->send(msg);
+                     mAsyncDispatcher->mStack->send(std::move(msg));
                   }
                }
             }
@@ -331,7 +333,7 @@ MessageSilo::onAdd(resip::ServerRegistrationHandle h, const resip::SipMessage& r
    AsyncDrainSiloMessage* async = new AsyncDrainSiloMessage(*this, Data::Empty, 0);  // tid and tu not needed since no response expected
    async->mAor = reg.header(h_To).uri().getAOR(false /* addPort? */);
    async->mRequestContacts = h->getRequestContacts();
-   std::auto_ptr<ApplicationMessage> async_ptr(async);
+   std::unique_ptr<ApplicationMessage> async_ptr(async);
    mAsyncDispatcher->post(async_ptr);
    return true;
 }

@@ -13,8 +13,8 @@
 #include "resip/stack/SecurityTypes.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/Compression.hxx"
-#include "rutil/SharedPtr.hxx"
 
+#include <memory>
 #include <openssl/ssl.h>
 
 namespace resip
@@ -35,23 +35,23 @@ class WssTransport : public TlsBaseTransport, public WsBaseTransport
                    Security& security,
                    const Data& sipDomain, 
                    SecurityTypes::SSLType sslType,
-                   AfterSocketCreationFuncPtr socketFunc=0,
+                   AfterSocketCreationFuncPtr socketFunc = nullptr,
                    Compression &compression = Compression::Disabled,
                    unsigned transportFlags = 0,
                    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                    bool useEmailAsSIP = false,
-                   SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
-                   SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(new BasicWsCookieContextFactory()),
+                   std::shared_ptr<WsConnectionValidator> = nullptr,
+                   std::shared_ptr<WsCookieContextFactory> = std::make_shared<BasicWsCookieContextFactory>(),
                    const Data& certificateFilename = "", 
                    const Data& privateKeyFilename = "",
                    const Data& privateKeyPassPhrase = "");
-      virtual  ~WssTransport();
 
+      // !bw! why is this re-defined here when the public definition in the TlsBaseTransport base class is identical?!
       bool isUseEmailAsSIP()
          { return mUseEmailAsSIP; };
 
    protected:
-      Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
+      Connection* createConnection(const Tuple& who, Socket fd, bool server = false) override;
 };
 
 }

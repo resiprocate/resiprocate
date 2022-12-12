@@ -25,7 +25,9 @@
 
 extern "C" 
 {
-#include <srtp/srtp.h>
+#include "../../Srtp2Helper.hxx"
+// this file isn't shipped in the packages for srtp2
+// see: https://www.resiprocate.org/bugzilla/show_bug.cgi?id=169
 #include <srtp/srtp_priv.h>
 }
 
@@ -151,12 +153,12 @@ TestDtlsUdpSocketContext::handshakeCompleted()
    cout << "Made SRTP policies\n";
    if(mSocket->getSocketType()==DtlsSocket::Client) 
    {
-      char *testData="test data";
+      const char *testData="test data";
       sendRtpData((const unsigned char *)testData,strlen(testData)+1);
 
 
 #if defined(WIN32)
-      char *testData2="test bobo";
+      const char *testData2="test bobo";
       sendRtpData((const unsigned char *)testData2,strlen(testData)+1);
 #endif
    }

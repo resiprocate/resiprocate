@@ -6,30 +6,22 @@
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 
+#include <utility>
+
 using namespace reconserver;
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-CredentialInfo::CredentialInfo(resip::SharedPtr<B2BCall> call, const resip::Data& user, const resip::Data& realm, const Data& transactionId, resip::TransactionUser* transactionUser, B2BCallManager* b) :
-   mCall(call),
+CredentialInfo::CredentialInfo(std::shared_ptr<B2BCall> call, const resip::Data& user, const resip::Data& realm, const Data& transactionId, resip::TransactionUser* transactionUser, B2BCallManager* b) :
+   mCall(std::move(call)),
    mUser(user),
    mRealm(realm),
    mMode(Error)
 {
    mTu = transactionUser;
    mB2BCallManager = b;
-}
-
-Data
-CredentialInfo::brief() const
-{
-   Data buffer;
-   DataStream strm(buffer);
-   strm << "CredentialInfo " << mUser << " @ " << mRealm << " mSecret=" << mSecret;
-   strm.flush();
-   return buffer;
 }
 
 void
@@ -48,7 +40,7 @@ CredentialInfo::clone() const
 EncodeStream&
 CredentialInfo::encode(EncodeStream& strm) const
 {
-   strm << brief();
+   strm << "CredentialInfo " << mUser << " @ " << mRealm << " mSecret=" << mSecret;
    return strm;
 }
 

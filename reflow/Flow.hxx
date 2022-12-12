@@ -8,14 +8,8 @@
 #include <map>
 #include <rutil/TimeLimitFifo.hxx>
 #include <rutil/Mutex.hxx>
-#include <rutil/SharedPtr.hxx>
 
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp/srtp.h>
-#endif
-#include <boost/shared_ptr.hpp>
+#include "Srtp2Helper.hxx"
 
 #include "reTurn/client/TurnAsyncUdpSocket.hxx"
 #include "reTurn/client/TurnAsyncTcpSocket.hxx"
@@ -27,6 +21,9 @@
 
 #include "FlowContext.hxx"
 #include "RTCPEventLoggingHandler.hxx"
+
+#include <memory>
+#include <utility>
 
 using namespace reTurn;
 
@@ -68,12 +65,12 @@ public:
         const StunTuple& localBinding, 
         MediaStream& mediaStream,
         bool forceCOMedia,
-        resip::SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = resip::SharedPtr<RTCPEventLoggingHandler>(),
-        resip::SharedPtr<FlowContext> context = resip::SharedPtr<FlowContext>());
+        std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = nullptr,
+        std::shared_ptr<FlowContext> context = nullptr);
    ~Flow();
 
-   void activateFlow(UInt8 allocationProps = StunMessage::PropsNone);
-   void activateFlow(UInt64 reservationToken);
+   void activateFlow(uint8_t allocationProps = StunMessage::PropsNone);
+   void activateFlow(uint64_t reservationToken);
 
    bool isReady() { return mFlowState == Ready; }
 
@@ -118,7 +115,7 @@ public:
    StunTuple getSessionTuple();  // returns either local, reflexive, or relay tuple depending on NatTraversalMode
    StunTuple getRelayTuple();
    StunTuple getReflexiveTuple();
-   UInt64 getReservationToken();
+   uint64_t getReservationToken();
    unsigned int getComponentId() { return mComponentId; }
 
 private:
@@ -137,18 +134,18 @@ private:
    bool mForceCOMedia;
 
    // Logging handler, if set
-   resip::SharedPtr<RTCPEventLoggingHandler> mRtcpEventLoggingHandler;
+   std::shared_ptr<RTCPEventLoggingHandler> mRtcpEventLoggingHandler;
 
    // Flow context from application layer
-   resip::SharedPtr<FlowContext> mFlowContext;
+   std::shared_ptr<FlowContext> mFlowContext;
 
    // mTurnSocket has it's own threading protection
-   boost::shared_ptr<TurnAsyncSocket> mTurnSocket;
+   std::shared_ptr<TurnAsyncSocket> mTurnSocket;
    bool mPrivatePeer;
 
    // These are only set once, then accessed - thus they do not require mutex protection
-   UInt8 mAllocationProps;
-   UInt64 mReservationToken; 
+   uint8_t mAllocationProps;
+   uint64_t mReservationToken; 
 
    // Mutex to protect the following members that may be get/set from multiple threads
    resip::Mutex mMutex;
@@ -169,13 +166,12 @@ private:
    class ReceivedData
    {
    public:
-      ReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data) :
-         mAddress(address), mPort(port), mData(data) {}
-      ~ReceivedData() {}
+      ReceivedData(const asio::ip::address& address, unsigned short port, std::shared_ptr<DataBuffer> data) :
+         mAddress(address), mPort(port), mData(std::move(data)) {}
 
       asio::ip::address mAddress;
       unsigned short mPort;
-      boost::shared_ptr<DataBuffer> mData;
+      std::shared_ptr<DataBuffer> mData;
    };
    // FIFO for received data
    typedef resip::TimeLimitFifo<ReceivedData> ReceivedDataFifo;
@@ -195,7 +191,7 @@ private:
    virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple);
    virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple);
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken);
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, uint64_t reservationToken);
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e);
 
    virtual void onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime);
@@ -211,7 +207,7 @@ private:
    virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e);
 
    //virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
 
    virtual void onSendSuccess(unsigned int socketDesc);

@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
    assert(reqMessage.mHasUsername);
    assert(*reqMessage.mUsername == "evtj:h6vY");
    assert(reqMessage.mHasMessageIntegrity);
-   assert(reqMessage.checkMessageIntegrity("VOkJxbRl1RmTxUk/WvJxBt"));
+   assert(reqMessage.checkMessageIntegrity("VOkJxbRl1RmTxUk/WvJxBt"));  // Note:  expect this to fail if you build without OpenSSL
    assert(reqMessage.mHasFingerprint);
    assert(reqMessage.checkFingerprint());  
 

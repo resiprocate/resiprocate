@@ -9,8 +9,13 @@
 #include "resip/recon/UserAgent.hxx"
 #include "rutil/ServerProcess.hxx"
 
+#include "CDRFile.hxx"
 #include "MyConversationManager.hxx"
 #include "MyUserAgent.hxx"
+#ifdef BUILD_QPID_PROTON
+#include "rutil/ProtonThreadBase.hxx"
+#include "ProtonCommandThread.hxx"
+#endif
 
 namespace reconserver
 {
@@ -31,9 +36,15 @@ protected:
    virtual void onReload();
 
 private:
+   std::shared_ptr<CDRFile> mCDRFile;
    bool mKeyboardInput;
-   resip::SharedPtr<MyUserAgent> mUserAgent;
-   std::auto_ptr<MyConversationManager> mConversationManager;
+   std::shared_ptr<MyUserAgent> mUserAgent;
+   std::unique_ptr<MyConversationManager> mConversationManager;
+#ifdef BUILD_QPID_PROTON
+   std::unique_ptr<resip::ProtonThreadBase> mProtonCommandThread;
+   std::shared_ptr<ProtonCommandThread> mCommandQueue;
+   std::shared_ptr<resip::ProtonThreadBase::ProtonSenderBase> mEventTopic;
+#endif
 };
 
 }
@@ -43,7 +54,9 @@ private:
 
 /* ====================================================================
  *
- * Copyright 2013 Catalin Constantin Usurelu.  All rights reserved.
+ * Copyright (C) 2013-2022 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
+ * Copyright 2013 Catalin Constantin Usurelu.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

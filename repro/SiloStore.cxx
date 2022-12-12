@@ -61,7 +61,7 @@ SiloStore::deleteSiloRecord(time_t originalSendTime, const resip::Data& tid)
 }
 
 void 
-SiloStore::cleanupExpiredSiloRecords(UInt64 now, unsigned long expirationTime)
+SiloStore::cleanupExpiredSiloRecords(uint64_t now, unsigned long expirationTime)
 {
    mDb.cleanupExpiredSiloRecords(now, expirationTime);
 }
@@ -69,7 +69,7 @@ SiloStore::cleanupExpiredSiloRecords(UInt64 now, unsigned long expirationTime)
 SiloStore::Key 
 SiloStore::buildKey(time_t originalSendTime, const resip::Data& tid) const
 {
-   Key key((UInt64)originalSendTime);
+   Key key((uint64_t)originalSendTime);
    key += ":" + tid;
    return key;
 }

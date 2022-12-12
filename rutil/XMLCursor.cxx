@@ -58,8 +58,7 @@ static const Data QUESTION_RA_QUOTE("?>");
 // 1. lazier parsing
 // 2. embedded weirdnesses like <! > and <? >
 XMLCursor::XMLCursor(const ParseBuffer& pb)
-   : mRoot(0),
-     mCursor(0),
+   : mCursor(nullptr),
      mAttributesSet(false)
 {
    ParseBuffer lPb(pb);
@@ -360,6 +359,7 @@ XMLCursor::getAttributes() const
       Data value;
 
       pb.skipToOneOf(ParseBuffer::Whitespace, RA_QUOTE_SLASH);
+      pb.skipWhitespace();
 
       while (!pb.eof() && 
              *pb.position() != RA_QUOTE[0] &&

@@ -6,15 +6,28 @@
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
 
-// sipX includes
-#include "mp/MpPlayerListener.h"
-
-class MpStreamPlayer;
-class MpPlayerEvent;
-
 namespace recon
 {
 class ConversationManager;
+
+// Used to delete a resource, from a media stack thread
+class MediaResourceParticipantDeleterCmd : public resip::DumCommand
+{
+   public:
+      MediaResourceParticipantDeleterCmd(ConversationManager& conversationManager, ParticipantHandle participantHandle) :
+         mConversationManager(conversationManager), mParticipantHandle(participantHandle) {}
+      ~MediaResourceParticipantDeleterCmd() {}
+
+      void executeCommand() { Participant* participant = mConversationManager.getParticipant(mParticipantHandle); if(participant) delete participant; }
+
+      Message* clone() const { resip_assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << "MediaResourceParticipantDeleterCmd: partHandle=" << mParticipantHandle; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+
+   private:
+      ConversationManager& mConversationManager;
+      ParticipantHandle mParticipantHandle;
+};
 
 /**
   This class represents a media resource participant.
@@ -24,7 +37,7 @@ class ConversationManager;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class MediaResourceParticipant : public Participant, public MpPlayerListener
+class MediaResourceParticipant : public virtual Participant
 {
 public:  
    typedef enum
@@ -34,44 +47,50 @@ public:
       File,
       Cache,
       Http,
-      Https
+      Https,
+      Record,
+      Buffer
    } ResourceType;
 
    MediaResourceParticipant(ParticipantHandle partHandle,
       ConversationManager& conversationManager,
-      const resip::Uri& mediaUrl);  
+      const resip::Uri& mediaUrl,
+      const std::shared_ptr<resip::Data>& audioBuffer);
    virtual ~MediaResourceParticipant();
 
-   virtual void startPlay();
-   virtual int getConnectionPortOnBridge();
+   virtual void startResource();
+   virtual bool hasInput();
+   virtual bool hasOutput();
    virtual ResourceType getResourceType() { return mResourceType; }
    virtual void destroyParticipant();
+   virtual void resourceDone();
 
-   // For Stream Player callbacks
-   virtual void playerRealized(MpPlayerEvent& event);
-   virtual void playerPrefetched(MpPlayerEvent& event);
-   virtual void playerPlaying(MpPlayerEvent& event);
-   virtual void playerPaused(MpPlayerEvent& event);
-   virtual void playerStopped(MpPlayerEvent& event);
-   virtual void playerFailed(MpPlayerEvent& event);
-
-protected:       
+protected:
+   virtual void startResourceImpl() = 0;
+   virtual bool stopResource() = 0;  // returns true if it's ok to destroy now, or false if we need to wait for an event
+   virtual ConversationManager& getConversationManager() { return mConversationManager; }
+   virtual resip::Uri& getMediaUrl() { return mMediaUrl; }
+   virtual bool isRepeat() { return mRepeat; }
+   virtual void setRepeat(bool repeat) { mRepeat = repeat; }
+   virtual bool isPrefetch() { return mPrefetch; }
+   virtual unsigned int getDurationMs() { return mDurationMs; }
+   virtual bool isRunning() { return mRunning; }
+   virtual void setRunning(bool running) { mRunning = running; }
+   virtual bool isDestroying() { return mDestroying; }
+   virtual void setDestroying(bool destroying) { mDestroying = destroying; }
+   virtual const std::shared_ptr<resip::Data>& getAudioBuffer() { return mAudioBuffer; }
 
 private:
    resip::Uri mMediaUrl;
    ResourceType mResourceType;
-   MpStreamPlayer* mStreamPlayer;
-   int mToneGenPortOnBridge;
-   int mFromFilePortOnBridge;
+   std::shared_ptr<resip::Data> mAudioBuffer; // only set if type is buffer playback
 
    // Play settings
-   bool mLocalOnly;
-   bool mRemoteOnly;
    bool mRepeat;
    bool mPrefetch;
    unsigned int mDurationMs;
 
-   bool mPlaying;
+   bool mRunning;
    bool mDestroying;
 };
 
@@ -82,6 +101,8 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

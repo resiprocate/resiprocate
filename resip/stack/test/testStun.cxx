@@ -70,7 +70,7 @@ main(int argc, char* argv[])
    StackThread sthread(receiver);
    sthread.run();
    
-   UInt64 startTime = Timer::getTimeMs();
+   uint64_t startTime = Timer::getTimeMs();
    int outstanding=0;
    int sent = 0;
 
@@ -125,15 +125,15 @@ main(int argc, char* argv[])
 
    InfoLog (<< "Finished " << count << " runs");
    
-   UInt64 elapsed = Timer::getTimeMs() - startTime;
+   uint64_t elapsed = Timer::getTimeMs() - startTime;
    if (!invite)
    {
-      cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
+      cout << runs << " registrations performed in " << elapsed << " ms, a rate of "
            << runs / ((float) elapsed / 1000.0) << " transactions per second.]" << endl;
    }
    else
    {
-      cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+      cout << runs << " calls performed in " << elapsed << " ms, a rate of "
            << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
    }
    cout << "Note: this test runs both sides (client and server)" << endl;

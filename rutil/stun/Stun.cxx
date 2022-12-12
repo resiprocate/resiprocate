@@ -60,11 +60,11 @@ stunParseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress4& result )
    result.family = *body++;
    if (result.family == IPv4Family)
    {
-      UInt16 nport;
+      uint16_t nport;
       memcpy(&nport, body, 2); body+=2;
       result.ipv4.port = ntohs(nport);
 		
-      UInt32 naddr;
+      uint32_t naddr;
       memcpy(&naddr, body, 4); body+=4;
       result.ipv4.addr = ntohl(naddr);
       return true;
@@ -82,7 +82,7 @@ stunParseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress4& result )
 }
 
 static bool 
-stunParseUInt32( char* body, unsigned int hdrLen,  UInt32& result )
+stunParseUInt32( char* body, unsigned int hdrLen,  uint32_t& result )
 {
    if ( hdrLen != 4 )
    {
@@ -90,7 +90,7 @@ stunParseUInt32( char* body, unsigned int hdrLen,  UInt32& result )
    }
    else
    {
-      UInt32 tmp;
+      uint32_t tmp;
       memcpy(&tmp, body, 4);
       result = ntohl(tmp);
       return true;
@@ -168,17 +168,36 @@ stunParseAtrString( char* body, unsigned int hdrLen,  StunAtrString& result )
    }
    else
    {
-      if (hdrLen % 4 != 0)
-      {
-         //clog << "Bad length string " << hdrLen << endl;
-         return false;
-      }
+      // !jr! Removed - newer RFCs don't require individual attributes to have this
+      // 4 byte boundary restriction.  (Note the overall structure of the 
+      // stun message attributes must still be padded to 4 byte boundaries)
+      //if (hdrLen % 4 != 0)
+      //{
+      //   //clog << "Bad length string " << hdrLen << endl;
+      //   return false;
+      //}
 		
       result.sizeValue = hdrLen;
       memcpy(&result.value, body, hdrLen);
       result.value[hdrLen] = 0;
       return true;
    }
+}
+
+static bool
+stunParseAtrUInt32(char* body, unsigned int hdrLen, uint32_t& result)
+{
+    if (hdrLen != 4)
+    {
+        // clog << "hdrLen wrong for UInt32 attribute";
+        return false;
+    }
+    else
+    {
+        memcpy(&result, body, 4);
+        result = ntohl(result);
+        return true;
+    }
 }
 
 
@@ -203,7 +222,6 @@ bool
 stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose)
 {
    if (verbose) clog << "Received stun message: " << bufLen << " bytes" << endl;
-   memset(&msg, 0, sizeof(msg));
 	
    if (sizeof(StunMsgHdr) > bufLen)
    {
@@ -228,15 +246,22 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 	
    while ( size > 0 )
    {
-      // !jf! should check that there are enough bytes left in the buffer
+      if (size < sizeof(StunAtrHdr))
+      {
+         return false;
+      }
 		
       StunAtrHdr* attr = reinterpret_cast<StunAtrHdr*>(body);
 		
       unsigned int attrLen = ntohs(attr->length);
+
+      // attrLen may not be on 4 byte boundary, in which case we need to pad to 4 bytes when advancing to next attribute
+      unsigned int attrLenPad = attrLen % 4 == 0 ? 0 : 4 - (attrLen % 4);
+
       int atrType = ntohs(attr->type);
-		
+
       if (verbose) clog << "Found attribute type=" << atrType << " length=" << attrLen << endl;
-      if ( attrLen+4 > size ) 
+      if (attrLen + attrLenPad + 4 > size)
       {
          clog << "claims attribute is larger than size of message " <<"(attribute type="<<atrType<<")"<< endl;
          return false;
@@ -392,7 +417,44 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             }
             break;  
 				
+         case Realm:
+             if (!msg.hasRealm)
+             {
+                 if (attrLen > MAX_REALM_BYTES)
+                 {
+                     if (verbose) clog << "Realm length=" << attrLen << " is longer than max allowed=" << MAX_REALM_BYTES << endl;
+                     return false;
+                 }
+                 msg.hasRealm = true;
+                 msg.realm = new resip::Data(resip::Data::Share, body, attrLen);
+                 if (verbose) clog << "Realm = " << *msg.realm << endl;
+             }
+             else
+             {
+                 if (verbose) clog << "Duplicate Realm in message - ignoring." << endl;
+             }
+             break;
+
+         case Nonce:
+             if (!msg.hasNonce)
+             {
+                 if (attrLen > MAX_NONCE_BYTES)
+                 {
+                     if (verbose) clog << "Nonce length=" << attrLen << " is longer than max allowed=" << MAX_NONCE_BYTES << endl;
+                     return false;
+                 }
+                 msg.hasNonce = true;
+                 msg.nonce = new resip::Data(resip::Data::Share, body, attrLen);
+                 if (verbose) clog << "Nonce = " << *msg.nonce << endl;
+             }
+             else
+             {
+                 if (verbose) clog << "Duplicate Nonce in message - ignoring." << endl;
+             }
+             break;
+
          case XorMappedAddress:
+         case XorMappedAddress_old:
             msg.hasXorMappedAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  msg.xorMappedAddress ) == false )
             {
@@ -401,7 +463,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             }
             else
             {
-               if (verbose) clog << "XorMappedAddress = " << msg.mappedAddress.ipv4 << endl;
+               if (verbose) clog << "XorMappedAddress = " << msg.xorMappedAddress.ipv4 << endl;
             }
             break;  
 
@@ -413,19 +475,55 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             }
             break;  
 				
-         case ServerName: 
-            msg.hasServerName = true;
-            if (stunParseAtrString( body, attrLen, msg.serverName) == false)
+         case Software:
+         // case ServerName: // Was non-standard "ServerName" attribute(0x8022) now standardardized as SOFTWARE(0x8022)
+            msg.hasSoftware = true;
+            if (stunParseAtrString( body, attrLen, msg.software) == false)
             {
                if (verbose) clog << "problem parsing ServerName" << endl;
                return false;
             }
             else
             {
-               if (verbose) clog << "ServerName = " << msg.serverName.value << endl;
+               if (verbose) clog << "ServerName = " << msg.software.value << endl;
             }
             break;
-				
+		
+         case AlternateServer:
+             if (!msg.hasAlternateServer)
+             {
+                 msg.hasAlternateServer = true;
+                 if (stunParseAtrAddress(body, attrLen, msg.alternateServer) == false)
+                 {
+                     if (verbose) clog << "problem parsing AlternateServer" << endl;
+                     return false;
+                 }
+                 if (verbose) clog << "AlternateServer = " << msg.alternateServer.ipv4;
+             }
+             else
+             {
+                 if (verbose) clog << "Duplicate AlternateServer in message - ignoring." << endl;
+             }
+             break;
+		
+         case Fingerprint:
+             if (!msg.hasFingerprint)
+             {
+                 msg.hasFingerprint = true;
+                 if (stunParseAtrUInt32(body, attrLen, msg.fingerprint) == false)
+                 {
+                     if (verbose) clog << "problem parsing Fingerprint" << endl;
+                     return false;
+                 }
+                 if (verbose) clog << "Fingerprint = " << msg.fingerprint;
+             }
+             else
+             {
+                 if (verbose) clog << "Duplicate Fingerprint in message - ignoring." << endl;
+             }
+             break;
+
+
          case SecondaryAddress:
             msg.hasSecondaryAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  msg.secondaryAddress ) == false )
@@ -439,8 +537,9 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             }
             break;  
 
-            // TURN attributes
+        // End STUN attributes
             
+         // TURN attributes            
          case TurnLifetime:
             msg.hasTurnLifetime = true;
             if (stunParseUInt32( body, attrLen, msg.turnLifetime) == false)
@@ -508,27 +607,27 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             }
       }
 		
-      body += attrLen;
-      size -= attrLen;
+      body += attrLen + attrLenPad;
+      size -= attrLen + attrLenPad;
    }
     
    return true;
 }
 
 static char* 
-encode16(char* buf, UInt16 data)
+encode16(char* buf, uint16_t data)
 {
-   UInt16 ndata = htons(data);
-   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(UInt16));
-   return buf + sizeof(UInt16);
+   uint16_t ndata = htons(data);
+   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(uint16_t));
+   return buf + sizeof(uint16_t);
 }
 
 static char* 
-encode32(char* buf, UInt32 data)
+encode32(char* buf, uint32_t data)
 {
-   UInt32 ndata = htonl(data);
-   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(UInt32));
-   return buf + sizeof(UInt32);
+   uint32_t ndata = htonl(data);
+   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(uint32_t));
+   return buf + sizeof(uint32_t);
 }
 
 
@@ -543,7 +642,7 @@ static char*
 encodeTurnData(char *ptr, const resip::Data* td)
 {
    ptr = encode16(ptr, TurnData);
-   ptr = encode16(ptr, (UInt16)td->size());
+   ptr = encode16(ptr, (uint16_t)td->size());
    memcpy(ptr, td->data(), td->size());
    ptr += td->size();
    
@@ -551,7 +650,7 @@ encodeTurnData(char *ptr, const resip::Data* td)
 }
 
 static char*
-encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value)
+encodeAtrUInt32(char* ptr, uint16_t type, uint32_t value)
 {
    ptr = encode16(ptr, type);
    ptr = encode16(ptr, 4);
@@ -560,7 +659,7 @@ encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value)
 }
 
 static char* 
-encodeAtrAddress4(char* ptr, UInt16 type, const StunAtrAddress4& atr)
+encodeAtrAddress4(char* ptr, uint16_t type, const StunAtrAddress4& atr)
 {
    ptr = encode16(ptr, type);
    ptr = encode16(ptr, 8);
@@ -582,7 +681,7 @@ encodeAtrChangeRequest(char* ptr, const StunAtrChangeRequest& atr)
 }
 
 static char* 
-encodeMagicCookie(char* ptr, const UInt32& cookie)
+encodeMagicCookie(char* ptr, const uint32_t& cookie)
 {
    ptr = encode16(ptr, TurnMagicCookie);
    ptr = encode16(ptr, 4);
@@ -626,7 +725,7 @@ encodeXorOnly(char* ptr)
 
 
 static char* 
-encodeAtrString(char* ptr, UInt16 type, const StunAtrString& atr)
+encodeAtrString(char* ptr, uint16_t type, const StunAtrString& atr)
 {
    resip_assert(atr.sizeValue % 4 == 0);
 	
@@ -745,10 +844,10 @@ stunEncodeMessage( const StunMessage& msg,
       if (verbose) clog << "Encoding xorOnly: " << endl;
       ptr = encodeXorOnly( ptr );
    }
-   if (msg.hasServerName)
+   if (msg.hasSoftware)
    {
-      if (verbose) clog << "Encoding ServerName: " << msg.serverName.value << endl;
-      ptr = encodeAtrString(ptr, ServerName, msg.serverName);
+      if (verbose) clog << "Encoding Software: " << msg.software.value << endl;
+      ptr = encodeAtrString(ptr, Software, msg.software);
    }
    if (msg.hasSecondaryAddress)
    {
@@ -776,8 +875,8 @@ stunEncodeMessage( const StunMessage& msg,
 
       // allocate space for message integrity attribute (hash + attribute type + size)
       char* ptrMessageIntegrity = ptr;
-	  ptr += 20 + sizeof(MessageIntegrity) + sizeof(UInt16);
-      encode16(lengthp, UInt16(ptr - buf - sizeof(StunMsgHdr)));
+	  ptr += 20 + sizeof(MessageIntegrity) + sizeof(uint16_t);
+      encode16(lengthp, uint16_t(ptr - buf - sizeof(StunMsgHdr)));
    
       StunAtrIntegrity integrity;
       // pad with zeros prior to calculating message integrity attribute	   
@@ -793,7 +892,7 @@ stunEncodeMessage( const StunMessage& msg,
    }
 
    if (verbose) clog << endl;
-   encode16(lengthp, UInt16(ptr - buf - sizeof(StunMsgHdr)));
+   encode16(lengthp, uint16_t(ptr - buf - sizeof(StunMsgHdr)));
    return int(ptr - buf);
 }
 
@@ -807,7 +906,7 @@ stunRand()
    { 
       init = true;
 		
-      UInt64 tick;
+      uint64_t tick;
 		
 #if defined(WIN32) 
 #if !defined(UNDER_CE) && !defined(__GNUC__) && !defined(_WIN64) && !defined(_M_ARM)
@@ -928,17 +1027,17 @@ toHex(const char* buffer, int bufferSize, char* output)
 void
 stunCreateUserName(const StunAddress4& source, StunAtrString* username)
 {
-   UInt64 time = stunGetSystemTimeSecs();
+   uint64_t time = stunGetSystemTimeSecs();
    time -= (time % 20*60);
    //UInt64 hitime = time >> 32;
-   UInt64 lotime = time & 0xFFFFFFFF;
+   uint64_t lotime = time & 0xFFFFFFFF;
 	
    char buffer[1024];
    sprintf(buffer,
            "%08x:%08x:%08x:", 
-           UInt32(source.addr),
-           UInt32(stunRand()),
-           UInt32(lotime));
+           uint32_t(source.addr),
+           uint32_t(stunRand()),
+           uint32_t(lotime));
    resip_assert( strlen(buffer) < 1024 );
 	
    resip_assert(strlen(buffer) + 41 < STUN_MAX_STRING);
@@ -978,10 +1077,10 @@ stunCreatePassword(const StunAtrString& username, StunAtrString* password)
 }
 
 
-UInt64
+uint64_t
 stunGetSystemTimeSecs()
 {
-   UInt64 time=0;
+   uint64_t time=0;
 #if defined(WIN32)  
    SYSTEMTIME t;
    // CJ TODO - this probably has bug on wrap around every 24 hours
@@ -1011,7 +1110,7 @@ ostream& operator<< ( ostream& strm, const UInt128& r )
 ostream& 
 operator<<( ostream& strm, const StunAddress4& addr)
 {
-   UInt32 ip = addr.addr;
+   uint32_t ip = addr.addr;
    strm << ((int)(ip>>24)&0xFF) << ".";
    strm << ((int)(ip>>16)&0xFF) << ".";
    strm << ((int)(ip>> 8)&0xFF) << ".";
@@ -1083,9 +1182,9 @@ operator<<(ostream& os, const StunMsgHdr& h)
 // returns true if it scucceeded
 bool 
 stunParseHostName( char* peerName,
-               UInt32& ip,
-               UInt16& portVal,
-               UInt16 defaultPort )
+               uint32_t& ip,
+               uint16_t& portVal,
+               uint16_t defaultPort )
 {
    in_addr sin_addr;
     
@@ -1210,7 +1309,7 @@ stunCreateErrorResponse(StunMessage& response, int cl, int number, const char* m
    response.errorCode.errorClass = cl;
    response.errorCode.number = number;
    strcpy(response.errorCode.reason, msg);
-   response.errorCode.sizeReason = (UInt16)strlen(msg);
+   response.errorCode.sizeReason = (uint16_t)strlen(msg);
 }
 
 #if 0
@@ -1256,11 +1355,6 @@ stunServerProcessMsg( char* buf,
                       bool* changeIp,
                       bool verbose)
 {
-    
-   // set up information for default response 
-	
-   memset( resp, 0 , sizeof(*resp) );
-	
    *changeIp = false;
    *changePort = false;
 	
@@ -1276,7 +1370,7 @@ stunServerProcessMsg( char* buf,
 	
    StunAddress4 mapped = req.mappedAddress.ipv4;
    StunAddress4 respondTo = req.responseAddress.ipv4;
-   UInt32 flags = req.changeRequest.value;
+   uint32_t flags = req.changeRequest.value;
 	
    switch (req.msgHdr.msgType)
    {
@@ -1393,9 +1487,9 @@ stunServerProcessMsg( char* buf,
          if (1) // do xorMapped address or not 
          {
             resp->hasXorMappedAddress = true;
-            UInt16 id16 = req.msgHdr.id.octet[0]<<8 
+            uint16_t id16 = req.msgHdr.id.octet[0]<<8 
                | req.msgHdr.id.octet[1];
-            UInt32 id32 = req.msgHdr.id.octet[0]<<24 
+            uint32_t id32 = req.msgHdr.id.octet[0]<<24 
                | req.msgHdr.id.octet[1]<<16 
                | req.msgHdr.id.octet[2]<<8 
                | req.msgHdr.id.octet[3];
@@ -1428,16 +1522,16 @@ stunServerProcessMsg( char* buf,
             resp->username.sizeValue = req.username.sizeValue;
          }
 		
-         if (1) // add ServerName 
+         if (1) // add Software 
          {
-            resp->hasServerName = true;
-            const char serverName[] = "Vovida.org " STUN_VERSION; // must pad to mult of 4
+            resp->hasSoftware = true;
+            const char software[] = "Vovida.org " STUN_VERSION; // must pad to mult of 4
             
-            resip_assert( sizeof(serverName) < STUN_MAX_STRING );
+            resip_assert( sizeof(software) < STUN_MAX_STRING );
             //cerr << "sizeof serverName is "  << sizeof(serverName) << endl;
-            resip_assert( sizeof(serverName)%4 == 0 );
-            memcpy( resp->serverName.value, serverName, sizeof(serverName));
-            resp->serverName.sizeValue = sizeof(serverName);
+            resip_assert( sizeof(software)%4 == 0 );
+            memcpy( resp->software.value, software, sizeof(software));
+            resp->software.sizeValue = sizeof(software);
          }
          
          if ( req.hasMessageIntegrity & req.hasUsername )  
@@ -1449,8 +1543,8 @@ stunServerProcessMsg( char* buf,
 				
          if (req.hasUsername && (req.username.sizeValue > 64 ) )
          {
-            UInt32 source;
-            resip_assert( sizeof(int) == sizeof(UInt32) );
+            uint32_t source;
+            resip_assert( sizeof(int) == sizeof(uint32_t) );
 					
             sscanf(req.username.value, "%x", &source);
             resp->hasReflectedFrom = true;
@@ -1853,7 +1947,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
 }
 
 int 
-stunFindLocalInterfaces(UInt32* addresses,int maxRet)
+stunFindLocalInterfaces(uint32_t* addresses,int maxRet)
 {
 #if defined(WIN32) || defined(__sparc__)
    return 0;
@@ -1897,7 +1991,7 @@ stunFindLocalInterfaces(UInt32* addresses,int maxRet)
       struct sockaddr a = ifr2.ifr_addr;
       struct sockaddr_in* addr = (struct sockaddr_in*) &a;
 		
-      UInt32 ai = ntohl( addr->sin_addr.s_addr );
+      uint32_t ai = ntohl( addr->sin_addr.s_addr );
       if (int((ai>>24)&0xFF) != 127)
       {
          addresses[count++] = ai;
@@ -1918,13 +2012,13 @@ stunFindLocalInterfaces(UInt32* addresses,int maxRet)
 #endif
 }
 
+
 void
 stunBuildReqSimple( StunMessage* msg,
                     const StunAtrString& username,
                     bool changePort, bool changeIp, unsigned int id )
 {
    resip_assert( msg );
-   memset( msg , 0 , sizeof(*msg) );
 	
    msg->msgHdr.msgType = BindRequestMsg;
 	
@@ -1989,8 +2083,6 @@ stunSendTest( resip::Socket myFd, StunAddress4& dest,
    }
 	
    StunMessage req;
-   memset(&req, 0, sizeof(StunMessage));
-	
    stunBuildReqSimple( &req, username, 
                        changePort , changeIP , 
                        testNum );
@@ -2029,7 +2121,7 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr, un
    resip_assert( dest.port != 0 );
 	
    int port = stunRandomPort();
-   UInt32 interfaceIp=0;
+   uint32_t interfaceIp=0;
    if (sAddr)
    {
       interfaceIp = sAddr->addr;
@@ -2082,12 +2174,10 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr, un
 	   return false;
    }
 	
-   StunMessage resp;
-   memset(&resp, 0, sizeof(StunMessage));
-	
    if ( verbose ) clog << "Got a response" << endl;
 
-   bool ok = stunParseMessage( msg,msgLen, resp,verbose );
+   StunMessage resp;
+   bool ok = stunParseMessage( msg, msgLen, resp, verbose );
 	
    if ( verbose )
    {
@@ -2130,7 +2220,7 @@ stunNatType( StunAddress4& dest,
    {
       port = stunRandomPort();
    }
-   UInt32 interfaceIp=0;
+   uint32_t interfaceIp=0;
    if (sAddr)
    {
       interfaceIp = sAddr->addr;
@@ -2268,12 +2358,11 @@ stunNatType( StunAddress4& dest,
                               msg,
                               &msgLen,
                               &from.addr,
-                              &from.port,verbose );
+                              &from.port,
+                              verbose );
 						
                   StunMessage resp;
-                  memset(&resp, 0, sizeof(StunMessage));
-						
-                  stunParseMessage( msg,msgLen, resp,verbose );
+                  stunParseMessage( msg, msgLen, resp, verbose );
 						
                   if ( verbose )
                   {
@@ -2523,12 +2612,10 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
 	
    StunAddress4 from;
 	
-   getMessage( myFd, msg, &msgLen, &from.addr, &from.port,verbose );
+   getMessage( myFd, msg, &msgLen, &from.addr, &from.port, verbose );
 	
    StunMessage resp;
-   memset(&resp, 0, sizeof(StunMessage));
-	
-   bool ok = stunParseMessage( msg, msgLen, resp,verbose );
+   bool ok = stunParseMessage( msg, msgLen, resp, verbose );
    if (!ok)
    {
       return -1;
@@ -2620,8 +2707,6 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
                   &from.port ,verbose);
 		
       StunMessage resp;
-      memset(&resp, 0, sizeof(StunMessage));
-		
       bool ok = stunParseMessage( msg, msgLen, resp, verbose );
       if (!ok) 
       {

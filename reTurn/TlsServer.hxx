@@ -10,7 +10,6 @@
 #include <asio.hpp>
 #include <asio/ssl.hpp>
 #include <string>
-#include <boost/noncopyable.hpp>
 #include "TlsConnection.hxx"
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
@@ -18,9 +17,12 @@
 namespace reTurn {
 
 class TlsServer
-  : private boost::noncopyable
 {
 public:
+  // noncopyable
+  TlsServer(const TlsServer&) = delete;
+  TlsServer& operator=(const TlsServer&) = delete;
+
   /// Create the server to listen on the specified TCP address and port
   explicit TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port);
 

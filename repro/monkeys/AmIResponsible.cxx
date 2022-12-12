@@ -9,6 +9,7 @@
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
 #include <ostream>
+#include <utility>
 
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -43,18 +44,13 @@ AmIResponsible::process(RequestContext& context)
            request.header(h_Routes).empty());
   
    // Topmost route had a flow-token; this is our problem
-   if(!context.getTopRoute().uri().user().empty())
+   if(context.isTopRouteFlowTupleSet())
    {
-      resip::Tuple dest(Tuple::makeTupleFromBinaryToken(context.getTopRoute().uri().user().base64decode(), Proxy::FlowTokenSalt));
-      if(!(dest==resip::Tuple()))
-      {
-         // .bwc. Valid flow token
-         std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
-         target->rec().mReceivedFrom = dest;
-         target->rec().mUseFlowRouting = true;
-         context.getResponseContext().addTarget(target);
-         return SkipThisChain;
-      }
+      std::unique_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
+      target->rec().mReceivedFrom = context.getTopRouteFlowTuple();
+      target->rec().mUseFlowRouting = true;
+      context.getResponseContext().addTarget(std::move(target));
+      return SkipThisChain;
    }
 
    // this if is just to be safe
@@ -138,8 +134,8 @@ AmIResponsible::process(RequestContext& context)
             }
          }
          
-         std::auto_ptr<Target> target(new Target(uri));
-         context.getResponseContext().addTarget(target);
+         std::unique_ptr<Target> target(new Target(uri));
+         context.getResponseContext().addTarget(std::move(target));
 
          InfoLog (<< "Sending to requri: " << uri);
          // skip the rest of the monkeys

@@ -14,10 +14,8 @@
 #include "rutil/compat.hxx"
 
 
-#include <asio.hpp>
-#ifdef USE_SSL
-#include <asio/ssl.hpp>
-#endif
+#include <asio/ip/address.hpp>
+
 #include <rutil/resipfaststreams.hxx>
 
 namespace reTurn {

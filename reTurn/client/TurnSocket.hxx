@@ -11,7 +11,7 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/bind.hpp>
+#include <functional>
 
 #include <vector>
 
@@ -47,6 +47,9 @@ public:
    // Set the username and password for all future requests
    void setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth=false);
 
+   // Software attribute
+   void setSoftware(const char* software);
+
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    asio::error_code bindRequest();
 
@@ -54,7 +57,7 @@ public:
    asio::error_code createAllocation(unsigned int lifetime = UnspecifiedLifetime,
                                      unsigned int bandwidth = UnspecifiedBandwidth,
                                      unsigned char requestedProps = StunMessage::PropsNone, 
-                                     UInt64 reservationToken = UnspecifiedToken,
+                                     uint64_t reservationToken = UnspecifiedToken,
                                      StunTuple::TransportType requestedTransportType = StunTuple::None);
    asio::error_code refreshAllocation();
    asio::error_code destroyAllocation();
@@ -94,11 +97,14 @@ protected:
    resip::Data mRealm;
    resip::Data mNonce;
 
+   // Attributes
+   resip::Data mSoftware;
+
    // Turn Allocation Properties used in request
    unsigned int mRequestedLifetime;
    unsigned int mRequestedBandwidth;
    unsigned char mRequestedProps;
-   UInt64 mReservationToken;
+   uint64_t mReservationToken;
    StunTuple::TransportType mRequestedTransportType;
 
    // Turn Allocation Properties from response
@@ -117,7 +123,7 @@ protected:
    asio::io_service mIOService;
 
    // handlers and timers required to do a timed out read
-   asio::deadline_timer mReadTimer;
+   asio::steady_timer mReadTimer;
    size_t mBytesRead;
    asio::error_code mReadErrorCode;
    void startReadTimer(unsigned int timeout);

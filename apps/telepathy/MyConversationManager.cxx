@@ -26,8 +26,8 @@
 #include <resip/recon/ReconSubsystem.hxx>
 
 // Test Prompts for cache testing
-#include "playback_prompt.h"
-#include "record_prompt.h"
+#include "media/samples/playback_prompt.h"
+#include "media/samples/record_prompt.h"
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
@@ -36,7 +36,7 @@ using namespace resip;
 using namespace recon;
 
 MyConversationManager::MyConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled, Connection *connection)
-      : ConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate),
+      : SipXMediaStackAdapter(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
         mLocalAudioEnabled(localAudioEnabled),
         mAutoAnswerEnabled(autoAnswerEnabled),
         mConnection(connection)
@@ -78,15 +78,15 @@ MyConversationManager::startup()
 }
 
 ConversationHandle
-MyConversationManager::createConversation()
+MyConversationManager::createConversation(AutoHoldMode autoHoldMode)
 {
-   ConversationHandle convHandle = ConversationManager::createConversation();
+   ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
    mConversationHandles.push_back(convHandle);
    return convHandle;
 }
 
 ParticipantHandle
-MyConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
+MyConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
 {
    ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode);
    mRemoteParticipantHandles.push_back(partHandle);

@@ -45,7 +45,6 @@ class UserAgentRegistration : public resip::AppDialogSet
 
    private:       
       UserAgent &mUserAgent;
-      resip::DialogUsageManager &mDum;
       ConversationProfileHandle mConversationProfileHandle;
       bool mEnded;
       resip::ClientRegistrationHandle mRegistrationHandle;  

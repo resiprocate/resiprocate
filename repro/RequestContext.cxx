@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <utility>
 
 #include "repro/Proxy.hxx"
 #include "repro/RequestContext.hxx"
@@ -44,13 +45,12 @@ RequestContext::RequestContext(Proxy& proxy,
    mTargetProcessorChain(targetP),
    mTransactionCount(1),
    mProxy(proxy),
+   mTopRouteFlowTupleSet(false),
    mResponseContext(*this),
-   mTCSerial(0),
    mSessionCreatedEventSent(false),
    mSessionEstablishedEventSent(false),
    mKeyValueStore(*Proxy::getRequestKeyValueStoreKeyAllocator())
 {
-   mInitialTimerCSet=false;
 }
 
 RequestContext::~RequestContext()
@@ -86,7 +86,7 @@ RequestContext::process(resip::TransactionTerminated& msg)
 }
 
 void
-RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
+RequestContext::process(std::unique_ptr<resip::SipMessage> sipMessage)
 {
    bool original = false;
    InfoLog (<< "RequestContext::process(SipMessage) " << sipMessage->getTransactionId());
@@ -378,8 +378,9 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
    try
    {
       // .slg. look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
-      if((!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
-          getProxy().isMyUri(msg->header(h_RequestLine).uri()))
+      if(!mTopRouteFlowTupleSet &&  // If we have a flow token in top route, then we don't need to route with RequestUri (so don't consider self aimed)
+         (!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
+         getProxy().isMyUri(msg->header(h_RequestLine).uri()))
       {
          // .bwc. Someone sent an ACK with us in the Request-Uri, and no
          // Route headers (after we have removed ourself). We will never perform 
@@ -652,7 +653,7 @@ RequestContext::doPostResponseProcessing(SipMessage* msg)
 }
 
 void
-RequestContext::process(std::auto_ptr<ApplicationMessage> app)
+RequestContext::process(std::unique_ptr<ApplicationMessage> app)
 {
    InfoLog (<< "RequestContext::process(ApplicationMessage) " << *app);
 
@@ -673,11 +674,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 
    if(tc)
    {
-      if(tc->mSerial == mTCSerial)
-      {
-         mResponseContext.processTimerC();
-      }
-
+      mResponseContext.processTimerC(tc->getTransactionId(), tc->mSerial);
       return;
    }
 
@@ -826,15 +823,10 @@ RequestContext::forwardAck200(const resip::SipMessage& ack)
       
       mAck200ToRetransmit->header(h_Vias).push_front(Via());
 
-      // .bwc. Check for flow-token
-      if(!mTopRoute.uri().user().empty())
+      // .bwc. Check for flow-token use
+      if(mTopRouteFlowTupleSet)
       {
-         resip::Tuple dest(Tuple::makeTupleFromBinaryToken(mTopRoute.uri().user().base64decode(), Proxy::FlowTokenSalt));
-         if(!(dest==resip::Tuple()))
-         {
-            // valid flow token
-            mAck200ToRetransmit->setDestination(dest);
-         }
+         mAck200ToRetransmit->setDestination(mTopRouteFlowTuple);
       }
    }
 
@@ -892,18 +884,9 @@ RequestContext::getDigestIdentity() const
 }
 
 void
-RequestContext::updateTimerC()
+RequestContext::postTimedMessage(std::unique_ptr<resip::ApplicationMessage> msg,int seconds)
 {
-   InfoLog(<<"Updating timer C.");
-   mTCSerial++;
-   TimerCMessage* tc = new TimerCMessage(this->getTransactionId(),mTCSerial);
-   mProxy.postTimerC(std::auto_ptr<TimerCMessage>(tc));
-}
-
-void
-RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds)
-{
-   mProxy.postMS(msg,seconds);
+   mProxy.postMS(std::move(msg), seconds);
 }
 
 void
@@ -917,7 +900,7 @@ RequestContext::postAck200Done()
    // non-ACK transaction with the same tid during this time, and make
    // sure we don't explode violently when this happens.)
    mProxy.postMS(
-      std::auto_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
+      std::unique_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
       64*resip::Timer::T1);
 }
 
@@ -1052,6 +1035,17 @@ RequestContext::removeTopRouteIfSelf()
             // should we reject?
          }
       }
+
+      // Extract Flow Token from mTopRoute - if present
+      if (!mTopRoute.uri().user().empty())
+      {
+          resip::Tuple flowTuple(Tuple::makeTupleFromBinaryToken(mTopRoute.uri().user().base64decode(), Proxy::FlowTokenSalt));
+          if (!(flowTuple == Tuple()))
+          {
+             mTopRouteFlowTuple = flowTuple;
+             mTopRouteFlowTupleSet = true;
+          }
+      }
    }
 }
 
@@ -1071,6 +1065,18 @@ NameAddr&
 RequestContext::getTopRoute()
 {
    return mTopRoute;
+}
+
+bool
+RequestContext::isTopRouteFlowTupleSet()
+{
+    return mTopRouteFlowTupleSet;
+}
+
+Tuple&
+RequestContext::getTopRouteFlowTuple()
+{
+   return mTopRouteFlowTuple;
 }
 
 const resip::Data&

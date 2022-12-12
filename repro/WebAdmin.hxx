@@ -31,7 +31,7 @@ class WebAdmin : public HttpBase,
                  public resip::GetDnsCacheDumpHandler
 {
    public:
-      class ConfigException : public resip::BaseException
+      class ConfigException final : public resip::BaseException
       {
          public:
             ConfigException(const resip::Data& msg,
@@ -39,7 +39,7 @@ class WebAdmin : public HttpBase,
                       const int line)
                : BaseException(msg, file, line) {}
          protected:
-            virtual const char* name() const { return "WebAdmin::ConfigException"; }
+            const char* name() const noexcept override { return "WebAdmin::ConfigException"; }
       };
 
       WebAdmin(Proxy& proxy,
@@ -86,6 +86,7 @@ class WebAdmin : public HttpBase,
       void buildSettingsSubPage(resip::DataStream& s);
       void buildRestartSubPage(resip::DataStream& s);
       void buildLogLevelSubPage(resip::DataStream& s);
+      void buildReloadCertsSubPage(resip::DataStream& s);
 
       resip::Data buildCertPage(const resip::Data& domain);
 

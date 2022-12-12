@@ -5,6 +5,7 @@
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Pidf.hxx"
+#include "resip/stack/EventStackThread.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
 #include "resip/dum/ServerInviteSession.hxx"
@@ -33,16 +34,17 @@ using namespace std;
 
 UserAgent::UserAgent(int argc, char** argv) : 
    CommandLineParser(argc, argv),
-   mProfile(new MasterProfile),
+   mProfile(std::make_shared<MasterProfile>()),
+   mPollGrp(FdPollGrp::create()),
+   mEventIntr(new EventThreadInterruptor(*mPollGrp)),
 #if defined(USE_SSL)
    mSecurity(new Security(mCertPath)),
-   mStack(mSecurity),
 #else
    mSecurity(0),
-   mStack(mSecurity),
 #endif
+   mStack(mSecurity, DnsStub::EmptyNameserverList, mEventIntr, false /* stateless */, 0, 0, mPollGrp),
    mDum(mStack),
-   mStackThread(mStack)
+   mStackThread(mStack, *mEventIntr, *mPollGrp)
 {
    Log::initialize(mLogType, mLogLevel, argv[0]);
 
@@ -85,7 +87,7 @@ UserAgent::UserAgent(int argc, char** argv) :
    mDum.addClientSubscriptionHandler(Symbols::Presence, this);
    mDum.addClientPublicationHandler(Symbols::Presence, this);
    mDum.addOutOfDialogHandler(OPTIONS, this);
-   mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum.setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
    mDum.setInviteSessionHandler(this);
    
    mStackThread.run(); 
@@ -113,7 +115,7 @@ UserAgent::startup()
 #if 0
    mDum.send(mDum.makePublish);
 
-   auto_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
+   unique_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
    Pidf* pidf = new Pidf( *mPidf );
    msg->header(h_Event).value() = "presence";
    msg->setContents( pidf );
@@ -144,13 +146,13 @@ UserAgent::addTransport(TransportType type, int port)
          {
             if (!mNoV4)
             {
-               mDum.addTransport(type, port+i, V4, Data::Empty, mTlsDomain);
+               mStack.addTransport(type, port+i, V4, StunDisabled, Data::Empty, mTlsDomain);
                return;
             }
 
             if (!mNoV6)
             {
-               mDum.addTransport(type, port+i, V6, Data::Empty, mTlsDomain);
+               mStack.addTransport(type, port+i, V6, StunDisabled, Data::Empty, mTlsDomain);
                return;
             }
          }
@@ -172,7 +174,7 @@ UserAgent::onNewSession(ClientInviteSessionHandle h, InviteSession::OfferAnswerT
 
    // Schedule an end() call; checks handle validity, and whether the Session
    // is already tearing down (isTerminated() check)
-   mStack.post(std::auto_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
+   mStack.post(std::unique_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
 }
 
 void
@@ -189,7 +191,7 @@ UserAgent::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferAnswerT
 
    // Schedule an end() call; checks handle validity, and whether the Session
    // is already tearing down (isTerminated() check)
-   mStack.post(std::auto_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
+   mStack.post(std::unique_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
 
    // might update presence here
 }

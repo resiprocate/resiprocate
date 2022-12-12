@@ -5,13 +5,13 @@
 #include <stdio.h>
 
 #include <map>
-#include <asio.hpp>
 #include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/BaseException.hxx>
 #include <resip/stack/SipConfigParse.hxx>
 #include <resip/recon/UserAgent.hxx>
+#include <resip/recon/ConversationManager.hxx>
 
 namespace reconserver {
 
@@ -30,6 +30,13 @@ public:
 
    void printHelpText(int argc, char **argv);
    using resip::ConfigParse::getConfigValue;
+
+   bool getConfigValue(const resip::Data& name, recon::ConversationManager::AutoHoldMode& value) const;
+   recon::ConversationManager::AutoHoldMode getConfigAutoHoldMode(const resip::Data& name,
+      const recon::ConversationManager::AutoHoldMode& defaultValue) const;
+
+   bool getConfigValue(const resip::Data& name, recon::ConversationProfile::MediaEndpointMode &value);
+   recon::ConversationProfile::MediaEndpointMode getConfigMediaEndpointMode(const resip::Data& name, const recon::ConversationProfile::MediaEndpointMode defaultValue);
 
    bool getConfigValue(const resip::Data& name, recon::ConversationProfile::SecureMediaMode &value);
    recon::ConversationProfile::SecureMediaMode getConfigSecureMediaMode(const resip::Data& name, const recon::ConversationProfile::SecureMediaMode defaultValue);
@@ -56,7 +63,9 @@ private:
 
 /* ====================================================================
  *
- * Copyright 2013 Catalin Constantin Usurelu.  All rights reserved.
+ * Copyright (C) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
+ * Copyright 2013 Catalin Constantin Usurelu.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

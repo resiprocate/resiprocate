@@ -20,12 +20,12 @@ class SubscriptionForwarder : public resip::TransactionUser
       SubscriptionForwarder(resip::ConfigParse& cp, resip::SipStack& stack);
       virtual ~SubscriptionForwarder();
 
-      bool process(resip::Lockable* mutex = 0);
+      bool process(resip::Mutex* mutex = 0);
 
       virtual const resip::Data& name() const;
 
    private:
-      void internalProcess(std::auto_ptr<resip::Message>);
+      void internalProcess(std::unique_ptr<resip::Message>);
 
       resip::SipStack& mStack;
 

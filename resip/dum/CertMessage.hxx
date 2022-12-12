@@ -39,6 +39,8 @@ class CertMessage : public Message
       bool mSuccess;
       Data mBody;
 };
+
+EncodeStream& operator<<(EncodeStream& strm, const MessageId& id);
  
 }
 

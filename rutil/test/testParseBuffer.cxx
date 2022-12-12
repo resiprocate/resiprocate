@@ -244,6 +244,15 @@ main(int argc, char** argv)
    }
 
    {
+      char buf[] = "abcdef";
+      ParseBuffer pb(buf, strlen(buf));
+
+      pb.skipToChars("def");
+      pb.skipChars("def");
+      pb.assertEof();
+   }
+
+   {
       char buf[] = "Here is asom \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars(Data("some"));
@@ -255,6 +264,13 @@ main(int argc, char** argv)
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars(Data("some"));
       pb.assertEof();
+   }
+
+   {
+      char buf[] = {'a', 'x', 'y'};      // Intentionally not NUL terminated.
+      ParseBuffer pb(buf, sizeof(buf));  // Note: sizeof instead of strlen.
+
+      pb.skipToChars("xyzabc123");
    }
 
    {
@@ -515,10 +531,10 @@ main(int argc, char** argv)
    }
 
    // test integer() -- reject values exceeding minimum / maximum
-   if (sizeof(Int64) > sizeof(int))
+   if (sizeof(int64_t) > sizeof(int))
    {
-      std::vector<Int64> testValues;
-      for (Int64 i = 1; i < 133; ++i)
+      std::vector<int64_t> testValues;
+      for (int64_t i = 1; i < 133; ++i)
       {
          testValues.push_back(std::numeric_limits<int>::max() + i);
          testValues.push_back(std::numeric_limits<int>::min() - i);

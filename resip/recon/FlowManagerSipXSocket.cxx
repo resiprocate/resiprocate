@@ -1,4 +1,4 @@
-// !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO and boost includes since inlined getErrno has 
+// !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO includes since inlined getErrno has 
 // a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
 #include <rutil/Socket.hxx>
 
@@ -6,7 +6,6 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/function.hpp>
 #include <rutil/Data.hxx>
 
 // SYSTEM INCLUDES
@@ -118,20 +117,16 @@ int FlowManagerSipXSocket::read(char* buffer, int bufferLength,
     return iRC ;
 }
 
-
 int FlowManagerSipXSocket::read(char* buffer, int bufferLength, long waitMilliseconds)
 {        
    //cout << "read: bufferlen=" << bufferLength << ", waitMilliseconds=" << waitMilliseconds << "ms" << endl;
    resip_assert(mFlow);
    unsigned int len = bufferLength;
-   if(!mFlow->receive(buffer, len, waitMilliseconds))
-   {
-      return len;
-   }
-   else
+   if(mFlow->receive(buffer, len, waitMilliseconds))
    {
       return 0;
    }
+   return len;
 }
 
 int FlowManagerSipXSocket::write(const char* buffer, int bufferLength)
@@ -139,7 +134,7 @@ int FlowManagerSipXSocket::write(const char* buffer, int bufferLength)
     //cout << "write: bufferlen=" << bufferLength << endl;  // *********
     resip_assert(mFlow);
     mFlow->send((char *)buffer, bufferLength);
-    return 0;
+    return bufferLength;
 }
 
 int FlowManagerSipXSocket::write(const char* buffer, 
@@ -150,7 +145,7 @@ int FlowManagerSipXSocket::write(const char* buffer,
    //cout << "write: bufferlen=" << bufferLength << ", address=" << ipAddress << ", port=" << port << endl;
    resip_assert(mFlow);
    mFlow->sendTo(asio::ip::address::from_string(ipAddress), port, (char*)buffer, bufferLength);
-   return 0;
+   return bufferLength;
 }
 
 int FlowManagerSipXSocket::write(const char* buffer, int bufferLength, 
@@ -159,12 +154,13 @@ int FlowManagerSipXSocket::write(const char* buffer, int bufferLength,
     //cout << "write: bufferlen=" << bufferLength << ", waitMilliseconds=" << waitMilliseconds << endl;
     resip_assert(0);
     mFlow->send((char*)buffer, bufferLength);  // !SLG! We don't have a timed out send???  Not used by sipX anyway
-    return 0;
+    return bufferLength;
 }
 
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.

@@ -1,3 +1,10 @@
+#define NOMINMAX
+
+#include <cstddef>
+#include <cstring>
+#include <new>
+#include <stdexcept>
+#include <algorithm>
 #include "rutil/ResipAssert.h"
 
 #if defined(HAVE_CONFIG_H)
@@ -10,6 +17,8 @@
 #if defined(USE_SSL)
 #include "rutil/ssl/SHA1Stream.hxx"
 
+#include "openssl/evp.h"
+
 // Remove warning about 'this' use in initiator list - pointer is only stored
 # if defined(WIN32) && !defined(__GNUC__)
 #   pragma warning( disable : 4355 ) // using this in base member initializer list 
@@ -18,12 +27,17 @@
 using namespace resip;
 
 SHA1Buffer::SHA1Buffer()
-        : mContext(new SHA_CTX()),
-          mBuf(SHA_DIGEST_LENGTH),
-          mBlown(false)
+        : mBlown(false)
 {
-   SHA1_Init(mContext.get());
-   setp(&mBuf[0], (&mBuf[mBuf.size()-1])+1);
+   std::memset(mBuf, 0, sizeof(mBuf));
+   setp(mBuf, mBuf + sizeof(mBuf));
+
+   mContext.reset(EVP_MD_CTX_new());
+   if (!mContext)
+      throw std::bad_alloc();
+   int res = EVP_DigestInit_ex(mContext.get(), EVP_sha1(), NULL);
+   if (!res)
+      throw std::runtime_error("Failed to initialize SHA1 context");
 }
 
 SHA1Buffer::~SHA1Buffer()
@@ -33,12 +47,12 @@ SHA1Buffer::~SHA1Buffer()
 int
 SHA1Buffer::sync()
 {
-   size_t len = pptr() - pbase();
-   if (len > 0) 
+   std::size_t len = pptr() - pbase();
+   if (len > 0)
    {
-      SHA1_Update(mContext.get(), reinterpret_cast <unsigned const char*>(pbase()), len);
+      EVP_DigestUpdate(mContext.get(), reinterpret_cast<unsigned const char*>(pbase()), len);
       // reset the put buffer
-      setp(&mBuf[0], (&mBuf[mBuf.size()-1])+1);
+      setp(mBuf, mBuf + sizeof(mBuf));
    }
    return 0;
 }
@@ -47,7 +61,7 @@ int
 SHA1Buffer::overflow(int c)
 {
    sync();
-   if (c != -1) 
+   if (c != -1)
    {
       mBuf[0] = c;
       pbump(1);
@@ -56,25 +70,30 @@ SHA1Buffer::overflow(int c)
    return 0;
 }
 
-Data 
+Data
 SHA1Buffer::getHex()
 {
    resip_assert(mBlown == false);
-   SHA1_Final((unsigned char*)&mBuf[0], mContext.get());
+   unsigned char md_value[EVP_MAX_MD_SIZE];
+   unsigned int md_len = 0u;
+   EVP_DigestFinal_ex(mContext.get(), md_value, &md_len);
    mBlown = true;
-   Data digest(Data::Share, (const char*)&mBuf[0], mBuf.size());
-   return digest.hex();   
+   Data digest(Data::Share, reinterpret_cast<const char*>(md_value), md_len);
+   return digest.hex();
 }
 
 Data
 SHA1Buffer::getBin(unsigned int bits)
 {
    resip_assert(mBlown == false);
-   resip_assert (bits % 8 == 0);
-   resip_assert (bits / 8 <= mBuf.size());
-   SHA1_Final((unsigned char*)&mBuf[0], mContext.get());
+   resip_assert(bits % 8 == 0);
+   resip_assert(bits / 8 <= EVP_MAX_MD_SIZE);
+   unsigned char md_value[EVP_MAX_MD_SIZE];
+   unsigned int md_len = 0u;
+   EVP_DigestFinal_ex(mContext.get(), md_value, &md_len);
    mBlown = true;
-   return Data(&mBuf[20-bits/8], bits / 8);
+   unsigned int len = std::min(bits / 8u, md_len);
+   return Data(md_value + (md_len - len), len);
 }
 
 SHA1Stream::SHA1Stream()
@@ -100,11 +119,11 @@ SHA1Stream::getBin(unsigned int bits)
    return SHA1Buffer::getBin(bits);
 }
 
-UInt32
+uint32_t
 SHA1Stream::getUInt32()
 {
    flush();
-   UInt32 input = *((UInt32*)getBin(32).c_str());
+   uint32_t input = *((uint32_t*)getBin(32).c_str());
    return ntohl(input);
 }
 

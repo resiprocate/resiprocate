@@ -108,6 +108,7 @@ libresip_la_SOURCES = \
 	UInt32Parameter.cxx \
 	InternalTransport.cxx \
 	LazyParser.cxx \
+	MediaControlContents.cxx \
 	Message.cxx \
 	MessageWaitingContents.cxx \
 	gen/MethodHash.cxx \
@@ -156,6 +157,7 @@ libresip_la_SOURCES = \
 	TimeAccumulate.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
+	TrickleIceContents.cxx \
 	Tuple.cxx \
 	TupleMarkManager.cxx \
 	TransactionController.cxx \
@@ -290,6 +292,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	KeepAlivePong.hxx \
 	LazyParser.hxx \
 	MarkListener.hxx \
+	MediaControlContents.hxx \
 	MessageDecorator.hxx \
 	MessageFilterRule.hxx \
 	Message.hxx \
@@ -378,6 +381,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	Transport.hxx \
 	TransportSelector.hxx \
 	TransportThread.hxx \
+	TrickleIceContents.hxx \
 	TuIM.hxx \
 	Tuple.hxx \
 	TupleMarkManager.hxx \

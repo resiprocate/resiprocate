@@ -1,26 +1,14 @@
-// sipX includes
-#if (_MSC_VER >= 1600)
-#include <stdint.h>       // Use Visual Studio's stdint.h
-#define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
-#endif
-#include <sdp/SdpCodec.h>
-#include <os/OsConfigDb.h>
-#include <mp/MpCodecFactory.h>
-#include <mp/MprBridge.h>
-#include <mp/MpResourceTopology.h>
-#include <mi/CpMediaInterfaceFactoryFactory.h>
-#include <mi/CpMediaInterface.h>
-
 // resip includes
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <rutil/Lock.hxx>
 #include <rutil/Random.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
 #include <resip/dum/ClientInviteSession.hxx>
 #include <resip/dum/ServerInviteSession.hxx>
 #include <resip/dum/ClientSubscription.hxx>
 #include <resip/dum/ServerOutOfDialogReq.hxx>
+#include <resip/dum/ClientPagerMessage.hxx>
+#include <resip/dum/ServerPagerMessage.hxx>
 
 #include "ReconSubsystem.hxx"
 #include "UserAgent.hxx"
@@ -30,6 +18,10 @@
 #include "Participant.hxx"
 #include "BridgeMixer.hxx"
 #include "DtmfEvent.hxx"
+#include "RemoteParticipant.hxx"
+#include "RemoteIMPagerParticipant.hxx"
+#include "RemoteIMSessionParticipant.hxx"
+#include "RemoteIMSessionParticipantDialogSet.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -42,124 +34,39 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode) 
+ConversationManager::ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter,
+   std::shared_ptr<ConfigParse> configParse)
 : mUserAgent(0),
+  mMediaStackAdapter(mediaStackAdapter),
+  mConfigParse(configParse),
+  mShuttingDown(false),
   mCurrentConversationHandle(1),
   mCurrentParticipantHandle(1),
-  mLocalAudioEnabled(localAudioEnabled),
-  mMediaInterfaceMode(mediaInterfaceMode),
-  mMediaFactory(0),
-  mBridgeMixer(0),
-  mSipXTOSValue(0)
+  mBridgeMixer(0)
 {
-   init();
-}
-
-ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate)
-: mUserAgent(0),
-  mCurrentConversationHandle(1),
-  mCurrentParticipantHandle(1),
-  mLocalAudioEnabled(localAudioEnabled),
-  mMediaInterfaceMode(mediaInterfaceMode),
-  mMediaFactory(0),
-  mBridgeMixer(0),
-  mSipXTOSValue(0)
-{
-   init(defaultSampleRate, maxSampleRate);
-}
-
-void
-ConversationManager::init(int defaultSampleRate, int maxSampleRate)
-{
-#ifdef _DEBUG
-   UtlString codecPaths[] = {".", "../../../../sipXtapi/sipXmediaLib/bin"};
-#else
-   UtlString codecPaths[] = {"."};
-#endif
-   int codecPathsNum = sizeof(codecPaths)/sizeof(codecPaths[0]);
-   OsStatus rc = CpMediaInterfaceFactory::addCodecPaths(codecPathsNum, codecPaths);
-   resip_assert(OS_SUCCESS == rc);
-
-   if(mMediaInterfaceMode == sipXConversationMediaInterfaceMode)
-   {
-      OsConfigDb sipXconfig;
-      sipXconfig.set("PHONESET_MAX_ACTIVE_CALLS_ALLOWED",300);  // This controls the maximum number of flowgraphs allowed - default is 16
-      mMediaFactory = sipXmediaFactoryFactory(&sipXconfig, 0, defaultSampleRate, maxSampleRate, mLocalAudioEnabled);
-   }
-   else
-   {
-      mMediaFactory = sipXmediaFactoryFactory(NULL, 0, defaultSampleRate, maxSampleRate, mLocalAudioEnabled);
-   }
-
-   // Create MediaInterface
-   MpCodecFactory *pCodecFactory = MpCodecFactory::getMpCodecFactory();
-   // For dynamic loading, we need to force the codecs to be loaded
-   // somehow, this should be exposed through the API
-   //pCodecFactory->loadAllDynCodecs("/tmp/codecs", "");
-   unsigned int count = 0;
-   const MppCodecInfoV1_1 **codecInfoArray;
-   pCodecFactory->getCodecInfoArray(count, codecInfoArray);
-
-   if(count == 0)
-   {
-      // Try to load plugin modules, if possible...
-      InfoLog(<<"No statically linked codecs, trying to load codec plugin modules with dlopen()");
-      pCodecFactory->loadAllDynCodecs(NULL, "");
-      pCodecFactory->getCodecInfoArray(count, codecInfoArray);
-      if(count == 0)
-      {
-         ErrLog( << "No codec plugins found.  Cannot start.");
-         exit(-1);
-      }
-   }
-
-   InfoLog( << "Loaded codecs are:");
-   for(unsigned int i =0; i < count; i++)
-   {
-      InfoLog( << "  " << codecInfoArray[i]->codecName 
-               << "(" << codecInfoArray[i]->codecManufacturer << ") " 
-               << codecInfoArray[i]->codecVersion 
-               << " MimeSubtype: " << codecInfoArray[i]->mimeSubtype 
-               << " Rate: " << codecInfoArray[i]->sampleRate
-               << " Channels: " << codecInfoArray[i]->numChannels);
-   }
-
-   if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
-   {
-      createMediaInterfaceAndMixer(mLocalAudioEnabled /* giveFocus?*/,    // This is the one and only media interface - give it focus
-                                   0,
-                                   mMediaInterface, 
-                                   &mBridgeMixer);      
-   }
 }
 
 ConversationManager::~ConversationManager()
 {
    resip_assert(mConversations.empty());
    resip_assert(mParticipants.empty());
-   delete mBridgeMixer;
-   if(mMediaInterface) mMediaInterface.reset();  // Make sure inteface is destroyed before factory
-   sipxDestroyMediaFactoryFactory();
+   mBridgeMixer.reset();       // Make sure the mixer is destroyed before the media interface
 }
 
 void
 ConversationManager::setUserAgent(UserAgent* userAgent)
 {
    mUserAgent = userAgent;
-
-   // Note: This is not really required, since we are managing the port allocation - but no harm done
-   // Really not needed now - since FlowManager integration
-   //mMediaFactory->getFactoryImplementation()->setRtpPortRange(mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin(), 
-   //                                                           mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax());
-
-   initRTPPortFreeList();
+   mMediaStackAdapter->setUserAgent(userAgent);
 }
 
 void
 ConversationManager::shutdown()
 {
+   mShuttingDown = true;
+
    // Destroy each Conversation
-   ConversationMap tempConvs = mConversations;  // Create copy for safety, since ending conversations can immediately remove themselves from map
+   ConversationMap tempConvs = mConversations; // Create copy for safety, since ending conversations can immediately remove themselves from map
    ConversationMap::iterator i;
    for(i = tempConvs.begin(); i != tempConvs.end(); i++)
    {
@@ -168,22 +75,37 @@ ConversationManager::shutdown()
    }
 
    // End each Participant
-   ParticipantMap tempParts = mParticipants;  
+   ParticipantMap tempParts = mParticipants; // Create copy for safety, since ending participants can immediately remove themselves from map
    ParticipantMap::iterator j;
-   int j2=0;
-   for(j = tempParts.begin(); j != tempParts.end(); j++, j2++)
+   for(j = tempParts.begin(); j != tempParts.end(); j++)
    {
       InfoLog(<< "Destroying participant: " << j->second->getParticipantHandle());
       j->second->destroyParticipant();
    }
+
+   if(mMediaStackAdapter.get())
+   {
+      mMediaStackAdapter->shutdown();
+      mMediaStackAdapter.reset();
+   }
+}
+
+void
+ConversationManager::process()
+{
+   if(mMediaStackAdapter)
+   {
+      mMediaStackAdapter->process();
+   }
 }
 
 ConversationHandle 
-ConversationManager::createConversation(bool broadcastOnly)
+ConversationManager::createConversation(AutoHoldMode autoHoldMode)
 {
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ConversationHandle convHandle = getNewConversationHandle();
 
-   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, broadcastOnly);
+   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, autoHoldMode, 0);
    post(cmd);
    return convHandle;
 }
@@ -202,30 +124,49 @@ ConversationManager::joinConversation(ConversationHandle sourceConvHandle, Conve
    post(cmd);
 }
 
-ParticipantHandle 
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
-{
-   SharedPtr<UserProfile> profile;
-   return createRemoteParticipant(convHandle, destination, forkSelectMode, profile, std::multimap<resip::Data,resip::Data>());
-}
-
 ParticipantHandle
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, SharedPtr<UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
+ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<ConversationProfile>& conversationProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = getNewParticipantHandle();
 
-   CreateRemoteParticipantCmd* cmd = new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, forkSelectMode, callerProfile, extraHeaders);
+   CreateRemoteParticipantCmd* cmd = new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, forkSelectMode, conversationProfile, extraHeaders);
    post(cmd);
 
    return partHandle;
 }
 
 ParticipantHandle 
-ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl)
+ConversationManager::createRemoteIMPagerParticipant(const resip::NameAddr& destination, const std::shared_ptr<ConversationProfile>& conversationProfile)
 {
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = getNewParticipantHandle();
 
-   CreateMediaResourceParticipantCmd* cmd = new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl);
+   CreateRemoteIMPagerParticipantCmd* cmd = new CreateRemoteIMPagerParticipantCmd(this, partHandle, destination, conversationProfile);
+   post(cmd);
+
+   return partHandle;
+}
+
+ParticipantHandle 
+ConversationManager::createRemoteIMSessionParticipant(const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<ConversationProfile>& conversationProfile, const std::multimap<resip::Data, resip::Data>& extraHeaders)
+{
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
+   ParticipantHandle partHandle = getNewParticipantHandle();
+
+   CreateRemoteIMSessionParticipantCmd* cmd = new CreateRemoteIMSessionParticipantCmd(this, partHandle, destination, forkSelectMode, conversationProfile, extraHeaders);
+   post(cmd);
+
+   return partHandle;
+}
+
+ParticipantHandle 
+ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl, const std::shared_ptr<Data>& audioBuffer, void* recordingCircularBuffer)
+{
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
+   ParticipantHandle partHandle = getNewParticipantHandle();
+
+   CreateMediaResourceParticipantCmd* cmd = new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl, audioBuffer, recordingCircularBuffer);
    post(cmd);
 
    return partHandle;
@@ -234,8 +175,9 @@ ConversationManager::createMediaResourceParticipant(ConversationHandle convHandl
 ParticipantHandle 
 ConversationManager::createLocalParticipant()
 {
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = 0;
-   if(mLocalAudioEnabled)
+   if (getMediaStackAdapter().supportsLocalAudio())
    {
       partHandle = getNewParticipantHandle();
 
@@ -286,17 +228,10 @@ ConversationManager::modifyParticipantContribution(ConversationHandle convHandle
 }
 
 void 
-ConversationManager::outputBridgeMatrix()
+ConversationManager::outputBridgeMatrix(ConversationHandle convHandle)
 {
-   if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
-   {
-      OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this);
-      post(cmd);
-   }
-   else
-   {
-      WarningLog(<< "ConversationManager::outputBridgeMatrix not supported in current Media Interface Mode");
-   }
+   OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this, convHandle);
+   post(cmd);
 }
 
 void 
@@ -321,16 +256,16 @@ ConversationManager::rejectParticipant(ParticipantHandle partHandle, unsigned in
 }
 
 void 
-ConversationManager::redirectParticipant(ParticipantHandle partHandle, const NameAddr& destination)
+ConversationManager::redirectParticipant(ParticipantHandle partHandle, const NameAddr& destination, unsigned int redirectCode, RedirectSuccessCondition successCondition)
 {
-   RedirectParticipantCmd* cmd = new RedirectParticipantCmd(this, partHandle, destination);
+   RedirectParticipantCmd* cmd = new RedirectParticipantCmd(this, partHandle, destination, redirectCode, successCondition);
    post(cmd);
 }
 
 void 
-ConversationManager::redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle)
+ConversationManager::redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle, RedirectSuccessCondition successCondition)
 {
-   RedirectToParticipantCmd* cmd = new RedirectToParticipantCmd(this, partHandle, destPartHandle);
+   RedirectToParticipantCmd* cmd = new RedirectToParticipantCmd(this, partHandle, destPartHandle, successCondition);
    post(cmd);
 }
 
@@ -341,10 +276,23 @@ ConversationManager::holdParticipant(ParticipantHandle partHandle, bool hold)
    post(cmd);
 }
 
+void 
+ConversationManager::sendIMToParticipant(ParticipantHandle partHandle, std::unique_ptr<Contents> contents)
+{
+   SendIMToParticipantCmd* cmd = new SendIMToParticipantCmd(this, partHandle, std::move(contents));
+   post(cmd);
+}
+
+void 
+ConversationManager::startApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2, unsigned int durationMs)
+{
+   ApplicationTimerCmd cmd(this, timerId, timerData1, timerData2);
+   post(cmd, durationMs);
+}
+
 ConversationHandle 
 ConversationManager::getNewConversationHandle()
 {
-   Lock lock(mConversationHandleMutex);
    return mCurrentConversationHandle++; 
 }
 
@@ -352,18 +300,23 @@ void
 ConversationManager::registerConversation(Conversation *conversation)
 {
    mConversations[conversation->getHandle()] = conversation;
+
+   std::lock_guard<std::mutex> lock(mConversationHandlesMutex);
+   mConversationHandles.insert(conversation->getHandle());
 }
 
 void 
 ConversationManager::unregisterConversation(Conversation *conversation)
 {
    mConversations.erase(conversation->getHandle());
+
+   std::lock_guard<std::mutex> lock(mConversationHandlesMutex);
+   mConversationHandles.erase(conversation->getHandle());
 }
 
 ParticipantHandle 
 ConversationManager::getNewParticipantHandle()
 {
-   Lock lock(mParticipantHandleMutex);
    return mCurrentParticipantHandle++; 
 }
 
@@ -371,6 +324,9 @@ void
 ConversationManager::registerParticipant(Participant *participant)
 {
    mParticipants[participant->getParticipantHandle()] = participant;
+   
+   std::lock_guard<std::mutex> lock(mParticipantHandlesMutex);
+   mParticipantHandlesByType[participant->getParticipantType()].insert(participant->getParticipantHandle());
 }
 
 void 
@@ -378,48 +334,27 @@ ConversationManager::unregisterParticipant(Participant *participant)
 {
    InfoLog(<< "participant unregistered, handle=" << participant->getParticipantHandle());
    mParticipants.erase(participant->getParticipantHandle());
+
+   std::lock_guard<std::mutex> lock(mParticipantHandlesMutex);
+   mParticipantHandlesByType[participant->getParticipantType()].erase(participant->getParticipantHandle());
 }
 
 void 
 ConversationManager::post(resip::Message *msg)
 {
-   mUserAgent->getDialogUsageManager().post(msg);
+   if (mUserAgent)
+   {
+      mUserAgent->getDialogUsageManager().post(msg);
+   }
 }
 
 void 
 ConversationManager::post(resip::ApplicationMessage& message, unsigned int ms)
 {
-    mUserAgent->post(message, ms);
-}
-
-void 
-ConversationManager::initRTPPortFreeList()
-{
-   mRTPPortFreeList.clear();
-   for(unsigned int i = mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin(); i <= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax();)
+   if (mUserAgent)
    {
-      mRTPPortFreeList.push_back(i);
-      i=i+2;  // only add even ports - note we are assuming rtpPortRangeMin is even
+      mUserAgent->post(message, ms);
    }
-}
- 
-unsigned int 
-ConversationManager::allocateRTPPort()
-{
-   unsigned int port = 0;
-   if(!mRTPPortFreeList.empty())
-   {
-      port = mRTPPortFreeList.front();
-      mRTPPortFreeList.pop_front();
-   }
-   return port;
-}
- 
-void
-ConversationManager::freeRTPPort(unsigned int port)
-{
-   resip_assert(port >= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin() && port <= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax());
-   mRTPPortFreeList.push_back(port);
 }
 
 void 
@@ -429,89 +364,15 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
    offer = profile->sessionCaps();
 
    // Set sessionid and version for this offer
-   UInt64 currentTime = Timer::getTimeMicroSec();
+   uint64_t currentTime = Timer::getTimeMicroSec();
    offer.session().origin().getSessionId() = currentTime;
    offer.session().origin().getVersion() = currentTime;  
 
    // Set local port in offer
-   // for now we only allow 1 audio media
-   resip_assert(offer.session().media().size() == 1);
-   resip_assert(offer.session().media().front().name() == "audio");
-}
-
-void
-ConversationManager::setSpeakerVolume(int volume)
-{
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setSpeakerVolume(volume);
-   if(status != OS_SUCCESS)
-   {
-      WarningLog(<< "setSpeakerVolume failed: status=" << status);
-   }
-}
-
-void 
-ConversationManager::setMicrophoneGain(int gain)
-{
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setMicrophoneGain(gain);
-   if(status != OS_SUCCESS)
-   {
-      WarningLog(<< "setMicrophoneGain failed: status=" << status);
-   }
-}
-
-void 
-ConversationManager::muteMicrophone(bool mute)
-{
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->muteMicrophone(mute? TRUE : FALSE);
-   if(status != OS_SUCCESS)
-   {
-      WarningLog(<< "muteMicrophone failed: status=" << status);
-   }
-}
- 
-void 
-ConversationManager::enableEchoCancel(bool enable)
-{
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setAudioAECMode(enable ? MEDIA_AEC_CANCEL : MEDIA_AEC_DISABLED);
-   if(status != OS_SUCCESS)
-   {
-      WarningLog(<< "enableEchoCancel failed: status=" << status);
-   }
-   if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)  // Note for sipXConversationMediaInterfaceMode - setting will apply on next conversation given focus
-   {
-      mMediaInterface->getInterface()->defocus();   // required to apply changes
-      mMediaInterface->getInterface()->giveFocus();
-   }
-}
-
-void 
-ConversationManager::enableAutoGainControl(bool enable)
-{
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->enableAGC(enable ? TRUE : FALSE);
-   if(status != OS_SUCCESS)
-   {
-      WarningLog(<< "enableAutoGainControl failed: status=" << status);
-   }
-   if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)  // Note for sipXConversationMediaInterfaceMode - setting will apply on next conversation given focus
-   {
-      mMediaInterface->getInterface()->defocus();   // required to apply changes
-      mMediaInterface->getInterface()->giveFocus();
-   }
-}
- 
-void 
-ConversationManager::enableNoiseReduction(bool enable)
-{
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setAudioNoiseReductionMode(enable ? MEDIA_NOISE_REDUCTION_MEDIUM /* arbitrary */ : MEDIA_NOISE_REDUCTION_DISABLED);
-   if(status != OS_SUCCESS)
-   {
-      WarningLog(<< "enableNoiseReduction failed: status=" << status);
-   }
-   if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)  // Note for sipXConversationMediaInterfaceMode - setting will apply on next conversation given focus
-   {
-      mMediaInterface->getInterface()->defocus();   // required to apply changes
-      mMediaInterface->getInterface()->giveFocus();
-   }
+   // make sure at least one medium is present
+   resip_assert(offer.session().media().size() > 0);
+   // make sure at least one medium is audio
+   resip_assert(offer.session().getMediaByType("audio").size() > 0);
 }
 
 Participant* 
@@ -542,236 +403,128 @@ ConversationManager::getConversation(ConversationHandle convHandle)
    }
 }
 
+std::set<ConversationHandle>
+ConversationManager::getConversationHandles() const
+{
+   std::lock_guard<std::mutex> lock(mConversationHandlesMutex);
+   return mConversationHandles;
+}
+
+std::set<ParticipantHandle>
+ConversationManager::getParticipantHandlesByType(ParticipantType participantType) const
+{
+   std::lock_guard<std::mutex> lock(mParticipantHandlesMutex);
+   std::set<ParticipantHandle> participantHandles;
+   auto it = mParticipantHandlesByType.find(participantType);
+   if (it != mParticipantHandlesByType.end())
+   {
+      participantHandles = it->second;
+   }
+   return participantHandles;
+};
+
 void 
 ConversationManager::addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type)
 {
    mMediaResourceCache.addToCache(name, buffer, type);
 }
 
-void 
-ConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsigned int numCodecIds, 
-                                              unsigned int codecIds[], resip::SdpContents& sessionCaps)
+bool 
+ConversationManager::getBufferFromMediaResourceCache(const resip::Data& name, resip::Data** buffer, int* type)
 {
-   sessionCaps = SdpContents::Empty;  // clear out passed in SdpContents
+   return mMediaResourceCache.getFromCache(name, buffer, type);
+}
 
-   // Check if ipaddress is V4 or V6
-   bool v6 = false;
-   if(!ipaddress.empty())
-   {
-      Tuple testTuple(ipaddress, 0, UDP);
-      if(testTuple.ipVersion() == V6)
-      {
-         v6 = true;
-      }
-   }
+void
+ConversationManager::requestKeyframe(ParticipantHandle partHandle, std::chrono::duration<double> duration)
+{
+   RequestKeyframeCmd cmd(this, partHandle);
+   post(cmd, (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
+}
 
-   // Create Session Capabilities 
-   // Note:  port, sessionId and version will be replaced in actual offer/answer
-   // Build s=, o=, t=, and c= lines
-   SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, v6 ? SdpContents::IP6 : SdpContents::IP4, ipaddress.empty() ? "0.0.0.0" : ipaddress);   // o=   
-   SdpContents::Session session(0, origin, "-" /* s= */);
-   session.connection() = SdpContents::Session::Connection(v6 ? SdpContents::IP6 : SdpContents::IP4, ipaddress.empty() ? "0.0.0.0" : ipaddress);  // c=
-   session.addTime(SdpContents::Session::Time(0, 0));
-
-   MpCodecFactory *pCodecFactory = MpCodecFactory::getMpCodecFactory();
-   SdpCodecList codecList;
-   pCodecFactory->addCodecsToList(codecList);
-   codecList.bindPayloadTypes();
-
-   //UtlString output;
-   //codecList.toString(output);
-   //InfoLog( << "Codec List: " << output.data());
-
-   // Auto-Create Session Codec Capabilities
-   // Note:  port, and potentially payloadid will be replaced in actual offer/answer
-
-   // Build Codecs and media offering
-   SdpContents::Session::Medium medium("audio", 0, 1, "RTP/AVP");
-
-   bool firstCodecAdded = false;
-   for(unsigned int idIter = 0; idIter < numCodecIds; idIter++)
-   {
-      const SdpCodec* sdpcodec = codecList.getCodec((SdpCodec::SdpCodecTypes)codecIds[idIter]);
-      if(sdpcodec)
-      {
-         UtlString mediaType;
-         sdpcodec->getMediaType(mediaType);
-         // Ensure this codec is an audio codec
-         if(mediaType.compareTo("audio", UtlString::ignoreCase) == 0)
-         {
-            UtlString mimeSubType;
-            sdpcodec->getEncodingName(mimeSubType);
-            //mimeSubType.toUpper();
-            
-            int capabilityRate = sdpcodec->getSampleRate();
-            if(mimeSubType == "G722")
-            {
-               capabilityRate = 8000;
-            }
-
-            Data codecName(mimeSubType.data());
-#ifdef RECON_SDP_ENCODING_NAMES_CASE_HACK
-            // The encoding names are not supposed to be case sensitive.
-            // However, some phones, including Polycom, don't recognize
-            // telephone-event if it is not lowercase.
-            // sipXtapi is writing all codec names in uppercase.
-            // (see sipXtapi macro SDP_MIME_SUBTYPE_TO_CASE) and this
-            // hack works around that.
-            if(mimeSubType.compareTo("telephone-event", UtlString::ignoreCase) == 0)
-            {
-               codecName = "telephone-event";
-            }
-#endif
-            SdpContents::Session::Codec codec(codecName, sdpcodec->getCodecPayloadFormat(), capabilityRate);
-            if(sdpcodec->getNumChannels() > 1)
-            {
-               codec.encodingParameters() = Data(sdpcodec->getNumChannels());
-            }
-
-            // Check for telephone-event and add fmtp manually
-            if(mimeSubType.compareTo("telephone-event", UtlString::ignoreCase) == 0)
-            {
-               codec.parameters() = Data("0-15");
-            }
-            else
-            {
-               UtlString fmtpField;
-               sdpcodec->getSdpFmtpField(fmtpField);
-               if(fmtpField.length() != 0)
-               {
-                  codec.parameters() = Data(fmtpField.data());
-               }
-            }
-
-            DebugLog(<< "Added codec to session capabilites: id=" << codecIds[idIter] 
-                    << " type=" << mimeSubType.data()
-                    << " rate=" << sdpcodec->getSampleRate()
-                    << " plen=" << sdpcodec->getPacketLength()
-                    << " payloadid=" << sdpcodec->getCodecPayloadFormat()
-                    << " fmtp=" << codec.parameters());
-
-            medium.addCodec(codec);
-            if(!firstCodecAdded)
-            {
-               firstCodecAdded = true;
-
-               // 20 ms of speech per frame (note G711 has 10ms samples, so this is 2 samples per frame)
-               // Note:  There are known problems with SDP and the ptime attribute.  For now we will choose an
-               // appropriate ptime from the first codec
-               medium.addAttribute("ptime", Data(sdpcodec->getPacketLength() / 1000));  
-            }
-         }
-      }
-   }
-
-   session.addMedium(medium);
-   sessionCaps.session() = session;
+void
+ConversationManager::requestKeyframeFromPeer(ParticipantHandle partHandle, std::chrono::duration<double> duration)
+{
+   RequestKeyframeFromPeerCmd cmd(this, partHandle);
+   post(cmd, (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
 }
 
 void 
-ConversationManager::notifyMediaEvent(ConversationHandle conversationHandle, int mediaConnectionId, MediaEvent::MediaEventType eventType)
+ConversationManager::notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::MediaEventType eventType, MediaEvent::MediaDirection direction)
 {
-   resip_assert(eventType == MediaEvent::PLAY_FINISHED);
-
-   if(conversationHandle == 0) // sipXGlobalMediaInterfaceMode
+   Participant* participant = getParticipant(partHandle);
+   if (participant)
    {
-      if(eventType == MediaEvent::PLAY_FINISHED)
+      if (eventType == MediaEvent::RESOURCE_DONE || eventType == MediaEvent::RESOURCE_FAILED)
       {
-         // Using sipXGlobalMediaInterfaceMode it is only possible to have one active media participant
-         // actually playing a file (or from cache) at a time, so for now it is sufficient to have
-         // this event indicate that any active media participants (playing a file/cache) should be destroyed.
-         ParticipantMap::iterator it;
-         for(it = mParticipants.begin(); it != mParticipants.end();)
+         MediaResourceParticipant* mrPart = dynamic_cast<MediaResourceParticipant*>(participant);
+         if (mrPart)
          {
-            MediaResourceParticipant* mrPart = dynamic_cast<MediaResourceParticipant*>(it->second);
-            it++;  // increment iterator here, since destroy may end up calling unregisterParticipant
-            if(mrPart)
+            if (eventType == MediaEvent::RESOURCE_FAILED)
             {
-               if(mrPart->getResourceType() == MediaResourceParticipant::File ||
-                  mrPart->getResourceType() == MediaResourceParticipant::Cache)
-               {
-                  mrPart->destroyParticipant();
-               }
+               onMediaResourceParticipantFailed(partHandle);
             }
+            mrPart->resourceDone();
          }
       }
+      else if (eventType == MediaEvent::VOICE_STARTED || eventType == MediaEvent::VOICE_STOPPED)
+      {
+         onParticipantVoiceActivity(partHandle, eventType == MediaEvent::VOICE_STARTED ? true : false, direction == MediaEvent::DIRECTION_IN);
+      }
+   }
+}
+
+void 
+ConversationManager::notifyDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up)
+{
+   // Call virtual method that applications can override
+   onDtmfEvent(partHandle, dtmf, duration, up);
+}
+
+RemoteParticipant* 
+ConversationManager::createAppropriateRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
+{
+   RemoteParticipant* rp = nullptr;
+   if (dynamic_cast<RemoteIMSessionParticipantDialogSet*>(&rpds) != nullptr)
+   {
+      rp = new RemoteIMSessionParticipant(*this, dum, rpds);
    }
    else
    {
-      Conversation* conversation = getConversation(conversationHandle);
-      if(conversation)
-      {
-         conversation->notifyMediaEvent(mediaConnectionId, eventType);
-      }
+      rp = getMediaStackAdapter().createRemoteParticipantInstance(dum, rpds);
    }
+   return rp;
 }
 
-void 
-ConversationManager::notifyDtmfEvent(ConversationHandle conversationHandle, int mediaConnectionId, int dtmf, int duration, bool up)
+RemoteParticipant* 
+ConversationManager::createAppropriateRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   if(conversationHandle == 0) // sipXGlobalMediaInterfaceMode
+   RemoteParticipant* rp = nullptr;
+   if (dynamic_cast<RemoteIMSessionParticipantDialogSet*>(&rpds) != nullptr)
    {
-      ParticipantMap::iterator i = mParticipants.begin();
-      for(; i != mParticipants.end(); i++)
-      {
-         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(i->second);
-         if(remoteParticipant)
-         {
-            if(remoteParticipant->getMediaConnectionId() == mediaConnectionId)
-            {
-               onDtmfEvent(remoteParticipant->getParticipantHandle(), dtmf, duration, up);
-            }
-         }
-      }
+      rp = new RemoteIMSessionParticipant(partHandle, *this, dum, rpds);
    }
    else
    {
-      Conversation* conversation = getConversation(conversationHandle);
-      if(conversation)
-      {
-         conversation->notifyDtmfEvent(mediaConnectionId, dtmf, duration, up);
-      }
+      rp = getMediaStackAdapter().createRemoteParticipantInstance(partHandle, dum, rpds);
    }
+   return rp;
 }
 
-void 
-ConversationManager::createMediaInterfaceAndMixer(bool giveFocus, 
-                                                  ConversationHandle ownerConversationHandle,
-                                                  SharedPtr<MediaInterface>& mediaInterface, 
-                                                  BridgeMixer** bridgeMixer)
+RemoteParticipantDialogSet* 
+ConversationManager::createRemoteIMSessionParticipantDialogSetInstance(ParticipantForkSelectMode forkSelectMode, std::shared_ptr<ConversationProfile> conversationProfile)
 {
-   UtlString localRtpInterfaceAddress("127.0.0.1");  // Will be overridden in RemoteParticipantDialogSet, when connection is created anyway
+   return new RemoteIMSessionParticipantDialogSet(*this, forkSelectMode, conversationProfile);
+}
 
-   // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
-   mediaInterface = SharedPtr<MediaInterface>(new MediaInterface(*this, ownerConversationHandle, mMediaFactory->createMediaInterface(NULL, 
-            localRtpInterfaceAddress, 
-            0,     /* numCodecs - not required at this point */
-            0,     /* codecArray - not required at this point */ 
-            NULL,  /* local */
-            mSipXTOSValue,  /* TOS Options */
-            NULL,  /* STUN Server Address */
-            0,     /* STUN Options */
-            25,    /* STUN Keepalive period (seconds) */
-            NULL,  /* TURN Server Address */
-            0,     /* TURN Port */
-            NULL,  /* TURN User */
-            NULL,  /* TURN Password */
-            25,    /* TURN Keepalive period (seconds) */
-            false))); /* enable ICE? */
-
-   // Register the NotificationDispatcher class (derived from OsMsgDispatcher)
-   // as the sipX notification dispatcher
-   mediaInterface->getInterface()->setNotificationDispatcher(mediaInterface.get());
-
-   // Turn on notifications for all resources...
-   mediaInterface->getInterface()->setNotificationsEnabled(true);
-
-   if(giveFocus)
+void
+ConversationManager::setMediaStackAdapter(std::shared_ptr<MediaStackAdapter> mediaStackAdapter)
+{
+   mMediaStackAdapter = mediaStackAdapter;
+   if(mediaStackAdapter)
    {
-      mediaInterface->getInterface()->giveFocus();
+      mediaStackAdapter->conversationManagerReady(this);
    }
-
-   *bridgeMixer = new BridgeMixer(*(mediaInterface->getInterface()));
 }
 
 void
@@ -1010,7 +763,6 @@ int
 ConversationManager::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, const SipMessage& msg)
 {
    return dynamic_cast<RemoteParticipant *>(h->getAppDialog().get())->onRequestRetry(h, retryMinimum, msg);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1046,7 +798,7 @@ ConversationManager::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, con
          }
 
          // Create new Participant
-         RemoteParticipantDialogSet *participantDialogSet = new RemoteParticipantDialogSet(*this);
+         RemoteParticipantDialogSet *participantDialogSet = getMediaStackAdapter().createRemoteParticipantDialogSetInstance();
          RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
 
          // Set pending OOD info in Participant - causes accept or reject to be called later
@@ -1127,7 +879,7 @@ ConversationManager::hasDefaultExpires() const
    return true;
 }
 
-UInt32 
+uint32_t 
 ConversationManager::getDefaultExpires() const
 {
    return 60;
@@ -1157,13 +909,19 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
    {
    case OPTIONS:
    {
-      SharedPtr<SipMessage> optionsAnswer = ood->answerOptions();
+      auto optionsAnswer = ood->answerOptions();
 
-      // Attach an offer to the options request
-      SdpContents sdp;
-      buildSdpOffer(mUserAgent->getIncomingConversationProfile(msg).get(), sdp);
-      optionsAnswer->setContents(&sdp);
-      ood->send(optionsAnswer);
+      ConversationProfile* convProfile = mUserAgent->getIncomingConversationProfile(msg).get();
+
+      if (convProfile)
+      {
+         // Attach an offer to the options request
+         SdpContents sdp;
+         buildSdpOffer(convProfile, sdp);
+         optionsAnswer->setContents(&sdp);
+      }
+
+      ood->send(std::move(optionsAnswer));
       break;
    }
    case REFER:
@@ -1191,7 +949,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
             }
 
             // Create new Participant 
-            RemoteParticipantDialogSet *participantDialogSet = new RemoteParticipantDialogSet(*this);
+            RemoteParticipantDialogSet *participantDialogSet = getMediaStackAdapter().createRemoteParticipantDialogSetInstance();
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
 
             // Set pending OOD info in Participant - causes accept or reject to be called later
@@ -1250,8 +1008,67 @@ ConversationManager::onTryingNextTarget(AppDialogSetHandle, const SipMessage& ms
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// ClientPagerMessageHandler ///////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void 
+ConversationManager::onSuccess(ClientPagerMessageHandle h, const SipMessage& status)
+{
+   return dynamic_cast<RemoteIMPagerParticipant*>(h->getAppDialogSet().get())->onSuccess(h, status);
+}
+
+void 
+ConversationManager::onFailure(ClientPagerMessageHandle h, const SipMessage& status, std::unique_ptr<Contents> contents)
+{
+   return dynamic_cast<RemoteIMPagerParticipant*>(h->getAppDialogSet().get())->onFailure(h, status, std::move(contents));
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ServerPagerMessageHandler ///////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void 
+ConversationManager::onMessageArrived(ServerPagerMessageHandle h, const SipMessage& message)
+{
+   RemoteIMPagerParticipant* remoteIMPagerParticipant = nullptr;
+
+   {
+      // First see if we already have a RemoteIMPagerParticipant for this CallId yet or not
+      for (ParticipantMap::iterator i = mParticipants.begin(); i != mParticipants.end(); i++)
+      {
+         remoteIMPagerParticipant = dynamic_cast<RemoteIMPagerParticipant*>(i->second);
+         if (remoteIMPagerParticipant != nullptr && remoteIMPagerParticipant->doesMessageMatch(message))
+         {
+            // Found existing remoteIMPagerParticipant, break out
+            break;
+         }
+         remoteIMPagerParticipant = nullptr;
+      }
+   }
+
+   if (remoteIMPagerParticipant == nullptr && mUserAgent != nullptr)
+   {
+      // If we make it here, we didn't find an existing RemoteIMPagerParticipant via the callId,
+      // for From header matching create a new one now.
+      remoteIMPagerParticipant = new RemoteIMPagerParticipant(getNewParticipantHandle(), *this);
+   }
+
+   if (remoteIMPagerParticipant)
+   {
+      remoteIMPagerParticipant->onMessageArrived(h, message);
+   }
+   else
+   {
+      h->send(h->reject(500)); // Reject with internal server error
+   }
+   
+}
+
+
 /* ====================================================================
 
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -10,10 +10,10 @@ class AbstractValue :public Signable
 {
   public:
    int getKind() const;
-   UInt64 getGeneration() const;
+   uint64_t getGeneration() const;
 
    void setKind(int kind) const;
-   void getGeneration(UInt64 generation) const;
+   void getGeneration(uint64_t generation) const;
 };
 
 } // p2p

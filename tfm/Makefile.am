@@ -2,7 +2,6 @@
 
 EXTRA_DIST = LICENSE
 EXTRA_DIST += README
-EXTRA_DIST += tfm.sln
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
 
 # autotools won't build the contrib stuff

@@ -1,13 +1,13 @@
 #if !defined(RESIP_MUTEX_HXX)
 #define RESIP_MUTEX_HXX
 
+#include <mutex>
+
 #include "rutil/compat.hxx"
-#include "rutil/Lockable.hxx"
 
 
 namespace resip
 {
-class Condition;
 
 /**
    @brief A semaphore that can be locked by only one thread at a time.  
@@ -31,30 +31,11 @@ class Condition;
    @see Condition
 
 */
-class Mutex : public Lockable
-{
-      friend class Condition;
 
-   public:
-      Mutex();
-      virtual ~Mutex();
-      virtual void lock();
-      virtual void unlock();
-
-   private:
-      // !kh!
-      //  no value sematics, therefore private and not implemented.
-      Mutex (const Mutex&);
-      Mutex& operator= (const Mutex&);
-
-   private:
-#ifdef WIN32
-	  CRITICAL_SECTION mId;
-#else
-      mutable  pthread_mutex_t mId;
-      pthread_mutex_t* getId() const;
-#endif
-};
+// We removed our local implementation and now we use the
+// C++11 library
+typedef std::mutex Mutex;
+typedef std::recursive_mutex RecursiveMutex;
 
 }
 

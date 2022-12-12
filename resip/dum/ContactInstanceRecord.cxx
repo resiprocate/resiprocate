@@ -94,11 +94,11 @@ ContactInstanceRecord::operator==(const ContactInstanceRecord& rhs) const
 
 void ContactInstanceRecord::stream(std::iostream& ss) const
 {
-    UInt64 now = Timer::getTimeSecs();
+    uint64_t now = Timer::getTimeSecs();
 
     ss << "   <contactinfo>" << Symbols::CRLF;
     ss << "      <contacturi>" << Data::from(mContact).xmlCharDataEncode() << "</contacturi>" << Symbols::CRLF;
-    // If contact is expired or removed, then pass expires time as 0, otherwise send number of seconds until expirey
+    // If contact is expired or removed, then pass expires time as 0, otherwise send number of seconds until expiry
     ss << "      <expires>" << (((mRegExpires == 0) || (mRegExpires <= now)) ? 0 : (mRegExpires-now)) << "</expires>" << Symbols::CRLF;
     ss << "      <lastupdate>" << now-mLastUpdated << "</lastupdate>" << Symbols::CRLF;
     if(mReceivedFrom.getPort() != 0)
@@ -138,7 +138,7 @@ void ContactInstanceRecord::stream(std::iostream& ss) const
     ss << "   </contactinfo>" << Symbols::CRLF;
 }
 
-bool ContactInstanceRecord::deserialize(resip::XMLCursor& xml, UInt64 now)
+bool ContactInstanceRecord::deserialize(resip::XMLCursor& xml, uint64_t now)
 {
    bool success = false;
    // Reset this members
@@ -169,7 +169,7 @@ bool ContactInstanceRecord::deserialize(resip::XMLCursor& xml, UInt64 now)
                if(xml.firstChild())
                {
                   //InfoLog(<< "RegSyncClient::handleRegInfoEvent: expires=" << xml.getValue());
-                  UInt64 expires = xml.getValue().convertUInt64();
+                  uint64_t expires = xml.getValue().convertUInt64();
                   mRegExpires = (expires == 0 ? 0 : now+expires);
                   xml.parent();
                }
@@ -269,7 +269,7 @@ ContactInstanceRecord::makeRemoveDelta(const NameAddr& contact)
 
 ContactInstanceRecord 
 ContactInstanceRecord::makeUpdateDelta(const NameAddr& contact, 
-                                       UInt64 expires,  // absolute time in secs
+                                       uint64_t expires,  // absolute time in secs
                                        const SipMessage& msg)
 {
    ContactInstanceRecord c;

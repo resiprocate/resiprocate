@@ -9,7 +9,8 @@
 #include "resip/dum/MergedRequestKey.hxx"
 #include "resip/dum/Handles.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -30,12 +31,14 @@ class DialogSet
       
       DialogSetId getId() const;
       void addDialog(Dialog*);
-      bool empty() const;
-      BaseCreator* getCreator();
+      bool empty() const noexcept;
+      BaseCreator* getCreator() const noexcept;
 
-      SharedPtr<UserProfile> getUserProfile() const;
-      void setUserProfile(SharedPtr<UserProfile> userProfile);
+      std::shared_ptr<UserProfile> getUserProfile() const;
+      void setUserProfile(std::shared_ptr<UserProfile> userProfile);
 
+      void end(const Data& endReason);
+      void end(const ParserContainer<Token>& endReasons);
       void end();
       void dispatch(const SipMessage& msg);
       
@@ -45,7 +48,7 @@ class DialogSet
       ClientOutOfDialogReqHandle getClientOutOfDialog();
       ServerOutOfDialogReqHandle getServerOutOfDialog();
 
-      bool isDestroying() { return mState == Destroying; };
+      bool isDestroying() const noexcept { return mState == Destroying; };
 
    private:
       friend class Dialog;
@@ -121,7 +124,12 @@ class DialogSet
 
       ClientPagerMessage* mClientPagerMessage;
       ServerPagerMessage* mServerPagerMessage;
-      SharedPtr<UserProfile> mUserProfile;
+      std::shared_ptr<UserProfile> mUserProfile;
+
+      // Used when EndReason(s) are specified
+      Data mEndReason;
+      ParserContainer<Token> mEndReasons;
+      void addEndReasonToMessage(SipMessage& msg);
 
       friend EncodeStream& operator<<(EncodeStream& strm, const DialogSet& ds);
 };

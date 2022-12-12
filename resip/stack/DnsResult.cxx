@@ -129,7 +129,7 @@ DnsResult::transition(Type t)
 void
 DnsResult::destroy()
 {
-   resip_assert(this);
+   resip_assert_not_null(this);
    //DebugLog (<< "DnsResult::destroy() " << *this);
    
    if (mType == Pending)
@@ -144,7 +144,7 @@ DnsResult::destroy()
 }
 
 bool
-DnsResult::blacklistLast(UInt64 expiry)
+DnsResult::blacklistLast(uint64_t expiry)
 {
    if(mHaveReturnedResults)
    {
@@ -162,7 +162,7 @@ DnsResult::blacklistLast(UInt64 expiry)
 }
 
 bool
-DnsResult::greylistLast(UInt64 expiry)
+DnsResult::greylistLast(uint64_t expiry)
 {
    if(mHaveReturnedResults)
    {
@@ -1371,7 +1371,7 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
          {
             if(preferredNAPTROrder == (*it).order)
             {
-               StackLog (<< "NAPTR record is supported and matches highes priority order. doing SRV query: " << (*it));
+               StackLog (<< "NAPTR record is supported and matches highest priority order. doing SRV query: " << (*it));
                mTopOrderedNAPTRs[(*it).replacement] = (*it);
                mSRVCount++;
                mDnsStub.lookup<RR_SRV>((*it).replacement, Protocol::Sip, this);

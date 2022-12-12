@@ -2,17 +2,19 @@
 #include "tfm/SipEvent.hxx"
 #include "tfm/TestSipEndPoint.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 SipEvent::SipEvent(TestSipEndPoint* endPoint,
-                   const boost::shared_ptr<SipMessage>& msg)
+                   std::shared_ptr<SipMessage> msg)
    : Event(endPoint),
-     mMsg(msg)
+     mMsg(std::move(msg))
 {
 }
 
-boost::shared_ptr<resip::SipMessage> 
-SipEvent::getMessage()
+std::shared_ptr<resip::SipMessage>
+SipEvent::getMessage() const noexcept
 {
    return mMsg;
 }

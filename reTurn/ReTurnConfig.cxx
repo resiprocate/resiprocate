@@ -9,8 +9,8 @@
 
 #include <sys/stat.h>
 
-#include <boost/bind.hpp>
-
+#include <asio/placeholders.hpp>
+#include <functional>
 #include "ReTurnConfig.hxx"
 
 #include "ReTurnSubsystem.hxx"
@@ -27,6 +27,13 @@
 
 using namespace std;
 using namespace resip;
+
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+#include <chrono>
+using namespace std::chrono;
+#endif
 
 namespace reTurn {
 
@@ -53,11 +60,6 @@ ReTurnConfig::ReTurnConfig() :
    mTlsPrivateKeyPassword(""),
    mUsersDatabaseFilename(""),
    mUserDatabaseHashedPasswords(false),
-   mLoggingType("cout"),
-   mSyslogFacility("LOG_DAEMON"),
-   mLoggingLevel("INFO"),
-   mLoggingFilename("reTurnServer.log"),
-   mLoggingFileMaxLineCount(50000),  // 50000 about 5M size
    mDaemonize(false),
    mPidFile(""),
    mRunAsUser(""),
@@ -90,11 +92,6 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);
    mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", mTlsPrivateKeyPassword);
    mUserDatabaseHashedPasswords = getConfigBool("UserDatabaseHashedPasswords", mUserDatabaseHashedPasswords);
-   mLoggingType = getConfigData("LoggingType", mLoggingType);
-   mSyslogFacility = getConfigData("SyslogFacility", "LOG_DAEMON");
-   mLoggingLevel = getConfigData("LoggingLevel", mLoggingLevel);
-   mLoggingFilename = getConfigData("LogFilename", mLoggingFilename);
-   mLoggingFileMaxLineCount = getConfigUnsignedLong("LogFileMaxLines", mLoggingFileMaxLineCount);
    mDaemonize = getConfigBool("Daemonize", mDaemonize);
    mPidFile = getConfigData("PidFile", mPidFile);
    mRunAsUser = getConfigData("RunAsUser", mRunAsUser);
@@ -127,7 +124,6 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
       throw ConfigParse::Exception("Missing user database option! Expected \"UserDatabaseFile = file location\".", __FILE__, __LINE__);
    }
 
-   AddBasePathIfRequired(mLoggingFilename);
    AddBasePathIfRequired(mTlsServerCertificateFilename);
    AddBasePathIfRequired(mTlsServerPrivateKeyFilename);
    AddBasePathIfRequired(mTlsTempDhFilename);
@@ -330,11 +326,11 @@ ReTurnConfig::getHa1ForUsername(const Data& username, const resip::Data& realm) 
    }
 }
 
-std::auto_ptr<UserAuthData>
+std::unique_ptr<UserAuthData>
 ReTurnConfig::getUser(const resip::Data& userName, const resip::Data& realm) const
 {
    ReadLock lock(mUserDataMutex);
-   std::auto_ptr<UserAuthData> ret(0);
+   std::unique_ptr<UserAuthData> ret;
    std::map<resip::Data,RealmUsers>::const_iterator it = mUsers.find(realm);
    if(it == mUsers.end())
       return ret;
@@ -344,7 +340,7 @@ ReTurnConfig::getUser(const resip::Data& userName, const resip::Data& realm) con
    if(it2 == realmUsers.end())
       return ret;
 
-   return std::auto_ptr<UserAuthData>(new UserAuthData(it2->second));
+   return std::unique_ptr<UserAuthData>(new UserAuthData(it2->second));
 }
 
 bool ReTurnUserFileScanner::mHup = false;
@@ -354,7 +350,7 @@ ReTurnUserFileScanner::ReTurnUserFileScanner(asio::io_service& ioService, ReTurn
    mReTurnConfig(reTurnConfig),
    mLoopInterval(3),
    mNextFileCheck(mLoadedTime + reTurnConfig.mUserDatabaseCheckInterval),
-   mTimer(ioService, boost::posix_time::seconds(mLoopInterval))
+   mTimer(ioService, seconds(mLoopInterval))
 {
    mHup = false;
 #ifndef WIN32
@@ -372,8 +368,8 @@ ReTurnUserFileScanner::start()
 
    if(timerInterval > 0)
    {
-      mTimer.expires_from_now(boost::posix_time::seconds(timerInterval));
-      mTimer.async_wait(boost::bind(&ReTurnUserFileScanner::timeout, this, asio::placeholders::error));
+      mTimer.expires_from_now(seconds(timerInterval));
+      mTimer.async_wait(std::bind(&ReTurnUserFileScanner::timeout, this, std::placeholders::_1));
    }
 }
 

@@ -24,7 +24,7 @@ ParkOrbit::ParkOrbit(Server& server, unsigned long orbit, unsigned long maxParkT
    mMaxParkTime(maxParkTime)
 {
    // Create an initial conversation and start music
-   mConversationHandle = mServer.createConversation(true /* broadcast only*/);
+   mConversationHandle = mServer.createConversation(ConversationManager::AutoHoldBroadcastOnly);
 
    // Play Music
    mServer.createMediaResourceParticipant(mConversationHandle, musicFilename);
@@ -87,7 +87,7 @@ ParkOrbit::getNextQueuedParticipant()
    ParticipantHandle participantHandle = 0;
    if(!mParticipants.empty())
    {
-      UInt64 now = resip::Timer::getTimeSecs();
+      uint64_t now = resip::Timer::getTimeSecs();
       if(now - mParticipants.front()->mAllocationTime > ALLOCATIONTIME)
       {
          participantHandle = mParticipants.front()->mParticipantHandle;
@@ -123,7 +123,7 @@ ParkOrbit::onMaxParkTimeout(recon::ParticipantHandle participantHandle)
 
 /* ====================================================================
 
- Copyright (c) 2011, SIP Spectrum, Inc.
+ Copyright (c) 2011-2021, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

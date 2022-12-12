@@ -15,7 +15,6 @@
 #include "resip/stack/WsCookieContextFactory.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "rutil/Sha1.hxx"
 
 #ifdef USE_SSL
@@ -142,7 +141,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
    {
       case NewMessage:
       {
-         if (strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
+         if (bytesRead >= 4 && strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
          {
             DebugLog(<< "Got incoming double-CRLF keepalive (aka ping).");
             mBufferPos += 4;
@@ -159,7 +158,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                return true;
             }
          }
-         else if (strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
+         else if (bytesRead >= 2 && strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
          {
             //DebugLog(<< "Got incoming CRLF keepalive response (aka pong).");
             mBufferPos += 2;
@@ -403,13 +402,14 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                }
 
                // The message body is complete.
-               mMessage->setBody(unprocessedCharPtr, (UInt32)contentLength);
+               if (contentLength > 0)
+                        mMessage->setBody(unprocessedCharPtr, (uint32_t)contentLength);
                CongestionManager::RejectionBehavior b=mTransport->getRejectionBehaviorForIncoming();
                if (b==CongestionManager::REJECTING_NON_ESSENTIAL
                      || (b==CongestionManager::REJECTING_NEW_WORK
                         && mMessage->isRequest()))
                {
-                  UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
+                  const uint32_t expectedWait(mTransport->getExpectedWaitForIncoming());
                   // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
                   // requests but not responses ( ?bwc? is this right for ACK?). 
                   // If we are REJECTING_NON_ESSENTIAL, 
@@ -419,10 +419,10 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   
                   // .bwc. This handles all appropriate checking for whether
                   // this is a response or an ACK.
-                  std::auto_ptr<SendData> tryLater(transport()->make503(*mMessage, expectedWait/1000));
+                  std::unique_ptr<SendData> tryLater(transport()->make503(*mMessage, expectedWait));
                   if(tryLater.get())
                   {
-                     transport()->send(tryLater);
+                     transport()->send(std::move(tryLater));
                   }
                   delete mMessage; // dropping message due to congestion
                   mMessage = 0;
@@ -477,7 +477,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             char *overHangStart = mBuffer + contentLength;
 
             mMessage->addBuffer(mBuffer);
-            mMessage->setBody(mBuffer, (UInt32)contentLength);
+            mMessage->setBody(mBuffer, (uint32_t)contentLength);
             mConnState = NewMessage;
             mBuffer = 0;
 
@@ -508,7 +508,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   || (b==CongestionManager::REJECTING_NEW_WORK
                      && mMessage->isRequest()))
             {
-               UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
+               const uint32_t expectedWait(mTransport->getExpectedWaitForIncoming());
                // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
                // requests but not responses ( ?bwc? is this right for ACK?). 
                // If we are REJECTING_NON_ESSENTIAL, 
@@ -518,10 +518,10 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                
                // .bwc. This handles all appropriate checking for whether
                // this is a response or an ACK.
-               std::auto_ptr<SendData> tryLater = transport()->make503(*mMessage, expectedWait/1000);
+               std::unique_ptr<SendData> tryLater = transport()->make503(*mMessage, expectedWait);
                if(tryLater.get())
                {
-                  transport()->send(tryLater);
+                  transport()->send(std::move(tryLater));
                }
                delete mMessage; // dropping message due to congestion
                mMessage = 0;
@@ -653,7 +653,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
       CookieList cookieList;
       if(wsConnectionBase)
       {
-         SharedPtr<WsCookieContext> wsCookieContext((WsCookieContext*)0);
+         std::shared_ptr<WsCookieContext> wsCookieContext;
          if (mMessage->exists(h_Cookies))
          {
             WsBaseTransport* wst = dynamic_cast<WsBaseTransport*>(mTransport);
@@ -676,9 +676,9 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
                WarningLog(<<"Failed to parse cookies into WsCookieContext: " << ex);
             }
          }
-         SharedPtr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
+         std::shared_ptr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
          if(wsConnectionValidator &&
-            (!wsCookieContext.get() || !wsConnectionValidator->validateConnection(*wsCookieContext)))
+            (!wsCookieContext || !wsConnectionValidator->validateConnection(*wsCookieContext)))
          {
             ErrLog(<<"WebSocket cookie validation failed, dropping connection");
             // FIXME: should send back a HTTP error code:
@@ -693,7 +693,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
          }
       }
 
-      std::auto_ptr<Data> wsResponsePtr = makeWsHandshakeResponse();
+      std::unique_ptr<Data> wsResponsePtr = makeWsHandshakeResponse();
 
       if (wsResponsePtr.get())
       {
@@ -754,10 +754,10 @@ ConnectionBase::scanMsgHeader(int bytesRead)
    return true;
 }
 
-std::auto_ptr<Data>
+std::unique_ptr<Data>
 ConnectionBase::makeWsHandshakeResponse()
 {
-   std::auto_ptr<Data> responsePtr(0);
+   std::unique_ptr<Data> responsePtr;
    if(isUsingSecWebSocketKey())
    {
       responsePtr.reset(new Data("HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
@@ -807,7 +807,7 @@ ConnectionBase::wsProcessData(int bytesRead)
 {
    bool dropConnection = false;
    // Always consumes the whole buffer:
-   std::auto_ptr<Data> msg = mWsFrameExtractor.processBytes((UInt8*)mBuffer, bytesRead, dropConnection);
+   std::unique_ptr<Data> msg = mWsFrameExtractor.processBytes((uint8_t*)mBuffer, bytesRead, dropConnection);
 
    while(msg.get())
    {
@@ -1061,11 +1061,12 @@ ConnectionBase::getCurrentWriteBuffer()
 }
 
 char*
-ConnectionBase::getWriteBufferForExtraBytes(int currentPos, int extraBytes)
+ConnectionBase::getWriteBufferForExtraBytes(int bytesRead, int extraBytes)
 {
+   int currentPos = mBufferPos + bytesRead;
    if (currentPos > 0 && extraBytes > 0)
    {
-      if ((currentPos + extraBytes) > mBufferSize)
+      if (((size_t)currentPos + (size_t)extraBytes) > mBufferSize)
       {
          mBufferSize = currentPos + extraBytes;
          char* buffer = MsgHeaderScanner::allocateBuffer((int)mBufferSize);
@@ -1093,7 +1094,7 @@ ConnectionBase::setBuffer(char* bytes, int count)
 Transport* 
 ConnectionBase::transport() const
 {
-   resip_assert(this);
+   resip_assert_not_null(this);
    return mTransport;
 }
 

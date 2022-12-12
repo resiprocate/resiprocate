@@ -64,7 +64,7 @@ defineParam(language, "language", QuotedDataParameter, NameAddr, "RFC 3840"); //
 defineParam(type, "type", QuotedDataParameter, NameAddr, "RFC 3840"); // list
 defineParam(isFocus, "isfocus", ExistsParameter, NameAddr, "RFC 3840");
 defineParam(actor, "actor", QuotedDataParameter, NameAddr, "RFC 3840"); // principal|msg-taker|attendant|information
-defineParam2(text, "text", ExistsOrDataParameter, NameAddr, Token, "RFC 3326/3840");
+defineParam2(text, "text", ExistsOrQuotedDataParameter, NameAddr, Token, "RFC 3326/3840");
 defineParam(cause, "cause", UInt32Parameter, Token, "RFC3326");
 defineParam(extensions, "extensions", QuotedDataParameter, NameAddr, "RFC 3840"); //list
 defineParam(Instance, "+sip.instance", QuotedDataParameter, NameAddr, "RFC 5626");  // <> quoted

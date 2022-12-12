@@ -27,6 +27,13 @@
 #include <rutil/DnsUtil.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+#include <chrono>
+using namespace std::chrono;
+#endif
+
 using namespace reTurn;
 using namespace std;
 
@@ -145,15 +152,15 @@ private:
 class MyTurnAsyncSocketHandler : public TurnAsyncSocketHandler
 {
 public:
-   MyTurnAsyncSocketHandler(asio::io_service& ioService) : mIOService(ioService), mTimer(ioService), mNumReceives(0), mNumSends(0) {}
+   MyTurnAsyncSocketHandler(asio::io_service& ioService) : mTimer(ioService), mNumReceives(0), mNumSends(0) {}
    virtual ~MyTurnAsyncSocketHandler() {}
 
    void sendRtpSimPacket()
    {
       if(++mNumSends <= NUM_RTP_PACKETS_TO_SIMULATE)
       {
-         mTimer.expires_from_now(boost::posix_time::milliseconds(PACKET_TIME_TO_SIMULATE));   
-         mTimer.async_wait(boost::bind(&MyTurnAsyncSocketHandler::sendRtpSimPacket, this));
+         mTimer.expires_from_now(milliseconds(PACKET_TIME_TO_SIMULATE));
+         mTimer.async_wait(std::bind(&MyTurnAsyncSocketHandler::sendRtpSimPacket, this));
          //InfoLog(<< "Sending packet " << mNumReceives << "...");
          mTurnAsyncSocket->send(rtpPayload.data(), rtpPayload.size());  
       }
@@ -198,7 +205,7 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), stunServerTuple=" << stunServerTuple);
    }
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, uint64_t reservationToken)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onAllocationSuccess: socketDest=" << socketDesc << 
               ", reflexive=" << reflexiveTuple << 
@@ -282,7 +289,7 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onSendFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
    {
       //InfoLog( << "MyTurnAsyncSocketHandler::onReceiveSuccess: socketDest=" << socketDesc << ", fromAddress=" << address << ", fromPort=" << port << ", size=" << data->size() << ", data=" << data->data()); 
       if(++mNumReceives == NUM_RTP_PACKETS_TO_SIMULATE)
@@ -304,13 +311,11 @@ public:
    void setTurnAsyncSocket(TurnAsyncSocket* turnAsyncSocket) { mTurnAsyncSocket = turnAsyncSocket; }
 
 private:
-   asio::io_service& mIOService;
-   asio::deadline_timer mTimer;
+   asio::steady_timer mTimer;
    TurnAsyncSocket* mTurnAsyncSocket;
    unsigned int mNumReceives;
    unsigned int mNumSends;
    time_t mStartTime;
-   UInt64 mRTPSendTime;
 };
 
 int main(int argc, char* argv[])
@@ -369,10 +374,10 @@ int main(int argc, char* argv[])
     sslContext.load_verify_file("ca.pem");
 #endif
 
-    boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
+    const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
 #ifdef USE_SSL
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, &handler, asio::ip::address::from_string(address.c_str()), 0)); port++;
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, &handler, asio::ip::address::from_string(address.c_str()), 0); port++;
 #endif
 
     handler.setTurnAsyncSocket(turnSocket.get());
@@ -393,7 +398,7 @@ int main(int argc, char* argv[])
     turnPeer.join();
 #endif
   }
-  catch (std::exception& e)
+  catch (const std::exception& e)
   {
     std::cerr << "Exception: " << e.what() << "\n";
   }

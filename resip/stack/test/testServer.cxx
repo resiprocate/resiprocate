@@ -36,7 +36,7 @@ class Server : public ThreadIf
       {
          InfoLog(<<"This is the Server");
 
-         UInt64 startTime = Timer::getTimeMs();
+         uint64_t startTime = Timer::getTimeMs();
 
          NameAddr contact;
          contact.uri().scheme() = "sip";
@@ -49,41 +49,37 @@ class Server : public ThreadIf
          int calls = mNumCalls;
          while(calls > 0)
          {
-            FdSet fdset;
-            mStack.buildFdSet(fdset);
-            int err = fdset.selectMilliSeconds(0);
-            assert (err != -1);
-            mStack.process(fdset);
+            mStack.process(1000);
             
             SipMessage* received = mStack.receive();
             if (received)
             {
-               auto_ptr<SipMessage> forDel(received);
+               unique_ptr<SipMessage> forDel(received);
                MethodTypes meth = received->header(h_RequestLine).getMethod();
                ErrLog ( << "Server received: " << getMethodName(meth));
                if ( meth == INVITE )
                {
                   Data localTag = Helper::computeTag(4);
-                  auto_ptr<SipMessage> msg180(Helper::makeResponse(*received, 180, contact));
+                  unique_ptr<SipMessage> msg180(Helper::makeResponse(*received, 180, contact));
                   msg180->header(h_To).param(p_tag) = localTag;
                   ErrLog( << "Sent 180");
                   mStack.send( *msg180);
 
-                  auto_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, contact));
+                  unique_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, contact));
                   msg200->header(h_To).param(p_tag) = localTag;
                   ErrLog( << "Sent 200");
                   mStack.send(*msg200);
                }
                if ( meth == BYE)
                {
-                  auto_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, contact));
+                  unique_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, contact));
                   calls--;
                   ErrLog( << "Sent 200 to BYE");
                   mStack.send(*msg200);
                }
             }
          }
-         UInt64 endTime = Timer::getTimeMs();
+         uint64_t endTime = Timer::getTimeMs();
 
          CritLog(<< "Completed: " << mNumCalls << " calls in " << endTime - startTime << "ms, " 
                  << mNumCalls*1000 / (float)(endTime - startTime) << " CPS");
