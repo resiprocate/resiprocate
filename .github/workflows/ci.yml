@@ -69,4 +69,4 @@ jobs:
         run: ./build/travis/build
 
       - name: Test
-        run: make -j1 check
+        run: make -j1 test
