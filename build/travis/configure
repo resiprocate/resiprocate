@@ -12,14 +12,16 @@ WARNING_CONFIG="-Wno-unknown-pragmas"
 # as an error, it will fail the build
 WARNING_CONFIG="-Werror  ${WARNING_CONFIG}"
 
-BLEEDING_EDGE_REPRO_FEATURES="-DUSE_SIPXTAPI=ON -DUSE_KURENTO=ON -DUSE_GSTREAMER=ON"
+# FIXME - need to make sure the gstreamer-dev packages have all the right
+# headers before we enable it here
+BLEEDING_EDGE_REPRO_FEATURES="-DUSE_SIPXTAPI=ON -DUSE_KURENTO=ON -DUSE_GSTREAMER=OFF"
 if [[ -e /etc/os-release ]]
 then
   source /etc/os-release
   if [[ "${VERSION_CODENAME}" == "buster" ]]
   then
     # those features do not compile on Debian Buster
-    BLEEDING_EDGE_REPRO_FEATURES="-DUSE_SIPXTAPI=OFF -DUSE_KURENTO=OFF -DUSE_GSTREAMER=OFF"
+    BLEEDING_EDGE_REPRO_FEATURES="-DUSE_SIPXTAPI=OFF -DUSE_KURENTO=ON -DUSE_GSTREAMER=OFF"
   fi
 fi
 
