@@ -32,6 +32,7 @@ CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix
   CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
 cmake \
     -DCMAKE_BUILD_TYPE=Debug \
+    -DENABLE_LOG_REPOSITORY_DETAILS=OFF \
     -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" \
     -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" \
     -DWITH_C_ARES=ON \
