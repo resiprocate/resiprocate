@@ -39,7 +39,7 @@ cmake \
     -DWITH_SSL=ON \
     -DUSE_POPT=ON \
     -DUSE_SIGCOMP=OFF \
-    -DUSE_FMT=ON \
+    -DUSE_FMT=OFF \
     -DVERSIONED_SONAME=ON \
     -DENABLE_ANDROID=OFF \
     -DUSE_IPV6=ON \
