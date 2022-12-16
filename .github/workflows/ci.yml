@@ -18,7 +18,7 @@ jobs:
           apt-get update -qq
           apt-get install -qq \
             clang \
-            cmake \
+            cmake/buster-backports \
             default-libmysqlclient-dev \
             g++ \
             git \
