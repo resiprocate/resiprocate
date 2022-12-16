@@ -17,9 +17,8 @@ jobs:
           echo "deb http://deb.debian.org/debian buster-backports main" > /etc/apt/sources.list.d/backports.list
           apt-get update -qq
           apt-get install -qq \
-            autoconf-archive \
-            autotools-dev \
             clang \
+            cmake \
             default-libmysqlclient-dev \
             g++ \
             git \

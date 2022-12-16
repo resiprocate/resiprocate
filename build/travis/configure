@@ -12,16 +12,14 @@ WARNING_CONFIG="-Wno-unknown-pragmas"
 # as an error, it will fail the build
 WARNING_CONFIG="-Werror  ${WARNING_CONFIG}"
 
-RADIUS_LIB=--with-radcli
-
-BLEEDING_EDGE_REPRO_FEATURES="--with-sipxtapi --with-kurento --with-gstreamer"
+BLEEDING_EDGE_REPRO_FEATURES="-DUSE_SIPXTAPI=ON -DUSE_KURENTO=ON -DUSE_GSTREAMER=ON"
 if [[ -e /etc/os-release ]]
 then
   source /etc/os-release
   if [[ "${VERSION_CODENAME}" == "buster" ]]
   then
     # those features do not compile on Debian Buster
-    BLEEDING_EDGE_REPRO_FEATURES=""
+    BLEEDING_EDGE_REPRO_FEATURES="-DUSE_SIPXTAPI=OFF -DUSE_KURENTO=OFF -DUSE_GSTREAMER=OFF"
   fi
 fi
 
@@ -30,35 +28,47 @@ fi
 #   so we can easily diff the configuration.
 # - we don't enable ichat-gw because of https://www.resiprocate.org/bugzilla/show_bug.cgi?id=133
 #     (compile fails on clang)
-./configure \
-  --with-popt \
-  --enable-ipv6 \
-  --enable-dtls \
-  $RADIUS_LIB \
-  --with-ssl \
-  --enable-assert-syslog \
-  --with-c-ares \
-  --with-fmt \
-  --with-mysql \
-  --with-postgresql \
-  --with-repro \
-  --with-return \
-  --enable-repro-plugins \
-  --with-python \
-  DEPS_PYTHON_VERSION="${PYTHON_MAJOR_VERSION}" \
-  DEPS_PYTHON_CFLAGS="${PYCFG_CFLAGS}" \
-  DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
-  PYCXX_SRCDIR=/usr/share/python${PYTHON_MAJOR_VERSION}/CXX/Python3 \
-  --with-apps \
-  --with-recon \
-  --with-soci-postgresql \
-  --with-soci-mysql \
-  --with-qpid-proton \
-  --with-geoip \
-  --with-netsnmp \
-  --with-rend \
-  ${BLEEDING_EDGE_REPRO_FEATURES} \
-  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags` ${WARNING_CONFIG}" \
+CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags` ${WARNING_CONFIG}" \
   CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
+./configure \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" \
+    -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" \
+    -DWITH_C_ARES=ON \
+    -DWITH_SSL=ON \
+    -DUSE_POPT=ON \
+    -DUSE_SIGCOMP=OFF \
+    -DUSE_FMT=ON \
+    -DVERSIONED_SONAME=ON \
+    -DENABLE_ANDROID=OFF \
+    -DUSE_IPV6=ON \
+    -DUSE_DTLS=ON \
+    -DPEDANTIC_STACK=OFF \
+    -DUSE_MYSQL=ON \
+    -DUSE_SOCI_POSTGRESQL=ON \
+    -DUSE_SOCI_MYSQL=ON \
+    -DUSE_POSTGRESQL=ON \
+    -DUSE_MAXMIND_GEOIP=ON \
+    -DRESIP_HAVE_RADCLI=ON \
+    -DUSE_NETSNMP=ON \
+    -DBUILD_REPRO=ON \
+    -DBUILD_DSO_PLUGINS=ON \
+    -DBUILD_RETURN=ON \
+    -DBUILD_REND=ON \
+    -DBUILD_TFM=OFF \
+    -DBUILD_ICHAT_GW=OFF \
+    -DBUILD_TELEPATHY_CM=OFF \
+    -DBUILD_RECON=ON \
+    -DUSE_SRTP1=OFF \
+    -DBUILD_RECONSERVER=ON \
+    -DUSE_LIBWEBRTC=OFF \
+    -DRECON_LOCAL_HW_TESTS=OFF \
+    -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 \
+    -DBUILD_P2P=OFF \
+    -DBUILD_PYTHON=ON \
+    -DBUILD_QPID_PROTON=ON \
+    -DRESIP_ASSERT_SYSLOG=ON \
+    ${BLEEDING_EDGE_REPRO_FEATURES} \
+    . \
   "${@}"
 
