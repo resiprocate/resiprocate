@@ -3,6 +3,10 @@
   #include "config.h"
 #endif
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wdeprecated"
+#endif
+
 #ifdef USE_SSL
 // .amr. Must include Apple headers first, otherwise conflicts with rutil/compat.hxx happen due to SDK type differences
 #include <CoreFoundation/CoreFoundation.h>
