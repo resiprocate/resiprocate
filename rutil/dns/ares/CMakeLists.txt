@@ -39,6 +39,11 @@ if(WIN32)
    target_link_libraries(resipares PRIVATE ws2_32)
 else()
    add_library(resipares ${SOURCES} ${INCLUDES})
+
+   check_include_files(arpa/nameser.h HAVE_ARPA_NAMESER_H)
+   target_compile_definitions(resipares PUBLIC $<$<BOOL:HAVE_ARPA_NAMESER_H>:HAVE_ARPA_NAMESER_H>)
+   check_include_files(arpa/nameser_compat.h HAVE_ARPA_NAMESER_COMPAT_H)
+   target_compile_definitions(resipares PUBLIC $<$<BOOL:HAVE_ARPA_NAMESER_COMPAT_H>:HAVE_ARPA_NAMESER_COMPAT_H>)
 endif()
 
 target_include_directories(resipares PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
