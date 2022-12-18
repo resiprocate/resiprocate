@@ -52,9 +52,6 @@ volatile short Log::touchCount = 0;
 
 /// DEPRECATED! Left for backward compatibility - use localLoggers instead
 #ifdef LOG_ENABLE_THREAD_SETTING
-#if defined(__APPLE__) || defined(__CYGWIN__)
-HashValueImp(ThreadIf::Id, (size_t)data);
-#endif
 HashMap<ThreadIf::Id, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
 HashMap<int, std::set<ThreadIf::Id> > Log::mServiceToThreads;
 ThreadIf::TlsKey* Log::mLevelKey;

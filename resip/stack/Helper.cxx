@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include <string.h>
+#include <cstring>
 #include <iomanip>
 #include <algorithm>
 #include <memory>
@@ -1352,14 +1352,11 @@ Helper::updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
       //DataStream s(nonceCountString);
       
       //s << std::setw(8) << std::setfill('0') << std::hex << nonceCount;
-	   char buf[128];
+	   constexpr size_t bufSize = 128;
+      char buf[bufSize];
 	   *buf = 0;
 
-#if (defined(_MSC_VER) && _MSC_VER >= 1400)
-	   sprintf_s(buf,128,"%08x",nonceCount);
-#else
-	   sprintf(buf,"%08x",nonceCount);
-#endif
+	   std::snprintf(buf,bufSize,"%08x",nonceCount);
 	   nonceCountString = buf;
    }
    DebugLog(<< "nonceCount is now: [" << nonceCountString << "]");

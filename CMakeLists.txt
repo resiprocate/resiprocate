@@ -338,6 +338,8 @@ if(WITH_SSL)
       # SSL support is requested, so make it mandatory when calling find_package
       find_package(OpenSSL REQUIRED) # HINTS ${OPENSSL_LIBRARIES})
    endif()
+   # Oldest OpenSSL API to target (1.1.1)
+   add_compile_definitions(OPENSSL_API_COMPAT=0x10101000L)
    set_def(USE_SSL)
 else()
    # Explicitly set OPENSSL_FOUND to false since we didn't even run
