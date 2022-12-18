@@ -40,10 +40,10 @@ void FakeApp::thread()
 {
     static unsigned wakeups[6] = { 3, 1, 0, 2, 5, 1 };
 
-    for (unsigned long n = 0; n < sizeof(wakeups)/sizeof(long); n++)
+    for (unsigned long n = 0; n < sizeof(wakeups)/sizeof(unsigned); n++)
     {
        InfoLog( << "Wakeup in: " << wakeups[n] << ", " << n+1 << " of " 
-                << sizeof(wakeups)/sizeof(long));
+                << sizeof(wakeups)/sizeof(unsigned));
 #ifdef WIN32
 	   Sleep(wakeups[n]*1000);
 #else
