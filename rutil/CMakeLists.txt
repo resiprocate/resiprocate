@@ -235,7 +235,7 @@ target_include_directories(rutil PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 target_include_directories(rutil PRIVATE ${ARES_INCLUDE_DIRS})
 target_include_directories(rutil PUBLIC ${QPIDPROTON_INCLUDE_DIRS})
 target_include_directories(rutil PUBLIC ${Python3_INCLUDE_DIRS} ${PYCXX_INCLUDE_DIRS})
-target_include_directories(rutil PUBLIC ${OPENSSL_INCLUDE_DIRS})
+target_include_directories(rutil PUBLIC ${OPENSSL_INCLUDE_DIR})
 #target_link_libraries(rutil ${OPENSSL_TARGETS})
 target_link_libraries(rutil PUBLIC ${OPENSSL_LIBRARIES})
 target_link_libraries(rutil PRIVATE ${ARES_LIBRARIES})
