@@ -4,10 +4,14 @@
 #        to ${PROJECT_BINARY_DIR}
 function(wav_to_header)
    if(REGENERATE_MEDIA_SAMPLES)
+      find_program(SOX_EXECUTABLE "sox") # with CMake 3.18, use REQUIRED
+      if(NOT SOX_EXECUTABLE)
+         message(FATAL_ERROR "The sox utility cannot be found.")
+      endif()
       add_custom_command(
          DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${ARGV0}.wav
          OUTPUT ${ARGV0}.h
-         COMMAND sox ${CMAKE_CURRENT_SOURCE_DIR}/${ARGV0}.wav -r 8k -e signed -b 16 -c 1 ${ARGV0}.raw
+         COMMAND ${SOX_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${ARGV0}.wav -r 8k -e signed -b 16 -c 1 ${ARGV0}.raw
          COMMAND xxd -i -u ${ARGV0}.raw ${ARGV0}.h.0
          COMMAND sed -e 's/_raw//g' ${ARGV0}.h.0 > ${ARGV0}.h
          COMMAND ${CMAKE_COMMAND} -E rm ${ARGV0}.raw ${ARGV0}.h.0
