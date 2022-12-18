@@ -68,8 +68,8 @@ if(OPENSSL_FOUND)
    test(testSecurity testSecurity.cxx)
 endif()
 
-if(DEFINED ENV{LIB_FUZZING_ENGINE})
-   add_executable(fuzzStack EXCLUDE_FROM_ALL fuzzStack.cxx TestSupport.cxx)
-   target_link_libraries(fuzzStack resip ${POPT_LIBRARIES} $ENV{LIB_FUZZING_ENGINE})
-   set_target_properties(fuzzStack PROPERTIES FOLDER resip/Fuzzing)
-endif()
+# fuzzing targets
+
+add_fuzzing_executable(fuzzStack fuzzStack.cxx TestSupport.cxx)
+set_target_properties(fuzzStack PROPERTIES FOLDER resip/Fuzzing)
+target_link_libraries(fuzzStack PRIVATE resip ${POPT_LIBRARIES})

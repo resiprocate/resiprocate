@@ -39,3 +39,9 @@ test(testXMLCursor testXMLCursor.cxx)
 # unreferenced in Makefile.am
 
 extra_test(testKeyValueStore testKeyValueStore.cxx)
+
+# fuzzing targets
+
+add_fuzzing_executable(fuzzUtil fuzzUtil.cxx)
+set_target_properties(fuzzUtil PROPERTIES FOLDER rutil/FuzzingTests)
+target_link_libraries(fuzzUtil PRIVATE rutil)

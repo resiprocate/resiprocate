@@ -70,3 +70,13 @@ target_link_libraries(adig resipares)
 
 set_target_properties(ahost PROPERTIES FOLDER ares)
 set_target_properties(adig PROPERTIES FOLDER ares)
+
+# fuzzing targets
+
+add_fuzzing_executable(aresfuzz ares-test-fuzz.c)
+set_target_properties(aresfuzz PROPERTIES FOLDER ares)
+target_link_libraries(aresfuzz PRIVATE resipares)
+
+add_fuzzing_executable(aresfuzzname ares-test-fuzz-name.c)
+set_target_properties(aresfuzzname PROPERTIES FOLDER ares)
+target_link_libraries(aresfuzzname PRIVATE resipares)
