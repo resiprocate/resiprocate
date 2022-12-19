@@ -1,8 +1,8 @@
 #if !defined(RESIP_TRANSACTIONMAP_HXX)
 #define RESIP_TRANSACTIONMAP_HXX
 
+#include <unordered_map>
 #include "rutil/Data.hxx"
-#include "rutil/HashMap.hxx"
 
 namespace resip
 {
@@ -32,26 +32,7 @@ class TransactionMap
      //    values are case-insensitive.Tokens are always case-insensitive.
      //    Unless specified otherwise, values expressed as quoted strings are
      //    case-sensitive.
-#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310) && (_MSC_VER < 1900))  // !slg! not sure if this works on __INTEL_COMPILER 
-      /**
-         @internal
-      */
-      class BranchCompare
-      {
-         public:
-            enum { bucket_size = 4, min_buckets = 8 };
 
-            inline size_t operator()(const Data& branch) const
-            {
-               return branch.caseInsensitiveTokenHash();
-            }
-
-            inline bool operator()(const Data& branch1, const Data& branch2) const
-            {
-               return isLessThanNoCase(branch1,branch2);
-            }
-      };
-#elif defined(HASH_MAP_NAMESPACE)
       /**
          @internal
       */
@@ -75,34 +56,8 @@ class TransactionMap
                return isEqualNoCase(branch1,branch2);
             }
       };
-#else
-      /**
-         @internal
-      */
-      class BranchCompare
-      {
-         public:
-            inline bool operator()(const Data& branch1, const Data& branch2) const
-            {
-               return isLessThanNoCase(branch1,branch2);
-            }
-      };
-#endif
 
-      // .bwc. If rutil/HashMap.hxx fails to find a hash_map impl for the 
-      // platform we're using, it will #define HashMap to a std::map, which
-      // takes different template args. We try to compensate for this here.
-#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310) && (_MSC_VER < 1900))
-     typedef HashMap<Data, TransactionState*, BranchCompare> Map;
-#elif defined(HASH_MAP_NAMESPACE)
-     typedef HashMap<Data, TransactionState*, BranchHasher, BranchEqual> Map;
-#else
-     typedef std::map<Data, TransactionState*, BranchCompare> Map;
-#endif
-
-     Map mMap;
-     typedef Map::iterator MapIterator;
-     typedef Map::const_iterator MapConstIterator;
+     std::unordered_map<Data, TransactionState*, BranchHasher, BranchEqual> mMap;
 };
 }
 

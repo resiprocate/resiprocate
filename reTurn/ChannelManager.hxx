@@ -1,6 +1,7 @@
 #ifndef CHANNELMANAGER_HXX
 #define CHANNELMANAGER_HXX
 
+#include <map>
 #include "RemotePeer.hxx"
 
 namespace reTurn {
