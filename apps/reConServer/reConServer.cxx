@@ -835,6 +835,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
    bool enableOpus = reConServerConfig.getConfigBool("EnableOpus", false);
+   unsigned int maximumVideoBandwidth = reConServerConfig.getConfigUnsignedLong("MaximumVideoBandwidth", 0);
    Data kurentoUri = reConServerConfig.getConfigData("KurentoURI", "ws://127.0.0.1:8888/kurento");
    ReConServerConfig::Application application = reConServerConfig.getConfigApplication("Application", ReConServerConfig::None);
 
@@ -1284,6 +1285,8 @@ ReConServerProcess::main (int argc, char** argv)
 
    conversationProfile->sessionCaps().session() = session;
 #endif
+
+   conversationProfile->maximumVideoBandwidth() = maximumVideoBandwidth;
 
    // Setup NatTraversal Settings
    conversationProfile->natTraversalMode() = natTraversalMode;

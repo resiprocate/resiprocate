@@ -511,6 +511,10 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
             Mime type("application", "sdp");
             std::unique_ptr<SdpContents> _updatedOffer(new SdpContents(hfv, type));
             _updatedOffer->session().transformLocalHold(isHolding());
+            if(getDialogSet().getConversationProfile()->maximumVideoBandwidth() > 0)
+            {
+               _updatedOffer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", getDialogSet().getConversationProfile()->maximumVideoBandwidth()));
+            }
             setLocalSdp(*_updatedOffer);
             //c(true, std::move(_updatedOffer));
          }, answerBuf.str());

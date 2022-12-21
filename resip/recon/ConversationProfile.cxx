@@ -28,7 +28,8 @@ ConversationProfile::ConversationProfile() :
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
    mForceCOMedia(true),
-   mNatTraversalServerPort(0)
+   mNatTraversalServerPort(0),
+   mMaximumVideoBandwidth(0)
 {
 }
 
@@ -45,7 +46,8 @@ ConversationProfile::ConversationProfile(std::shared_ptr<Profile> baseProfile) :
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
    mForceCOMedia(true),
-   mNatTraversalServerPort(0)
+   mNatTraversalServerPort(0),
+   mMaximumVideoBandwidth(0)
 {
 }
 
