@@ -479,8 +479,8 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
    // FIXME Kurento - implement, may need to break up this method into multiple parts
    StackLog(<<"adjustRTPStreams");
 
-   std::shared_ptr<SdpContents> localSdp = sendingOffer ? getDialogSet().getProposedSdp() : getLocalSdp();
-   resip_assert(localSdp);
+   //std::shared_ptr<SdpContents> localSdp = sendingOffer ? getDialogSet().getProposedSdp() : getLocalSdp();
+   //resip_assert(localSdp);
 
    std::shared_ptr<SdpContents> remoteSdp = getRemoteSdp();
    bool remoteSdpChanged = remoteSdp.get() != mLastRemoteSdp; // FIXME - better way to do this?
