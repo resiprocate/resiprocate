@@ -246,6 +246,12 @@ KurentoRemoteParticipant::createAndConnectElements(kurento::ContinuationVoid cCo
       requestKeyframeFromPeer();
    });
 
+   std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::dynamic_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
+   if(webRtc)
+   {
+      webRtc->addDataChannelOpenedListener(elEventDebug, [this](){});
+   }
+
    mEndpoint->create([=]{
       mEndpoint->addErrorListener(elError, [=](){
          mEndpoint->addConnectionStateChangedListener(elEventDebug, [=](){
