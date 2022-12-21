@@ -118,6 +118,10 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    headers["DisplayName"] = Py::String(message.header(resip::h_From).displayName().c_str());
    headers["From"] = Py::String(message.header(resip::h_From).uri().toString().c_str());
    headers["To"] = Py::String(message.header(resip::h_To).uri().toString().c_str());
+   if(message.exists(resip::h_CallID))
+   {
+      headers["Call-ID"] = Py::String(message.header(resip::h_CallID).value().c_str());
+   }
    if(message.exists(resip::h_ContentType))
    {
       const resip::HeaderFieldValue hfv = message.header(resip::h_ContentType).getHeaderField();
