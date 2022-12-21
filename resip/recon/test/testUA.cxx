@@ -94,9 +94,9 @@ public:
    MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
       UserAgent(conversationManager, std::move(profile)) {}
     
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq) override
+   virtual void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override
    {
-      InfoLog(LOG_PREFIX << "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+      InfoLog(LOG_PREFIX << "onApplicationTimeout: id=" << id << " dur=" << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << "ms seq=" << seq);
    }
 
    virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode) override
@@ -970,7 +970,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 
       if(durationMs > 0)
       {
-         myUserAgent.startApplicationTimer(timerId, durationMs, seqNumber);
+         myUserAgent.startApplicationTimer(timerId, std::chrono::milliseconds(durationMs), seqNumber);
          InfoLog( << "Application Timer started for " << durationMs << "ms");
       }
       else

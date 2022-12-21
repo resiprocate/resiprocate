@@ -625,7 +625,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
 
       if(durationMs > 0)
       {
-         myUserAgent.startApplicationTimer(timerId, durationMs, seqNumber);
+         myUserAgent.startApplicationTimer(timerId, std::chrono::milliseconds(durationMs), seqNumber);
          InfoLog( << "Application Timer started for " << durationMs << "ms");
       }
       else

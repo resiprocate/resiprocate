@@ -287,7 +287,14 @@ void
 ConversationManager::startApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2, unsigned int durationMs)
 {
    ApplicationTimerCmd cmd(this, timerId, timerData1, timerData2);
-   post(cmd, durationMs);
+   post(cmd, std::chrono::milliseconds(durationMs));
+}
+
+void
+ConversationManager::startApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2, std::chrono::duration<double> duration)
+{
+   ApplicationTimerCmd cmd(this, timerId, timerData1, timerData2);
+   post(cmd, duration);
 }
 
 ConversationHandle 
@@ -348,12 +355,12 @@ ConversationManager::post(resip::Message *msg)
    }
 }
 
-void 
-ConversationManager::post(resip::ApplicationMessage& message, unsigned int ms)
+void
+ConversationManager::post(resip::ApplicationMessage& message, std::chrono::duration<double> duration)
 {
    if (mUserAgent)
    {
-      mUserAgent->post(message, ms);
+      mUserAgent->post(message, duration);
    }
 }
 
@@ -439,14 +446,14 @@ void
 ConversationManager::requestKeyframe(ParticipantHandle partHandle, std::chrono::duration<double> duration)
 {
    RequestKeyframeCmd cmd(this, partHandle);
-   post(cmd, (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
+   post(cmd, duration);
 }
 
 void
 ConversationManager::requestKeyframeFromPeer(ParticipantHandle partHandle, std::chrono::duration<double> duration)
 {
    RequestKeyframeFromPeerCmd cmd(this, partHandle);
-   post(cmd, (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
+   post(cmd, duration);
 }
 
 void 

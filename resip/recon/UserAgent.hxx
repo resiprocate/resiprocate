@@ -192,12 +192,12 @@ public:
      order to use application timers.
 
      @param timerId Id representing the timers purpose
-     @param durationMs the duration of the timer in ms
+     @param duration the duration of the timer in ms
      @param seqNumber Can be used by the application to differentiate 
                       "active" from "non-active" timers, since timers
                       cannot be stopped
    */
-   virtual void startApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber);
+   virtual void startApplicationTimer(unsigned int timerId, std::chrono::duration<double> duration, unsigned int seqNumber);
 
    /**
      Requests that the user agent create and manage an event subscription.  
@@ -238,12 +238,12 @@ public:
            startApplicaitonTimer.
 
      @param timerId Id representing the timers purpose
-     @param durationMs the duration of the timer in ms
+     @param duration the duration of the timer in ms
      @param seqNumber Can be used by the application to differentiate 
                       "active" from "non-active" timers, since timers
                       cannot be stopped
    */
-   virtual void onApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber);
+   virtual void onApplicationTimer(unsigned int timerId, std::chrono::duration<double> duration, unsigned int seqNumber);
 
    /**
      Callback used when a subscription has received an event notification 
@@ -337,7 +337,7 @@ protected:
    friend class RemoteIMSessionParticipantDialogSet;
 
    void addTransports();
-   void post(resip::ApplicationMessage& message, unsigned int ms=0);
+   void post(resip::ApplicationMessage& message, std::chrono::duration<double> duration);
    void shutdownImpl(); 
    void addConversationProfileImpl(ConversationProfileHandle handle, std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing=true);
    void setDefaultOutgoingConversationProfileImpl(ConversationProfileHandle handle);
