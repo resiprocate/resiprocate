@@ -854,10 +854,40 @@ class RequestKeyframeFromPeerCmd : public resip::DumCommandAdapter
             WarningLog(<< "RequestKeyframeFromPeerCmd: invalid remote participant handle.");
          }
       }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RequestKeyframeFromPeerCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
+};
+
+class RequestKeyframeFromPeerRecurringCmd : public resip::DumCommandAdapter
+{
+   public:
+      RequestKeyframeFromPeerRecurringCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle,
+                          std::chrono::duration<double> interval)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle),
+           mInterval(interval) {}
+      virtual Message* clone() const { return new RequestKeyframeFromPeerRecurringCmd(*this); }
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            remoteParticipant->requestKeyframeFromPeerTimeout(false);
+            mConversationManager->requestKeyframeFromPeerRecurring(mPartHandle, mInterval);
+         }
+         else
+         {
+            WarningLog(<< "RequestKeyframeFromPeerRecurringCmd: invalid remote participant handle.");
+         }
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RequestKeyframeFromPeerRecurringCmd: "; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+      std::chrono::duration<double> mInterval;
 };
 
 class ApplicationTimerCmd : public resip::DumCommand

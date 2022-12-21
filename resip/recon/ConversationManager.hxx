@@ -474,6 +474,7 @@ public:
    
    virtual void requestKeyframe(ParticipantHandle partHandle, std::chrono::duration<double> durationMs);
    virtual void requestKeyframeFromPeer(ParticipantHandle partHandle, std::chrono::duration<double> durationMs);
+   virtual void requestKeyframeFromPeerRecurring(ParticipantHandle partHandle, std::chrono::duration<double> interval);
    /**
      This function is used to start a timer on behalf of recon based application.
      The onApplicationTimer callback will get called when the timer expires.
@@ -886,6 +887,7 @@ private:
    friend class SendIMToParticipantCmd;
    friend class RequestKeyframeCmd;
    friend class RequestKeyframeFromPeerCmd;
+   friend class RequestKeyframeFromPeerRecurringCmd;
 
    UserAgent* mUserAgent;
    std::shared_ptr<MediaStackAdapter> mMediaStackAdapter;

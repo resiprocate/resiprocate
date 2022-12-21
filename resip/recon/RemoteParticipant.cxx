@@ -844,6 +844,27 @@ RemoteParticipant::requestKeyframeFromPeer()
 }
 
 void
+RemoteParticipant::requestKeyframeFromPeerTimeout(bool reset)
+{
+   if(reset)
+   {
+      mCurrentIntervalIndex = 0;
+   }
+   auto now = std::chrono::steady_clock::now();
+   std::chrono::seconds t = std::chrono::seconds(mKeyframeIntervals[mCurrentIntervalIndex]);
+   if(now < (mLastRemoteKeyframeRequest + t))
+   {
+      DebugLog(<<"keyframe timeout ignored, too soon");
+      return;
+   }
+   requestKeyframeFromPeer();
+   if(mCurrentIntervalIndex < mKeyframeIntervals.size()-1)
+   {
+      mCurrentIntervalIndex++;
+   }
+}
+
+void
 RemoteParticipant::reInvite()
 {
    // calling RemoteParticipant::unhold() here forces a reINVITE,

@@ -135,16 +135,19 @@ KurentoConversation::confirmParticipant(Participant* participant)
                         krp->reInvite();
                      }
 
+                     // set up schedule to repeatedly ask peer for keyframes
+                     _p->requestKeyframeFromPeerTimeout(true);
+                     krp->requestKeyframeFromPeerTimeout(true);
+
+                     // ask local encoders to send some keyframes to their peers at
+                     // beginning of the session
                      ParticipantHandle partHandle1 = _p->getParticipantHandle();
                      ParticipantHandle partHandle2 = krp->getParticipantHandle();
                      for(int i = 1000; i <= 5000; i+=1000)
                      {
                         std::chrono::milliseconds _i = std::chrono::milliseconds(i);
-                        std::chrono::milliseconds __i = std::chrono::milliseconds(i + 500);
                         getConversationManager().requestKeyframe(partHandle1, _i);
                         getConversationManager().requestKeyframe(partHandle2, _i);
-                        getConversationManager().requestKeyframeFromPeer(partHandle1, __i);
-                        getConversationManager().requestKeyframeFromPeer(partHandle2, __i);
                      }
 
                   }, *otherEndpoint);

@@ -456,6 +456,13 @@ ConversationManager::requestKeyframeFromPeer(ParticipantHandle partHandle, std::
    post(cmd, duration);
 }
 
+void
+ConversationManager::requestKeyframeFromPeerRecurring(ParticipantHandle partHandle, std::chrono::duration<double> interval)
+{
+   RequestKeyframeFromPeerRecurringCmd cmd(this, partHandle, interval);
+   post(cmd, interval);
+}
+
 void 
 ConversationManager::notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::MediaEventType eventType, MediaEvent::MediaDirection direction)
 {

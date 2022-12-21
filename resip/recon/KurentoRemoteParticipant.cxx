@@ -176,6 +176,9 @@ KurentoRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
       mEndpoint.reset(newEndpoint());
    }
 
+   // start the periodic timer requesting keyframes from the peer
+   mConversationManager.requestKeyframeFromPeerRecurring(getParticipantHandle(), std::chrono::seconds(1));
+
    //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoMediaStackAdapter.mPipeline, "videoconvert"));
    //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
    std::shared_ptr<resip::ConfigParse> cfg = mConversationManager.getConfig();
@@ -529,12 +532,11 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
             //c(true, std::move(_updatedOffer));
          }, answerBuf.str());
       }
+      requestKeyframeFromPeerTimeout(true);
       for(int i = 1000; i <= 5000; i+=1000)
       {
          std::chrono::milliseconds _i = std::chrono::milliseconds(i);
-         std::chrono::milliseconds __i = std::chrono::milliseconds(i + 500);
          mConversationManager.requestKeyframe(mHandle, _i);
-         mConversationManager.requestKeyframeFromPeer(mHandle, __i);
       }
    }
 }

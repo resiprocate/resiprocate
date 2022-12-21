@@ -132,6 +132,7 @@ public:
 
    virtual void requestKeyframe() = 0;
    virtual void requestKeyframeFromPeer();
+   virtual void requestKeyframeFromPeerTimeout(bool reset);
    // force a SIP re-INVITE to this RemoteParticipant
    virtual void reInvite();
 
@@ -232,6 +233,9 @@ private:
 
    std::chrono::time_point<std::chrono::steady_clock> mLastRemoteKeyframeRequest = std::chrono::steady_clock::now();
    std::chrono::duration<double> mKeyframeRequestInterval = std::chrono::milliseconds(1000);
+
+   unsigned int mCurrentIntervalIndex = 0;
+   const std::vector<int> mKeyframeIntervals = { 2, 2, 5, 5, 7, 10, 20, 30 };
 };
 
 }
