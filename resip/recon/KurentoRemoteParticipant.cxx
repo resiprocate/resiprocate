@@ -99,6 +99,15 @@ KurentoRemoteParticipant::~KurentoRemoteParticipant()
    //        See https://stackoverflow.com/questions/10979250/usage-of-this-in-destructor.
    unregisterFromAllConversations();
 
+   if(mEndpoint)
+   {
+      ParticipantHandle h = mHandle;
+      mEndpoint->release([h]
+      {
+         DebugLog(<<"release requested for Endpoint mHandle = " << h);
+      });
+   }
+
    InfoLog(<< "KurentoRemoteParticipant destroyed, handle=" << mHandle);
 }
 
