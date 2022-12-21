@@ -946,7 +946,7 @@ SipStack::post(const ApplicationMessage& message,  unsigned int secondsLater,
                TransactionUser* tu)
 {
    resip_assert(!mShuttingDown);
-   postMS(message, secondsLater*1000, tu);
+   post(message, std::chrono::seconds(secondsLater), tu);
 }
 
 void
@@ -954,9 +954,19 @@ SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
                  TransactionUser* tu)
 {
    resip_assert(!mShuttingDown);
+   post(message, std::chrono::milliseconds(ms), tu);
+}
+
+void
+SipStack::post(const ApplicationMessage& message,
+                 std::chrono::duration<double> interval,
+                 TransactionUser* tu)
+{
+   resip_assert(!mShuttingDown);
    Message* toPost = message.clone();
    if (tu) toPost->setTransactionUser(tu);
    Lock lock(mAppTimerMutex);
+   unsigned int ms = (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(interval).count();
    mAppTimers.add(ms,toPost);
    //.dcm. timer update rather than process cycle...optimize by checking if sooner
    //than current timeTillNextProcess?
@@ -968,7 +978,7 @@ SipStack::post(std::unique_ptr<ApplicationMessage> message,
                unsigned int secondsLater,
                TransactionUser* tu)
 {
-   postMS(std::move(message), secondsLater*1000, tu);
+   post(std::move(message), std::chrono::seconds(secondsLater), tu);
 }
 
 
@@ -977,9 +987,18 @@ SipStack::postMS( std::unique_ptr<ApplicationMessage> message,
                   unsigned int ms,
                   TransactionUser* tu)
 {
+   post(std::move(message), std::chrono::milliseconds(ms), tu);
+}
+
+void
+SipStack::post( std::unique_ptr<ApplicationMessage> message,
+                  std::chrono::duration<double> interval,
+                  TransactionUser* tu)
+{
    resip_assert(!mShuttingDown);
    if (tu) message->setTransactionUser(tu);
    Lock lock(mAppTimerMutex);
+   unsigned int ms = (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(interval).count();
    mAppTimers.add(ms, message.release());
    //.dcm. timer update rather than process cycle...optimize by checking if sooner
    //than current timeTillNextProcess?

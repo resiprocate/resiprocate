@@ -566,6 +566,22 @@ class SipStack : public FdSetIOObserver
                   TransactionUser* tu=0);
 
       /**
+          @brief Makes the message available to the TU at some later time, specified as
+          an interval.
+
+          @note  TransactionUser subclasses can just post to themselves.
+
+          @param message ApplicationMessage to post
+
+          @param interval Delay before message is to be posted.
+
+          @param tu    TransactionUser to post to.
+      */
+      void post(std::unique_ptr<ApplicationMessage> message,
+                std::chrono::duration<double> interval,
+                TransactionUser* tu=0);
+
+      /**
           @brief Makes the message available to the TU later
           
           @note  TranasctionUser subclasses can just post to themselves.
@@ -621,6 +637,22 @@ class SipStack : public FdSetIOObserver
       */
       void postMS(const ApplicationMessage& message, unsigned int ms,
                   TransactionUser* tu=0);
+
+      /**
+          @brief Makes the message available to the TU at some later time, specified as
+          an interval.
+
+          @note  TransactionUser subclasses can just post to themselves.
+
+          @param message ApplicationMessage to post
+
+          @param interval Delay before message is to be posted.
+
+          @param tu    TransactionUser to post to.
+      */
+      void post(const ApplicationMessage& message,
+                std::chrono::duration<double> interval,
+                TransactionUser* tu=0);
 
       /**
          Tells the stack that the TU has abandoned a server transaction. This
