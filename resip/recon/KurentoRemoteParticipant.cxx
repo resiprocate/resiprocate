@@ -503,7 +503,9 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
          mWaitingAnswer = false;
          std::ostringstream answerBuf;
          answerBuf << *remoteSdp;
-         mEndpoint->processAnswer([this](const std::string updatedOffer){
+         // FIXME - we checked mWaitingAnswer is true above, shouldn't this
+         // be processAnswer?
+         mEndpoint->processOffer([this](const std::string updatedOffer){
             // FIXME - use updatedOffer
             WarningLog(<<"Kurento has processed the peer's SDP answer");
             StackLog(<<"updatedOffer FROM Kurento: " << updatedOffer);
@@ -516,6 +518,14 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
                _updatedOffer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", getDialogSet().getConversationProfile()->maximumVideoBandwidth()));
             }
             setLocalSdp(*_updatedOffer);
+            if(getInviteSessionHandle().isValid())
+            {
+               getInviteSessionHandle()->provideOffer(*getLocalSdp());
+            }
+            else
+            {
+               WarningLog(<<"handle no longer valid");
+            }
             //c(true, std::move(_updatedOffer));
          }, answerBuf.str());
       }
