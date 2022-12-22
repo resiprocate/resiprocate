@@ -179,15 +179,20 @@ KurentoRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
    // start the periodic timer requesting keyframes from the peer
    mConversationManager.requestKeyframeFromPeerRecurring(getParticipantHandle(), std::chrono::seconds(1));
 
-   //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoMediaStackAdapter.mPipeline, "videoconvert"));
-   //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
    std::shared_ptr<resip::ConfigParse> cfg = mConversationManager.getConfig();
    if(cfg)
    {
-      const Data& holdVideo = mConversationManager.getConfig()->getConfigData("HoldVideo", "file:///tmp/test.mp4", true);
-      mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, holdVideo.c_str()));
+      const bool& waitingMode = mConversationManager.getConfig()->getConfigBool("WaitingMode", false);
+      if(waitingMode)
+      {
+         mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
+      }
+      const Data& holdVideo = mConversationManager.getConfig()->getConfigData("HoldVideo", "", true);
+      if(!holdVideo.empty())
+      {
+         mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, holdVideo.c_str()));
+      }
    }
-   mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
 
    return true;
 }
@@ -249,11 +254,15 @@ KurentoRemoteParticipant::createAndConnectElements(kurento::ContinuationVoid cCo
       requestKeyframeFromPeer();
    });
 
-   std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::dynamic_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
-   if(webRtc)
+   auto cConnectedInternal = [this, cConnected, elEventDebug]
    {
-      webRtc->addDataChannelOpenedListener(elEventDebug, [this](){});
-   }
+      std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::dynamic_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
+      if(webRtc)
+      {
+         webRtc->addDataChannelOpenedListener(elEventDebug, [this](){});
+      }
+      cConnected();
+   };
 
    mEndpoint->create([=]{
       mEndpoint->addErrorListener(elError, [=](){
@@ -263,25 +272,27 @@ KurentoRemoteParticipant::createAndConnectElements(kurento::ContinuationVoid cCo
                   mEndpoint->addMediaFlowInStateChangeListener(elEventDebug, [=](){
                      mEndpoint->addMediaFlowOutStateChangeListener(elEventDebug, [=](){
                         mEndpoint->addKeyframeRequiredListener(elEventKeyframeRequired, [=](){
-                           //mMultiqueue->create([this, cConnected]{
-                           // mMultiqueue->connect([this, cConnected]{
-                           mPlayer->create([this, cConnected]{
-                              mPassThrough->create([this, cConnected]{
-                                 mEndpoint->connect([this, cConnected]{
-                                    mPassThrough->connect([this, cConnected]{
-                                       //mPlayer->play([this, cConnected]{
-                                       cConnected();
-                                       //mPlayer->connect(cConnected, *mEndpoint); // connect
-                                       //});
-                                    }, *mEndpoint);
+                           if(mPlayer)
+                           {
+                              mPlayer->create([this, cConnectedInternal]{
+                                 mPlayer->play([this, cConnectedInternal]{
+                                    mPlayer->connect(cConnectedInternal, *mEndpoint);
+                                 });
+                              });
+                           }
+                           else if(mPassThrough)
+                           {
+                              mPassThrough->create([this, cConnectedInternal]{
+                                 mEndpoint->connect([this, cConnectedInternal]{
+                                    mPassThrough->connect(cConnectedInternal, *mEndpoint);
                                  }, *mPassThrough);
                               });
-                           });
-                           //}, *mEndpoint); // mEndpoint->connect
-                           // }, *mEndpoint); // mMultiqueue->connect
-                           //}); // mMultiqueue->create
+                           }
+                           else
+                           {
+                              cConnectedInternal();
+                           }
                         }); // addKeyframeRequiredListener
-
                      });
                   });
                });
@@ -563,7 +574,7 @@ void
 KurentoRemoteParticipant::waitingMode()
 {
    std::shared_ptr<kurento::MediaElement> e = getWaitingModeElement();
-   if(!e)
+   if(!e || e == mEndpoint)
    {
       return;
    }
@@ -590,9 +601,13 @@ KurentoRemoteParticipant::getWaitingModeElement()
    {
       return dynamic_pointer_cast<kurento::Endpoint>(mPlayer);
    }
-   else
+   else if(mPassThrough)
    {
       return mPassThrough;
+   }
+   else
+   {
+      return mEndpoint;
    }
 }
 

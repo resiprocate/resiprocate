@@ -76,6 +76,26 @@ KurentoConversation::onParticipantAdded(Participant* participant)
 }
 
 void
+KurentoConversation::disconnectWaitingMode(KurentoRemoteParticipant *krp, kurento::ContinuationVoid c)
+{
+   std::shared_ptr<kurento::BaseRtpEndpoint> ep = krp->getEndpoint();
+   std::shared_ptr<kurento::MediaElement> wm = krp->getWaitingModeElement();
+
+   if(!wm)
+   {
+      c();
+   }
+   else
+   {
+      wm->disconnect([this, ep, wm, c]{
+         ep->disconnect([this, wm, c]{
+            c();
+         }, *wm);
+      }, *ep);
+   }
+}
+
+void
 KurentoConversation::confirmParticipant(Participant* participant)
 {
    DebugLog(<<"confirmParticipant handle: " << getHandle()
@@ -107,55 +127,51 @@ KurentoConversation::confirmParticipant(Participant* participant)
       return;
    }
    DebugLog(<<"attempting to join two RemoteParticipants");
-   _p->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint]{
-      answeredEndpoint->disconnect([this, _p, answeredEndpoint]{
-         // Find the other Participant / endpoint
+   disconnectWaitingMode(_p, [this, _p, answeredEndpoint]{
+      // Find the other Participant / endpoint
 
-         Conversation::ParticipantMap& m = getParticipants();
-         KurentoRemoteParticipant* krp = 0; // FIXME - better to use shared_ptr
-         Conversation::ParticipantMap::iterator _it = m.begin();
-         for(;_it != m.end() && krp == 0; _it++)
+      Conversation::ParticipantMap& m = getParticipants();
+      KurentoRemoteParticipant* krp = 0; // FIXME - better to use shared_ptr
+      Conversation::ParticipantMap::iterator _it = m.begin();
+      for(;_it != m.end() && krp == 0; _it++)
+      {
+         krp = dynamic_cast<KurentoRemoteParticipant*>(_it->second.getParticipant());
+         if(krp == _p)
          {
-            krp = dynamic_cast<KurentoRemoteParticipant*>(_it->second.getParticipant());
-            if(krp == _p)
-            {
-               krp = 0;
-            }
+            krp = 0;
          }
-         resip_assert(krp);
-         std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
+      }
+      resip_assert(krp);
+      std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
 
-         krp->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-            otherEndpoint->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-               otherEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-                  answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-                     InfoLog(<<"peers connected");
-                     if(mKurentoReInviteOnParticipantsPresent)
-                     {
-                        krp->reInvite();
-                     }
+      disconnectWaitingMode(krp, [this, _p, answeredEndpoint, otherEndpoint, krp]{
+         otherEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+            answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+               InfoLog(<<"peers connected");
+               if(mKurentoReInviteOnParticipantsPresent)
+               {
+                  krp->reInvite();
+               }
 
-                     // set up schedule to repeatedly ask peer for keyframes
-                     _p->requestKeyframeFromPeerTimeout(true);
-                     krp->requestKeyframeFromPeerTimeout(true);
+               // set up schedule to repeatedly ask peer for keyframes
+               _p->requestKeyframeFromPeerTimeout(true);
+               krp->requestKeyframeFromPeerTimeout(true);
 
-                     // ask local encoders to send some keyframes to their peers at
-                     // beginning of the session
-                     ParticipantHandle partHandle1 = _p->getParticipantHandle();
-                     ParticipantHandle partHandle2 = krp->getParticipantHandle();
-                     for(int i = 1000; i <= 5000; i+=1000)
-                     {
-                        std::chrono::milliseconds _i = std::chrono::milliseconds(i);
-                        getConversationManager().requestKeyframe(partHandle1, _i);
-                        getConversationManager().requestKeyframe(partHandle2, _i);
-                     }
+               // ask local encoders to send some keyframes to their peers at
+               // beginning of the session
+               ParticipantHandle partHandle1 = _p->getParticipantHandle();
+               ParticipantHandle partHandle2 = krp->getParticipantHandle();
+               for(int i = 1000; i <= 5000; i+=1000)
+               {
+                  std::chrono::milliseconds _i = std::chrono::milliseconds(i);
+                  getConversationManager().requestKeyframe(partHandle1, _i);
+                  getConversationManager().requestKeyframe(partHandle2, _i);
+               }
 
-                  }, *otherEndpoint);
-               }, *answeredEndpoint);
-            }, *krp->getWaitingModeElement());
-         }, *otherEndpoint); // otherEndpoint->disconnect()
-      }, *_p->getWaitingModeElement());
-   }, *answeredEndpoint);  // answeredEndpoint->disconnect()
+            }, *otherEndpoint);
+         }, *answeredEndpoint);
+      }); // disconnectWaitingMode
+   }); // disconnectWaitingMode
 }
 
 void
@@ -179,11 +195,21 @@ KurentoConversation::onParticipantRemoved(Participant* participant)
    {
       DebugLog(<<"remaining participant found");
       std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
-      otherEndpoint->disconnect([this, krp, myEndpoint, otherEndpoint](){
-         myEndpoint->disconnect([this, krp](){
-            krp->waitingMode();
-         }, *otherEndpoint);
-      }, *myEndpoint);
+      if(otherEndpoint->valid())
+      {
+         otherEndpoint->disconnect([this, krp, myEndpoint, otherEndpoint](){
+            if(myEndpoint->valid())
+            {
+               myEndpoint->disconnect([this, krp](){
+                  krp->waitingMode();
+               }, *otherEndpoint);
+            }
+            else
+            {
+               krp->waitingMode();
+            }
+         }, *myEndpoint);
+      }
    }
 
    return;
