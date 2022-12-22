@@ -3,6 +3,7 @@
 #include "rutil/Subsystem.hxx"
 #include "rutil/ResipAssert.h"
 
+#include "KurentoException.hxx"
 #include "KurentoSubsystem.hxx"
 #include "Object.hxx"
 
@@ -187,7 +188,7 @@ Object::onVoidSuccess(ContinuationVoid c, const json::Object& message)
    {
       json::String errorMessage = message[JSON_RPC_ERROR][JSON_RPC_ERROR_MESSAGE];
       ErrLog(<<"Error from Kurento: " << errorMessage.Value());
-      resip_assert(0); // FIXME - pass up to the application
+      throw KurentoException(errorMessage.Value().c_str()); // FIXME - pass up to the application
    }
    DebugLog(<<"successfully executed RPC method without a return value");
    c();
