@@ -78,6 +78,7 @@ Object::release(ContinuationVoid c)
    json::Object params;
    ContinuationInternal ci = std::bind(&Object::onVoidSuccess, this, c, _1);
    std::string reqId = makeRpcCall("release", params, ci);
+   mId.clear();
 }
 
 void
