@@ -748,11 +748,11 @@ ReproRunner::createSipStack()
       int capturePort = mProxyConfig->getConfigInt("CapturePort", 9060);
       int captureAgentID = mProxyConfig->getConfigInt("CaptureAgentID", 2001);
       auto agent = std::make_shared<HepAgent>(captureHost, capturePort, captureAgentID);
-      mSipStack->setTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
+      mSipStack->addTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
    }
    else if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
    {
-       mSipStack->setTransportSipMessageLoggingHandler(std::make_shared<ReproSipMessageLoggingHandler>());
+       mSipStack->addTransportSipMessageLoggingHandler(std::make_shared<ReproSipMessageLoggingHandler>());
    }
 
    // Add stack transports

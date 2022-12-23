@@ -328,6 +328,20 @@ SipStack::reloadCertificates()
    }
 }
 
+void
+SipStack::addTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept
+{
+   mTransportSipMessageLoggingHandlers.push_back(handler);
+   for(auto& t : mNonSecureTransports)
+   {
+      t.second->addSipMessageLoggingHandler(handler);
+   }
+   for(auto& t : mSecureTransports)
+   {
+      t.second->addSipMessageLoggingHandler(handler);
+   }
+}
+
 Transport*
 SipStack::addTransport( TransportType protocol,
                         int port,
@@ -569,9 +583,9 @@ SipStack::addTransport(std::unique_ptr<Transport> transport)
    }
 
    // Set Sip Message Logging Handler if one was provided
-   if (mTransportSipMessageLoggingHandler)
+   if (!mTransportSipMessageLoggingHandlers.empty())
    {
-       transport->setSipMessageLoggingHandler(mTransportSipMessageLoggingHandler);
+       transport->setSipMessageLoggingHandlers(mTransportSipMessageLoggingHandlers);
    }
 
    if(mProcessingHasStarted)
