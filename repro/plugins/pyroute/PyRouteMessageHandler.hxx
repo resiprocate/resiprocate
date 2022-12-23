@@ -1,7 +1,5 @@
-#ifndef PYROUTE_WORKER_HXX
-#define PYROUTE_WORKER_HXX
-
-#include <memory>
+#ifndef PYROUTE_MESSAGE_HANDLER_HXX
+#define PYROUTE_MESSAGE_HANDLER_HXX
 
 /* Using the PyCXX API for C++ Python integration
  * It is extremely convenient and avoids the need to write boilerplate
@@ -10,87 +8,37 @@
 #include <Python.h>
 #include <CXX/Objects.hxx>
 
-#include "rutil/Logger.hxx"
-#include "resip/stack/Helper.hxx"
-#include "repro/Plugin.hxx"
+#include "resip/stack/Dispatcher.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Transport.hxx"
 #include "repro/Processor.hxx"
-#include "repro/ProcessorMessage.hxx"
-#include "repro/RequestContext.hxx"
-#include "resip/stack/Worker.hxx"
-
-#include "rutil/PyExtensionBase.hxx"
+#include "repro/Proxy.hxx"
 
 namespace repro
 {
 
-class PyRouteWork : public ProcessorMessage
+class PyRouteMessageHandler : public resip::Transport::SipMessageLoggingHandler
 {
    public:
-      PyRouteWork(Processor& proc,
-                  const resip::Data& tid,
-                  resip::TransactionUser* passedtu,
-                  resip::SipMessage& message);
+      PyRouteMessageHandler(resip::Dispatcher& dispatcher);
+      virtual ~PyRouteMessageHandler();
 
-      virtual ~PyRouteWork();
+      virtual void outboundMessage(const resip::Tuple &source, const resip::Tuple &destination, const resip::SipMessage &msg);
+      virtual void inboundMessage(const resip::Tuple& source, const resip::Tuple& destination, const resip::SipMessage &msg);
+      virtual void onMessage(bool outbound, const resip::Tuple& source, const resip::Tuple& destination, const resip::SipMessage &msg);
 
-      resip::SipMessage& mMessage;
-      int mResponseCode;
-      resip::Data mResponseMessage;
-      std::vector<resip::Data> mTargets;
-
-      virtual PyRouteWork* clone() const;
-
-      virtual EncodeStream& encode(EncodeStream& ostr) const;
-      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const;
-
-      bool hasResponse() { return mResponseCode >= 0; };
+   private:
+      resip::Dispatcher& mDispatcher;
 };
 
-class PyRouteMessageHandlerWork : public resip::ApplicationMessage
-{
-   public:
-      PyRouteMessageHandlerWork(const resip::SipMessage& message);
-
-      virtual ~PyRouteMessageHandlerWork();
-
-      std::shared_ptr<resip::SipMessage> mMessage;
-
-      virtual PyRouteMessageHandlerWork* clone() const;
-
-      virtual EncodeStream& encode(EncodeStream& ostr) const;
-      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const;
 };
-
-class PyRouteWorker : public resip::Worker
-{
-   public:
-      PyRouteWorker(resip::PyExtensionBase& py, Py::Callable& action, Py::Callable& messageHandlerAction);
-      virtual ~PyRouteWorker();
-
-      virtual PyRouteWorker* clone() const;
-
-      virtual void onStart() override;
-      virtual bool process(resip::ApplicationMessage* msg) override;
-
-      bool processWork(PyRouteWork* work);
-      bool processMessageHandlerWork(PyRouteMessageHandlerWork* work);
-
-   protected:
-      resip::PyExtensionBase& mPy;
-      std::unique_ptr<resip::PyExternalUser> mPyUser;
-      Py::Callable& mAction;
-      Py::Callable& mMessageHandlerAction;
-};
-
-}
-
 
 #endif
 
 /* ====================================================================
  *
  * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
- * Copyright (c) 2013-2022, Daniel Pocock https://danielpocock.com
+ * Copyright (c) 2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

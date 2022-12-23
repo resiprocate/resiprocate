@@ -1,12 +1,14 @@
 
 set(INCLUDES
    PyRouteWorker.hxx
+   PyRouteMessageHandler.hxx
    PyRouteProcessor.hxx
 )
 
 add_library(pyroute MODULE
    PyRoutePlugin.cxx
    PyRouteWorker.cxx
+   PyRouteMessageHandler.cxx
    PyRouteProcessor.cxx
    ${INCLUDES}
 )

@@ -34,11 +34,21 @@ def provide_route(method, request_uri, headers, transport_type, body, cookies, n
 
     return routes
 
+def on_message(status_line, headers, transport_type, body, cookies):
+    '''Log the message somewhere'''
 
+    if 'method' in status_line.keys():
+        resip.log_debug('method = ' + status_line['method'])
+    else:
+        resip.log_debug('response code = %d' % (status_line['response_code'],))
+    resip.log_debug('body = ' + body)
+
+    return
 
 #  ====================================================================
 # 
-#  Copyright 2013 Daniel Pocock http://danielpocock.com All rights reserved.
+#  Copyright (C) 2022 Software Freedom Institute https://softwarefreedom.institute
+#  Copyright (C) 2013-2022 Daniel Pocock https://danielpocock.com
 # 
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
