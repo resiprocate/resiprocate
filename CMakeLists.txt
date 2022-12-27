@@ -674,6 +674,7 @@ if(BUILD_PYTHON)
          message(FATAL_ERROR "Failed to obtain PyCXX srcdir automatically, please set it manually or disable BUILD_PYTHON")
       endif()
    endif()
+   add_definitions(-DPy_LIMITED_API=0x03090000)
 endif()
 
 # Apache Qpid Proton
