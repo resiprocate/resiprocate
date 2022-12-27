@@ -22,7 +22,7 @@ using namespace std;
 
 
 MyUserAgent::MyUserAgent(ReConServerConfig& configParse, ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
-   UserAgent(conversationManager, std::move(profile)),
+   UserAgent(conversationManager, profile),
    mMaxRegLoops(1000)
 {
    ReConServerConfig::Application application = configParse.getConfigApplication("Application", ReConServerConfig::None);
@@ -58,7 +58,7 @@ MyUserAgent::getIncomingConversationProfile(const resip::SipMessage& msg)
    auto defaultProfile = UserAgent::getIncomingConversationProfile(msg);
    if(b2bcm)
    {
-      return b2bcm->getIncomingConversationProfile(msg, std::move(defaultProfile));
+      return b2bcm->getIncomingConversationProfile(msg, defaultProfile);
    }
    return defaultProfile;
 }

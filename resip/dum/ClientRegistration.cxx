@@ -35,7 +35,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
                                        DialogSet& dialogSet,
                                        std::shared_ptr<SipMessage> request)
    : NonDialogUsage(dum, dialogSet),
-     mLastRequest(std::move(request)),
+     mLastRequest(request),
      mTimerSeq(0),
      mState(mLastRequest->exists(h_Contacts) ? Adding : Querying),
      mEnding(false),

@@ -6,7 +6,7 @@
 using namespace resip;
 
 OutgoingEvent::OutgoingEvent(std::shared_ptr<SipMessage> msg)
-   : mMessage(std::move(msg))
+   : mMessage(msg)
 {
 }
 

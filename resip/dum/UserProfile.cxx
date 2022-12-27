@@ -22,7 +22,7 @@ UserProfile::UserProfile() : Profile(),
     //InfoLog (<< "************ UserProfile created (no base)!: " << *this);
 }
 
-UserProfile::UserProfile(std::shared_ptr<Profile> baseProfile) : Profile(std::move(baseProfile)),
+UserProfile::UserProfile(std::shared_ptr<Profile> baseProfile) : Profile(baseProfile),
    mGruuEnabled(false),
    mRegId(0),
    mClientOutboundEnabled(false),

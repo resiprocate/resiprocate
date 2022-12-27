@@ -46,7 +46,7 @@ TestClientPublication::update(const resip::Contents* body)
 CommonAction* 
 TestClientPublication::end()
 {
-   return new CommonAction(mUa, "end", std::bind(&ClientPublication::end, std::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), std::ref(mHandle))));
+   return new CommonAction(mUa, "end", std::bind(static_cast<void(ClientPublication::*)()>(&ClientPublication::end), std::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), std::ref(mHandle))));
 }
 
 bool 

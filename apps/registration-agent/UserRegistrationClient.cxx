@@ -12,14 +12,14 @@ using namespace resip;
 using namespace std;
 
 UserRegistrationClient::UserRegistrationClient(std::shared_ptr<KeyedFile> keyedFile) :
-   mKeyedFile(std::move(keyedFile))
+   mKeyedFile(keyedFile)
 {
 }
 
 void
 UserRegistrationClient::addUserAccount(const Uri& aor, std::shared_ptr<UserAccount> userAccount)
 {
-   mAccounts[aor] = std::move(userAccount);
+   mAccounts[aor] = userAccount;
 }
 
 void

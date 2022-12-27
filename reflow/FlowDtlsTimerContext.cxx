@@ -32,7 +32,7 @@ FlowDtlsTimerContext::addTimer(dtls::DtlsTimer *timer, unsigned int durationMs)
    auto deadlineTimer = std::make_shared<asio::steady_timer>(mIOService);
    deadlineTimer->expires_from_now(milliseconds(durationMs));
    deadlineTimer->async_wait(std::bind(&FlowDtlsTimerContext::handleTimeout, this, timer, std::placeholders::_1));
-   mDeadlineTimers[timer] = std::move(deadlineTimer);
+   mDeadlineTimers[timer] = deadlineTimer;
    //InfoLog(<< "FlowDtlsTimerContext: starting timer for " << durationMs << "ms.");
 }    
 

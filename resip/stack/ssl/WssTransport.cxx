@@ -40,7 +40,7 @@ WssTransport::WssTransport(Fifo<TransactionMessage>& fifo,
    TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, WSS, socketFunc, 
                     compression, transportFlags, cvm, useEmailAsSIP, certificateFilename, privateKeyFilename,
                     privateKeyPassPhrase),
-   WsBaseTransport(std::move(connectionValidator), std::move(cookieContextFactory))
+   WsBaseTransport(connectionValidator, cookieContextFactory)
 {
    InfoLog (<< "Creating WSS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 

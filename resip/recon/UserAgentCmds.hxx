@@ -45,7 +45,7 @@ class AddConversationProfileCmd  : public resip::DumCommand
                                 bool defaultOutgoing)
          : mUserAgent(userAgent),
            mHandle(handle),
-           mConversationProfile(std::move(conversationProfile)),
+           mConversationProfile(conversationProfile),
            mDefaultOutgoing(defaultOutgoing) {}
       virtual void executeCommand()
       {

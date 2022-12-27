@@ -119,7 +119,7 @@ private:
    {
    public:
       SendData(const StunTuple& destination, std::shared_ptr<DataBuffer> frameData, std::shared_ptr<DataBuffer> data, size_t bufferStartPos = 0) :
-         mDestination(destination), mFrameData(std::move(frameData)), mData(std::move(data)), mBufferStartPos(bufferStartPos) {}
+         mDestination(destination), mFrameData(frameData), mData(data), mBufferStartPos(bufferStartPos) {}
       StunTuple mDestination;
       std::shared_ptr<DataBuffer> mFrameData;
       std::shared_ptr<DataBuffer> mData;

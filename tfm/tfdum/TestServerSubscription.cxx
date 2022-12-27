@@ -70,7 +70,7 @@ TestServerSubscription::setSubscriptionState(resip::SubscriptionState state)
 CommonAction* 
 TestServerSubscription::end()
 {
-   return new CommonAction(mUa, "end", std::bind(&ServerSubscription::end, std::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), std::ref(mHandle))));
+   return new CommonAction(mUa, "end", std::bind(static_cast<void(ServerSubscription::*)()>(&ServerSubscription::end), std::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), std::ref(mHandle))));
 }
  
 CommonAction* 

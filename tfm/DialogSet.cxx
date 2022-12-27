@@ -13,7 +13,7 @@ using namespace resip;
 
 DialogSet::DialogSet(std::shared_ptr<SipMessage> msg,
                      const TestSipEndPoint& testSipEndPoint)
-   : mMsg(std::move(msg)),
+   : mMsg(msg),
      mDialogs(),
      mTestSipEndPoint(&testSipEndPoint)
 {}

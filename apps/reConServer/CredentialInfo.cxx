@@ -15,7 +15,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 CredentialInfo::CredentialInfo(std::shared_ptr<B2BCall> call, const resip::Data& user, const resip::Data& realm, const Data& transactionId, resip::TransactionUser* transactionUser, B2BCallManager* b) :
-   mCall(std::move(call)),
+   mCall(call),
    mUser(user),
    mRealm(realm),
    mMode(Error)

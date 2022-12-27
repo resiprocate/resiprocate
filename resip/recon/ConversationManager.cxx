@@ -935,7 +935,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
          optionsAnswer->setContents(&sdp);
       }
 
-      ood->send(std::move(optionsAnswer));
+      ood->send(optionsAnswer);
       break;
    }
    case REFER:

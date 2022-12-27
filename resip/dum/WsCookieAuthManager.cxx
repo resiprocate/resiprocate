@@ -118,7 +118,7 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
       InfoLog(<<"Malformed From header: cannot verify against cookie. Rejecting.");
       auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *sipMessage, 400, "Malformed From header");
-      mDum.send(std::move(response));
+      mDum.send(response);
       return Rejected;
    }
 
@@ -133,7 +133,7 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
          }
          auto response = std::make_shared<SipMessage>();
          Helper::makeResponse(*response, *sipMessage, 403, "Cookie-based authorization failed");
-         mDum.send(std::move(response));
+         mDum.send(response);
          return Rejected;
       }
       else
@@ -145,7 +145,7 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
    {
       auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *sipMessage, 403, "Cookie-based authorization failed");
-      mDum.send(std::move(response));
+      mDum.send(response);
       return Rejected;
    }
 

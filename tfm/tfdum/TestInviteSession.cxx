@@ -75,13 +75,13 @@ CommonAction*
 TestInviteSession::refer(const resip::NameAddr& referTo, bool referSub)
 {
    return new CommonAction(mUa, "refer",
-                           std::bind(&InviteSession::refer, std::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), std::ref(mSessionHandle)), referTo, referSub));
+                           std::bind(static_cast<void(InviteSession::*)(const NameAddr&, bool)>(&InviteSession::refer), std::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), std::ref(mSessionHandle)), referTo, referSub));
 }
 
 CommonAction*
 TestInviteSession::refer(const resip::NameAddr& referTo, resip::InviteSessionHandle sessionToReplace, bool referSub)
 {
-   void (InviteSession::*refer)(const resip::NameAddr&, resip::InviteSessionHandle, bool) = &InviteSession::refer;
+   void (InviteSession::*refer)(const NameAddr&, InviteSessionHandle, bool) = &InviteSession::refer;
    return new CommonAction(mUa, "refer", std::bind(refer, std::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), 
                                                                                                         std::ref(mSessionHandle)),
                                                      referTo, sessionToReplace, referSub));
@@ -277,7 +277,7 @@ CommonAction*
 TestClientInviteSession::provideOffer(const resip::SdpContents& offer, resip::DialogUsageManager::EncryptionLevel level, resip::SdpContents* alternative)
 {
    return new CommonAction(mUa, "ClientInviteSession::provideOffer",
-                           std::bind(&ClientInviteSession::provideOffer, std::bind<ClientInviteSession*>(static_cast<ClientInviteSession*(ClientInviteSessionHandle::*)()>(&ClientInviteSessionHandle::get), std::ref(mHandle)),
+                           std::bind(static_cast<void(ClientInviteSession::*)(const Contents&, DialogUsageManager::EncryptionLevel, const Contents*)>(&ClientInviteSession::provideOffer), std::bind<ClientInviteSession*>(static_cast<ClientInviteSession*(ClientInviteSessionHandle::*)()>(&ClientInviteSessionHandle::get), std::ref(mHandle)),
                                        offer, level, alternative));
 }
 
@@ -359,7 +359,7 @@ CommonAction*
 TestServerInviteSession::provideOffer(const resip::SdpContents& offer, resip::DialogUsageManager::EncryptionLevel level, resip::SdpContents* alternative, bool sendOfferAtAccept)
 {
    return new CommonAction(mUa, "ServerInviteSession::provideOffer",
-                           std::bind(&ServerInviteSession::provideOffer, std::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), std::ref(mHandle)),
+                           std::bind(static_cast<void(ServerInviteSession::*)(const Contents&, DialogUsageManager::EncryptionLevel, const Contents*, bool)>(&ServerInviteSession::provideOffer), std::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), std::ref(mHandle)),
                                        offer, level, alternative, sendOfferAtAccept));
 }
 

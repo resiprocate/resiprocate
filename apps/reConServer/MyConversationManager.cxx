@@ -21,6 +21,9 @@
 #include <media/kurento/Object.hxx>
 #include <resip/recon/KurentoRemoteParticipant.hxx>
 #endif
+#ifdef USE_LIBWEBRTC
+#include <resip/recon/LibWebRTCMediaStackAdapter.hxx>
+#endif
 
 // Test Prompts for cache testing
 #include "media/samples/playback_prompt.h"
@@ -37,24 +40,38 @@ MyConversationManager::MyConversationManager(const ReConServerConfig& config, bo
       : ConversationManager(nullptr, std::shared_ptr<ConfigParse>(new ReConServerConfig(config))),
         mConfig(config),
         mAutoAnswerEnabled(autoAnswerEnabled)
-{ 
-#if defined(PREFER_GSTREAMER)
-   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<GstMediaStackAdapter>(*this);
-#elif defined(PREFER_LIBWEBRTC)
-   #error libWebRTC not fully implemented yet // FIXME
-   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<LibWebRTCMediaStackAdapter>(*this);
-#elif defined(PREFER_KURENTO)
-   Data kurentoUri = config.getConfigData("KurentoURI", "ws://127.0.0.1:8888/kurento");
-   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<KurentoMediaStackAdapter>(*this, kurentoUri);
-#else
+{
+   ReConServerConfig::MediaStack mediaStack = config.getConfigMediaStack("MediaStack", ReConServerConfig::sipXtapi);
+   shared_ptr<MediaStackAdapter> mediaStackAdapter;
+   if(mediaStack == ReConServerConfig::Gstreamer)
+   {
+#ifdef USE_GSTREAMER
+      mediaStackAdapter = make_shared<GstMediaStackAdapter>(*this);
+#endif
+   }
+   else if(mediaStack == ReConServerConfig::LibWebRTC)
+   {
+#ifdef USE_LIBWEBRTC
+      #error libWebRTC not fully implemented yet // FIXME
+      mediaStackAdapter = make_shared<LibWebRTCMediaStackAdapter>(*this);
+#endif
+   }
+   else if(mediaStack == ReConServerConfig::Kurento)
+   {
+#ifdef USE_KURENTO
+      Data kurentoUri = config.getConfigData("KurentoURI", "ws://127.0.0.1:8888/kurento");
+      mediaStackAdapter = make_shared<KurentoMediaStackAdapter>(*this, kurentoUri);
+#endif
+   }
+   else if(mediaStack == ReConServerConfig::sipXtapi)
+   {
 #ifdef USE_SIPXTAPI
-   SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode = config.getConfigBool("GlobalMediaInterface", false)
-      ? SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode : SipXMediaStackAdapter::sipXConversationMediaInterfaceMode;
-   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<SipXMediaStackAdapter>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false);
-#else
-   #error Need Gstreamer, libWebRTC, Kurento or sipXtapi
+      SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode = config.getConfigBool("GlobalMediaInterface", false)
+         ? SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode : SipXMediaStackAdapter::sipXConversationMediaInterfaceMode;
+      mediaStackAdapter = make_shared<SipXMediaStackAdapter>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false);
 #endif
-#endif
+   }
+   resip_assert(mediaStackAdapter);
    setMediaStackAdapter(mediaStackAdapter);
 }
 

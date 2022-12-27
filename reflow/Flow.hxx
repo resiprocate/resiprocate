@@ -167,7 +167,7 @@ private:
    {
    public:
       ReceivedData(const asio::ip::address& address, unsigned short port, std::shared_ptr<DataBuffer> data) :
-         mAddress(address), mPort(port), mData(std::move(data)) {}
+         mAddress(address), mPort(port), mData(data) {}
 
       asio::ip::address mAddress;
       unsigned short mPort;

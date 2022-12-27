@@ -25,15 +25,15 @@ CommonAction*
 TestClientRegistration::addBinding(const resip::NameAddr& contact)
 {
    return new CommonAction(mUa, "addBinding",
-                           std::bind(&ClientRegistration::addBinding, std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle)),
+                           std::bind(static_cast<void(ClientRegistration::*)(const NameAddr& contact)>(&ClientRegistration::addBinding), std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle)),
                                        contact));
 }
 
 CommonAction*
-TestClientRegistration::addBinding(const resip::NameAddr& contact, int registrationTime)
+TestClientRegistration::addBinding(const resip::NameAddr& contact, uint32_t registrationTime)
 {
    return new CommonAction(mUa, "addBinding",
-                           std::bind(&ClientRegistration::addBinding, std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle)),
+                           std::bind(static_cast<void(ClientRegistration::*)(const NameAddr& contact, uint32_t registrationTime)>(&ClientRegistration::addBinding), std::bind<ClientRegistration*>(static_cast<ClientRegistration*(ClientRegistrationHandle::*)()>(&ClientRegistrationHandle::get), std::ref(mHandle)),
                                        contact, registrationTime));
 }
 

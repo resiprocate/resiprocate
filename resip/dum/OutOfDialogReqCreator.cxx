@@ -8,7 +8,7 @@ OutOfDialogReqCreator::OutOfDialogReqCreator(DialogUsageManager& dum,
                                              MethodTypes method, 
                                              const NameAddr& target, 
                                              std::shared_ptr<UserProfile> userProfile)
-   : BaseCreator(dum, std::move(userProfile))
+   : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, method);
 }

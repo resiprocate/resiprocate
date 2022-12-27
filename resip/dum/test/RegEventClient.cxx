@@ -34,7 +34,7 @@ AddAor::executeCommand()
 {
    //InfoLog (<< "Execute: " << *this);
    auto sub = mClient.mDum.makeSubscription(resip::NameAddr(mAor), regEvent.value());
-   mClient.mDum.send(std::move(sub));
+   mClient.mDum.send(sub);
 }
 
 resip::Message* 
@@ -75,7 +75,7 @@ RegEventClient::RegEventClient(std::shared_ptr<MasterProfile> profile) :
    mStackThread(mStack, *mEventIntr, *mPollGrp),
    mDum(mStack),
    mDumThread(mDum),
-   mProfile(std::move(profile))
+   mProfile(profile)
 {
    mStack.addTransport(UDP, 5060);
    mStack.addTransport(TCP, 5060);

@@ -613,7 +613,7 @@ class MyUserAgent : public UserAgent
 {
 public:
    MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, std::move(profile)) {}
+      UserAgent(conversationManager, profile) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
@@ -697,7 +697,7 @@ std::shared_ptr<UserAgentMasterProfile> createUserAgentMasterProfile()
 
 std::shared_ptr<ConversationProfile> createConversationProfile(std::shared_ptr<UserAgentMasterProfile> profile, int port)
 {
-   auto conversationProfile = std::make_shared<ConversationProfile>(std::move(profile));
+   auto conversationProfile = std::make_shared<ConversationProfile>(profile);
    conversationProfile->setDefaultRegistrationTime(0);
 
    // Create Session Capabilities and assign to coversation Profile

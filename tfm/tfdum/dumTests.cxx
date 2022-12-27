@@ -335,7 +335,7 @@ class DumTestCase : public DumFixture
       class InviteHelper
       {
       public:
-         InviteHelper(std::shared_ptr<SipMessage> invite) : mInvite(std::move(invite)) {}
+         InviteHelper(std::shared_ptr<SipMessage> invite) : mInvite(invite) {}
          std::shared_ptr<SipMessage> getInvite() const noexcept { return mInvite; }
       private:
          std::shared_ptr<SipMessage> mInvite;
@@ -2285,7 +2285,7 @@ class DumTestCase : public DumFixture
       {
          public:
             ReUseNonce(std::shared_ptr<resip::SipMessage> source, bool stale = false) :
-               mSource(std::move(source)),
+               mSource(source),
                mStale(stale)
             {
                resip_assert(mSource->header(h_StatusLine).responseCode() == 401 || mSource->header(h_StatusLine).responseCode() == 407);

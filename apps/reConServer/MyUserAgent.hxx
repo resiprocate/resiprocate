@@ -35,7 +35,7 @@ public:
    virtual std::shared_ptr<recon::ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
    virtual void process(int timeoutMs);
 
-   virtual void addIncomingFeature(std::shared_ptr<resip::DumFeature> f) { getDialogUsageManager().addIncomingFeature(std::move(f)); };
+   virtual void addIncomingFeature(std::shared_ptr<resip::DumFeature> f) { getDialogUsageManager().addIncomingFeature(f); };
 
    virtual std::shared_ptr<resip::Dispatcher> initDispatcher(std::unique_ptr<resip::Worker> prototype,
                   int workers=2,

@@ -100,7 +100,7 @@ void
 ServerOutOfDialogReq::send(std::shared_ptr<SipMessage> response)
 {
    resip_assert(response->isResponse());
-   mDum.send(std::move(response));
+   mDum.send(response);
    delete this;
 }
 

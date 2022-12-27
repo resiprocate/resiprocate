@@ -68,7 +68,7 @@ NonDialogUsage::send(std::shared_ptr<SipMessage> msg)
       }
    }
    
-   mDum.send(std::move(msg));
+   mDum.send(msg);
 }
 
 class NonDialogUsageSendCommand : public DumCommandAdapter
@@ -76,7 +76,7 @@ class NonDialogUsageSendCommand : public DumCommandAdapter
 public:
    NonDialogUsageSendCommand(NonDialogUsage& usage, std::shared_ptr<SipMessage> msg)
       : mNonDialogUsage(usage),
-        mMessage(std::move(msg))
+        mMessage(msg)
    {
    }
 
@@ -97,7 +97,7 @@ private:
 void
 NonDialogUsage::sendCommand(std::shared_ptr<SipMessage> message)
 {   
-   mDum.post(new NonDialogUsageSendCommand(*this, std::move(message)));
+   mDum.post(new NonDialogUsageSendCommand(*this, message));
 }
 
 /* ====================================================================
