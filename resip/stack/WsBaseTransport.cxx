@@ -18,8 +18,8 @@ using namespace std;
 using namespace resip;
 
 WsBaseTransport::WsBaseTransport(std::shared_ptr<WsConnectionValidator> connectionValidator, std::shared_ptr<WsCookieContextFactory> cookieContextFactory)
- : mConnectionValidator(std::move(connectionValidator)),
-   mCookieContextFactory(std::move(cookieContextFactory))
+ : mConnectionValidator(connectionValidator),
+   mCookieContextFactory(cookieContextFactory)
 {
 }
 

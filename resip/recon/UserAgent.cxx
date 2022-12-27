@@ -52,7 +52,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mCurrentConversationProfileHandle(1),
    mDefaultOutgoingConversationProfileHandle(0),
    mConversationManager(conversationManager),
-   mProfile(std::move(profile)),
+   mProfile(profile),
 #if defined(USE_SSL)
    mSecurity(new Security(mProfile->certPath())),
 #else
@@ -286,7 +286,7 @@ ConversationProfileHandle
 UserAgent::addConversationProfile(std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing)
 {
    ConversationProfileHandle handle = getNewConversationProfileHandle();
-   AddConversationProfileCmd* cmd = new AddConversationProfileCmd(this, handle, std::move(conversationProfile), defaultOutgoing);
+   AddConversationProfileCmd* cmd = new AddConversationProfileCmd(this, handle, conversationProfile, defaultOutgoing);
    mDum.post(cmd);
    return handle;
 }

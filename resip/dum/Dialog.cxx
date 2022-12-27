@@ -677,7 +677,7 @@ Dialog::dispatch(const SipMessage& msg)
                      {
                         auto response = std::make_shared<SipMessage>();
                         makeResponse(*response, msg, 406);
-                        send(std::move(response));
+                        send(response);
                      }
                   }
                }

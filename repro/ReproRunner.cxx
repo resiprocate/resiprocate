@@ -1103,7 +1103,7 @@ ReproRunner::createDialogUsageManager()
       if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
       {
          auto cookieAuth = std::make_shared<WsCookieAuthManager>(*mDum, mDum->dumIncomingTarget());
-         mDum->addIncomingFeature(std::move(cookieAuth));
+         mDum->addIncomingFeature(cookieAuth);
       }
 
       // If Authentication is enabled, then configure DUM to authenticate requests

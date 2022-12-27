@@ -250,7 +250,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
          {
             response->header(h_MinExpires).value() = handler->getMinExpires();		   
          }
-         send(std::move(response));
+         send(response);
          return;
       }     
 

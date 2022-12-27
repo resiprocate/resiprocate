@@ -322,7 +322,7 @@ DialogSet::dispatch(const SipMessage& msg)
                   auto ack = std::make_shared<SipMessage>();
                   dialog.makeRequest(*ack, ACK);
                   ack->header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
-                  dialog.send(std::move(ack));
+                  dialog.send(ack);
                   
                   auto bye = std::make_shared<SipMessage>();
                   dialog.makeRequest(*bye, BYE);
@@ -357,7 +357,7 @@ DialogSet::dispatch(const SipMessage& msg)
                   auto unsubscribe = std::make_shared<SipMessage>(*mCreator->getLastRequest());  // create message from initial request so we get proper headers
                   dialog.makeRequest(*unsubscribe, SUBSCRIBE);
                   unsubscribe->header(h_Expires).value() = 0;
-                  dialog.send(std::move(unsubscribe));
+                  dialog.send(unsubscribe);
                   
                   // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
                }
@@ -379,7 +379,7 @@ DialogSet::dispatch(const SipMessage& msg)
                   auto unpublish = std::make_shared<SipMessage>(*mCreator->getLastRequest());  // create message from initial request so we get proper headers
                   dialog.makeRequest(*unpublish, PUBLISH);
                   unpublish->header(h_Expires).value() = 0;
-                  dialog.send(std::move(unpublish));
+                  dialog.send(unpublish);
                   
                   // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
                }
@@ -400,7 +400,7 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();         
          mDum.makeResponse(*response, msg, 481);
-         mDum.send(std::move(response));
+         mDum.send(response);
       }
       return;
    }
@@ -424,12 +424,12 @@ DialogSet::dispatch(const SipMessage& msg)
                auto ack = std::make_shared<SipMessage>();
                dialog.makeRequest(*ack, ACK);
                ack->header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
-               dialog.send(std::move(ack));
+               dialog.send(ack);
                   
                auto bye = std::make_shared<SipMessage>();
                dialog.makeRequest(*bye, BYE);
                addEndReasonToMessage(*bye);
-               dialog.send(std::move(bye));
+               dialog.send(bye);
 
                // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
             }
@@ -444,7 +444,7 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();         
          mDum.makeResponse(*response, msg, 481);
-         mDum.send(std::move(response));
+         mDum.send(response);
       }
       return;
    }
@@ -472,7 +472,7 @@ DialogSet::dispatch(const SipMessage& msg)
             StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
             auto response = std::make_shared<SipMessage>();
             mDum.makeResponse(*response, msg, 481);
-            mDum.send(std::move(response));
+            mDum.send(response);
          }
          else
          {
@@ -509,7 +509,7 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                auto response = std::make_shared<SipMessage>();         
                mDum.makeResponse(*response, msg, 481);
-               mDum.send(std::move(response));
+               mDum.send(response);
                return;
             }
             break;
@@ -525,7 +525,7 @@ DialogSet::dispatch(const SipMessage& msg)
                 // We have a To tag, but don't have an existing dialog, we shouldn't be creating a new one, reject
                 auto response = std::make_shared<SipMessage>();
                 mDum.makeResponse(*response, msg, 481);
-                mDum.send(std::move(response));
+                mDum.send(response);
                 return;
             }
             // We have an out-of-dialog request, check if it needs an implied subscription dialog
@@ -559,7 +559,7 @@ DialogSet::dispatch(const SipMessage& msg)
                 // We have a To tag, but don't have an existing dialog, we shouldn't be creating a new one, reject
                 auto response = std::make_shared<SipMessage>();
                 mDum.makeResponse(*response, msg, 481);
-                mDum.send(std::move(response));
+                mDum.send(response);
                 return;
             }
             else // no to tag - unsolicited notify
@@ -777,7 +777,7 @@ DialogSet::dispatch(const SipMessage& msg)
             // Need to respond to CANCEL in order for transaction in stack to go away
             auto response = std::make_shared<SipMessage>();         
             mDum.makeResponse(*response, msg, 481);
-            mDum.send(std::move(response));
+            mDum.send(response);
          }
          return;
       }
@@ -856,7 +856,7 @@ DialogSet::dispatch(const SipMessage& msg)
             // BYE, hmmphh. see draft-sparks-sipping-dialogusage-01.txt
             auto response = std::make_shared<SipMessage>();
             mDum.makeResponse(*response, msg, 400);
-            mDum.send(std::move(response));
+            mDum.send(response);
             if(mDialogs.empty())
             {
                if (mDum.mDialogEventStateManager)
@@ -1162,7 +1162,7 @@ void
 DialogSet::setUserProfile(std::shared_ptr<UserProfile> userProfile)
 {
    resip_assert(userProfile.get());
-   mUserProfile = std::move(userProfile);
+   mUserProfile = userProfile;
 }
 
 void 

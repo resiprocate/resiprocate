@@ -91,7 +91,7 @@ public:
     	//cout << "Message rcv: "  << message << "\n";
 	
 	    auto ok = handle->accept();
-	    handle->send(std::move(ok));
+	    handle->send(ok);
 
 	    Contents *body = message.getContents();
 	    cout << "Message rcv: "  << *body << "\n";
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
 	auto regMessage = clientDum.makeRegistration(naFrom);
 	
 	InfoLog( << *regMessage << "Generated register: " << endl << *regMessage );
-	clientDum.send(std::move(regMessage));
+	clientDum.send(regMessage);
 
 	while(true) // (!cmh->isEnded() || !smh->isRcvd() )
 

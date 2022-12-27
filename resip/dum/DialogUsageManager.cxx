@@ -138,14 +138,14 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
 #endif
 
       // default incoming features.
-      addIncomingFeature(std::move(identity));
+      addIncomingFeature(identity);
 #if defined (USE_SSL)
-      addIncomingFeature(std::move(encryptionIncoming));
+      addIncomingFeature(encryptionIncoming);
 #endif
 
       // default outgoing features.
 #if defined (USE_SSL)
-      addOutgoingFeature(std::move(encryptionOutgoing));
+      addOutgoingFeature(encryptionOutgoing);
 #endif
    }
 }
@@ -355,7 +355,7 @@ DialogUsageManager::setClientAuthManager(std::unique_ptr<ClientAuthManager> mana
 void
 DialogUsageManager::setServerAuthManager(std::shared_ptr<ServerAuthManager> manager)
 {
-   mIncomingFeatureList.emplace(std::begin(mIncomingFeatureList), std::move(manager));
+   mIncomingFeatureList.emplace(std::begin(mIncomingFeatureList), manager);
 }
 
 void
@@ -731,7 +731,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
       serverSub->setSubscriptionState(Active);
       auto notify = serverSub->update(&contents);
 //   mInviteSessionHandler->onReadyToSend(InviteSessionHandle::NotValid(), notify);
-      serverSub->send(std::move(notify));
+      serverSub->send(notify);
    }
 
    //19.1.5
@@ -1017,7 +1017,7 @@ DialogUsageManager::send(std::shared_ptr<SipMessage> msg)
 void 
 DialogUsageManager::sendCommand(std::shared_ptr<SipMessage> request)
 {
-   SendCommand* s=new SendCommand(std::move(request), *this);
+   SendCommand* s=new SendCommand(request, *this);
    post(s);
 }
 
@@ -2275,7 +2275,7 @@ DialogUsageManager::processPublish(const SipMessage& request)
          {
             auto response = std::make_shared<SipMessage>();
             makeResponse(*response, request, 412);
-            send(std::move(response));
+            send(response);
          }
       }
    }
@@ -2298,7 +2298,7 @@ DialogUsageManager::processPublish(const SipMessage& request)
          // per 3903 (sec 6.5), a PUB w/ no SIPIfMatch must have contents. .mjf.
          auto response = std::make_shared<SipMessage>();
          makeResponse(*response, request, 400);
-         send(std::move(response));
+         send(response);
       }
    }
 }
@@ -2357,7 +2357,7 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
       {
          response->header(h_AllowEvents) = getMasterProfile()->getAllowedEvents();
       }
-      send(std::move(response));
+      send(response);
       return false;
    }
    return true;
@@ -2491,20 +2491,20 @@ DialogUsageManager::getOutOfDialogHandler(const MethodTypes type)
 void 
 DialogUsageManager::addIncomingFeature(std::shared_ptr<DumFeature> feat)
 {
-   mIncomingFeatureList.emplace_back(std::move(feat));
+   mIncomingFeatureList.emplace_back(feat);
 }
 
 void
 DialogUsageManager::addOutgoingFeature(std::shared_ptr<DumFeature> feat)
 {
    // make sure EncryptionManager is the last feature in the list.
-   mOutgoingFeatureList.emplace(std::begin(mOutgoingFeatureList), std::move(feat));
+   mOutgoingFeatureList.emplace(std::begin(mOutgoingFeatureList), feat);
 }
 
 void
 DialogUsageManager::setOutgoingMessageInterceptor(std::shared_ptr<DumFeature> feat) noexcept
 {
-   mOutgoingMessageInterceptor = std::move(feat);
+   mOutgoingMessageInterceptor = feat;
 }
 
 void

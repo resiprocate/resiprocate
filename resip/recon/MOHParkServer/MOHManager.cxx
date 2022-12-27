@@ -83,7 +83,7 @@ MOHManager::initializeConversationProfile(const NameAddr& uri, const Data& passw
    mohConversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
    mohConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
    mServer.buildSessionCapabilities(mohConversationProfile->sessionCaps());
-   mConversationProfileHandle = mServer.mMyUserAgent->addConversationProfile(std::move(mohConversationProfile));
+   mConversationProfileHandle = mServer.mMyUserAgent->addConversationProfile(mohConversationProfile);
    mMOHUri = uri;
 }
 

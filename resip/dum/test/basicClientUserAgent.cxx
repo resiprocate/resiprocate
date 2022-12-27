@@ -346,7 +346,7 @@ BasicClientUserAgent::startup()
       if(!mSubscribeTarget.host().empty())
       {
          auto sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
-         mDum->send(std::move(sub));
+         mDum->send(sub);
       }
 
       // Check if we should try to form a test call
@@ -542,7 +542,7 @@ BasicClientUserAgent::onSuccess(ClientRegistrationHandle h, const SipMessage& ms
       if(!mSubscribeTarget.host().empty())
       {
          auto sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
-         mDum->send(std::move(sub));
+         mDum->send(sub);
       }
 
       // Check if we should try to form a test call
@@ -1042,7 +1042,7 @@ BasicClientUserAgent::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Si
    case OPTIONS:
       {
          auto optionsAnswer = ood->answerOptions();
-         ood->send(std::move(optionsAnswer));
+         ood->send(optionsAnswer);
          break;
       }
    default:

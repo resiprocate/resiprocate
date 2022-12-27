@@ -190,7 +190,7 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        stunPassword,
                                        forceCOMedia,
                                        mRtcpEventLoggingHandler,
-                                       std::move(context));
+                                       context);
    }
    else
    {
@@ -212,7 +212,7 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        stunPassword,
                                        forceCOMedia,
                                        nullptr,
-                                       std::move(context));
+                                       context);
    }
    return newMediaStream;
 }

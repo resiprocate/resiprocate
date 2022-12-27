@@ -92,7 +92,7 @@ class MyUserAgent : public UserAgent
 {
 public:
    MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, std::move(profile)) {}
+      UserAgent(conversationManager, profile) {}
     
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq) override
    {

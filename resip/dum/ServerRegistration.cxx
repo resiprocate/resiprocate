@@ -73,7 +73,7 @@ ServerRegistration::accept(SipMessage& ok)
       database->unlockRecord(mAor);
 
       std::shared_ptr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
-      mDum.send(std::move(msg));
+      mDum.send(msg);
       delete(this);
    }
    else
@@ -98,7 +98,7 @@ ServerRegistration::accept(SipMessage& ok)
          }
 
          std::shared_ptr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
-         mDum.send(std::move(msg));
+         mDum.send(msg);
          delete(this);        
       }
       else
@@ -167,7 +167,7 @@ ServerRegistration::reject(int statusCode)
    auto failure = std::make_shared<SipMessage>();
    mDum.makeResponse(*failure, mRequest, statusCode);
    failure->remove(h_Contacts);
-   mDum.send(std::move(failure));
+   mDum.send(failure);
    delete(this);
 }
 
@@ -188,7 +188,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
        
        auto failure = std::make_shared<SipMessage>();
        mDum.makeResponse(*failure, msg, 405);
-       mDum.send(std::move(failure));
+       mDum.send(failure);
        delete(this);
        return;
     }
@@ -204,7 +204,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
        auto failure = std::make_shared<SipMessage>();
        mDum.makeResponse(*failure, msg, 400);
        failure->header(h_StatusLine).reason() = "Bad/unsupported scheme in To: " + mAor.scheme();
-       mDum.send(std::move(failure));
+       mDum.send(failure);
        delete(this);
        return;
    }
@@ -243,7 +243,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
          failure->header(h_StatusLine).reason() = "Interval Too Brief";
          failure->header(h_MinExpires).value() = globalExpires;
       }
-      mDum.send(std::move(failure));
+      mDum.send(failure);
       delete(this);
       return;
    }
@@ -280,7 +280,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       {
          auto failure = std::make_shared<SipMessage>();
          mDum.makeResponse(*failure, msg, 400, "Malformed Contact");
-         mDum.send(std::move(failure));
+         mDum.send(failure);
          if (!async)
          {
             database->unlockRecord(mAor);
@@ -299,7 +299,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
          {
             auto failure = std::make_shared<SipMessage>();
             mDum.makeResponse(*failure, msg, 400, "Invalid use of 'Contact: *'");
-            mDum.send(std::move(failure));
+            mDum.send(failure);
             if (!async)
             {
                database->unlockRecord(mAor);
@@ -534,7 +534,7 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
       {
          auto failure = std::make_shared<SipMessage>();
          mDum.makeResponse(*failure, msg, 439);
-         mDum.send(std::move(failure));
+         mDum.send(failure);
          return false;
       }
    }
@@ -543,7 +543,7 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
    {
       auto failure = std::make_shared<SipMessage>();
       mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
-      mDum.send(std::move(failure));
+      mDum.send(failure);
       return false;
    }
 
@@ -551,7 +551,7 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
    {
       auto failure = std::make_shared<SipMessage>();
       mDum.makeResponse(*failure, msg, 400, "Trying to use sigcomp on a connection-oriented protocol won't work if you don't have a flow. Consider implementing outbound, or using UDP/DTLS for this case.");
-      mDum.send(std::move(failure));
+      mDum.send(failure);
       return false;
    }
 

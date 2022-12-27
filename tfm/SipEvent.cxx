@@ -9,7 +9,7 @@ using namespace resip;
 SipEvent::SipEvent(TestSipEndPoint* endPoint,
                    std::shared_ptr<SipMessage> msg)
    : Event(endPoint),
-     mMsg(std::move(msg))
+     mMsg(msg)
 {
 }
 

@@ -15,7 +15,7 @@ RegistrationCreator::RegistrationCreator(DialogUsageManager& dum,
                                          const NameAddr& target, 
                                          std::shared_ptr<UserProfile> userProfile, 
                                          uint32_t registrationTime)
-   : BaseCreator(dum, std::move(userProfile))
+   : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, target, REGISTER);
    mLastRequest->header(h_RequestLine).uri().user() = Data::Empty;

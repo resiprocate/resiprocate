@@ -332,7 +332,7 @@ TestEndPoint::ExpectBase::queue(SequenceClass* parent)
 void 
 TestEndPoint::ExpectBase::setSequenceSet(std::shared_ptr<SequenceSet> set)
 {
-   getEndPoint()->setSequenceSet(std::move(set));
+   getEndPoint()->setSequenceSet(set);
 }
 
 EncodeStream& 

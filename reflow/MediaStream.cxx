@@ -75,8 +75,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
                            localRtcpBinding, 
                            *this,
                            mForceCOMedia,
-                           std::move(rtcpEventLoggingHandler),
-                           std::move(context));
+                           rtcpEventLoggingHandler,
+                           context);
 
       mRtpFlow->activateFlow(StunMessage::PropsPortPair);
 
@@ -97,7 +97,7 @@ MediaStream::MediaStream(asio::io_service& ioService,
                           *this,
                           mForceCOMedia,
                           nullptr,
-                          std::move(context));
+                          context);
       mRtpFlow->activateFlow(StunMessage::PropsPortEven);
       mRtcpFlow = 0;
    }

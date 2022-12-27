@@ -78,7 +78,7 @@ ServerAuthManager::process(Message* msg)
         InfoLog(<< "ServerAuth requiresChallenge() async failed");
         auto response = std::make_shared<SipMessage>();
         Helper::makeResponse(*response, *sipMsg, 500, "Server Internal Error");
-        mDum.send(std::move(response));
+        mDum.send(response);
         return DumFeature::ChainDoneAndEventDone;
       }
 
@@ -138,7 +138,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
       InfoLog (<< "User unknown " << userAuth->getUser() << " in " << userAuth->getRealm());
       auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *requestWithAuth, 404, "User unknown.");
-      mDum.send(std::move(response));
+      mDum.send(response);
       onAuthFailure(BadCredentials, *requestWithAuth);
       delete requestWithAuth;
       return nullptr;
@@ -149,7 +149,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
       InfoLog (<< "Error in auth procedure for " << userAuth->getUser() << " in " << userAuth->getRealm());
       auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *requestWithAuth, 503, "Server Error.");
-      mDum.send(std::move(response));
+      mDum.send(response);
       onAuthFailure(Error, *requestWithAuth);
       delete requestWithAuth;
       return 0;
@@ -183,7 +183,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
    
                auto response = std::make_shared<SipMessage>();
                Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid nonce");
-               mDum.send(std::move(response));
+               mDum.send(response);
                onAuthFailure(InvalidRequest, *requestWithAuth);
                delete requestWithAuth;
                return 0;
@@ -227,7 +227,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
 
          auto response = std::make_shared<SipMessage>();
          Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid user name provided");
-         mDum.send(std::move(response));
+         mDum.send(response);
          onAuthFailure(InvalidRequest, *requestWithAuth);
          delete requestWithAuth;
          return 0;
@@ -243,7 +243,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
 
       auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid password provided");
-      mDum.send(std::move(response));
+      mDum.send(response);
       onAuthFailure(BadCredentials, *requestWithAuth);
       delete requestWithAuth;
       return 0;
@@ -372,12 +372,12 @@ ServerAuthManager::handle(SipMessage* sipMsg)
                // Send 487/Inv
                auto inviteResponse = std::make_shared<SipMessage>();
                Helper::makeResponse(*inviteResponse, *inviteMsg, 487);  // Request Cancelled
-               mDum.send(std::move(inviteResponse));
+               mDum.send(inviteResponse);
 
                // Send 200/Cancel
                auto cancelResponse = std::make_shared<SipMessage>();
                Helper::makeResponse(*cancelResponse, *sipMsg, 200);  
-               mDum.send(std::move(cancelResponse));
+               mDum.send(cancelResponse);
 
                return Rejected; // Use rejected since handling is what we want - stop DUM from processing the cancel any further
             }
@@ -430,7 +430,7 @@ ServerAuthManager::handle(SipMessage* sipMsg)
             InfoLog (<< "Invalid auth header provided " << e);
             auto response = std::make_shared<SipMessage>();
             Helper::makeResponse(*response, *sipMsg, 400, "Invalid auth header");
-            mDum.send(std::move(response));
+            mDum.send(response);
             onAuthFailure(InvalidRequest, *sipMsg);
             return Rejected;
          }
@@ -469,7 +469,7 @@ ServerAuthManager::issueChallenge(SipMessage *sipMsg, bool stale)
                                                         proxyAuthenticationMode()));
 
   InfoLog (<< "Sending challenge to " << sipMsg->brief());
-  mDum.send(std::move(challenge));
+  mDum.send(challenge);
 }
 
 void 

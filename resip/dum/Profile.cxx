@@ -16,7 +16,7 @@ Profile::Profile() :
 
 Profile::Profile(std::shared_ptr<Profile> baseProfile) :
    mHasOutboundDecorator(false),
-   mBaseProfile(std::move(baseProfile))
+   mBaseProfile(baseProfile)
 {
    resip_assert(mBaseProfile.get());
 
@@ -865,7 +865,7 @@ Profile::unsetRinstanceEnabled() noexcept
 void 
 Profile::setOutboundDecorator(std::shared_ptr<MessageDecorator> outboundDecorator) noexcept
 {
-   mOutboundDecorator = std::move(outboundDecorator);
+   mOutboundDecorator = outboundDecorator;
    mHasOutboundDecorator = true;
 }
 

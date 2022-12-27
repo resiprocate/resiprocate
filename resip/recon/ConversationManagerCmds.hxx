@@ -151,7 +151,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommandAdapter
            mConvHandle(convHandle),
            mDestination(destination),
            mForkSelectMode(forkSelectMode),
-           mCallerProfile(std::move(callerProfile)),
+           mCallerProfile(callerProfile),
            mExtraHeaders(extraHeaders) {}
       virtual void executeCommand()
       {
@@ -198,7 +198,7 @@ public:
       : mConversationManager(conversationManager),
       mPartHandle(partHandle),
       mDestination(destination),
-      mConversationProfile(std::move(conversationProfile)) {}
+      mConversationProfile(conversationProfile) {}
    virtual void executeCommand()
    {
       new RemoteIMPagerParticipant(mPartHandle, *mConversationManager, mDestination, mConversationProfile);
@@ -224,7 +224,7 @@ public:
       mPartHandle(partHandle),
       mDestination(destination),
       mForkSelectMode(forkSelectMode),
-      mCallerProfile(std::move(callerProfile)),
+      mCallerProfile(callerProfile),
       mExtraHeaders(extraHeaders) {}
    virtual void executeCommand()
    {

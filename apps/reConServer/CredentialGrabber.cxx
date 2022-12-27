@@ -15,7 +15,7 @@ using namespace resip;
 using namespace soci;
 
 CredentialGrabber::CredentialGrabber(std::shared_ptr<soci::connection_pool> pool, const resip::Data& databaseQueryUserCredential) :
-   mPool(std::move(pool)),
+   mPool(pool),
    mDatabaseQueryUserCredential(databaseQueryUserCredential)
 {
    DebugLog(<<"instantiated");

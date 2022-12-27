@@ -553,7 +553,7 @@ class SipMessage : public TransactionMessage
       void setWsCookies(const CookieList& wsCookies) { mWsCookies = wsCookies; }
 
       std::shared_ptr<WsCookieContext> getWsCookieContext() const noexcept { return mWsCookieContext; }
-      void setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext) noexcept { mWsCookieContext = std::move(wsCookieContext); }
+      void setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext) noexcept { mWsCookieContext = wsCookieContext; }
 
       Data getCanonicalIdentityString() const;
       

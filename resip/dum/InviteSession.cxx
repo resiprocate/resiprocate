@@ -584,7 +584,7 @@ InviteSession::provideAnswer(const Contents& answer)
          mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          InfoLog (<< "Sending " << response->brief());
          DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
-         send(std::move(response));
+         send(response);
          if (mDum.mDialogEventStateManager)
          {
              // New Offer/Answer - generate a new confirmed callback with updated SDP
@@ -720,7 +720,7 @@ InviteSession::end(EndReason reason)
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, 488);
          InfoLog (<< "Sending " << response->brief());
-         send(std::move(response));
+         send(response);
 
          const auto msg = sendBye();
          transition(Terminated);
@@ -827,7 +827,7 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
             response->header(h_Warnings).push_back(*warning);
          }
          InfoLog (<< "Sending " << response->brief());
-         send(std::move(response));
+         send(response);
          break;
       }
       // Sent a reINVITE no offer and received a 200-offer.
@@ -1492,7 +1492,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 200);
          handleSessionTimerRequest(*response, msg);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1532,7 +1532,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          // glare
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1619,7 +1619,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1744,7 +1744,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1838,7 +1838,7 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(std::move(response));
+         send(response);
          break;
       }
       case OnAckAnswer:
@@ -1946,7 +1946,7 @@ InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 500);
          response->header(h_RetryAfter).value() = Random::getRandom() % 10;
-         send(std::move(response));
+         send(response);
          break;
       }
       case OnBye:
@@ -1955,7 +1955,7 @@ InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, 487); // Request Terminated
          handleSessionTimerRequest(*response, *mLastRemoteSessionModification);
-         send(std::move(response));
+         send(response);
 
          dispatchBye(msg);
          break;
@@ -2049,7 +2049,7 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 400 /* Bad Request */);
-         send(std::move(response));
+         send(response);
       }
    }
 }
@@ -2088,13 +2088,13 @@ InviteSession::dispatchTerminated(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 200);
-         send(std::move(response));
+         send(response);
       }
       else
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 481);
-         send(std::move(response));
+         send(response);
       }
 
       // !jf! means the peer sent BYE while we are waiting for response to BYE
@@ -2120,7 +2120,7 @@ InviteSession::dispatchOthers(const SipMessage& msg)
          {
             auto response = std::make_shared<SipMessage>();
             mDialog.makeResponse(*response, msg, 491);
-            send(std::move(response));
+            send(response);
          }
          break;
       case PRACK:
@@ -2164,7 +2164,7 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
    auto response = std::make_shared<SipMessage>();
    mDialog.makeResponse(*response, msg, 400); // !jf! what code to use?
    InfoLog (<< "Sending " << response->brief());
-   send(std::move(response));
+   send(response);
 
    sendBye();
    transition(Terminated);
@@ -2179,7 +2179,7 @@ InviteSession::dispatchPrack(const SipMessage& msg)
    {
       auto rsp = std::make_shared<SipMessage>();
       mDialog.makeResponse(*rsp, msg, 481);
-      send(std::move(rsp));
+      send(rsp);
 
       sendBye();
       // !jf! should we make some other callback here
@@ -2201,7 +2201,7 @@ InviteSession::dispatchCancel(const SipMessage& msg)
    {
       auto rsp = std::make_shared<SipMessage>();
       mDialog.makeResponse(*rsp, msg, 200);
-      send(std::move(rsp));
+      send(rsp);
 
       sendBye();
       // !jf! should we make some other callback here
@@ -2237,7 +2237,7 @@ InviteSession::dispatchBye(const SipMessage& msg)
       auto rsp = std::make_shared<SipMessage>();
       InfoLog (<< "Received " << msg.brief());
       mDialog.makeResponse(*rsp, msg, 200);
-      send(std::move(rsp));
+      send(rsp);
 
       // !jf! should we make some other callback here
       transition(Terminated);
@@ -2270,7 +2270,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 500);
          response->header(h_RetryAfter).value() = Random::getRandom() % 10;
-         send(std::move(response));
+         send(response);
          WarningLog(<<"an INFO message was received before the application called acceptNIT() for the previous INFO message");
       }
       else
@@ -2417,7 +2417,7 @@ InviteSession::dispatchMessage(const SipMessage& msg)
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 500);
          response->header(h_RetryAfter).value() = Random::getRandom() % 10;
-         send(std::move(response));
+         send(response);
       }
       else
       {
@@ -3289,7 +3289,7 @@ InviteSession::acceptReferNoSub(int statusCode)
    response->header(h_ReferSub).value() = "false";
    //response->header(h_Supporteds).push_back(Token(Symbols::NoReferSub));
    
-   send(std::move(response));
+   send(response);
 } 
 
 void
@@ -3302,7 +3302,7 @@ InviteSession::rejectReferNoSub(int responseCode)
 
    auto response = std::make_shared<SipMessage>();
    mDialog.makeResponse(*response, mLastReferNoSubRequest, responseCode);
-   send(std::move(response));
+   send(response);
 }
 
 /* ====================================================================

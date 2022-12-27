@@ -15,7 +15,7 @@ WssConnection::WssConnection(Transport* transport, const Tuple& who, Socket fd,
                               SecurityTypes::SSLType sslType , Compression &compression,
                               std::shared_ptr<WsConnectionValidator> wsConnectionValidator)
   : TlsConnection(transport, who, fd, security, server, domain, sslType, compression),
-    WsConnectionBase(std::move(wsConnectionValidator))
+    WsConnectionBase(wsConnectionValidator)
 {
    DebugLog (<< "Creating WSS connection " << who << " on " << fd);
 }

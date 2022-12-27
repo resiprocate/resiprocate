@@ -144,7 +144,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
       }
       auto invitemsg = mDum.makeInviteSession(
                destination,
-               std::move(profile),
+               profile,
                offer.get(),
                &mDialogSet);
 
@@ -927,7 +927,7 @@ RemoteParticipant::acceptPendingOODRefer()
                      DialogUsageManager::None,  //EncryptionLevel
                      0,     // Alternative Contents
                      &mDialogSet);
-            mDialogSet.sendInvite(std::move(invitemsg));
+            mDialogSet.sendInvite(invitemsg);
 
             adjustRTPStreams(true);
 
@@ -977,7 +977,7 @@ RemoteParticipant::redirectPendingOODRefer(resip::NameAddr& destination)
          auto redirect = mPendingOODReferNoSubHandle->reject(302 /* Moved Temporarily */);
          redirect->header(h_Contacts).clear();
          redirect->header(h_Contacts).push_back(destination);
-         mPendingOODReferNoSubHandle->send(std::move(redirect));
+         mPendingOODReferNoSubHandle->send(redirect);
          mConversationManager.onParticipantTerminated(mHandle, 302 /* Moved Temporarily */);
       }
       else if(mPendingOODReferSubHandle.isValid())
@@ -985,7 +985,7 @@ RemoteParticipant::redirectPendingOODRefer(resip::NameAddr& destination)
          auto redirect = mPendingOODReferSubHandle->reject(302 /* Moved Temporarily */);
          redirect->header(h_Contacts).clear();
          redirect->header(h_Contacts).push_back(destination);
-         mPendingOODReferSubHandle->send(std::move(redirect));  
+         mPendingOODReferSubHandle->send(redirect);  
          mConversationManager.onParticipantTerminated(mHandle, 302 /* Moved Temporarily */);
       }
       else
@@ -1702,7 +1702,7 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
          SdpContents& offer = *_offer;
          // Build the Invite
          auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, ss->getHandle(), &offer, DialogUsageManager::None, 0, participantDialogSet);
-         participantDialogSet->sendInvite(std::move(NewInviteMsg));
+         participantDialogSet->sendInvite(NewInviteMsg);
 
          // Set RTP stack to listen
          participant->adjustRTPStreams(true);
@@ -1764,7 +1764,7 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
       SdpContents& offer = *_offer;
       // Build the Invite
       auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, &offer, participantDialogSet);
-      participantDialogSet->sendInvite(std::move(NewInviteMsg));
+      participantDialogSet->sendInvite(NewInviteMsg);
 
       // Set RTP stack to listen
       participant->adjustRTPStreams(true);

@@ -73,7 +73,7 @@ BasicClientCall::initiateCall(const Uri& target, std::shared_ptr<UserProfile> pr
    SdpContents offer;
    makeOffer(offer);
    auto invite = mUserAgent.getDialogUsageManager().makeInviteSession(NameAddr(target), profile, &offer, this);
-   mUserAgent.getDialogUsageManager().send(std::move(invite));
+   mUserAgent.getDialogUsageManager().send(invite);
    mPlacedCall = true;
 }
 
@@ -573,7 +573,7 @@ BasicClientCall::onFlowTerminated(InviteSessionHandle h)
       SdpContents offer;
       replacesCall->makeOffer(offer);
       auto invite = mUserAgent.getDialogUsageManager().makeInviteSession(inviteWithReplacesTarget, h, getUserProfile(), &offer, replacesCall);
-      mUserAgent.getDialogUsageManager().send(std::move(invite));
+      mUserAgent.getDialogUsageManager().send(invite);
    }
 }
 

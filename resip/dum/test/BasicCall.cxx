@@ -673,7 +673,7 @@ main (int argc, char** argv)
    {
       auto regMessage = dumUas->makeRegistration(uasAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
       cout << "Sending register for Uas: " << endl << regMessage << endl;
-      dumUas->send(std::move(regMessage));
+      dumUas->send(regMessage);
    } 
    else 
    {
@@ -683,7 +683,7 @@ main (int argc, char** argv)
    {
       auto regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAC(Registration)"));
       cout << "Sending register for Uac: " << endl << regMessage << endl;
-      dumUac->send(std::move(regMessage));
+      dumUac->send(regMessage);
    } 
    else 
    {

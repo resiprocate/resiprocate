@@ -72,7 +72,7 @@ void PresenceSubscriptionHandler::onRefresh(ServerSubscriptionHandle h, const Si
          {
             adjustNotifyExpiresTime(*notify.get(), maxExpires);
          }
-         h->send(std::move(notify));
+         h->send(notify);
       }
    }
    else
@@ -310,7 +310,7 @@ PresenceSubscriptionHandler::fabricateSimplePresence(ServerSubscriptionHandle h,
    {
       adjustNotifyExpiresTime(*notify.get(), regMaxExpires);
    }
-   h->send(std::move(notify));
+   h->send(notify);
 }
 
 bool 
