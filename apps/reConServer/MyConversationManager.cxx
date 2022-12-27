@@ -21,6 +21,9 @@
 #include <media/kurento/Object.hxx>
 #include <resip/recon/KurentoRemoteParticipant.hxx>
 #endif
+#ifdef USE_LIBWEBRTC
+#include <resip/recon/LibWebRTCMediaStackAdapter.hxx>
+#endif
 
 // Test Prompts for cache testing
 #include "media/samples/playback_prompt.h"
