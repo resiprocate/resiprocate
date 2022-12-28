@@ -14,6 +14,7 @@ endfunction()
 
 test(testCompat testCompat.cxx)
 test(testCoders testCoders.cxx)
+test(testCondition testCondition.cxx)
 test(testConfigParse testConfigParse.cxx)
 test(testCountStream testCountStream.cxx)
 test(testData testData.cxx)
@@ -45,3 +46,4 @@ extra_test(testKeyValueStore testKeyValueStore.cxx)
 add_fuzzing_executable(fuzzUtil fuzzUtil.cxx)
 set_target_properties(fuzzUtil PROPERTIES FOLDER rutil/FuzzingTests)
 target_link_libraries(fuzzUtil PRIVATE rutil)
+
