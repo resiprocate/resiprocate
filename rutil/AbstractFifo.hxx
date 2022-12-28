@@ -258,6 +258,7 @@ class AbstractFifo : public FifoStatsInterface
               return false;
             toReturn = mFifo.front();
             mFifo.pop_front();
+            onMessagePopped();
             return true;
          }
 
