@@ -16,10 +16,7 @@
 #include "UserAgent.hxx"
 #include "MediaStreamEvent.hxx"
 
-// Flowmanager Includes
-#include "reflow/FlowManager.hxx"
-#include "reflow/Flow.hxx"
-#include "reflow/MediaStream.hxx"
+#include "reTurn/StunTuple.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -34,6 +31,7 @@
 #include <utility>
 
 using namespace recon;
+using namespace reTurn;
 using namespace resip;
 using namespace std;
 
