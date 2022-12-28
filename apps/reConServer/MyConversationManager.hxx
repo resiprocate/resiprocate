@@ -1,18 +1,11 @@
 #ifndef MYCONVERSATIONMANAGER_HXX
 #define MYCONVERSATIONMANAGER_HXX
 
-#ifdef USE_SIPXTAPI
-#include <os/OsIntTypes.h>
-#endif
-
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
 #endif
 
 #include <rutil/Data.hxx>
-#ifdef USE_SIPXTAPI
-#include <resip/recon/SipXMediaStackAdapter.hxx>
-#endif
 
 #include "reConServerConfig.hxx"
 
