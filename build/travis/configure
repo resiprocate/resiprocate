@@ -14,7 +14,7 @@ WARNING_CONFIG="-Werror  ${WARNING_CONFIG}"
 
 # FIXME - need to make sure the gstreamer-dev packages have all the right
 # headers before we enable it here
-BLEEDING_EDGE_REPRO_FEATURES="-DBUILD_RECON=ON -DBUILD_RECONSERVER=ON -DUSE_SIPXTAPI=ON -DUSE_KURENTO=ON -DUSE_GSTREAMER=OFF"
+BLEEDING_EDGE_REPRO_FEATURES="-DBUILD_RECON=ON -DBUILD_RECONSERVER=ON -DUSE_SIPXTAPI=ON -DUSE_KURENTO=OFF -DUSE_GSTREAMER=OFF"
 if [[ -e /etc/os-release ]]
 then
   source /etc/os-release
