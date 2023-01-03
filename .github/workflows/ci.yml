@@ -15,6 +15,7 @@ jobs:
       - name: Install Dependencies
         run: |
           echo "deb http://deb.debian.org/debian bullseye-backports main" > /etc/apt/sources.list.d/backports.list
+          wget -O - http://apt.debify.org/add-apt-debify | bash
           apt-get update -qq
           apt-get install -qq \
             clang \
