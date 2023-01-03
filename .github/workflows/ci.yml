@@ -6,7 +6,7 @@ jobs:
     name: Build with ${{ matrix.compiler }}
     runs-on: ubuntu-20.04
     container:
-      image: debian:buster-slim
+      image: debian:bullseye-slim
     strategy:
       fail-fast: false
       matrix:
@@ -14,11 +14,11 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
-          echo "deb http://deb.debian.org/debian buster-backports main" > /etc/apt/sources.list.d/backports.list
+          echo "deb http://deb.debian.org/debian bullseye-backports main" > /etc/apt/sources.list.d/backports.list
           apt-get update -qq
           apt-get install -qq \
             clang \
-            cmake/buster-backports \
+            cmake \
             default-libmysqlclient-dev \
             g++ \
             git \
@@ -29,7 +29,7 @@ jobs:
             libcajun-dev \
             libcppunit-dev \
             libdb++-dev \
-            libfmt-dev/buster-backports \
+            libfmt-dev \
             libgeoip-dev \
             libgloox-dev \
             libgstreamermm-1.0-dev \
