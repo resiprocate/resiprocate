@@ -1,0 +1,35 @@
+########################################################################
+##
+## mib2c node setting for applOutboundAssociations
+##
+## Remove the '##' comment delimeter to change settings
+##
+########################################################################
+## Node declaration type? This is the C type to be used when
+## declaring a variable to hold a value for this column. It
+## is strongly recommended that you do not change this value.
+## If you do, it is likely to break lots of generated code that
+## you will have to fix.
+##
+## @eval $m2c_decl = u_long@
+##
+########################################################################
+## Generate/use mapping functions? Useful if the MIB defines
+## a different format or enumerations than you data store uses.
+##
+## @eval $m2c_node_skip_mapping = 1@
+##
+########################################################################
+## Need a length for the value? Most OCTET-STRING based values will
+## need a length, most other types will not. Do not change this one
+## unless you know what you are doing! You will almost certainly need
+## to fix lots of generated code if you do.
+##
+## @eval $m2c_node_needlength = 0@
+##
+########################################################################
+## Skip get? Set this to 1 if you do not want to implement a value
+## for this column.
+##
+## @eval $m2c_node_skip_get = 0@
+##

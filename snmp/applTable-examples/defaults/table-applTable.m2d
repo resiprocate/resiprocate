@@ -1,0 +1,103 @@
+## ########################################################################
+##
+## mib2c Table setting for applTable
+##
+## ########################################################################
+##
+## User context structure type
+##
+@eval $m2c_context_reg = "netsnmp_data_list"@
+##
+## ########################################################################
+##
+## Allocate data structure in row structure? (vs embedd)
+##
+@eval $m2c_data_allocate = 0@
+##
+## ########################################################################
+##
+## Generate code to cache data?
+##
+@eval $m2c_data_cache = 0@
+##
+## ########################################################################
+##
+## Data context structure type
+##
+@eval $m2c_data_context = "generated"@ [generated|NAME]
+##
+## ########################################################################
+##
+## Generate function to initialize row context when created?
+##
+@eval $m2c_data_init = 1@
+##
+## ########################################################################
+##
+## Persistence of data context
+## // 0:persistent, 1:semi-transient, 2:transient
+##
+@eval $m2c_data_transient = 2@
+##
+## ########################################################################
+##
+## Include some example code?
+##
+@eval $m2c_include_examples = 1@
+##
+## ########################################################################
+##
+## Generate code for irreversible_commit mode?
+##
+@eval $m2c_irreversible_commit = 0@
+##
+## ########################################################################
+##
+## Data access method
+##
+@eval $m2c_table_access = "container-cached"@
+##
+## ########################################################################
+##
+## Generate row dependency function?
+##
+@eval $m2c_table_dependencies = 0@
+##
+## ########################################################################
+##
+## Generate data store/restore functions for persistent storage?
+##
+@eval $m2c_table_persistent = 0@
+##
+## ########################################################################
+##
+## Generate code for dynamic row creation?
+##
+@eval $m2c_table_row_creation = 0@
+##
+## ########################################################################
+##
+## Generate code for settable objects?
+##
+@eval $m2c_table_settable = 0@
+##
+## ########################################################################
+##
+## Skip mapping between data context and MIB formats?
+## // 0:generate maps, 1:skip maps, -1:skip unless enum/oid
+##
+@eval $m2c_table_skip_mapping = 1@
+##
+## ########################################################################
+##
+## Generate code for sparse tables?
+##
+@eval $m2c_table_sparse = 0@
+##
+## ########################################################################
+##
+## Generate Makefile/AgentX code?
+##
+@eval $mfd_generate_makefile = 0@
+@eval $mfd_generate_subagent = 0@
+##
