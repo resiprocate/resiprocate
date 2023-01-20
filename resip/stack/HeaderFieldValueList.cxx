@@ -212,11 +212,45 @@ HeaderFieldValueList::freeParserContainer()
    }
 }
 
+size_t 
+HeaderFieldValueList::getNumHeaderValues() const
+{
+   if (mParserContainer)
+   {
+      return mParserContainer->size();
+   }
+   else
+   {
+      return mHeaders.size();
+   }
+}
+
+bool 
+HeaderFieldValueList::getHeaderValueByIndex(size_t index, Data& headerValue) const
+{
+   if (mParserContainer)
+   {
+      return mParserContainer->getHeaderValueByIndex(index, headerValue);
+   }
+   else
+   {
+      if (index < mHeaders.size())
+      {
+         const HeaderFieldValue& hfv = mHeaders[index];
+         headerValue.copy(hfv.getBuffer(), hfv.getLength());
+         return true;
+      }
+   }
+   return false;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2023 SIP Spectrum, Inc. www.sipspectrum.com
+ * Copyright (c) 2000 Vovida Networks, Inc.
+ * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

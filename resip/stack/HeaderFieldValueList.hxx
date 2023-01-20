@@ -16,6 +16,29 @@ class HeaderFieldValue;
 
 /**
    @internal
+
+   A HeaderFieldValueList contains a ParserContainer (after parsing occurs) or may only contain
+   a vector of unparsed headers (if parsing hasn't occurred).  Depending on how the SipMessage was
+   constructured, it's possible a HeaderFieldValueList doesn't contain any information in the 
+   mHeaders vector, and all the data is stored solely in the ParserContainer.  If a ParserContainer
+   is set, then it must be used for all future encoding.  Looking for null (or not) from 
+   getParserContainer can be used to see which storage mechanism is being used.
+
+   Most methods on this class deal with manipulation of the header vector (ie: empty, size, clear,
+   push_back, pop_back, iterator, etc.).
+
+   The encode method will either use the ParserContainer to encode (if set), or will encode from the
+   header vector otherwise.
+
+   In order to query all the raw header values regardless of their storage format use the 
+   getNumHeaderValues and getHeaderValueByIndex methods as follows:
+
+   for(size_t i = 0; i < hfvl->getNumHeaderValues(); i++)
+   {
+      Data headerValue;
+      hfvl->getHeaderValueByIndex(i, headerValue);
+      ....
+   }
 */
 class HeaderFieldValueList
 {
@@ -82,6 +105,10 @@ class HeaderFieldValueList
       }
 
       bool parsedEmpty() const;
+
+      size_t getNumHeaderValues() const;
+      bool getHeaderValueByIndex(size_t index, Data& headerValue) const;
+
    private:
       typedef std::vector<HeaderFieldValue, StlPoolAllocator<HeaderFieldValue, PoolBase > >  ListImpl;
    public:
@@ -108,7 +135,9 @@ class HeaderFieldValueList
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2023 SIP Spectrum, Inc. www.sipspectrum.com
+ * Copyright (c) 2000 Vovida Networks, Inc.  
+ * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
