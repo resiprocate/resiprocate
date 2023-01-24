@@ -13,7 +13,7 @@ Stun/Turn drafts:  RFC5389, and draft-ietf-behave-turn-15
 
 Current External Library Usage
 ------------------------------
-- currently uses OpenSSL, ASIO, BOOST and RUTIL
+- currently uses OpenSSL, ASIO and RUTIL
 - OpenSSL
        - Used for TLS support (optional)
        - libcrypto used for calculating message authentication code (mandatory
@@ -28,10 +28,6 @@ Current External Library Usage
        - StunMessage, TurnAllocation and RequestHandler use asio::ip:address to manipulate IPV6, 
          and IPV4 StunAddresses - easily changed
        - StunTuple uses asio::ip::address - easily changed
-- BOOST - 1.34.1
-        - Using BOOST in no-lib mode is fine
-        - BOOST::bind is used in server transports
-        - BOOST::crc_optimal is used for fingerprint CRC calculations
 - RUTIL - Data class is used in StunMessage and StunAuth for strings and TurnData
 
 
@@ -45,7 +41,7 @@ RFC5389 message parsing                yes          partly
 IPV6 message parsing support           yes          no 
 Short Term Credentials                 yes          yes     Implementation currently only accepts one hardcoded username/password
 Long Term Credentials                  mostly       yes     Implementation currently only accepts one hardcoded username/password
-Finger Print Insertion and Validation  yes          yes     Uses BOOST:crc_optimal
+Finger Print Insertion and Validation  yes          yes
 Checking for unknown attributes        yes          yes
 Bandwidth Check                        no           no
 Turn Allocation                        yes          yes     Only UDP Relay's are implemented
@@ -60,7 +56,7 @@ Don't Fragment Attribute               no           no      Server will reject r
 
 General TODO
 -------------
-- reduce library use - remove BOOST and/or rutil requirement - remove ASIO for client??
+- reduce library use - remove rutil requirement - remove ASIO for client??
 - allow multiple interfaces to be used for relay
 - per user allocation quota enforcement
 - cleanup stun message class so that there are accessors for all data members
