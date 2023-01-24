@@ -84,6 +84,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets" Condition="Exists('..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -188,7 +189,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../contrib/asio;../../contrib/boost;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../contrib/asio;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_IPV6;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -202,7 +203,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../contrib/asio;../../contrib/boost;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../contrib/asio;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_IPV6;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -216,7 +217,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../contrib/asio;../../contrib/boost;../../contrib/OpenSSL/include;../../contrib/OpenSSL/inc32;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../contrib/asio;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -230,7 +231,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../contrib/asio;../../contrib/boost;../../contrib/OpenSSLx64/include;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../contrib/asio;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -243,7 +244,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../../contrib/asio;../../contrib/boost;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../contrib/asio;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_IPV6;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -255,7 +256,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../../contrib/asio;../../contrib/boost;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../contrib/asio;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_IPV6;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -267,7 +268,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../../contrib/asio;../../contrib/boost;../../contrib/OpenSSL/include;../../contrib/OpenSSL/inc32;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../contrib/asio;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_SSL;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -281,7 +282,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../../contrib/asio;../../contrib/boost;../../contrib/OpenSSLx64/include;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../contrib/asio;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_SSL;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -335,5 +336,14 @@
     <ClInclude Include="TurnTlsSocket.hxx" />
     <ClInclude Include="TurnUdpSocket.hxx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets'))" />
+  </Target>
 </Project>

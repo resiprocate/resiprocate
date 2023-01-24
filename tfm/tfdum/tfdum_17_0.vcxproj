@@ -270,7 +270,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\pcre;..\..\contrib\OpenSSL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -281,7 +281,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -296,7 +296,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\pcre;..\..\contrib\OpenSSLx64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -307,7 +307,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -321,7 +321,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\pcre;..\..\contrib\OpenSSL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -331,7 +331,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -340,7 +340,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\pcre;..\..\contrib\OpenSSLx64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -350,7 +350,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -363,9 +363,6 @@
     </ProjectReference>
     <ProjectReference Include="..\..\contrib\db\build_windows\db_static_17_0.vcxproj">
       <Project>{9e5a7645-1502-4467-91f8-bcf2eb06ef72}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\contrib\fmt\fmt_17_0.vcxproj">
-      <Project>{5bfe7a8e-474a-4e9f-9903-04ba9b5abf03}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\contrib\GeoIP\GeoIP_17_0.vcxproj">
       <Project>{6527d843-ee53-4f1e-b0a9-12abba8e75cc}</Project>
@@ -454,12 +451,14 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\boost.1.78.0\build\boost.targets" Condition="Exists('..\..\packages\boost.1.78.0\build\boost.targets')" />
+    <Import Project="..\..\packages\boost.1.80.0\build\boost.targets" Condition="Exists('..\..\packages\boost.1.80.0\build\boost.targets')" />
+    <Import Project="..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets" Condition="Exists('..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\boost.1.78.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.78.0\build\boost.targets'))" />
+    <Error Condition="!Exists('..\..\packages\boost.1.80.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.80.0\build\boost.targets'))" />
+    <Error Condition="!Exists('..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets'))" />
   </Target>
 </Project>

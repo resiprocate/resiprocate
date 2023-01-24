@@ -307,7 +307,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -329,7 +329,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -356,7 +356,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -385,7 +385,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -398,7 +398,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -409,7 +409,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MDd.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -420,7 +420,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -431,7 +431,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MDd.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -442,7 +442,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -453,7 +453,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MTd.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -464,7 +464,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -475,7 +475,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MTd.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -489,7 +489,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -502,7 +502,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -518,7 +518,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -531,7 +531,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -547,7 +547,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -560,7 +560,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MT.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -576,7 +576,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -589,7 +589,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MT.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -643,12 +643,14 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\boost.1.78.0\build\boost.targets" Condition="Exists('..\..\packages\boost.1.78.0\build\boost.targets')" />
+    <Import Project="..\..\packages\boost.1.80.0\build\boost.targets" Condition="Exists('..\..\packages\boost.1.80.0\build\boost.targets')" />
+    <Import Project="..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets" Condition="Exists('..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\boost.1.78.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.78.0\build\boost.targets'))" />
+    <Error Condition="!Exists('..\..\packages\boost.1.80.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.80.0\build\boost.targets'))" />
+    <Error Condition="!Exists('..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets'))" />
   </Target>
 </Project>

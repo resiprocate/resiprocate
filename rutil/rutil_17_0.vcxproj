@@ -284,8 +284,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -298,8 +298,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -311,8 +311,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -323,8 +323,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -335,8 +335,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -347,8 +347,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -359,33 +359,33 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/opensslx64/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/opensslx64/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -398,8 +398,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -412,8 +412,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/opensslx64/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -426,8 +426,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/opensslx64/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -610,14 +610,21 @@
     <ClInclude Include="XMLCursor.hxx" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\contrib\fmt\fmt_17_0.vcxproj">
-      <Project>{5bfe7a8e-474a-4e9f-9903-04ba9b5abf03}</Project>
-    </ProjectReference>
     <ProjectReference Include="dns\ares\ares_17_0.vcxproj">
       <Project>{ce7cf5e0-cad1-49d6-95d1-143ded7b226e}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets" Condition="Exists('..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets'))" />
+  </Target>
 </Project>
