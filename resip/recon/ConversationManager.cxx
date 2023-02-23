@@ -911,8 +911,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
    {
       auto optionsAnswer = ood->answerOptions();
 
-      ConversationProfile* convProfile = mUserAgent->getIncomingConversationProfile(msg).get();
-
+      ConversationProfile* convProfile = dynamic_cast<ConversationProfile*>(ood->getUserProfile().get());
       if (convProfile)
       {
          // Attach an offer to the options request

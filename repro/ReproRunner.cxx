@@ -583,6 +583,8 @@ ReproRunner::loadPlugins()
    mPluginManager.reset(new ReproPluginManager(*mSipStack, mProxyConfig));
    return mPluginManager->loadPlugins(pluginNames);
 #else
+   if (pluginNames.empty()) return true;
+
    CritLog(<< "LoadPlugins is specified in the configuration but repro was compiled without plugin support");
    return false;
 #endif
