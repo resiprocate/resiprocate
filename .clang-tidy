@@ -1,4 +1,12 @@
 Checks: >-
   -*,
-  bugprone-*
+  bugprone-exception-escape,
+  bugprone-move-forwarding-reference,
+  bugprone-undefined-memory-manipulation,
+  bugprone-unhandled-self-assignment,
+  bugprone-use-after-move,
+  performance-move-const-arg,
+  performance-move-constructor-init,
+  performance-no-automatic-move,
+  performance-noexcept-move-constructor
 HeaderFilterRegex: .*

@@ -27,32 +27,35 @@ ContactInstanceRecord::ContactInstanceRecord(const ContactInstanceRecord& rhs) :
 
 ContactInstanceRecord& ContactInstanceRecord::operator=(const ContactInstanceRecord& rhs)
 {
-   mContact = rhs.mContact;
-   mRegExpires = rhs.mRegExpires;
-   mLastUpdated = rhs.mLastUpdated;
-   mReceivedFrom = rhs.mReceivedFrom;
-   mPublicAddress = rhs.mPublicAddress;
-   mSipPath = rhs.mSipPath;
-   mInstance = rhs.mInstance;
-   mUserAgent = rhs.mUserAgent;
-   mRegId = rhs.mRegId;
-   mSyncContact = rhs.mSyncContact;
-   mUseFlowRouting = rhs.mUseFlowRouting;
-   mUserInfo = rhs.mUserInfo;
-   if(mUserData && rhs.mUserData == 0)
+   if (&rhs != this)
    {
-      delete mUserData;
-      mUserData = 0;
+      mContact = rhs.mContact;
+      mRegExpires = rhs.mRegExpires;
+      mLastUpdated = rhs.mLastUpdated;
+      mReceivedFrom = rhs.mReceivedFrom;
+      mPublicAddress = rhs.mPublicAddress;
+      mSipPath = rhs.mSipPath;
+      mInstance = rhs.mInstance;
+      mUserAgent = rhs.mUserAgent;
+      mRegId = rhs.mRegId;
+      mSyncContact = rhs.mSyncContact;
+      mUseFlowRouting = rhs.mUseFlowRouting;
+      mUserInfo = rhs.mUserInfo;
+      if(mUserData && rhs.mUserData == 0)
+      {
+         delete mUserData;
+         mUserData = 0;
+      }
+      else if(mUserData == 0 && rhs.mUserData)
+      {
+         mUserData = new Data(*rhs.mUserData);
+      }
+      else if(rhs.mUserData)
+      {
+         *mUserData = *rhs.mUserData;
+      }
+      // else both are already NULL
    }
-   else if(mUserData == 0 && rhs.mUserData)
-   {
-      mUserData = new Data(*rhs.mUserData);
-   }
-   else if(rhs.mUserData)
-   {
-      *mUserData = *rhs.mUserData;
-   }
-   // else both are already NULL
 
    return(*this);
 }
