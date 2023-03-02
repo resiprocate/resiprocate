@@ -43,5 +43,8 @@
     <None Include="repro.config">
       <Filter>ConfigFile</Filter>
     </None>
+    <None Include="packages.config">
+      <Filter>ConfigFile</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -808,6 +808,8 @@ protected:
 
    bool isShuttingDown() { return mShuttingDown; }
 
+   bool remoteParticipantInitialHold() { return getConfig()->getConfigBool("RemoteParticipantInitialHold", true); };
+
 private:
    friend class DefaultDialogSet;
    friend class Subscription;

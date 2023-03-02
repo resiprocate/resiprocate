@@ -1,6 +1,7 @@
 #if !defined(ConfigParse_hxx)
 #define ConfigParse_hxx
 
+#include <map>
 #include <set>
 #include <vector>
 #include "rutil/BaseException.hxx"

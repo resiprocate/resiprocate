@@ -137,6 +137,7 @@ public:
    virtual void reInvite();
 
 protected:
+   void addExtraHeader(const std::shared_ptr<resip::SipMessage>& invitemsg, const resip::Data& headerName, const resip::Data& headerValue);
    void setRemoteHold(bool remoteHold);
    void setProposedSdp(const resip::SdpContents& sdp);
    void setLocalSdp(const resip::SdpContents& sdp);
@@ -245,7 +246,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.

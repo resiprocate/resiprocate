@@ -64,7 +64,7 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
    mDialogId(Data::Empty, Data::Empty, Data::Empty),
    mState(Connecting),
    mOfferRequired(false),
-   mLocalHold(true),
+   mLocalHold(conversationManager.remoteParticipantInitialHold()),
    mRemoteHold(false),
    mTrickleIce(false),
    mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
@@ -86,7 +86,7 @@ RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager,
    mDialogId(Data::Empty, Data::Empty, Data::Empty),
    mState(Connecting),
    mOfferRequired(false),
-   mLocalHold(true),
+   mLocalHold(conversationManager.remoteParticipantInitialHold()),
    mRemoteHold(false),
    mTrickleIce(false),
    mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
@@ -128,7 +128,8 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
       resip_assert(profile);
    }
 
-   CallbackSdpReady createAndSendInvite = [this, handleId, &cm, destination, profile, extraHeaders](bool success, std::unique_ptr<SdpContents> offer){
+   CallbackSdpReady createAndSendInvite = [this, handleId, &cm, destination, profile, extraHeaders](bool success, std::unique_ptr<SdpContents> offer)
+   {
       if(!cm.getParticipant(handleId))
       {
          WarningLog(<<"handle no longer valid");
@@ -151,49 +152,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
       std::multimap<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
       for (; it != extraHeaders.end(); it++)
       {
-         resip::Data headerName(it->first);
-         resip::Data value(it->second);
-         try
-         {
-            if (resip::isEqualNoCase(headerName, "Replaces"))
-            {
-               HeaderFieldValue hfv(value.data(), value.size());
-               CallId callid(hfv, Headers::UNKNOWN);
-               invitemsg->header(h_Replaces) = callid;
-            }
-            else if (resip::isEqualNoCase(headerName, "Remote-Party-ID"))
-            {
-               invitemsg->header(h_RemotePartyIds).push_back(NameAddr(value));
-            }
-            else if (resip::isEqualNoCase(headerName, "Privacy"))
-            {
-               invitemsg->header(h_Privacies).push_back(PrivacyCategory(value));
-            }
-            else if (resip::isEqualNoCase(headerName, "P-Asserted-Identity"))
-            {
-               invitemsg->header(h_PAssertedIdentities).push_back(NameAddr(value));
-            }
-            else
-            {
-               StackLog(<< "processing an extension header: " << headerName << ": " << value);
-               resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
-               if (hType == resip::Headers::UNKNOWN)
-               {
-                  resip::ExtensionHeader h_Tmp(headerName.c_str());
-                  resip::ParserContainer<resip::StringCategory>& pc = invitemsg->header(h_Tmp);
-                  resip::StringCategory sc(value);
-                  pc.push_back(sc);
-               }
-               else
-               {
-                  WarningLog(<< "Discarding header '" << headerName << "', only extension headers and select standard headers permitted");
-               }
-            }
-         }
-         catch (resip::BaseException& ex)
-         {
-            WarningLog(<< "Discarding header '" << headerName << "', invalid value format '" << value << "': " << ex);
-         }
+         addExtraHeader(invitemsg, it->first, it->second);
       }
 
       mDialogSet.sendInvite(std::move(invitemsg));
@@ -223,6 +182,76 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
    else
    {
       buildSdpOffer(mLocalHold, createAndSendInvite);
+   }
+}
+
+void
+RemoteParticipant::addExtraHeader(const std::shared_ptr<SipMessage>& invitemsg, const Data& headerName, const Data& headerValue)
+{
+   try
+   {
+      Headers::Type headerType = Headers::getType(headerName.data(), (int)headerName.size());
+      if (headerType == Headers::UNKNOWN)
+      {
+         ExtensionHeader h_Tmp(headerName.c_str());
+         StringCategories& scs = invitemsg->header(h_Tmp);
+         bool alreadyExists = false;
+         for (StringCategories::iterator it = scs.begin(); it != scs.end(); it++)
+         {
+            if (isEqualNoCase(it->value(), headerValue))
+            {
+               alreadyExists = true;
+               break;
+            }
+         }
+         // Only add if not already present
+         if(!alreadyExists)
+         {
+            StringCategory sc(headerValue);
+            scs.push_back(sc);
+         }
+      }
+      else
+      {
+         HeaderFieldValueList newHfvl;
+
+         // If header is a multi header, we will append to back, looking to see if the value we are
+         // about to add is present already or not, if present, it won't add twice.
+         if (Headers::isMulti(headerType))
+         {
+            // Ensure the message appears as an external so HeaderFieldValue inspection will work as expected
+            const HeaderFieldValueList* existingHfvl = invitemsg->getRawHeader(headerType);
+            if (existingHfvl)
+            {
+               Data existingHeaderValue;
+               for (int i = 0; i < existingHfvl->getNumHeaderValues(); i++)
+               {
+                  existingHfvl->getHeaderValueByIndex(i, existingHeaderValue);
+
+                  // If this instance of the header value is different from what we are going to set, then make
+                  // sure the header ends up in the final message
+                  if (!isEqualNoCase(existingHeaderValue, headerValue))
+                  {
+                     // Copy header data into new buffer and pass true to push_back to have SipMessage cleanup memory when done
+                     char* buffer = new char[existingHeaderValue.size()];
+                     memcpy(buffer, existingHeaderValue.data(), existingHeaderValue.size());
+                     newHfvl.push_back(buffer, existingHeaderValue.size(), true /* let HeaderFieldValueList own new memory */);
+                  }
+               }
+            }
+         }
+
+         // Copy header data into new buffer and pass true to push_back to have SipMessage cleanup memory when done
+         char* buffer = new char[headerValue.size()];
+         memcpy(buffer, headerValue.data(), headerValue.size());
+         newHfvl.push_back(buffer, headerValue.size(), true /* let HeaderFieldValueList own new memory */);
+
+         invitemsg->setRawHeader(&newHfvl, headerType);
+      }
+   }
+   catch (BaseException& ex)
+   {
+      WarningLog(<< "Discarding header '" << headerName << "', invalid value format '" << headerValue << "': " << ex);
    }
 }
 
@@ -1981,7 +2010,7 @@ RemoteParticipant::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, 
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.

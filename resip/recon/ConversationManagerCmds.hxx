@@ -372,11 +372,11 @@ class AddParticipantCmd : public resip::DumCommandAdapter
          {
             if(!participant)
             {
-               WarningLog(<< "AddParticipantCmd: invalid participant handle.");
+               WarningLog(<< "AddParticipantCmd: invalid participant handle: " << mPartHandle);
             }
             if(!conversation)
             {
-               WarningLog(<< "AddParticipantCmd: invalid conversation handle.");
+               WarningLog(<< "AddParticipantCmd: invalid conversation handle: " << mConvHandle);
             }
          }
       }
@@ -414,17 +414,6 @@ class RemoveParticipantCmd : public resip::DumCommandAdapter
                }
             }
             conversation->removeParticipant(participant);
-         }
-         else
-         {
-            if(!participant)
-            {
-               WarningLog(<< "RemoveParticipantCmd: invalid participant handle.");
-            }
-            if(!conversation)
-            {
-               WarningLog(<< "RemoveParticipantCmd: invalid conversation handle.");
-            }
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RemoveParticipantCmd: "; return strm; }
@@ -478,15 +467,15 @@ class MoveParticipantCmd : public resip::DumCommandAdapter
          {
             if(!participant)
             {
-               WarningLog(<< "MoveParticipantCmd: invalid participant handle.");
+               WarningLog(<< "MoveParticipantCmd: invalid participant handle: " << mPartHandle);
             }
             if(!sourceConversation)
             {
-               WarningLog(<< "MoveParticipantCmd: invalid source conversation handle.");
+               WarningLog(<< "MoveParticipantCmd: invalid source conversation handle: " << mSourceConvHandle);
             }
             if(!destConversation)
             {
-               WarningLog(<< "MoveParticipantCmd: invalid destination conversation handle.");
+               WarningLog(<< "MoveParticipantCmd: invalid destination conversation handle: " << mDestConvHandle);
             }
          }
       }
@@ -523,11 +512,11 @@ class ModifyParticipantContributionCmd : public resip::DumCommandAdapter
          {
             if(!participant)
             {
-               WarningLog(<< "ModifyParticipantContributionCmd: invalid participant handle.");
+               WarningLog(<< "ModifyParticipantContributionCmd: invalid participant handle: " << mPartHandle);
             }
             if(!conversation)
             {
-               WarningLog(<< "ModifyParticipantContributionCmd: invalid conversation handle.");
+               WarningLog(<< "ModifyParticipantContributionCmd: invalid conversation handle: " << mConvHandle);
             }
          }
       }
@@ -583,7 +572,7 @@ class AlertParticipantCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "AlertParticipantCmd: invalid remote participant handle.");
+            WarningLog(<< "AlertParticipantCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " AlertParticipantCmd: "; return strm; }
@@ -626,7 +615,7 @@ class AnswerParticipantCmd : public resip::DumCommandAdapter
             return;
          }
 
-         WarningLog(<< "AnswerParticipantCmd: invalid remote participant handle.");
+         WarningLog(<< "AnswerParticipantCmd: invalid remote participant handle: " << mPartHandle);
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " AnswerParticipantCmd: "; return strm; }
    private:
@@ -660,7 +649,7 @@ class RejectParticipantCmd : public resip::DumCommandAdapter
             return;
          }
 
-         WarningLog(<< "RejectParticipantCmd: invalid remote participant handle.");
+         WarningLog(<< "RejectParticipantCmd: invalid remote participant handle: " << mPartHandle);
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RejectParticipantCmd: "; return strm; }
    private:
@@ -691,7 +680,7 @@ class RedirectParticipantCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "RedirectParticipantCmd: invalid remote participant handle.");
+            WarningLog(<< "RedirectParticipantCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RedirectParticipantCmd: "; return strm; }
@@ -726,11 +715,11 @@ class RedirectToParticipantCmd : public resip::DumCommandAdapter
          {
             if(!remoteParticipant)
             {
-               WarningLog(<< "RedirectToParticipantCmd: invalid remote participant handle.");
+               WarningLog(<< "RedirectToParticipantCmd: invalid remote participant handle: " << mPartHandle);
             }
             if(!destRemoteParticipant)
             {
-               WarningLog(<< "RedirectToParticipantCmd: invalid destination remote participant handle.");
+               WarningLog(<< "RedirectToParticipantCmd: invalid destination remote participant handle: " << mDestPartHandle);
             }
          }
       }
@@ -770,7 +759,7 @@ class HoldParticipantCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "HoldParticipantCmd: invalid remote participant handle.");
+            WarningLog(<< "HoldParticipantCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
@@ -799,7 +788,7 @@ public:
          return;
       }
 
-      WarningLog(<< "SendIMToParticipantCmd: invalid remote participant handle.");
+      WarningLog(<< "SendIMToParticipantCmd: invalid remote participant handle: " << mPartHandle);
    }
    EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " SendIMToParticipantCmd: "; return strm; }
 private:
@@ -825,7 +814,7 @@ class RequestKeyframeCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle.");
+            WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
@@ -851,7 +840,7 @@ class RequestKeyframeFromPeerCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "RequestKeyframeFromPeerCmd: invalid remote participant handle.");
+            WarningLog(<< "RequestKeyframeFromPeerCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RequestKeyframeFromPeerCmd: "; return strm; }
@@ -922,7 +911,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.

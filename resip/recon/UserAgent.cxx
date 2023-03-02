@@ -118,8 +118,11 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    std::unique_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
    mDum.setAppDialogSetFactory(std::move(dsf));
 
-   // Set UserAgentServerAuthManager
-   mDum.setServerAuthManager(std::make_shared<UserAgentServerAuthManager>(*this));
+   if (profile->serverAuthManagerEnabled())
+   {
+      // Set UserAgentServerAuthManager
+      mDum.setServerAuthManager(std::make_shared<UserAgentServerAuthManager>(*this));
+   }
 }
 
 UserAgent::~UserAgent()
