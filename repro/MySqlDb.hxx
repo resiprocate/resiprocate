@@ -4,7 +4,8 @@
 #ifdef WIN32
 #include <mysql.h>
 #else 
-#include <mysql/mysql.h>
+//#include <mysql/mysql.h>
+#include <mysql.h>
 #endif
 
 #include "rutil/Data.hxx"

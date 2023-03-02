@@ -9,8 +9,9 @@
 
 #ifdef WIN32
 #include <errmsg.h>
-#else 
-#include <mysql/errmsg.h>
+#else
+//#include <mysql/errmsg.h>
+#include <errmsg.h>
 #endif
 
 #include "rutil/Data.hxx"

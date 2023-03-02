@@ -202,7 +202,7 @@ if(USE_MAXMIND_GEOIP)
    target_link_libraries(repro PUBLIC ${GEOIP_LIBRARY})
 endif()
 
-target_add_conditional_sources(repro MySQL_FOUND
+target_add_conditional_sources(repro USE_MYSQL
    MySqlDb.cxx
    )
 target_link_libraries(repro PUBLIC ${MySQL_LIBRARIES})

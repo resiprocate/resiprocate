@@ -15,10 +15,10 @@
 #include "AppSubsystem.hxx"
 
 #ifdef USE_SOCI_POSTGRESQL
-#include "postgresql/soci-postgresql.h"
+#include "soci/postgresql/soci-postgresql.h"
 #endif
 #ifdef USE_SOCI_MYSQL
-#include "mysql/soci-mysql.h"
+#include "soci/mysql/soci-mysql.h"
 #endif
 
 #include "MyUserAgent.hxx"

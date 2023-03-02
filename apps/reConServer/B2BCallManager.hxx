@@ -17,7 +17,7 @@
 #include "reConServerConfig.hxx"
 #include "MyConversationManager.hxx"
 
-#include "soci.h"
+#include "soci/soci.h"
 
 namespace reconserver
 {

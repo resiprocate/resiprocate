@@ -4,7 +4,7 @@
 #include "resip/stack/Worker.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 
-#include "soci.h"
+#include "soci/soci.h"
 
 #include <memory>
 

@@ -41,11 +41,11 @@ target_link_libraries(reConServer PUBLIC recon ${SOCI_LIBRARIES})
 
 # FIXME
 if(USE_SOCI_POSTGRESQL)
-   target_link_libraries(reConServer PUBLIC -lsoci_postgresql)
+   target_link_libraries(reConServer PUBLIC ${SOCI_POSTGRESQL_LIBRARIES})
 endif()
 
 if(USE_SOCI_MYSQL)
-   target_link_libraries(reConServer PUBLIC -lsoci_mysql ${MySQL_LIBRARIES})
+   target_link_libraries(reConServer PUBLIC ${SOCI_MYSQL_LIBRARIES})
 endif()
 
 install(TARGETS reConServer DESTINATION ${CMAKE_INSTALL_SBINDIR})
