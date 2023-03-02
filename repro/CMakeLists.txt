@@ -1,5 +1,3 @@
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/reproInfo.hxx" [=[#include "config.h"]=])
-
 add_executable(repro-bin
    repro.cxx
    )
@@ -63,7 +61,6 @@ set(INCLUDES
    RegSyncClient.hxx
    RegSyncServer.hxx
    RegSyncServerThread.hxx
-   reproInfo.hxx
    ReproAuthenticatorFactory.hxx
    ReproRADIUSServerAuthManager.hxx
    ReproServerAuthManager.hxx
