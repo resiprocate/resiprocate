@@ -7,6 +7,7 @@ jobs:
     runs-on: ubuntu-20.04
     container:
       image: debian:bullseye-slim
+      options: --ulimit memlock=-1
     strategy:
       fail-fast: false
       matrix:
