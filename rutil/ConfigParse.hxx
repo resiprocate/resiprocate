@@ -57,6 +57,7 @@ public:
    unsigned short getConfigUnsignedShort(const resip::Data& name, int defaultValue) const;
 
    bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value) const;
+   bool getConfigValue(const resip::Data& name, std::vector<int>& value) const;
    bool getConfigValue(const resip::Data& name, std::set<resip::Data> &value) const;
 
    typedef HashMap<int, NestedConfigParse> NestedConfigMap;
@@ -124,6 +125,8 @@ EncodeStream& operator<<(EncodeStream& strm, const ConfigParse& config);
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (C) 2013-2023 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2023 Software Freedom Institute SA https://softwarefreedom.institute
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
