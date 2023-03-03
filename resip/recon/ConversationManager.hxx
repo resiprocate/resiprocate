@@ -712,6 +712,8 @@ public:
 
    std::shared_ptr<resip::ConfigParse> getConfig() { return mConfigParse; };
 
+   bool sendKeyframesAtStart() const { return !mKeyframeIntervals.empty(); };
+
 protected:
 
    // Invite Session Handler /////////////////////////////////////////////////////
@@ -809,6 +811,7 @@ protected:
    bool isShuttingDown() { return mShuttingDown; }
 
    bool remoteParticipantInitialHold() { return getConfig()->getConfigBool("RemoteParticipantInitialHold", true); };
+   const std::vector<int>& keyframeIntervals() const { return mKeyframeIntervals; };
 
 private:
    friend class DefaultDialogSet;
@@ -912,6 +915,8 @@ private:
    MediaResourceCache mMediaResourceCache;
 
    std::shared_ptr<BridgeMixer> mBridgeMixer;
+
+   std::vector<int> mKeyframeIntervals = { 2, 2, 5, 5, 7, 10, 20, 30 };
 };
 
 }

@@ -69,7 +69,8 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
    mTrickleIce(false),
    mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
    mLocalSdp(0),
-   mRemoteSdp(0)
+   mRemoteSdp(0),
+   mKeyframeIntervals(conversationManager.keyframeIntervals())
 {
    InfoLog(<< "RemoteParticipant created (UAC), handle=" << mHandle);
 }
@@ -91,7 +92,8 @@ RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager,
    mTrickleIce(false),
    mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
    mLocalSdp(0),
-   mRemoteSdp(0)
+   mRemoteSdp(0),
+   mKeyframeIntervals(conversationManager.keyframeIntervals())
 {
    InfoLog(<< "RemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -875,6 +877,11 @@ RemoteParticipant::requestKeyframeFromPeer()
 void
 RemoteParticipant::requestKeyframeFromPeerTimeout(bool reset)
 {
+   if(mKeyframeIntervals.empty())
+   {
+      StackLog(<<"no intervals defined");
+      return;
+   }
    if(reset)
    {
       mCurrentIntervalIndex = 0;

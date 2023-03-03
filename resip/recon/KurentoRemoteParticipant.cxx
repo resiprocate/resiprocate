@@ -544,10 +544,13 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
          }, answerBuf.str());
       }
       requestKeyframeFromPeerTimeout(true);
-      for(int i = 1000; i <= 5000; i+=1000)
+      if(mConversationManager.sendKeyframesAtStart())
       {
-         std::chrono::milliseconds _i = std::chrono::milliseconds(i);
-         mConversationManager.requestKeyframe(mHandle, _i);
+         for(int i = 1000; i <= 5000; i+=1000)
+         {
+            std::chrono::milliseconds _i = std::chrono::milliseconds(i);
+            mConversationManager.requestKeyframe(mHandle, _i);
+         }
       }
    }
 }

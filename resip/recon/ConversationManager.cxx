@@ -44,6 +44,14 @@ ConversationManager::ConversationManager(std::shared_ptr<MediaStackAdapter> medi
   mCurrentParticipantHandle(1),
   mBridgeMixer(0)
 {
+   if(mConfigParse)
+   {
+      std::vector<int> intervals;
+      if(configParse->getConfigValue("KeyframeIntervals", intervals))
+      {
+         mKeyframeIntervals = intervals;
+      }
+   }
 }
 
 ConversationManager::~ConversationManager()

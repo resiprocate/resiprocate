@@ -236,7 +236,7 @@ private:
    std::chrono::duration<double> mKeyframeRequestInterval = std::chrono::milliseconds(1000);
 
    unsigned int mCurrentIntervalIndex = 0;
-   const std::vector<int> mKeyframeIntervals = { 2, 2, 5, 5, 7, 10, 20, 30 };
+   const std::vector<int> mKeyframeIntervals;
 };
 
 }
