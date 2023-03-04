@@ -41,12 +41,13 @@ enable_testing()
 
 option(ENABLE_LOG_REPOSITORY_DETAILS "Log repository revision and branch" TRUE)
 if(ENABLE_LOG_REPOSITORY_DETAILS)
+   find_package(Git REQUIRED)
    execute_process(
-      COMMAND git describe --match="" --always --abbrev=40 --dirty
+      COMMAND ${GIT_EXECUTABLE} describe --match="" --always --abbrev=40 --dirty
       OUTPUT_VARIABLE RESIPROCATE_GIT_ID
       OUTPUT_STRIP_TRAILING_WHITESPACE)
    execute_process(
-      COMMAND git rev-parse --abbrev-ref HEAD
+      COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
       OUTPUT_VARIABLE RESIPROCATE_BRANCH_NAME
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
