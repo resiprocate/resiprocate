@@ -118,12 +118,13 @@ option(USE_KURENTO "Build Kurento client (requires websocketpp)" FALSE)
 option(USE_GSTREAMER "Link against Gstreamer" FALSE)
 option(USE_LIBWEBRTC "Link against LibWebRTC" FALSE)
 option(RECON_LOCAL_HW_TESTS "Attempt to use local audio hardware in unit tests" FALSE)
-option(DEFAULT_BRIDGE_MAX_IN_OUTPUTS "recon: Maximum connections on bridge" 20)
 option(BUILD_P2P "Build P2P, links against S2C and SSL, unfinished" FALSE)
 option(BUILD_PYTHON "Build components requiring Python" FALSE)
 option(BUILD_QPID_PROTON "Build components requiring qpid-proton (AMQP)" TRUE)
 option(RESIP_ASSERT_SYSLOG "Log assertion failures with Syslog" TRUE)
 option(REGENERATE_MEDIA_SAMPLES "Regenerate the header files containing raw audio samples (requires sox, xxd)" TRUE)
+
+set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20 CACHE STRING "recon: Maximum connections on bridge")
 
 # This must be enabled when building with the Android ndkports tools.
 # It should not be enabled for any other case.
