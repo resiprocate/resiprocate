@@ -59,17 +59,17 @@ public:
 
    virtual ~KurentoRemoteParticipant();
 
-   virtual void buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp = false);
+   virtual void buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp = false) override;
 
-   virtual int getConnectionPortOnBridge();
-   virtual bool hasInput() { return true; }
-   virtual bool hasOutput() { return true; }
+   virtual int getConnectionPortOnBridge() override;
+   virtual bool hasInput() override { return true; }
+   virtual bool hasOutput() override { return true; }
    virtual int getMediaConnectionId();
 
    virtual void applyBridgeMixWeights() override;
    virtual void applyBridgeMixWeights(Conversation* removedConversation) override;
 
-   virtual void adjustRTPStreams(bool sendingOffer=false);
+   virtual void adjustRTPStreams(bool sendingOffer=false) override;
 
    void onIceGatheringDone() { mIceGatheringDone = true; };
 
@@ -85,13 +85,13 @@ public:
    virtual void waitingMode();
    virtual std::shared_ptr<kurento::MediaElement> getWaitingModeElement();
 
-   virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
+   virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl) override;
    virtual bool onTrickleIce(resip::TrickleIceContents& trickleIce) override;
 
    virtual void requestKeyframe() override;
 
 protected:
-   virtual bool mediaStackPortAvailable();
+   virtual bool mediaStackPortAvailable() override;
 
    virtual KurentoRemoteParticipantDialogSet& getKurentoDialogSet() { return dynamic_cast<KurentoRemoteParticipantDialogSet&>(getDialogSet()); };
 

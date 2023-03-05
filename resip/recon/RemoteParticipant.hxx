@@ -63,9 +63,9 @@ public:
 
    virtual void initiateRemoteCall(const resip::NameAddr& destination);
    virtual void initiateRemoteCall(const resip::NameAddr& destination, const std::shared_ptr<ConversationProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
-   virtual void destroyParticipant();
-   virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
-   virtual void removeFromConversation(Conversation *conversation);
+   virtual void destroyParticipant() override;
+   virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100) override;
+   virtual void removeFromConversation(Conversation *conversation) override;
    virtual void accept();
    virtual void alert(bool earlyFlag);
    virtual void reject(unsigned int rejectCode);
@@ -169,7 +169,7 @@ private:
    void provideOffer(bool postOfferAccept, bool preferExistingSdp = false);
    void provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
    virtual void buildSdpAnswer(const resip::SdpContents& offer, CallbackSdpReady sdpReady) = 0;
-   virtual void replaceWithParticipant(Participant* replacingParticipant);
+   virtual void replaceWithParticipant(Participant* replacingParticipant) override;
 
    resip::DialogUsageManager &mDum;
    resip::InviteSessionHandle mInviteSessionHandle;
