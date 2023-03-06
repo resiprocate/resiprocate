@@ -301,9 +301,9 @@
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -342,9 +342,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -382,9 +382,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -423,9 +423,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -463,9 +463,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -504,9 +504,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -545,9 +545,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -586,9 +586,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -627,9 +627,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -668,9 +668,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -709,9 +709,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
@@ -749,9 +749,9 @@ endlocal
 @echo off &amp; setlocal enableextensions enabledelayedexpansion
 echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
 
-:: Get VERSION in a variable
+:: Get VERSION.txt in a variable
 set lineNro_=
-for /f "tokens=* delims=" %%r in ('type VERSION') do (
+for /f "tokens=* delims=" %%r in ('type VERSION.txt') do (
 set /a lineNro_+=1
 echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd

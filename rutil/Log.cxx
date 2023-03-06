@@ -1243,7 +1243,7 @@ Log::ThreadData::set(Type type, Level level,
    {
 #ifdef USE_FMT
       fmt::memory_buffer _loggingFilename;
-      fmt::format_to(_loggingFilename,
+      fmt::format_to(std::back_inserter(_loggingFilename),
                      logFileName,
 #ifdef WIN32
                      fmt::arg("pid", (int)GetCurrentProcess()),
