@@ -1,8 +1,6 @@
 #if !defined(KurentoMediaStackAdapter_hxx)
 #define KurentoMediaStackAdapter_hxx
 
-#include <boost/function.hpp>
-
 #include "BridgeMixer.hxx"
 
 #include <resip/stack/Uri.hxx>
