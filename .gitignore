@@ -28,7 +28,8 @@
 /resiprocate-[0-9]*.zip
 /resiprocate-contrib-[0-9]*.tar.gz
 /resiprocate-contrib-[0-9]*.zip
-/repro_*.db
+repro_*.db
+reproInfo.hxx
 
 /SVN-VERSION
 /.make_prefs
@@ -48,6 +49,10 @@ bin.prof.*
 **/[Ww]in32
 **/x64
 *.vcxproj.user
+**/Debug Dll
+**/Release Dll
+**/x64-Debug
+**/packages
 
 /.idea
 /cmake-build-*
