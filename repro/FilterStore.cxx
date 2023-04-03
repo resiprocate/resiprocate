@@ -17,11 +17,16 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+// Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+// of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+// std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+// use the EMCAScript syntax.
+const std::regex_constants::syntax_option_type DefaultFlags = std::regex_constants::ECMAScript;
+
 bool FilterStore::FilterOp::operator<(const FilterOp& rhs) const
 {
    return filterRecord.mOrder < rhs.filterRecord.mOrder;
 }
-
 
 FilterStore::FilterStore(AbstractDb& db):
    mDb(db)
@@ -35,7 +40,7 @@ FilterStore::FilterStore(AbstractDb& db):
       filter.pcond1 = 0;
       filter.pcond2 = 0;
       
-      std::regex_constants::syntax_option_type flags = std::regex_constants::extended;
+      std::regex_constants::syntax_option_type flags = DefaultFlags;
       if(filter.filterRecord.mActionData.find("$") == Data::npos)
       {
          flags |= std::regex_constants::nosubs;
@@ -78,7 +83,6 @@ FilterStore::FilterStore(AbstractDb& db):
    mCursor = mFilterOperators.begin();
 }
 
-
 FilterStore::~FilterStore()
 {
    for(FilterOpList::iterator i = mFilterOperators.begin(); i != mFilterOperators.end(); i++)
@@ -94,7 +98,6 @@ FilterStore::~FilterStore()
    }
    mFilterOperators.clear();
 }
-
 
 bool 
 FilterStore::addFilter(const resip::Data& cond1Header,
@@ -133,7 +136,7 @@ FilterStore::addFilter(const resip::Data& cond1Header,
    filter.key = key;
    filter.pcond1 = 0;
    filter.pcond2 = 0;
-   std::regex_constants::syntax_option_type flags = std::regex_constants::extended;
+   std::regex_constants::syntax_option_type flags = DefaultFlags;
    if(filter.filterRecord.mActionData.find("$") == Data::npos)
    {
       flags |= std::regex_constants::nosubs;
@@ -172,7 +175,6 @@ FilterStore::addFilter(const resip::Data& cond1Header,
    return true;
 }
 
-      
 /*
 AbstractDb::FilterRecordList 
 FilterStore::getFilters() const
@@ -189,7 +191,6 @@ FilterStore::getFilters() const
 }
 */
 
-
 void 
 FilterStore::eraseFilter(const resip::Data& cond1Header,
                          const resip::Data& cond1Regex,
@@ -201,7 +202,6 @@ FilterStore::eraseFilter(const resip::Data& cond1Header,
    Key key = buildKey(cond1Header, cond1Regex, cond2Header, cond2Regex, method, event);
    eraseFilter(key);
 }
-
 
 void 
 FilterStore::eraseFilter(const resip::Data& key)
@@ -237,7 +237,6 @@ FilterStore::eraseFilter(const resip::Data& key)
    mCursor = mFilterOperators.begin();  // reset the cursor since it may have been on deleted filter
 }
 
-
 bool
 FilterStore::updateFilter(const resip::Data& originalKey,
                           const resip::Data& cond1Header,
@@ -253,7 +252,6 @@ FilterStore::updateFilter(const resip::Data& originalKey,
    eraseFilter(originalKey);
    return addFilter(cond1Header, cond1Regex, cond2Header, cond2Regex, method, event, action, actionData, order);
 }
-
 
 FilterStore::Key 
 FilterStore::getFirstKey()
@@ -314,7 +312,6 @@ FilterStore::getNextKey(Key& key)
    return mCursor->key;
 }
 
-
 AbstractDb::FilterRecord 
 FilterStore::getFilterRecord(const resip::Data& key)
 {
@@ -326,7 +323,6 @@ FilterStore::getFilterRecord(const resip::Data& key)
    }
    return mCursor->filterRecord;
 }
-
 
 void
 FilterStore::getHeaderFromSipMessage(const SipMessage& msg, const Data& headerName, list<Data>& headerList)
@@ -369,12 +365,11 @@ FilterStore::applyRegex(int conditionNum, const Data& header, const Data& match,
 {
    resip_assert(conditionNum < 10);
    
-   // TODO - !cj! www.pcre.org looks like it has better performance
-   // !mbg! is this true now that the compiled regexp is used?
-
    std::cmatch matches; // replacements $x1-$x9 are allowed, where x is the condition number
 
-   if(!std::regex_match(header.c_str(), matches, *_regex))
+   // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+   //        the string, this is backwards compatible with the previous regexec PCRE implementation
+   if(!std::regex_search(header.c_str(), matches, *_regex))
    {
       // did not match 
       return false;
@@ -501,7 +496,6 @@ FilterStore::process(const SipMessage& request,
    return false;
 }
 
-
 bool 
 FilterStore::test(const resip::Data& cond1Header, 
                   const resip::Data& cond2Header,
@@ -542,7 +536,6 @@ FilterStore::test(const resip::Data& cond1Header,
    // If we make it here, then none of the conditions matched - return false
    return false;
 }
-
 
 FilterStore::Key 
 FilterStore::buildKey(const resip::Data& cond1Header,

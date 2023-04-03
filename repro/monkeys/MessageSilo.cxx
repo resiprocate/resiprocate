@@ -79,7 +79,11 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
    {
       try
       {
-         mDestFilterRegex = new std::regex(destFilterRegex.c_str(), std::regex_constants::extended | std::regex_constants::nosubs);
+         // Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+         // of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+         // std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+         // use the EMCAScript syntax.
+         mDestFilterRegex = new std::regex(destFilterRegex.c_str(), std::regex_constants::ECMAScript | std::regex_constants::nosubs);
       }
       catch (std::regex_error& e)
       {
@@ -92,7 +96,11 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
    {
       try
       {
-         mMimeTypeFilterRegex= new std::regex(mimeTypeFilterRegex.c_str(), std::regex_constants::extended | std::regex_constants::nosubs);
+         // Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+         // of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+         // std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+         // use the EMCAScript syntax.
+         mMimeTypeFilterRegex= new std::regex(mimeTypeFilterRegex.c_str(), std::regex_constants::ECMAScript | std::regex_constants::nosubs);
       }
       catch (std::regex_error& e)
       {
@@ -157,7 +165,9 @@ MessageSilo::process(RequestContext& context)
          async->mMimeType = Data::from(contents->getType());
          if (mMimeTypeFilterRegex)
          {
-            if(std::regex_match(async->mMimeType.c_str(), *mMimeTypeFilterRegex))
+            // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+            //        the string, this is backwards compatible with the previous regexec PCRE implementation
+            if(std::regex_search(async->mMimeType.c_str(), *mMimeTypeFilterRegex))
             {
                // match 
                DebugLog( << " MESSAGE not silo'd due to Mime-Type filter: " << async->mMimeType);
@@ -179,7 +189,9 @@ MessageSilo::process(RequestContext& context)
          async->mDestUri = originalRequest.header(h_To).uri().getAOR(false /* addPort? */);
          if (mDestFilterRegex)
          {
-            if(std::regex_match(async->mDestUri.c_str(), *mDestFilterRegex))
+            // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+            //        the string, this is backwards compatible with the previous regexec PCRE implementation
+            if(std::regex_search(async->mDestUri.c_str(), *mDestFilterRegex))
             {
                // match 
                DebugLog( << " MESSAGE not silo'd due to destination filter: " << async->mDestUri);
