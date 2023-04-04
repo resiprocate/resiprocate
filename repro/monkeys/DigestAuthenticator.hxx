@@ -40,6 +40,7 @@ namespace repro
       int  mHttpPort;
       bool mUseAuthInt;
       bool mRejectBadNonces;
+      bool mAllowInDialogImpersonationWithinRealm;
   };
   
 }
