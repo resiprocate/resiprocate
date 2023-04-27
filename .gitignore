@@ -6,6 +6,11 @@
 *.lo
 *.la
 *.bak
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.log
 /Makefile
 /Makefile.in
 /.deps
@@ -53,6 +58,7 @@ bin.prof.*
 **/Release Dll
 **/x64-Debug
 **/packages
+**/test/*.exe
 
 /.idea
 /cmake-build-*
@@ -66,3 +72,4 @@ CPackSourceConfig.cmake
 **/lib*.so
 **/lib*.so.*
 **/Testing/
+
