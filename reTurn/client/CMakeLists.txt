@@ -33,3 +33,4 @@ install(TARGETS reTurnClient DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/reTurn/client ${INCLUDES})
 
 add_subdirectory(test)
+add_subdirectory(TurnLoadGenClient)

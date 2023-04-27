@@ -11,5 +11,4 @@ function(test)
 endfunction()
 
 manual_test(TestAsyncClient TestAsyncClient.cxx)
-manual_test(TestRtpLoad TestRtpLoad.cxx)
 manual_test(TestClient TestClient.cxx)
