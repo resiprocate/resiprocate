@@ -48,9 +48,12 @@ ParseBuffer::ParseBuffer(const ParseBuffer& rhs)
 ParseBuffer& 
 ParseBuffer::operator=(const ParseBuffer& rhs)
 {
-   mBuff = rhs.mBuff;
-   mPosition = rhs.mPosition;
-   mEnd = rhs.mEnd;
+   if (&rhs != this)
+   {
+      mBuff = rhs.mBuff;
+      mPosition = rhs.mPosition;
+      mEnd = rhs.mEnd;
+   }
 
    return *this;
 }

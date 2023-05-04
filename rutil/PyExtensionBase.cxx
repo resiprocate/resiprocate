@@ -211,7 +211,11 @@ PyExtensionBase::init(const resip::Data& pyPath)
 {
    // FIXME: what if there are other Python modules?
    Py_Initialize();
+#if PY_VERSION_HEX < 0x03070000
+   // Since Python 3.7: GIL is initialzed in Py_Initialize()
+   // Since Python 3.9: PyEval_InitThreads() is deprecated
    PyEval_InitThreads();
+#endif
 
    initMethods();
    initialize("reSIProcate SIP stack API callbacks");

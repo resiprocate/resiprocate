@@ -60,7 +60,7 @@ class MyUserAgent : public UserAgent
 {
 public:
    MyUserAgent(Server& server, std::shared_ptr<UserAgentMasterProfile> profile, resip::AfterSocketCreationFuncPtr socketFunc) :
-      UserAgent(&server, std::move(profile), socketFunc),
+      UserAgent(&server, profile, socketFunc),
       mServer(server) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)

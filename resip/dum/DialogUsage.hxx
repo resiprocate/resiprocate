@@ -54,7 +54,7 @@ class DialogUsage : public BaseUsage
       public:
          DialogUsageSendCommand(DialogUsage& usage, std::shared_ptr<SipMessage> msg)
             : mDialogUsage(usage),
-              mMessage(std::move(msg))
+              mMessage(msg)
          {
          }
 

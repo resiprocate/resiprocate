@@ -435,7 +435,7 @@ ServerInviteSession::provideAnswer(const Contents& answer)
             mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
             InfoLog (<< "Sending " << response->brief());
             DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
-            send(std::move(response));
+            send(response);
          }
          break;
          
@@ -448,7 +448,7 @@ ServerInviteSession::provideAnswer(const Contents& answer)
             mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
             InfoLog (<< "Sending " << response->brief());
             DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
-            send(std::move(response));
+            send(response);
 
             // send the queued 200/Invite
             updateCheckQueue();
@@ -473,7 +473,7 @@ ServerInviteSession::provideAnswer(const Contents& answer)
             setOfferAnswer(*p200, mCurrentLocalOfferAnswer.get());
             mAnswerSentReliably = true;
             mPrackWithOffer.reset();
-            send(std::move(p200));
+            send(p200);
          }
          else
          {
@@ -916,7 +916,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
             InfoLog (<< "Reliable provisional timeout" );
             auto i504 = std::make_shared<SipMessage>();
             mDialog.makeResponse(*i504, mFirstRequest, 504);
-            send(std::move(i504));
+            send(i504);
  
             transition(Terminated);
  
@@ -1042,7 +1042,7 @@ ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
           // Note: target refresh handling is in Dialog::handleTargetRefresh
           auto response = std::make_shared<SipMessage>();
           mDialog.makeResponse(*response, msg, 200);
-          send(std::move(response));
+          send(response);
           break;
       }
       default:
@@ -1072,7 +1072,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1088,7 +1088,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          // Cancel and 200 crossed
          auto c200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*c200, msg, 200);
-         send(std::move(c200));
+         send(c200);
          break;
       }
 
@@ -1096,7 +1096,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       {
          auto b200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*b200, msg, 200);
-         send(std::move(b200));
+         send(b200);
 
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
@@ -1110,7 +1110,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          InfoLog (<< "spurious PRACK in state=" << toData(mState));
          auto p481 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*p481, msg, 481);
-         send(std::move(p481));
+         send(p481);
          break;
       }
       
@@ -1141,7 +1141,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1163,7 +1163,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
          // Cancel and 200 crossed
          auto c200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*c200, msg, 200);
-         send(std::move(c200));
+         send(c200);
          break;
       }
 
@@ -1171,7 +1171,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       {
          auto b200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*b200, msg, 200);
-         send(std::move(b200));
+         send(b200);
 
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
@@ -1206,7 +1206,7 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1227,7 +1227,7 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
          // Cancel and 200 crossed
          auto c200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*c200, msg, 200);
-         send(std::move(c200));
+         send(c200);
          break;
       }
 
@@ -1235,7 +1235,7 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
       {
          auto b200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*b200, msg, 200);
-         send(std::move(b200));
+         send(b200);
 
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
@@ -1269,7 +1269,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1299,7 +1299,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          // no transition
          auto c200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*c200, msg, 200);
-         send(std::move(c200));
+         send(c200);
          break;
       }
 
@@ -1309,7 +1309,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          InfoLog (<< "spurious PRACK in state=" << toData(mState));
          auto p481 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*p481, msg, 481);
-         send(std::move(p481));
+         send(p481);
          break;
       }
 
@@ -1344,7 +1344,7 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
           // Note: target refresh handling is in Dialog::handleTargetRefresh
           auto response = std::make_shared<SipMessage>();
           mDialog.makeResponse(*response, msg, 200);
-          send(std::move(response));
+          send(response);
           break;
       }
 
@@ -1356,7 +1356,7 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
                transition(UAS_NegotiatedReliable);
                auto p200 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p200, msg, 200);
-               send(std::move(p200));
+               send(p200);
 
                setCurrentLocalOfferAnswer(msg);
                mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
@@ -1373,12 +1373,12 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
                // 406 the Prack
                auto p406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p406, msg, 406);
-               send(std::move(p406));
+               send(p406);
 
                // 406 the Invite
                auto i406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*i406, mFirstRequest, 406);
-               send(std::move(i406));
+               send(i406);
 
                mDum.destroy(this);
             }
@@ -1413,7 +1413,7 @@ ServerInviteSession::handlePrack(const SipMessage& msg)
    InfoLog (<< "spurious PRACK in state=" << toData(mState));
    auto p481 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*p481, msg, 481);
-   send(std::move(p481));
+   send(p481);
    return false;
 }
 
@@ -1483,7 +1483,7 @@ ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
           // Note: target refresh handling is in Dialog::handleTargetRefresh
           auto response = std::make_shared<SipMessage>();
           mDialog.makeResponse(*response, msg, 200);
-          send(std::move(response));
+          send(response);
           break;
       }
 
@@ -1502,12 +1502,12 @@ ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
                // 406 the Prack
                auto p406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p406, msg, 406);
-               send(std::move(p406));
+               send(p406);
 
                // 406 the Invite
                auto i406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*i406, mFirstRequest, 406);
-               send(std::move(i406));
+               send(i406);
 
                mDum.destroy(this);
             }
@@ -1516,7 +1516,7 @@ ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
                // Send 200/PRACK
                auto p200 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p200, msg, 200);
-               send(std::move(p200));
+               send(p200);
 
                // If we have a provisional to send with answer then transition to UAS_FirstSentAnswerReliable
                if (!mQueuedResponses.empty() && 
@@ -1562,7 +1562,7 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
           // Note: target refresh handling is in Dialog::handleTargetRefresh
           auto response = std::make_shared<SipMessage>();
           mDialog.makeResponse(*response, msg, 200);
-          send(std::move(response));
+          send(response);
           break;
       }
 
@@ -1593,7 +1593,7 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
             {
                auto p200 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p200, msg, 200);
-               send(std::move(p200));
+               send(p200);
                // check if we have a queued up offer then sent it - if not check prack queue
                if (mProposedLocalOfferAnswer)
                {
@@ -1642,7 +1642,7 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
           // Note: target refresh handling is in Dialog::handleTargetRefresh
           auto response = std::make_shared<SipMessage>();
           mDialog.makeResponse(*response, msg, 200);
-          send(std::move(response));
+          send(response);
           break;
       }
 
@@ -1661,12 +1661,12 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
                // 406 the Prack
                auto p406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p406, msg, 406);
-               send(std::move(p406));
+               send(p406);
 
                // 406 the Invite
                auto i406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*i406, mFirstRequest, 406);
-               send(std::move(i406));
+               send(i406);
 
                mDum.destroy(this);
             }
@@ -1675,7 +1675,7 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
                // Send 200/PRACK
                auto p200 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p200, msg, 200);
-               send(std::move(p200));
+               send(p200);
 
                transition(UAS_NoAnswerReliable);
                handler->onPrack(getHandle(), msg);
@@ -1715,7 +1715,7 @@ ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
          // Glare
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1807,7 +1807,7 @@ ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
           // Note: target refresh handling is in Dialog::handleTargetRefresh
           auto response = std::make_shared<SipMessage>();
           mDialog.makeResponse(*response, msg, 200);
-          send(std::move(response));
+          send(response);
           break;
       }
 
@@ -1871,7 +1871,7 @@ ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
             auto u500 = std::make_shared<SipMessage>();
             mDialog.makeResponse(*u500, msg, 500);
             u500->header(h_RetryAfter).value() = Random::getRandom() % 10;
-            send(std::move(u500));
+            send(u500);
          }
          break;
 
@@ -1906,7 +1906,7 @@ ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
          {
             auto u500 = std::make_shared<SipMessage>();
             mDialog.makeResponse(*u500, msg, 500);
-            send(std::move(u500));
+            send(u500);
          }
          break;
 
@@ -1954,7 +1954,7 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
             {
                auto p200 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p200, msg, 200);
-               send(std::move(p200));
+               send(p200);
                handler->onPrack(getHandle(), msg);
                prackCheckQueue();
             }
@@ -1978,7 +1978,7 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
           // Note: target refresh handling is in Dialog::handleTargetRefresh
           auto response = std::make_shared<SipMessage>();
           mDialog.makeResponse(*response, msg, 200);
-          send(std::move(response));
+          send(response);
           break;
       }
 
@@ -2019,11 +2019,11 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
 {
    auto c200 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*c200, msg, 200);
-   send(std::move(c200));
+   send(c200);
 
    auto i487 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*i487, mFirstRequest, 487);
-   send(std::move(i487));
+   send(i487);
 
    transition(Terminated);
 
@@ -2041,11 +2041,11 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
 {
    auto b200 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*b200, msg, 200);
-   send(std::move(b200));
+   send(b200);
 // !dcm! -- pretty sure we shouldn't 487 after the BYE/200
    auto i487 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*i487, mFirstRequest, 487);
-   send(std::move(i487));
+   send(i487);
 
    transition(Terminated);
 
@@ -2060,11 +2060,11 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 
    auto r500 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*r500, msg, 500);
-   send(std::move(r500));
+   send(r500);
    
    auto i400 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*i400, mFirstRequest, 400);
-   send(std::move(i400));
+   send(i400);
 
    transition(Terminated);
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);

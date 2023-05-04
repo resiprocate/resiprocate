@@ -49,23 +49,21 @@ Update version information and tag it:
 Bootstrap
 ---------
 
-The bootstrap must always be done on the same version of autotools
-for consistency.  The currently endorsed version is the autotools
-distributed in Debian 10.0 (buster).  If another version is to be used,
+The bootstrap must always be done on the same version of CMake
+for consistency.  The currently endorsed version is the CMake
+distributed in Debian 11.0 (bullseye).  If another version is to be used,
 it should be discussed on the mailing list and noted in this document.
 
-  autoreconf --install
+  cmake .
 
 Make a tarball
 --------------
 
   build/release-tarball.sh
 
-  * this script will call configure && make dist
-  * any previous configure settings will be overridden, so you
-    may want to preserve a copy of config.status and config.log
-    or just do this operation from a workspace that is independent
-    of your normal development workspace
+  * this script will call cmake . && make dist
+  * it uses a temporary clone from the current working directory
+    to avoid picking up files that are not committed
 
 Make the contrib tarball
 ------------------------
@@ -78,7 +76,7 @@ Sanity check on tarball
   Extract the tarball to /tmp/some-folder/resiprocate-1.8.5
 
   cd /tmp/some-folder/resiprocate-1.8.5
-  ./configure && make -j 12 check
+  ./build/debian.sh && make -j 70 check
 
 Distribute the tarball
 ----------------------

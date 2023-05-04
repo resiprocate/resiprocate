@@ -1032,13 +1032,15 @@ stunCreateUserName(const StunAddress4& source, StunAtrString* username)
    //UInt64 hitime = time >> 32;
    uint64_t lotime = time & 0xFFFFFFFF;
 	
-   char buffer[1024];
-   sprintf(buffer,
+   constexpr size_t bufferSize = 1024;
+   char buffer[bufferSize];
+   int expectedSize = std::snprintf(buffer,
+           bufferSize,
            "%08x:%08x:%08x:", 
            uint32_t(source.addr),
            uint32_t(stunRand()),
            uint32_t(lotime));
-   resip_assert( strlen(buffer) < 1024 );
+   resip_assert( expectedSize > 0 && static_cast<size_t>(expectedSize) < bufferSize );
 	
    resip_assert(strlen(buffer) + 41 < STUN_MAX_STRING);
 	

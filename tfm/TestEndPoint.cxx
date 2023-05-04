@@ -1,5 +1,3 @@
-#include <boost/lexical_cast.hpp>
-
 #include "cppunit/TestCase.h"
 #include "rutil/Logger.hxx"
 #include "tfm/TestEndPoint.hxx"
@@ -8,7 +6,6 @@
 #include "tfm/ExpectActionEvent.hxx"
 
 using namespace resip;
-using namespace boost;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
@@ -335,7 +332,7 @@ TestEndPoint::ExpectBase::queue(SequenceClass* parent)
 void 
 TestEndPoint::ExpectBase::setSequenceSet(std::shared_ptr<SequenceSet> set)
 {
-   getEndPoint()->setSequenceSet(std::move(set));
+   getEndPoint()->setSequenceSet(set);
 }
 
 EncodeStream& 

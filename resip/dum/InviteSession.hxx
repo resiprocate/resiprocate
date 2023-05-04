@@ -399,7 +399,7 @@ class InviteSession : public DialogUsage
       {
       public:
          QueuedNIT(std::shared_ptr<SipMessage> NIT, bool referSub=false)
-            : mNIT(std::move(NIT)), mReferSubscription(referSub) {}
+            : mNIT(NIT), mReferSubscription(referSub) {}
          std::shared_ptr<SipMessage>& getNIT() { return mNIT; }
          bool referSubscription() { return mReferSubscription; }
       private:

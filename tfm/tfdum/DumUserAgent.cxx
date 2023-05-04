@@ -94,7 +94,7 @@ DumUserAgent::getAor() const
 
 ExpectAction* DumUserAgent::setOfferToProvideInNextOnAnswerCallback(std::shared_ptr<resip::SdpContents> offer) 
 { 
-   mOfferToProvideInNextOnAnswerCallback = std::move(offer); 
+   mOfferToProvideInNextOnAnswerCallback = offer; 
    return new NoAction();
 }
 
@@ -120,7 +120,7 @@ DumUserAgent::clean()
 
 
 DumUserAgent::DumUserAgent(std::shared_ptr<resip::MasterProfile> profile) :
-   mProfile(std::move(profile)),
+   mProfile(profile),
    mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
    mInterruptor(new EventThreadInterruptor(*mPollGrp)),
 #if defined(USE_SSL)
@@ -143,7 +143,7 @@ DumUserAgent::DumUserAgent(std::shared_ptr<resip::MasterProfile> profile) :
 
 DumUserAgent::DumUserAgent(std::shared_ptr<resip::MasterProfile> profile,
                            TestProxy* proxy) : 
-   mProfile(std::move(profile)),
+   mProfile(profile),
    mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
    mInterruptor(new EventThreadInterruptor(*mPollGrp)),
 #if defined(USE_SSL)

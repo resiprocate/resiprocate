@@ -16,7 +16,7 @@ using namespace resip;
 using namespace std;
 
 KeyedFileLine::KeyedFileLine(std::shared_ptr<KeyedFile> keyedFile, const Data& key)
-   : mKeyedFile(std::move(keyedFile)),
+   : mKeyedFile(keyedFile),
      mKey(key)
 {
 }
@@ -24,7 +24,7 @@ KeyedFileLine::KeyedFileLine(std::shared_ptr<KeyedFile> keyedFile, const Data& k
 void
 KeyedFileLine::onLineRemoved(std::shared_ptr<KeyedFileLine> sp)
 {
-   mSharedPtr = std::move(sp);
+   mSharedPtr = sp;
 }
 
 const Data&
@@ -34,7 +34,7 @@ KeyedFileLine::getKey()
 }
 
 BasicKeyedFileLine::BasicKeyedFileLine(std::shared_ptr<KeyedFile> keyedFile, const Data& key, const vector<Data>& columns)
-   : KeyedFileLine(std::move(keyedFile), key),
+   : KeyedFileLine(keyedFile, key),
      mColumns(columns)
 {
 }
@@ -74,7 +74,7 @@ BasicKeyedFileLine::onFileReload(const std::vector<Data>& columns)
 
 KeyedFile::KeyedFile(const Data& filename, std::shared_ptr<KeyedFileRowHandler> rowHandler, const int minimumColumns, const int maximumColumns)
     : mFilename(filename),
-      mRowHandler(std::move(rowHandler)),
+      mRowHandler(rowHandler),
       mMinimumColumns(minimumColumns),
       mMaximumColumns(maximumColumns)
 {

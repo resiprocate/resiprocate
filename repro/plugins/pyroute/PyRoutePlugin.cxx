@@ -25,6 +25,7 @@
 #include "rutil/PyExtensionBase.hxx"
 
 #include "PyRouteWorker.hxx"
+#include "PyRouteMessageHandler.hxx"
 #include "PyRouteProcessor.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -70,6 +71,10 @@ class PyRoutePlugin : public repro::Plugin, public PyExtensionBase
          mPyModule = std::move(pyModule);
 
          mAction = mPyModule->getAttr("provide_route");
+         if(mPyModule->getDict().hasKey("on_message"))
+         {
+            mMessageHandlerAction = mPyModule->getAttr("on_message");
+         }
 
          return true;
       }
@@ -104,8 +109,11 @@ class PyRoutePlugin : public repro::Plugin, public PyExtensionBase
          }
 
          int numPyRouteWorkerThreads = proxyConfig->getConfigInt("PyRouteNumWorkerThreads", 2);
-         std::unique_ptr<Worker> worker(new PyRouteWorker(*this, mAction));
+         std::unique_ptr<Worker> worker(new PyRouteWorker(*this, mAction, mMessageHandlerAction));
          mDispatcher.reset(new Dispatcher(std::move(worker), &sipStack, numPyRouteWorkerThreads));
+
+         mMessageHandler.reset(new PyRouteMessageHandler(*mDispatcher));
+         sipStack.addTransportSipMessageLoggingHandler(mMessageHandler);
 
          return true;
       }
@@ -141,7 +149,9 @@ class PyRoutePlugin : public repro::Plugin, public PyExtensionBase
       Data mRouteScript;
       std::unique_ptr<Py::Module> mPyModule;
       Py::Callable mAction;
+      Py::Callable mMessageHandlerAction;
       std::unique_ptr<Dispatcher> mDispatcher;
+      std::shared_ptr<PyRouteMessageHandler> mMessageHandler;
 };
 
 

@@ -2,7 +2,7 @@
 #define RtpEvent_hxx
 
 #include <tfm/Event.hxx>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 class TestRtp;
 

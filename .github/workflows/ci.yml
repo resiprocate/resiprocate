@@ -3,25 +3,41 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: Build with ${{ matrix.compiler }}
+    name: Build with ${{ matrix.c-compiler }}
     runs-on: ubuntu-20.04
     container:
-      image: debian:buster-slim
+      image: debian:bullseye-slim
+      options: --ulimit memlock=-1
     strategy:
       fail-fast: false
       matrix:
-        compiler: [gcc-10, clang]
+        c-compiler: [gcc-10, clang-13]
+        include:
+          - c-compiler: gcc-10
+            cxx-compiler: g++-10
+          - c-compiler: clang-13
+            cxx-compiler: clang++-13
+    env:
+      CC: /usr/bin/${{ matrix.c-compiler }}
+      CXX: /usr/bin/${{ matrix.cxx-compiler }}
     steps:
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v1.1.0
+        id: cpu-cores
+
       - name: Install Dependencies
         run: |
-          echo "deb http://deb.debian.org/debian buster-backports main" > /etc/apt/sources.list.d/backports.list
+          echo "deb http://deb.debian.org/debian bullseye-backports main" > /etc/apt/sources.list.d/backports.list
+          apt-get update -qq
+          apt-get install -qq wget
+          wget -O - http://apt.debify.org/add-apt-debify | bash
           apt-get update -qq
           apt-get install -qq \
-            autoconf-archive \
-            autotools-dev \
-            clang \
+            clang-13 \
+            clang-tidy-13 \
+            cmake \
             default-libmysqlclient-dev \
-            g++ \
+            g++-10 \
             git \
             gperf \
             libasio-dev \
@@ -30,7 +46,7 @@ jobs:
             libcajun-dev \
             libcppunit-dev \
             libdb++-dev \
-            libfmt-dev/buster-backports \
+            libfmt-dev \
             libgeoip-dev \
             libgloox-dev \
             libgstreamermm-1.0-dev \
@@ -48,6 +64,7 @@ jobs:
             libtelepathy-qt5-dev \
             libwebsocketpp-dev \
             libxerces-c-dev \
+            lld-13 \
             make \
             perl \
             python3-cxx-dev \
@@ -62,12 +79,14 @@ jobs:
         run: ./build/travis/bootstrap
 
       - name: Configure
-        env:
-          TRAVIS_COMPILER: ${{ matrix.compiler }}
-        run: ./build/travis/configure --disable-static
+        run: ./build/travis/configure
 
       - name: Build
         run: ./build/travis/build
 
+      - name: Analyse
+        if: ${{ matrix.c-compiler == 'clang-13' }}
+        run: run-clang-tidy-13 -j ${{ steps.cpu-cores.outputs.count }} -quiet
+
       - name: Test
-        run: make -j1 check
+        run: make -j1 CTEST_OUTPUT_ON_FAILURE=1 test

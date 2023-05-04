@@ -238,7 +238,7 @@ TestRepro::TestRepro(const resip::Data& name,
                                                            true,
                                                            false,
                                                            true);
-   mDum->setServerAuthManager(std::move(authMgr));
+   mDum->setServerAuthManager(authMgr);
 
    mStack->registerTransactionUser(mProxy);
 

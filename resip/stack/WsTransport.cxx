@@ -25,7 +25,7 @@ WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
       std::shared_ptr<WsConnectionValidator> connectionValidator,
       std::shared_ptr<WsCookieContextFactory> cookieContextFactory)
 : TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
-  WsBaseTransport(std::move(connectionValidator), std::move(cookieContextFactory))
+  WsBaseTransport(connectionValidator, cookieContextFactory)
 {
    mTuple.setType(WS);
 

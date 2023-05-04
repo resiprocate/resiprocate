@@ -11,7 +11,7 @@ PublicationCreator::PublicationCreator(DialogUsageManager& dum,
                                        const Contents& body, 
                                        const Data& eventType, 
                                        uint32_t expireSeconds )
-   : BaseCreator(dum, std::move(userProfile))
+   : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, PUBLISH);
 

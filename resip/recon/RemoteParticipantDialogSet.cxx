@@ -36,7 +36,7 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mUACOriginalRemoteParticipant(0),
    mNumDialogs(0),
    mForkSelectMode(forkSelectMode),
-   mConversationProfile(std::move(conversationProfile)),
+   mConversationProfile(conversationProfile),
    mUACConnectedDialogId(Data::Empty, Data::Empty, Data::Empty),
    mActiveRemoteParticipantHandle(0),
    mProposedSdp(0),
@@ -147,12 +147,12 @@ RemoteParticipantDialogSet::sendInvite(std::shared_ptr<SipMessage> invite)
 {
    if(!isAsyncMediaSetup())
    {
-      doSendInvite(std::move(invite));
+      doSendInvite(invite);
    }
    else
    {
       // Wait until media stream is ready
-      mPendingInvite = std::move(invite);
+      mPendingInvite = invite;
    }
 }
 
@@ -168,7 +168,7 @@ RemoteParticipantDialogSet::doSendInvite(std::shared_ptr<SipMessage> invite)
    }
 
    // Send the invite
-   mDum.send(std::move(invite));
+   mDum.send(invite);
 }
 
 void 

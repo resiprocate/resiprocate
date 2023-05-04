@@ -447,8 +447,7 @@ Transport::callSocketFunc(Socket sock)
 void
 Transport::pushRxMsgUp(SipMessage* message)
 {
-   std::shared_ptr<SipMessageLoggingHandler> handler = getSipMessageLoggingHandler();
-   if(handler)
+   for(auto& handler : getSipMessageLoggingHandlers())
    {
        handler->inboundMessage(message->getSource(), message->getReceivedTransportTuple(), *message);
    }

@@ -480,7 +480,7 @@ public:
          MARKER;
 
          // Next Scenario
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       case 2:
          assert(CALLBACK_SEQUENCE++ == 3);
@@ -489,7 +489,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       case 3:
          assert(CALLBACK_SEQUENCE++ == 5);
@@ -498,7 +498,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       case 4:
          assert(CALLBACK_SEQUENCE++ == 5);
@@ -507,7 +507,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       default:
          assert(false);
@@ -613,7 +613,7 @@ class MyUserAgent : public UserAgent
 {
 public:
    MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, std::move(profile)) {}
+      UserAgent(conversationManager, profile) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
@@ -697,7 +697,7 @@ std::shared_ptr<UserAgentMasterProfile> createUserAgentMasterProfile()
 
 std::shared_ptr<ConversationProfile> createConversationProfile(std::shared_ptr<UserAgentMasterProfile> profile, int port)
 {
-   auto conversationProfile = std::make_shared<ConversationProfile>(std::move(profile));
+   auto conversationProfile = std::make_shared<ConversationProfile>(profile);
    conversationProfile->setDefaultRegistrationTime(0);
 
    // Create Session Capabilities and assign to coversation Profile

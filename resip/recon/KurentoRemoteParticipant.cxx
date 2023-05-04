@@ -99,6 +99,15 @@ KurentoRemoteParticipant::~KurentoRemoteParticipant()
    //        See https://stackoverflow.com/questions/10979250/usage-of-this-in-destructor.
    unregisterFromAllConversations();
 
+   if(mEndpoint)
+   {
+      ParticipantHandle h = mHandle;
+      mEndpoint->release([h]
+      {
+         DebugLog(<<"release requested for Endpoint mHandle = " << h);
+      });
+   }
+
    InfoLog(<< "KurentoRemoteParticipant destroyed, handle=" << mHandle);
 }
 
@@ -167,15 +176,23 @@ KurentoRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
       mEndpoint.reset(newEndpoint());
    }
 
-   //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoMediaStackAdapter.mPipeline, "videoconvert"));
-   //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
+   // start the periodic timer requesting keyframes from the peer
+   mConversationManager.requestKeyframeFromPeerRecurring(getParticipantHandle(), std::chrono::seconds(1));
+
    std::shared_ptr<resip::ConfigParse> cfg = mConversationManager.getConfig();
    if(cfg)
    {
-      const Data& holdVideo = mConversationManager.getConfig()->getConfigData("HoldVideo", "file:///tmp/test.mp4", true);
-      mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, holdVideo.c_str()));
+      const bool& waitingMode = mConversationManager.getConfig()->getConfigBool("WaitingMode", false);
+      if(waitingMode)
+      {
+         mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
+      }
+      const Data& holdVideo = mConversationManager.getConfig()->getConfigData("HoldVideo", "", true);
+      if(!holdVideo.empty())
+      {
+         mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, holdVideo.c_str()));
+      }
    }
-   mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
 
    return true;
 }
@@ -237,6 +254,16 @@ KurentoRemoteParticipant::createAndConnectElements(kurento::ContinuationVoid cCo
       requestKeyframeFromPeer();
    });
 
+   auto cConnectedInternal = [this, cConnected, elEventDebug]
+   {
+      std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::dynamic_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
+      if(webRtc)
+      {
+         webRtc->addDataChannelOpenedListener(elEventDebug, [this](){});
+      }
+      cConnected();
+   };
+
    mEndpoint->create([=]{
       mEndpoint->addErrorListener(elError, [=](){
          mEndpoint->addConnectionStateChangedListener(elEventDebug, [=](){
@@ -245,25 +272,27 @@ KurentoRemoteParticipant::createAndConnectElements(kurento::ContinuationVoid cCo
                   mEndpoint->addMediaFlowInStateChangeListener(elEventDebug, [=](){
                      mEndpoint->addMediaFlowOutStateChangeListener(elEventDebug, [=](){
                         mEndpoint->addKeyframeRequiredListener(elEventKeyframeRequired, [=](){
-                           //mMultiqueue->create([this, cConnected]{
-                           // mMultiqueue->connect([this, cConnected]{
-                           mPlayer->create([this, cConnected]{
-                              mPassThrough->create([this, cConnected]{
-                                 mEndpoint->connect([this, cConnected]{
-                                    mPassThrough->connect([this, cConnected]{
-                                       //mPlayer->play([this, cConnected]{
-                                       cConnected();
-                                       //mPlayer->connect(cConnected, *mEndpoint); // connect
-                                       //});
-                                    }, *mEndpoint);
+                           if(mPlayer)
+                           {
+                              mPlayer->create([this, cConnectedInternal]{
+                                 mPlayer->play([this, cConnectedInternal]{
+                                    mPlayer->connect(cConnectedInternal, *mEndpoint);
+                                 });
+                              });
+                           }
+                           else if(mPassThrough)
+                           {
+                              mPassThrough->create([this, cConnectedInternal]{
+                                 mEndpoint->connect([this, cConnectedInternal]{
+                                    mPassThrough->connect(cConnectedInternal, *mEndpoint);
                                  }, *mPassThrough);
                               });
-                           });
-                           //}, *mEndpoint); // mEndpoint->connect
-                           // }, *mEndpoint); // mMultiqueue->connect
-                           //}); // mMultiqueue->create
+                           }
+                           else
+                           {
+                              cConnectedInternal();
+                           }
                         }); // addKeyframeRequiredListener
-
                      });
                   });
                });
@@ -368,7 +397,10 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpRe
          // Tested with Kurento and Cisco EX90
          // https://datatracker.ietf.org/doc/html/draft-ietf-mmusic-sdp-comedia-05
          // https://datatracker.ietf.org/doc/html/rfc4145
-         offerMangled->session().transformCOMedia("active", "direction");
+         if(getDialogSet().getConversationProfile()->forceCOMedia())
+         {
+            offerMangled->session().transformCOMedia("active", "direction");
+         }
       }
 
       std::ostringstream offerMangledBuf;
@@ -461,8 +493,8 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
    // FIXME Kurento - implement, may need to break up this method into multiple parts
    StackLog(<<"adjustRTPStreams");
 
-   std::shared_ptr<SdpContents> localSdp = sendingOffer ? getDialogSet().getProposedSdp() : getLocalSdp();
-   resip_assert(localSdp);
+   //std::shared_ptr<SdpContents> localSdp = sendingOffer ? getDialogSet().getProposedSdp() : getLocalSdp();
+   //resip_assert(localSdp);
 
    std::shared_ptr<SdpContents> remoteSdp = getRemoteSdp();
    bool remoteSdpChanged = remoteSdp.get() != mLastRemoteSdp; // FIXME - better way to do this?
@@ -485,7 +517,9 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
          mWaitingAnswer = false;
          std::ostringstream answerBuf;
          answerBuf << *remoteSdp;
-         mEndpoint->processAnswer([this](const std::string updatedOffer){
+         // FIXME - we checked mWaitingAnswer is true above, shouldn't this
+         // be processAnswer?
+         mEndpoint->processOffer([this](const std::string updatedOffer){
             // FIXME - use updatedOffer
             WarningLog(<<"Kurento has processed the peer's SDP answer");
             StackLog(<<"updatedOffer FROM Kurento: " << updatedOffer);
@@ -493,16 +527,30 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
             Mime type("application", "sdp");
             std::unique_ptr<SdpContents> _updatedOffer(new SdpContents(hfv, type));
             _updatedOffer->session().transformLocalHold(isHolding());
+            if(getDialogSet().getConversationProfile()->maximumVideoBandwidth() > 0)
+            {
+               _updatedOffer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", getDialogSet().getConversationProfile()->maximumVideoBandwidth()));
+            }
             setLocalSdp(*_updatedOffer);
+            if(getInviteSessionHandle().isValid())
+            {
+               getInviteSessionHandle()->provideOffer(*getLocalSdp());
+            }
+            else
+            {
+               WarningLog(<<"handle no longer valid");
+            }
             //c(true, std::move(_updatedOffer));
          }, answerBuf.str());
       }
-      for(int i = 1000; i <= 5000; i+=1000)
+      requestKeyframeFromPeerTimeout(true);
+      if(mConversationManager.sendKeyframesAtStart())
       {
-         std::chrono::milliseconds _i = std::chrono::milliseconds(i);
-         std::chrono::milliseconds __i = std::chrono::milliseconds(i + 500);
-         mConversationManager.requestKeyframe(mHandle, _i);
-         mConversationManager.requestKeyframeFromPeer(mHandle, __i);
+         for(int i = 1000; i <= 5000; i+=1000)
+         {
+            std::chrono::milliseconds _i = std::chrono::milliseconds(i);
+            mConversationManager.requestKeyframe(mHandle, _i);
+         }
       }
    }
 }
@@ -529,7 +577,7 @@ void
 KurentoRemoteParticipant::waitingMode()
 {
    std::shared_ptr<kurento::MediaElement> e = getWaitingModeElement();
-   if(!e)
+   if(!e || e == mEndpoint)
    {
       return;
    }
@@ -556,9 +604,13 @@ KurentoRemoteParticipant::getWaitingModeElement()
    {
       return dynamic_pointer_cast<kurento::Endpoint>(mPlayer);
    }
-   else
+   else if(mPassThrough)
    {
       return mPassThrough;
+   }
+   else
+   {
+      return mEndpoint;
    }
 }
 

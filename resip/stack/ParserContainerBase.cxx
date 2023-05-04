@@ -179,10 +179,25 @@ ParserContainerBase::freeParsers()
    }
 }
 
+bool
+ParserContainerBase::getHeaderValueByIndex(size_t index, Data& headerValue) const
+{
+   if (index < mParsers.size())
+   {
+      const HeaderKit& hk = mParsers[index];
+      headerValue.empty();
+      DataStream ds(headerValue);
+      hk.encode(ds);
+      return true;
+   }
+   return false;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2023 SIP Spectrum, Inc. www.sipspectrum.com
  * Copyright (c) 2005
  * 
  * Redistribution and use in source and binary forms, with or without

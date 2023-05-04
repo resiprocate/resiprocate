@@ -23,7 +23,7 @@ TransactionMap::~TransactionMap()
 TransactionState* 
 TransactionMap::find( const Data& tid ) const
 {
-   MapConstIterator i = mMap.find(tid);
+   auto i = mMap.find(tid);
    if (i != mMap.end())
    {
       return i->second;
@@ -37,7 +37,7 @@ TransactionMap::find( const Data& tid ) const
 void 
 TransactionMap::add(const Data& tid, TransactionState* state  )
 {
-   MapIterator i = mMap.find(tid);
+   auto i = mMap.find(tid);
    if (i != mMap.end())
    {
       if (i->second != state)
@@ -58,7 +58,7 @@ TransactionMap::add(const Data& tid, TransactionState* state  )
 void 
 TransactionMap::erase(const Data& tid )
 {
-   MapIterator i = mMap.find(tid);
+   auto i = mMap.find(tid);
    if (i != mMap.end())
    {
       // don't delete it here, the TransactionState deletes itself and removes

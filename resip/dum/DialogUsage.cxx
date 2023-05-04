@@ -103,13 +103,13 @@ DialogUsage::send(std::shared_ptr<SipMessage> msg)
 {
    // give app an chance to adorn the message.
    onReadyToSend(*msg);
-   mDialog.send(std::move(msg));
+   mDialog.send(msg);
 }
 
 void
 DialogUsage::sendCommand(std::shared_ptr<SipMessage> message)
 {   
-   mDum.post(new DialogUsageSendCommand(*this, std::move(message)));
+   mDum.post(new DialogUsageSendCommand(*this, message));
 }
 
 

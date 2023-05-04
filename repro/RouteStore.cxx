@@ -12,14 +12,18 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+// Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+// of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+// std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+// use the EMCAScript syntax.
+const std::regex_constants::syntax_option_type DefaultFlags = std::regex_constants::ECMAScript;
 
 bool RouteStore::RouteOp::operator<(const RouteOp& rhs) const
 {
    return routeRecord.mOrder < rhs.routeRecord.mOrder;
 }
-
 
 RouteStore::RouteStore(AbstractDb& db):
    mDb(db)
@@ -35,18 +39,21 @@ RouteStore::RouteStore(AbstractDb& db):
       
       if(!route.routeRecord.mMatchingPattern.empty())
       {
-         int flags = REG_EXTENDED;
+         std::regex_constants::syntax_option_type flags = DefaultFlags;
          if(route.routeRecord.mRewriteExpression.find("$") == Data::npos)
          {
-            flags |= REG_NOSUB;
+            flags |= std::regex_constants::nosubs;
          }
-         route.preq = new regex_t;
-         int ret = regcomp(route.preq, route.routeRecord.mMatchingPattern.c_str(), flags);
-         if(ret != 0)
+         try
+         {
+            route.preq = new std::regex(route.routeRecord.mMatchingPattern.c_str(), flags);
+         }
+         catch (std::regex_error& e)
          {
             delete route.preq;
             ErrLog(<< "Routing rule has invalid match expression: "
-                   << route.routeRecord.mMatchingPattern);
+                   << route.routeRecord.mMatchingPattern
+                   << ", ex=" << e.what());
             route.preq = 0;
          }
       }
@@ -77,25 +84,21 @@ RouteStore::RouteStore(AbstractDb& db):
    mCursor = mRouteOperators.begin();
 }
 
-
 RouteStore::~RouteStore()
 {
    for(RouteOpList::iterator i = mRouteOperators.begin(); i != mRouteOperators.end(); i++)
    {
       if ( i->preq )
       {
-         regfree ( i->preq );
          delete i->preq;
 
          // !abr! Can't modify elements in a set
          // i->preq = 0;
-
       }
    }
    mRouteOperators.clear();
 }
 
-      
 bool
 RouteStore::addRoute(const resip::Data& method,
                      const resip::Data& event,
@@ -124,20 +127,25 @@ RouteStore::addRoute(const resip::Data& method,
 
    route.key = key;
    route.preq = 0;
-   if( !route.routeRecord.mMatchingPattern.empty() )
+   if (!route.routeRecord.mMatchingPattern.empty())
    {
-     int flags = REG_EXTENDED;
-     if( route.routeRecord.mRewriteExpression.find("$") == Data::npos )
-     {
-       flags |= REG_NOSUB;
-     }
-     route.preq = new regex_t;
-     int ret = regcomp( route.preq, route.routeRecord.mMatchingPattern.c_str(), flags );
-     if( ret != 0 )
-     {
-       delete route.preq;
-       route.preq = 0;
-     }
+      std::regex_constants::syntax_option_type flags = DefaultFlags;
+      if (route.routeRecord.mRewriteExpression.find("$") == Data::npos)
+      {
+         flags |= std::regex_constants::nosubs;
+      }
+      try
+      {
+         route.preq = new std::regex(route.routeRecord.mMatchingPattern.c_str(), flags);
+      }
+      catch (std::regex_error& e)
+      {
+         delete route.preq;
+         ErrLog(<< "Routing rule has invalid match expression: "
+            << route.routeRecord.mMatchingPattern
+            << ", ex=" << e.what());
+         route.preq = 0;
+      }
    }
 
    {
@@ -149,7 +157,6 @@ RouteStore::addRoute(const resip::Data& method,
    return true;
 }
 
-      
 /*
 AbstractDb::RouteRecordList 
 RouteStore::getRoutes() const
@@ -166,7 +173,6 @@ RouteStore::getRoutes() const
 }
 */
 
-
 void 
 RouteStore::eraseRoute(const resip::Data& method,
                        const resip::Data& event,
@@ -176,7 +182,6 @@ RouteStore::eraseRoute(const resip::Data& method,
    Key key = buildKey(method, event, matchingPattern, order);
    eraseRoute(key);
 }
-
 
 void 
 RouteStore::eraseRoute(const resip::Data& key )
@@ -195,12 +200,10 @@ RouteStore::eraseRoute(const resip::Data& key )
             it++;
             if ( i->preq )
             {
-               regfree ( i->preq );
                delete i->preq;
 
                // !abr! Can't modify elements in a set
                //i->preq = 0;
-
             }
             mRouteOperators.erase(i);
          }
@@ -213,7 +216,6 @@ RouteStore::eraseRoute(const resip::Data& key )
    mCursor = mRouteOperators.begin();  // reset the cursor since it may have been on deleted route
 }
 
-
 bool
 RouteStore::updateRoute(const resip::Data& originalKey, 
                         const resip::Data& method,
@@ -225,7 +227,6 @@ RouteStore::updateRoute(const resip::Data& originalKey,
    eraseRoute(originalKey);
    return addRoute(method, event, matchingPattern, rewriteExpression, order);
 }
-
 
 RouteStore::Key 
 RouteStore::getFirstKey()
@@ -286,7 +287,6 @@ RouteStore::getNextKey(Key& key)
    return mCursor->key;
 }
 
-
 AbstractDb::RouteRecord 
 RouteStore::getRouteRecord(const resip::Data& key)
 {
@@ -299,7 +299,6 @@ RouteStore::getRouteRecord(const resip::Data& key)
    return mCursor->routeRecord;
 }
 
-
 RouteStore::UriList 
 RouteStore::process(const resip::Uri& ruri, 
                     const resip::Data& method, 
@@ -307,6 +306,8 @@ RouteStore::process(const resip::Uri& ruri,
 {
    RouteStore::UriList targetSet;
    if(mRouteOperators.empty()) return targetSet;  // If there are no routes bail early to save a few cycles (size check is atomic enough, we don't need a lock)
+
+   Data uri = Data::from(ruri);
 
    ReadLock lock(mMutex);
 
@@ -341,21 +342,11 @@ RouteStore::process(const resip::Uri& ruri,
       const Data& match = rec.mMatchingPattern;
       if ( it->preq ) 
       {
-         int ret;
-         // TODO - !cj! www.pcre.org looks like it has better performance
-         // !mbg! is this true now that the compiled regexp is used?
-         Data uri;
-         {
-            DataStream s(uri);
-            s << ruri;
-            s.flush();
-         }
-         
-         const int nmatch=10;
-         regmatch_t pmatch[nmatch];
-         
-         ret = regexec(it->preq, uri.c_str(), nmatch, pmatch, 0/*eflags*/);
-         if ( ret != 0 )
+         std::cmatch matches;
+
+         // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+         //        the string, this is backwards compatible with the previous regexec PCRE implementation
+         if(!std::regex_search(uri.c_str(), matches, *it->preq))
          {
             // did not match 
             DebugLog( << "  Skipped - request URI "<< uri << " did not match " << match );
@@ -367,40 +358,36 @@ RouteStore::process(const resip::Uri& ruri,
          
          if ( rewrite.find("$") != Data::npos )
          {
-            for ( int i=1; i<nmatch; i++)
+            for ( int i=1; i<matches.size(); i++)
             {
-               if ( pmatch[i].rm_so != -1 )
+               Data subExp(matches[i]);
+               DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+
+               Data result;
                {
-                  Data subExp(uri.substr(pmatch[i].rm_so,
-                                         pmatch[i].rm_eo-pmatch[i].rm_so));
-                  DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+                  DataStream s(result);
 
-                  Data result;
-                  {
-                     DataStream s(result);
-
-                     ParseBuffer pb(target);
+                  ParseBuffer pb(target);
                      
-                     while (true)
+                  while (true)
+                  {
+                     const char* a = pb.position();
+                     pb.skipToChars( Data("$") + char('0'+i) );
+                     if ( pb.eof() )
                      {
-                        const char* a = pb.position();
-                        pb.skipToChars( Data("$") + char('0'+i) );
-                        if ( pb.eof() )
-                        {
-                           s << pb.data(a);
-                           break;
-                        }
-                        else
-                        {
-                           s << pb.data(a);
-                           pb.skipN(2);
-                           s <<  subExp;
-                        }
+                        s << pb.data(a);
+                        break;
                      }
-                     s.flush();
+                     else
+                     {
+                        s << pb.data(a);
+                        pb.skipN(2);
+                        s <<  subExp;
+                     }
                   }
-                  target = result;
+                  s.flush();
                }
+               target = result;
             }
          }
          
@@ -428,7 +415,6 @@ RouteStore::process(const resip::Uri& ruri,
 
    return targetSet;
 }
-  
 
 RouteStore::Key 
 RouteStore::buildKey(const resip::Data& method,

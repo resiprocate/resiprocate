@@ -1,0 +1,89 @@
+
+set(INCLUDES
+   AbstractValue.hxx
+   ArrayValue.hxx
+   BatchMessages.hxx
+   Candidate.hxx
+   CertDoneEvent.hxx
+   ChordTopology.hxx
+   ChordUpdate.hxx
+   ConnectBase.hxx
+   Connect.hxx
+   DataSpecifier.hxx
+   DestinationId.hxx
+   DictionaryValue.hxx
+   Dispatcher.hxx
+   EventConsumerBase.hxx
+   EventConsumer.hxx
+   Event.hxx
+   EventWrapper.hxx
+   FetchAns.hxx
+   FetchKind.hxx
+   FetchReq.hxx
+   Find.hxx
+   FlowId.hxx
+   ForwardingLayer.hxx
+   Join.hxx
+   Leave.hxx
+   MessageHelper.hxx
+   Message.hxx
+   MessageStructsGen.hxx
+   NodeId.hxx
+   p2p.hxx
+   P2PStack.hxx
+   P2PSubsystem.hxx
+   Postable.hxx
+   Profile.hxx
+   ResourceId.hxx
+   SelectTransporter.hxx
+   Signable.hxx
+   SignatureContext.hxx
+   SingleValue.hxx
+   StoreAns.hxx
+   StoreReq.hxx
+   StoreSet.hxx
+   tmp/ForwardingGen.hxx
+   tmp/fwding.hxx
+   TopologyAPI.hxx
+   TransactionController.hxx
+   TransactionState.hxx
+   TransApi.hxx
+   Transporter.hxx
+   TransporterMessage.hxx
+   Update.hxx
+   UserName.hxx
+)
+
+add_libraries(p2p
+   ChordTopology.cxx
+   ChordUpdate.cxx
+   Connect.cxx
+   ConnectBase.cxx
+   DestinationId.cxx
+   Dispatcher.cxx
+   Find.cxx
+   FlowId.cxx
+   ForwardingLayer.cxx
+   Join.cxx
+   Leave.cxx
+   Message.cxx
+   MessageHelper.cxx
+   MessageStructsGen.cxx
+   NodeId.cxx
+   P2PStack.cxx
+   P2PSubsystem.cxx
+   ResourceId.cxx
+   SelectTransporter.cxx
+   Signable.cxx
+   SignatureContext.cxx
+   TestMake.cxx
+   TopologyAPI.cxx
+   Transporter.cxx
+   TransporterMessage.cxx
+   Update.cxx
+   BatchMessages.cxx
+)
+
+target_link_libraries(p2p PUBLIC rutil s2c)
+
+add_subdirectory(s2c)

@@ -7,7 +7,7 @@ using namespace resip;
 PagerMessageCreator::PagerMessageCreator(DialogUsageManager& dum, 
                                          const NameAddr& target, 
                                          std::shared_ptr<UserProfile> userProfile)
-   : BaseCreator(dum, std::move(userProfile))
+   : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, MESSAGE);
    //rfc3428 section 9 - remove the header that may have been added by the BaseCreator and are not allowed

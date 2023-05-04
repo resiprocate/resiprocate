@@ -4,8 +4,8 @@
 #include "TfmDns.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-#include "rutil/dns/ares/ares.h"
-#include "rutil/dns/ares/ares_dns.h"
+#include <ares.h>
+#include <ares_dns.h>
 
 #if !defined WIN32 && !defined __CYGWIN__
 #include <resolv.h>

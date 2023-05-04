@@ -2,7 +2,7 @@
 #define GstBridgeMixer_hxx
 
 #ifdef HAVE_CONFIG_H
-#include "../../config.h"
+#include "config.h"
 #endif
 
 #if (_MSC_VER >= 1600)

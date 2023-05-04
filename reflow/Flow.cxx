@@ -34,83 +34,83 @@ int Flow::maxReceiveFifoSize = 100 * maxReceiveFifoDuration; // 1000 = 1 message
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
-const char* srtp_error_string(err_status_t error)
+const char* srtp_error_string(srtp_err_status_t error)
 {
    switch(error)
    {
-   case err_status_ok:  
+   case srtp_err_status_ok:
       return "nothing to report";
       break;
-   case err_status_fail:
+   case srtp_err_status_fail:
       return "unspecified failure";
       break;
-   case err_status_bad_param:
+   case srtp_err_status_bad_param:
       return "unsupported parameter";
       break;
-   case err_status_alloc_fail:
+   case srtp_err_status_alloc_fail:
       return "couldn't allocate memory";
       break;
-   case err_status_dealloc_fail:
+   case srtp_err_status_dealloc_fail:
       return "couldn't deallocate properly";
       break;
-   case err_status_init_fail:
+   case srtp_err_status_init_fail:
       return "couldn't initialize";
       break;
-   case err_status_terminus:
+   case srtp_err_status_terminus:
       return "can't process as much data as requested";
       break;
-   case err_status_auth_fail:
+   case srtp_err_status_auth_fail:
       return "authentication failure";
       break;
-   case err_status_cipher_fail:
+   case srtp_err_status_cipher_fail:
       return "cipher failure";
       break;
-   case err_status_replay_fail:
+   case srtp_err_status_replay_fail:
       return "replay check failed (bad index)";
       break;
-   case err_status_replay_old:
+   case srtp_err_status_replay_old:
       return "replay check failed (index too old)";
       break;
-   case err_status_algo_fail:
+   case srtp_err_status_algo_fail:
       return "algorithm failed test routine";
       break;
-   case err_status_no_such_op:
+   case srtp_err_status_no_such_op:
       return "unsupported operation";
       break;
-   case err_status_no_ctx:
+   case srtp_err_status_no_ctx:
       return "no appropriate context found";
       break;
-   case err_status_cant_check:
+   case srtp_err_status_cant_check:
       return "unable to perform desired validation";
       break;
-   case err_status_key_expired:
+   case srtp_err_status_key_expired:
       return "can't use key any more";
       break;
-   case err_status_socket_err:
+   case srtp_err_status_socket_err:
       return "error in use of socket";
       break;
-   case err_status_signal_err:
+   case srtp_err_status_signal_err:
       return "error in use POSIX signals";
       break;
-   case err_status_nonce_bad:
+   case srtp_err_status_nonce_bad:
       return "nonce check failed";
       break;
-   case err_status_read_fail:
+   case srtp_err_status_read_fail:
       return "couldn't read data";
       break;
-   case err_status_write_fail:
+   case srtp_err_status_write_fail:
       return "couldn't write data";
       break;
-   case err_status_parse_err:
+   case srtp_err_status_parse_err:
       return "error pasring data";
       break;
-   case err_status_encode_err:
+   case srtp_err_status_encode_err:
       return "error encoding data";
       break;
-   case err_status_semaphore_err:
+   case srtp_err_status_semaphore_err:
       return "error while using semaphores";
       break;
-   case err_status_pfkey_err:
+   case srtp_err_status_pfkey_err:
       return "error while using pfkey";
       break;
    default:
@@ -136,8 +136,8 @@ Flow::Flow(asio::io_service& ioService,
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
     mForceCOMedia(forceCOMedia),
-    mRtcpEventLoggingHandler(std::move(rtcpEventLoggingHandler)),
-    mFlowContext(std::move(context)),
+    mRtcpEventLoggingHandler(rtcpEventLoggingHandler),
+    mFlowContext(context),
     mPrivatePeer(false),
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
@@ -305,8 +305,8 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
    }
    if(mMediaStream.mSRTPSessionOutCreated)
    {
-      err_status_t status = mMediaStream.srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
-      if(status != err_status_ok)
+      srtp_err_status_t status = mMediaStream.srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
+      if(status != srtp_err_status_ok)
       {
          ErrLog(<< "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")  ComponentId=" << mComponentId);
          onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
@@ -322,8 +322,8 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
       {
          if(((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->isSrtpInitialized())
          {
-            err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
-            if(status != err_status_ok)
+            srtp_err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
+            if(status != srtp_err_status_ok)
             {
                ErrLog(<< "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")  ComponentId=" << mComponentId);
                onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
@@ -436,8 +436,8 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
    // SRTP Unprotect (if required)
    if(mMediaStream.mSRTPSessionInCreated)
    {
-      err_status_t status = mMediaStream.srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
-      if(status != err_status_ok)
+      srtp_err_status_t status = mMediaStream.srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
+      if(status != srtp_err_status_ok)
       {
          ErrLog(<< "Unable to SRTP unprotect the packet (componentid=" << mComponentId << "), error code=" << status << "(" << srtp_error_string(status) << ")");
          //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
@@ -452,8 +452,8 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
       {
          if(((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->isSrtpInitialized())
          {
-            err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
-            if(status != err_status_ok)
+            srtp_err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
+            if(status != srtp_err_status_ok)
             {
                ErrLog(<< "Unable to SRTP unprotect the packet (componentid=" << mComponentId << "), error code=" << status << "(" << srtp_error_string(status) << ")");
                //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);

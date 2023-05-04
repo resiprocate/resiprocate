@@ -25,6 +25,14 @@ public:
       B2BUA
    } Application;
 
+   typedef enum
+   {
+      sipXtapi,
+      Kurento,
+      Gstreamer,
+      LibWebRTC
+   } MediaStack;
+
    ReConServerConfig();
    virtual ~ReConServerConfig();
 
@@ -47,6 +55,9 @@ public:
 
    bool getConfigValue(const resip::Data& name, Application& defaultValue);
    Application getConfigApplication(const resip::Data& name, const Application defaultValue);
+
+   bool getConfigValue(const resip::Data& name, MediaStack& defaultValue) const;
+   MediaStack getConfigMediaStack(const resip::Data& name, const MediaStack defaultValue) const;
 
 
    

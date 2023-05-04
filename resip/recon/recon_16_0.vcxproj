@@ -47,8 +47,6 @@
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
@@ -92,7 +90,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/openssl/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_SIPXTAPI;BOOST_ASIO_HAS_STD_CHRONO;SIPX_TONES_INBAND;WIN32;_WIN32_WINNT=0x0501;_DEBUG;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;_CRT_SECURE_NO_WARNINGS;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -109,7 +107,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/opensslx64/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_SIPXTAPI;BOOST_ASIO_HAS_STD_CHRONO;SIPX_TONES_INBAND;WIN32;_WIN32_WINNT=0x0501;_DEBUG;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;_CRT_SECURE_NO_WARNINGS;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -129,7 +127,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/openssl/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_SIPXTAPI;BOOST_ASIO_HAS_STD_CHRONO;SIPX_TONES_INBAND;WIN32;_WIN32_WINNT=0x0501;NDEBUG;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;_CRT_SECURE_NO_WARNINGS;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>
       </StringPooling>
@@ -150,7 +148,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/opensslx64/include;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../sipXtapi/sipXcallLib/include;$(ProjectDir)/../../reTurn;$(ProjectDir)/../../contrib/pcre;$(ProjectDir)/../../contrib/asio;$(ProjectDir)/../../contrib/srtp/include;$(ProjectDir)/../../contrib/srtp/crypto/include;$(ProjectDir)/../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_SIPXTAPI;BOOST_ASIO_HAS_STD_CHRONO;SIPX_TONES_INBAND;WIN32;_WIN32_WINNT=0x0501;NDEBUG;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;_CRT_SECURE_NO_WARNINGS;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>
       </StringPooling>
@@ -266,7 +264,17 @@
     <ClInclude Include="UserAgentServerAuthManager.hxx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(SolutionDir)\packages\zeroc.openssl.v142.1.1.1.2\build\native\zeroc.openssl.v142.targets" Condition="Exists('$(SolutionDir)\packages\zeroc.openssl.v142.1.1.1.2\build\native\zeroc.openssl.v142.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\packages\zeroc.openssl.v142.1.1.1.2\build\native\zeroc.openssl.v142.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\packages\zeroc.openssl.v142.1.1.1.2\build\native\zeroc.openssl.v142.targets'))" />
+  </Target>
 </Project>

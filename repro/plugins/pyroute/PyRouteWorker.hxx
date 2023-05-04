@@ -46,10 +46,25 @@ class PyRouteWork : public ProcessorMessage
       bool hasResponse() { return mResponseCode >= 0; };
 };
 
+class PyRouteMessageHandlerWork : public resip::ApplicationMessage
+{
+   public:
+      PyRouteMessageHandlerWork(const resip::SipMessage& message);
+
+      virtual ~PyRouteMessageHandlerWork();
+
+      std::shared_ptr<resip::SipMessage> mMessage;
+
+      virtual PyRouteMessageHandlerWork* clone() const;
+
+      virtual EncodeStream& encode(EncodeStream& ostr) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const;
+};
+
 class PyRouteWorker : public resip::Worker
 {
    public:
-      PyRouteWorker(resip::PyExtensionBase& py, Py::Callable& action);
+      PyRouteWorker(resip::PyExtensionBase& py, Py::Callable& action, Py::Callable& messageHandlerAction);
       virtual ~PyRouteWorker();
 
       virtual PyRouteWorker* clone() const;
@@ -57,10 +72,14 @@ class PyRouteWorker : public resip::Worker
       virtual void onStart() override;
       virtual bool process(resip::ApplicationMessage* msg) override;
 
+      bool processWork(PyRouteWork* work);
+      bool processMessageHandlerWork(PyRouteMessageHandlerWork* work);
+
    protected:
       resip::PyExtensionBase& mPy;
       std::unique_ptr<resip::PyExternalUser> mPyUser;
       Py::Callable& mAction;
+      Py::Callable& mMessageHandlerAction;
 };
 
 }

@@ -29,7 +29,7 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
      mWaitingForResponse(false),
      mPendingPublish(false),
      mPendingEnd(false),
-     mPublish(std::move(req)),
+     mPublish(req),
      mEventType(mPublish->header(h_Event).value()),
      mTimerSeq(0),
      mDocument(mPublish->releaseContents().release())
@@ -380,7 +380,7 @@ ClientPublication::send(std::shared_ptr<SipMessage> request)
    else
    {
       request->header(h_CSeq).sequence()++;
-      mDum.send(std::move(request));
+      mDum.send(request);
       mWaitingForResponse = true;
       mPendingPublish = false;
    }

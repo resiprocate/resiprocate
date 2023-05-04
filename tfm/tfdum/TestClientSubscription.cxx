@@ -8,8 +8,7 @@
 
 #include "resip/dum/Handles.hxx"
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
+#include <functional>
 
 #include "rutil/Logger.hxx"
 
@@ -26,7 +25,7 @@ CommonAction*
 TestClientSubscription::acceptUpdate(int statusCode, const char* reason)
 {
    return new CommonAction(mUa, "acceptUpdate", 
-                           boost::bind(&ClientSubscription::acceptUpdateCommand, boost::bind<ClientSubscription*>(static_cast<ClientSubscription*(ClientSubscriptionHandle::*)()>(&ClientSubscriptionHandle::get), boost::ref(mHandle)), 
+                           std::bind(&ClientSubscription::acceptUpdateCommand, std::bind<ClientSubscription*>(static_cast<ClientSubscription*(ClientSubscriptionHandle::*)()>(&ClientSubscriptionHandle::get), std::ref(mHandle)), 
                                        statusCode, reason));
 }
 
@@ -34,7 +33,7 @@ CommonAction*
 TestClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
 {
    return new CommonAction(mUa, "rejectUpdate", 
-                           boost::bind(&ClientSubscription::rejectUpdateCommand, boost::bind<ClientSubscription*>(static_cast<ClientSubscription*(ClientSubscriptionHandle::*)()>(&ClientSubscriptionHandle::get), boost::ref(mHandle)),
+                           std::bind(&ClientSubscription::rejectUpdateCommand, std::bind<ClientSubscription*>(static_cast<ClientSubscription*(ClientSubscriptionHandle::*)()>(&ClientSubscriptionHandle::get), std::ref(mHandle)),
                                        statusCode, reasonPhrase));
 }
 
@@ -42,14 +41,14 @@ CommonAction*
 TestClientSubscription::requestRefresh(int expires)
 {
    return new CommonAction(mUa, "requestRefresh", 
-                           boost::bind(&ClientSubscription::requestRefreshCommand, boost::bind<ClientSubscription*>(static_cast<ClientSubscription*(ClientSubscriptionHandle::*)()>(&ClientSubscriptionHandle::get), boost::ref(mHandle)),
+                           std::bind(&ClientSubscription::requestRefreshCommand, std::bind<ClientSubscription*>(static_cast<ClientSubscription*(ClientSubscriptionHandle::*)()>(&ClientSubscriptionHandle::get), std::ref(mHandle)),
                                        expires));
 }
 
 CommonAction* 
 TestClientSubscription::end()
 {
-   return new CommonAction(mUa, "end", boost::bind(&ClientSubscription::endCommand, boost::bind<ClientSubscription*>(static_cast<ClientSubscription*(ClientSubscriptionHandle::*)()>(&ClientSubscriptionHandle::get), boost::ref(mHandle)), false));
+   return new CommonAction(mUa, "end", std::bind(&ClientSubscription::endCommand, std::bind<ClientSubscription*>(static_cast<ClientSubscription*(ClientSubscriptionHandle::*)()>(&ClientSubscriptionHandle::get), std::ref(mHandle)), false));
 }
 
 bool 

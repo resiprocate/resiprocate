@@ -7,7 +7,7 @@ ExpectActionEvent::ExpectActionEvent(ActionBase* action,
                                      std::shared_ptr<Event> event)
    : Event(event->getEndPoint()),
      mAction(action),
-     mEvent(std::move(event)),
+     mEvent(event),
      mHasEvent(true)
 {
 }

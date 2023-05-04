@@ -171,7 +171,7 @@ ClientInviteSession::provideAnswer (const Contents& answer)
          mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          InfoLog (<< "Sending " << response->brief());
          DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
-         send(std::move(response));
+         send(response);
          break;
       }
         
@@ -272,7 +272,7 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
          }
 
          //  Send the req and do state transition.
-         send(std::move(response));
+         send(response);
          transition(UAC_EarlyWithAnswer);
          break;
       }
@@ -650,7 +650,7 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
       auto prack = std::make_shared<SipMessage>();
       mDialog.makeRequest(*prack, PRACK);
       prack->header(h_RAck) = mRelRespInfo;
-      send(std::move(prack));
+      send(prack);
    }
 }
 
@@ -668,7 +668,7 @@ ClientInviteSession::sendPrack(const Contents& offerAnswer, DialogUsageManager::
    InviteSession::setOfferAnswer(*prack, offerAnswer);
 
    DumHelper::setOutgoingEncryptionLevel(*prack, encryptionLevel);
-   send(std::move(prack));
+   send(prack);
 }
 
 void
@@ -901,7 +901,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
             auto response = std::make_shared<SipMessage>();
             mDialog.makeResponse(*response, msg, 500);  // RFC3311 - section 5.2
             InfoLog (<< "Sending " << response->brief());
-            send(std::move(response));
+            send(response);
          }
          else
          {
@@ -918,7 +918,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 200);
-         send(std::move(response));
+         send(response);
          break;
       }
      
@@ -1031,7 +1031,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 500);  // RFC3311 - section 5.2
          InfoLog (<< "Sending " << response->brief());
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1040,7 +1040,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
          // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 200);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1152,7 +1152,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
             mDialog.makeRequest(*update, UPDATE);
             InviteSession::setOfferAnswer(*update, mProposedLocalOfferAnswer.get());
             DumHelper::setOutgoingEncryptionLevel(*update, mProposedEncryptionLevel);
-            send(std::move(update));
+            send(update);
          }
          handleFinalResponse(msg);
          onConnectedAspect(getHandle(), msg);
@@ -1268,7 +1268,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 200);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1329,7 +1329,7 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
          {
             auto response = std::make_shared<SipMessage>();
             mDialog.makeResponse(*response, msg, 491);
-            send(std::move(response));
+            send(response);
          }
          break;
          
@@ -1338,7 +1338,7 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
          // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 200);
-         send(std::move(response));
+         send(response);
          break;
       }
 
@@ -1431,7 +1431,7 @@ ClientInviteSession::dispatchReceivedUpdateEarly(const SipMessage& msg)
             auto u500 = std::make_shared<SipMessage>();
             mDialog.makeResponse(*u500, msg, 500);
             u500->header(h_RetryAfter).value() = Random::getRandom() % 10;
-            send(std::move(u500));
+            send(u500);
          }
          break;
 

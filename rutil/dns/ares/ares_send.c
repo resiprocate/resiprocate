@@ -19,7 +19,7 @@
 #ifndef WIN32
 #include <netinet/in.h>
 #ifndef __CYGWIN__
-#  include <arpa/nameser.h>
+#  include "ares_nameser.h"
 #endif
 #endif
 

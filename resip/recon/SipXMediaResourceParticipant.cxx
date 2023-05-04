@@ -21,6 +21,9 @@
 #undef ssrc_t  
 #include <mp/MprEncode.h>
 #include <mp/MpStreamPlayer.h>
+#ifndef SIPX_NO_RECORD
+#include <utl/CircularBufferPtr.h>
+#endif
 
 using namespace recon;
 using namespace resip;
@@ -38,14 +41,26 @@ SipXMediaResourceParticipant::SipXMediaResourceParticipant(ParticipantHandle par
                                                    ConversationManager& conversationManager,
                                                    SipXMediaStackAdapter& sipXMediaStackAdapter,
                                                    const Uri& mediaUrl,
-                                                   const std::shared_ptr<Data>& audioBuffer)
+                                                   const std::shared_ptr<Data>& playAudioBuffer,
+                                                   void* recordingCircularBuffer)
 : Participant(partHandle, ConversationManager::ParticipantType_MediaResource, conversationManager),
-  MediaResourceParticipant(partHandle, conversationManager, mediaUrl, audioBuffer),
+  MediaResourceParticipant(partHandle, conversationManager, mediaUrl, playAudioBuffer),
   SipXParticipant(partHandle, ConversationManager::ParticipantType_MediaResource, conversationManager, sipXMediaStackAdapter),
   mStreamPlayer(0),
-  mPortOnBridge(-1)
+  mPortOnBridge(-1),
+#ifndef SIPX_NO_RECORD
+  mRecordingCircularBuffer((CircularBufferPtr*)recordingCircularBuffer)
+#else
+  mRecordingCircularBuffer(nullptr)
+#endif
 {
    InfoLog(<< "SipXMediaResourceParticipant created, handle=" << mHandle << " url=" << getMediaUrl());
+#ifdef SIPX_NO_RECORD
+   if(recordingCircularBuffer != 0)
+   {
+      ErrLog(<< "recordingCircularBuffer specified but recon is not compiled with support for CircularBuffer");
+   }
+#endif
 }
 
 SipXMediaResourceParticipant::~SipXMediaResourceParticipant()
@@ -312,13 +327,6 @@ SipXMediaResourceParticipant::startResourceImpl()
 #ifdef SIPX_NO_RECORD
       ErrLog(<< "support for Record was not enabled at compile time");
 #else
-      Data filepath = getMediaUrl().host().urlDecoded();
-      if (filepath.size() > 3 && filepath.substr(0, 3) == Data("///")) filepath = filepath.substr(2);
-      else if (filepath.size() > 2 && filepath.substr(0, 2) == Data("//")) filepath = filepath.substr(1);
-
-      filepath.replace("|", ":");  // For Windows filepath processing - convert | to :
-
-      bool append = getMediaUrl().exists(p_append);
       int silenceTimeMs = -1;  // disabled
       if (getMediaUrl().exists(p_silencetime))
       {
@@ -352,9 +360,51 @@ SipXMediaResourceParticipant::startResourceImpl()
          }
       }
 
-      InfoLog(<< "SipXMediaResourceParticipant recording, handle=" << mHandle << " filepath=" << filepath << ", format=" << formatString << ", append=" << (append ? "YES" : "NO") << ", maxDurationMs=" << getDurationMs() << ", silenceTimeMs=" << silenceTimeMs);
-
       SipXMediaInterface* mediaInterface = getMediaInterface().get();
+
+      // If recording to circular buffer, then do that now, and return
+      if (isEqualNoCase(getMediaUrl().host(), "circularbuffer") && mRecordingCircularBuffer)
+      {
+         // Set Watermark level at 5/6 of the circular buffer size
+         unsigned long recordingBufferNotificationWatermark = mRecordingCircularBuffer->getCapacity() / 5 * 4;
+
+         InfoLog(<< "SipXMediaResourceParticipant recording to CircularBuffer, handle=" << mHandle << ", format=" << formatString << ", maxDurationMs=" << getDurationMs() << ", silenceTimeMs=" << silenceTimeMs << ", circularBufferCapacity=" << mRecordingCircularBuffer->getCapacity() << ", recordingBufferNotificationWatermark=" << recordingBufferNotificationWatermark);
+
+         // We are passing the CircularBufferPtr to sipX - it will call release when it's done with the buffer - add it's reference now
+         mRecordingCircularBuffer->addRef();
+
+         OsStatus status = mediaInterface->getInterface()->recordCircularBufferAudio(
+            mSipXResourceName.c_str(),
+            *mRecordingCircularBuffer,
+            format,
+            recordingBufferNotificationWatermark,
+            getDurationMs() /* maxTime Ms */,
+            silenceTimeMs /* silenceLength Ms, -1 to disable */);
+
+         if (status == OS_SUCCESS)
+         {
+            mRecordingCircularBuffer = 0;  // The application and sipX control the lifetime of the CircularBuffer, clear out our pointer, so we are not tempted to use it.
+            setRunning(true);
+         }
+         else
+         {
+            mRecordingCircularBuffer->release();  // Failed to handoff ownership to sipX, release the reference we added above
+            mRecordingCircularBuffer = 0;
+            WarningLog(<< "SipXMediaResourceParticipant::startResource error calling recordCircularBufferAudio: " << status);
+         }
+
+         return;
+      }
+
+      Data filepath = getMediaUrl().host().urlDecoded();
+      if (filepath.size() > 3 && filepath.substr(0, 3) == Data("///")) filepath = filepath.substr(2);
+      else if (filepath.size() > 2 && filepath.substr(0, 2) == Data("//")) filepath = filepath.substr(1);
+
+      filepath.replace("|", ":");  // For Windows filepath processing - convert | to :
+
+      bool append = getMediaUrl().exists(p_append);
+
+      InfoLog(<< "SipXMediaResourceParticipant recording, handle=" << mHandle << " filepath=" << filepath << ", format=" << formatString << ", append=" << (append ? "YES" : "NO") << ", maxDurationMs=" << getDurationMs() << ", silenceTimeMs=" << silenceTimeMs);
 
       // Note:  locking to single channel recording for now.  Will record all participants in a conversation in a mixed single
       //        channel file.  In order to support multi-channel recording a few things need to happen:
@@ -379,7 +429,7 @@ SipXMediaResourceParticipant::startResourceImpl()
       }
       else
       {
-         WarningLog(<< "SipXMediaResourceParticipant::startResource error calling recordChannelAudio: " << status);
+         WarningLog(<< "SipXMediaResourceParticipant::startResource error calling recordAudio: " << status);
       }
 #endif
    }

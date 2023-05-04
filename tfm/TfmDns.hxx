@@ -3,7 +3,7 @@
 
 #include <list>
 #include <map>
-#include "rutil/dns/ares/ares.h"
+#include <ares.h>
 #include "rutil/Data.hxx"
 #include "rutil/dns/ExternalDns.hxx"
 

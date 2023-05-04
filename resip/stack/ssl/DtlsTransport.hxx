@@ -24,11 +24,8 @@
 #include "rutil/HeapInstanceCounter.hxx"
 #endif
 
-#ifndef RESIP_HASHMAP_HXX
-#include "rutil/HashMap.hxx"
-#endif
-
 #include <map>
+#include <unordered_map>
 #include <openssl/ssl.h>
 
 #include "resip/stack/Compression.hxx"
@@ -45,31 +42,6 @@ class DtlsMessage;
 
 class DtlsTransport : public UdpTransport
 {
-#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310) && (_MSC_VER < 1900))  // !slg! not sure if this works on __INTEL_COMPILER 
-   struct sockaddr_in_hash_compare
-   {
-      enum { bucket_size = 4, min_buckets = 8 };
-
-      size_t operator()(const struct sockaddr_in& sock) const 
-      { 
-          return sock.sin_addr.s_addr; 
-      }
-      bool operator()(const struct sockaddr_in& s1, 
-                      const struct sockaddr_in& s2) const
-      {
-         if ( (s1.sin_addr.s_addr < s2.sin_addr.s_addr) ||
-              ( (s1.sin_addr.s_addr == s2.sin_addr.s_addr ) &&
-                ( s1.sin_port < s2.sin_port) ) )
-         {
-             return 1;
-         }
-         else
-         {
-            return 0;
-         }
-      }
-   };
-#elif defined(HASH_MAP_NAMESPACE)
    struct addr_hash
    {
       size_t operator()( const struct sockaddr_in sock ) const
@@ -94,25 +66,6 @@ class DtlsTransport : public UdpTransport
          }
       }
    };
-#else
-   struct addr_less
-   { 
-      bool operator()(const struct sockaddr_in& s1, 
-                      const struct sockaddr_in& s2) const
-      {
-         if ( (s1.sin_addr.s_addr < s2.sin_addr.s_addr) ||
-              ( (s1.sin_addr.s_addr == s2.sin_addr.s_addr ) &&
-                ( s1.sin_port < s2.sin_port) ) )
-         {
-             return 1;
-         }
-         else
-         {
-            return 0;
-         }
-      }
-   };
-#endif
 
    public:
       RESIP_HeapCount(DtlsTransport);
@@ -141,20 +94,10 @@ class DtlsTransport : public UdpTransport
 
    private:
 
-#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310) && (_MSC_VER < 1900))
-      typedef HashMap<struct sockaddr_in, 
-                      SSL*, 
-                      DtlsTransport::sockaddr_in_hash_compare> DtlsConnectionMap;
-#elif defined(HASH_MAP_NAMESPACE)
-      typedef HashMap<struct sockaddr_in, 
+      typedef std::unordered_map<struct sockaddr_in, 
                       SSL*, 
                       DtlsTransport::addr_hash, 
                       DtlsTransport::addr_cmp> DtlsConnectionMap ;
-#else
-      typedef std::map<struct sockaddr_in, 
-                      SSL*, 
-                      DtlsTransport::addr_less> DtlsConnectionMap ;
-#endif
 
       SSL_CTX             *mClientCtx ;
       SSL_CTX             *mServerCtx ;

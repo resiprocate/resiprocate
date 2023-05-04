@@ -113,10 +113,10 @@ void FlowDtlsSocketContext::fingerprintMismatch()
    mSrtpInitialized = false;
 }
 
-err_status_t 
+srtp_err_status_t
 FlowDtlsSocketContext::srtpProtect(void* data, int* size, bool rtcp)
 {
-   err_status_t status = err_status_no_ctx;
+   srtp_err_status_t status = srtp_err_status_no_ctx;
    if(mSrtpInitialized)
    {
       if(rtcp)
@@ -131,10 +131,10 @@ FlowDtlsSocketContext::srtpProtect(void* data, int* size, bool rtcp)
    return status;
 }
 
-err_status_t 
+srtp_err_status_t
 FlowDtlsSocketContext::srtpUnprotect(void* data, int* size, bool rtcp)
 {
-   err_status_t status = err_status_no_ctx;
+   srtp_err_status_t status = srtp_err_status_no_ctx;
    if(mSrtpInitialized)
    {
       if(rtcp)

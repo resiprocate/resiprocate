@@ -6,11 +6,8 @@
 #include "tfm/Sequence.hxx"
 #include "tfm/SequenceSet.hxx"
 
-#include <boost/version.hpp>
-
 using namespace resip;
 using namespace std;
-using namespace boost;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 

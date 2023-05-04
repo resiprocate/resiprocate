@@ -32,13 +32,13 @@ UserAccountFileRowHandler::onNewLine(std::shared_ptr<KeyedFile> keyedFile, const
 void
 UserAccountFileRowHandler::setUserRegistrationClient(std::shared_ptr<UserRegistrationClient> userRegistrationClient)
 {
-   mUserRegistrationClient = std::move(userRegistrationClient);
+   mUserRegistrationClient = userRegistrationClient;
 }
 
 UserAccount::UserAccount(std::shared_ptr<KeyedFile> keyedFile, const Uri& aor, const vector<Data>& columns, DialogUsageManager& dum, std::shared_ptr<UserRegistrationClient> userRegistrationClient) :
-   BasicKeyedFileLine(std::move(keyedFile), aor.getAor(), columns),
+   BasicKeyedFileLine(keyedFile, aor.getAor(), columns),
    mDum(dum),
-   mUserRegistrationClient(std::move(userRegistrationClient)),
+   mUserRegistrationClient(userRegistrationClient),
    mAor(aor),
    mContactOverride(false),
    mExpires(0),
@@ -169,7 +169,7 @@ UserAccount::doRegistration()
    regMessage->header(h_Contacts).push_back(contact);
    regMessage->header(h_Routes) = mRoute;
 
-   mDum.sendCommand(std::move(regMessage));
+   mDum.sendCommand(regMessage);
 }
 
 void
@@ -257,7 +257,7 @@ UserAccount::removeAllActive()
 void
 UserAccount::onLineRemoved(std::shared_ptr<KeyedFileLine> sp)
 {
-   BasicKeyedFileLine::onLineRemoved(std::move(sp));
+   BasicKeyedFileLine::onLineRemoved(sp);
    InfoLog( << "Removing registration(s)");
    if(mHandles.size() > 0)
    {

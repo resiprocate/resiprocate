@@ -63,12 +63,21 @@ main(int argc, char *argv[])
       assert(port101 == 443);
    }
 
+   {
+      std::vector<int> values;
+      cp.getConfigValue("PortList", values);
+
+      assert(values.size() == 3);
+      assert(values[2] == 443);
+   }
+
    return 0;
 }
 
 /* ====================================================================
  *
- * Copyright 2014 Daniel Pocock.  All rights reserved.
+ * Copyright (C) 2014-2023 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2023 Software Freedom Institute SA https://softwarefreedom.institute
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
