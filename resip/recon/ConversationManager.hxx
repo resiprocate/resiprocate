@@ -474,6 +474,7 @@ public:
    
    virtual void requestKeyframe(ParticipantHandle partHandle, std::chrono::duration<double> durationMs);
    virtual void requestKeyframeFromPeer(ParticipantHandle partHandle, std::chrono::duration<double> durationMs);
+   virtual void requestKeyframeFromPeerRecurring(ParticipantHandle partHandle, std::chrono::duration<double> interval);
    /**
      This function is used to start a timer on behalf of recon based application.
      The onApplicationTimer callback will get called when the timer expires.
@@ -486,6 +487,19 @@ public:
      @param timerData2 Application specified generic data returned in callback
    */
    virtual void startApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2, unsigned int durationMs);
+
+   /**
+     This function is used to start a timer on behalf of recon based application.
+     The onApplicationTimer callback will get called when the timer expires.
+     Note:  You cannot stop a running timer, so you may want to use a sequence
+            number as the timer data and ignore timers when they fire, if
+            they should be cancelled.
+
+     @param timerId    Application specified id for this timer instance returned in callback
+     @param timerData1 Application specified generic data returned in callback
+     @param timerData2 Application specified generic data returned in callback
+   */
+   virtual void startApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2, std::chrono::duration<double> duration);
 
    // Override this to handle the callback
    virtual void onApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2) { }
@@ -698,6 +712,8 @@ public:
 
    std::shared_ptr<resip::ConfigParse> getConfig() { return mConfigParse; };
 
+   bool sendKeyframesAtStart() const { return !mKeyframeIntervals.empty(); };
+
 protected:
 
    // Invite Session Handler /////////////////////////////////////////////////////
@@ -779,7 +795,7 @@ protected:
    ParticipantHandle getNewParticipantHandle();    // thread safe
 
    void post(resip::Message *message);
-   void post(resip::ApplicationMessage& message, unsigned int ms=0);
+   void post(resip::ApplicationMessage& message, std::chrono::duration<double> duration=std::chrono::milliseconds::zero());
 
    virtual void setUserAgent(UserAgent *userAgent);
 
@@ -793,6 +809,9 @@ protected:
    std::set<ParticipantHandle> getParticipantHandlesByType(ParticipantType participantType) const;  // thread safe
 
    bool isShuttingDown() { return mShuttingDown; }
+
+   bool remoteParticipantInitialHold() { return getConfig()->getConfigBool("RemoteParticipantInitialHold", true); };
+   const std::vector<int>& keyframeIntervals() const { return mKeyframeIntervals; };
 
 private:
    friend class DefaultDialogSet;
@@ -873,6 +892,7 @@ private:
    friend class SendIMToParticipantCmd;
    friend class RequestKeyframeCmd;
    friend class RequestKeyframeFromPeerCmd;
+   friend class RequestKeyframeFromPeerRecurringCmd;
 
    UserAgent* mUserAgent;
    std::shared_ptr<MediaStackAdapter> mMediaStackAdapter;
@@ -895,6 +915,8 @@ private:
    MediaResourceCache mMediaResourceCache;
 
    std::shared_ptr<BridgeMixer> mBridgeMixer;
+
+   std::vector<int> mKeyframeIntervals = { 2, 2, 5, 5, 7, 10, 20, 30 };
 };
 
 }

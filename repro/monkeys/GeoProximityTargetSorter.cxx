@@ -71,7 +71,11 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
    mDefaultDistance(config.getConfigUnsignedLong("GeoProximityDefaultDistance", 0)),
    mLoadBalanceEqualDistantTargets(config.getConfigBool("LoadBalanceEqualDistantTargets", true))
 {
-   std::regex_constants::syntax_option_type flags = std::regex_constants::extended | std::regex_constants::nosubs;
+   // Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+   // of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+   // std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+   // use the EMCAScript syntax.
+   std::regex_constants::syntax_option_type flags = std::regex_constants::ECMAScript | std::regex_constants::nosubs;
 
    if(!mRUriRegularExpressionData.empty())
    {
@@ -212,7 +216,9 @@ GeoProximityTargetSorter::process(RequestContext &rc)
          {
             if(mRUriRegularExpression)
             {
-               if(!std::regex_match(Data::from(rc.getOriginalRequest().header(h_RequestLine).uri()).c_str(), *mRUriRegularExpression))
+               // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+               //        the string, this is backwards compatible with the previous regexec PCRE implementation
+               if(!std::regex_search(Data::from(rc.getOriginalRequest().header(h_RequestLine).uri()).c_str(), *mRUriRegularExpression))
                {
                   // did not match 
                   DebugLog( << "GeoProximityTargetSorter: Skipped - request URI "<< rc.getOriginalRequest().header(h_RequestLine).uri() << " did not match.");

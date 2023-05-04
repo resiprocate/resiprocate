@@ -2,6 +2,7 @@
 #define XmlRpcServerBase_hxx 
 
 #include <map>
+#include <memory>
 #include <rutil/Data.hxx>
 #include <rutil/Socket.hxx>
 #include <rutil/TransportType.hxx>
@@ -12,6 +13,7 @@
 
 #ifdef BUILD_QPID_PROTON
 #include "rutil/ProtonThreadBase.hxx"
+#include <proton/message.hpp>
 #endif
 
 #include <memory>
@@ -22,7 +24,7 @@
 
 namespace repro
 {
-class XmlRpcConnection;
+class XmlRpcConnectionBase;
 
 class ResponseInfo
 {
@@ -48,59 +50,115 @@ private:
    bool mIsFinal;
 };
 
+class XmlRpcServerBase;
+
+class XmlRpcHandler
+{
+public:
+   XmlRpcHandler(std::shared_ptr<XmlRpcServerBase> rpc) : mRpc(rpc) {};
+   virtual ~XmlRpcHandler();
+   virtual void handleRequest(unsigned int connectionId,
+                              unsigned int requestId,
+                              const resip::Data& request) = 0;
+   virtual void buildFdSet(resip::FdSet& fdset);
+   void process(resip::FdSet& fdset);
+   bool isSane();
+protected:
+   std::shared_ptr<XmlRpcServerBase> mRpc;
+};
+
 class XmlRpcServerBase
 {
-   friend class XmlRpcConnection;
-      
+   friend class XmlRpcConnectionBase;
+
+protected:
+   XmlRpcServerBase(XmlRpcHandler& h);
+   virtual void processIncoming(resip::FdSet& fdset) = 0;
+   void setSane(bool sane) { mSane = sane; };
+
 public:
-   XmlRpcServerBase(int port, resip::IpVersion version, resip::Data ipAddr = resip::Data::Empty);
-   XmlRpcServerBase(const resip::Data& brokerUrl);
    virtual ~XmlRpcServerBase();
-      
-   void buildFdSet(resip::FdSet& fdset);
+
+   virtual void buildFdSet(resip::FdSet& fdset);
    void process(resip::FdSet& fdset);
 
    bool isSane();
-   static void logSocketError(int e);
 
    // thread safe - uses fifo
-   void sendResponse(unsigned int connectionId,
+   virtual void sendResponse(unsigned int connectionId,
                      unsigned int requestId,
                      const resip::Data& responseData,
                      bool isFinal=true);
 
    // thread safe - uses fifo (use connectionId == 0 to send to all connections)
-   void sendEvent(unsigned int connectionId,
+   virtual void sendEvent(unsigned int connectionId,
                   const resip::Data& eventData);
 
-   std::shared_ptr<resip::ThreadIf> getThread();
+   virtual void handleRequest(unsigned int connectionId,
+                              unsigned int requestId,
+                              const resip::Data& request) { mHandler.handleRequest(connectionId, requestId, request); };
+
+   XmlRpcHandler& mHandler;
+   bool mSane;
+   typedef std::map<unsigned int, XmlRpcConnectionBase*> ConnectionMap;
+   ConnectionMap mConnections;
+   resip::Fifo<ResponseInfo> mResponseFifo;
+   resip::SelectInterruptor mSelectInterruptor;
+};
+
+class XmlRpcSocketServer : public XmlRpcServerBase
+{
+   friend class XmlRpcConnectionBase;
+
+public:
+   XmlRpcSocketServer(XmlRpcHandler& h, int port, resip::IpVersion version, resip::Data ipAddr = resip::Data::Empty);
+   virtual ~XmlRpcSocketServer();
+
+   virtual void buildFdSet(resip::FdSet& fdset);
+
+   static void logSocketError(int e);
 
 protected:
-   virtual void handleRequest(unsigned int connectionId, 
-                              unsigned int requestId, 
-                              const resip::Data& request) = 0; 
-      
+   void processIncoming(resip::FdSet& fdset);
+
 private:
    static const unsigned int MaxConnections = 60;   // Note:  use caution if making this any bigger, default fd_set size in windows is 64
       
    resip::Socket mFd;
    resip::Tuple mTuple;
-   bool mSane;
+
+   void closeOldestConnection();
+};
 
 #ifdef BUILD_QPID_PROTON
+class XmlRpcProtonServer : public XmlRpcServerBase,
+                           public resip::ProtonThreadBase::ProtonReceiverBase,
+                           public std::enable_shared_from_this<XmlRpcProtonServer>
+{
+   friend class XmlRpcProtonConnection;
+
+public:
+   XmlRpcProtonServer(XmlRpcHandler& h, const resip::Data& brokerUrl, bool broadcast);
+   virtual ~XmlRpcProtonServer();
+
+   virtual void buildFdSet(resip::FdSet& fdset) override;
+   //void process(resip::FdSet& fdset);
+
+protected:
+   virtual void processIncoming(resip::FdSet& fdset) override;
+
+private:
+   resip::Data mBrokerUrl;
+   bool mBroadcast;
+   bool mReady;
    std::shared_ptr<resip::ProtonThreadBase> mQpidProtonThread;
    std::shared_ptr<resip::ProtonThreadBase::ProtonSenderBase> mProtonSender;
-#else
-   std::shared_ptr<resip::ThreadIf> mQpidProtonThread;
-#endif
 
-   typedef std::map<unsigned int, XmlRpcConnection*> ConnectionMap;
-   ConnectionMap mConnections;
-   void closeOldestConnection();
-
-   resip::Fifo<ResponseInfo> mResponseFifo;
-   resip::SelectInterruptor mSelectInterruptor;
+   unsigned int mConnectionId = 0;
+   unsigned int mNextRequestId = 0;
+   std::map<resip::Data, unsigned int> mQueueConnection;
 };
+#endif
 
 }
 
@@ -111,6 +169,8 @@ private:
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (c) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

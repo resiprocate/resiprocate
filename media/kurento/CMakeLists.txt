@@ -2,6 +2,7 @@ set(INCLUDES
    Continuation.hxx
    Event.hxx
    KurentoConnection.hxx
+   KurentoException.hxx
    KurentoManager.hxx
    KurentoResponseHandler.hxx
    KurentoSubsystem.hxx

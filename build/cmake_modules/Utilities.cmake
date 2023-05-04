@@ -15,6 +15,7 @@ endfunction()
 function(test_base target)
    add_executable(${target} ${ARGN})
    add_test(NAME ${target} COMMAND $<TARGET_FILE:${target}>)
+   set_tests_properties(${target} PROPERTIES TIMEOUT 300)
 endfunction()
 
 function(add_fuzzing_executable target)

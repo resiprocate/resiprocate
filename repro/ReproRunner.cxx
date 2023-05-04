@@ -401,10 +401,6 @@ ReproRunner::run(int argc, char** argv)
    {
       mRegSyncClient->run();
    }
-   if(mRegSyncServerAMQP && mRegSyncServerAMQP->getThread().get())
-   {
-      mRegSyncServerAMQP->getThread()->run();
-   }
 
    mRunning = true;
 
@@ -438,10 +434,6 @@ ReproRunner::shutdown()
    if(mRegSyncClient)
    {
       mRegSyncClient->shutdown();
-   }
-   if(mRegSyncServerAMQP && mRegSyncServerAMQP->getThread().get())
-   {
-      mRegSyncServerAMQP->getThread()->shutdown();
    }
 
    // Wait for all threads to shutdown, and destroy objects
@@ -485,10 +477,6 @@ ReproRunner::shutdown()
    if(mRegSyncClient)
    {
       mRegSyncClient->join();
-   }
-   if(mRegSyncServerAMQP && mRegSyncServerAMQP->getThread().get())
-   {
-      mRegSyncServerAMQP->getThread()->join();
    }
 
    mSipStack->setCongestionManager(0);
@@ -583,6 +571,8 @@ ReproRunner::loadPlugins()
    mPluginManager.reset(new ReproPluginManager(*mSipStack, mProxyConfig));
    return mPluginManager->loadPlugins(pluginNames);
 #else
+   if (pluginNames.empty()) return true;
+
    CritLog(<< "LoadPlugins is specified in the configuration but repro was compiled without plugin support");
    return false;
 #endif
@@ -748,11 +738,11 @@ ReproRunner::createSipStack()
       int capturePort = mProxyConfig->getConfigInt("CapturePort", 9060);
       int captureAgentID = mProxyConfig->getConfigInt("CaptureAgentID", 2001);
       auto agent = std::make_shared<HepAgent>(captureHost, capturePort, captureAgentID);
-      mSipStack->setTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
+      mSipStack->addTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
    }
    else if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
    {
-       mSipStack->setTransportSipMessageLoggingHandler(std::make_shared<ReproSipMessageLoggingHandler>());
+       mSipStack->addTransportSipMessageLoggingHandler(std::make_shared<ReproSipMessageLoggingHandler>());
    }
 
    // Add stack transports
@@ -1358,9 +1348,19 @@ ReproRunner::createRegSync()
    resip_assert(!mRegSyncServerAMQP);
    resip_assert(!mRegSyncServerThread);
    bool enablePublicationReplication = mProxyConfig->getConfigBool("EnablePublicationReplication", false);
-   if(mRegSyncPort != 0)
+   std::list<RegSyncServer*> regSyncServerList;
+   Data regSyncBrokerTopic = mProxyConfig->getConfigData("RegSyncBrokerTopic", Data::Empty);
+   if(!regSyncBrokerTopic.empty())
    {
-      std::list<RegSyncServer*> regSyncServerList;
+#ifdef BUILD_QPID_PROTON
+      mRegSyncServerAMQP = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
+                                             regSyncBrokerTopic,
+                                             enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
+      regSyncServerList.push_back(mRegSyncServerAMQP);
+#endif
+   }
+   if(mRegSyncPort != 0 || regSyncServerList.size() > 0)
+   {
       if(mUseV4) 
       {
          mRegSyncServerV4 = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), 
@@ -1387,17 +1387,13 @@ ReproRunner::createRegSync()
          {
             remoteRegSyncPort = mRegSyncPort;
          }
-         mRegSyncClient = new RegSyncClient(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
-                                            regSyncPeerAddress, remoteRegSyncPort,
-                                            enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
+         if(remoteRegSyncPort != 0)
+         {
+            mRegSyncClient = new RegSyncClient(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
+                                               regSyncPeerAddress, remoteRegSyncPort,
+                                               enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
+         }
       }
-   }
-   Data regSyncBrokerTopic = mProxyConfig->getConfigData("RegSyncBrokerTopic", Data::Empty);
-   if(!regSyncBrokerTopic.empty())
-   {
-      mRegSyncServerAMQP = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
-                                              regSyncBrokerTopic,
-                                              enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
    }
 }
 
@@ -1410,6 +1406,12 @@ ReproRunner::createCommandServer()
    std::vector<resip::Data> commandServerBindAddresses;
    mProxyConfig->getConfigValue("CommandBindAddress", commandServerBindAddresses);
    int commandPort = mProxyConfig->getConfigInt("CommandPort", 5081);
+
+   WebAdmin* webAdmin = 0;
+   if(!mWebAdminList.empty())
+   {
+      webAdmin = mWebAdminList.front();
+   }
 
    if(commandPort != 0)
    {
@@ -1429,7 +1431,7 @@ ReproRunner::createCommandServer()
       {
          if(mUseV4 && DnsUtil::isIpV4Address(*it))
          {
-            CommandServer* pCommandServerV4 = new CommandServer(*this, *it, commandPort, V4);
+            CommandServer* pCommandServerV4 = new CommandServer(*this, *it, commandPort, V4, webAdmin);
 
             if(pCommandServerV4->isSane())
             {
@@ -1444,7 +1446,7 @@ ReproRunner::createCommandServer()
 
          if(mUseV6 && DnsUtil::isIpV6Address(*it))
          {
-            CommandServer* pCommandServerV6 = new CommandServer(*this, *it, commandPort, V6);
+            CommandServer* pCommandServerV6 = new CommandServer(*this, *it, commandPort, V6, webAdmin);
 
             if(pCommandServerV6->isSane())
             {
@@ -1457,11 +1459,45 @@ ReproRunner::createCommandServer()
             }
          }
       }
+   }
 
-      if(!mCommandServerList.empty())
+#ifdef BUILD_QPID_PROTON
+   std::vector<resip::Data> commandServerQueues;
+   mProxyConfig->getConfigValue("CommandQueue", commandServerQueues);
+   for(Data& brokerUrl : commandServerQueues)
+   {
+      CommandServer* pCommandServerQueue = new CommandServer(*this, brokerUrl, false, webAdmin);
+      if(pCommandServerQueue->isSane())
       {
-         mCommandServerThread = new CommandServerThread(mCommandServerList);
+         mCommandServerList.push_back(pCommandServerQueue);
       }
+      else
+      {
+         CritLog(<<"Failed to start CommandServerQueue");
+         delete pCommandServerQueue;
+      }
+   }
+
+   std::vector<resip::Data> commandServerTopics;
+   mProxyConfig->getConfigValue("CommandEventTopic", commandServerTopics);
+   for(Data& brokerUrl : commandServerTopics)
+   {
+      CommandServer* pCommandServerTopic = new CommandServer(*this, brokerUrl, true, webAdmin);
+      if(pCommandServerTopic->isSane())
+      {
+         mCommandServerList.push_back(pCommandServerTopic);
+      }
+      else
+      {
+         CritLog(<<"Failed to start CommandServerTopic");
+         delete pCommandServerTopic;
+      }
+   }
+#endif
+
+   if(!mCommandServerList.empty())
+   {
+      mCommandServerThread = new CommandServerThread(mCommandServerList);
    }
 }
 

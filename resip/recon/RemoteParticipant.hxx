@@ -132,10 +132,12 @@ public:
 
    virtual void requestKeyframe() = 0;
    virtual void requestKeyframeFromPeer();
+   virtual void requestKeyframeFromPeerTimeout(bool reset);
    // force a SIP re-INVITE to this RemoteParticipant
    virtual void reInvite();
 
 protected:
+   void addExtraHeader(const std::shared_ptr<resip::SipMessage>& invitemsg, const resip::Data& headerName, const resip::Data& headerValue);
    void setRemoteHold(bool remoteHold);
    void setProposedSdp(const resip::SdpContents& sdp);
    void setLocalSdp(const resip::SdpContents& sdp);
@@ -232,6 +234,9 @@ private:
 
    std::chrono::time_point<std::chrono::steady_clock> mLastRemoteKeyframeRequest = std::chrono::steady_clock::now();
    std::chrono::duration<double> mKeyframeRequestInterval = std::chrono::milliseconds(1000);
+
+   unsigned int mCurrentIntervalIndex = 0;
+   const std::vector<int> mKeyframeIntervals;
 };
 
 }
@@ -241,7 +246,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.

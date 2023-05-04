@@ -25,10 +25,42 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
-   mTuple(ipAddr,port,ipVer,TCP,Data::Empty),
+XmlRpcHandler::~XmlRpcHandler()
+{
+}
+
+void
+XmlRpcHandler::buildFdSet(resip::FdSet& fdset)
+{
+   mRpc->buildFdSet(fdset);
+};
+
+void
+XmlRpcHandler::process(resip::FdSet& fdset)
+{
+   mRpc->process(fdset);
+};
+
+bool
+XmlRpcHandler::isSane()
+{
+   return mRpc->isSane();
+}
+
+XmlRpcServerBase::XmlRpcServerBase(XmlRpcHandler& h) :
+   mHandler(h),
    mSane(true)
-{   
+{
+}
+
+XmlRpcServerBase::~XmlRpcServerBase()
+{
+}
+
+XmlRpcSocketServer::XmlRpcSocketServer(XmlRpcHandler& h, int port, IpVersion ipVer, Data ipAddr) :
+   XmlRpcServerBase(h),
+   mTuple(ipAddr,port,ipVer,TCP,Data::Empty)
+{
 #ifdef USE_IPV6
    mFd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_STREAM, 0);
 #else
@@ -40,7 +72,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
       int e = getErrno();
       logSocketError(e);
       ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed to create socket: " << strerror(e));
-      mSane = false;
+      setSane(false);
       return;
    }
 
@@ -57,7 +89,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
       int e = getErrno();
       logSocketError(e);
       ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
-      mSane = false;
+      setSane(false);
       return;
    }
 
@@ -70,7 +102,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
           int e = getErrno();
           logSocketError(e);
           ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions IPV6_V6ONLY: " << strerror(e));
-          mSane = false;
+          setSane(false);
           return;
       }
    }
@@ -91,7 +123,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
       {
          ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Could not bind to " << mTuple);
       }
-      mSane = false;
+      setSane(false);
       return;
    }
    
@@ -101,7 +133,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
       int e = getErrno();
       logSocketError(e);
       ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Could not make HTTP socket non-blocking " << port);
-      mSane = false;
+      setSane(false);
       return;
    }
    
@@ -114,38 +146,13 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
    {
       int e = getErrno();
       InfoLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed listen " << strerror(e));
-      mSane = false;
+      setSane(false);
       return;
    }
 }
 
-XmlRpcServerBase::XmlRpcServerBase(const Data& brokerUrl) :
-   mSane(true)
+XmlRpcSocketServer::~XmlRpcSocketServer()
 {
-   // AMQP mode
-#ifdef BUILD_QPID_PROTON
-   mQpidProtonThread.reset(new ProtonThreadBase());
-   mProtonSender.reset(new ProtonThreadBase::ProtonSenderBase(std::string(brokerUrl.c_str())));
-   mQpidProtonThread->addSender(mProtonSender);
-   InfoLog(<<"XmlRpcServerBase::XmlRpcServerBase: using Qpid Proton AMQP to send to " << brokerUrl);
-#else
-   ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Qpid Proton support not enabled at compile time");
-   mSane = false;
-#endif
-}
-
-XmlRpcServerBase::~XmlRpcServerBase()
-{
-#ifdef BUILD_QPID_PROTON
-   if(mQpidProtonThread.get())
-   {
-      // the thread may not have started or may have already been stopped
-      mQpidProtonThread->shutdown();
-      mQpidProtonThread->join();
-      return;
-   }
-#endif
-
 #if defined(WIN32)
    closesocket(mFd);
 #else
@@ -160,12 +167,10 @@ XmlRpcServerBase::~XmlRpcServerBase()
 }
 
 
-void 
+void
 XmlRpcServerBase::buildFdSet(FdSet& fdset)
 { 
    mSelectInterruptor.buildFdSet(fdset);
-
-   fdset.setRead(mFd);  // listen socket for server
 
    ConnectionMap::iterator it = mConnections.begin();
    for(; it != mConnections.end(); it++)
@@ -174,20 +179,21 @@ XmlRpcServerBase::buildFdSet(FdSet& fdset)
    }
 }
 
+void
+XmlRpcSocketServer::buildFdSet(FdSet& fdset)
+{
+   XmlRpcServerBase::buildFdSet(fdset);
+   fdset.setRead(mFd);  // listen socket for server
+}
 
-void 
+void
 XmlRpcServerBase::process(FdSet& fdset)
 {
-#ifdef BUILD_QPID_PROTON
-   if(mQpidProtonThread.get())
-   {
-      return;
-   }
-#endif
-
+   //StackLog(<<"process invoked");
    // Process Response fifo first
    while (mResponseFifo.messageAvailable())
    {
+      StackLog(<<"outgoing message found");
       ResponseInfo* responseInfo = mResponseFifo.getNext();
       if(responseInfo->getRequestId() == 0)
       {
@@ -217,12 +223,38 @@ XmlRpcServerBase::process(FdSet& fdset)
          {
             it->second->sendResponse(responseInfo->getRequestId(), responseInfo->getResponseData(), responseInfo->getIsFinal());
          }
+         else
+         {
+            ErrLog(<<"failed to find connection " << responseInfo->getConnectionId());
+         }
       }
       delete responseInfo;
    }
 
    mSelectInterruptor.process(fdset);
 
+   processIncoming(fdset);
+
+   // Call process on each connection
+   ConnectionMap::iterator it = mConnections.begin();
+   for(; it != mConnections.end(); )
+   {
+      bool ok = it->second->process(fdset);
+      if (!ok)
+      {
+         delete it->second;
+         mConnections.erase(it++);
+      }
+      else
+      {
+         it++;
+      }
+   }
+}
+
+void
+XmlRpcSocketServer::processIncoming(FdSet& fdset)
+{
    if (fdset.readyToRead(mFd))
    {
       Tuple tuple(mTuple);
@@ -252,76 +284,39 @@ XmlRpcServerBase::process(FdSet& fdset)
          closeOldestConnection();
       }
 
-      XmlRpcConnection* connection = new XmlRpcConnection(*this,sock);
+      XmlRpcConnectionBase* connection = new XmlRpcSocketConnection(*this,sock);
       mConnections[connection->getConnectionId()] = connection;
       
       DebugLog (<< "XmlRpcServerBase::process: Received TCP connection as connection=" << connection->getConnectionId() << " fd=" << (int)sock);
    }
-
-   // Call process on each connection
-   ConnectionMap::iterator it = mConnections.begin();
-   for(; it != mConnections.end(); )
-   {
-      bool ok = it->second->process(fdset);
-      if (!ok)
-      {
-         delete it->second;
-         mConnections.erase(it++);
-      }
-      else
-      {
-         it++;
-      }
-   }
 }
 
-void 
+void
 XmlRpcServerBase::sendResponse(unsigned int connectionId,
                                unsigned int requestId, 
                                const Data& responseData,
                                bool isFinal)
 {
-#ifdef BUILD_QPID_PROTON
-   // FIXME: response support not yet completed/tested
-   if(mProtonSender.get())
-   {
-      mProtonSender->sendMessage(responseData);
-      return;
-   }
-#endif
    mResponseFifo.add(new ResponseInfo(connectionId, requestId, responseData, isFinal));
    mSelectInterruptor.interrupt();
 }
 
-void 
+void
 XmlRpcServerBase::sendEvent(unsigned int connectionId,
                             const Data& eventData)
 {
-#ifdef BUILD_QPID_PROTON
-   if(mProtonSender.get())
-   {
-      mProtonSender->sendMessage(eventData);
-      return;
-   }
-#endif
    mResponseFifo.add(new ResponseInfo(connectionId, 0 /* requestId */, eventData, true /* isFinal */));
    mSelectInterruptor.interrupt();
 }
 
-std::shared_ptr<ThreadIf>
-XmlRpcServerBase::getThread()
-{
-   return mQpidProtonThread;
-}
-
-bool 
+bool
 XmlRpcServerBase::isSane()
 {
   return mSane;
 }
 
 void
-XmlRpcServerBase::closeOldestConnection()
+XmlRpcSocketServer::closeOldestConnection()
 {
    if(mConnections.empty()) return;
 
@@ -340,7 +335,7 @@ XmlRpcServerBase::closeOldestConnection()
 }
 
 void
-XmlRpcServerBase::logSocketError(int e)
+XmlRpcSocketServer::logSocketError(int e)
 {
    switch (e)
    {
@@ -463,12 +458,108 @@ XmlRpcServerBase::logSocketError(int e)
    }
 }
 
+#ifdef BUILD_QPID_PROTON
+
+XmlRpcProtonServer::XmlRpcProtonServer(XmlRpcHandler& h, const resip::Data& brokerUrl, bool broadcast) :
+   XmlRpcServerBase(h),
+   ProtonThreadBase::ProtonReceiverBase(brokerUrl.c_str(),
+      std::chrono::seconds(60), // FIXME configurable
+      std::chrono::seconds(2)),
+   mBrokerUrl(brokerUrl),
+   mBroadcast(false),
+   mReady(false)
+{
+   mQpidProtonThread.reset(new ProtonThreadBase());
+   mProtonSender.reset(new ProtonThreadBase::ProtonSenderBase(std::string(brokerUrl.c_str())));
+   InfoLog(<<"XmlRpcServerBase::XmlRpcServerBase: using Qpid Proton AMQP to send to " << brokerUrl);
+}
+
+XmlRpcProtonServer::~XmlRpcProtonServer()
+{
+   if(mQpidProtonThread.get())
+   {
+      // the thread may not have started or may have already been stopped
+      mQpidProtonThread->shutdown();
+      mQpidProtonThread->join();
+      return;
+   }
+}
+
+void
+XmlRpcProtonServer::buildFdSet(resip::FdSet& fdset)
+{
+   if(!mReady)
+   {
+      // can't do this in the constructor because shared_from_this() doesn't work there
+      if(!mBroadcast)
+      {
+         mQpidProtonThread->addReceiver(shared_from_this());
+      }
+      mQpidProtonThread->run();
+      mReady = true;
+   }
+   XmlRpcServerBase::buildFdSet(fdset);
+}
+
+void
+XmlRpcProtonServer::processIncoming(resip::FdSet& fdset)
+{
+   StackLog(<<"processIncoming invoked");
+   // open incoming connections ?
+   resip::TimeLimitFifo<proton::message>& fifo = getFifo();
+   while(fifo.messageAvailable())
+   {
+      try
+      {
+         std::unique_ptr<proton::message> m(fifo.getNext());
+         Data replyTo(m->reply_to());
+         StackLog(<<"reply to: " << m->reply_to());
+         auto it = mQueueConnection.find(replyTo);
+         unsigned int connectionId;
+         XmlRpcProtonConnection* connection = nullptr;
+         if(it == mQueueConnection.end())
+         {
+            StackLog(<<"new client");
+            std::shared_ptr<ProtonThreadBase::ProtonSenderBase> sender = mQpidProtonThread->getSenderForReply(m->reply_to());
+            connection = new XmlRpcProtonConnection(*this, replyTo, sender);
+            connectionId = connection->getConnectionId();
+            mConnections[connectionId] = connection;
+            mQueueConnection[replyTo] = connectionId;
+         }
+         else
+         {
+            connectionId = it->second;
+            StackLog(<<"existing client: " << connectionId);
+            connection = dynamic_cast<XmlRpcProtonConnection*>(mConnections[connectionId]);
+            if(!connection)
+            {
+               ErrLog(<<"invalid connectionId: " << connectionId << " for queue " << replyTo);
+            }
+         }
+         unsigned int requestId = connection->getNextRequestId();
+         Data requestBody = Data(proton::get<std::string>(m->body()));
+         connection->onRequest(requestId, requestBody);
+         StackLog(<<"message received: " << requestBody);
+         handleRequest(connectionId, requestId, requestBody);
+         StackLog(<<"message handled, requestId = " << requestId);
+      }
+      catch(...)
+      {
+         ErrLog(<<"exception while parsing the XML");
+      }
+   }
+}
+
+#endif // BUILD_QPID_PROTON
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (c) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

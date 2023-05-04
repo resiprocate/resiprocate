@@ -14,7 +14,7 @@ namespace repro
 {
 class RegSyncServer;
 
-class RegSyncServer: public XmlRpcServerBase, 
+class RegSyncServer: public XmlRpcHandler,
                      public resip::InMemorySyncRegDbHandler,
                      public resip::InMemorySyncPubDbHandler
 {
@@ -23,9 +23,11 @@ public:
                  int port, 
                  resip::IpVersion version,
                  resip::InMemorySyncPubDb* pubDb = 0);
+#ifdef BUILD_QPID_PROTON
    RegSyncServer(resip::InMemorySyncRegDb* regDb,
                  const resip::Data& brokerQueue,
                  resip::InMemorySyncPubDb* pubDb = 0);
+#endif
    virtual ~RegSyncServer();
 
    // thread safe
@@ -70,6 +72,8 @@ private:
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (c) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

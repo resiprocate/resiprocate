@@ -54,6 +54,7 @@ class WebAdmin : public HttpBase,
       void parseUserFile();
       
    protected:
+      friend class CommandServer;
       virtual void buildPage( const resip::Data& uri, 
                               int pageNumber,
                               const resip::Data& user,

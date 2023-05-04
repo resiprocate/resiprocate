@@ -43,96 +43,88 @@ PyExtensionBase::~PyExtensionBase()
    }
 }
 
-Py::Object PyExtensionBase::logStack(const Py::Tuple &args)
+bool
+PyExtensionBase::checkPyArgs(const resip::Data& method, const Py::Tuple &args, unsigned int minArgs, unsigned int maxArgs)
 {
-   if(args.size() < 1)
+   DebugLog(<<"python invoked C method: " << method);
+   if(args.size() < minArgs)
    {
-      ErrLog(<<"log_stack called with insufficient arguments");
-      return Py::None();
+      ErrLog(<< method << " called with insufficient arguments");
+      return false;
    }
-   if(args.size() > 1)
+   if(args.size() > maxArgs)
    {
-      ErrLog(<<"log_stack called with excess arguments, only using first argument");
+      ErrLog(<< method << " called with excess arguments, only using first argument(s)");
+   }
+   return true;
+}
+
+Py::Object
+PyExtensionBase::logStack(const Py::Tuple &args)
+{
+   if(!checkPyArgs("log_stack", args, 1, 1))
+   {
+      throw Py::TypeError("insufficient number of arguments");
    }
    const Py::String& text(args[0]);
    StackLog(<< '[' << mLogPrefix << "] " << text);
    return Py::None();
 }
 
-Py::Object PyExtensionBase::logDebug(const Py::Tuple &args)
+Py::Object
+PyExtensionBase::logDebug(const Py::Tuple &args)
 {
-   if(args.size() < 1)
+   if(!checkPyArgs("log_debug", args, 1, 1))
    {
-      ErrLog(<<"log_debug called with insufficient arguments");
-      return Py::None();
-   }
-   if(args.size() > 1)
-   {
-      ErrLog(<<"log_debug called with excess arguments, only using first argument");
+      throw Py::TypeError("insufficient number of arguments");
    }
    const Py::String& text(args[0]);
    DebugLog(<< '[' << mLogPrefix << "] " << text);
    return Py::None();
 }
 
-Py::Object PyExtensionBase::logInfo(const Py::Tuple &args)
+Py::Object
+PyExtensionBase::logInfo(const Py::Tuple &args)
 {
-   if(args.size() < 1)
+   if(!checkPyArgs("log_info", args, 1, 1))
    {
-      ErrLog(<<"log_info called with insufficient arguments");
-      return Py::None();
-   }
-   if(args.size() > 1)
-   {
-      ErrLog(<<"log_info called with excess arguments, only using first argument");
+      throw Py::TypeError("insufficient number of arguments");
    }
    const Py::String& text(args[0]);
    InfoLog(<< '[' << mLogPrefix << "] " << text);
    return Py::None();
 }
 
-Py::Object PyExtensionBase::logWarning(const Py::Tuple &args)
+Py::Object
+PyExtensionBase::logWarning(const Py::Tuple &args)
 {
-   if(args.size() < 1)
+   if(!checkPyArgs("log_warning", args, 1, 1))
    {
-      ErrLog(<<"log_warning called with insufficient arguments");
-      return Py::None();
-   }
-   if(args.size() > 1)
-   {
-      ErrLog(<<"log_warning called with excess arguments, only using first argument");
+      throw Py::TypeError("insufficient number of arguments");
    }
    const Py::String& text(args[0]);
    WarningLog(<< '[' << mLogPrefix << "] " << text);
    return Py::None();
 }
 
-Py::Object PyExtensionBase::logErr(const Py::Tuple &args)
+Py::Object
+PyExtensionBase::logErr(const Py::Tuple &args)
 {
-   if(args.size() < 1)
+   if(!checkPyArgs("log_err", args, 1, 1))
    {
-      ErrLog(<<"log_err called with insufficient arguments");
-      return Py::None();
-   }
-   if(args.size() > 1)
-   {
-      ErrLog(<<"log_err called with excess arguments, only using first argument");
+      throw Py::TypeError("insufficient number of arguments");
    }
    const Py::String& text(args[0]);
    ErrLog(<< '[' << mLogPrefix << "] " << text);
    return Py::None();
 }
 
-Py::Object PyExtensionBase::logCrit(const Py::Tuple &args)
+Py::Object
+PyExtensionBase::logCrit(const Py::Tuple &args)
 {
-   if(args.size() < 1)
+   if(!checkPyArgs("log_crit", args, 1, 1))
    {
-      ErrLog(<<"log_crit called with insufficient arguments");
-      return Py::None();
-   }
-   if(args.size() > 1)
-   {
-      ErrLog(<<"log_crit called with excess arguments, only using first argument");
+      throw Py::TypeError("insufficient number of arguments");
    }
    const Py::String& text(args[0]);
    CritLog(<< '[' << mLogPrefix << "] " << text);

@@ -480,7 +480,7 @@ public:
          MARKER;
 
          // Next Scenario
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       case 2:
          assert(CALLBACK_SEQUENCE++ == 3);
@@ -489,7 +489,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       case 3:
          assert(CALLBACK_SEQUENCE++ == 5);
@@ -498,7 +498,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       case 4:
          assert(CALLBACK_SEQUENCE++ == 5);
@@ -507,7 +507,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       default:
          assert(false);

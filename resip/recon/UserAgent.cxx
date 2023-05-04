@@ -118,8 +118,11 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    std::unique_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
    mDum.setAppDialogSetFactory(std::move(dsf));
 
-   // Set UserAgentServerAuthManager
-   mDum.setServerAuthManager(std::make_shared<UserAgentServerAuthManager>(*this));
+   if (profile->serverAuthManagerEnabled())
+   {
+      // Set UserAgentServerAuthManager
+      mDum.setServerAuthManager(std::make_shared<UserAgentServerAuthManager>(*this));
+   }
 }
 
 UserAgent::~UserAgent()
@@ -225,12 +228,12 @@ UserAgent::clearDnsCache()
    mStack.clearDnsCache();
 }
 
-void 
-UserAgent::post(ApplicationMessage& message, unsigned int ms)
+void
+UserAgent::post(ApplicationMessage& message, std::chrono::duration<double> duration)
 {
-   if(ms > 0)
+   if(duration > std::chrono::milliseconds::zero())
    {
-      mStack.postMS(message, ms, &mDum);
+      mStack.post(message, duration, &mDum);
    }
    else
    {
@@ -545,14 +548,14 @@ UserAgent::addTransports()
 }
 
 void 
-UserAgent::startApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber)
+UserAgent::startApplicationTimer(unsigned int timerId, std::chrono::duration<double> duration, unsigned int seqNumber)
 {
-   UserAgentTimeout t(*this, timerId, durationMs, seqNumber);
-   post(t, durationMs);
+   UserAgentTimeout t(*this, timerId, duration, seqNumber);
+   post(t, duration);
 }
 
 void 
-UserAgent::onApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber)
+UserAgent::onApplicationTimer(unsigned int timerId, std::chrono::duration<double> duration, unsigned int seqNumber)
 {
    // Default implementation is to do nothing - application should override this
 }

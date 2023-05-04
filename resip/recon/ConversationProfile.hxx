@@ -259,6 +259,14 @@ public:
    virtual resip::Data& stunPassword() { return mStunPassword; }
    virtual const resip::Data stunPassword() const { return mStunPassword; }
 
+   /**
+     Get/Set the maximum video bandwidth to be indicated in SDP.
+
+     @return The maximum video bandwidth.
+   */
+   virtual unsigned int& maximumVideoBandwidth() { return mMaximumVideoBandwidth; }
+   virtual const unsigned int maximumVideoBandwidth() const { return mMaximumVideoBandwidth; }
+
 private:            
    friend class UserAgent;
    void setHandle(ConversationProfileHandle handle);
@@ -280,6 +288,7 @@ private:
    unsigned short mNatTraversalServerPort;
    resip::Data mStunUsername;
    resip::Data mStunPassword;
+   unsigned int mMaximumVideoBandwidth;
 };
 
 }

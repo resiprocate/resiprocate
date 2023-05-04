@@ -70,5 +70,6 @@
       <Filter>config</Filter>
     </None>
     <None Include="test\stunTestVectors_17_0.vcxproj" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

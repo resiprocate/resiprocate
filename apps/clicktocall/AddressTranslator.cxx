@@ -45,7 +45,11 @@ AddressTranslator::addTranslation(const resip::Data& matchingPattern,
 
    if( !filter.mMatchingPattern.empty() )
    {
-      std::regex_constants::syntax_option_type flags = std::regex_constants::extended;
+      // Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+      // of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+      // std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+      // use the EMCAScript syntax.
+      const std::regex_constants::syntax_option_type flags = std::regex_constants::ECMAScript;
       if( filter.mRewriteExpression.find("$") == Data::npos )
       {
          flags |= std::regex_constants::nosubs;
@@ -104,7 +108,9 @@ AddressTranslator::translate(const resip::Data& address, resip::Data& translatio
       {
          std::cmatch matches;
          
-         if(!std::regex_match(address.c_str(), matches, *it->preq))
+         // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+         //        the string, this is backwards compatible with the previous regexec PCRE implementation
+         if(!std::regex_search(address.c_str(), matches, *it->preq))
          {
             // did not match 
             DebugLog( << "  Skipped translation "<< address << " did not match " << match );

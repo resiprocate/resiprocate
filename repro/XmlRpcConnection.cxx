@@ -18,20 +18,28 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-unsigned int XmlRpcConnection::NextConnectionId = 1;
+std::atomic<unsigned int> XmlRpcConnectionBase::NextConnectionId(1);
 
-
-XmlRpcConnection::XmlRpcConnection(XmlRpcServerBase& server, resip::Socket sock):
+XmlRpcConnectionBase::XmlRpcConnectionBase(XmlRpcServerBase& server) :
    mXmlRcpServer(server),
    mConnectionId(NextConnectionId++),
-   mNextRequestId(1),
+   mNextRequestId(1)
+{
+}
+
+XmlRpcConnectionBase::~XmlRpcConnectionBase()
+{
+}
+
+XmlRpcSocketConnection::XmlRpcSocketConnection(XmlRpcSocketServer& server, resip::Socket sock):
+   XmlRpcConnectionBase(server),
    mSock(sock)
 {
-	resip_assert(mSock > 0);
+   resip_assert(mSock > 0);
 }
 
 
-XmlRpcConnection::~XmlRpcConnection()
+XmlRpcSocketConnection::~XmlRpcSocketConnection()
 {
    resip_assert(mSock > 0);
 #ifdef WIN32
@@ -44,7 +52,7 @@ XmlRpcConnection::~XmlRpcConnection()
 
       
 void 
-XmlRpcConnection::buildFdSet(FdSet& fdset)
+XmlRpcSocketConnection::buildFdSet(FdSet& fdset)
 {
    if (!mTxBuffer.empty())
    {
@@ -55,14 +63,14 @@ XmlRpcConnection::buildFdSet(FdSet& fdset)
 
 
 bool 
-XmlRpcConnection::process(FdSet& fdset)
+XmlRpcSocketConnection::process(FdSet& fdset)
 {
    if (fdset.hasException(mSock))
    {
       int errNum = 0;
       int errNumSize = sizeof(errNum);
       getsockopt(mSock,SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
-      InfoLog (<< "XmlRpcConnection::process: Exception reading from socket " 
+      InfoLog (<< "XmlRpcSocketConnection::process: Exception reading from socket "
                << (int)mSock << " code: " << errNum << "; closing connection");
       return false;
    }
@@ -88,7 +96,7 @@ XmlRpcConnection::process(FdSet& fdset)
 }
 
 bool
-XmlRpcConnection::processSomeReads()
+XmlRpcSocketConnection::processSomeReads()
 {
    const int bufSize = 8000;
    char buf[bufSize];
@@ -103,17 +111,17 @@ XmlRpcConnection::processSomeReads()
    if (bytesRead == INVALID_SOCKET)
    {
       int e = getErrno();
-      XmlRpcServerBase::logSocketError(e);
-      InfoLog (<< "XmlRpcConnection::processSomeReads: Failed read on " << (int)mSock);
+      XmlRpcSocketServer::logSocketError(e);
+      InfoLog (<< "XmlRpcSocketConnection::processSomeReads: Failed read on " << (int)mSock);
       return false;
    }
    else if(bytesRead == 0)
    {
-      DebugLog (<< "XmlRpcConnection::processSomeReads: Connection closed by remote");
+      DebugLog (<< "XmlRpcSocketConnection::processSomeReads: Connection closed by remote");
       return false;
    }
 
-   //DebugLog (<< "XmlRpcConnection::processSomeReads: read=" << bytesRead);            
+   //DebugLog (<< "XmlRpcSocketConnection::processSomeReads: read=" << bytesRead);
 
    mRxBuffer += Data( buf, bytesRead );
    
@@ -124,7 +132,7 @@ XmlRpcConnection::processSomeReads()
 
 
 bool 
-XmlRpcConnection::tryParse()
+XmlRpcSocketConnection::tryParse()
 {
    ParseBuffer pb(mRxBuffer);
    Data initialTag;
@@ -144,9 +152,9 @@ XmlRpcConnection::tryParse()
          if (!pb.eof())
          {
             pb.skipN((int)initialTag.size() + 3);  // Skip past </InitialTag>            
-            mRequests[mNextRequestId] = pb.data(start);
-            mXmlRcpServer.handleRequest(mConnectionId, mNextRequestId, mRequests[mNextRequestId]);
-            mNextRequestId++;
+            unsigned int requestId = getNextRequestId();
+            mRequests[requestId] = pb.data(start);
+            mXmlRcpServer.handleRequest(getConnectionId(), requestId, mRequests[requestId]);
 
             // Remove processed data from RxBuffer
             pb.skipWhitespace();
@@ -168,14 +176,14 @@ XmlRpcConnection::tryParse()
 }
 
 bool
-XmlRpcConnection::processSomeWrites()
+XmlRpcSocketConnection::processSomeWrites()
 {
    if (mTxBuffer.empty())
    {
       return true;
    }
    
-   //DebugLog (<< "XmlRpcConnection::processSomeWrites: Writing " << mTxBuffer );
+   //DebugLog (<< "XmlRpcSocketConnection::processSomeWrites: Writing " << mTxBuffer );
 
 #if defined(WIN32)
    int bytesWritten = ::send(mSock, mTxBuffer.data(), (int)mTxBuffer.size(), 0);
@@ -186,15 +194,15 @@ XmlRpcConnection::processSomeWrites()
    if (bytesWritten == INVALID_SOCKET)
    {
       int e = getErrno();
-      XmlRpcServerBase::logSocketError(e);
-      InfoLog (<< "XmlRpcConnection::processSomeWrites - failed write on " << mSock << " " << strerror(e));
+      XmlRpcSocketServer::logSocketError(e);
+      InfoLog (<< "XmlRpcSocketConnection::processSomeWrites - failed write on " << mSock << " " << strerror(e));
 
       return false;
    }
    
    if (bytesWritten == (int)mTxBuffer.size())
    {
-      DebugLog (<< "XmlRpcConnection::processSomeWrites - Wrote it all" );
+      DebugLog (<< "XmlRpcSocketConnection::processSomeWrites - Wrote it all" );
       mTxBuffer = Data::Empty;
 
       //return false; // return false causes connection to close and clean up
@@ -204,14 +212,14 @@ XmlRpcConnection::processSomeWrites()
    {
       Data rest = mTxBuffer.substr(bytesWritten);
       mTxBuffer = rest;
-      DebugLog( << "XmlRpcConnection::processSomeWrites - Wrote " << bytesWritten << " bytes - still need to do " << mTxBuffer );
+      DebugLog( << "XmlRpcSocketConnection::processSomeWrites - Wrote " << bytesWritten << " bytes - still need to do " << mTxBuffer );
    }
    
    return true;
 }
 
 bool
-XmlRpcConnection::sendResponse(unsigned int requestId, const Data& responseData, bool isFinal)
+XmlRpcConnectionBase::sendResponse(unsigned int requestId, const Data& responseData, bool isFinal)
 {
    RequestMap::iterator it = mRequests.find(requestId);
    if(it != mRequests.end())
@@ -247,7 +255,7 @@ XmlRpcConnection::sendResponse(unsigned int requestId, const Data& responseData,
          // No Request in message - just send bare response
          response = "<Response>" + responseData + "</Response>";
       }
-      mTxBuffer += response;
+      sendResponse(response);
       if(isFinal)
       {
           mRequests.erase(it);
@@ -258,16 +266,75 @@ XmlRpcConnection::sendResponse(unsigned int requestId, const Data& responseData,
 }
 
 void
-XmlRpcConnection::sendEvent(const Data& eventData)
+XmlRpcSocketConnection::sendResponse(const resip::Data& response)
+{
+   mTxBuffer += response;
+}
+
+void
+XmlRpcSocketConnection::sendEvent(const Data& eventData)
 {
    mTxBuffer += eventData;
 }
+
+#ifdef BUILD_QPID_PROTON
+
+XmlRpcProtonConnection::XmlRpcProtonConnection(XmlRpcProtonServer& server, const resip::Data& replyTo,
+                                               std::shared_ptr<ProtonThreadBase::ProtonSenderBase> sender) :
+   XmlRpcConnectionBase(server),
+   mReplyTo(replyTo),
+   mSender(sender)
+{
+}
+
+XmlRpcProtonConnection::~XmlRpcProtonConnection()
+{
+}
+
+void
+XmlRpcProtonConnection::onRequest(unsigned int requestId, const resip::Data& request)
+{
+   mRequests[requestId] = request;
+}
+
+void
+XmlRpcProtonConnection::buildFdSet(resip::FdSet& fdset)
+{
+   // no need to do anything here, Qpid Proton has its own threads
+}
+
+bool
+XmlRpcProtonConnection::process(resip::FdSet& fdset)
+{
+   // no need to do anything here, Qpid Proton has its own threads
+   StackLog(<<"process invoked");
+   return true;
+}
+
+void
+XmlRpcProtonConnection::sendResponse(const resip::Data& responseData)
+{
+   StackLog(<<"sending via Proton: " << responseData);
+   mSender->sendMessage(responseData);
+}
+
+void
+XmlRpcProtonConnection::sendEvent(const resip::Data& eventData)
+{
+   StackLog(<<"sending via Proton: " << eventData);
+   mSender->sendMessage(eventData);
+}
+
+#endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (c) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

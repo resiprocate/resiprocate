@@ -216,6 +216,7 @@ class WebRtcEndpoint : public BaseRtpEndpoint
 
       void addOnIceCandidateFoundListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
       void addOnIceGatheringDoneListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
+      void addDataChannelOpenedListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
 
 };
 

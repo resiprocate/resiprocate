@@ -12,6 +12,7 @@ set(INCLUDES
    RegistrationForwarder.hxx
    SubscriptionForwarder.hxx
    ProtonCommandThread.hxx
+   PyConversationManager.hxx
 )
 
 add_executable(reConServer
@@ -35,7 +36,15 @@ target_add_conditional_sources(reConServer BUILD_QPID_PROTON
    ProtonCommandThread.cxx
 )
 
+target_add_conditional_sources(reConServer BUILD_PYTHON
+   PyConversationManager.cxx
+)
+
 target_include_directories(reConServer PRIVATE ${SOCI_INCLUDE_DIRS} ${PostgreSQL_INCLUDE_DIR} ${MySQL_INCLUDE_DIRS})
+
+if(BUILD_PYTHON)
+   target_include_directories(reConServer PRIVATE ${Python3_INCLUDE_DIRS} ${PYCXX_INCLUDE_DIRS})
+endif()
 
 target_link_libraries(reConServer PUBLIC recon ${SOCI_LIBRARIES})
 
@@ -46,6 +55,10 @@ endif()
 
 if(USE_SOCI_MYSQL)
    target_link_libraries(reConServer PUBLIC -lsoci_mysql ${MySQL_LIBRARIES})
+endif()
+
+if(BUILD_PYTHON)
+   target_link_libraries(reConServer PUBLIC ${Python3_LIBRARIES} ${PYCXX_LIBRARIES})
 endif()
 
 install(TARGETS reConServer DESTINATION ${CMAKE_INSTALL_SBINDIR})

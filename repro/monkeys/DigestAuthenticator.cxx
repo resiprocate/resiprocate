@@ -37,7 +37,8 @@ DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
    mHttpHostname(config.getConfigData("HttpHostname", "")),
    mHttpPort(config.getConfigInt("HttpPort", 5080)),
    mUseAuthInt(!config.getConfigBool("DisableAuthInt", false)),
-   mRejectBadNonces(config.getConfigBool("RejectBadNonces", false))
+   mRejectBadNonces(config.getConfigBool("RejectBadNonces", false)),
+   mAllowInDialogImpersonationWithinRealm(config.getConfigBool("AllowInDialogImpersonationWithinRealm", false))
 {
 }
 
@@ -177,8 +178,23 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                                (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
                return SkipAllChains;               
             }
-            
-            if (authorizedForThisIdentity(user, realm, sipMessage->header(h_From).uri()))
+
+            // The mAllowInDialogImpersonationWithinRealm setting allows a request to be authorized
+            // using a digest user that is different from the user specified in the From header. This
+            // applies to mid-dialog requests only. This is necessary to properly support call forwarding
+            // scenarios.Consider this scenario:
+            //  -User A calls User B
+            //  -User B sends a 302 redierct to redirect A to User C
+            //  -User A resends INVITE to User C.  This INVITE still has User B in the To header.
+            //  -Sometime during the call between A and C, User C decides to put the call on hold.
+            // This results in a reINVITE from C to A, however User B is in From header. If this setting
+            // set to false, then the DigestAuthenticator will return a 403 (forged request) because
+            // the auth info provided is for User C, yet the From header is User B (ie: authorizedForThisIdentity
+            // will return false).
+            if ((mAllowInDialogImpersonationWithinRealm &&
+                 sipMessage->header(h_To).exists(p_tag) &&             // to_tag is present - this is an in-dialog request
+                 sipMessage->header(h_From).uri().host() == realm) ||  // request is From a user in our realm/domain
+                authorizedForThisIdentity(user, realm, sipMessage->header(h_From).uri()))
             {
                rc.setDigestIdentity(user);
 

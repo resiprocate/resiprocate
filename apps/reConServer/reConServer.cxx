@@ -45,6 +45,9 @@ int _kbhit() {
 #include "reConServer.hxx"
 #include "MyMessageDecorator.hxx"
 #include "MyConversationManager.hxx"
+#ifdef BUILD_PYTHON
+#include "PyConversationManager.hxx"
+#endif
 #include "B2BCallManager.hxx"
 #include "CDRFile.hxx"
 #include "RegistrationForwarder.hxx"
@@ -634,7 +637,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
 
       if(durationMs > 0)
       {
-         myUserAgent.startApplicationTimer(timerId, durationMs, seqNumber);
+         myUserAgent.startApplicationTimer(timerId, std::chrono::milliseconds(durationMs), seqNumber);
          InfoLog( << "Application Timer started for " << durationMs << "ms");
       }
       else
@@ -844,6 +847,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
    bool enableOpus = reConServerConfig.getConfigBool("EnableOpus", false);
+   unsigned int maximumVideoBandwidth = reConServerConfig.getConfigUnsignedLong("MaximumVideoBandwidth", 0);
    Data kurentoUri = reConServerConfig.getConfigData("KurentoURI", "ws://127.0.0.1:8888/kurento");
    ReConServerConfig::Application application = reConServerConfig.getConfigApplication("Application", ReConServerConfig::None);
    mediaStack = reConServerConfig.getConfigMediaStack("MediaStack", ReConServerConfig::sipXtapi);
@@ -1300,6 +1304,8 @@ ReConServerProcess::main (int argc, char** argv)
    conversationProfile->sessionCaps().session() = session;
 #endif
 
+   conversationProfile->maximumVideoBandwidth() = maximumVideoBandwidth;
+
    // Setup NatTraversal Settings
    conversationProfile->natTraversalMode() = natTraversalMode;
    conversationProfile->forceCOMedia() = forceCOMedia;
@@ -1352,6 +1358,14 @@ ReConServerProcess::main (int argc, char** argv)
                b2BCallManager = new B2BCallManager(reConServerConfig, defaultSampleRate, maximumSampleRate, mCDRFile);
                mConversationManager.reset(b2BCallManager);
             }
+            break;
+         case ReConServerConfig::Python:
+#ifdef BUILD_PYTHON
+            mConversationManager = std::unique_ptr<PyConversationManager>(new PyConversationManager(reConServerConfig, localAudioEnabled, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
+#else
+            CritLog(<<"Not compiled with Python support");
+            resip_assert(0);
+#endif
             break;
          default:
             resip_assert(0);

@@ -130,6 +130,7 @@ ReConServerConfig::getConfigValue(const resip::Data& name, ReConServerConfig::Ap
    std::map<ReConServerConfig::Application, Data> dict;
    dict[None] = "None";
    dict[B2BUA] = "B2BUA";
+   dict[Python] = "Python";
    return translateConfigValue<ReConServerConfig::Application>(dict, name, value);
 }
 
