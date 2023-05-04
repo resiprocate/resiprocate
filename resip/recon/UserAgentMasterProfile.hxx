@@ -178,6 +178,17 @@ public:
    virtual bool& statisticsManagerEnabled();
    virtual const bool statisticsManagerEnabled() const; 
 
+
+   /**
+     Get/Set wether Server Auth Manager is enabled or not.  Note:  ServerAuthManager
+     must be enabled to support challengeOODReferRequests and challengeAutoAnswerRequests 
+     ConversationProfile settings.
+
+     @return bool Set to true to enable server auth manager
+   */
+   virtual bool& serverAuthManagerEnabled();
+   virtual const bool serverAuthManagerEnabled() const;
+
    /**
      Get/Set the starting port number in the range of valid port
      numbers to be used for RTP traffic.
@@ -216,6 +227,7 @@ private:
    std::vector<resip::Data> mRootCertDirectories;
    std::vector<resip::Data> mRootCertBundles;
    bool mStatisticsManagerEnabled;
+   bool mServerAuthManagerEnabled;
    std::shared_ptr<resip::Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
    std::shared_ptr<flowmanager::RTCPEventLoggingHandler> mRTCPEventLoggingHandler;
    bool mDTMFDigitLoggingEnabled;

@@ -13,6 +13,7 @@ using namespace std;
 
 UserAgentMasterProfile::UserAgentMasterProfile()
 : mStatisticsManagerEnabled(false),
+  mServerAuthManagerEnabled(true),
   mDTMFDigitLoggingEnabled(true),
   mRTPPortRangeMin(16384),
   mRTPPortRangeMax(17385),
@@ -179,6 +180,18 @@ const bool
 UserAgentMasterProfile::statisticsManagerEnabled() const
 {
    return mStatisticsManagerEnabled;
+}
+
+bool&
+UserAgentMasterProfile::serverAuthManagerEnabled()
+{
+   return mServerAuthManagerEnabled;
+}
+
+const bool
+UserAgentMasterProfile::serverAuthManagerEnabled() const
+{
+   return mServerAuthManagerEnabled;
 }
 
 unsigned short& 

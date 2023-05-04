@@ -32,35 +32,7 @@ ThreadIf::TlsDestructorMap *ThreadIf::mTlsDestructors;
 Mutex *ThreadIf::mTlsDestructorsMutex;
 #endif
 
-extern "C"
-{
-static void*
-#ifdef WIN32
-#ifdef _WIN32_WCE
-WINAPI
-#else
-__stdcall
-#endif
-#endif
-threadIfThreadWrapper( void* threadParm )
-{
-   resip_assert( threadParm );
-   ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
-
-   resip_assert( t );
-   t->thread();
-#ifdef WIN32
-   // Free data in TLS slots.
-   ThreadIf::tlsDestroyAll();
-#ifdef _WIN32_WCE
-   ExitThread( 0 );
-#else
-   _endthreadex(0);
-#endif
-#endif
-   return 0;
-}
-}
+std::thread::id noThread;
 
 #ifdef WIN32
 unsigned int TlsDestructorInitializer::mInstanceCounter=0;
@@ -85,10 +57,10 @@ TlsDestructorInitializer::~TlsDestructorInitializer()
 
 
 ThreadIf::ThreadIf() : 
-#ifdef WIN32
-   mThread(0),
-#endif
-   mId(0), mShutdown(false), mShutdownMutex()
+   mThreadObj(nullptr),
+   mId(),
+   mShutdown(false),
+   mShutdownMutex()
 {
 }
 
@@ -102,41 +74,18 @@ ThreadIf::~ThreadIf()
 void
 ThreadIf::run()
 {
-   resip_assert(mId == 0);
+   resip_assert(mId == noThread);
 
-#if defined(WIN32)
-   // !kh!
-   // Why _beginthreadex() instead of CreateThread():
-   //   http://support.microsoft.com/support/kb/articles/Q104/6/41.ASP
-   // Example of using _beginthreadex() mixed with WaitForSingleObject() and CloseHandle():
-   //   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt__beginthread.2c_._beginthreadex.asp
-   
-   mThread =
-#ifdef _WIN32_WCE
-       // there is no _beginthreadex() for WINCE
-       CreateThread
-#else
-       (HANDLE)_beginthreadex 
-#endif // _WIN32_WCE
-         (
-         NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
-         0, // DWORD dwStackSize,                         // initial thread stack size
-         RESIP_THREAD_START_ROUTINE
-         (threadIfThreadWrapper), // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
-         this, //LPVOID lpParameter,                        // argument for new thread
-         0, //DWORD dwCreationFlags,                     // creation flags
-         (unsigned*)&mId// LPDWORD lpThreadId                         // pointer to receive thread ID
-         );
-   resip_assert( mThread != 0 );
-#else
-   // spawn the thread
-   if ( int retval = pthread_create( &mId, 0, threadIfThreadWrapper, this) )
+   mThreadObj = std::make_shared<std::thread>([this]
    {
-      std::cerr << "Failed to spawn thread: " << retval << std::endl;
-      resip_assert(0);
-      // TODO - ADD LOGING HERE
-   }
+      thread();
+#ifdef WIN32
+      // Free data in TLS slots.
+      ThreadIf::tlsDestroyAll();
 #endif
+   });
+   mId = mThreadObj->get_id();
+   return;
 }
 
 void
@@ -147,77 +96,34 @@ ThreadIf::join()
    // programming error?
    //assert(mId == 0);
 
-   if (mId == 0)
+   if (!mThreadObj)
    {
       return;
    }
 
-#if defined(WIN32)
-   DWORD exitCode;
-   while (true)
+   if(!mThreadObj->joinable())
    {
-      if (GetExitCodeThread(mThread,&exitCode) != 0)
-      {
-         if (exitCode != STILL_ACTIVE)
-         {
-            break;
-         }
-         else
-         {
-            WaitForSingleObject(mThread,INFINITE);
-         }
-      }
-      else
-      {
-         // log something here
-         break;
-      }
+      return;
    }
 
-   //  !kh!
-   CloseHandle(mThread);
-   mThread=0;
-#else
-   void* stat;
-   if (mId != pthread_self())
-   {
-      int r = pthread_join( mId , &stat );
-      if ( r != 0 )
-      {
-         WarningLog( << "Internal error: pthread_join() returned " << r );
-         resip_assert(0);
-         // TODO
-      }
-   }
-   
-#endif
+   mThreadObj->join();
 
-   mId = 0;
+   mThreadObj.reset();
+   mId = noThread;
 }
 
 void
 ThreadIf::detach()
 {
-#if !defined(WIN32)
-   pthread_detach(mId);
-#else
-   if(mThread)
-   {
-      CloseHandle(mThread);
-      mThread = 0;
-   }
-#endif
-   mId = 0;
+   mThreadObj->detach();
+   mThreadObj.reset();
+   mId = noThread;
 }
 
 ThreadIf::Id
 ThreadIf::selfId()
 {
-#if defined(WIN32)
-   return GetCurrentThreadId();
-#else
-   return pthread_self();
-#endif
+   return std::this_thread::get_id();
 }
 
 int

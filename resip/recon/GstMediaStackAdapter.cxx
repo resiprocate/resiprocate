@@ -240,7 +240,7 @@ GstMediaStackAdapter::createLocalParticipantInstance(ParticipantHandle partHandl
 }
 
 MediaResourceParticipant *
-GstMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer)
+GstMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer, void* recordingCircularBuffer)
 {
    return 0; // FIXME Gst - implement MediaResourceParticipant in Gst
 }

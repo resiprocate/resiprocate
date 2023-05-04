@@ -22,9 +22,6 @@
 #include "rutil/Subsystem.hxx"
 #include "rutil/SysLogStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#ifdef ENABLE_LOG_REPOSITORY_DETAILS
-#include "rutil/Repository.hxx"
-#endif
 
 #ifdef USE_FMT
 #include <fmt/format.h>
@@ -55,9 +52,6 @@ volatile short Log::touchCount = 0;
 
 /// DEPRECATED! Left for backward compatibility - use localLoggers instead
 #ifdef LOG_ENABLE_THREAD_SETTING
-#if defined(__APPLE__) || defined(__CYGWIN__)
-HashValueImp(ThreadIf::Id, (size_t)data);
-#endif
 HashMap<ThreadIf::Id, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
 HashMap<int, std::set<ThreadIf::Id> > Log::mServiceToThreads;
 ThreadIf::TlsKey* Log::mLevelKey;
@@ -1249,7 +1243,7 @@ Log::ThreadData::set(Type type, Level level,
    {
 #ifdef USE_FMT
       fmt::memory_buffer _loggingFilename;
-      fmt::format_to(_loggingFilename,
+      fmt::format_to(std::back_inserter(_loggingFilename),
                      logFileName,
 #ifdef WIN32
                      fmt::arg("pid", (int)GetCurrentProcess()),

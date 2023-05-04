@@ -3,6 +3,7 @@
 #include "rutil/Subsystem.hxx"
 #include "rutil/ResipAssert.h"
 
+#include "KurentoException.hxx"
 #include "KurentoSubsystem.hxx"
 #include "Object.hxx"
 
@@ -74,7 +75,10 @@ Object::subscribe(const std::string& eventName, ContinuationVoid c)
 void
 Object::release(ContinuationVoid c)
 {
-   invokeVoidMethod("release", c);
+   json::Object params;
+   ContinuationInternal ci = std::bind(&Object::onVoidSuccess, this, c, _1);
+   std::string reqId = makeRpcCall("release", params, ci);
+   mId.clear();
 }
 
 void
@@ -185,7 +189,7 @@ Object::onVoidSuccess(ContinuationVoid c, const json::Object& message)
    {
       json::String errorMessage = message[JSON_RPC_ERROR][JSON_RPC_ERROR_MESSAGE];
       ErrLog(<<"Error from Kurento: " << errorMessage.Value());
-      resip_assert(0); // FIXME - pass up to the application
+      throw KurentoException(errorMessage.Value().c_str()); // FIXME - pass up to the application
    }
    DebugLog(<<"successfully executed RPC method without a return value");
    c();
@@ -295,6 +299,12 @@ void
 MediaElement::addMediaFlowOutStateChangeListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
 {
    addListener(OnMediaFlowOutStateChangeEvent::EVENT_NAME, l, c);
+}
+
+void
+WebRtcEndpoint::addDataChannelOpenedListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+    addListener(OnDataChannelOpenEvent::EVENT_NAME, l, c);
 }
 
 PassThroughElement::PassThroughElement(std::shared_ptr<MediaPipeline> mediaPipeline)

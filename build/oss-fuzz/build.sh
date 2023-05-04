@@ -15,18 +15,25 @@
 #
 ################################################################################
 
-autoreconf --install
-./configure --disable-shared --enable-static
+cmake -S . -B _build \
+    -GNinja \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DBUILD_CLICKTOCALL=OFF \
+    -DBUILD_QPID_PROTON=OFF \
+    -DBUILD_RECON=OFF \
+    -DBUILD_REPRO=OFF \
+    -DBUILD_RETURN=OFF \
+    -DBUILD_TFM=OFF \
+    -DREGENERATE_MEDIA_SAMPLES=OFF \
+    -DUSE_DTLS=OFF \
+    -DWITH_SSL=OFF
 
-make -j$(nproc) -C rutil
-make -j$(nproc) -C rutil/test fuzzUtil
-cp rutil/test/fuzzUtil $OUT/
+cmake --build _build --target fuzzUtil fuzzStack aresfuzz aresfuzzname
 
-make -j$(nproc) -C rutil/dns/ares aresfuzz aresfuzzname
+cp _build/rutil/test/fuzzUtil $OUT/
+cp _build/resip/stack/test/fuzzStack $OUT/
+
 # those fuzz targets are too small
 #  See: https://github.com/google/oss-fuzz/issues/1331
-#cp rutil/dns/ares/{aresfuzz,aresfuzzname} $OUT/
-
-make -j$(nproc) -C resip/stack
-make -j$(nproc) -C resip/stack/test fuzzStack
-cp resip/stack/test/fuzzStack $OUT/
+#cp _build/rutil/dns/ares/{aresfuzz,aresfuzzname} $OUT/

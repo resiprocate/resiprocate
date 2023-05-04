@@ -703,7 +703,7 @@ ClientSubscription::reSubscribe()
    NameAddr target(mLastRequest->header(h_To));
    target.remove(p_tag);  // ensure To tag is removed
    auto sub = mDum.makeSubscription(target, getUserProfile(), getEventType(), getAppDialogSet()->reuse());
-   mDum.send(std::move(sub));
+   mDum.send(sub);
 
    delete this;
 }

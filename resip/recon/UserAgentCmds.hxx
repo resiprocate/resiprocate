@@ -45,7 +45,7 @@ class AddConversationProfileCmd  : public resip::DumCommand
                                 bool defaultOutgoing)
          : mUserAgent(userAgent),
            mHandle(handle),
-           mConversationProfile(std::move(conversationProfile)),
+           mConversationProfile(conversationProfile),
            mDefaultOutgoing(defaultOutgoing) {}
       virtual void executeCommand()
       {
@@ -102,7 +102,7 @@ class DestroyConversationProfileCmd  : public resip::DumCommand
 class UserAgentTimeout : public resip::DumCommand
 {
    public:
-      UserAgentTimeout(UserAgent& userAgent, unsigned int timerId, unsigned int duration, unsigned int seqNumber) :
+      UserAgentTimeout(UserAgent& userAgent, unsigned int timerId, std::chrono::duration<double> duration, unsigned int seqNumber) :
          mUserAgent(userAgent), mTimerId(timerId), mDuration(duration), mSeqNumber(seqNumber) {}
       UserAgentTimeout(const UserAgentTimeout& rhs) :
          mUserAgent(rhs.mUserAgent), mTimerId(rhs.mTimerId), mDuration(rhs.mDuration), mSeqNumber(rhs.mSeqNumber) {}
@@ -111,17 +111,17 @@ class UserAgentTimeout : public resip::DumCommand
       void executeCommand() { mUserAgent.onApplicationTimer(mTimerId, mDuration, mSeqNumber); }
 
       resip::Message* clone() const { return new UserAgentTimeout(*this); }
-      EncodeStream& encode(EncodeStream& strm) const { strm << "UserAgentTimeout: id=" << mTimerId << ", duration=" << mDuration << ", seq=" << mSeqNumber; return strm; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << "UserAgentTimeout: id=" << mTimerId << ", duration=" << std::chrono::duration_cast<std::chrono::milliseconds>(mDuration).count() << "ms, seq=" << mSeqNumber; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
 
       unsigned int id() const { return mTimerId; }
       unsigned int seqNumber() const { return mSeqNumber; }
-      unsigned int duration() const { return mDuration; }
+      std::chrono::duration<double> duration() const { return mDuration; }
       
    private:
       UserAgent& mUserAgent;
       unsigned int mTimerId;
-      unsigned int mDuration;
+      std::chrono::duration<double> mDuration;
       unsigned int mSeqNumber;
 };
 

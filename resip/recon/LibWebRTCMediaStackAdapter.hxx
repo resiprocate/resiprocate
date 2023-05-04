@@ -180,7 +180,7 @@ public:
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode) override;
    virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle) override;
-   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer) override;
+   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer, void* recordingCircularBuffer) override;
    virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
    virtual RemoteParticipant *createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
    virtual RemoteParticipantDialogSet *createRemoteParticipantDialogSetInstance(

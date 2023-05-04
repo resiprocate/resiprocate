@@ -121,7 +121,7 @@ main (int argc, char** argv)
    auto regMessage = clientDum.makeRegistration(userAor);
    NameAddr contact;
 
-   clientDum.send(std::move(regMessage));
+   clientDum.send(regMessage);
 
    int n = 0;
    while ( !clientHandler.done )

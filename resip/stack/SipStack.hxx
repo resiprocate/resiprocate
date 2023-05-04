@@ -298,6 +298,7 @@ class SipStack : public FdSetIOObserver
       /**
          Used by the application to provide a handler that will get called for all
          inbound and outbound SIP messages on transports that are added after calling this.
+         Clears any handlers that have been added previously.
 
          @note                        If you want a custom handler per transport then
                                       you can call setSipMessageLoggingHandler on the
@@ -307,7 +308,22 @@ class SipStack : public FdSetIOObserver
                                       outbound SIP messages for all transports added
                                       after calling this.
       */
-      void setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept { mTransportSipMessageLoggingHandler = std::move(handler); }
+      void setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept { mTransportSipMessageLoggingHandlers.clear(); mTransportSipMessageLoggingHandlers.push_back(handler); }
+
+      /**
+         Used by the application to provide a handler that will get called for all
+         inbound and outbound SIP messages on transports that are added after calling this.
+         Multiple handlers can be added with this method.
+
+         @note                        If you want a custom handler per transport then
+                                      you can call setSipMessageLoggingHandler on the
+                                      Transport pointer returned from addTransport
+
+         @param handler               std::shared_ptr to a handler to call for inbound and
+                                      outbound SIP messages for all transports added
+                                      after calling this.
+      */
+      void addTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept;
 
       /**
          Used by the application to add in a new built-in transport.  The transport is
@@ -566,6 +582,22 @@ class SipStack : public FdSetIOObserver
                   TransactionUser* tu=0);
 
       /**
+          @brief Makes the message available to the TU at some later time, specified as
+          an interval.
+
+          @note  TransactionUser subclasses can just post to themselves.
+
+          @param message ApplicationMessage to post
+
+          @param interval Delay before message is to be posted.
+
+          @param tu    TransactionUser to post to.
+      */
+      void post(std::unique_ptr<ApplicationMessage> message,
+                std::chrono::duration<double> interval,
+                TransactionUser* tu=0);
+
+      /**
           @brief Makes the message available to the TU later
           
           @note  TranasctionUser subclasses can just post to themselves.
@@ -621,6 +653,22 @@ class SipStack : public FdSetIOObserver
       */
       void postMS(const ApplicationMessage& message, unsigned int ms,
                   TransactionUser* tu=0);
+
+      /**
+          @brief Makes the message available to the TU at some later time, specified as
+          an interval.
+
+          @note  TransactionUser subclasses can just post to themselves.
+
+          @param message ApplicationMessage to post
+
+          @param interval Delay before message is to be posted.
+
+          @param tu    TransactionUser to post to.
+      */
+      void post(const ApplicationMessage& message,
+                std::chrono::duration<double> interval,
+                TransactionUser* tu=0);
 
       /**
          Tells the stack that the TU has abandoned a server transaction. This
@@ -1192,7 +1240,7 @@ class SipStack : public FdSetIOObserver
 
       unsigned int mNextTransportKey;
 
-      std::shared_ptr<Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
+      Transport::SipMessageLoggingHandlerList mTransportSipMessageLoggingHandlers;
 
       friend class Executive;
       friend class StatelessHandler;

@@ -3,11 +3,7 @@
 
 #include <list>
 
-#ifdef WIN32
-#include <pcreposix.h>
-#else
-#include <regex.h>
-#endif
+#include <regex>
 #include "rutil/Data.hxx"
 
 namespace clicktocall
@@ -32,7 +28,7 @@ class AddressTranslator
          public:
             resip::Data mMatchingPattern;
             resip::Data mRewriteExpression;
-            regex_t *preq;
+            std::regex *preq;
       };
       
       typedef std::list<FilterOp> FilterOpList;

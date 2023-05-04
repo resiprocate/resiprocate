@@ -49,7 +49,7 @@ ParkOrbit::addParticipant(recon::ParticipantHandle participantHandle, const Uri&
 
       if(mMaxParkTime != 0)
       {
-         mServer.getMyUserAgent()->startApplicationTimer(MAXPARKTIMEOUT, mMaxParkTime*1000, participantHandle);
+         mServer.getMyUserAgent()->startApplicationTimer(MAXPARKTIMEOUT, std::chrono::seconds(mMaxParkTime), participantHandle);
       }
 
       mParticipants.push_back(new ParticipantOrbitInfo(participantHandle, parkedUri, parkerUri));

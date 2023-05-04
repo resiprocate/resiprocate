@@ -328,7 +328,7 @@ void DtlsTransport::_write( FdSet& fdset )
 
        expected = sm->getDatagramLength();
 
-       count = SSL_Write(ssl,
+       count = SSL_write(ssl,
                          sm->getDatagramMessage(),
                          sm->getDatagramLength());
        delete sm;

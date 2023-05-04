@@ -61,7 +61,7 @@ int _kbhit() {
 #include <resip/stack/HEPSipMessageLoggingHandler.hxx>
 #include <reflow/HEPRTCPEventLoggingHandler.hxx>
 
-#ifdef PREFER_SIPXTAPI
+#ifdef USE_SIPXTAPI
 #include <resip/recon/SipXHelper.hxx>
 #include <os/OsSysLog.h>
 #include <resip/recon/SipXMediaStackAdapter.hxx>
@@ -88,6 +88,7 @@ static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then reConServer will automatically answer incoming calls by adding to lowest numbered conversation
 std::shared_ptr<ConversationProfile> conversationProfile;
+static ReConServerConfig::MediaStack mediaStack = ReConServerConfig::sipXtapi;
 
 int main(int argc, char** argv)
 {
@@ -130,10 +131,6 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
          pb.data(arg[currentArg++], start);
       }
    }
-
-#ifdef PREFER_SIPXTAPI
-   SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(myConversationManager.getMediaStackAdapter());
-#endif
 
    // Process commands
    if(isEqualNoCase(command, "quit") || isEqualNoCase(command, "q") || isEqualNoCase(command, "exit"))
@@ -395,49 +392,55 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       }
       return;
    }
-#ifdef PREFER_SIPXTAPI
-   if(isEqualNoCase(command, "volume") || isEqualNoCase(command, "sv"))
+   if(mediaStack == ReConServerConfig::sipXtapi)
    {
-      unsigned long volume = arg[0].convertUnsignedLong();
-      mediaStackAdapter.setSpeakerVolume(volume);
-      InfoLog( << "Speaker volume set to " << volume);
-      return;
-   }
-   if(isEqualNoCase(command, "gain") || isEqualNoCase(command, "sg"))
-   {
-      unsigned long gain = arg[0].convertUnsignedLong();
-      mediaStackAdapter.setMicrophoneGain(gain);
-      InfoLog( << "Microphone gain set to " << gain);
-      return;
-   }
-   if(isEqualNoCase(command, "mute") || isEqualNoCase(command, "mm"))
-   {
-      bool enable = arg[0].convertUnsignedLong() != 0;
-      mediaStackAdapter.muteMicrophone(enable);
-      InfoLog( << "Microphone mute " << (enable ? "enabled" : "disabled"));
-      return;
-   }
-   if(isEqualNoCase(command, "echocanel") || isEqualNoCase(command, "aec"))
-   {
-      bool enable = arg[0].convertUnsignedLong() != 0;
-      mediaStackAdapter.enableEchoCancel(enable);
-      InfoLog( << "Echo cancellation " << (enable ? "enabled" : "disabled"));
-      return;
-   }
-   if(isEqualNoCase(command, "autogain") || isEqualNoCase(command, "agc"))
-   {
-      bool enable = arg[0].convertUnsignedLong() != 0;
-      mediaStackAdapter.enableAutoGainControl(enable);
-      InfoLog( << "Automatic gain control " << (enable ? "enabled" : "disabled"));
-      return;
-   }
-   if(isEqualNoCase(command, "noisereduction") || isEqualNoCase(command, "nr"))
-   {
-      bool enable = arg[0].convertUnsignedLong() != 0;
-      mediaStackAdapter.enableNoiseReduction(enable);
-      return;
-   }
+#ifdef USE_SIPXTAPI
+      SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(myConversationManager.getMediaStackAdapter());
+      if(isEqualNoCase(command, "volume") || isEqualNoCase(command, "sv"))
+      {
+         unsigned long volume = arg[0].convertUnsignedLong();
+         mediaStackAdapter.setSpeakerVolume(volume);
+         InfoLog( << "Speaker volume set to " << volume);
+         return;
+      }
+      if(isEqualNoCase(command, "gain") || isEqualNoCase(command, "sg"))
+      {
+         unsigned long gain = arg[0].convertUnsignedLong();
+         mediaStackAdapter.setMicrophoneGain(gain);
+         InfoLog( << "Microphone gain set to " << gain);
+         return;
+      }
+      if(isEqualNoCase(command, "mute") || isEqualNoCase(command, "mm"))
+      {
+         bool enable = arg[0].convertUnsignedLong() != 0;
+         mediaStackAdapter.muteMicrophone(enable);
+         InfoLog( << "Microphone mute " << (enable ? "enabled" : "disabled"));
+         return;
+      }
+      if(isEqualNoCase(command, "echocanel") || isEqualNoCase(command, "aec"))
+      {
+         bool enable = arg[0].convertUnsignedLong() != 0;
+         mediaStackAdapter.enableEchoCancel(enable);
+         InfoLog( << "Echo cancellation " << (enable ? "enabled" : "disabled"));
+         return;
+      }
+      if(isEqualNoCase(command, "autogain") || isEqualNoCase(command, "agc"))
+      {
+         bool enable = arg[0].convertUnsignedLong() != 0;
+         mediaStackAdapter.enableAutoGainControl(enable);
+         InfoLog( << "Automatic gain control " << (enable ? "enabled" : "disabled"));
+         return;
+      }
+      if(isEqualNoCase(command, "noisereduction") || isEqualNoCase(command, "nr"))
+      {
+         bool enable = arg[0].convertUnsignedLong() != 0;
+         mediaStackAdapter.enableNoiseReduction(enable);
+         return;
+      }
+#else
+      resip_assert(0);
 #endif
+   }
    if(isEqualNoCase(command, "subscribe") || isEqualNoCase(command, "cs"))
    {
       unsigned int subTime = arg[2].convertUnsignedLong();
@@ -484,34 +487,40 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       InfoLog( << "Autoanswer " << (enable ? "enabled" : "disabled"));
       return;
    }
-#ifdef PREFER_SIPXTAPI
-   if(isEqualNoCase(command, "setcodecs") || isEqualNoCase(command, "sc"))
+   if(mediaStack == ReConServerConfig::sipXtapi)
    {
-      Data codecId;
-      std::vector<unsigned int> idList;
-      ParseBuffer pb(arg[0]);
-      pb.skipWhitespace();
-      while(!pb.eof())
+#ifdef USE_SIPXTAPI
+      SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(myConversationManager.getMediaStackAdapter());
+      if(isEqualNoCase(command, "setcodecs") || isEqualNoCase(command, "sc"))
       {
-         const char *start = pb.position();
-         pb.skipToOneOf(ParseBuffer::Whitespace, ",");  // white space or "," 
-         pb.data(codecId, start);
-         idList.push_back(codecId.convertUnsignedLong());
-         if(!pb.eof())
+         Data codecId;
+         std::vector<unsigned int> idList;
+         ParseBuffer pb(arg[0]);
+         pb.skipWhitespace();
+         while(!pb.eof())
          {
-            pb.skipChar(',');
+            const char *start = pb.position();
+            pb.skipToOneOf(ParseBuffer::Whitespace, ",");  // white space or "," 
+            pb.data(codecId, start);
+            idList.push_back(codecId.convertUnsignedLong());
+            if(!pb.eof())
+            {
+               pb.skipChar(',');
+            }
          }
+         if(!idList.empty())
+         {
+            Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
+            // Note:  Technically modifying the conversation profile at runtime like this is not
+            //        thread safe.  But it should be fine for this test consoles purposes.
+            mediaStackAdapter.buildSessionCapabilities(ipAddress, idList, conversationProfile->sessionCaps());
+         }
+         return;
       }
-      if(!idList.empty())
-      {
-         Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
-         // Note:  Technically modifying the conversation profile at runtime like this is not
-         //        thread safe.  But it should be fine for this test consoles purposes.
-         mediaStackAdapter.buildSessionCapabilities(ipAddress, idList, conversationProfile->sessionCaps());
-      }
-      return;
-   }
+#else
+      resip_assert(0);
 #endif
+   }
    if(isEqualNoCase(command, "securemedia") || isEqualNoCase(command, "sm"))
    {
       ConversationProfile::SecureMediaMode secureMediaMode = ConversationProfile::NoSecureMedia;
@@ -628,7 +637,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
 
       if(durationMs > 0)
       {
-         myUserAgent.startApplicationTimer(timerId, durationMs, seqNumber);
+         myUserAgent.startApplicationTimer(timerId, std::chrono::milliseconds(durationMs), seqNumber);
          InfoLog( << "Application Timer started for " << durationMs << "ms");
       }
       else
@@ -838,8 +847,10 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
    bool enableOpus = reConServerConfig.getConfigBool("EnableOpus", false);
+   unsigned int maximumVideoBandwidth = reConServerConfig.getConfigUnsignedLong("MaximumVideoBandwidth", 0);
    Data kurentoUri = reConServerConfig.getConfigData("KurentoURI", "ws://127.0.0.1:8888/kurento");
    ReConServerConfig::Application application = reConServerConfig.getConfigApplication("Application", ReConServerConfig::None);
+   mediaStack = reConServerConfig.getConfigMediaStack("MediaStack", ReConServerConfig::sipXtapi);
 
 
    // build a list of codecs in priority order
@@ -871,11 +882,16 @@ ReConServerProcess::main (int argc, char** argv)
 
    Log::initialize(reConServerConfig, argv[0]);
 
-#ifdef PREFER_SIPXTAPI
-   // Setup logging for the sipX media stack
-   // It is bridged to the reSIProcate logger
-   SipXHelper::setupLoggingBridge("reConServer");
+   if(mediaStack == ReConServerConfig::sipXtapi)
+   {
+#ifdef USE_SIPXTAPI
+      // Setup logging for the sipX media stack
+      // It is bridged to the reSIProcate logger
+      SipXHelper::setupLoggingBridge("reConServer");
+#else
+      resip_assert(0);
 #endif
+   }
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
 
@@ -1288,6 +1304,8 @@ ReConServerProcess::main (int argc, char** argv)
    conversationProfile->sessionCaps().session() = session;
 #endif
 
+   conversationProfile->maximumVideoBandwidth() = maximumVideoBandwidth;
+
    // Setup NatTraversal Settings
    conversationProfile->natTraversalMode() = natTraversalMode;
    conversationProfile->forceCOMedia() = forceCOMedia;
@@ -1353,10 +1371,15 @@ ReConServerProcess::main (int argc, char** argv)
             resip_assert(0);
       }
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
-#ifdef PREFER_SIPXTAPI
-      SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(mConversationManager->getMediaStackAdapter());
-      mediaStackAdapter.buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
+      if(mediaStack == ReConServerConfig::sipXtapi)
+      {
+#ifdef USE_SIPXTAPI
+         SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(mConversationManager->getMediaStackAdapter());
+         mediaStackAdapter.buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
+#else
+         resip_assert(0);
 #endif
+      }
       mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
@@ -1380,9 +1403,15 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
-#ifdef PREFER_SIPXTAPI
-            mediaStackAdapter.buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
+            if(mediaStack == ReConServerConfig::sipXtapi)
+            {
+#ifdef USE_SIPXTAPI
+               SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(mConversationManager->getMediaStackAdapter());
+               mediaStackAdapter.buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
+#else
+               resip_assert(0);
 #endif
+            }
             mUserAgent->addConversationProfile(internalProfile, false);
          }
          else
@@ -1442,9 +1471,14 @@ ReConServerProcess::main (int argc, char** argv)
 #endif
    }
    InfoLog(<< "reConServer is shutdown.");
-#ifdef PREFER_SIPXTAPI
-   OsSysLog::shutdown();
+   if(mediaStack == ReConServerConfig::sipXtapi)
+   {
+#ifdef USE_SIPXTAPI
+      OsSysLog::shutdown();
+#else
+      resip_assert(0);
 #endif
+   }
    ::sleepSeconds(2);
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 

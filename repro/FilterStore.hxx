@@ -1,11 +1,7 @@
 #if !defined(REPRO_FILTERSTORE_HXX)
 #define REPRO_FILTERSTORE_HXX
 
-#ifdef WIN32
-#include <pcreposix.h>
-#else
-#include <regex.h>
-#endif
+#include <regex>
 
 #include <set>
 #include <list>
@@ -97,7 +93,7 @@ class FilterStore
       bool applyRegex(int conditionNum,
                       const resip::Data& header, 
                       const resip::Data& match, 
-                      regex_t *regex, 
+                      std::regex *_regex,
                       resip::Data& rewrite);
 
       AbstractDb& mDb;  
@@ -106,8 +102,8 @@ class FilterStore
       {
          public:
             Key key;
-            regex_t *pcond1;
-            regex_t *pcond2;
+            std::regex *pcond1;
+            std::regex *pcond2;
             AbstractDb::FilterRecord filterRecord;
             bool operator<(const FilterOp&) const;
       };

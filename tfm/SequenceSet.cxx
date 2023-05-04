@@ -6,11 +6,8 @@
 #include "tfm/SequenceSet.hxx"
 #include "tfm/ExpectActionEvent.hxx"
 
-#include <boost/version.hpp>
-
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-using namespace boost;
 using namespace std;
 using resip::Data;
 using resip::DataStream;

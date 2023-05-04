@@ -21,6 +21,9 @@
 #include "Srtp2Helper.hxx"
 
 #ifdef USE_SSL  
+#include <openssl/bn.h>
+#include <openssl/evp.h>
+#include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include "FlowDtlsTimerContext.hxx"
@@ -86,8 +89,8 @@ FlowManager::FlowManager()
 #endif 
 
    // Initialize SRTP 
-   err_status_t status = srtp_init();
-   if(status && status != err_status_bad_param)  // Note: err_status_bad_param happens if srtp_init is called twice - we allow this for test programs
+   srtp_err_status_t status = srtp_init();
+   if(status && status != srtp_err_status_bad_param)  // Note: err_status_bad_param happens if srtp_init is called twice - we allow this for test programs
    {
       ErrLog(<< "Unable to initialize SRTP engine, error code=" << status);
       throw FlowManagerException("Unable to initialize SRTP engine", __FILE__, __LINE__);
@@ -187,7 +190,7 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        stunPassword,
                                        forceCOMedia,
                                        mRtcpEventLoggingHandler,
-                                       std::move(context));
+                                       context);
    }
    else
    {
@@ -209,7 +212,7 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        stunPassword,
                                        forceCOMedia,
                                        nullptr,
-                                       std::move(context));
+                                       context);
    }
    return newMediaStream;
 }
@@ -270,8 +273,8 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    resip_assert(ret);
    
    const long duration = 60*60*24*expireDays;   
-   X509_gmtime_adj(X509_get_notBefore(cert),0);
-   X509_gmtime_adj(X509_get_notAfter(cert), duration);
+   X509_gmtime_adj(X509_getm_notBefore(cert),0);
+   X509_gmtime_adj(X509_getm_notAfter(cert), duration);
    
    ret = X509_set_pubkey(cert, privkey);
    resip_assert(ret);

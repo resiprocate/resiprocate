@@ -77,7 +77,6 @@ public:
    virtual void removeFromConversation(Conversation *conversation) override;
 
    virtual std::shared_ptr<kurento::BaseRtpEndpoint> getEndpoint() { return mEndpoint; }; // FIXME Kurento
-   std::shared_ptr<kurento::MediaElement> mMultiqueue; // FIXME Kurento
    bool mWaitingModeVideo = false;
    std::shared_ptr<kurento::PlayerEndpoint> mPlayer; // FIXME Kurento
    std::shared_ptr<kurento::PassThroughElement> mPassThrough; // FIXME Kurento

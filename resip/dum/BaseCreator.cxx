@@ -15,7 +15,7 @@ using namespace resip;
 BaseCreator::BaseCreator(DialogUsageManager& dum, std::shared_ptr<UserProfile> userProfile)
    : mLastRequest(std::make_shared<SipMessage>()),
      mDum(dum),
-     mUserProfile(std::move(userProfile))
+     mUserProfile(userProfile)
 {
 }
 

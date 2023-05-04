@@ -151,7 +151,7 @@ MediaResourceParticipant::startResource()
       {
          // Start timer to destroy media resource participant automatically
          DestroyParticipantCmd destroyer(&mConversationManager, mHandle);
-         mConversationManager.post(destroyer, mDurationMs);
+         mConversationManager.post(destroyer, std::chrono::milliseconds(mDurationMs));
       }
    }
    else

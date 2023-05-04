@@ -5,6 +5,12 @@
 *.o
 *.lo
 *.la
+*.bak
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.log
 /Makefile
 /Makefile.in
 /.deps
@@ -21,12 +27,14 @@
 /stamp-h1
 /autom4te.cache
 /build-aux
+/packages
 /resiprocate.spec
 /resiprocate-[0-9]*.tar.gz
 /resiprocate-[0-9]*.zip
 /resiprocate-contrib-[0-9]*.tar.gz
 /resiprocate-contrib-[0-9]*.zip
-/repro_*.db
+repro_*.db
+reproInfo.hxx
 
 /SVN-VERSION
 /.make_prefs
@@ -46,3 +54,22 @@ bin.prof.*
 **/[Ww]in32
 **/x64
 *.vcxproj.user
+**/Debug Dll
+**/Release Dll
+**/x64-Debug
+**/packages
+**/test/*.exe
+
+/.idea
+/cmake-build-*
+
+CMakeCache.txt
+CPackConfig.cmake
+CPackSourceConfig.cmake
+**/CMakeFiles/
+**/CTestTestfile.cmake
+**/cmake_install.cmake
+**/lib*.so
+**/lib*.so.*
+**/Testing/
+

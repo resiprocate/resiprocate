@@ -181,8 +181,11 @@ class ParserContainer : public ParserContainerBase
             friend bool operator==(const iterator& lhs, const iterator& rhs) { return lhs.mIt == rhs.mIt; }
             iterator& operator=(const iterator& rhs) 
             {
-               mIt = rhs.mIt; 
-               mRef = rhs.mRef;
+               if (&rhs != this)
+               {
+                  mIt = rhs.mIt; 
+                  mRef = rhs.mRef;
+               }
                return *this;
             }
             T& operator*() {return ensureInitialized(*mIt,mRef);}
@@ -214,8 +217,11 @@ class ParserContainer : public ParserContainerBase
             friend bool operator==(const const_iterator& lhs, const const_iterator& rhs) { return lhs.mIt == rhs.mIt; }
             const_iterator& operator=(const const_iterator& rhs) 
             {
-               mIt = rhs.mIt;
-               mRef = rhs.mRef;
+               if (&rhs != this)
+               {
+                  mIt = rhs.mIt;
+                  mRef = rhs.mRef;
+               }
                return *this;
             }
             const_iterator& operator=(const iterator& rhs) 

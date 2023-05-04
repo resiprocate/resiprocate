@@ -1,6 +1,7 @@
 #if !defined(XmlRpcConnection_hxx)
 #define XmlRpcConnection_hxx 
 
+#include <atomic>
 #include <map>
 #include <rutil/Data.hxx>
 #include <rutil/Socket.hxx>
@@ -12,38 +13,88 @@
 namespace repro
 {
 
-class XmlRpcConnection
+class XmlRpcConnectionBase
 {
-   friend class XmlRpcServerBase;
-      
 public:
-   XmlRpcConnection(XmlRpcServerBase& server, resip::Socket sock);
-   virtual ~XmlRpcConnection();
-   
+   XmlRpcConnectionBase(XmlRpcServerBase& server);
+   virtual ~XmlRpcConnectionBase();
+
    unsigned int getConnectionId() const { return mConnectionId; }
-   void buildFdSet(resip::FdSet& fdset);
-   bool process(resip::FdSet& fdset);
+   unsigned int getNextRequestId() { return mNextRequestId++; }
+
+   virtual void buildFdSet(resip::FdSet& fdset) = 0;
+   virtual bool process(resip::FdSet& fdset) = 0;
 
    virtual bool sendResponse(unsigned int requestId, const resip::Data& responseData, bool isFinal);
+   virtual void sendEvent(const resip::Data& eventData) = 0;
+
+protected:
+   virtual void sendResponse(const resip::Data& response) = 0;
+
+   XmlRpcServerBase& mXmlRcpServer;
+
+   typedef std::map<unsigned int, resip::Data> RequestMap;
+   RequestMap mRequests;
+
+private:
+   const unsigned int mConnectionId;
+   static std::atomic<unsigned int> NextConnectionId;
+   unsigned int mNextRequestId;
+};
+
+class XmlRpcSocketConnection : public XmlRpcConnectionBase
+{
+   friend class XmlRpcServerBase;
+
+public:
+   XmlRpcSocketConnection(XmlRpcSocketServer& server, resip::Socket sock);
+   virtual ~XmlRpcSocketConnection();
+
+   virtual void buildFdSet(resip::FdSet& fdset);
+   virtual bool process(resip::FdSet& fdset);
+
    virtual void sendEvent(const resip::Data& eventData);
+
+protected:
+   virtual void sendResponse(const resip::Data& response);
 
 private:
    bool processSomeReads();
    bool processSomeWrites();
    bool tryParse(); // returns true if we processed something and there is more data in the buffer
-            
-   XmlRpcServerBase& mXmlRcpServer;
-   const unsigned int mConnectionId;
-   static unsigned int NextConnectionId;
 
-   unsigned int mNextRequestId;
-   typedef std::map<unsigned int, resip::Data> RequestMap;
-   RequestMap mRequests;
-           
    resip::Socket mSock;
    resip::Data mRxBuffer;
    resip::Data mTxBuffer;
 };
+
+#ifdef BUILD_QPID_PROTON
+
+class XmlRpcProtonConnection : public XmlRpcConnectionBase
+{
+   friend class XmlRpcServerBase;
+
+public:
+   XmlRpcProtonConnection(XmlRpcProtonServer& server, const resip::Data& replyTo,
+                          std::shared_ptr<resip::ProtonThreadBase::ProtonSenderBase> sender);
+   virtual ~XmlRpcProtonConnection();
+
+   void onRequest(unsigned int requestId, const resip::Data& request);
+
+   virtual void buildFdSet(resip::FdSet& fdset);
+   virtual bool process(resip::FdSet& fdset);
+
+   virtual void sendEvent(const resip::Data& eventData);
+
+protected:
+   virtual void sendResponse(const resip::Data& response);
+
+private:
+   resip::Data mReplyTo;
+   std::shared_ptr<resip::ProtonThreadBase::ProtonSenderBase> mSender;
+};
+
+#endif
 
 }
 
@@ -54,6 +105,8 @@ private:
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (c) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

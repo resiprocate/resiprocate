@@ -5,6 +5,7 @@
 #include <vector>
 #include <list>
 #include <iosfwd>
+#include <map>
 #include <memory>
 
 #include "resip/stack/Contents.hxx"

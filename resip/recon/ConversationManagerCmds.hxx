@@ -151,7 +151,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommandAdapter
            mConvHandle(convHandle),
            mDestination(destination),
            mForkSelectMode(forkSelectMode),
-           mCallerProfile(std::move(callerProfile)),
+           mCallerProfile(callerProfile),
            mExtraHeaders(extraHeaders) {}
       virtual void executeCommand()
       {
@@ -198,7 +198,7 @@ public:
       : mConversationManager(conversationManager),
       mPartHandle(partHandle),
       mDestination(destination),
-      mConversationProfile(std::move(conversationProfile)) {}
+      mConversationProfile(conversationProfile) {}
    virtual void executeCommand()
    {
       new RemoteIMPagerParticipant(mPartHandle, *mConversationManager, mDestination, mConversationProfile);
@@ -224,7 +224,7 @@ public:
       mPartHandle(partHandle),
       mDestination(destination),
       mForkSelectMode(forkSelectMode),
-      mCallerProfile(std::move(callerProfile)),
+      mCallerProfile(callerProfile),
       mExtraHeaders(extraHeaders) {}
    virtual void executeCommand()
    {
@@ -257,18 +257,20 @@ class CreateMediaResourceParticipantCmd : public resip::DumCommandAdapter
                                         ParticipantHandle partHandle,
                                         ConversationHandle convHandle,
                                         const resip::Uri& mediaUrl,
-                                        const std::shared_ptr<resip::Data>& audioBuffer)
+                                        const std::shared_ptr<resip::Data>& audioBuffer,
+                                        void* recordingCircularBuffer)
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mConvHandle(convHandle),
            mMediaUrl(mediaUrl),
-           mAudioBuffer(audioBuffer) {}
+           mAudioBuffer(audioBuffer),
+           mRecordingCircularBuffer(recordingCircularBuffer) {}
       virtual void executeCommand()
       {
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation)
          {
-            MediaResourceParticipant* mediaResourceParticipant = mConversationManager->getMediaStackAdapter().createMediaResourceParticipantInstance(mPartHandle, mMediaUrl, mAudioBuffer);
+            MediaResourceParticipant* mediaResourceParticipant = mConversationManager->getMediaStackAdapter().createMediaResourceParticipantInstance(mPartHandle, mMediaUrl, mAudioBuffer, mRecordingCircularBuffer);
             if(mediaResourceParticipant)
             {
                conversation->addParticipant(mediaResourceParticipant);
@@ -293,6 +295,7 @@ class CreateMediaResourceParticipantCmd : public resip::DumCommandAdapter
       ConversationHandle mConvHandle;
       resip::Uri mMediaUrl;
       std::shared_ptr<resip::Data> mAudioBuffer;
+      void* mRecordingCircularBuffer;
 };
 
 class CreateLocalParticipantCmd : public resip::DumCommandAdapter
@@ -369,11 +372,11 @@ class AddParticipantCmd : public resip::DumCommandAdapter
          {
             if(!participant)
             {
-               WarningLog(<< "AddParticipantCmd: invalid participant handle.");
+               WarningLog(<< "AddParticipantCmd: invalid participant handle: " << mPartHandle);
             }
             if(!conversation)
             {
-               WarningLog(<< "AddParticipantCmd: invalid conversation handle.");
+               WarningLog(<< "AddParticipantCmd: invalid conversation handle: " << mConvHandle);
             }
          }
       }
@@ -411,17 +414,6 @@ class RemoveParticipantCmd : public resip::DumCommandAdapter
                }
             }
             conversation->removeParticipant(participant);
-         }
-         else
-         {
-            if(!participant)
-            {
-               WarningLog(<< "RemoveParticipantCmd: invalid participant handle.");
-            }
-            if(!conversation)
-            {
-               WarningLog(<< "RemoveParticipantCmd: invalid conversation handle.");
-            }
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RemoveParticipantCmd: "; return strm; }
@@ -475,15 +467,15 @@ class MoveParticipantCmd : public resip::DumCommandAdapter
          {
             if(!participant)
             {
-               WarningLog(<< "MoveParticipantCmd: invalid participant handle.");
+               WarningLog(<< "MoveParticipantCmd: invalid participant handle: " << mPartHandle);
             }
             if(!sourceConversation)
             {
-               WarningLog(<< "MoveParticipantCmd: invalid source conversation handle.");
+               WarningLog(<< "MoveParticipantCmd: invalid source conversation handle: " << mSourceConvHandle);
             }
             if(!destConversation)
             {
-               WarningLog(<< "MoveParticipantCmd: invalid destination conversation handle.");
+               WarningLog(<< "MoveParticipantCmd: invalid destination conversation handle: " << mDestConvHandle);
             }
          }
       }
@@ -520,11 +512,11 @@ class ModifyParticipantContributionCmd : public resip::DumCommandAdapter
          {
             if(!participant)
             {
-               WarningLog(<< "ModifyParticipantContributionCmd: invalid participant handle.");
+               WarningLog(<< "ModifyParticipantContributionCmd: invalid participant handle: " << mPartHandle);
             }
             if(!conversation)
             {
-               WarningLog(<< "ModifyParticipantContributionCmd: invalid conversation handle.");
+               WarningLog(<< "ModifyParticipantContributionCmd: invalid conversation handle: " << mConvHandle);
             }
          }
       }
@@ -580,7 +572,7 @@ class AlertParticipantCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "AlertParticipantCmd: invalid remote participant handle.");
+            WarningLog(<< "AlertParticipantCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " AlertParticipantCmd: "; return strm; }
@@ -623,7 +615,7 @@ class AnswerParticipantCmd : public resip::DumCommandAdapter
             return;
          }
 
-         WarningLog(<< "AnswerParticipantCmd: invalid remote participant handle.");
+         WarningLog(<< "AnswerParticipantCmd: invalid remote participant handle: " << mPartHandle);
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " AnswerParticipantCmd: "; return strm; }
    private:
@@ -657,7 +649,7 @@ class RejectParticipantCmd : public resip::DumCommandAdapter
             return;
          }
 
-         WarningLog(<< "RejectParticipantCmd: invalid remote participant handle.");
+         WarningLog(<< "RejectParticipantCmd: invalid remote participant handle: " << mPartHandle);
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RejectParticipantCmd: "; return strm; }
    private:
@@ -688,7 +680,7 @@ class RedirectParticipantCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "RedirectParticipantCmd: invalid remote participant handle.");
+            WarningLog(<< "RedirectParticipantCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RedirectParticipantCmd: "; return strm; }
@@ -723,11 +715,11 @@ class RedirectToParticipantCmd : public resip::DumCommandAdapter
          {
             if(!remoteParticipant)
             {
-               WarningLog(<< "RedirectToParticipantCmd: invalid remote participant handle.");
+               WarningLog(<< "RedirectToParticipantCmd: invalid remote participant handle: " << mPartHandle);
             }
             if(!destRemoteParticipant)
             {
-               WarningLog(<< "RedirectToParticipantCmd: invalid destination remote participant handle.");
+               WarningLog(<< "RedirectToParticipantCmd: invalid destination remote participant handle: " << mDestPartHandle);
             }
          }
       }
@@ -767,7 +759,7 @@ class HoldParticipantCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "HoldParticipantCmd: invalid remote participant handle.");
+            WarningLog(<< "HoldParticipantCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
@@ -796,7 +788,7 @@ public:
          return;
       }
 
-      WarningLog(<< "SendIMToParticipantCmd: invalid remote participant handle.");
+      WarningLog(<< "SendIMToParticipantCmd: invalid remote participant handle: " << mPartHandle);
    }
    EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " SendIMToParticipantCmd: "; return strm; }
 private:
@@ -822,7 +814,7 @@ class RequestKeyframeCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle.");
+            WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
       EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
@@ -848,13 +840,43 @@ class RequestKeyframeFromPeerCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "RequestKeyframeFromPeerCmd: invalid remote participant handle.");
+            WarningLog(<< "RequestKeyframeFromPeerCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RequestKeyframeFromPeerCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
+};
+
+class RequestKeyframeFromPeerRecurringCmd : public resip::DumCommandAdapter
+{
+   public:
+      RequestKeyframeFromPeerRecurringCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle,
+                          std::chrono::duration<double> interval)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle),
+           mInterval(interval) {}
+      virtual Message* clone() const { return new RequestKeyframeFromPeerRecurringCmd(*this); }
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            remoteParticipant->requestKeyframeFromPeerTimeout(false);
+            mConversationManager->requestKeyframeFromPeerRecurring(mPartHandle, mInterval);
+         }
+         else
+         {
+            WarningLog(<< "RequestKeyframeFromPeerRecurringCmd: invalid remote participant handle.");
+         }
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RequestKeyframeFromPeerRecurringCmd: "; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+      std::chrono::duration<double> mInterval;
 };
 
 class ApplicationTimerCmd : public resip::DumCommand
@@ -889,7 +911,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.

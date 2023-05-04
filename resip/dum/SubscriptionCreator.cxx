@@ -10,7 +10,7 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
                                          std::shared_ptr<UserProfile> userProfile, 
                                          const Data& event, 
                                          uint32_t subscriptionTime)
-   : BaseCreator(dum, std::move(userProfile)),
+   : BaseCreator(dum, userProfile),
      mRefreshInterval(-1)
 {
    makeInitialRequest(target, SUBSCRIBE);
@@ -25,7 +25,7 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
                                          const Data& event, 
                                          uint32_t subscriptionTime, 
                                          int refreshInterval)
-   : BaseCreator(dum, std::move(userProfile)),
+   : BaseCreator(dum, userProfile),
      mRefreshInterval(refreshInterval)
 {
    makeInitialRequest(target, SUBSCRIBE);
@@ -38,7 +38,7 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
                                          const NameAddr& target,
                                          std::shared_ptr<UserProfile> userProfile,
                                          const H_ReferTo::Type& referTo)
-   : BaseCreator(dum, std::move(userProfile)),
+   : BaseCreator(dum, userProfile),
      mRefreshInterval(-1)
 {
    makeInitialRequest(target, REFER);

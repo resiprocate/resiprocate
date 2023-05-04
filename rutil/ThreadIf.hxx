@@ -1,6 +1,8 @@
 #if !defined(RESIP_THREADIF_HXX)
 #define RESIP_THREADIF_HXX
 
+#include <thread>
+
 #include "rutil/Socket.hxx"
 
 #ifdef WIN32
@@ -41,6 +43,13 @@ namespace resip
    thread.join();
    @endcode
 */
+// Subclasses should use C++11 std::thread directly so that they will
+// be more readable.
+// FIXME: uncomment the RESIP_DEPRECATED macro after we stop using ThreadIf
+// within the stack itself.
+// FIXME: remove ThreadIf altogether after a delay of at least 6 months.
+// It remains here for transition purposes.
+//RESIP_DEPRECATED(
 class ThreadIf
 {
    public:
@@ -67,11 +76,7 @@ class ThreadIf
       // returns true if the thread has been asked to shutdown or not running
       bool isShutdown() const;
 
-#ifdef WIN32
-      typedef DWORD Id;
-#else
-      typedef pthread_t Id;
-#endif
+      typedef std::thread::id Id;
       static Id selfId();
 
 #ifdef WIN32
@@ -97,8 +102,8 @@ class ThreadIf
       virtual void thread() = 0;
 
    protected:
+      std::shared_ptr<std::thread> mThreadObj;
 #ifdef WIN32
-      HANDLE mThread;
       typedef std::map<DWORD,TlsDestructor *> TlsDestructorMap;
    public:
       /// Free data in TLS slots. For internal use only!

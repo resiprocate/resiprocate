@@ -54,6 +54,7 @@ ProtonThreadBase::ProtonSenderBase::ProtonSenderBase(const std::string &u,
      mFifo(0, 0),
      mPending(0)
 {
+   StackLog(<<"ProtonSenderBase::ProtonSenderBase : " << mUrl);
 }
 
 ProtonThreadBase::ProtonSenderBase::~ProtonSenderBase()
@@ -63,9 +64,18 @@ ProtonThreadBase::ProtonSenderBase::~ProtonSenderBase()
 void
 ProtonThreadBase::ProtonSenderBase::sendMessage(const resip::Data& msg)
 {
-   mFifo.add(new Data(msg), TimeLimitFifo<Data>::InternalElement);
-   mWorkQueue->add(proton::internal::v11::make_work(&ProtonThreadBase::ProtonSenderBase::doSend, this));
-   StackLog(<<"QpidProtonThread::sendMessage added a message to the FIFO");
+   if(mFifo.add(new Data(msg), TimeLimitFifo<Data>::IgnoreTimeDepth))
+   {
+      StackLog(<<"QpidProtonThread::sendMessage added a message to the FIFO");
+   }
+   else
+   {
+      ErrLog(<<"mFifo rejected the message");
+   }
+   if(mWorkQueue)
+   {
+      mWorkQueue->add(proton::internal::v11::make_work(&ProtonThreadBase::ProtonSenderBase::doSend, this));
+   }
 }
 
 void
@@ -95,7 +105,8 @@ ProtonThreadBase::ProtonSenderBase::doSend()
 }
 
 ProtonThreadBase::ProtonThreadBase(std::chrono::duration<long int> retryDelay)
-   : mRetryDelay(retryDelay)
+   : mRetryDelay(retryDelay),
+     mConnected(false)
 {
 }
 
@@ -104,29 +115,92 @@ ProtonThreadBase::~ProtonThreadBase()
 }
 
 void
-ProtonThreadBase::on_container_start(proton::container &c)
+ProtonThreadBase::openReceiver(std::shared_ptr<ProtonReceiverBase> rx)
 {
-   for(auto rb : mReceivers)
+   StackLog(<<"calling open_receiver");
+   if(mConnected)
+   {
+      rx->mReceiver = mConnection.open_receiver(rx->mUrl);
+      rx->mWorkQueue = &rx->mReceiver.work_queue();
+   }
+   else
    {
       proton::reconnect_options rec;
-      rec.delay(proton::duration(std::chrono::milliseconds(rb->mRetryDelay).count()));
+      rec.delay(proton::duration(std::chrono::milliseconds(rx->mRetryDelay).count()));
       proton::connection_options co;
       co.reconnect(rec);
-      rb->mReceiver = c.open_receiver(rb->mUrl, co);
+      rx->mReceiver = mContainer->open_receiver(rx->mUrl, co);
+   }
+}
+
+void
+ProtonThreadBase::openSender(std::shared_ptr<ProtonSenderBase> tx)
+{
+   StackLog(<<"calling open_sender for " << tx->mUrl);
+   if(mConnected)
+   {
+      tx->mSender = mConnection.open_sender(tx->mUrl);
+      tx->mWorkQueue = &tx->mSender.work_queue();
+      tx->mWorkQueue->add(proton::internal::v11::make_work(&ProtonThreadBase::ProtonSenderBase::doSend, tx));
+   }
+   else
+   {
+      proton::reconnect_options rec;
+      rec.delay(proton::duration(std::chrono::milliseconds(tx->mRetryDelay).count()));
+      proton::connection_options co;
+      co.reconnect(rec);
+      tx->mSender = mContainer->open_sender(tx->mUrl, co);
+   }
+}
+
+void
+ProtonThreadBase::addReceiver(std::shared_ptr<ProtonReceiverBase> rx)
+{
+   mReceivers.push_back(rx);
+   if(mStarted)
+   {
+      openReceiver(rx);
+   }
+}
+
+void
+ProtonThreadBase::addSender(std::shared_ptr<ProtonSenderBase> tx)
+{
+   mSenders.push_back(tx);
+   if(mStarted)
+   {
+      openSender(tx);
+   }
+}
+
+std::shared_ptr<ProtonThreadBase::ProtonSenderBase>
+ProtonThreadBase::getSenderForReply(const std::string& replyTo)
+{
+   std::shared_ptr<ProtonSenderBase> sender = std::make_shared<ProtonThreadBase::ProtonSenderBase>(replyTo);
+   addSender(sender);
+   return sender;
+}
+
+void
+ProtonThreadBase::on_container_start(proton::container &c)
+{
+   mStarted = true;
+   for(auto rb : mReceivers)
+   {
+      openReceiver(rb);
    }
    for(auto sb : mSenders)
    {
-      proton::reconnect_options rec;
-      rec.delay(proton::duration(std::chrono::milliseconds(sb->mRetryDelay).count()));
-      proton::connection_options co;
-      co.reconnect(rec);
-      sb->mSender = c.open_sender(sb->mUrl, co);
+      openSender(sb);
    }
 }
 
 void
 ProtonThreadBase::on_connection_open(proton::connection& conn)
 {
+   InfoLog(<<"ProtonThreadBase::on_connection_open");
+   mConnection = conn;
+   mConnected = true;
 }
 
 void
@@ -159,6 +233,7 @@ ProtonThreadBase::on_sender_open(proton::sender &s)
       {
          InfoLog(<<"sender ready for queue " << sb->mUrl);
          sb->mWorkQueue = &s.work_queue();
+         sb->doSend();
          return;
       }
    }
@@ -196,43 +271,52 @@ ProtonThreadBase::on_message(proton::delivery &d, proton::message &m)
                return;
             }
          }
-         // get body as std::stringstream
-         std::string _json;
-         try
-         {
-            _json = proton::get<std::string>(m.body());
-         }
-         catch(proton::conversion_error& ex)
-         {
-            ErrLog(<<"failed to extract message body as string: " << ex.what());
-            return;
-         }
-         StackLog(<<"on_message received: " << _json);
-         std::stringstream stream;
-         stream << _json;
-
-         // extract elements from JSON
-         json::Object *elemRootFile = new json::Object();
-         if(!elemRootFile)
-         {
-            ErrLog(<<"failed to allocate new json::Object()"); // FIXME
-            return;
-         }
-         try
-         {
-            json::Reader::Read(*elemRootFile, stream);
-         }
-         catch(json::Reader::ScanException& ex)
-         {
-            ErrLog(<<"failed to scan JSON message: " << ex.what() << " message body: " << _json);
-            return;
-         }
-         rb->mFifo.add(elemRootFile, TimeLimitFifo<json::Object>::InternalElement);
+         rb->mFifo.add(new proton::message(m), TimeLimitFifo<proton::message>::InternalElement);
 
          return;
       }
    }
    ErrLog(<<"unexpected receiver: " << r);
+}
+
+std::unique_ptr<json::Object>
+ProtonThreadBase::ProtonReceiverBase::getBodyAsJSON(const proton::message &m)
+{
+   std::unique_ptr<json::Object> result;
+   // get body as std::stringstream
+   std::string _json;
+   try
+   {
+      _json = proton::get<std::string>(m.body());
+   }
+   catch(proton::conversion_error& ex)
+   {
+      ErrLog(<<"failed to extract message body as string: " << ex.what());
+      return result;
+   }
+   StackLog(<<"on_message received: " << _json);
+   std::stringstream stream;
+   stream << _json;
+
+   // extract elements from JSON
+   json::Object* __json = new json::Object();
+   if(!__json)
+   {
+      ErrLog(<<"failed to allocate new json::Object()");
+      return result;
+   }
+   result.reset(__json);
+   try
+   {
+      json::Reader::Read(*result, stream);
+   }
+   catch(json::Reader::ScanException& ex)
+   {
+      ErrLog(<<"failed to scan JSON message: " << ex.what() << " message body: " << _json);
+      result.reset();
+      return result;
+   }
+   return result;
 }
 
 void

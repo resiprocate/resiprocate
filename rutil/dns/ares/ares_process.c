@@ -25,7 +25,7 @@
 #include <sys/uio.h>
 #include <netinet/in.h>
 #ifndef __CYGWIN__
-#  include <arpa/nameser.h>
+#  include "ares_nameser.h"
 #endif
 #include <unistd.h>
 #endif

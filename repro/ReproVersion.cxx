@@ -15,7 +15,9 @@
 #endif
 
 #include "repro/ReproVersion.hxx"
-#include "repro/reproInfo.hxx"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #if !defined(REPRO_BUILD_REV)
 # define REPRO_BUILD_REV "000000"
 #endif

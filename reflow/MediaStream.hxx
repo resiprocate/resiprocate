@@ -104,8 +104,8 @@ protected:
    srtp_t mSRTPSessionIn;
    srtp_t mSRTPSessionOut;
 
-   err_status_t srtpProtect(void* data, int* size, bool rtcp);
-   err_status_t srtpUnprotect(void* data, int* size, bool rtcp);
+   srtp_err_status_t srtpProtect(void* data, int* size, bool rtcp);
+   srtp_err_status_t srtpUnprotect(void* data, int* size, bool rtcp);
   
    // Nat Traversal Members
    NatTraversalMode mNatTraversalMode;

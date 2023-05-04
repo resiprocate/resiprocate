@@ -64,9 +64,38 @@ PyRouteWork::encodeBrief(EncodeStream& ostr) const
    return encode(ostr);
 }
 
-PyRouteWorker::PyRouteWorker(PyExtensionBase& py, Py::Callable& action)
+PyRouteMessageHandlerWork::PyRouteMessageHandlerWork(const resip::SipMessage& message)
+    : mMessage(dynamic_cast<resip::SipMessage*>(message.clone()))
+{
+}
+
+PyRouteMessageHandlerWork::~PyRouteMessageHandlerWork()
+{
+}
+
+PyRouteMessageHandlerWork*
+PyRouteMessageHandlerWork::clone() const
+{
+   return new PyRouteMessageHandlerWork(*this);
+}
+
+EncodeStream&
+PyRouteMessageHandlerWork::encode(EncodeStream& ostr) const
+{
+   ostr << "PyRouteMessageHandlerWork";
+   return ostr;
+}
+
+EncodeStream&
+PyRouteMessageHandlerWork::encodeBrief(EncodeStream& ostr) const
+{
+   return encode(ostr);
+}
+
+PyRouteWorker::PyRouteWorker(PyExtensionBase& py, Py::Callable& action, Py::Callable& messageHandlerAction)
     : mPy(py),
-      mAction(action)
+      mAction(action),
+      mMessageHandlerAction(messageHandlerAction)
 {
 }
 
@@ -77,7 +106,7 @@ PyRouteWorker::~PyRouteWorker()
 PyRouteWorker*
 PyRouteWorker::clone() const
 {
-   PyRouteWorker* worker = new PyRouteWorker(mPy, mAction);
+   PyRouteWorker* worker = new PyRouteWorker(mPy, mAction, mMessageHandlerAction);
    return worker;
 }
 
@@ -92,12 +121,22 @@ bool
 PyRouteWorker::process(resip::ApplicationMessage* msg)
 {
    PyRouteWork* work = dynamic_cast<PyRouteWork*>(msg);
-   if(!work)
+   if(work)
    {
-      WarningLog(<< "received unexpected message");
-      return false;
+      return processWork(work);
    }
+   PyRouteMessageHandlerWork* messageHandlerWork = dynamic_cast<PyRouteMessageHandlerWork*>(msg);
+   if(messageHandlerWork)
+   {
+      return processMessageHandlerWork(messageHandlerWork);
+   }
+   WarningLog(<< "received unexpected message");
+   return false;
+}
 
+bool
+PyRouteWorker::processWork(PyRouteWork* work)
+{
    DebugLog(<<"handling a message");
 
    resip::SipMessage& message = work->mMessage;
@@ -115,8 +154,13 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
 
    // arg 3: a subset of the SIP headers
    Py::Dict headers;
+   headers["DisplayName"] = Py::String(message.header(resip::h_From).displayName().c_str());
    headers["From"] = Py::String(message.header(resip::h_From).uri().toString().c_str());
    headers["To"] = Py::String(message.header(resip::h_To).uri().toString().c_str());
+   if(message.exists(resip::h_CallID))
+   {
+      headers["Call-ID"] = Py::String(message.header(resip::h_CallID).value().c_str());
+   }
    if(message.exists(resip::h_ContentType))
    {
       const resip::HeaderFieldValue hfv = message.header(resip::h_ContentType).getHeaderField();
@@ -292,6 +336,126 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
       }
    }
    
+   return true;
+}
+
+bool
+PyRouteWorker::processMessageHandlerWork(PyRouteMessageHandlerWork* work)
+{
+   DebugLog(<<"handling a message");
+
+   const resip::SipMessage& message = *work->mMessage;
+
+   // Get the Global Interpreter Lock
+   StackLog(<< "getting lock...");
+   resip_assert(mPyUser);
+   PyExternalUser::Use use(*mPyUser);
+
+   // arg 1: SIP request / response line
+   Py::Dict statusLine;
+   if(message.isRequest())
+   {
+      statusLine["method"] = Py::String(getMethodName(message.header(resip::h_RequestLine).method()).c_str());
+      statusLine["request_uri"] = Py::String(message.header(resip::h_RequestLine).uri().toString().c_str());
+   }
+   else if(message.isResponse())
+   {
+      const StatusLine& sline = message.header(resip::h_StatusLine);
+      statusLine["response_code"] = Py::Long(sline.responseCode());
+      statusLine["reason_text"] = Py::String(sline.reason().c_str());
+   }
+   else
+   {
+      ErrLog(<<"neither request nor response");
+      return false;
+   }
+
+   // arg 2: a subset of the SIP headers
+   Py::Dict headers;
+   headers["DisplayName"] = Py::String(message.header(resip::h_From).displayName().c_str());
+   headers["From"] = Py::String(message.header(resip::h_From).uri().toString().c_str());
+   headers["To"] = Py::String(message.header(resip::h_To).uri().toString().c_str());
+   if(message.exists(resip::h_CallID))
+   {
+      headers["Call-ID"] = Py::String(message.header(resip::h_CallID).value().c_str());
+   }
+   if(message.exists(resip::h_ContentType))
+   {
+      std::ostringstream os;
+      os << message.header(resip::h_ContentType);
+      headers["Content-Type"] = Py::String(os.str());
+      //const resip::HeaderFieldValue hfv = message.header(resip::h_ContentType).getHeaderField();
+      //headers["Content-Type"] = Py::String(hfv.getBuffer(), hfv.getLength(), "utf8");
+   }
+   const resip::SipMessage::UnknownHeaders& unknowns = message.getRawUnknownHeaders();
+   resip::SipMessage::UnknownHeaders::const_iterator it = unknowns.begin();
+   for( ; it != unknowns.end(); it++)
+   {
+      const resip::Data& name = it->first;
+      StackLog(<<"found unknown header: " << name);
+      resip::HeaderFieldValueList* hfvl = it->second;
+      if(!hfvl->empty())
+      {
+         resip::HeaderFieldValue* hfv = hfvl->front();
+         headers[name.c_str()] = Py::String(hfv->getBuffer(), hfv->getLength(), "utf8");
+      }
+      if(hfvl->size() > 1)
+      {
+         // TODO - if multiple values exist, put them in a Py::List
+         WarningLog(<<"ignoring additional values for header " << name);
+      }
+   }
+
+   // arg 3: transport type
+   Py::String transportType(
+      getTransportNameFromType(message.getReceivedTransportTuple().getType()));
+
+   // arg 4: body
+   Py::String body("");
+   const resip::HeaderFieldValue& bodyHfv = message.getRawBody();
+   if(bodyHfv.getLength() > 0)
+   {
+      // FIXME: do we always need to copy the whole body?
+      // could we give Python a read-only pointer to the body data?
+      body = Py::String(bodyHfv.getBuffer(), bodyHfv.getLength(), "utf8");
+   }
+
+   // arg 5: cookies (if the message was received over a WebSocket transport)
+   const resip::CookieList& _cookies = message.getWsCookies();
+   Py::Dict cookies;
+   for(
+      resip::CookieList::const_iterator it = _cookies.begin();
+      it != _cookies.end();
+      it++)
+   {
+      ErrLog(<<"adding cookie: " << it->name());
+      cookies[Py::String(it->name().c_str())] = Py::String(it->value().c_str());
+   }
+
+   Py::Tuple args(5);
+   int arg = 0;
+   args[arg++] = statusLine;
+   args[arg++] = headers;
+   args[arg++] = transportType;
+   args[arg++] = body;
+   args[arg++] = cookies;
+   Py::Object response;
+   if(mMessageHandlerAction == Py::None())
+   {
+      ErrLog(<<"No on_message method in the Python script");
+      return false;
+   }
+   try
+   {
+      StackLog(<< "invoking mMessageHandlerAction");
+      response = mMessageHandlerAction.apply(args);
+   }
+   catch (const Py::Exception& ex)
+   {
+      WarningLog(<< "PyRoute mMessageHandlerAction failed: " << Py::value(ex));
+      WarningLog(<< Py::trace(ex));
+      return true;
+   }
    return true;
 }
 

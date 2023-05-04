@@ -5,7 +5,7 @@
 using namespace resip;
 
 WsConnectionBase::WsConnectionBase(std::shared_ptr<WsConnectionValidator> wsConnectionValidator)
-   : mWsConnectionValidator(std::move(wsConnectionValidator))
+   : mWsConnectionValidator(wsConnectionValidator)
 {
 }
 
@@ -26,7 +26,7 @@ std::shared_ptr<WsCookieContext> WsConnectionBase::getWsCookieContext() const no
 
 void WsConnectionBase::setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext) noexcept
 {
-   mWsCookieContext = std::move(wsCookieContext);
+   mWsCookieContext = wsCookieContext;
 }
 
 std::shared_ptr<WsConnectionValidator> WsConnectionBase::connectionValidator() const noexcept

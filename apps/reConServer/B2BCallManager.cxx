@@ -57,7 +57,7 @@ B2BCall::peer(const recon::ParticipantHandle& partHandle)
 
 B2BCallManager::B2BCallManager(const ReConServerConfig& config, int defaultSampleRate, int maxSampleRate, std::shared_ptr<B2BCallLogger> b2bCallLogger)
    : MyConversationManager(config, false, defaultSampleRate, maxSampleRate, false),
-     mB2BCallLogger(std::move(b2bCallLogger))
+     mB2BCallLogger(b2bCallLogger)
 { 
    config.getConfigValue("B2BUAInternalHosts", mInternalHosts);
    config.getConfigValue("B2BUAInternalTLSNames", mInternalTLSNames);

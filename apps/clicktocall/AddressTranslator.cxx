@@ -26,7 +26,6 @@ AddressTranslator::~AddressTranslator()
     {
         if ( it->preq )
         {
-            regfree ( it->preq );
             delete it->preq;
             it->preq = 0;
         }
@@ -46,20 +45,26 @@ AddressTranslator::addTranslation(const resip::Data& matchingPattern,
 
    if( !filter.mMatchingPattern.empty() )
    {
-     int flags = REG_EXTENDED;
-     if( filter.mRewriteExpression.find("$") == Data::npos )
-     {
-       flags |= REG_NOSUB;
-     }
-     filter.preq = new regex_t;
-     int ret = regcomp( filter.preq, filter.mMatchingPattern.c_str(), flags );
-     if( ret != 0 )
-     {
-       delete filter.preq;
-       ErrLog( << "Translation has invalid match expression: "
-               << filter.mMatchingPattern );
-       filter.preq = 0;
-     }
+      // Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+      // of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+      // std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+      // use the EMCAScript syntax.
+      const std::regex_constants::syntax_option_type flags = std::regex_constants::ECMAScript;
+      if( filter.mRewriteExpression.find("$") == Data::npos )
+      {
+         flags |= std::regex_constants::nosubs;
+      }
+      try
+      {
+         filter.preq = new std::regex(filter.mMatchingPattern.c_str(), flags );
+      }
+      catch (std::regex_error& e)
+      {
+         delete filter.preq;
+         ErrLog( << "Translation has invalid match expression: "
+                 << filter.mMatchingPattern );
+         filter.preq = 0;
+      }
    }
    mFilterOperators.push_back( filter ); 
 }
@@ -76,7 +81,6 @@ AddressTranslator::removeTranslation(const resip::Data& matchingPattern )
          it++;
          if ( i->preq )
          {
-           regfree ( i->preq );
            delete i->preq;
            i->preq = 0;
          }
@@ -102,13 +106,11 @@ AddressTranslator::translate(const resip::Data& address, resip::Data& translatio
       Data& match = it->mMatchingPattern;
       if ( it->preq ) 
       {
-         int ret;
+         std::cmatch matches;
          
-         const int nmatch=10;
-         regmatch_t pmatch[nmatch];
-         
-         ret = regexec(it->preq, address.c_str(), nmatch, pmatch, 0/*eflags*/);
-         if ( ret != 0 )
+         // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+         //        the string, this is backwards compatible with the previous regexec PCRE implementation
+         if(!std::regex_search(address.c_str(), matches, *it->preq))
          {
             // did not match 
             DebugLog( << "  Skipped translation "<< address << " did not match " << match );
@@ -120,40 +122,36 @@ AddressTranslator::translate(const resip::Data& address, resip::Data& translatio
          rc=true;
          if ( rewrite.find("$") != Data::npos )
          {
-            for ( int i=1; i<nmatch; i++)
+            for ( int i=1; i<matches.size(); i++)
             {
-               if ( pmatch[i].rm_so != -1 )
+               Data subExp(matches[i]);
+               DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+
+               Data result;
                {
-                  Data subExp(address.substr(pmatch[i].rm_so,
-                                             pmatch[i].rm_eo-pmatch[i].rm_so));
-                  DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+                  DataStream s(result);
 
-                  Data result;
-                  {
-                     DataStream s(result);
-
-                     ParseBuffer pb(translation);
+                  ParseBuffer pb(translation);
                      
-                     while (true)
+                  while (true)
+                  {
+                     const char* a = pb.position();
+                     pb.skipToChars( Data("$") + char('0'+i) );
+                     if ( pb.eof() )
                      {
-                        const char* a = pb.position();
-                        pb.skipToChars( Data("$") + char('0'+i) );
-                        if ( pb.eof() )
-                        {
-                           s << pb.data(a);
-                           break;
-                        }
-                        else
-                        {
-                           s << pb.data(a);
-                           pb.skipN(2);
-                           s <<  subExp;
-                        }
+                        s << pb.data(a);
+                        break;
                      }
-                     s.flush();
+                     else
+                     {
+                        s << pb.data(a);
+                        pb.skipN(2);
+                        s <<  subExp;
+                     }
                   }
-                  translation = result;
+                  s.flush();
                }
+               translation = result;
             }
          }
          else

@@ -1,10 +1,6 @@
 #include <fstream>
 #include <iostream>
 
-#ifdef USE_SIPXTAPI
-#include "os/OsIntTypes.h"
-#endif
-
 #include "reConServerConfig.hxx"
 
 #include "AppSubsystem.hxx"
@@ -142,6 +138,25 @@ ReConServerConfig::Application
 ReConServerConfig::getConfigApplication(const resip::Data& name, const ReConServerConfig::Application defaultValue)
 {
    ReConServerConfig::Application ret = defaultValue;
+   getConfigValue(name, ret);
+   return ret;
+}
+
+bool
+ReConServerConfig::getConfigValue(const resip::Data& name, ReConServerConfig::MediaStack& value) const
+{
+   std::map<ReConServerConfig::MediaStack, Data> dict;
+   dict[sipXtapi] = "sipXtapi";
+   dict[Kurento] = "Kurento";
+   dict[Gstreamer] = "Gstreamer";
+   dict[LibWebRTC] = "LibWebRTC";
+   return translateConfigValue<ReConServerConfig::MediaStack>(dict, name, value);
+}
+
+ReConServerConfig::MediaStack
+ReConServerConfig::getConfigMediaStack(const resip::Data& name, const ReConServerConfig::MediaStack defaultValue) const
+{
+   ReConServerConfig::MediaStack ret = defaultValue;
    getConfigValue(name, ret);
    return ret;
 }

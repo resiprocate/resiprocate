@@ -14,7 +14,7 @@ WsConnection::WsConnection(Transport* transport,
                            std::shared_ptr<WsConnectionValidator> wsConnectionValidator,
                            bool isServer)
    : TcpConnection(transport,who, fd, compression, isServer)
-   , WsConnectionBase(std::move(wsConnectionValidator))
+   , WsConnectionBase(wsConnectionValidator)
 {
    DebugLog (<< "Creating WS connection " << who << " on " << fd);
 }

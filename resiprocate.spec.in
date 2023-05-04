@@ -1,12 +1,12 @@
-Name: @PACKAGE@
-Version: @VERSION@
+Name: @CMAKE_PROJECT_NAME@
+Version: @PROJECT_VERSION@
 Release: 1%{?dist}
 Summary: SIP and TURN stacks, with SIP proxy and TURN server implementations
 License: VSL
 Url: http://www.resiprocate.org
 Source: https://www.resiprocate.org/files/pub/reSIProcate/releases/%name-%version.tar.gz
 BuildRequires: gcc-c++
-BuildRequires: libtool automake autoconf
+BuildRequires: cmake
 %define build_return 0%{?fedora} >= 30 || 0%{?rhel} >= 8
 %if %build_return
 BuildRequires: asio-devel >= 1.12.0
@@ -17,6 +17,10 @@ BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
 BuildRequires: fmt-devel
 BuildRequires: gperf
+BuildRequires: gstreamer1-devel
+BuildRequires: gstreamer1-plugins-base-devel
+BuildRequires: gstreamer1-plugins-bad-free-devel
+BuildRequires: gstreamermm-devel
 %if 0%{?fedora} >= 34 || 0%{?rhel} >= 8
 BuildRequires: libdb-cxx-devel
 %endif
@@ -53,7 +57,11 @@ BuildRequires: xerces-c-devel
 BuildRequires: net-snmp-devel
 BuildRequires: qpid-proton-cpp-devel
 BuildRequires: soci-devel
+BuildRequires: soci-mysql-devel
 BuildRequires: soci-postgresql-devel
+BuildRequires: sox
+# vim-common contains the xxd utility
+BuildRequires: vim-common
 BuildRequires: websocketpp-devel
 Requires: openssl >= 1.1.0
 %if %use_systemd
@@ -204,17 +212,61 @@ RETURN_CFG=--with-return
 %endif
 %define use_srtp1 0%{?rhel} == 8
 %if %use_srtp1
-SRTP1=--with-srtp1
+SRTP1=-DUSE_SRTP1=ON
+%else
+SRTP1=-DUSE_SRTP1=OFF
 %endif
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D_REENTRANT -I/usr/include/soci" %configure --with-c-ares --with-fmt --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} ${RETURN_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_VERSION=${PYVERSION} DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python3 --enable-assert-syslog --with-netsnmp --with-qpid-proton --with-recon --with-kurento ${SRTP1}
-sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
-sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
-rm -rf resip/stack/gen/*.cxx
-make %{?_smp_mflags}
+CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -I/usr/include/soci"
+# FIXME - enable FMT
+# FIXME - enable GStreamer - requires gst-webrtc header tweak
+%cmake \
+    -DENABLE_LOG_REPOSITORY_DETAILS=OFF \
+    -DRUN_GPERF=ON \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" \
+    -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" \
+    -DWITH_C_ARES=ON \
+    -DWITH_SSL=ON \
+    -DUSE_POPT=ON \
+    -DUSE_SIGCOMP=OFF \
+    -DUSE_FMT=OFF \
+    -DVERSIONED_SONAME=ON \
+    -DENABLE_ANDROID=OFF \
+    -DUSE_IPV6=ON \
+    -DUSE_DTLS=ON \
+    -DPEDANTIC_STACK=OFF \
+    -DUSE_MYSQL=ON \
+    -DUSE_SOCI_POSTGRESQL=ON \
+    -DUSE_SOCI_MYSQL=ON \
+    -DUSE_POSTGRESQL=ON \
+    -DUSE_MAXMIND_GEOIP=OFF \
+    -DRESIP_HAVE_RADCLI=ON \
+    -DUSE_NETSNMP=ON \
+    -DBUILD_REPRO=ON \
+    -DBUILD_REPRO_DSO_PLUGINS=ON \
+    -DBUILD_RETURN=ON \
+    -DBUILD_REND=OFF \
+    -DBUILD_TFM=OFF \
+    -DBUILD_ICHAT_GW=OFF \
+    -DBUILD_TELEPATHY_CM=OFF \
+    -DBUILD_RECON=ON \
+    ${SRTP1} \
+    -DBUILD_RECONSERVER=ON \
+    -DUSE_SIPXTAPI=OFF \
+    -DUSE_KURENTO=ON \
+    -DUSE_GSTREAMER=OFF \
+    -DUSE_LIBWEBRTC=OFF \
+    -DRECON_LOCAL_HW_TESTS=OFF \
+    -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 \
+    -DBUILD_P2P=OFF \
+    -DBUILD_PYTHON=ON \
+    -DBUILD_QPID_PROTON=ON \
+    -DRESIP_ASSERT_SYSLOG=ON
+%cmake_build
 
 %install
-make DESTDIR=%{buildroot} install
+%cmake_install
 %if %use_systemd
 install -p -D -m644 repro/pkg/common/repro.service %{buildroot}%{_unitdir}/repro.service
 install -p -D -m644 apps/reConServer/pkg/common/reconserver.service %{buildroot}%{_unitdir}/reconserver.service
@@ -440,6 +492,7 @@ fi
 %{_libdir}/libreflow-*.so
 %{_libdir}/librepro-*.so
 %{_libdir}/libresip-*.so
+%{_libdir}/libresipmedia-*.so
 %if %build_return
 %{_libdir}/libreTurnClient-*.so
 %{_libdir}/libreTurnCommon-*.so
@@ -456,9 +509,9 @@ fi
 %dir %{_includedir}/reTurn/client/
 %endif
 %dir %{_includedir}/recon/
+%dir %{_includedir}/recon/sdp/
 %dir %{_includedir}/reflow/
 %dir %{_includedir}/reflow/dtls_wrapper/
-%dir %{_includedir}/reflow/rtcp/
 %dir %{_includedir}/repro/
 %dir %{_includedir}/repro/monkeys/
 %dir %{_includedir}/repro/stateAgents/
@@ -469,20 +522,22 @@ fi
 %dir %{_includedir}/resip/stack/ssl/
 %dir %{_includedir}/rutil/
 %dir %{_includedir}/rutil/dns/
+%dir %{_includedir}/rutil/rtcp/
 %dir %{_includedir}/rutil/ssl/
 %dir %{_includedir}/rutil/stun/
 %dir %{_includedir}/rutil/wince/
 %dir %{_includedir}/sipdial/
 %{_includedir}/clicktocall/*.hxx
-%dir %{_includedir}/media/kurento/*.hxx
+%{_includedir}/media/*.hxx
+%{_includedir}/media/kurento/*.hxx
 %if %build_return
 %{_includedir}/reTurn/*.hxx
 %{_includedir}/reTurn/client/*.hxx
 %endif
 %{_includedir}/recon/*.hxx
+%{_includedir}/recon/*/*.hxx
 %{_includedir}/reflow/*.hxx
 %{_includedir}/reflow/dtls_wrapper/*.hxx
-%{_includedir}/reflow/rtcp/*.h
 %{_includedir}/repro/*.hxx
 %{_includedir}/repro/*/*.hxx
 %{_includedir}/resip/dum/*.hxx
@@ -492,6 +547,7 @@ fi
 %{_includedir}/rutil/*.hxx
 %{_includedir}/rutil/*.h
 %{_includedir}/rutil/*/*.hxx
+%{_includedir}/rutil/*/*.h
 %{_includedir}/sipdial/*.hxx
 %{_libdir}/libdum.so
 %{_libdir}/libkurentoclient.so
@@ -499,6 +555,7 @@ fi
 %{_libdir}/libreflow.so
 %{_libdir}/librepro.so
 %{_libdir}/libresip.so
+%{_libdir}/libresipmedia.so
 %if %build_return
 %{_libdir}/libreTurnClient.so
 %{_libdir}/libreTurnCommon.so

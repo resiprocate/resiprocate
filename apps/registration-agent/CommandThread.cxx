@@ -42,12 +42,18 @@ CommandThread::~CommandThread()
 void
 CommandThread::processQueue(UserRegistrationClient& userRegistrationClient)
 {
-   resip::TimeLimitFifo<json::Object>& fifo = getFifo();
+   resip::TimeLimitFifo<proton::message>& fifo = getFifo();
    while(fifo.messageAvailable())
    {
       try
       {
-         std::unique_ptr<json::Object> _jObj(fifo.getNext());
+         std::unique_ptr<proton::message> m(fifo.getNext());
+         std::unique_ptr<json::Object> _jObj(getBodyAsJSON(*m));
+         if(!_jObj)
+         {
+            ErrLog(<<"failed to get message as JSON");
+            break;
+         }
          json::Object& jObj = *_jObj;
          std::string command = json::String(jObj["command"]).Value();
          json::Object args = jObj["arguments"];

@@ -1,0 +1,8 @@
+add_subdirectory(stack)
+add_subdirectory(dum)
+if(BUILD_RECON)
+   add_subdirectory(recon)
+endif()
+if(BUILD_REND)
+   add_subdirectory(rend)
+endif()

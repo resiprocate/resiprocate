@@ -156,6 +156,7 @@
     <ClCompile Include="HEPSipMessageLoggingHandler.cxx" />
     <ClCompile Include="Dispatcher.cxx" />
     <ClCompile Include="WorkerThread.cxx" />
+    <ClCompile Include="TrickleIceContents.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AddTransport.hxx" />
@@ -338,6 +339,7 @@
     <ClInclude Include="Dispatcher.hxx" />
     <ClInclude Include="Worker.hxx" />
     <ClInclude Include="WorkerThread.hxx" />
+    <ClInclude Include="TrickleIceContents.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf">
@@ -349,5 +351,6 @@
     <None Include="ParameterHash.gperf">
       <Filter>GPerfFiles</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -1,37 +1,19 @@
 #ifndef MYCONVERSATIONMANAGER_HXX
 #define MYCONVERSATIONMANAGER_HXX
 
-#ifdef USE_SIPXTAPI
-#include <os/OsIntTypes.h>
-#endif
-
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
 #endif
 
 #include <rutil/Data.hxx>
-#ifdef USE_SIPXTAPI
-#include <resip/recon/SipXMediaStackAdapter.hxx>
-#endif
 
 #include "reConServerConfig.hxx"
 
 namespace reconserver
 {
 
-#if defined(USE_GSTREAMER)
-#define PREFER_GSTREAMER
-#elif defined(USE_LIBWEBRTC)
-#define PREFER_LIBWEBRTC
-#elif defined(USE_KURENTO)
-#define PREFER_KURENTO
-// FIXME: hard-coded to use Kurento when selected at compile time
-#else
-#if defined(USE_SIPXTAPI)
-#define PREFER_SIPXTAPI
-#else
+#if !defined(USE_GSTREAMER) && !defined(USE_LIBWEBRTC) && !defined(USE_KURENTO) && !defined(USE_SIPXTAPI)
 #error No media stack enabled
-#endif
 #endif
 
 class MyConversationManager : public recon::ConversationManager

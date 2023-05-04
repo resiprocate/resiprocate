@@ -39,11 +39,9 @@
 #include "tfm/TestProxy.hxx"
 #include "tfm/TestUser.hxx"
 
-#include <boost/version.hpp>
 #include <utility>
 
 using namespace resip;
-using namespace boost;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
@@ -829,7 +827,7 @@ TestSipEndPoint::ReInvite::ReInvite(TestSipEndPoint* from,
    : mEndPoint(*from),
      mTo(to),
      mMatchUserOnly(matchUserOnly),
-     mSdp(std::move(sdp))
+     mSdp(sdp)
 {
 }
 
@@ -918,7 +916,7 @@ TestSipEndPoint::Update::Update(TestSipEndPoint* from,
    : mEndPoint(*from),
      mTo(to),
      mMatchUserOnly(matchUserOnly),
-     mSdp(std::move(sdp))
+     mSdp(sdp)
 {
 }
 
@@ -1142,7 +1140,7 @@ TestSipEndPoint::Invite::Invite(TestSipEndPoint* from,
                                 EndpointReliableProvisionalMode mode,
                                 std::shared_ptr<resip::SdpContents> sdp)
    : MessageAction(*from, to),
-     mSdp(std::move(sdp)),
+     mSdp(sdp),
      mUseOutbound(useOutbound),
      mRelProvMode(mode)
 {}
@@ -1441,7 +1439,7 @@ TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from,
    : MessageAction(*from, to),
      mEventPackage(eventPackage),
      mAccept(accept),
-     mContents(std::move(contents)),
+     mContents(contents),
      mExpires(3600),
      mIgnoreExistingDialog(false)
 {
@@ -1591,7 +1589,7 @@ TestSipEndPoint::Request::Request(TestSipEndPoint* from,
                                   std::shared_ptr<resip::Contents> contents)
    : MessageAction(*from, to),
      mType(type),
-     mContents(std::move(contents))
+     mContents(contents)
 {}
 
 resip::Data
@@ -1635,14 +1633,14 @@ TestSipEndPoint::Request*
 TestSipEndPoint::request(const TestUser& endPoint, resip::MethodTypes method, 
                          std::shared_ptr<resip::Contents> contents)
 {
-   return new Request(this, endPoint.getAddressOfRecord(), method, std::move(contents));
+   return new Request(this, endPoint.getAddressOfRecord(), method, contents);
 }
 
 TestSipEndPoint::Request* 
 TestSipEndPoint::request(const resip::Uri& to, resip::MethodTypes method, 
                          std::shared_ptr<resip::Contents> contents)
 {
-   return new Request(this, to, method, std::move(contents));
+   return new Request(this, to, method, contents);
 }
 
 TestSipEndPoint::Request* 
@@ -1666,7 +1664,7 @@ TestSipEndPoint::info(const Uri& url)
 TestSipEndPoint::Request* 
 TestSipEndPoint::info(const Uri& url, std::shared_ptr<resip::Contents> contents)
 {
-   return new Request(this, url, resip::INFO, std::move(contents));
+   return new Request(this, url, resip::INFO, contents);
 }
 
 TestSipEndPoint::Request* 
@@ -1674,7 +1672,7 @@ TestSipEndPoint::message(const TestSipEndPoint* endPoint, const Data& text)
 {
    auto plain = std::make_shared<PlainContents>();
    plain->text() = text;
-   return new Request(this, endPoint->mAor, resip::MESSAGE, std::move(plain));
+   return new Request(this, endPoint->mAor, resip::MESSAGE, plain);
 }
 
 TestSipEndPoint::Request* 
@@ -1682,7 +1680,7 @@ TestSipEndPoint::message(const TestUser& endPoint, const Data& text)
 {
    auto plain = std::make_shared<PlainContents>();
    plain->text() = text; 
-   return new Request(this, endPoint.getAddressOfRecord(), resip::MESSAGE, std::move(plain));
+   return new Request(this, endPoint.getAddressOfRecord(), resip::MESSAGE, plain);
 }
 
 // vk
@@ -1693,13 +1691,13 @@ TestSipEndPoint::message(const NameAddr& target, const Data& text, const message
    {
      auto cpim = std::make_shared<CpimContents>();
      cpim->text() = text;
-     return new Request(this, target.uri(), resip::MESSAGE, std::move(cpim));
+     return new Request(this, target.uri(), resip::MESSAGE, cpim);
    }
    else // if (contentType == textPlain)
    {
      auto plain = std::make_shared<PlainContents>();
      plain->text() = text;
-     return new Request(this, target.uri(), resip::MESSAGE, std::move(plain));
+     return new Request(this, target.uri(), resip::MESSAGE, plain);
    }
 }
 // end - vk
@@ -1709,13 +1707,13 @@ TestSipEndPoint::message(const resip::Uri& target, const Data& text)
 {
    auto plain = std::make_shared<PlainContents>();
    plain->text() = text;
-   return new Request(this, target, resip::MESSAGE, std::move(plain));
+   return new Request(this, target, resip::MESSAGE, plain);
 }
 
 TestSipEndPoint::Request*
 TestSipEndPoint::message(const resip::Uri& target, std::shared_ptr<resip::Contents> contents)
 {
-   return new Request(this, target, resip::MESSAGE, std::move(contents));
+   return new Request(this, target, resip::MESSAGE, contents);
 }
 
 // vk
@@ -1733,7 +1731,7 @@ TestSipEndPoint::Publish::Publish(TestSipEndPoint* from, const resip::Uri& to,
                     const std::string pSIPIfEtag)
    : MessageAction(*from, to),
      mType(resip::PUBLISH),
-     mContents(std::move(contents)),
+     mContents(contents),
      mEventPackage(eventPackage),
      mExpires(pExpires),
      mPAssertedIdentity(PAssertedIdentity),
@@ -1746,7 +1744,7 @@ TestSipEndPoint::Publish::Publish(TestSipEndPoint* from,
                                   std::shared_ptr<resip::Contents> contents)
    : MessageAction(*from, to),
      mType(type),
-     mContents(std::move(contents))
+     mContents(contents)
 {}
 
 
@@ -1774,7 +1772,7 @@ TestSipEndPoint::publish(const Uri& url, const Token& eventPackage,
    */
 
    Publish* localPublish = new Publish(this, url, eventPackage, 
-                                       std::move(pc), pExpires, PAssertedIdentity,
+                                       pc, pExpires, PAssertedIdentity,
                                        pSIPIfEtag);
 
    DebugLog(<< "1. START OF MESSAGE" );
@@ -1791,7 +1789,7 @@ TestSipEndPoint::publish(const resip::NameAddr& target, const resip::Data& text)
    Mime type("application", "pidf+xml");
    auto pc = std::make_shared<Pidf>(hfv, type);
 
-   return new Publish(this, target.uri(), resip::PUBLISH, std::move(pc));
+   return new Publish(this, target.uri(), resip::PUBLISH, pc);
 }
 
 resip::Data
@@ -2486,7 +2484,7 @@ TestSipEndPoint::Notify::Notify(TestSipEndPoint & endPoint, std::shared_ptr<resi
                                 const resip::Data& eventPackage, const resip::Data& subscriptionState, int expires, int minExpires, bool firstNotify)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
-     mContents(std::move(contents)),
+     mContents(contents),
      mEventPackage(eventPackage),
      mSubscriptionState(subscriptionState),
      mExpires(expires),
@@ -2574,7 +2572,7 @@ TestSipEndPoint::respond(int code)
 TestSipEndPoint::Answer::Answer(TestSipEndPoint & endPoint, const std::shared_ptr<resip::SdpContents> sdp)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
-     mSdp(std::move(sdp))
+     mSdp(sdp)
 {
 }
 
@@ -2608,14 +2606,14 @@ TestSipEndPoint::answer()
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::answer(std::shared_ptr<resip::SdpContents> sdp)
 {
-   return new Answer(*this, std::move(sdp));
+   return new Answer(*this, sdp);
 }
 
 
 TestSipEndPoint::AnswerUpdate::AnswerUpdate(TestSipEndPoint & endPoint, std::shared_ptr<resip::SdpContents> sdp)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
-     mSdp(std::move(sdp))
+     mSdp(sdp)
 {
 }
 
@@ -2644,7 +2642,7 @@ TestSipEndPoint::answerUpdate()
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::answerUpdate(std::shared_ptr<resip::SdpContents> sdp)
 {
-   return new AnswerUpdate(*this, std::move(sdp));
+   return new AnswerUpdate(*this, sdp);
 }
 
 TestSipEndPoint::AnswerTo::AnswerTo(
@@ -2654,7 +2652,7 @@ TestSipEndPoint::AnswerTo::AnswerTo(
 ) :
    MessageAction(endPoint, Uri()),
    mMsg(msg),
-   mSdp(std::move(sdp))
+   mSdp(sdp)
 {}
 
 std::shared_ptr<SipMessage>
@@ -2685,7 +2683,7 @@ TestSipEndPoint::answerTo(
    std::shared_ptr<resip::SdpContents> sdp
 )
 {
-   return new AnswerTo(*this, invite, std::move(sdp));
+   return new AnswerTo(*this, invite, sdp);
 }
 
 TestSipEndPoint::MessageExpectAction* 
@@ -2744,7 +2742,7 @@ TestSipEndPoint::ringNewBranch()
 TestSipEndPoint::Ring183::Ring183(TestSipEndPoint & endPoint, std::shared_ptr<resip::SdpContents> sdp, bool removeContact)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
-     mSdp(std::move(sdp)),
+     mSdp(sdp),
      mReliable(false),
      mRseq(0),
      mRemoveContact(removeContact)
@@ -2754,7 +2752,7 @@ TestSipEndPoint::Ring183::Ring183(TestSipEndPoint & endPoint, std::shared_ptr<re
 TestSipEndPoint::Ring183::Ring183(TestSipEndPoint & endPoint, std::shared_ptr<resip::SdpContents> sdp, int rseq)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
-     mSdp(std::move(sdp)),
+     mSdp(sdp),
      mReliable(true),
      mRseq(rseq),
      mRemoveContact(false)
@@ -2821,13 +2819,13 @@ TestSipEndPoint::ring183()
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::ring183(std::shared_ptr<resip::SdpContents> sdp)
 {
-   return new Ring183(*this, std::move(sdp));
+   return new Ring183(*this, sdp);
 }
 
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::ring183_missingContact(std::shared_ptr<resip::SdpContents> sdp)
 {
-   return new Ring183(*this, std::move(sdp), true);
+   return new Ring183(*this, sdp, true);
 }
 
 TestSipEndPoint::MessageExpectAction* 
@@ -2838,7 +2836,7 @@ TestSipEndPoint::reliableProvisional(std::shared_ptr<resip::SdpContents> sdp, in
       throw AssertException("RSEQ value must be greater than 0",
                             __FILE__, __LINE__);
    }
-   return new Ring183(*this, std::move(sdp), rseq);
+   return new Ring183(*this, sdp, rseq);
 }
 
 TestSipEndPoint::MessageExpectAction* 
@@ -3034,7 +3032,7 @@ TestSipEndPoint::dump()
 TestSipEndPoint::Ack::Ack(TestSipEndPoint & endPoint, std::shared_ptr<resip::SdpContents> sdp)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
-     mSdp(std::move(sdp))
+     mSdp(sdp)
 {
 }
 
@@ -3119,13 +3117,13 @@ TestSipEndPoint::ack()
 TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::ack(std::shared_ptr<resip::SdpContents> sdp)
 {
-   return new Ack(*this, std::move(sdp));
+   return new Ack(*this, sdp);
 }
 
 TestSipEndPoint::AckNewTid::AckNewTid(TestSipEndPoint & endPoint, std::shared_ptr<resip::SdpContents> sdp)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
-     mSdp(std::move(sdp))
+     mSdp(sdp)
 {
 }
 
@@ -3171,13 +3169,13 @@ TestSipEndPoint::ackNewTid()
 TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::ackNewTid(std::shared_ptr<resip::SdpContents> sdp)
 {
-   return new AckNewTid(*this, std::move(sdp));
+   return new AckNewTid(*this, sdp);
 }
 
 TestSipEndPoint::AckOldTid::AckOldTid(TestSipEndPoint & endPoint, std::shared_ptr<resip::SdpContents> sdp)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
-     mSdp(std::move(sdp))
+     mSdp(sdp)
 {
 }
 
@@ -3224,7 +3222,7 @@ TestSipEndPoint::ackOldTid()
 TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::ackOldTid(std::shared_ptr<resip::SdpContents> sdp)
 {
-   return new AckOldTid(*this, std::move(sdp));
+   return new AckOldTid(*this, sdp);
 }
 
 TestSipEndPoint::Reflect::Reflect(TestSipEndPoint& endPoint, MethodTypes method, const Uri& to):
@@ -3313,7 +3311,7 @@ TestSipEndPoint::cancel()
 TestSipEndPoint::Prack::Prack(TestSipEndPoint & endPoint, std::shared_ptr<resip::SdpContents> sdp)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
-     mSdp(std::move(sdp))
+     mSdp(sdp)
 {
 }
 
@@ -3353,7 +3351,7 @@ TestSipEndPoint::prack()
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::prack(std::shared_ptr<resip::SdpContents> sdp)
 {
-   return new Prack(*this, std::move(sdp));
+   return new Prack(*this, sdp);
 }
 
 ExpectAction* 

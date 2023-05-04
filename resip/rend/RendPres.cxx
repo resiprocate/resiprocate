@@ -5,7 +5,7 @@
 **/
 
 #include <iomanip>
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
@@ -14,6 +14,8 @@
 #include "RendSketch.hxx"
 
 #include "popt.h"
+
+using std::placeholders::_1;
 
 #ifdef WIN32
 int ffsl(int mask) 
@@ -1853,13 +1855,13 @@ RendPres1Sketch::checkStale(RendTimeUs now)
 {
    bool failAll = false;
    int maxAgePR=-1, maxAgePN=-1, maxAgeSR=-1, maxAgeSN=-1; // returned by checkAge()
-   int numOldPR = mPubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+   int numOldPR = mPubTroop.checkAge(now, std::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
                                      REND_SM_PendReq, mFailAge, failAll, maxAgePR);
-   int numOldPN = mPubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+   int numOldPN = mPubTroop.checkAge(now, std::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
                                      REND_SM_PendNotify, mFailAge, failAll, maxAgePN);
-   int numOldSR = mSubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+   int numOldSR = mSubTroop.checkAge(now, std::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
                                      REND_SM_PendReq, mFailAge, failAll, maxAgeSR);
-   int numOldSN = mSubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+   int numOldSN = mSubTroop.checkAge(now, std::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
                                      REND_SM_PendNotify, mFailAge, failAll, maxAgeSN);
 
    if ( numOldPR>0 || numOldPN>0 || numOldSR>0 || numOldSN>0 )
@@ -1987,7 +1989,7 @@ RendPres1Sketch::doWorkChunk(RendTimeUs now, int minWork, int maxWork)
 
       case REND_SKETCH_WS_SUB_1:
          if ((numWork=mSubTroop.adjustAllDlgs(now, 
-                                              boost::bind(&RendSubTroop::checkGoalMood, &mSubTroop, _1), 
+                                              std::bind(&RendSubTroop::checkGoalMood, &mSubTroop, _1), 
                                               maxWork)) == 0) 
          {
             nextState = REND_SKETCH_WS_SUB_2;
@@ -2060,7 +2062,7 @@ RendPres1Sketch::doWorkChunk(RendTimeUs now, int minWork, int maxWork)
          // With current PubTroop, this should never do work
          // (It move stuff to Wave mood, not doesn't start any dlgs)
          if ( (numWork=mPubTroop.adjustAllDlgs(now, 
-            boost::bind(&RendPubTroop::checkGoalMood, &mPubTroop, _1), 
+            std::bind(&RendPubTroop::checkGoalMood, &mPubTroop, _1), 
             maxWork)) == 0) 
          {
             nextState = REND_SKETCH_WS_PUB_2;

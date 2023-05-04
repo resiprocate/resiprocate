@@ -43,7 +43,10 @@ class StlPoolAllocator
          mPool(other.mPool){}
       StlPoolAllocator& operator=(const StlPoolAllocator& rhs)
       {
-         mPool=rhs.mPool;
+         if (&rhs != this)
+         {
+            mPool=rhs.mPool;
+         }
          return *this;
       }
 #else

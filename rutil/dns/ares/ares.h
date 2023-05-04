@@ -20,6 +20,12 @@
 #include "config.h"
 #endif
 
+// include this early to resolve some build issues
+// FIXME: maybe we need to update our copy of c-ares
+//        with the upstream version that resolves
+//        a lot of these issues
+#include "ares_nameser.h"
+
 #ifdef WIN32
 	#include <winsock2.h>
 	#include <stdlib.h>
@@ -54,9 +60,9 @@ extern "C" {
 #endif
 
 #if defined(__APPLE__)
-#include <arpa/nameser.h>
+#include "ares_nameser.h"
 #if !defined(MAC_OS_X_VERSION_MIN_REQUIRED) || (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_2)
-#include <arpa/nameser_compat.h>
+#include "ares_nameser.h"
 #endif
 #endif
 
@@ -261,7 +267,10 @@ extern 	void ares_free_errmem(char *mem);
 #define T_MAILA         254             /* transfer mail agent records */
 #define T_ANY           255             /* wildcard match */
 
-
+/* These are now defined in ares_nameserv.h
+   Some compilers error when the macro is redefined so
+   we disable them without the macro LEGACY_DEFINES */
+#ifdef ARES_LEGACY_DEFINES
 #define C_IN 1
 #define C_CHAOS 3
 #define C_HS 4
@@ -280,10 +289,10 @@ extern 	void ares_free_errmem(char *mem);
 #define REFUSED 5
 
 #define PACKETSZ 512 
+#endif
 
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 256
-#endif
 
 #ifndef MAXCDNAME
 #define MAXCDNAME   255     /* maximum compressed domain name */
@@ -294,6 +303,7 @@ extern 	void ares_free_errmem(char *mem);
 
 #define QUERY 0
 #define MAXLABEL 63
+#endif
 
 #endif
 

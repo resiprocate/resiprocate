@@ -217,7 +217,7 @@ Contents* EncryptionManager::sign(std::shared_ptr<SipMessage> msg,
                                   const Data& senderAor,
                                   bool* noCerts)
 {
-   Sign* request = new Sign(mDum, mRemoteCertStore.get(), std::move(msg), senderAor, *this);
+   Sign* request = new Sign(mDum, mRemoteCertStore.get(), msg, senderAor, *this);
    Contents* contents;
    *noCerts = false;
    bool async = request->sign(&contents, noCerts);
@@ -238,7 +238,7 @@ Contents* EncryptionManager::encrypt(std::shared_ptr<SipMessage> msg,
                                      const Data& recipientAor,
                                      bool* noCerts)
 {
-   Encrypt* request = new Encrypt(mDum, mRemoteCertStore.get(), std::move(msg), recipientAor, *this);
+   Encrypt* request = new Encrypt(mDum, mRemoteCertStore.get(), msg, recipientAor, *this);
    Contents* contents;
    *noCerts = false;
    bool async = request->encrypt(&contents, noCerts);
@@ -260,7 +260,7 @@ Contents* EncryptionManager::signAndEncrypt(std::shared_ptr<SipMessage> msg,
                                             const Data& recipAor,
                                             bool* noCerts)
 {
-   SignAndEncrypt* request = new SignAndEncrypt(mDum, mRemoteCertStore.get(), std::move(msg), senderAor, recipAor, *this);
+   SignAndEncrypt* request = new SignAndEncrypt(mDum, mRemoteCertStore.get(), msg, senderAor, recipAor, *this);
    Contents* contents;
    *noCerts = false;
    bool async = request->signAndEncrypt(&contents, noCerts);
@@ -329,7 +329,7 @@ EncryptionManager::Request::Request(DialogUsageManager& dum,
                                     DumFeature& feature)
     : mDum(dum),
      mStore(store),
-     mMsgToEncrypt(std::move(msg)),
+     mMsgToEncrypt(msg),
      mPendingRequests(0),
      mFeature(feature)
      //mTaken(false)
@@ -358,7 +358,7 @@ EncryptionManager::Sign::Sign(DialogUsageManager& dum,
                               std::shared_ptr<SipMessage> msg, 
                               const Data& senderAor,
                               DumFeature& feature)
-   : Request(dum, store, std::move(msg), feature),
+   : Request(dum, store, msg, feature),
      mSenderAor(senderAor)
 {
 }
@@ -457,7 +457,7 @@ EncryptionManager::Encrypt::Encrypt(DialogUsageManager& dum,
                                     std::shared_ptr<SipMessage> msg, 
                                     const Data& recipientAor,
                                     DumFeature& feature)
-   : Request(dum, store, std::move(msg), feature),
+   : Request(dum, store, msg, feature),
      mRecipientAor(recipientAor)
 {
 }
@@ -546,7 +546,7 @@ EncryptionManager::SignAndEncrypt::SignAndEncrypt(DialogUsageManager& dum,
                                                   const Data& senderAor, 
                                                   const Data& recipientAor,
                                                   DumFeature& feature)
-   : Request(dum, store, std::move(msg), feature),
+   : Request(dum, store, msg, feature),
      mSenderAor(senderAor),
      mRecipientAor(recipientAor)
 {

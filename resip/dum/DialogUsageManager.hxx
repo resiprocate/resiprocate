@@ -264,7 +264,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
          public:
             SendCommand(std::shared_ptr<SipMessage> request,
                         DialogUsageManager& dum):
-               mRequest(std::move(request)),
+               mRequest(request),
                mDum(dum)
             {
             }

@@ -302,7 +302,7 @@ main (int argc, char** argv)
    // Second test: invalid scheme
    auto invalidSchemeMsg = dumUac->makeOutOfDialogRequest(uasAor, OPTIONS);
    invalidSchemeMsg->header(h_RequestLine).uri().scheme() = "tel";
-   dumUac->send(std::move(invalidSchemeMsg));
+   dumUac->send(invalidSchemeMsg);
 
    // !fjoanis! TODO: Add more tests
 

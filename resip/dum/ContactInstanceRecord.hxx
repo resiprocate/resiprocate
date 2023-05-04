@@ -91,7 +91,7 @@ class ContactRecordTransaction
       {}
 
    ContactRecordTransaction(Operation op, std::shared_ptr<ContactInstanceRecord> rec)
-      :mOp(op),mRec(std::move(rec))
+      :mOp(op),mRec(rec)
       {}
 
    Operation mOp;  //!< the operation that was performed in this transaction.

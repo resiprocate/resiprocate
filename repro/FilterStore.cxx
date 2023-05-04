@@ -17,11 +17,16 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+// Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+// of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+// std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+// use the EMCAScript syntax.
+const std::regex_constants::syntax_option_type DefaultFlags = std::regex_constants::ECMAScript;
+
 bool FilterStore::FilterOp::operator<(const FilterOp& rhs) const
 {
    return filterRecord.mOrder < rhs.filterRecord.mOrder;
 }
-
 
 FilterStore::FilterStore(AbstractDb& db):
    mDb(db)
@@ -35,17 +40,19 @@ FilterStore::FilterStore(AbstractDb& db):
       filter.pcond1 = 0;
       filter.pcond2 = 0;
       
-      int flags = REG_EXTENDED;
+      std::regex_constants::syntax_option_type flags = DefaultFlags;
       if(filter.filterRecord.mActionData.find("$") == Data::npos)
       {
-         flags |= REG_NOSUB;
+         flags |= std::regex_constants::nosubs;
       }
 
       if(!filter.filterRecord.mCondition1Regex.empty())
       {
-         filter.pcond1 = new regex_t;
-         int ret = regcomp(filter.pcond1, filter.filterRecord.mCondition1Regex.c_str(), flags);
-         if(ret != 0)
+         try
+         {
+            filter.pcond1 = new std::regex(filter.filterRecord.mCondition1Regex.c_str(), flags);
+         }
+         catch (std::regex_error& ex)
          {
             delete filter.pcond1;
             ErrLog( << "Condition1Regex has invalid match expression: "
@@ -56,9 +63,11 @@ FilterStore::FilterStore(AbstractDb& db):
 
       if(!filter.filterRecord.mCondition2Regex.empty())
       {
-         filter.pcond2 = new regex_t;
-         int ret = regcomp(filter.pcond2, filter.filterRecord.mCondition2Regex.c_str(), flags);
-         if(ret != 0)
+         try
+         {
+            filter.pcond2 = new std::regex(filter.filterRecord.mCondition2Regex.c_str(), flags);
+         }
+         catch (std::regex_error& ex)
          {
             delete filter.pcond2;
             ErrLog( << "Condition2Regex has invalid match expression: "
@@ -74,25 +83,21 @@ FilterStore::FilterStore(AbstractDb& db):
    mCursor = mFilterOperators.begin();
 }
 
-
 FilterStore::~FilterStore()
 {
    for(FilterOpList::iterator i = mFilterOperators.begin(); i != mFilterOperators.end(); i++)
    {
       if (i->pcond1)
       {
-         regfree(i->pcond1);
          delete i->pcond1;
       }
       if (i->pcond2)
       {
-         regfree(i->pcond2);
          delete i->pcond2;
       }
    }
    mFilterOperators.clear();
 }
-
 
 bool 
 FilterStore::addFilter(const resip::Data& cond1Header,
@@ -131,16 +136,18 @@ FilterStore::addFilter(const resip::Data& cond1Header,
    filter.key = key;
    filter.pcond1 = 0;
    filter.pcond2 = 0;
-   int flags = REG_EXTENDED;
+   std::regex_constants::syntax_option_type flags = DefaultFlags;
    if(filter.filterRecord.mActionData.find("$") == Data::npos)
    {
-      flags |= REG_NOSUB;
+      flags |= std::regex_constants::nosubs;
    }
    if(!filter.filterRecord.mCondition1Regex.empty())
    {
-      filter.pcond1 = new regex_t;
-      int ret = regcomp(filter.pcond1, filter.filterRecord.mCondition1Regex.c_str(), flags);
-      if(ret != 0)
+      try
+      {
+         filter.pcond1 = new std::regex(filter.filterRecord.mCondition1Regex.c_str(), flags);
+      }
+      catch (std::regex_error& ex)
       {
          delete filter.pcond1;
          filter.pcond1 = 0;
@@ -148,9 +155,11 @@ FilterStore::addFilter(const resip::Data& cond1Header,
    }
    if(!filter.filterRecord.mCondition2Regex.empty())
    {
-      filter.pcond2 = new regex_t;
-      int ret = regcomp(filter.pcond2, filter.filterRecord.mCondition2Regex.c_str(), flags);
-      if(ret != 0)
+      try
+      {
+         filter.pcond2 = new std::regex(filter.filterRecord.mCondition2Regex.c_str(), flags);
+      }
+      catch (std::regex_error& ex)
       {
          delete filter.pcond2;
          filter.pcond2 = 0;
@@ -166,7 +175,6 @@ FilterStore::addFilter(const resip::Data& cond1Header,
    return true;
 }
 
-      
 /*
 AbstractDb::FilterRecordList 
 FilterStore::getFilters() const
@@ -183,7 +191,6 @@ FilterStore::getFilters() const
 }
 */
 
-
 void 
 FilterStore::eraseFilter(const resip::Data& cond1Header,
                          const resip::Data& cond1Regex,
@@ -195,7 +202,6 @@ FilterStore::eraseFilter(const resip::Data& cond1Header,
    Key key = buildKey(cond1Header, cond1Regex, cond2Header, cond2Regex, method, event);
    eraseFilter(key);
 }
-
 
 void 
 FilterStore::eraseFilter(const resip::Data& key)
@@ -214,12 +220,10 @@ FilterStore::eraseFilter(const resip::Data& key)
             it++;
             if(i->pcond1)
             {
-               regfree(i->pcond1);
                delete i->pcond1;
             }
             if(i->pcond2)
             {
-               regfree(i->pcond2);
                delete i->pcond2;
             }
             mFilterOperators.erase(i);
@@ -232,7 +236,6 @@ FilterStore::eraseFilter(const resip::Data& key)
    }
    mCursor = mFilterOperators.begin();  // reset the cursor since it may have been on deleted filter
 }
-
 
 bool
 FilterStore::updateFilter(const resip::Data& originalKey,
@@ -249,7 +252,6 @@ FilterStore::updateFilter(const resip::Data& originalKey,
    eraseFilter(originalKey);
    return addFilter(cond1Header, cond1Regex, cond2Header, cond2Regex, method, event, action, actionData, order);
 }
-
 
 FilterStore::Key 
 FilterStore::getFirstKey()
@@ -310,7 +312,6 @@ FilterStore::getNextKey(Key& key)
    return mCursor->key;
 }
 
-
 AbstractDb::FilterRecord 
 FilterStore::getFilterRecord(const resip::Data& key)
 {
@@ -322,7 +323,6 @@ FilterStore::getFilterRecord(const resip::Data& key)
    }
    return mCursor->filterRecord;
 }
-
 
 void
 FilterStore::getHeaderFromSipMessage(const SipMessage& msg, const Data& headerName, list<Data>& headerList)
@@ -361,19 +361,15 @@ FilterStore::getHeaderFromSipMessage(const SipMessage& msg, const Data& headerNa
 }
 
 bool 
-FilterStore::applyRegex(int conditionNum, const Data& header, const Data& match, regex_t *regex, Data& rewrite)
+FilterStore::applyRegex(int conditionNum, const Data& header, const Data& match, std::regex *_regex, Data& rewrite)
 {
-   int ret;
    resip_assert(conditionNum < 10);
    
-   // TODO - !cj! www.pcre.org looks like it has better performance
-   // !mbg! is this true now that the compiled regexp is used?
+   std::cmatch matches; // replacements $x1-$x9 are allowed, where x is the condition number
 
-   const int nmatch=10;  // replacements $x1-$x9 are allowed, where x is the condition number
-   regmatch_t pmatch[nmatch];
-
-   ret = regexec(regex, header.c_str(), nmatch, pmatch, 0/*eflags*/);
-   if (ret != 0)
+   // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+   //        the string, this is backwards compatible with the previous regexec PCRE implementation
+   if(!std::regex_search(header.c_str(), matches, *_regex))
    {
       // did not match 
       return false;
@@ -383,39 +379,35 @@ FilterStore::applyRegex(int conditionNum, const Data& header, const Data& match,
 
    if (rewrite.find("$") != Data::npos)
    {
-      for (int i=1; i<nmatch; i++)
+      for (int i=1; i<matches.size(); i++)
       {
-         if (pmatch[i].rm_so != -1)
+         Data subExp(matches[i]);
+         DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+
+         Data result;
          {
-            Data subExp(header.substr(pmatch[i].rm_so,
-                                      pmatch[i].rm_eo-pmatch[i].rm_so));
-            DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+            DataStream s(result);
+            ParseBuffer pb(rewrite);
 
-            Data result;
+            while (true)
             {
-               DataStream s(result);
-               ParseBuffer pb(rewrite);
-
-               while (true)
+               const char* a = pb.position();
+               pb.skipToChars(Data("$") + char('0' + conditionNum) + char('0' + i));
+               if (pb.eof())
                {
-                  const char* a = pb.position();
-                  pb.skipToChars(Data("$") + char('0' + conditionNum) + char('0' + i));
-                  if (pb.eof())
-                  {
-                     s << pb.data(a);
-                     break;
-                  }
-                  else
-                  {
-                     s << pb.data(a);
-                     pb.skipN(3);
-                     s <<  subExp;
-                  }
+                  s << pb.data(a);
+                  break;
                }
-               s.flush();
+               else
+               {
+                  s << pb.data(a);
+                  pb.skipN(3);
+                  s <<  subExp;
+               }
             }
-            rewrite = result;
+            s.flush();
          }
+         rewrite = result;
       }
    }
    return true;
@@ -504,7 +496,6 @@ FilterStore::process(const SipMessage& request,
    return false;
 }
 
-
 bool 
 FilterStore::test(const resip::Data& cond1Header, 
                   const resip::Data& cond2Header,
@@ -545,7 +536,6 @@ FilterStore::test(const resip::Data& cond1Header,
    // If we make it here, then none of the conditions matched - return false
    return false;
 }
-
 
 FilterStore::Key 
 FilterStore::buildKey(const resip::Data& cond1Header,

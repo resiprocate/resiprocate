@@ -8,8 +8,7 @@
 
 #include "resip/dum/Handles.hxx"
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
+#include <functional>
 
 #include "rutil/Logger.hxx"
 
@@ -27,8 +26,8 @@ SendingAction<ServerOutOfDialogReqHandle>*
 TestServerOutOfDialogReq::accept(int statusCode)
 {
    return new SendingAction<ServerOutOfDialogReqHandle>(mUa, mHandle, "accept", 
-                                                        boost::bind(&ServerOutOfDialogReq::accept, 
-                                                                    boost::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), boost::ref(mHandle)), statusCode), 
+                                                        std::bind(&ServerOutOfDialogReq::accept, 
+                                                                    std::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), std::ref(mHandle)), statusCode), 
                                                         NoAdornment::instance());
 }
 
@@ -36,8 +35,8 @@ SendingAction<ServerOutOfDialogReqHandle>*
 TestServerOutOfDialogReq::reject(int responseCode)
 {
    return new SendingAction<ServerOutOfDialogReqHandle>(mUa, mHandle, "reject",
-                                                        boost::bind(&ServerOutOfDialogReq::reject, 
-                                                                    boost::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), boost::ref(mHandle)), 
+                                                        std::bind(&ServerOutOfDialogReq::reject, 
+                                                                    std::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), std::ref(mHandle)), 
                                                                     responseCode),
                                                         NoAdornment::instance());
 }
@@ -46,22 +45,22 @@ SendingAction<ServerOutOfDialogReqHandle>*
 TestServerOutOfDialogReq::answerOptions()
 {
    return new SendingAction<ServerOutOfDialogReqHandle>(mUa, mHandle, "answerOptions",
-                                                        boost::bind(&ServerOutOfDialogReq::answerOptions, 
-                                                                    boost::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), boost::ref(mHandle))),
+                                                        std::bind(&ServerOutOfDialogReq::answerOptions, 
+                                                                    std::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), std::ref(mHandle))),
                                                         NoAdornment::instance());
 }
 
 CommonAction* 
 TestServerOutOfDialogReq::end()
 {
-   return new CommonAction(mUa, "end", boost::bind(&ServerOutOfDialogReq::end, boost::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), boost::ref(mHandle))));
+   return new CommonAction(mUa, "end", std::bind(&ServerOutOfDialogReq::end, std::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), std::ref(mHandle))));
 }
  
 CommonAction* 
 TestServerOutOfDialogReq::send(std::shared_ptr<SipMessage> msg)
 {
    return new CommonAction(mUa, "send", 
-                           boost::bind(&ServerOutOfDialogReq::send, boost::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), boost::ref(mHandle)), 
+                           std::bind(&ServerOutOfDialogReq::send, std::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), std::ref(mHandle)), 
                                        msg));
 }
 

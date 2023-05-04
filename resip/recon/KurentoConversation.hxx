@@ -63,6 +63,8 @@ protected:
    virtual void onParticipantRemoved(Participant* participant);
 
 private: 
+   void disconnectWaitingMode(KurentoRemoteParticipant *krp, kurento::ContinuationVoid c);
+
    KurentoMediaStackAdapter& mKurentoMediaStackAdapter;
    bool mKurentoReInviteOnParticipantsPresent;
 

@@ -30,7 +30,7 @@ RegSyncServer::RegSyncServer(resip::InMemorySyncRegDb* regDb,
                              int port, 
                              IpVersion version,
                              resip::InMemorySyncPubDb* pubDb) :
-   XmlRpcServerBase(port, version),
+   XmlRpcHandler(std::unique_ptr<XmlRpcServerBase>(new XmlRpcSocketServer(*this, port, version))),
    mRegDb(regDb),
    mPubDb(pubDb)
 {
@@ -44,10 +44,11 @@ RegSyncServer::RegSyncServer(resip::InMemorySyncRegDb* regDb,
    }
 }
 
+#ifdef BUILD_QPID_PROTON
 RegSyncServer::RegSyncServer(resip::InMemorySyncRegDb* regDb,
                              const resip::Data& brokerQueue,
                              resip::InMemorySyncPubDb* pubDb) :
-   XmlRpcServerBase(brokerQueue),
+   XmlRpcHandler(std::unique_ptr<XmlRpcProtonServer>(new XmlRpcProtonServer(*this, brokerQueue, true))),
    mRegDb(regDb),
    mPubDb(pubDb)
 {
@@ -60,6 +61,7 @@ RegSyncServer::RegSyncServer(resip::InMemorySyncRegDb* regDb,
       mPubDb->addHandler(this);
    }
 }
+#endif
 
 RegSyncServer::~RegSyncServer()
 {
@@ -83,7 +85,7 @@ RegSyncServer::sendResponse(unsigned int connectionId,
    std::stringstream ss;
    ss << Symbols::CRLF << responseData << "    <Result Code=\"" << resultCode << "\"";
    ss << ">" << resultText.xmlCharDataEncode() << "</Result>" << Symbols::CRLF;
-   XmlRpcServerBase::sendResponse(connectionId, requestId, ss.str().c_str(), resultCode >= 200 /* isFinal */);
+   mRpc->sendResponse(connectionId, requestId, ss.str().c_str(), resultCode >= 200 /* isFinal */);
 }
 
 void 
@@ -118,7 +120,7 @@ RegSyncServer::sendRegistrationModifiedEvent(unsigned int connectionId, const re
 
    if(infoFound)
    {
-      sendEvent(connectionId, ss.str().c_str());
+      mRpc->sendEvent(connectionId, ss.str().c_str());
    }
 }
 
@@ -199,7 +201,7 @@ RegSyncServer::sendDocumentModifiedEvent(unsigned int connectionId, const Data& 
    }
    ss << "</pubinfo>" << Symbols::CRLF;
 
-   sendEvent(connectionId, ss.str().c_str());
+   mRpc->sendEvent(connectionId, ss.str().c_str());
 }
 
 void 
@@ -216,7 +218,7 @@ RegSyncServer::sendDocumentRemovedEvent(unsigned int connectionId, const Data& e
    ss << "   <lastupdate>" << now - lastUpdated << "</lastupdate>" << Symbols::CRLF;
    ss << "</pubinfo>" << Symbols::CRLF;
 
-   sendEvent(connectionId, ss.str().c_str());
+   mRpc->sendEvent(connectionId, ss.str().c_str());
 }
 
 void 
@@ -371,6 +373,8 @@ RegSyncServer::onInitialSyncDocument(unsigned int connectionId, const Data& even
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (c) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

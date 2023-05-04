@@ -96,7 +96,7 @@ static DumUserAgent* createAnonDumUserAgent(const Data& user, const Data& host =
    //!dcm! -- truly terrible hack. Should be banned by the geneva convention,
    //clean up post-haste.
    auto anonProf = std::dynamic_pointer_cast<MasterProfile>(DumUserAgent::makeProfile(aor, user)->getAnonymousUserProfile());
-   DumUserAgent* ua = new DumUserAgent(std::move(anonProf), DumFixture::proxy);
+   DumUserAgent* ua = new DumUserAgent(anonProf, DumFixture::proxy);
    ua->init();
    return ua;
 }

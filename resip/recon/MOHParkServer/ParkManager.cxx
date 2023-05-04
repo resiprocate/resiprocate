@@ -89,7 +89,7 @@ ParkManager::initializeConversationProfile(const NameAddr& uri, const Data& pass
    parkConversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
    parkConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
    mServer.buildSessionCapabilities(parkConversationProfile->sessionCaps());   
-   mConversationProfileHandle = mServer.mMyUserAgent->addConversationProfile(std::move(parkConversationProfile));
+   mConversationProfileHandle = mServer.mMyUserAgent->addConversationProfile(parkConversationProfile);
    mParkUri = uri;
 }
 
@@ -141,7 +141,7 @@ ParkManager::initializeOrbitConversationProfiles(unsigned long orbitStart,
       orbitConversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
       orbitConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
       mServer.buildSessionCapabilities(orbitConversationProfile->sessionCaps());      
-      mOrbitProfiles[orbit] = mServer.mMyUserAgent->addConversationProfile(std::move(orbitConversationProfile));
+      mOrbitProfiles[orbit] = mServer.mMyUserAgent->addConversationProfile(orbitConversationProfile);
 
       // If orbit is free - add to free list
       if(mOrbits.find(orbit) == mOrbits.end())      

@@ -1,10 +1,6 @@
 #ifndef MYUSERAGENT_HXX
 #define MYUSERAGENT_HXX
 
-#ifdef USE_SIPXTAPI
-#include <os/OsIntTypes.h>
-#endif
-
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
 #endif
@@ -35,7 +31,7 @@ public:
    virtual std::shared_ptr<recon::ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
    virtual void process(int timeoutMs);
 
-   virtual void addIncomingFeature(std::shared_ptr<resip::DumFeature> f) { getDialogUsageManager().addIncomingFeature(std::move(f)); };
+   virtual void addIncomingFeature(std::shared_ptr<resip::DumFeature> f) { getDialogUsageManager().addIncomingFeature(f); };
 
    virtual std::shared_ptr<resip::Dispatcher> initDispatcher(std::unique_ptr<resip::Worker> prototype,
                   int workers=2,

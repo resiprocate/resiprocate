@@ -258,14 +258,18 @@ public:
                          ;duration parameter specified max recording length in Ms
                          ;append parameter specifies to append to an existing recording
                          ;silencetime parameter specifies ms of silence to end recording
+     record:circularbuffer - Recorded audio is written to provided media specific CircularBuffer
+                         ;duration parameter specified max recording length in Ms
+                         ;silencetime parameter specifies ms of silence to end recording
      buffer:<type> - For sipXtapi the only allowed type is RAW_PCM_16, the sampling rate
                          is expected to be 8khz.
 
-     optional arguments are: [;duration=<duration>][;repeat]
+     optional arguments are: [;duration=<duration>][;repeat][;format=<recording_format>]
 
-     @note 'repeat' option only makes sense for file and cache playback
+     @note 'repeat' option only makes sense for file and cache playback scheme's
      @note audio files may be AU, WAV or RAW formats.  Audiofiles should be 16bit mono, 8khz, PCM to avoid runtime conversion.
      @note http referenced audio files must be WAV files, 16 or 8bit, 8Khz, Mono.
+     @note 'format' options only makes sense for recording scheme's.  Possible values: WAV_PCM16, WAV_MULAW, WAV_ALAW, WAV_GSM, OGG_OPUS
 
      Sample mediaUrls:
         tone:0                             - play DTMF tone 0 until participant is destroyed
@@ -276,18 +280,24 @@ public:
         file://ringback.wav;repeat         - play the file ringback.wav, repeating when complete until participant is destroyed
         file://hi.wav;repeat;duration=9000 - play the file hi.wav for 9000ms, repeating as required, then automatically destroy the participant
         cache:welcomeprompt                - plays a prompt from the media cache with key/name "welcomeprompt"
-        record:recording.wav               - records all participants audio mixed togehter in a WAV file, must be manually destroyed
-        record:recording.wav;duration=30000;silencetime=5000 - records all participants audio mixed togehter in a WAV file, for up to 5 mins, stop 
+        record:recording.wav               - records all participants audio mixed together in a WAV file of type WAV_PCM16, must be manually destroyed
+        record:recording.ogg;format=OGG_OPUS - records all participants audio mixed together in an Opus encoded OGG file, must be manually destroyed
+        record:recording.wav;duration=30000;silencetime=5000 - records all participants audio mixed togehter in a WAV file, for up to 5 mins, stop
                                                                automatically when voice is missing for 5 seconds
-        buffer:RAW_PCM_16;repeat           - plays the audio from the provided audioBuffer parameter, repeating when complete until participant is destroyed
+        record:circularbuffer;format=WAV_PCM16 - records all participants audio mixed together as PCM16 in the provided ciruclar buffer (no WAV header 
+                                                 is generated), must be manually destroyed
+        buffer:RAW_PCM_16;repeat           - plays the audio from the provided playAudioBuffer parameter, repeating when complete until participant is destroyed
+
 
      @param convHandle Handle of the conversation to create the MediaParticipant in
      @param mediaUrl   Url of media to play.  See above.
-     @param audioBuffer - Shared_ptr to a data object containing the raw audio buffer to play out.  Only provide this parameter if using buffer: as the mediaUrl scheme
+     @param playAudioBuffer - Shared_ptr to a data object containing the raw audio buffer to play out.  Only provide this parameter if using buffer: as the mediaUrl scheme
+     @param recordingCircularBuffer - a pointer to media stack specific circular buffer implementation to pass to the recorder.  Audio can be read from
+                                      the circular buffer as it is being recorded.  For sipXtapi, this implementation is of type utl\CircularBufferPtr.h
 
      @return A handle to the newly created media participant
    */
-   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& audioBuffer = std::shared_ptr<resip::Data>());
+   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const resip::Uri& mediaUrl, const std::shared_ptr<resip::Data>& playAudioBuffer = std::shared_ptr<resip::Data>(), void* recordingCircularBuffer = 0);
 
    /**
      Creates a new local participant in the specified conversation (if supported).
@@ -464,6 +474,7 @@ public:
    
    virtual void requestKeyframe(ParticipantHandle partHandle, std::chrono::duration<double> durationMs);
    virtual void requestKeyframeFromPeer(ParticipantHandle partHandle, std::chrono::duration<double> durationMs);
+   virtual void requestKeyframeFromPeerRecurring(ParticipantHandle partHandle, std::chrono::duration<double> interval);
    /**
      This function is used to start a timer on behalf of recon based application.
      The onApplicationTimer callback will get called when the timer expires.
@@ -476,6 +487,19 @@ public:
      @param timerData2 Application specified generic data returned in callback
    */
    virtual void startApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2, unsigned int durationMs);
+
+   /**
+     This function is used to start a timer on behalf of recon based application.
+     The onApplicationTimer callback will get called when the timer expires.
+     Note:  You cannot stop a running timer, so you may want to use a sequence
+            number as the timer data and ignore timers when they fire, if
+            they should be cancelled.
+
+     @param timerId    Application specified id for this timer instance returned in callback
+     @param timerData1 Application specified generic data returned in callback
+     @param timerData2 Application specified generic data returned in callback
+   */
+   virtual void startApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2, std::chrono::duration<double> duration);
 
    // Override this to handle the callback
    virtual void onApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2) { }
@@ -688,6 +712,8 @@ public:
 
    std::shared_ptr<resip::ConfigParse> getConfig() { return mConfigParse; };
 
+   bool sendKeyframesAtStart() const { return !mKeyframeIntervals.empty(); };
+
 protected:
 
    // Invite Session Handler /////////////////////////////////////////////////////
@@ -769,7 +795,7 @@ protected:
    ParticipantHandle getNewParticipantHandle();    // thread safe
 
    void post(resip::Message *message);
-   void post(resip::ApplicationMessage& message, unsigned int ms=0);
+   void post(resip::ApplicationMessage& message, std::chrono::duration<double> duration=std::chrono::milliseconds::zero());
 
    virtual void setUserAgent(UserAgent *userAgent);
 
@@ -783,6 +809,9 @@ protected:
    std::set<ParticipantHandle> getParticipantHandlesByType(ParticipantType participantType) const;  // thread safe
 
    bool isShuttingDown() { return mShuttingDown; }
+
+   bool remoteParticipantInitialHold() { return getConfig()->getConfigBool("RemoteParticipantInitialHold", true); };
+   const std::vector<int>& keyframeIntervals() const { return mKeyframeIntervals; };
 
 private:
    friend class DefaultDialogSet;
@@ -863,6 +892,7 @@ private:
    friend class SendIMToParticipantCmd;
    friend class RequestKeyframeCmd;
    friend class RequestKeyframeFromPeerCmd;
+   friend class RequestKeyframeFromPeerRecurringCmd;
 
    UserAgent* mUserAgent;
    std::shared_ptr<MediaStackAdapter> mMediaStackAdapter;
@@ -885,6 +915,8 @@ private:
    MediaResourceCache mMediaResourceCache;
 
    std::shared_ptr<BridgeMixer> mBridgeMixer;
+
+   std::vector<int> mKeyframeIntervals = { 2, 2, 5, 5, 7, 10, 20, 30 };
 };
 
 }

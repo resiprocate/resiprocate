@@ -26,11 +26,6 @@
 // crashes in the Mac OS native API.
 #if !defined(TARGET_OS_MAC)
 #define LOG_ENABLE_THREAD_SETTING
-// defining hash function in mac os (non-sdk api) and cygwin because
-// ThreadIf::Id is a pointer,  (this assumes it's always the same pointer)
-#if defined(__APPLE__) || defined(__CYGWIN__)
-HashValue(resip::ThreadIf::Id);
-#endif
 #endif
 
 extern "C"
