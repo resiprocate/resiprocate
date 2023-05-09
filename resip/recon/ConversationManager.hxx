@@ -810,8 +810,8 @@ protected:
 
    bool isShuttingDown() { return mShuttingDown; }
 
-   bool remoteParticipantInitialHold() { return getConfig()->getConfigBool("RemoteParticipantInitialHold", true); };
-   const std::vector<int>& keyframeIntervals() const { return mKeyframeIntervals; };
+   bool remoteParticipantInitialHold() { return mConfigParse ? mConfigParse->getConfigBool("RemoteParticipantInitialHold", true) : true; }
+   const std::vector<int>& keyframeIntervals() const { return mKeyframeIntervals; }
 
 private:
    friend class DefaultDialogSet;
