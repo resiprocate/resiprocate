@@ -5,8 +5,10 @@
 
 #ifdef USE_SSL
 #include "TurnAsyncTlsSocket.hxx"
+#include "rutil/Lock.hxx"
 
 using namespace std;
+using namespace resip;
 
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 )
@@ -31,13 +33,17 @@ TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_service& ioService,
 void 
 TurnAsyncTlsSocket::onConnectSuccess()
 {
-   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
+   {
+      RecursiveLock lock(mHandlerMutex);
+      if (mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
+   }
    turnReceive();
 }
 
 void 
 TurnAsyncTlsSocket::onConnectFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectFailure(getSocketDescriptor(), e);
 }
 
@@ -51,18 +57,21 @@ TurnAsyncTlsSocket::onReceiveSuccess(const asio::ip::address& address, unsigned 
 void 
 TurnAsyncTlsSocket::onReceiveFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
 }
  
 void 
 TurnAsyncTlsSocket::onSendSuccess()
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendSuccess(getSocketDescriptor());
 }
  
 void 
 TurnAsyncTlsSocket::onSendFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendFailure(getSocketDescriptor(), e);
 }
 
@@ -71,6 +80,7 @@ TurnAsyncTlsSocket::onSendFailure(const asio::error_code& e)
 
 /* ====================================================================
 
+ Copyright (c) 2023, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

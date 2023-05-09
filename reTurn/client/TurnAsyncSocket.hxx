@@ -117,6 +117,7 @@ protected:
 
    asio::io_service& mIOService;
    TurnAsyncSocketHandler* mTurnAsyncSocketHandler;
+   resip::RecursiveMutex mHandlerMutex;
 
    // Local Binding Info
    StunTuple mLocalBinding;
@@ -148,7 +149,6 @@ protected:
 private:
    AsyncSocketBase& mAsyncSocketBase;
    bool mCloseAfterDestroyAllocationFinishes;
-   resip::Mutex mMutex;
 
    // Request map (for retransmissions)
    class RequestEntry : public std::enable_shared_from_this<RequestEntry>
@@ -269,6 +269,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2023, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

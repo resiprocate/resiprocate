@@ -1,4 +1,5 @@
 #include "TurnAsyncTcpSocket.hxx"
+#include <rutil/Lock.hxx>
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32) && !defined(__GNUC__)
@@ -6,6 +7,7 @@
 #endif
 
 using namespace std;
+using namespace resip;
 
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 )
@@ -27,13 +29,17 @@ TurnAsyncTcpSocket::TurnAsyncTcpSocket(asio::io_service& ioService,
 void 
 TurnAsyncTcpSocket::onConnectSuccess()
 {
-   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
+   {
+      RecursiveLock lock(mHandlerMutex);
+      if (mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
+   }
    turnReceive();
 }
 
 void 
 TurnAsyncTcpSocket::onConnectFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectFailure(getSocketDescriptor(), e);
 }
 
@@ -47,18 +53,21 @@ TurnAsyncTcpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned 
 void 
 TurnAsyncTcpSocket::onReceiveFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
 }
  
 void 
 TurnAsyncTcpSocket::onSendSuccess()
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendSuccess(getSocketDescriptor());
 }
  
 void 
 TurnAsyncTcpSocket::onSendFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendFailure(getSocketDescriptor(), e);
 }
 
@@ -67,6 +76,7 @@ TurnAsyncTcpSocket::onSendFailure(const asio::error_code& e)
 
 /* ====================================================================
 
+ Copyright (c) 2023, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
