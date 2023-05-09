@@ -22,6 +22,7 @@ class IMParticipantBase
 {
 public:
    IMParticipantBase(bool prependSenderInfoToIMs) : mPrependSenderInfoToIMs(prependSenderInfoToIMs) {}
+   virtual ~IMParticipantBase() {}
 
    virtual void sendInstantMessage(std::unique_ptr<resip::Contents> contents) = 0;
 

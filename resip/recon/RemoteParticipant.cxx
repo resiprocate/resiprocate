@@ -1192,7 +1192,7 @@ RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept
          ErrLog(<<"buildSdpAnswer failed");
          mInviteSessionHandle->reject(488);
       }
-      mPendingOffer.release();
+      mPendingOffer.reset();
    });
 }
 
