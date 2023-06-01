@@ -438,6 +438,9 @@ SipXMediaResourceParticipant::startResourceImpl()
    case Invalid:
       WarningLog(<< "SipXMediaResourceParticipant::startResource invalid resource type: " << getMediaUrl().scheme());
       break;
+   
+   default:
+      resip_assert(false);
    }
 }
 
@@ -490,6 +493,7 @@ SipXMediaResourceParticipant::stopResource()
       break;
       case File:
       case Cache:
+      case Buffer:
       {
 #ifdef SIPX_NO_RECORD
          OsStatus status = getMediaInterface()->getInterface()->stopAudio();
@@ -532,6 +536,8 @@ SipXMediaResourceParticipant::stopResource()
       case Invalid:
          WarningLog(<< "SipXMediaResourceParticipant::stopResource invalid resource type: " << getResourceType());
          break;
+      default:
+         resip_assert(false);
       }
    }
    return okToDeleteNow;
