@@ -151,9 +151,6 @@
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
 
-/* Define 'inline' to nothing, since the MSVC compiler doesn't support it.  */
-#define inline 
-
 /* Define to `unsigned' if <sys/types.h> does not define. */
 /* #undef size_t */
 
