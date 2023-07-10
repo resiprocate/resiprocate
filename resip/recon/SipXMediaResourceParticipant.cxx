@@ -35,6 +35,7 @@ static const resip::ExtensionParameter p_participantonly("participant-only");
 static const resip::ExtensionParameter p_append("append");
 static const resip::ExtensionParameter p_silencetime("silencetime");  // in milliseconds
 static const resip::ExtensionParameter p_format("format");
+static const resip::ExtensionParameter p_numchannels("numchannels");
 
 
 SipXMediaResourceParticipant::SipXMediaResourceParticipant(ParticipantHandle partHandle,
@@ -333,6 +334,20 @@ SipXMediaResourceParticipant::startResourceImpl()
          silenceTimeMs = getMediaUrl().param(p_silencetime).convertInt();
       }
 
+      int numChannels = 1;
+      if (getMediaUrl().exists(p_numchannels))
+      {
+         numChannels = getMediaUrl().param(p_numchannels).convertInt();
+         if (numChannels < 1)
+         {
+            numChannels = 1;
+         } 
+         else if (numChannels > 2)
+         {
+            numChannels = 2;
+         }
+      }
+
       CpMediaInterface::CpAudioFileFormat format = CpMediaInterface::CP_WAVE_PCM_16;  // Default recording format
       Data formatString(recordingFormatWAVPCM16);
       if (getMediaUrl().exists(p_format))
@@ -379,7 +394,9 @@ SipXMediaResourceParticipant::startResourceImpl()
             format,
             recordingBufferNotificationWatermark,
             getDurationMs() /* maxTime Ms */,
-            silenceTimeMs /* silenceLength Ms, -1 to disable */);
+            silenceTimeMs /* silenceLength Ms, -1 to disable */,
+            numChannels,
+            FALSE /* setupMultiChannelMixesAutomatically? */);
 
          if (status == OS_SUCCESS)
          {
@@ -414,12 +431,13 @@ SipXMediaResourceParticipant::startResourceImpl()
       //            but they are not alterened when additional RTP streams (remote Participants) come and go.
       //        4.  The MAXIMUM_RECORDER_CHANNELS=1 define needs to change in sipXmedaLib and sipXmediaAdpaterLib project files
       // Note: Automatic trimming of silence is not supported for OPUS recordings.
+      // ^^^^^^^^^ TODO SLG FIX UP when done!
       OsStatus status = mediaInterface->getInterface()->recordAudio(
          mSipXResourceName.c_str(),
          filepath.c_str(),
          format,
          append /* append? */,
-         1 /* numChannels */,
+         numChannels /* numChannels */,
          getDurationMs() /* maxTime Ms */,
          silenceTimeMs /* silenceLength Ms, -1 to disable */,
          FALSE /* setupMixesAutomatically? */);
