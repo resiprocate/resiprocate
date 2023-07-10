@@ -345,12 +345,14 @@ class DnsResult : public DnsResultSink, public EnumResultSink
       class WhitelistCommand : public DnsStub::Command
       {
       public:
-         WhitelistCommand(RRVip& vip, std::vector<Item>& path) : mVip(vip), mPath(path) {}
+         WhitelistCommand(RRVip& vip, TupleMarkManager& markManager, std::vector<Item>& path, Tuple& result) : mVip(vip), mMarkManager(markManager), mPath(path), mResult(result) {}
          virtual ~WhitelistCommand() {}
          virtual void execute();
       private:
          RRVip& mVip;
+         TupleMarkManager& mMarkManager;
          std::vector<Item> mPath;
+         Tuple mResult;
       };
 
       class GreyOrBlacklistCommand : public DnsStub::Command

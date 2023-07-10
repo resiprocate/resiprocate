@@ -240,7 +240,7 @@ DnsResult::next()
 void
 DnsResult::whitelistLast()
 {
-    WhitelistCommand* command = new WhitelistCommand(mVip, mLastReturnedPath);
+    WhitelistCommand* command = new WhitelistCommand(mVip, mInterface.getMarkManager(), mLastReturnedPath, mLastResult);
     mDnsStub.queueCommand(command);
 }
 
@@ -253,6 +253,8 @@ DnsResult::WhitelistCommand::execute()
       DebugLog( << "Whitelisting " << i->domain << "(" << i->rrType << "): " << i->value);
       mVip.vip(i->domain, i->rrType, i->value);
    }
+   // Remove greylist (if present)
+   mMarkManager.unmark(mResult, TupleMarkManager::GREY);
 }
 
 void

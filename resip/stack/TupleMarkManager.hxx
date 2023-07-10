@@ -28,6 +28,7 @@ class TupleMarkManager
       MarkType getMarkType(const Tuple& tuple);
       
       void mark(const Tuple& tuple,uint64_t expiry,MarkType mark);
+      void unmark(const Tuple& tuple, MarkType markFilter);
       void registerMarkListener(MarkListener*);
       void unregisterMarkListener(MarkListener*);
 
@@ -55,6 +56,7 @@ class TupleMarkManager
       typedef std::set<MarkListener*> Listeners;
       Listeners mListeners;
       
+      void removeMark(const Tuple& tuple, TupleList::iterator i);
       void notifyListeners(const resip::Tuple& tuple, uint64_t& expiry, MarkType& mark);
 };
 

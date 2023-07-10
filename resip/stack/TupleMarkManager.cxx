@@ -22,18 +22,15 @@ TupleMarkManager::getMarkType(const Tuple& tuple)
       }
       else
       {
-         mList.erase(i);
-         // ?bwc? Should we do this?
-         uint64_t expiry = 0;
-         MarkType mark = OK;
-         notifyListeners(tuple,expiry,mark);
+         removeMark(tuple, i);
       }
    }
    
    return OK;
 }
 
-void TupleMarkManager::mark(const Tuple& tuple,uint64_t expiry,MarkType mark)
+void 
+TupleMarkManager::mark(const Tuple& tuple,uint64_t expiry,MarkType mark)
 {
    // .amr. Notify listeners first so they can change the entry if they want
    notifyListeners(tuple,expiry,mark);
@@ -41,14 +38,41 @@ void TupleMarkManager::mark(const Tuple& tuple,uint64_t expiry,MarkType mark)
    mList[entry]=mark;
 }
 
-void TupleMarkManager::registerMarkListener(MarkListener* listener)
+void 
+TupleMarkManager::unmark(const Tuple& tuple, MarkType markFilter)
+{
+   ListEntry entry(tuple, 0);
+   TupleList::iterator i = mList.find(entry);
+
+   if (i != mList.end())
+   {
+      if (markFilter == BLACK || markFilter == i->second)
+      {
+         removeMark(tuple, i);
+      }
+   }
+}
+
+void 
+TupleMarkManager::registerMarkListener(MarkListener* listener)
 {
    mListeners.insert(listener);
 }
 
-void TupleMarkManager::unregisterMarkListener(MarkListener* listener)
+void 
+TupleMarkManager::unregisterMarkListener(MarkListener* listener)
 {
    mListeners.erase(listener);
+}
+
+void 
+TupleMarkManager::removeMark(const Tuple& tuple, TupleList::iterator i)
+{
+   mList.erase(i);
+   // ?bwc? Should we do this?
+   uint64_t expiry = 0;
+   MarkType mark = OK;
+   notifyListeners(tuple, expiry, mark);
 }
 
 void
