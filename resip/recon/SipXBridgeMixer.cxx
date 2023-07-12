@@ -38,6 +38,12 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
 
    if(bridgePort != -1)
    {
+      bool processingMultiChannelRecorder = false;
+      if (participant->hasInput() && bridgePort == 0)
+      {
+         // If input bridgePort is 0, then this is the multichannel recorder.
+         processingMultiChannelRecorder = true;
+      }
       // Default All Inputs/Outputs to 0, then calculate non-zero inputs/outputs
       for(int i = 0; i < DEFAULT_BRIDGE_MAX_IN_OUTPUTS; i++)
       {
@@ -45,6 +51,13 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
          if (participant->hasInput())
          {
             mMixMatrix[bridgePort][i] = 0;
+            if (processingMultiChannelRecorder)
+            {
+               // BridgePort 0 is for the left channel.  BridgePort 1 is for the right channel.
+               // Note:  getConnectionPortOnBridge always only returns BridgePort 0 for the 
+               //        multichannel recorder.
+               mMixMatrix[1][i] = 0; // Clear out right channel (bridge port 1)
+            }
          }
          // If we have output capabilites, then clear out other participants inputs from us
          if (participant->hasOutput())
@@ -64,7 +77,7 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
          // Walk through each participant in this Conversation
          Conversation::ParticipantMap& convParts = it1->second->getParticipants();
          Conversation::ParticipantMap::iterator it2;
-         it2 = convParts.find(participant->getParticipantHandle());  // Get the participants gain settings in this conversation            
+         it2 = convParts.find(participant->getParticipantHandle());  // Get the participants gain settings in this conversation
          unsigned int participantOutputGain = 0;
          unsigned int participantInputGain = 0;
          if(it2 != convParts.end()) // if we are in the middle of removing a participant from a conversation then they may not exist in the conversation list any more
@@ -79,15 +92,25 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
             if(it2->second.getParticipant()->getParticipantHandle() != participant->getParticipantHandle())
             {
                int otherBridgePort = it2->second.getParticipant()->getConnectionPortOnBridge();
-               //if (otherBridgePort != -1 && otherBridgePort != bridgePort)  // Note otherBridgePort can equal bridge port if multiple media participants of the same type exist
                if (otherBridgePort != -1)
                {
+                  int bridgePortToUse = bridgePort;
                   if (participant->hasInput() &&                  // Only look at outputs from other participants if we have an input,  and
                       it2->second.getParticipant()->hasOutput())  // Only look at other participant if it has an output
                   {
                      // Calculate the mixed output gain from the other participant to us
                      unsigned int outputGain = ((it2->second.getOutputGain() * participantInputGain) / 100) * 10;  // 10 factor is to bring inline with MrpBridgeWeight int type
-                     mMixMatrix[bridgePort][otherBridgePort] = max((int)outputGain, mMixMatrix[bridgePort][otherBridgePort]);
+                     if (processingMultiChannelRecorder)
+                     {
+                        // If other party is supposed to record to channel 2 then update 
+                        // bridgePortToUse from 0 to 1
+                        if (it2->second.getParticipant()->getRecordChannelNum() == 2)
+                        {
+                           // Send audio to right channel
+                           bridgePortToUse = 1;
+                        }
+                     }
+                     mMixMatrix[bridgePortToUse][otherBridgePort] = max((int)outputGain, mMixMatrix[bridgePortToUse][otherBridgePort]);
                   }
 
                   if (participant->hasOutput() &&                // Only look at inputs to other participants if we have an output, and
@@ -95,9 +118,20 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
                   {
                      // Calculate the mixed input gain for the other participant
                      unsigned int inputGain = ((it2->second.getInputGain() * participantOutputGain) / 100) * 10;  // 10 factor is to bring inline with MrpBridgeWeight int type
-                     inputBridgeWeights[otherBridgePort] = mMixMatrix[otherBridgePort][bridgePort] = max((int)inputGain, mMixMatrix[otherBridgePort][bridgePort]);
+
+                     // OtherParty has input and is bridgePort is 0, then other party is the multichannel recorder.
+                     if (otherBridgePort == 0)
+                     {
+                        // If participant in question needs channel 2 recording then change otherBridgePort from 0 to 1.
+                        if (participant->getRecordChannelNum() == 2)
+                        {
+                           // Send audio to right channel
+                           otherBridgePort = 1;
+                        }
+                     }
+                     inputBridgeWeights[otherBridgePort] = mMixMatrix[otherBridgePort][bridgePortToUse] = max((int)inputGain, mMixMatrix[otherBridgePort][bridgePortToUse]);
                   }
-                  //InfoLog(<< "Setting mix level for bridge ports: " << bridgePort << " and " << otherBridgePort << ": outputGain=" << mMixMatrix[bridgePort][otherBridgePort]/10 << ", inputGain=" << inputBridgeWeights[otherBridgePort]/10);
+                  //InfoLog(<< "Setting mix level for bridge ports: " << bridgePortToUse << " and " << otherBridgePort << ": outputGain=" << mMixMatrix[bridgePortToUse][otherBridgePort]/10 << ", inputGain=" << inputBridgeWeights[otherBridgePort]/10);
                }
             }
          }
@@ -110,13 +144,18 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
       {
          // Apply mix outputs for other participants if we have an input
          MprBridge::setMixWeightsForOutput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, mMixMatrix[bridgePort]);
+         if (processingMultiChannelRecorder)
+         {
+            // If processing the multichannel recorder than also update the secondary/right channel
+            MprBridge::setMixWeightsForOutput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), 1, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, mMixMatrix[1]);
+         }
       }
       if (participant->hasOutput())
       {
          // Apply mix inputs to other participants if we have an output
          MprBridge::setMixWeightsForInput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, inputBridgeWeights);
       }
-   }   
+   }
 }
 
 void
@@ -177,7 +216,7 @@ SipXBridgeMixer::outputBridgeMixWeights()
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

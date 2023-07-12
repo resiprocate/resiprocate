@@ -236,6 +236,13 @@ ConversationManager::modifyParticipantContribution(ConversationHandle convHandle
 }
 
 void 
+ConversationManager::modifyParticipantRecordChannel(ParticipantHandle partHandle, unsigned int channelNum)
+{
+   ModifyParticipantRecordChannelCmd* cmd = new ModifyParticipantRecordChannelCmd(this, partHandle, channelNum);
+   post(cmd);
+}
+
+void 
 ConversationManager::outputBridgeMatrix(ConversationHandle convHandle)
 {
    OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this, convHandle);
@@ -1088,7 +1095,7 @@ ConversationManager::onMessageArrived(ServerPagerMessageHandle h, const SipMessa
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

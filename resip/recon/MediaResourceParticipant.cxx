@@ -26,6 +26,7 @@ static const Data cacheScheme("cache");
 static const Data httpScheme("http");
 static const Data httpsScheme("https");
 static const Data recordScheme("record");
+static const Data recordMultiChannelScheme("record-mc");
 static const Data bufferScheme("buffer");
 
 static const resip::ExtensionParameter p_repeat("repeat");
@@ -72,6 +73,10 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
       {
          mResourceType = Record;
       }
+      else if (isEqualNoCase(mMediaUrl.scheme(), recordMultiChannelScheme))
+      {
+         mResourceType = RecordMultiChannel;
+      }
       else if (isEqualNoCase(mMediaUrl.scheme(), bufferScheme))
       {
          mResourceType = Buffer;
@@ -95,7 +100,8 @@ MediaResourceParticipant::~MediaResourceParticipant()
 bool
 MediaResourceParticipant::hasInput()
 {
-   return mResourceType == Record;
+   return mResourceType == Record ||
+          mResourceType == RecordMultiChannel;
 }
 
 bool
@@ -184,7 +190,7 @@ MediaResourceParticipant::destroyParticipant()
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

@@ -324,6 +324,7 @@ SipXMediaResourceParticipant::startResourceImpl()
    break;
 
    case Record:
+   case RecordMultiChannel:
    {
 #ifdef SIPX_NO_RECORD
       ErrLog(<< "support for Record was not enabled at compile time");
@@ -335,7 +336,7 @@ SipXMediaResourceParticipant::startResourceImpl()
       }
 
       int numChannels = 1;
-      if (getMediaUrl().exists(p_numchannels))
+      if (getResourceType() == RecordMultiChannel && getMediaUrl().exists(p_numchannels))
       {
          numChannels = getMediaUrl().param(p_numchannels).convertInt();
          if (numChannels < 1)
@@ -423,15 +424,20 @@ SipXMediaResourceParticipant::startResourceImpl()
 
       InfoLog(<< "SipXMediaResourceParticipant recording, handle=" << mHandle << " filepath=" << filepath << ", format=" << formatString << ", append=" << (append ? "YES" : "NO") << ", maxDurationMs=" << getDurationMs() << ", silenceTimeMs=" << silenceTimeMs);
 
-      // Note:  locking to single channel recording for now.  Will record all participants in a conversation in a mixed single
-      //        channel file.  In order to support multi-channel recording a few things need to happen:
-      //        1.  Fix bugs in sipX with multi-channel GSM WAV recording, or disallow.
-      //        2.  Fix bugs in sipX with multi-channel OPUS OGG recording, or disallow.
-      //        3.  Control mixes with SipXBridgeMixer for multiple recording outputs.  sipX sets up mixes when you start recording
-      //            but they are not alterened when additional RTP streams (remote Participants) come and go.
-      //        4.  The MAXIMUM_RECORDER_CHANNELS=1 define needs to change in sipXmedaLib and sipXmediaAdpaterLib project files
-      // Note: Automatic trimming of silence is not supported for OPUS recordings.
-      // ^^^^^^^^^ TODO SLG FIX UP when done!
+      // Note:  If mediaStackAdapter.extraPlayAndRecordResourcesEnabled is disabled then there is a single multi-channel
+      //        recording resource.  If enabled, then there are two recording resources, one multichannel
+      //        resources and one single channel recording resource.  The numChannels parameter is only processed
+      //        for the multichannel recording resource.  Media URL scheme of "record-mc" is for the multichannel resource
+      //        and "record" specifies to use the single channel recorder.  
+      // 
+      //        For the multichannel resource (with numChannels set to 2 on the record operation; all participants are by 
+      //        default mixed to the left channel.  Any participant with RecordChannelNum set to 2 will be mixed to
+      //        the right channel.
+      //        
+      // Caveats: 
+      //        1. There are bugs in sipX with multi-channel GSM WAV recording.
+      //        2. There are bugs in sipX with multi-channel OPUS OGG recording.
+      //        3. Automatic trimming of silence is not supported for OPUS recordings.
       OsStatus status = mediaInterface->getInterface()->recordAudio(
          mSipXResourceName.c_str(),
          filepath.c_str(),
@@ -541,12 +547,13 @@ SipXMediaResourceParticipant::stopResource()
       }
       break;
       case Record:
+      case RecordMultiChannel:
       {
 #ifndef SIPX_NO_RECORD
          OsStatus status = getMediaInterface()->getInterface()->stopRecordAudio(mSipXResourceName.c_str());
          if (status != OS_SUCCESS)
          {
-            WarningLog(<< "SipXMediaResourceParticipant::stopResource error calling stopRecordChannelAudio: " << status);
+            WarningLog(<< "SipXMediaResourceParticipant::stopResource error calling stopRecordAudio: " << status);
          }
 #endif
       }
@@ -577,7 +584,8 @@ SipXMediaResourceParticipant::getConnectionPortOnBridge()
             return -1;
          }
       }
-      if (getResourceType() == Record)
+      if (getResourceType() == Record ||
+          getResourceType() == RecordMultiChannel)
       {
 #ifdef SIPX_NO_RECORD
          ErrLog(<< "support for Record was not enabled at compile time");
@@ -679,7 +687,7 @@ SipXMediaResourceParticipant::playerFailed(MpPlayerEvent& event)
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

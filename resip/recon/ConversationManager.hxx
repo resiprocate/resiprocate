@@ -253,23 +253,28 @@ public:
                        (Use | instead of : for drive specifier)
      cache:<cache-name> - You can play from a memory buffer/cache any items you
                           have added with the addBufferToMediaResourceCache api.
-     record:<filepath> - If filename only, then writes to application directory
-                         (Use | instead of : for drive specifier)
-                         ;duration parameter specified max recording length in Ms
+     record:<filepath> - Single channel recorder.  If filename only, then writes to 
+                         application directory. Use | instead of : for drive specifier.
                          ;append parameter specifies to append to an existing recording
-                         ;silencetime parameter specifies ms of silence to end recording
-     record:circularbuffer - Recorded audio is written to provided media specific CircularBuffer
-                         ;duration parameter specified max recording length in Ms
-                         ;silencetime parameter specifies ms of silence to end recording
+     record:circularbuffer - Single channel recorded audio is written to provided media 
+                         specific CircularBuffer
+     record-mc:<filepath> - Multichannel recorder. If filename only, then writes to application
+                         directory.  Use | instead of : for drive specifier.
+                         ;append parameter specifies to append to an existing recording
+                         ;numchannels parameter specifies either 1 or 2 channels of recording
+     record-mc:circularbuffer - Multichannel recorded audio is written to provided media
+                         specific CircularBuffer.
+                         ;numchannels parameter specifies either 1 or 2 channels of recording
      buffer:<type> - For sipXtapi the only allowed type is RAW_PCM_16, the sampling rate
                          is expected to be 8khz.
 
-     optional arguments are: [;duration=<duration>][;repeat][;format=<recording_format>]
-
-     @note 'repeat' option only makes sense for file and cache playback scheme's
+     other optional parameters are: [;duration=<duration>][;repeat][silencetime=<duration>][;format=<recording_format>]
+        - 'duration' parameter will automatically stop playback if file is longer than duration. For recording, parameter specifies max recording length in Ms
+        - 'repeat' parameter only makes sense for file and cache playback scheme's
+        - 'silencetime' parameter specifies ms of silence to end recording
+        - 'format' parameter only makes sense for recording scheme's.  Possible values: WAV_PCM16, WAV_MULAW, WAV_ALAW, WAV_GSM, OGG_OPUS
      @note audio files may be AU, WAV or RAW formats.  Audiofiles should be 16bit mono, 8khz, PCM to avoid runtime conversion.
      @note http referenced audio files must be WAV files, 16 or 8bit, 8Khz, Mono.
-     @note 'format' options only makes sense for recording scheme's.  Possible values: WAV_PCM16, WAV_MULAW, WAV_ALAW, WAV_GSM, OGG_OPUS
 
      Sample mediaUrls:
         tone:0                             - play DTMF tone 0 until participant is destroyed
@@ -285,9 +290,11 @@ public:
         record:recording.wav;duration=30000;silencetime=5000 - records all participants audio mixed togehter in a WAV file, for up to 5 mins, stop
                                                                automatically when voice is missing for 5 seconds
         record:circularbuffer;format=WAV_PCM16 - records all participants audio mixed together as PCM16 in the provided ciruclar buffer (no WAV header 
-                                                 is generated), must be manually destroyed
+                                                 is generated). Must be manually destroyed.
+        record-mc:circularbuffer;format=WAV_PCM16;numchannels=2 - records all parties in the left channel unless they have channel 2 recording enabled
+                                                 via the modifyParticipantRecordChannel API, then they are mixed into the right channel.  Use PCM16 
+                                                 format and output to the provided ciruclar buffer (no WAV header is generated).  Must be manually destroyed.
         buffer:RAW_PCM_16;repeat           - plays the audio from the provided playAudioBuffer parameter, repeating when complete until participant is destroyed
-
 
      @param convHandle Handle of the conversation to create the MediaParticipant in
      @param mediaUrl   Url of media to play.  See above.
@@ -365,6 +372,17 @@ public:
      @param partHandle Handle of the participant to modify
    */
    virtual void modifyParticipantContribution(ConversationHandle convHandle, ParticipantHandle partHandle, unsigned int inputGain, unsigned int outputGain);
+
+   /**
+     If the participant is mixed to a multi-channel recording resource, then this controls
+     if a participants audio is mixed into channel 1 or channel 2. By default participants 
+     mix to channel 1 (left).  Set to 2 to have participants audio is mixed to the 
+     right/secondary channel of the recording.
+
+     @param partHandle Handle of the participant to modify
+     @param channelNum The channel number to mix audio to. 1 (default) or 2.
+   */
+   virtual void modifyParticipantRecordChannel(ParticipantHandle partHandle, unsigned int channelNum);
 
    /**
      Logs a multiline representation of the current state
@@ -882,6 +900,7 @@ private:
    friend class RemoveParticipantCmd;
    friend class MoveParticipantCmd;
    friend class ModifyParticipantContributionCmd;
+   friend class ModifyParticipantRecordChannelCmd;
    friend class AlertParticipantCmd;
    friend class AnswerParticipantCmd;
    friend class RejectParticipantCmd;
@@ -926,7 +945,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

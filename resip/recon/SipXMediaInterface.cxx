@@ -30,12 +30,12 @@ SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager,
    // default initial resources, plus any customizations done in SipXMediaStackAdapter::addExtraPlayAndRecordResourcesToTopology
    mMediaResourceAllocations[MediaResourceParticipant::Tone].push_back(MediaResourceAllocationInfo(DEFAULT_TONE_GEN_RESOURCE_NAME));
    mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(DEFAULT_FROM_FILE_RESOURCE_NAME));  // Note:  File resource also tracks Cache and Buffer types
-   mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(DEFAULT_RECORDER_RESOURCE_NAME));
+   mMediaResourceAllocations[MediaResourceParticipant::RecordMultiChannel].push_back(MediaResourceAllocationInfo(DEFAULT_RECORDER_RESOURCE_NAME));
    SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(conversationManager.getMediaStackAdapter());
    if (mediaStackAdapter.extraPlayAndRecordResourcesEnabled())
    {
       mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(SipXMediaStackAdapter::DEFAULT_FROM_FILE_2_RESOURCE_NAME));
-      mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(SipXMediaStackAdapter::DEFAULT_RECORDER_2_RESOURCE_NAME));
+      mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(SipXMediaStackAdapter::DEFAULT_RECORDER_2_RESOURCE_NAME));  // Single channel recorder
    }
 }
 
@@ -120,7 +120,7 @@ std::list<SipXMediaInterface::MediaResourceAllocationInfo>& SipXMediaInterface::
    if (resourceType == MediaResourceParticipant::Cache ||
        resourceType == MediaResourceParticipant::Buffer)
    {
-      // Cache and File resources are the same sipX resource, track both under the File type
+      // Cache, Buffer and File resources are the same sipX resource, track both under the File type
       resourceType = MediaResourceParticipant::File;
    }
    resip_assert(mMediaResourceAllocations.find(resourceType) != mMediaResourceAllocations.end());
@@ -375,7 +375,7 @@ SipXMediaInterface::post(const OsMsg& msg)
 
 /* ====================================================================
 
- Copyright (c) 2010-2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2010-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  All rights reserved.
 

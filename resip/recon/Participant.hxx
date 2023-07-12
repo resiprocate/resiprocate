@@ -34,6 +34,10 @@ class Participant
 
       virtual ParticipantHandle getParticipantHandle() { return mHandle; }
       virtual ConversationManager::ParticipantType getParticipantType() { return mType; }
+
+      virtual void setRecordChannelNum(unsigned int channelNum) { mRecordChannelNum = channelNum; }
+      virtual unsigned int getRecordChannelNum() { return mRecordChannelNum; }
+
       virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
       virtual void removeFromConversation(Conversation *conversation);
       virtual void unregisterFromAllConversations();
@@ -57,7 +61,8 @@ class Participant
    protected:
       ParticipantHandle mHandle;
       ConversationManager::ParticipantType mType;
-      ConversationManager &mConversationManager;
+      unsigned int mRecordChannelNum;
+      ConversationManager& mConversationManager;
       ConversationMap mConversations;
 };
 
@@ -68,7 +73,7 @@ class Participant
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

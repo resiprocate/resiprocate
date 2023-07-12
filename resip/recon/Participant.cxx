@@ -19,6 +19,7 @@ Participant::Participant(ParticipantHandle partHandle,
                          ConversationManager& conversationManager)
 : mHandle(partHandle),
   mType(participantType),
+  mRecordChannelNum(1),
   mConversationManager(conversationManager)
 {
    mConversationManager.registerParticipant(this);
@@ -29,6 +30,7 @@ Participant::Participant(ConversationManager::ParticipantType participantType,
                          ConversationManager& conversationManager)
 : mHandle(0),
   mType(participantType),
+  mRecordChannelNum(1),
   mConversationManager(conversationManager)
 {
    setHandle(mConversationManager.getNewParticipantHandle());
@@ -180,7 +182,7 @@ Participant::applyBridgeMixWeights(Conversation* removedConversation)
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

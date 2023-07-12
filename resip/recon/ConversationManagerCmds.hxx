@@ -529,6 +529,39 @@ class ModifyParticipantContributionCmd : public resip::DumCommandAdapter
       unsigned int mOutputGain;
 };
 
+class ModifyParticipantRecordChannelCmd : public resip::DumCommandAdapter
+{
+public:
+   ModifyParticipantRecordChannelCmd(ConversationManager* conversationManager, ParticipantHandle partHandle, unsigned int channelNum)
+      : mConversationManager(conversationManager),
+        mPartHandle(partHandle),
+        mChannelNum(channelNum) {}
+   virtual void executeCommand()
+   {
+      if (mChannelNum >= 1 && mChannelNum <= 2)
+      {
+         Participant* participant = mConversationManager->getParticipant(mPartHandle);
+         if (participant)
+         {
+            participant->setRecordChannelNum(mChannelNum);
+         }
+         else
+         {
+            WarningLog(<< "ModifyParticipantRecordChannelCmd: invalid participant handle: " << mPartHandle);
+         }
+      }
+      else
+      {
+         WarningLog(<< "ModifyParticipantRecordChannelCmd: partHandle=" << mPartHandle << ", invalid channelNum=" << mChannelNum << ", expecting either 1 or 2.");
+      }
+   }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " ModifyParticipantRecordChannelCmd: partHandle=" << mPartHandle << ", channelNum=" << mChannelNum; return strm; }
+private:
+   ConversationManager* mConversationManager;
+   ParticipantHandle mPartHandle;
+   unsigned int mChannelNum;
+};
+
 class OutputBridgeMixWeightsCmd : public resip::DumCommandAdapter
 {
    public:  
@@ -911,7 +944,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2023, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.

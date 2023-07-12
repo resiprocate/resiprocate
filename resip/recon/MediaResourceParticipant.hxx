@@ -48,6 +48,7 @@ public:
       Cache,
       Http,
       Https,
+      RecordMultiChannel,
       Record,
       Buffer
    } ResourceType;
@@ -101,7 +102,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
