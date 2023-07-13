@@ -61,7 +61,7 @@ UserAgentClientPublication::onRemove(ClientPublicationHandle handle, const SipMe
 void
 UserAgentClientPublication::onFailure(ClientPublicationHandle handle, const SipMessage& status)
 {
-   InfoLog(<<"UserAgentClientPublication::onFailure - not implemented\n");
+   WarningLog(<<"UserAgentClientPublication::onFailure - not implemented\n");
 }
 
 int
@@ -79,6 +79,7 @@ UserAgentClientPublication::onStaleUpdate(ClientPublicationHandle handle, const 
 
 /* ====================================================================
 
+ Copyright (c) 2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  Copyright (C) 2016, Mateus Bellomo (mateusbellomo AT gmail DOT com) https://mateusbellomo.wordpress.com/
  All rights reserved.
