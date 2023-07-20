@@ -683,6 +683,10 @@ ParseBuffer::integer()
       fail(__FILE__, __LINE__,msg);
    }
 
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4146)
+#endif
    // The absolute value limit depending on the detected sign
    const unsigned int absoluteLimit = negative ? -(unsigned int)INT_MIN : INT_MAX;
    // maximum value for full number except last digit
@@ -705,6 +709,9 @@ ParseBuffer::integer()
         num = -num;
     }
     return num;
+#ifdef _MSC_VER
+#pragma warning( pop ) 
+#endif
 }
 
 uint8_t
