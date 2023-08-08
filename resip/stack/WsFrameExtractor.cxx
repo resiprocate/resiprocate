@@ -222,11 +222,11 @@ WsFrameExtractor::joinFrames()
       // ShareEnum will change to Take when expanded
       char *_msg = (char *)msg->data();
       Data::size_type frameSize = msg->size();
-      delete msg;
 
       // allow extra byte for null terminator
       char *newBuf = new char [mMessageSize + 1]; 
       memcpy(newBuf, _msg, frameSize);
+      delete msg;
 
       msg = new Data(Data::Borrow, newBuf, frameSize, mMessageSize + 1);
    }
