@@ -185,7 +185,7 @@ ParserContainerBase::getHeaderValueByIndex(size_t index, Data& headerValue) cons
    if (index < mParsers.size())
    {
       const HeaderKit& hk = mParsers[index];
-      headerValue.empty();
+      headerValue.clear();
       DataStream ds(headerValue);
       hk.encode(ds);
       return true;
