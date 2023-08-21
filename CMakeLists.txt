@@ -262,7 +262,8 @@ if(WITH_C_ARES)
    add_definitions(-DUSE_CARES)
 
    set(ARES_LIBRARIES ${cares_LIBRARIES})
-   include_directories(${cares_INCLUDE_DIR})
+   include_directories(${cares_INCLUDE_DIRS})
+   link_directories(${cares_LIBRARY_DIRS})
 else()
    # Use built-in ares
    set(USE_ARES true)
