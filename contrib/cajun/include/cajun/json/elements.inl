@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "reader.h"
 #include <cassert>
 #include <algorithm>
+#include <functional>
 #include <map>
 
 /*  
