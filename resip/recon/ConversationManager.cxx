@@ -41,8 +41,7 @@ ConversationManager::ConversationManager(std::shared_ptr<MediaStackAdapter> medi
   mConfigParse(configParse),
   mShuttingDown(false),
   mCurrentConversationHandle(1),
-  mCurrentParticipantHandle(1),
-  mBridgeMixer(0)
+  mCurrentParticipantHandle(1)
 {
    if(mConfigParse)
    {
@@ -59,6 +58,7 @@ ConversationManager::~ConversationManager()
    resip_assert(mConversations.empty());
    resip_assert(mParticipants.empty());
    mBridgeMixer.reset();       // Make sure the mixer is destroyed before the media interface
+   mMediaStackAdapter.reset();
 }
 
 void
@@ -94,14 +94,14 @@ ConversationManager::shutdown()
    if(mMediaStackAdapter.get())
    {
       mMediaStackAdapter->shutdown();
-      mMediaStackAdapter.reset();
+      //mMediaStackAdapter.reset();  // Reset here causes a deadlock, will reset in destructor instead
    }
 }
 
 void
 ConversationManager::process()
 {
-   if(mMediaStackAdapter)
+   if(!mShuttingDown)
    {
       mMediaStackAdapter->process();
    }

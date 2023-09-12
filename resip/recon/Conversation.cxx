@@ -36,7 +36,6 @@ Conversation::Conversation(ConversationHandle handle,
   mNumMediaParticipants(0),
   mAutoHoldMode(autoHoldMode),
   mMaxParticipants(maxParticipants),
-  mBridgeMixer(0),
   mSharingMediaInterfaceWithAnotherConversation(false)
 {
    mConversationManager.registerConversation(this);
@@ -397,7 +396,7 @@ Conversation::unregisterParticipant(Participant *participant)
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
