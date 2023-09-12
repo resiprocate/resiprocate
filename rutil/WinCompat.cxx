@@ -251,7 +251,9 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
    DWORD flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
    unsigned short family = destination.isVersion6() ? AF_INET6 : AF_INET;
    dwRet = (instance()->getAdaptersAddresses)(family, flags, NULL, NULL, &dwSize);
-   if (dwRet == ERROR_BUFFER_OVERFLOW)  // expected error
+   if (dwRet != ERROR_BUFFER_OVERFLOW)  // expected error
+      throw Exception("Unexpected return code", __FILE__, __LINE__);
+
    {
       // Allocate memory
       pAdapterAddresses = (IP_ADAPTER_ADDRESSES *) LocalAlloc(LMEM_ZEROINIT,dwSize);

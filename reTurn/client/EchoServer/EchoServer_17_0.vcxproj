@@ -35,9 +35,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>TurnLoadGenClient</ProjectName>
-    <ProjectGuid>{B913FF68-5F2E-4820-9562-3C35614DDD5E}</ProjectGuid>
-    <RootNamespace>TurnLoadGenClient</RootNamespace>
+    <ProjectName>EchoServer</ProjectName>
+    <ProjectGuid>{3483AD87-47ED-4351-BEF2-5E9BEC84C317}</ProjectGuid>
+    <RootNamespace>EchoServer</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -388,11 +388,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TurnLoadGenClient.cxx" />
+    <ClCompile Include="EchoServer.cxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <CopyFileToFolders Include="turnloadgenclient.config">
+    <CopyFileToFolders Include="EchoServer.config">
       <FileType>Document</FileType>
     </CopyFileToFolders>
   </ItemGroup>
