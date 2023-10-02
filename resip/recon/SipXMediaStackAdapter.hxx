@@ -66,6 +66,7 @@ class SipXMediaStackAdapter : public MediaStackAdapter
 public:
 
    static constexpr char DEFAULT_FROM_FILE_2_RESOURCE_NAME[] = "FromFile2";
+   static constexpr char DEFAULT_FROM_FILE_3_RESOURCE_NAME[] = "FromFile3";
    static constexpr char DEFAULT_RECORDER_2_RESOURCE_NAME[] = "Recorder2";
 
    /**
@@ -74,7 +75,7 @@ public:
           (1 used for local mic / speaker, 1 for a WAV Player/Recorder and 1 for a 
           Tone Player, leaving 7 remaining for RemoteParticipants - 8 if local audio  
           is disabled).  Also, if enableExtraPlayAndRecordResources is passed in as true
-          then an extra slot if taken for an additional player and recorder.
+          then 2 extra slots are taken for additional players and a recorder.
 
           The limit of 10 is controlled by the preprocessor define 
           DEFAULT_BRIDGE_MAX_IN_OUTPUTS (see
@@ -87,7 +88,7 @@ public:
           mode, there can only be a single MediaParticipant at a time performing
           each operation (ie.  1 playing a WAV, 1 recording and one playing a tone
           is allowed, but only 1 of each type) for all conversations.  If 
-          enableExtraPlayAndRecordResources is enabled then you are allowed to have 2
+          enableExtraPlayAndRecordResources is enabled then you are allowed to have 3
           players and 2 recorders.  This architecture/mode is appropriate for single 
           user agent devices (ie. sip phones).
 

@@ -566,21 +566,37 @@ SipXMediaStackAdapter::addExtraPlayAndRecordResourcesToTopology()
 {
    MpResourceTopology* resourceTopology = mMediaFactory->getInitialResourceTopology();
 
-   // Add in an extra player and recorder
+   // Add in first extra player (FromFile) resource
    OsStatus result = resourceTopology->addResource(DEFAULT_FROM_FILE_RESOURCE_TYPE, DEFAULT_FROM_FILE_2_RESOURCE_NAME, MP_INVALID_CONNECTION_ID, -1);
    resip_assert(result == OS_SUCCESS);
    if (result == OS_SUCCESS)
    {
-      result = resourceTopology->addResource(DEFAULT_RECORDER_RESOURCE_TYPE, DEFAULT_RECORDER_2_RESOURCE_NAME, MP_INVALID_CONNECTION_ID, -1);
+      // Add in second extra player (FromFile) resource
+      result = resourceTopology->addResource(DEFAULT_FROM_FILE_RESOURCE_TYPE, DEFAULT_FROM_FILE_3_RESOURCE_NAME, MP_INVALID_CONNECTION_ID, -1);
    }
    resip_assert(result == OS_SUCCESS);
    if (result == OS_SUCCESS)
    {
+      // Add in extra recording resource
+      result = resourceTopology->addResource(DEFAULT_RECORDER_RESOURCE_TYPE, DEFAULT_RECORDER_2_RESOURCE_NAME, MP_INVALID_CONNECTION_ID, -1);
+   }
+
+   resip_assert(result == OS_SUCCESS);
+   if (result == OS_SUCCESS)
+   {
+      // Add connection for first extra player
       result = resourceTopology->addConnection(DEFAULT_FROM_FILE_2_RESOURCE_NAME, 0, DEFAULT_BRIDGE_RESOURCE_NAME, MpResourceTopology::MP_TOPOLOGY_NEXT_AVAILABLE_PORT);
    }
    resip_assert(result == OS_SUCCESS);
    if (result == OS_SUCCESS)
    {
+      // Add connection for second extra player
+      result = resourceTopology->addConnection(DEFAULT_FROM_FILE_3_RESOURCE_NAME, 0, DEFAULT_BRIDGE_RESOURCE_NAME, MpResourceTopology::MP_TOPOLOGY_NEXT_AVAILABLE_PORT);
+   }
+   resip_assert(result == OS_SUCCESS);
+   if (result == OS_SUCCESS)
+   {
+      // Add connection for extra recording resource
       result = resourceTopology->addConnection(DEFAULT_BRIDGE_RESOURCE_NAME, MpResourceTopology::MP_TOPOLOGY_NEXT_AVAILABLE_PORT, DEFAULT_RECORDER_2_RESOURCE_NAME, 0);
    }
    resip_assert(result == OS_SUCCESS);

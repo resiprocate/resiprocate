@@ -35,6 +35,7 @@ SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager,
    if (mediaStackAdapter.extraPlayAndRecordResourcesEnabled())
    {
       mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(SipXMediaStackAdapter::DEFAULT_FROM_FILE_2_RESOURCE_NAME));
+      mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(SipXMediaStackAdapter::DEFAULT_FROM_FILE_3_RESOURCE_NAME));
       mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(SipXMediaStackAdapter::DEFAULT_RECORDER_2_RESOURCE_NAME));  // Single channel recorder
    }
 }
