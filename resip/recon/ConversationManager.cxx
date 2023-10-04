@@ -57,8 +57,11 @@ ConversationManager::~ConversationManager()
 {
    resip_assert(mConversations.empty());
    resip_assert(mParticipants.empty());
+   InfoLog(<< "ConversationManager::~ConversationManager destroying BridgeMixer...");
    mBridgeMixer.reset();       // Make sure the mixer is destroyed before the media interface
+   InfoLog(<< "ConversationManager::~ConversationManager destroying MediaStackAdapter...");
    mMediaStackAdapter.reset();
+   InfoLog(<< "ConversationManager::~ConversationManager complete.");
 }
 
 void
@@ -71,6 +74,8 @@ ConversationManager::setUserAgent(UserAgent* userAgent)
 void
 ConversationManager::shutdown()
 {
+   InfoLog(<< "ConversationManager::shutting down.  Ending any active conversations and participants...");
+
    mShuttingDown = true;
 
    // Destroy each Conversation
@@ -93,9 +98,11 @@ ConversationManager::shutdown()
 
    if(mMediaStackAdapter.get())
    {
+      InfoLog(<< "ConversationManager::shutting down MediaStackAdapter...");
       mMediaStackAdapter->shutdown();
       //mMediaStackAdapter.reset();  // Reset here causes a deadlock, will reset in destructor instead
    }
+   InfoLog(<< "ConversationManager::shutdown.");
 }
 
 void

@@ -63,7 +63,8 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mStack(mSecurity, mProfile->getAdditionalDnsServers(), mEventInterruptor, false /* stateless */, socketFunc, 0, mPollGrp),
    mDum(mStack),
    mStackThread(mStack, *mEventInterruptor, *mPollGrp),
-   mDumShutdown(false)
+   mDumShutdown(false),
+   mUserAgentShutdown(false)
 {
 #if defined(USE_SSL)
    const std::vector<Data>& rootCertDirectories = mProfile->rootCertDirectories();
@@ -203,17 +204,27 @@ UserAgent::process(int timeoutMs)
 void
 UserAgent::shutdown()
 {
-   UserAgentShutdownCmd* cmd = new UserAgentShutdownCmd(this);
-   mDum.post(cmd);
-
-   // Wait for Dum to shutdown
-   while(!mDumShutdown) 
+   if (!mUserAgentShutdown)
    {
-      process(100);
-   }
+      UserAgentShutdownCmd* cmd = new UserAgentShutdownCmd(this);
+      mDum.post(cmd);
 
-   mStackThread.shutdown();
-   mStackThread.join();
+      InfoLog(<< "UserAgent::shutdown: posted UserAgentShutdownCmd, waiting for DUM to shutdown...");
+
+      // Wait for Dum to shutdown
+      while (!mDumShutdown)
+      {
+         process(100);
+      }
+
+      InfoLog(<< "UserAgent::shutdown: DUM shutdown, shutting down StackThread...");
+
+      mStackThread.shutdown();
+      mStackThread.join();
+
+      InfoLog(<< "UserAgent::shutdown: StackThread shutdown.");
+      mUserAgentShutdown = true;
+   }
 }
 
 void
@@ -453,6 +464,7 @@ UserAgent::getConversationManager()
 void 
 UserAgent::onDumCanBeDeleted()
 {
+   InfoLog(<< "UserAgent::onDumCanBeDeleted called.");
    mDumShutdown = true;
 }
 
@@ -575,9 +587,11 @@ UserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyDat
 void 
 UserAgent::shutdownImpl()
 {
+   InfoLog(<< "UserAgent::shutdownImpl shutting down DUM...");
    mDum.shutdown(this);
 
    // End all subscriptions
+   InfoLog(<< "UserAgent::shutdownImpl ending " << mSubscriptions.size() << " subscriptions...");
    SubscriptionMap tempSubs = mSubscriptions;  // Create copy for safety, since ending Subscriptions can immediately remove themselves from map
    SubscriptionMap::iterator i;
    for(i = tempSubs.begin(); i != tempSubs.end(); i++)
@@ -586,6 +600,7 @@ UserAgent::shutdownImpl()
    }
 
    // Unregister all registrations
+   InfoLog(<< "UserAgent::shutdownImpl ending " << mRegistrations.size() << " registrations...");
    RegistrationMap tempRegs = mRegistrations;  // Create copy for safety, since ending can immediately remove themselves from map
    RegistrationMap::iterator j;
    for(j = tempRegs.begin(); j != tempRegs.end(); j++)

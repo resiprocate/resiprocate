@@ -390,7 +390,7 @@ protected:
    resip::DialogUsageManager mDum;
    resip::EventStackThread mStackThread;
    volatile bool mDumShutdown;
-
+   volatile bool mUserAgentShutdown;
 };
  
 }
