@@ -54,6 +54,8 @@ using namespace std;
 */
 //#define RTP_SAVPF_FUDGE
 
+static Data IPV4_ZERO_ADDRESS_STRING("0.0.0.0");
+
 // UAC
 SipXRemoteParticipant::SipXRemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager,
@@ -1068,15 +1070,16 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
 
    InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", mediaDirection=" << sdpcontainer::SdpMediaLine::SdpDirectionTypeString[mediaDirection] << ", remoteIp=" << remoteIPAddress << ", remotePort=" << remoteRtpPort);
 
-   if(!remoteIPAddress.empty() && remoteRtpPort != 0)
+   bool activeDestinationSet = false;
+   if(!remoteIPAddress.empty() && remoteIPAddress != IPV4_ZERO_ADDRESS_STRING && remoteRtpPort != 0)
    {
       sipXDialogSet->setActiveDestination(remoteIPAddress.c_str(), remoteRtpPort, remoteRtcpPort);
+      activeDestinationSet = true;
    }
 
    if((mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
        mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY) &&
-       !remoteIPAddress.empty() && remoteRtpPort != 0 && 
-       remoteCodecs && localCodecs)
+       activeDestinationSet && remoteCodecs && localCodecs)
    {
       // Calculate intersection of local and remote codecs, and pass remote codecs that exist locally to RTP send fn
       int numCodecs=0;
