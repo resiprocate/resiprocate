@@ -156,14 +156,15 @@ option(USE_NDKPORTS_HACKS "Android ndkports build: use hardcoded paths to depend
 if(WIN32)
    set(BUILD_SHARED_LIBS_DEFAULT OFF)
    set(USE_CONTRIB_DEFAULT ON)
-   set(USE_NUGET ON)
+   set(USE_NUGET_DEFAULT ON)
 else()
    set(BUILD_SHARED_LIBS_DEFAULT ON)
    set(USE_CONTRIB_DEFAULT OFF)
-   set(USE_NUGET OFF)
+   set(USE_NUGET_DEFAULT OFF)
 endif()
 option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT})
 option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
+option(USE_NUGET "Use NuGet package manager" ${USE_NUGET_DEFAULT})
 
 set(CMAKE_CXX_STANDARD 11)
 
