@@ -776,7 +776,9 @@ if(BUILD_TFM)
    add_subdirectory(tfm)
 endif()
 
-add_subdirectory(media)
+if(BUILD_RECON)
+   add_subdirectory(media)
+endif()
 
 if(BUILD_RETURN)
    add_subdirectory(reTurn)
