@@ -48,6 +48,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 constexpr char SipXMediaStackAdapter::DEFAULT_FROM_FILE_2_RESOURCE_NAME[];
+constexpr char SipXMediaStackAdapter::DEFAULT_FROM_FILE_3_RESOURCE_NAME[];
 constexpr char SipXMediaStackAdapter::DEFAULT_RECORDER_2_RESOURCE_NAME[];
 
 SipXMediaStackAdapter::SipXMediaStackAdapter(ConversationManager& conversationManager, bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, bool enableExtraPlayAndRecordResources)
