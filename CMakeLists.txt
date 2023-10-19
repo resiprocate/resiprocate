@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules")
 
 if(POLICY CMP0042)
@@ -257,14 +257,12 @@ endif()
 # ares
 if(WITH_C_ARES)
    # Don't use built-in ares
-   pkg_check_modules(cares libcares REQUIRED)
+   pkg_check_modules(cares libcares REQUIRED IMPORTED_TARGET)
 
    set(USE_CARES true)
    add_definitions(-DUSE_CARES)
 
-   set(ARES_LIBRARIES ${cares_LIBRARIES})
-   include_directories(${cares_INCLUDE_DIRS})
-   link_directories(${cares_LIBRARY_DIRS})
+   set(ARES_LIBRARIES PkgConfig::cares)
 else()
    # Use built-in ares
    set(USE_ARES true)
