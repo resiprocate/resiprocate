@@ -298,7 +298,7 @@ TlsConnection::checkState()
                   switch(verifyErrorCode)
                   {
                      case X509_V_OK:
-                        DebugLog(<<"peer supplied a ceritifcate, but it has not been checked or it was checked successfully");
+                        DebugLog(<<"peer supplied a certificate, but it has not been checked or it was checked successfully");
                         break;
                      default:
                         ErrLog(<<"peer certificate validation failure: " << X509_verify_cert_error_string(verifyErrorCode));
@@ -320,7 +320,7 @@ TlsConnection::checkState()
                   }
                   else
                   {
-                     ErrLog(<<"Server did not present any certificiate to us, certificate invalid or protocol did not reach certificate exchange");
+                     ErrLog(<<"Server did not present any certificate to us, certificate invalid or protocol did not reach certificate exchange");
                   }
                }
             }
