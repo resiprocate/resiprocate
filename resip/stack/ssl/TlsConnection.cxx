@@ -602,7 +602,7 @@ TlsConnection::hasDataToRead() // has data that can be read
 
 
 bool 
-TlsConnection::isGood() // has data that can be read 
+TlsConnection::isGood()
 {
 #if defined(USE_SSL)
    if ( mBio == 0 )
@@ -624,7 +624,7 @@ TlsConnection::isGood() // has data that can be read
    }
 
 #endif       
-   return true;
+   return false;
 }
 
 bool 
@@ -651,7 +651,7 @@ TlsConnection::isWritable()
 void TlsConnection::getPeerNames(std::list<Data> &peerNames) const
 {
    for(std::list<BaseSecurity::PeerName>::const_iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
-{
+   {
       peerNames.push_back(it->mName);
    }
 }
