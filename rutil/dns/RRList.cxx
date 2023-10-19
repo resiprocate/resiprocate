@@ -10,6 +10,8 @@
 #undef write  // Note:  ares.h defines write to be _write for WIN32 - we don't want that here, since we use fdset.write and stream write
 #endif
 
+#include "AresCompat.hxx"
+
 #ifndef WIN32
 #ifndef __CYGWIN__
 #include <arpa/nameser.h>
