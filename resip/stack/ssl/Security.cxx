@@ -69,6 +69,12 @@ static const Data userCert("user_cert_");
 static const Data userKey("user_key_");
 static const Data unknownKey("user_key_");
 
+#ifdef WIN32
+static const Data pathSepartor = "\\";
+#else
+static const Data pathSepartor = "/";
+#endif
+
 static const Data 
 pemTypePrefixes(  Security::PEMType pType )
 {
@@ -165,9 +171,9 @@ Security::Security(const Data& directory, const CipherList& cipherSuite, const D
    mPath(directory)
 {
    // since the preloader won't work otherwise and VERY difficult to figure out.
-   if (!mPath.empty() && !mPath.postfix(Symbols::SLASH))
+   if (!mPath.empty() && !mPath.postfix(pathSepartor))
    {
-      mPath += Symbols::SLASH;
+      mPath += pathSepartor;
    }
 }
 
@@ -176,9 +182,9 @@ Security::addCADirectory(const Data& caDirectory)
 {
    mCADirectories.push_back(caDirectory);
    Data &_dir = mCADirectories.back();
-   if ( !_dir.postfix(Symbols::SLASH))
+   if ( !_dir.postfix(pathSepartor))
    {
-      _dir += Symbols::SLASH;
+      _dir += pathSepartor;
    }
 }
 
@@ -457,7 +463,7 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 {
    Data filename = mPath + pemTypePrefixes(type) + name + PEM;
 
-   InfoLog (<< "Reading PEM file " << filename << " into " << name);
+   InfoLog (<< "Reading PEM file " << filename << " for " << name);
    // .dlb. extra copy
    buffer = Data::fromFile(filename);
 }
