@@ -70,9 +70,9 @@ static const Data userKey("user_key_");
 static const Data unknownKey("user_key_");
 
 #ifdef WIN32
-static const Data pathSepartor = "\\";
+static const Data pathSeparator = "\\";
 #else
-static const Data pathSepartor = "/";
+static const Data pathSeparator = "/";
 #endif
 
 static const Data 
@@ -171,9 +171,9 @@ Security::Security(const Data& directory, const CipherList& cipherSuite, const D
    mPath(directory)
 {
    // since the preloader won't work otherwise and VERY difficult to figure out.
-   if (!mPath.empty() && !mPath.postfix(pathSepartor))
+   if (!mPath.empty() && !mPath.postfix(pathSeparator))
    {
-      mPath += pathSepartor;
+      mPath += pathSeparator;
    }
 }
 
@@ -182,9 +182,9 @@ Security::addCADirectory(const Data& caDirectory)
 {
    mCADirectories.push_back(caDirectory);
    Data &_dir = mCADirectories.back();
-   if ( !_dir.postfix(pathSepartor))
+   if ( !_dir.postfix(pathSeparator))
    {
-      _dir += pathSepartor;
+      _dir += pathSeparator;
    }
 }
 
@@ -250,7 +250,7 @@ Security::preload()
    // or a collection of root certificates
    struct stat s;
    Data fileName(mPath);
-   if(fileName.postfix("/"))
+   if(fileName.postfix(pathSeparator))
    {
       fileName.truncate(fileName.size() - 1);
    }
