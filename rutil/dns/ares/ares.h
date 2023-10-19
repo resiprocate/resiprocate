@@ -301,8 +301,14 @@ extern 	void ares_free_errmem(char *mem);
 #define NS_DEFAULTPORT 53 
 #define NAMESERVER_PORT NS_DEFAULTPORT 
 
+#ifndef QUERY
 #define QUERY 0
+#endif
+
+#ifndef MAXLABEL
 #define MAXLABEL 63
+#endif 
+
 #endif
 
 #endif
