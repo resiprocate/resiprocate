@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+
+option(USE_VCPKG "assume vcpkg presence and include it so find_package finds it." FALSE)
+if(USE_VCPKG)
+  include(${VCPKG_DIR})
+# include("C:/On-Hertz/Dev/vcpkg/scripts/buildsystems/vcpkg.cmake")
+endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules")
 
 if(POLICY CMP0042)
