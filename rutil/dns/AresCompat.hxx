@@ -13,6 +13,9 @@
 #if ARES_VERSION_MAJOR < 1 || (ARES_VERSION_MAJOR == 1 && ARES_VERSION_MINOR < 6)
 #error Need c-ares >= 1.6
 #endif
+#if ARES_VERSION_MAJOR > 1 || (ARES_VERSION_MAJOR == 1 && ARES_VERSION_MINOR >= 18)
+#include "ares_nameser.h"
+#endif
 #endif
 
 #endif
