@@ -431,7 +431,7 @@ asio::error_code
 Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receivedData, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    asio::error_code errorCode;
-   unsigned int receivedsize = receivedData->mData->size();
+   unsigned int receivedsize = (unsigned int)receivedData->mData->size();
 
    // SRTP Unprotect (if required)
    if(mMediaStream.mSRTPSessionInCreated)
@@ -792,7 +792,7 @@ Flow::onSendFailure(unsigned int socketDesc, const asio::error_code& e)
    {
       // Note:  if setActiveDestination is called it can take some time to "connect" the socket to the destination
       //        and send requests during this time, will be discarded - this can be considered normal
-      InfoLog(<< "Flow::onSendFailure: socketDesc=" << socketDesc << " socket is not in correct state to send yet, componentId=" << mComponentId );
+      InfoLog(<< "Flow::onSendFailure: socketDesc=" << socketDesc << " socket is not in correct state to send yet, state=" << flowStateToString(mFlowState) << ", componentId = " << mComponentId );
    }
    else
    {
@@ -818,7 +818,7 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
 #ifdef USE_SSL
    // Check if packet is a dtls packet - if so then process it
    // Note:  Stun messaging should be picked off by the reTurn library - so we only need to tell the difference between DTLS and SRTP here
-   if(DtlsFactory::demuxPacket((const unsigned char*) data->data(), data->size()) == DtlsFactory::dtls)
+   if(DtlsFactory::demuxPacket((const unsigned char*) data->data(), (unsigned int)data->size()) == DtlsFactory::dtls)
    {
       Lock lock(mMutex);
 
@@ -831,7 +831,7 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
       }
       if(dtlsSocket)
       { 
-         dtlsSocket->handlePacketMaybe((const unsigned char*) data->data(), data->size());
+         dtlsSocket->handlePacketMaybe((const unsigned char*) data->data(), (unsigned int)data->size());
       }
 
       // Packet was a DTLS packet - do not queue for app
