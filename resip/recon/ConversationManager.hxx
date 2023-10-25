@@ -277,15 +277,15 @@ public:
      @note http referenced audio files must be WAV files, 16 or 8bit, 8Khz, Mono.
 
      Sample mediaUrls:
-        tone:0                             - play DTMF tone 0 until participant is destroyed
-        tone:1;duration=1000               - play DTMF tone 1 for 1000ms, then automatically destroy participant
-        tone:ringback                      - play special tone "Ringback" to conversation until participant is manually destroyed
-        file://ringback.wav                - play the file ringback.wav until completed (automatically destroyed) or participant is manually destroyed
-        file://ringback.wav;duration=1000  - play the file ringback.wav for 1000ms (or until completed, if shorter), then automatically destroy participant
-        file://ringback.wav;repeat         - play the file ringback.wav, repeating when complete until participant is destroyed
-        file://hi.wav;repeat;duration=9000 - play the file hi.wav for 9000ms, repeating as required, then automatically destroy the participant
-        cache:welcomeprompt                - plays a prompt from the media cache with key/name "welcomeprompt"
-        record:recording.wav               - records all participants audio mixed together in a WAV file of type WAV_PCM16, must be manually destroyed
+        tone:0                           - play DTMF tone 0 until participant is destroyed
+        tone:1;duration=1000             - play DTMF tone 1 for 1000ms, then automatically destroy participant
+        tone:ringback                    - play special tone "Ringback" to conversation until participant is manually destroyed
+        file:ringback.wav                - play the file ringback.wav until completed (automatically destroyed) or participant is manually destroyed
+        file:ringback.wav;duration=1000  - play the file ringback.wav for 1000ms (or until completed, if shorter), then automatically destroy participant
+        file:ringback.wav;repeat         - play the file ringback.wav, repeating when complete until participant is destroyed
+        file:hi.wav;repeat;duration=9000 - play the file hi.wav for 9000ms, repeating as required, then automatically destroy the participant
+        cache:welcomeprompt              - plays a prompt from the media cache with key/name "welcomeprompt"
+        record:recording.wav             - records all participants audio mixed together in a WAV file of type WAV_PCM16, must be manually destroyed
         record:recording.ogg;format=OGG_OPUS - records all participants audio mixed together in an Opus encoded OGG file, must be manually destroyed
         record:recording.wav;duration=30000;silencetime=5000 - records all participants audio mixed togehter in a WAV file, for up to 5 mins, stop
                                                                automatically when voice is missing for 5 seconds
@@ -294,7 +294,7 @@ public:
         record-mc:circularbuffer;format=WAV_PCM16;numchannels=2 - records all parties in the left channel unless they have channel 2 recording enabled
                                                  via the modifyParticipantRecordChannel API, then they are mixed into the right channel.  Use PCM16 
                                                  format and output to the provided ciruclar buffer (no WAV header is generated).  Must be manually destroyed.
-        buffer:RAW_PCM_16;repeat           - plays the audio from the provided playAudioBuffer parameter, repeating when complete until participant is destroyed
+        buffer:RAW_PCM_16;repeat         - plays the audio from the provided playAudioBuffer parameter, repeating when complete until participant is destroyed
 
      @param convHandle Handle of the conversation to create the MediaParticipant in
      @param mediaUrl   Url of media to play.  See above.

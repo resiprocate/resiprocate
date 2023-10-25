@@ -175,9 +175,6 @@ SipXMediaResourceParticipant::startResourceImpl()
    case File:
    {
       Data filepath = getMediaUrl().host().urlDecoded();
-      if (filepath.size() > 3 && filepath.substr(0, 3) == Data("///")) filepath = filepath.substr(2);
-      else if (filepath.size() > 2 && filepath.substr(0, 2) == Data("//")) filepath = filepath.substr(1);
-
       filepath.replace("|", ":");  // For Windows filepath processing - convert | to :
 
       InfoLog(<< "SipXMediaResourceParticipant playing, handle=" << mHandle << " filepath=" << filepath);
@@ -415,9 +412,6 @@ SipXMediaResourceParticipant::startResourceImpl()
       }
 
       Data filepath = getMediaUrl().host().urlDecoded();
-      if (filepath.size() > 3 && filepath.substr(0, 3) == Data("///")) filepath = filepath.substr(2);
-      else if (filepath.size() > 2 && filepath.substr(0, 2) == Data("//")) filepath = filepath.substr(1);
-
       filepath.replace("|", ":");  // For Windows filepath processing - convert | to :
 
       bool append = getMediaUrl().exists(p_append);
