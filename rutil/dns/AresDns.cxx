@@ -233,7 +233,7 @@ AresDns::init(int dnsTimeout, int dnsTries, unsigned int features)
     }
 #endif
 
-#ifdef WIN32
+#if defined(WIN32) && defined(USE_ARES)
     // For windows OSs it is uncommon to run a local DNS server.  Therefor if there
     // are no defined DNS servers in windows networking and ARES just returned the
     // loopback address (ie. default localhost server / named)

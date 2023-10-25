@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 
 option(USE_VCPKG "assume vcpkg presence and include it so find_package finds it." FALSE)
 if(USE_VCPKG)
   include(${VCPKG_DIR})
 endif()
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules")
 
 if(POLICY CMP0042)
@@ -204,7 +205,7 @@ function(version_libname)
    # FIXME
    # Other people have complained about the same problem, e.g.
    # https://discourse.libsdl.org/t/patches-dynamic-library-name-should-it-be-libsdl2-2-0-so-or-libsdl2-so/19400/8
-   if(VERSIONED_SONAME)
+   if(VERSIONED_SONAME AND BUILD_SHARED_LIBS)
       set_target_properties(${ARGV0} PROPERTIES OUTPUT_NAME ${ARGV0}-${SO_RELEASE})
       file(CREATE_LINK lib${ARGV0}-${SO_RELEASE}.so ${CMAKE_CURRENT_BINARY_DIR}/lib${ARGV0}.so RESULT ${ARGV0}-IGNORE SYMBOLIC)
       install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib${ARGV0}.so DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -262,14 +263,12 @@ endif()
 # ares
 if(WITH_C_ARES)
    # Don't use built-in ares
-   pkg_check_modules(cares libcares REQUIRED)
+   pkg_check_modules(cares libcares REQUIRED IMPORTED_TARGET)
 
    set(USE_CARES true)
    add_definitions(-DUSE_CARES)
 
-   set(ARES_LIBRARIES ${cares_LIBRARIES})
-   include_directories(${cares_INCLUDE_DIRS})
-   link_directories(${cares_LIBRARY_DIRS})
+   set(ARES_LIBRARIES PkgConfig::cares)
 else()
    # Use built-in ares
    set(USE_ARES true)
