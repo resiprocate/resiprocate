@@ -30,7 +30,7 @@ using namespace repro;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
+TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args, int timerC)
 {
    createDataStore(db);
 
@@ -48,7 +48,7 @@ TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
    insertConfigValue("QValueMsBetweenForkGroups", "5000");
    insertConfigValue("QValueMsBeforeCancel", "5000");
 
-   insertConfigValue("TimerC", "40");
+   insertConfigValue("TimerC", Data(timerC).c_str());
 
    insertConfigValue("ForceRecordRouting", "true");
    //insertConfigValue("RecordRouteUri", "sip:127.0.0.1:5060");  // Set below per transport
@@ -71,7 +71,8 @@ TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& host, 
                      const CommandLineParser& args, 
                      const resip::Data& nwInterface,
-                     Security* security) : 
+                     Security* security,
+                     int timerC) : 
    TestProxy(name, host, args.mUdpPorts, args.mTcpPorts, args.mTlsPorts, args.mDtlsPorts, nwInterface),
    mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
    mInterruptor(new EventThreadInterruptor(*mPollGrp)),
@@ -89,7 +90,7 @@ TestRepro::TestRepro(const resip::Data& name,
    mRegistrar(),
    mProfile(std::make_shared<MasterProfile>()),
    mDb(new BerkeleyDb),
-   mConfig(mDb, args),
+   mConfig(mDb, args, timerC),
    mAuthRequestDispatcher(new Dispatcher(std::unique_ptr<Worker>(new UserAuthGrabber(*mConfig.getDataStore())), 
                                          mStack, 2)),
    mRequestProcessors(Processor::REQUEST_CHAIN),

@@ -6980,7 +6980,7 @@ class TestHolder : public ReproFixture
       RouteGuard dGuard7(*proxy, "sip:7spiral@.*", "sip:6spiral@localhost");
       RouteGuard dGuard8(*proxy, "sip:8spiral@.*", "sip:7spiral@localhost");
       RouteGuard dGuard9(*proxy, "sip:9spiral@.*", "sip:8spiral@localhost");
-      
+
 
       Seq(david->registerUser(60, david->getDefaultContacts()),
           david->expect(REGISTER/407, from(proxy), WaitForResponse, david->digestRespond()),
@@ -6992,7 +6992,8 @@ class TestHolder : public ReproFixture
       (
          derek->message(proxy->makeUrl("9spiral").uri(),"Ping"),
          derek->expect(MESSAGE/407,from(proxy),WaitForResponse,derek->digestRespond()),
-         david->expect(MESSAGE, from(proxy),2*WaitForCommand,david->ok()),
+         optional(derek->expect(MESSAGE / 100, from(proxy), WaitForCommandSpiral, derek->noAction())),
+         david->expect(MESSAGE, from(proxy),WaitForCommandSpiral,david->ok()),
          derek->expect(MESSAGE/200,from(proxy),WaitForResponse, derek->noAction()),
          WaitForEndOfTest
       );
