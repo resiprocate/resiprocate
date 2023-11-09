@@ -31,6 +31,7 @@ static const Data bufferScheme("buffer");
 
 static const resip::ExtensionParameter p_repeat("repeat");
 static const resip::ExtensionParameter p_prefetch("prefetch");
+static const resip::ExtensionParameter p_startOffset("startoffset");
 
 MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
                                                    ConversationManager& conversationManager,
@@ -42,6 +43,7 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
   mRepeat(false),
   mPrefetch(false),
   mDurationMs(0),
+  mStartOffsetMs(0),
   mRunning(false),
   mDestroying(false)
 {
@@ -138,6 +140,11 @@ MediaResourceParticipant::startResource()
       {
          mPrefetch = true;
          mMediaUrl.remove(p_prefetch);
+      }
+      if (mMediaUrl.exists(p_startOffset))
+      {
+         mStartOffsetMs = mMediaUrl.param(p_startOffset).convertUnsignedLong();
+         mMediaUrl.remove(p_startOffset);
       }
 
       startResourceImpl();

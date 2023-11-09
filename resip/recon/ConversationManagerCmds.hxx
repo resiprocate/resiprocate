@@ -121,11 +121,11 @@ class JoinConversationCmd  : public resip::DumCommandAdapter
          {
             if (!sourceConversation)
             {
-               WarningLog(<< "JoinConversationCmd: invalid source conversation handle.");
+               WarningLog(<< "JoinConversationCmd: invalid source conversation handle: " << mSourceConvHandle);
             }
             if (!destConversation)
             {
-               WarningLog(<< "JoinConversationCmd: invalid destination conversation handle.");
+               WarningLog(<< "JoinConversationCmd: invalid destination conversation handle: " << mDestConvHandle);
             }
          }
       }
@@ -173,7 +173,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "CreateRemoteParticipantCmd: invalid conversation handle.");
+            WarningLog(<< "CreateRemoteParticipantCmd: invalid conversation handle: " << mConvHandle);
             mConversationManager->onParticipantDestroyed(mPartHandle);
          }
       }
@@ -284,7 +284,7 @@ class CreateMediaResourceParticipantCmd : public resip::DumCommandAdapter
          }
          else
          {
-            WarningLog(<< "CreateMediaResourceParticipantCmd: invalid conversation handle.");
+            WarningLog(<< "CreateMediaResourceParticipantCmd: invalid conversation handle: " << mConvHandle);
             mConversationManager->onParticipantDestroyed(mPartHandle);
          }
       }

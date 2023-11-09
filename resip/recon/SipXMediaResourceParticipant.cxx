@@ -185,7 +185,11 @@ SipXMediaResourceParticipant::startResourceImpl()
          isRepeat() ? TRUE : FALSE /* repeast? */,
          TRUE /* local - unused */, TRUE /* remote - unused */);
 #else
-      OsStatus status = mediaInterface->getInterface()->playAudio(mSipXResourceName.c_str(), filepath.c_str(), isRepeat() ? TRUE : FALSE /* repeat? */);
+      OsStatus status = mediaInterface->getInterface()->playAudio(mSipXResourceName.c_str(), 
+         filepath.c_str(), 
+         isRepeat() ? TRUE : FALSE,
+         TRUE /* autoStopAfterFinish? */,
+         getStartOffsetMs());
 #endif
 
       if(status == OS_SUCCESS)
@@ -224,7 +228,10 @@ SipXMediaResourceParticipant::startResourceImpl()
             buffer->size(),
             8000, /* rate */
             type,
-            isRepeat() ? TRUE : FALSE /* repeat? */);
+            isRepeat() ? TRUE : FALSE,
+            NULL /* OsProtectedEvent */,
+            TRUE /* autoStopAfterFinish? */,
+            getStartOffsetMs());
 #endif
          if (status == OS_SUCCESS)
          {
@@ -268,7 +275,10 @@ SipXMediaResourceParticipant::startResourceImpl()
                buffer->size(),
                8000, /* rate */
                0,  // RAW_PCM_16 = 0 - always correct for SipXMedia:  see sipXTapi.h: SIPX_AUDIO_DATA_FORMAT
-               isRepeat() ? TRUE : FALSE /* repeat? */);
+               isRepeat() ? TRUE : FALSE,
+               NULL /* OsProtectedEvent */,
+               TRUE /* autoStopAfterFinish? */,
+               getStartOffsetMs());
 #endif
             if (status == OS_SUCCESS)
             {
