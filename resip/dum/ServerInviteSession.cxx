@@ -913,7 +913,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
          unsigned int duration = 2*timeout.secondarySeq();
          if(duration>=64*Timer::T1)
          {
-            InfoLog (<< "Reliable provisional timeout" );
+            InfoLog (<< "Reliable provisional timeout, duration=" << duration );
             auto i504 = std::make_shared<SipMessage>();
             mDialog.makeResponse(*i504, mFirstRequest, 504);
             send(i504);
@@ -932,7 +932,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
          }
          else
          {
-            InfoLog (<< "Reliable provisional retransmit" );
+            InfoLog (<< "Reliable provisional retransmit, duration=" << duration );
             send(mUnacknowledgedReliableProvisional);
             mDum.addTimerMs(DumTimeout::Retransmit1xxRel, duration, getBaseHandle(), timeout.seq(), duration);
          }

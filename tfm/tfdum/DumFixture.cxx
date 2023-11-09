@@ -122,8 +122,7 @@ DumFixture::initialize(int argc, char** argv)
    // enable for TLS testing
    //security = new resip::Security(getenv("PWD"));
    CommandLineParser args(argc, argv);
-   proxy = new TestRepro("proxy", "localhost", args, Data::Empty, security);
-
+   proxy = new TestRepro("proxy", "localhost", args, Data::Empty, security, 180 /* timerC */);
    {
       Data offer("v=0\r\n"
                  "o=dumTfm 2087 3916 IN IP4 127.0.0.1\r\n"

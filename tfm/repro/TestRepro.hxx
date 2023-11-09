@@ -29,7 +29,7 @@ namespace repro
 class TfmProxyConfig : public repro::ProxyConfig
 {
 public:
-   TfmProxyConfig(repro::AbstractDb* db, const CommandLineParser& args);
+   TfmProxyConfig(repro::AbstractDb* db, const CommandLineParser& args, int timerC);
 };
 
 class TestRepro : public TestProxy
@@ -39,7 +39,8 @@ class TestRepro : public TestProxy
                 const resip::Data& host, 
                 const CommandLineParser& args, 
                 const resip::Data& nwInterface = resip::Data::Empty,
-                resip::Security* security=0);
+                resip::Security* security=0,
+                int timerC = 40);
       ~TestRepro();
 
       virtual void addUser(const resip::Data& userid, const resip::Uri& aor, const resip::Data& password);

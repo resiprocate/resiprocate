@@ -5213,7 +5213,7 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         int retransInterval = resip::Timer::T1;
+         int retransInterval = resip::Timer::T1;  // Set to 2000
 
          TestServerInviteSession uas(scott);
          
