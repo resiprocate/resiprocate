@@ -268,11 +268,12 @@ public:
      buffer:<type> - For sipXtapi the only allowed type is RAW_PCM_16, the sampling rate
                          is expected to be 8khz.
 
-     other optional parameters are: [;duration=<duration>][;repeat][silencetime=<duration>][;format=<recording_format>]
+     other optional parameters are: [;duration=<milliseconds>][;repeat][silencetime=<milliseconds>][;format=<recording_format>][;startoffset=<milliseconds>]
         - 'duration' parameter will automatically stop playback if file is longer than duration. For recording, parameter specifies max recording length in Ms
         - 'repeat' parameter only makes sense for file and cache playback scheme's
         - 'silencetime' parameter specifies ms of silence to end recording
         - 'format' parameter only makes sense for recording scheme's.  Possible values: WAV_PCM16, WAV_MULAW, WAV_ALAW, WAV_GSM, OGG_OPUS
+        - 'startoffset' parameter specifies an offset, in milliseconds, that the file or buffer will start playing from.
      @note audio files may be AU, WAV or RAW formats.  Audiofiles should be 16bit mono, 8khz, PCM to avoid runtime conversion.
      @note http referenced audio files must be WAV files, 16 or 8bit, 8Khz, Mono.
 
@@ -284,6 +285,7 @@ public:
         file:ringback.wav;duration=1000  - play the file ringback.wav for 1000ms (or until completed, if shorter), then automatically destroy participant
         file:ringback.wav;repeat         - play the file ringback.wav, repeating when complete until participant is destroyed
         file:hi.wav;repeat;duration=9000 - play the file hi.wav for 9000ms, repeating as required, then automatically destroy the participant
+        file:music.wav;startoffset=2500  - play the file music.wav starting 2.5 seconds into the file, until completed or participant is manually destroyed
         cache:welcomeprompt              - plays a prompt from the media cache with key/name "welcomeprompt"
         record:recording.wav             - records all participants audio mixed together in a WAV file of type WAV_PCM16, must be manually destroyed
         record:recording.ogg;format=OGG_OPUS - records all participants audio mixed together in an Opus encoded OGG file, must be manually destroyed

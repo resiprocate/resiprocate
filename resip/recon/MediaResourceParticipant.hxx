@@ -75,6 +75,7 @@ protected:
    virtual void setRepeat(bool repeat) { mRepeat = repeat; }
    virtual bool isPrefetch() { return mPrefetch; }
    virtual unsigned int getDurationMs() { return mDurationMs; }
+   virtual unsigned int getStartOffsetMs() { return mStartOffsetMs; }
    virtual bool isRunning() { return mRunning; }
    virtual void setRunning(bool running) { mRunning = running; }
    virtual bool isDestroying() { return mDestroying; }
@@ -90,6 +91,7 @@ private:
    bool mRepeat;
    bool mPrefetch;
    unsigned int mDurationMs;
+   unsigned int mStartOffsetMs;
 
    bool mRunning;
    bool mDestroying;
