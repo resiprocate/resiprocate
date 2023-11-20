@@ -2525,7 +2525,11 @@ InviteSession::setSessionTimerHeaders(SipMessage &msg)
 void
 InviteSession::sessionRefresh()
 {
-   if (updateMethodSupported())
+   // Note:  We could get a 422 to a provideOffer reINVITE, and sessionRefresh can get called.
+   //        In this case we want to make sure we resend the reINVITE and not an UPDATE.  The
+   //        mState != SentReinvite check handles this.
+   DialogUsageManager::EncryptionLevel encryptionLevel = mCurrentEncryptionLevel;
+   if (updateMethodSupported() && mState != SentReinvite) 
    {
       transition(SentUpdate);
       mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
@@ -2536,14 +2540,24 @@ InviteSession::sessionRefresh()
       transition(SentReinvite);
       mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
       startStaleReInviteTimer();
-      InviteSession::setOfferAnswer(*mLastLocalSessionModification, mCurrentLocalOfferAnswer.get());
-      mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(*mCurrentLocalOfferAnswer, 0);
-      mSessionRefreshReInvite = true;      
+      Contents* sdpToSend;
+      if (mProposedLocalOfferAnswer)
+      {
+         sdpToSend = mProposedLocalOfferAnswer.get();
+         encryptionLevel = mProposedEncryptionLevel;
+      }
+      else
+      {
+         sdpToSend = mCurrentLocalOfferAnswer.get();
+         mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(*mCurrentLocalOfferAnswer, 0);
+      }
+      InviteSession::setOfferAnswer(*mLastLocalSessionModification, sdpToSend);
+      mSessionRefreshReInvite = true;
    }
    setSessionTimerHeaders(*mLastLocalSessionModification);
 
    InfoLog (<< "sessionRefresh: Sending " << mLastLocalSessionModification->brief());
-   DumHelper::setOutgoingEncryptionLevel(*mLastLocalSessionModification, mCurrentEncryptionLevel);
+   DumHelper::setOutgoingEncryptionLevel(*mLastLocalSessionModification, encryptionLevel);
    send(mLastLocalSessionModification);
 }
 
@@ -3252,7 +3266,7 @@ InviteSession::setCurrentLocalOfferAnswer(const SipMessage& msg)
    {
       mCurrentLocalOfferAnswer = unique_ptr<Contents>(static_cast<Contents*>(mProposedLocalOfferAnswer->clone()));
    }
-   mProposedLocalOfferAnswer.reset();   
+   mProposedLocalOfferAnswer.reset();
 }
 
 void 
