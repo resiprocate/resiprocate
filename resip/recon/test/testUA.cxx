@@ -151,15 +151,20 @@ public:
       }      
    }
 
-   
    virtual void onConversationDestroyed(ConversationHandle convHandle) override
    {
       InfoLog(LOG_PREFIX << "onConversationDestroyed: handle=" << convHandle);
    }
 
-   virtual void onParticipantDestroyed(ParticipantHandle partHandle) override
+   virtual void onParticipantDestroyed(ParticipantHandle partHandle)
    {
-      InfoLog(LOG_PREFIX << "onParticipantDestroyed: handle=" << partHandle);
+      // Should never get called if version of onParticipantDestroyed below is implemented
+      assert(false);
+   }
+
+   virtual void onParticipantDestroyed(ParticipantHandle partHandle, ParticipantType partType) override
+   {
+      InfoLog(LOG_PREFIX << "onParticipantDestroyed: handle=" << partHandle << ", type=" << ConversationManager::participantTypeToString(partType));
    }
 
    virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) override
@@ -251,10 +256,16 @@ public:
          addParticipant(convHandle, partHandle);
       }*/
    }
-    
+
    virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode) override
    {
-      InfoLog(LOG_PREFIX << "onParticipantTerminated: handle=" << partHandle << ", statusCode=" << statusCode);
+      // Should never get called if version of onParticipantTerminated below is implemented
+      assert(false);
+   }
+
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode, const resip::Data& reason) override
+   {
+      InfoLog(LOG_PREFIX << "onParticipantTerminated: handle=" << partHandle << ", statusCode=" << statusCode << ", reason=" << reason);
    }
     
    virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg) override

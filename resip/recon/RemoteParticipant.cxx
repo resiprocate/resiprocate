@@ -139,9 +139,8 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
       }
       if(!success)
       {
-         // FIXME - can/should we let the application know this failed?
-         ErrLog(<<"failed to create offer, aborting");
-         mConversationManager.onParticipantTerminated(mHandle, 500);
+         ErrLog(<<"failed to create an SDP offer");
+         mConversationManager.onParticipantTerminated(mHandle, 500, "Failed to create SDP offer");
          delete this;
          return;
       }
@@ -972,7 +971,7 @@ RemoteParticipant::acceptPendingOODRefer()
             if(!success)
             {
                ErrLog(<<"failed to create an SDP offer");
-               mConversationManager.onParticipantTerminated(mHandle, 500);
+               mConversationManager.onParticipantTerminated(mHandle, 500, "Failed to create SDP offer");
                delete this;
                return;
             }
@@ -995,7 +994,7 @@ RemoteParticipant::acceptPendingOODRefer()
       else
       {
          WarningLog(<< "acceptPendingOODRefer - no valid handles");
-         mConversationManager.onParticipantTerminated(mHandle, 500);
+         mConversationManager.onParticipantTerminated(mHandle, 500, "Accepting OOD Refer failed, no valid handles");
          delete this;
       }
    }
@@ -1009,17 +1008,17 @@ RemoteParticipant::rejectPendingOODRefer(unsigned int statusCode)
       if(mPendingOODReferNoSubHandle.isValid())
       {
          mPendingOODReferNoSubHandle->send(mPendingOODReferNoSubHandle->reject(statusCode));
-         mConversationManager.onParticipantTerminated(mHandle, statusCode);
+         mConversationManager.onParticipantTerminated(mHandle, statusCode, "OOD Refer NoSub rejected");
       }
       else if(mPendingOODReferSubHandle.isValid())
       {
          mPendingOODReferSubHandle->send(mPendingOODReferSubHandle->reject(statusCode));  
-         mConversationManager.onParticipantTerminated(mHandle, statusCode);
+         mConversationManager.onParticipantTerminated(mHandle, statusCode, "OOD Refer rejected");
       }
       else
       {
          WarningLog(<< "rejectPendingOODRefer - no valid handles");
-         mConversationManager.onParticipantTerminated(mHandle, 500);
+         mConversationManager.onParticipantTerminated(mHandle, 500, "Rejecting OOD Refer failed, no valid handles");
       }
       mDialogSet.destroy();  // Will also cause "this" to be deleted
    }
@@ -1036,7 +1035,7 @@ RemoteParticipant::redirectPendingOODRefer(resip::NameAddr& destination)
          redirect->header(h_Contacts).clear();
          redirect->header(h_Contacts).push_back(destination);
          mPendingOODReferNoSubHandle->send(redirect);
-         mConversationManager.onParticipantTerminated(mHandle, 302 /* Moved Temporarily */);
+         mConversationManager.onParticipantTerminated(mHandle, 302 /* Moved Temporarily */, "OOD Refer NoSub redirected");
       }
       else if(mPendingOODReferSubHandle.isValid())
       {
@@ -1044,12 +1043,12 @@ RemoteParticipant::redirectPendingOODRefer(resip::NameAddr& destination)
          redirect->header(h_Contacts).clear();
          redirect->header(h_Contacts).push_back(destination);
          mPendingOODReferSubHandle->send(redirect);  
-         mConversationManager.onParticipantTerminated(mHandle, 302 /* Moved Temporarily */);
+         mConversationManager.onParticipantTerminated(mHandle, 302 /* Moved Temporarily */, "OOD Refer redirectred");
       }
       else
       {
-         WarningLog(<< "rejectPendingOODRefer - no valid handles");
-         mConversationManager.onParticipantTerminated(mHandle, 500);
+         WarningLog(<< "redirectPendingOODRefer - no valid handles");
+         mConversationManager.onParticipantTerminated(mHandle, 500, "Redirecting OOD Refer failed, no valid handles");
       }
       mDialogSet.destroy();  // Will also cause "this" to be deleted
    }
@@ -1161,7 +1160,7 @@ RemoteParticipant::provideOffer(bool postOfferAccept, bool preferExistingSdp)
       if(!success)
       {
          ErrLog(<<"buildSdpOffer failed");
-         mConversationManager.onParticipantTerminated(mHandle, 500);
+         mConversationManager.onParticipantTerminated(mHandle, 500, "Failed to create SDP offer");
          delete this;
          return;
       }
@@ -1227,8 +1226,8 @@ void RemoteParticipant::notifyTerminating()
    // and let DUM handle the rest in the background.
    if (mHandle != 0)
    {
-      mConversationManager.onParticipantTerminated(mHandle, 0);
-      mConversationManager.onParticipantDestroyed(mHandle);
+      mConversationManager.onParticipantTerminated(mHandle, 0, Data::Empty);
+      mConversationManager.onParticipantDestroyed(mHandle, ConversationManager::ParticipantType_Remote);
       setHandle(0);        // unregister from Conversation Manager
    }
 }
@@ -1465,33 +1464,43 @@ void
 RemoteParticipant::onTerminated(InviteSessionHandle h, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
 {
    stateTransition(Terminating);
+   Data callbackReason;
    switch(reason)
    {
    case InviteSessionHandler::RemoteBye:
+      callbackReason = "RemoteBye";
       InfoLog(<< "onTerminated: handle=" << mHandle << ", received a BYE from peer");
       break;
    case InviteSessionHandler::RemoteCancel:
+      callbackReason = "RemoteCancel";
       InfoLog(<< "onTerminated: handle=" << mHandle << ", received a CANCEL from peer");
       break;
    case InviteSessionHandler::Rejected:
+      callbackReason = "Rejected";
       InfoLog(<< "onTerminated: handle=" << mHandle << ", received a rejection from peer");
       break;
    case InviteSessionHandler::LocalBye:
+      callbackReason = "LocalBye";
       InfoLog(<< "onTerminated: handle=" << mHandle << ", ended locally via BYE");
       break;
    case InviteSessionHandler::LocalCancel:
+      callbackReason = "LocalCancel";
       InfoLog(<< "onTerminated: handle=" << mHandle << ", ended locally via CANCEL");
       break;
    case InviteSessionHandler::Replaced:
+      callbackReason = "Replaced";
       InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to being replaced");
       break;
    case InviteSessionHandler::Referred:
+      callbackReason = "Referred";
       InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to being reffered");
       break;
    case InviteSessionHandler::Error:
+      callbackReason = "Error";
       InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to an error");
       break;
    case InviteSessionHandler::Timeout:
+      callbackReason = "Timeout";
       InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to a timeout");
       break;
    default:
@@ -1504,6 +1513,12 @@ RemoteParticipant::onTerminated(InviteSessionHandle h, InviteSessionHandler::Ter
       if(msg->isResponse())
       {
          statusCode = msg->header(h_StatusLine).responseCode();
+      }
+      if (msg->exists(h_Reasons) && msg->header(h_Reasons).size() > 0)
+      {
+         // Grab first reason only
+         callbackReason += ": ";
+         callbackReason += Data::from(msg->header(h_Reasons).front());
       }
    }
 
@@ -1523,7 +1538,7 @@ RemoteParticipant::onTerminated(InviteSessionHandle h, InviteSessionHandler::Ter
    // Ensure terminating party is from answered fork before generating event
    if(!mDialogSet.isStaleFork(getDialogId()))
    {
-      if(mHandle) mConversationManager.onParticipantTerminated(mHandle, statusCode);
+      if(mHandle) mConversationManager.onParticipantTerminated(mHandle, statusCode, callbackReason);
    }
 }
 
@@ -1756,7 +1771,7 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
          if(!success)
          {
             ErrLog(<<"failed to create an SDP offer");
-            mConversationManager.onParticipantTerminated(mHandle, 500);
+            mConversationManager.onParticipantTerminated(mHandle, 500, "Failed to create SDP offer");
             delete this;
             return;
          }
@@ -1819,7 +1834,7 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
       if(!success)
       {
          ErrLog(<<"failed to create SDP offer");
-         mConversationManager.onParticipantTerminated(mHandle, 500);
+         mConversationManager.onParticipantTerminated(mHandle, 500, "Failed to create SDP offer");
          delete this;
          return;
       }
