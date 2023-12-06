@@ -152,6 +152,8 @@ private:
    StunTuple mReflexiveTuple;
    StunTuple mRelayTuple;
    resip::Data mRemoteSDPFingerprint;
+   asio::ip::address mActiveDestinationAddress;
+   unsigned short mActiveDestinationPort;
 
    // Map to store all DtlsSockets - in forking cases there can be more than one
    std::map<reTurn::StunTuple, dtls::DtlsSocket*> mDtlsSockets;
@@ -223,6 +225,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2007-2023, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

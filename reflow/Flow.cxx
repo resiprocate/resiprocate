@@ -34,6 +34,8 @@ int Flow::maxReceiveFifoSize = 100 * maxReceiveFifoDuration; // 1000 = 1 message
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
+#define LOG_PREFIX << mLocalBinding << " ComponentId=" << mComponentId << ", CallId=" << (mFlowContext ? mFlowContext->getSipCallId() : "") << ": "
+
 const char* srtp_error_string(srtp_err_status_t error)
 {
    switch(error)
@@ -141,14 +143,15 @@ Flow::Flow(asio::io_service& ioService,
     mPrivatePeer(false),
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
+    mActiveDestinationPort(0),
     mFlowState(Unconnected),
     mReceivedDataFifo(maxReceiveFifoDuration, maxReceiveFifoSize)
 {
-   InfoLog(<< "Flow: flow created for " << mLocalBinding << "  ComponentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow created");
 
    if(componentId != RTCP_COMPONENT_ID && mRtcpEventLoggingHandler.get())
    {
-      ErrLog(<< "attempting to set an RTCPEventLoggingHandler for non-RTCP flow");
+      ErrLog(LOG_PREFIX << "attempting to set an RTCPEventLoggingHandler for non-RTCP flow");
       mRtcpEventLoggingHandler.reset();
    }
 
@@ -186,8 +189,7 @@ Flow::Flow(asio::io_service& ioService,
 
 Flow::~Flow() 
 {
-   InfoLog(<< "Flow: flow destroyed for " << mLocalBinding << "  ComponentId=" << mComponentId);
-
+   InfoLog(LOG_PREFIX << "Flow destroyed");
 
 #ifdef USE_SSL
    // Cleanup DtlsSockets
@@ -308,7 +310,7 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
       srtp_err_status_t status = mMediaStream.srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
       if(status != srtp_err_status_ok)
       {
-         ErrLog(<< "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")  ComponentId=" << mComponentId);
+         ErrLog(LOG_PREFIX << "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
          onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
          return false;
       }
@@ -325,14 +327,14 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
             srtp_err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
             if(status != srtp_err_status_ok)
             {
-               ErrLog(<< "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")  ComponentId=" << mComponentId);
+               ErrLog(LOG_PREFIX << "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
                onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
                return false;
             }
          }
          else
          {
-            //WarningLog(<< "Unable to send packet yet - handshake is not completed yet, ComponentId=" << mComponentId);
+            //WarningLog(LOG_PREFIX << "Unable to send packet yet - handshake is not completed yet");
             onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::InvalidState, asio::error::misc_category));
             return false;
          }
@@ -402,15 +404,15 @@ Flow::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::
    if(timeout == 0 && mReceivedDataFifo.empty())
    {
       // timeout
-      InfoLog(<< "Receive timeout (timeout==0 and fifo empty)!");
+      DebugLog(LOG_PREFIX << "Receive timeout (timeout==0 and fifo empty)!");
       return asio::error_code(flowmanager::ReceiveTimeout, asio::error::misc_category);
    }
    if(mReceivedDataFifo.empty())
    {
-      WarningLog(<< "Receive called when there is no data available!  ComponentId=" << mComponentId);
+      WarningLog(LOG_PREFIX << "Receive called when there is no data available!");
    }
 
-   ReceivedData* receivedData = mReceivedDataFifo.getNext(timeout);   
+   ReceivedData* receivedData = mReceivedDataFifo.getNext(timeout);
    if(receivedData)
    {
       mFakeSelectSocketDescriptor.receive();
@@ -420,7 +422,7 @@ Flow::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::
    else
    {
       // timeout
-      InfoLog(<< "Receive timeout!  ComponentId=" << mComponentId);
+      DebugLog(LOG_PREFIX << "Receive timeout!");
       errorCode = asio::error_code(flowmanager::ReceiveTimeout, asio::error::misc_category);
    }
    return errorCode;
@@ -439,7 +441,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
       srtp_err_status_t status = mMediaStream.srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
       if(status != srtp_err_status_ok)
       {
-         ErrLog(<< "Unable to SRTP unprotect the packet (componentid=" << mComponentId << "), error code=" << status << "(" << srtp_error_string(status) << ")");
+         ErrLog(LOG_PREFIX << "Unable to SRTP unprotect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
          //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
       }
    }
@@ -455,13 +457,13 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
             srtp_err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
             if(status != srtp_err_status_ok)
             {
-               ErrLog(<< "Unable to SRTP unprotect the packet (componentid=" << mComponentId << "), error code=" << status << "(" << srtp_error_string(status) << ")");
+               ErrLog(LOG_PREFIX << "Unable to SRTP unprotect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
                //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
             }
          }
          else
          {
-            //WarningLog(<< "Unable to send packet yet - handshake is not completed yet, ComponentId=" << mComponentId);
+            //WarningLog(LOG_PREFIX << "Unable to send packet yet - handshake is not completed yet");
             errorCode = asio::error_code(flowmanager::InvalidState, asio::error::misc_category);
          }
       }
@@ -478,7 +480,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
       else
       {
          // Receive buffer too small
-         InfoLog(<< "Receive buffer too small for data size=" << receivedsize << "  ComponentId=" << mComponentId);
+         InfoLog(LOG_PREFIX << "Receive buffer too small for data size=" << receivedsize);
          errorCode = asio::error_code(flowmanager::BufferTooSmall, asio::error::misc_category);
       }
       if(sourceAddress)
@@ -506,6 +508,18 @@ Flow::setActiveDestination(const char* address, unsigned short port)
    {
       asio::ip::address peerAddress = asio::ip::address::from_string(address);
 
+      {
+         Lock lock(mMutex);
+         // If no changes, then no-op
+         if (peerAddress == mActiveDestinationAddress && port == mActiveDestinationPort)
+         {
+            return;
+         }
+
+         mActiveDestinationAddress = peerAddress;
+         mActiveDestinationPort = port;
+      }
+
       if(peerAddress.is_v4())
       {
          asio::ip::address_v4::bytes_type _bytes = peerAddress.to_v4().to_bytes();
@@ -513,24 +527,24 @@ Flow::setActiveDestination(const char* address, unsigned short port)
          mPrivatePeer = _bytes[0] == 10 ||
             (_bytes[0] == 172 && (_bytes[1] & 0xf0) == 16) ||
             (_bytes[0] == 192 && _bytes[1] == 168);
-         DebugLog(<<"Peer address " << address << " private: " << (mPrivatePeer ? "true" : "false"));
       }
 
       if(mMediaStream.mNatTraversalMode != MediaStream::TurnAllocation)
-      {         
-         DebugLog(<<"Connecting socket to remote peer " << address << ":" << port);
+      {
+         InfoLog(LOG_PREFIX <<"Connecting socket to remote peer " << address << ":" << port << (mPrivatePeer ? " [PRIVATE]" : ""));
          changeFlowState(Connecting);
          mTurnSocket->connect(address, port);
       }
       else
       {
-         DebugLog(<<"Setting TURN destination to remote peer " << address << ":" << port);
+         InfoLog(LOG_PREFIX <<"Setting TURN destination to remote peer " << address << ":" << port << (mPrivatePeer ? " [PRIVATE]" : ""));
          mTurnSocket->setActiveDestination(peerAddress, port);
-
       }
    }
    else
-      WarningLog(<<"No TURN Socket, can't send media to destination");
+   {
+      WarningLog(LOG_PREFIX << "No TURN Socket, can't send media to destination");
+   }
 }
 
 #ifdef USE_SSL
@@ -556,7 +570,7 @@ Flow::setRemoteSDPFingerprint(const resip::Data& fingerprint)
       if(it->second->handshakeCompleted() && 
          !it->second->checkFingerprint(fingerprint.c_str(), fingerprint.size()))
       {
-         InfoLog(<< "Marking Dtls socket bad with non-matching fingerprint!");
+         InfoLog(LOG_PREFIX << "Marking Dtls socket bad with non-matching fingerprint!");
          ((FlowDtlsSocketContext*)it->second->getSocketContext())->fingerprintMismatch();
       }
    }
@@ -579,7 +593,7 @@ Flow::getLocalTuple()
 StunTuple
 Flow::getSessionTuple()
 {
-   resip_assert(mFlowState == Ready);
+   //resip_assert(mFlowState == Ready);  setActiveDestination can get called mid-call and send state back to Connecting, exposing a tight race condition...
    Lock lock(mMutex);
 
    if(mMediaStream.mNatTraversalMode == MediaStream::TurnAllocation)
@@ -596,7 +610,7 @@ Flow::getSessionTuple()
 StunTuple
 Flow::getRelayTuple() 
 { 
-   resip_assert(mFlowState == Ready);
+   //resip_assert(mFlowState == Ready);  setActiveDestination can get called mid-call and send state back to Connecting, exposing a tight race condition...
    Lock lock(mMutex);
    return mRelayTuple; 
 }  
@@ -604,7 +618,7 @@ Flow::getRelayTuple()
 StunTuple
 Flow::getReflexiveTuple() 
 { 
-   resip_assert(mFlowState == Ready);
+   //resip_assert(mFlowState == Ready);  setActiveDestination can get called mid-call and send state back to Connecting, exposing a tight race condition...
    Lock lock(mMutex);
    return mReflexiveTuple; 
 } 
@@ -612,7 +626,7 @@ Flow::getReflexiveTuple()
 uint64_t 
 Flow::getReservationToken()
 {
-   resip_assert(mFlowState == Ready);
+   //resip_assert(mFlowState == Ready);  setActiveDestination can get called mid-call and send state back to Connecting, exposing a tight race condition...
    Lock lock(mMutex);
    return mReservationToken; 
 }
@@ -620,7 +634,7 @@ Flow::getReservationToken()
 void 
 Flow::onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port)
 {
-   InfoLog(<< "Flow::onConnectSuccess: socketDesc=" << socketDesc << ", address=" << address.to_string() << ", port=" << port << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onConnectSuccess: socketDesc=" << socketDesc << ", address=" << address.to_string() << ", port=" << port);
 
    // Start candidate discovery
    switch(mMediaStream.mNatTraversalMode)
@@ -656,28 +670,27 @@ Flow::onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address
 void 
 Flow::onConnectFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onConnectFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ", componentId=" << mComponentId);
+   WarningLog(LOG_PREFIX << "Flow::onConnectFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
    changeFlowState(Unconnected);
    mMediaStream.onFlowError(mComponentId, e.value());  // TODO define different error code?
 }
 
-
 void 
 Flow::onSharedSecretSuccess(unsigned int socketDesc, const char* username, unsigned int usernameSize, const char* password, unsigned int passwordSize)
 {
-   InfoLog(<< "Flow::onSharedSecretSuccess: socketDesc=" << socketDesc << ", username=" << username << ", password=" << password << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onSharedSecretSuccess: socketDesc=" << socketDesc << ", username=" << username << ", password=" << password);
 }
 
 void 
 Flow::onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onSharedSecretFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onSharedSecretFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
 }
 
 void 
 Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple)
 {
-   InfoLog(<< "Flow::onBindingSuccess: socketDesc=" << socketDesc << ", reflexive=" << reflexiveTuple << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onBindingSuccess: socketDesc=" << socketDesc << ", reflexive=" << reflexiveTuple);
    {
       Lock lock(mMutex);
       mReflexiveTuple = reflexiveTuple;
@@ -685,10 +698,11 @@ Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, co
    changeFlowState(Ready);
    mMediaStream.onFlowReady(mComponentId);
 }
+
 void 
 Flow::onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple)
 {
-   WarningLog(<< "Flow::onBindingFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onBindingFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
    changeFlowState(Connected);
    mMediaStream.onFlowError(mComponentId, e.value());  // TODO define different error code?
 }
@@ -696,13 +710,12 @@ Flow::onBindFailure(unsigned int socketDesc, const asio::error_code& e, const St
 void 
 Flow::onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, uint64_t reservationToken)
 {
-   InfoLog(<< "Flow::onAllocationSuccess: socketDesc=" << socketDesc << 
-      ", reflexive=" << reflexiveTuple << 
+   InfoLog(LOG_PREFIX << "Flow::onAllocationSuccess: socketDesc=" << socketDesc <<
+      ", reflexive=" << reflexiveTuple <<
       ", relay=" << relayTuple <<
       ", lifetime=" << lifetime <<
-      ", bandwidth=" << bandwidth << 
-      ", reservationToken=" << reservationToken <<
-      ", componentId=" << mComponentId);
+      ", bandwidth=" << bandwidth <<
+      ", reservationToken=" << reservationToken);
    {
       Lock lock(mMutex);
       mReflexiveTuple = reflexiveTuple; 
@@ -716,7 +729,7 @@ Flow::onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTup
 void 
 Flow::onAllocationFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onAllocationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onAllocationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
    changeFlowState(Connected);
    mMediaStream.onFlowError(mComponentId, e.value());  // TODO define different error code?
 }
@@ -724,7 +737,7 @@ Flow::onAllocationFailure(unsigned int socketDesc, const asio::error_code& e)
 void 
 Flow::onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime)
 {
-   InfoLog(<< "Flow::onRefreshSuccess: socketDesc=" << socketDesc << ", lifetime=" << lifetime << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onRefreshSuccess: socketDesc=" << socketDesc << ", lifetime=" << lifetime);
    if(lifetime == 0)
    {
       changeFlowState(Connected);
@@ -734,49 +747,49 @@ Flow::onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime)
 void 
 Flow::onRefreshFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onRefreshFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onRefreshFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
 }
 
 void 
 Flow::onSetActiveDestinationSuccess(unsigned int socketDesc)
 {
-   InfoLog(<< "Flow::onSetActiveDestinationSuccess: socketDesc=" << socketDesc << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onSetActiveDestinationSuccess: socketDesc=" << socketDesc);
 }
 
 void 
 Flow::onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onSetActiveDestinationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onSetActiveDestinationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
 }
 
 void 
 Flow::onClearActiveDestinationSuccess(unsigned int socketDesc)
 {
-   InfoLog(<< "Flow::onClearActiveDestinationSuccess: socketDesc=" << socketDesc << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onClearActiveDestinationSuccess: socketDesc=" << socketDesc);
 }
 
 void 
 Flow::onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onClearActiveDestinationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onClearActiveDestinationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
 }
 
 void 
 Flow::onChannelBindRequestSent(unsigned int socketDesc, unsigned short channelNumber)
 {
-   InfoLog(<< "Flow::onChannelBindRequestSent: socketDesc=" << socketDesc << ", channelNumber=" << channelNumber << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onChannelBindRequestSent: socketDesc=" << socketDesc << ", channelNumber=" << channelNumber);
 }
 
 void 
 Flow::onChannelBindSuccess(unsigned int socketDesc, unsigned short channelNumber)
 {
-   InfoLog(<< "Flow::onChannelBindSuccess: socketDesc=" << socketDesc << ", channelNumber=" << channelNumber << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onChannelBindSuccess: socketDesc=" << socketDesc << ", channelNumber=" << channelNumber);
 }
 
 void 
 Flow::onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onChannelBindFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onChannelBindFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
 }
 
 void 
@@ -792,18 +805,18 @@ Flow::onSendFailure(unsigned int socketDesc, const asio::error_code& e)
    {
       // Note:  if setActiveDestination is called it can take some time to "connect" the socket to the destination
       //        and send requests during this time, will be discarded - this can be considered normal
-      InfoLog(<< "Flow::onSendFailure: socketDesc=" << socketDesc << " socket is not in correct state to send yet, state=" << flowStateToString(mFlowState) << ", componentId = " << mComponentId );
+      InfoLog(LOG_PREFIX << "Flow::onSendFailure: socketDesc=" << socketDesc << " socket is not in correct state to send yet, state=" << flowStateToString(mFlowState));
    }
    else
    {
-      WarningLog(<< "Flow::onSendFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+      WarningLog(LOG_PREFIX << "Flow::onSendFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
    }
 }
 
 void 
 Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<reTurn::DataBuffer>& data)
 {
-   StackLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
+   StackLog(LOG_PREFIX << "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size());
 
    if(address != mTurnSocket->getConnectedAddress() || port != mTurnSocket->getConnectedPort())
    {
@@ -842,7 +855,7 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
    ReceivedData* receivedData = new ReceivedData(address, port, data);
    if(!mReceivedDataFifo.add(receivedData, ReceivedDataFifo::EnforceTimeDepth))
    {
-      WarningLog(<< "Flow::onReceiveSuccess: TimeLimitFifo is full (countDepth=" << mReceivedDataFifo.getCountDepth() << ", timeDepth=" << mReceivedDataFifo.getTimeDepth() << ") - discarding data!  socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
+      WarningLog(LOG_PREFIX << "Flow::onReceiveSuccess: TimeLimitFifo is full (countDepth=" << mReceivedDataFifo.getCountDepth() << ", timeDepth=" << mReceivedDataFifo.getTimeDepth() << ") - discarding data!  socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size());
       delete receivedData;
    }
    else
@@ -859,27 +872,27 @@ Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
       (e.value() == asio::error::connection_reset ||
        e.value() == asio::error::connection_refused))
    {
-      DebugLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
+      DebugLog(LOG_PREFIX << "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
       resip_assert(mTurnSocket.get());
       mTurnSocket->turnReceive();
    }
    else
    {
-      WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
+      WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
    }
 }
 
 void 
 Flow::onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple)
 {
-   InfoLog(<< "Flow::onIncomingBindRequestProcessed: socketDesc=" << socketDesc << ", sourceTuple=" << sourceTuple );
+   InfoLog(LOG_PREFIX << "Flow::onIncomingBindRequestProcessed: socketDesc=" << socketDesc << ", sourceTuple=" << sourceTuple);
    // TODO - handle
 }
 
 void 
 Flow::changeFlowState(FlowState newState)
 {
-   InfoLog(<< "Flow::changeState: oldState=" << flowStateToString(mFlowState) << ", newState=" << flowStateToString(newState) << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::changeState: oldState=" << flowStateToString(mFlowState) << ", newState=" << flowStateToString(newState));
    mFlowState = newState;
 }
 
@@ -926,7 +939,7 @@ Flow::createDtlsSocketClient(const StunTuple& endpoint)
    DtlsSocket* dtlsSocket = getDtlsSocket(endpoint);
    if(!dtlsSocket && mMediaStream.mDtlsFactory)
    {
-      InfoLog(<< "Creating DTLS Client socket, componentId=" << mComponentId);
+      InfoLog(LOG_PREFIX << "Creating DTLS Client socket");
       std::unique_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
       dtlsSocket = mMediaStream.mDtlsFactory->createClient(std::move(socketContext));
       dtlsSocket->startClient();
@@ -942,7 +955,7 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
    DtlsSocket* dtlsSocket = getDtlsSocket(endpoint);
    if(!dtlsSocket && mMediaStream.mDtlsFactory)
    {
-      InfoLog(<< "Creating DTLS Server socket, componentId=" << mComponentId);
+      InfoLog(LOG_PREFIX << "Creating DTLS Server socket");
       std::unique_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
       dtlsSocket = mMediaStream.mDtlsFactory->createServer(std::move(socketContext));
       mDtlsSockets[endpoint] = dtlsSocket;
@@ -955,7 +968,7 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
 
 /* ====================================================================
 
- Copyright (c) 2022, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2007-2023, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
