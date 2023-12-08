@@ -89,6 +89,7 @@ void
 CallID::parse(ParseBuffer& pb)
 {
    const char* start = pb.skipWhitespace();
+   pb.assertNotEof();
    static const std::bitset<256> wsOrSemi(Data::toBitset(ParseBuffer::Whitespace).set(Symbols::SEMI_COLON[0]));
    pb.skipToOneOf(wsOrSemi);
    pb.data(mValue, start);
