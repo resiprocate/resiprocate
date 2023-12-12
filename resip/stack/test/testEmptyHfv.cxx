@@ -33,7 +33,7 @@ int main()
       if(sip->exists(resip::h_From))
       {
          sip->header(resip::h_From);
-         cerr << sip->header(resip::h_From).uri();         
+         cerr << "From: " << sip->header(resip::h_From).uri() << endl;
          cerr << "test failed" << endl;
          
          assert(0);         
@@ -45,4 +45,20 @@ int main()
       cerr << "Caught: " << e << "as expected, PASSED" << endl;
    }
 
+   try
+   {
+      if (sip->exists(resip::h_CallID))
+      {
+         sip->header(resip::h_CallID);
+         cerr << "Call-ID: " << sip->header(resip::h_CallID).value() << endl;
+         cerr << "test failed" << endl;
+
+         assert(0);
+         return -1;
+      }
+   }
+   catch (resip::BaseException& e)
+   {
+      cerr << "Caught: " << e << "as expected, PASSED" << endl;
+   }
 }
