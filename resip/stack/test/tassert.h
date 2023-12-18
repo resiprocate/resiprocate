@@ -33,11 +33,15 @@ else                                            \
 }
 
 
+#ifndef WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
 static int tassert_enabled = 1;
 static int tassert_failure = 0;
+#ifndef WIN32
 #pragma GCC diagnostic pop
+#endif
 static int tassert_stack[10];
 const int tassert_nstack = sizeof(tassert_stack)/sizeof(*tassert_stack);
 static int tassert_stack_ptr = 0;

@@ -83,6 +83,7 @@ public:
       ParticipantType_RemoteIMPager,
       ParticipantType_RemoteIMSession
    } ParticipantType;
+   static const char* participantTypeToString(ParticipantType partType);
 
    typedef enum
    {
@@ -606,6 +607,21 @@ public:
    virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode) = 0;
 
    /**
+     Notifies an application about a disconnect by a remote participant.
+     For SIP this could be a BYE or a CANCEL request. 
+     
+     If you override this version of the callback, then the version above will not
+     be called, and you can implement it with an empty body. Implemented this way, 
+     so that we don't break ABI for existing applications.
+
+     @param partHandle Handle of the participant that terminated
+     @param statusCode The status Code for the termination.
+     @param reason The reason for the termination, if available, can be the
+                   reason header from a received BYE message (if present)
+   */
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode, const resip::Data& reason) { onParticipantTerminated(partHandle, statusCode); }
+
+   /**
      Notifies an application when a conversation has been destroyed.  
      This is useful for tracking conversations that get created when forking 
      occurs, and are destroyed when forked call is answered or ended.
@@ -622,6 +638,20 @@ public:
      @param partHandle Handle of the destroyed participant
    */
    virtual void onParticipantDestroyed(ParticipantHandle partHandle) = 0;
+
+   /**
+     Notifies an application when a Participant has been destroyed.  This is
+     useful for tracking when audio playback via MediaResourceParticipants has
+     stopped.
+
+     If you override this version of the callback, then the version above will not
+     be called, and you can implement it with an empty body. Implemented this way, 
+     so that we don't break ABI for existing applications.
+
+     @param partHandle Handle of the destroyed participant
+     @param partType   The type of participant being destroyed.
+   */
+   virtual void onParticipantDestroyed(ParticipantHandle partHandle, ParticipantType partType) { onParticipantDestroyed(partHandle); }
 
    /**
      Notifies an applications that a outbound remote participant request has 

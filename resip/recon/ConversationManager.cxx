@@ -64,6 +64,25 @@ ConversationManager::~ConversationManager()
    InfoLog(<< "ConversationManager::~ConversationManager complete.");
 }
 
+const char* ConversationManager::participantTypeToString(ConversationManager::ParticipantType partType)
+{
+   switch (partType)
+   {
+   case ParticipantType_Local:
+      return "Local";
+   case ParticipantType_Remote:
+      return "Remote";
+   case ParticipantType_MediaResource:
+      return "MediaResource";
+   case ParticipantType_RemoteIMPager:
+      return "RemoteIMPager";
+   case ParticipantType_RemoteIMSession:
+      return "RemoteIMSession";
+   }
+   assert(false);
+   return "UNKNOWN";
+}
+
 void
 ConversationManager::setUserAgent(UserAgent* userAgent)
 {

@@ -42,7 +42,7 @@ Participant::~Participant()
    // Note:  We cannot call Conversation::unregisterParticipant here, since dynamic_cast in the fn will not work - 
    //        thus unregister must be implemented in sub-classes destructors (see ~LocalParticipant and ~RemoteParticipant)
    //InfoLog(<< "Participant destroyed, handle=" << mHandle);
-   if(mHandle != 0) mConversationManager.onParticipantDestroyed(mHandle);
+   if(mHandle != 0) mConversationManager.onParticipantDestroyed(mHandle, mType);
    setHandle(0);        // unregister from Conversation Manager
 }
 
