@@ -1503,9 +1503,17 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          break;
 
       case OnAck:
-      case OnAckAnswer: // .bwc. Don't drop ACK with SDP!
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         handler->onAckReceived(getSessionHandle(), msg);
+      case OnAckAnswer:
+         // Not checking for strict equality, since request may have been digest challenged
+         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
+         {
+            InfoLog(<< "dropped stale ACK");
+         }
+         else
+         {
+            mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+            handler->onAckReceived(getSessionHandle(), msg);
+         }
          break;
 
       default:
@@ -1842,20 +1850,29 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
          break;
       }
       case OnAckAnswer:
-         transition(Connected);
-         setCurrentLocalOfferAnswer(msg);
-         mCurrentRemoteOfferAnswer = std::move(offerAnswer); 
-         mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-
-         if (mDum.mDialogEventStateManager)
+         // Not checking for strict equality, since request may have been digest challenged
+         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
          {
-             // New Offer/Answer - generate a new confirmed callback with updated SDP
-             mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+            InfoLog(<< "dropped stale ACK");
          }
-         handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteOfferAnswer);
-         break;         
+         else
+         {
+            transition(Connected);
+            setCurrentLocalOfferAnswer(msg);
+            mCurrentRemoteOfferAnswer = std::move(offerAnswer);
+            mCurrentEncryptionLevel = getEncryptionLevel(msg);
+            mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+
+            if (mDum.mDialogEventStateManager)
+            {
+               // New Offer/Answer - generate a new confirmed callback with updated SDP
+               mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+            }
+            handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteOfferAnswer);
+         }
+         break;
       case OnAck:
+         // Not checking for strict equality, since request may have been digest challenged
          if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
          {
             InfoLog(<< "dropped stale ACK");
@@ -2063,14 +2080,20 @@ InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
    {
       case OnAck:
       case OnAckAnswer:
-      {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         // Not checking for strict equality, since request may have been digest challenged
+         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
+         {
+            InfoLog(<< "dropped stale ACK");
+         }
+         else
+         {
+            mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
-         const auto bye = sendBye();
-         transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, bye.get());
+            const auto bye = sendBye();
+            transition(Terminated);
+            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, bye.get());
+         }
          break;
-      }
       
       default:
          break;
