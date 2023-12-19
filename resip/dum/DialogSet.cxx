@@ -141,7 +141,7 @@ void DialogSet::possiblyDie()
       //       request (such as OPTIONS) in the same dialogset as a UAC dialogset
       //       for which we have not created any Dialogs yet - in this case
       //       we don't want the dialogset to die, since the UAC usage is not complete.     
-      (mCreator == 0 || (mState != Initial && mState != ReceivedProvisional)) &&  
+      (getCreator() == 0 || (mState != Initial && mState != ReceivedProvisional)) &&
       mClientOutOfDialogRequests.empty() &&
       !(mClientPublication ||
         mServerOutOfDialogRequest ||
@@ -304,10 +304,19 @@ DialogSet::dispatch(const SipMessage& msg)
    if (mState == WaitingToEnd)
    {
       resip_assert(mDialogs.empty());
-      if (msg.isResponse())         
+      if (msg.isResponse())
       {
+         MethodTypes method;
+         if (getCreator())
+         {
+            method = getCreator()->getLastRequest()->method();
+         }
+         else
+         {
+            method = msg.method();
+         }
          int code = msg.header(h_StatusLine).statusCode();
-         switch(mCreator->getLastRequest()->header(h_CSeq).method())
+         switch(method)
          {
             case INVITE:
                if (code / 100 == 1)
@@ -350,11 +359,11 @@ DialogSet::dispatch(const SipMessage& msg)
                {
                   // do nothing - wait for final response
                }
-               else if (code / 100 == 2)
+               else if ((code / 100 == 2) && getCreator())
                {
                   Dialog dialog(mDum, msg, *this);
 
-                  auto unsubscribe = std::make_shared<SipMessage>(*mCreator->getLastRequest());  // create message from initial request so we get proper headers
+                  auto unsubscribe = std::make_shared<SipMessage>(*getCreator()->getLastRequest());  // create message from initial request so we get proper headers
                   dialog.makeRequest(*unsubscribe, SUBSCRIBE);
                   unsubscribe->header(h_Expires).value() = 0;
                   dialog.send(unsubscribe);
@@ -372,11 +381,11 @@ DialogSet::dispatch(const SipMessage& msg)
                {
                   // do nothing - wait for final response
                }
-               else if (code / 100 == 2)
+               else if ((code / 100 == 2) && getCreator())
                {
                   Dialog dialog(mDum, msg, *this);
 
-                  auto unpublish = std::make_shared<SipMessage>(*mCreator->getLastRequest());  // create message from initial request so we get proper headers
+                  auto unpublish = std::make_shared<SipMessage>(*getCreator()->getLastRequest());  // create message from initial request so we get proper headers
                   dialog.makeRequest(*unpublish, PUBLISH);
                   unpublish->header(h_Expires).value() = 0;
                   dialog.send(unpublish);
@@ -398,7 +407,7 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else
       {
-         auto response = std::make_shared<SipMessage>();         
+         auto response = std::make_shared<SipMessage>();
          mDum.makeResponse(*response, msg, 481);
          mDum.send(response);
       }
@@ -407,10 +416,19 @@ DialogSet::dispatch(const SipMessage& msg)
    else if(mState == Cancelling)
    {
       resip_assert(mDialogs.empty());
-      if (msg.isResponse())         
+      if (msg.isResponse())
       {
+         MethodTypes method;
+         if (getCreator())
+         {
+            method = getCreator()->getLastRequest()->method();
+         }
+         else
+         {
+            method = msg.method();
+         }
          int code = msg.header(h_StatusLine).statusCode();
-         if(mCreator->getLastRequest()->header(h_CSeq).method() == INVITE)
+         if(method == INVITE)
          {
             if (code / 100 == 1)
             {
@@ -442,7 +460,7 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else // is a request
       {
-         auto response = std::make_shared<SipMessage>();         
+         auto response = std::make_shared<SipMessage>();
          mDum.makeResponse(*response, msg, 481);
          mDum.send(response);
       }
@@ -507,7 +525,7 @@ DialogSet::dispatch(const SipMessage& msg)
          case UPDATE:
             if(!dialog)
             {
-               auto response = std::make_shared<SipMessage>();         
+               auto response = std::make_shared<SipMessage>();
                mDum.makeResponse(*response, msg, 481);
                mDum.send(response);
                return;
@@ -677,7 +695,7 @@ DialogSet::dispatch(const SipMessage& msg)
                break;
             default:
                // !jf!
-               break;            
+               break;
          }
       }
 
@@ -700,19 +718,25 @@ DialogSet::dispatch(const SipMessage& msg)
             break; 
 
          case PUBLISH:
-            if (mClientPublication == 0)
+            if (mClientPublication == 0 && getCreator())
             {
                mClientPublication = makeClientPublication(response);
             }
-            mClientPublication->dispatch(response);
+            if (mClientPublication)
+            {
+               mClientPublication->dispatch(response);
+            }
             return;
 
          case REGISTER:
-            if (mClientRegistration == 0)
+            if (mClientRegistration == 0 && getCreator())
             {
                mClientRegistration = makeClientRegistration(response);
             }
-            mClientRegistration->dispatch(response);
+            if (mClientRegistration)
+            {
+               mClientRegistration->dispatch(response);
+            }
             return;
 
          case MESSAGE:
@@ -724,9 +748,9 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                mClientPagerMessage->dispatch(response);
             }
-            return;            
+            return;
 
-         case INFO:   
+         case INFO:
          case UPDATE:
          case PRACK:
             if (dialog)
@@ -753,6 +777,12 @@ DialogSet::dispatch(const SipMessage& msg)
             ClientOutOfDialogReq* req = findMatchingClientOutOfDialogReq(response);
             if (req == 0)
             {
+               // We should only create a new ClientOutOfDialogReq if this is a response to our initial request
+               if (!getCreator() || !(msg.header(h_CSeq) == getCreator()->getLastRequest()->header(h_CSeq)))
+               {
+                  InfoLog(<< "Cannot create a ClientOutOfDialogReq, initial dialog request is missing or cseq does not match, ignoring.");
+                  return;
+               }
                req = makeClientOutOfDialogReq(response);
                mClientOutOfDialogRequests.push_back(req);
             }
@@ -784,9 +814,9 @@ DialogSet::dispatch(const SipMessage& msg)
 
       if (msg.isResponse())
       {
-         if( mCreator )
+         if(getCreator())
          {
-            auto lastRequest = mCreator->getLastRequest();
+            auto lastRequest = getCreator()->getLastRequest();
             if (lastRequest && !(lastRequest->header(h_CSeq) == msg.header(h_CSeq)))
             {
                InfoLog(<< "Cannot create a dialog, cseq does not match initial dialog request (illegal mid-dialog fork? see 3261 14.1).");
@@ -962,7 +992,7 @@ DialogSet::end()
          break;
       case ReceivedProvisional:
       {
-         if (mCreator->getLastRequest()->header(h_CSeq).method() == INVITE)
+         if (getCreator() && getCreator()->getLastRequest()->header(h_CSeq).method() == INVITE)
          {
             mState = Terminating;
             // !jf! this should be made exception safe
@@ -1020,7 +1050,7 @@ DialogSet::end()
             }
          }
       }
-      break;         
+      break;
       case Established:
       {
          for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
@@ -1146,7 +1176,7 @@ void DialogSet::dispatchToAllDialogs(const SipMessage& msg)
    {
       for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
       {
-         it->second->dispatch(msg);         
+         it->second->dispatch(msg);
       }
    }
 }
