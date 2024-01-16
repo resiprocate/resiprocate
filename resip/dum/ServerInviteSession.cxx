@@ -1679,6 +1679,20 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
 
                transition(UAS_NoAnswerReliable);
                handler->onPrack(getHandle(), msg);
+
+               // If we have a provisional to send with answer then transition to UAS_FirstSentAnswerReliable,
+               // otherwise if there is no answer, go to UAS_NoAnswerReliableWaitingPrack.
+               if (!mQueuedResponses.empty() && mQueuedResponses.front().first < 200)
+               {
+                  if (mQueuedResponses.front().second)  // Early flag is on
+                  {
+                     transition(UAS_FirstSentAnswerReliable);
+                  }
+                  else
+                  {
+                     transition(UAS_NoAnswerReliableWaitingPrack);
+                  }
+               }
                prackCheckQueue();
             }
          }
