@@ -141,7 +141,9 @@ defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903");
 defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
 defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
 
-defineHeader(Identity, "Identity", StringCategory, "RFC 4474");
+defineMultiHeader(Identity, "Identity", StringCategory, "RFC 8224");  // Originally defined in RFC 4474 as a single header, but later modified by RFC8224 to be a multiheader
+// explicitly declare to avoid h_Identitys
+H_Identitys resip::h_Identities;
 
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 // explicitly declare to avoid h_AllowEventss, ugh
@@ -187,7 +189,7 @@ defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
 //====================
 // GenericUris:
 //====================
-defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474");
+defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474");   // deprecated by RFC8224
 
 typedef ParserContainer<GenericUri> GenericUris;
 defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261");

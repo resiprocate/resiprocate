@@ -263,13 +263,14 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                }            
             
 #if defined(USE_SSL)
+               // TODO !SLG!  RFC4474 has been deprecated by RFC8224 (Authenticated Identity Management).  We should remove/adjust this code.
                if(!mNoIdentityHeaders)
                {
                   static Data http("http://" + mHttpHostname + ":" + Data(mHttpPort) + "/cert?domain=");
                   // .bwc. Leave pre-existing Identity headers alone.
-                  if(!sipMessage->exists(h_Identity))
+                  if(!sipMessage->exists(h_Identities))
                   {
-                     sipMessage->header(h_Identity).value() = Data::Empty;  // This is a signal to have the TransportSelector fill in the identity header
+                     sipMessage->header(h_Identities).push_back(StringCategory(Data::Empty));  // This is a signal to have the TransportSelector fill in the identity header
                      if(sipMessage->exists(h_IdentityInfo))
                      {
                         InfoLog(<<"Somebody sent us a"

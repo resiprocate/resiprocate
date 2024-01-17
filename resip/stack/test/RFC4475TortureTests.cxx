@@ -2532,10 +2532,11 @@ hÎÿ®<½+ÿuİÕdY=ÖG(òb ÷éAt3
    
 
    //Identity: r5mwreLuyDRYBi/0TiPwEsY3rEVsk/G2WxhgTV1PF7hHuLIK0YWVKZhKv9Mj8UeXqkMVbnVq37CD+813gvYjcBUaZngQmXc9WNZSDNGCzA+fWl9MEUHWIZo1CeJebdY/XlgKeTa0Olvq0rt70Q5jiSfbqMJmQFteeivUhkMWYUA=
-   tassert(msg->exists(resip::h_Identity));
-   tassert(msg->header(resip::h_Identity).value()=="r5mwreLuyDRYBi/0TiPwEsY3rEVsk/G2WxhgTV1PF7hHuLIK0YWVKZhKv9Mj8UeXqkMVbnVq37CD+813gvYjcBUaZngQmXc9WNZSDNGCzA+fWl9MEUHWIZo1CeJebdY/XlgKeTa0Olvq0rt70Q5jiSfbqMJmQFteeivUhkMWYUA=");
-   tassert(msg->header(resip::h_Identity).numKnownParams()==0);
-   tassert(msg->header(resip::h_Identity).numUnknownParams()==0);
+   tassert(msg->exists(resip::h_Identities));
+   tassert(msg->header(resip::h_Identities).size() == 1);
+   tassert(msg->header(resip::h_Identities).front().value()=="r5mwreLuyDRYBi/0TiPwEsY3rEVsk/G2WxhgTV1PF7hHuLIK0YWVKZhKv9Mj8UeXqkMVbnVq37CD+813gvYjcBUaZngQmXc9WNZSDNGCzA+fWl9MEUHWIZo1CeJebdY/XlgKeTa0Olvq0rt70Q5jiSfbqMJmQFteeivUhkMWYUA=");
+   tassert(msg->header(resip::h_Identities).front().numKnownParams()==0);
+   tassert(msg->header(resip::h_Identities).front().numUnknownParams()==0);
    
    //Contact: <sip:fluffy@127.0.0.1:5070>
    tassert(msg->exists(resip::h_Contacts));

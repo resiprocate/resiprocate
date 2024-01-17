@@ -20,6 +20,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
+// TODO !SLG!  RFC4474 has been deprecated by RFC8224 (Authenticated Identity Management).  We should remove/adjust this code.
+
 IdentityHandler::IdentityHandler(DialogUsageManager& dum, TargetCommand::Target& target)
    : DumFeature(dum, target)
 {
@@ -63,7 +65,8 @@ bool
 IdentityHandler::queueForIdentityCheck(SipMessage* sipMsg)
 {
 #if defined(USE_SSL)
-   if (sipMsg->exists(h_Identity) &&
+   if (sipMsg->exists(h_Identities) &&
+       sipMsg->header(h_Identities).size() > 0 &&
        sipMsg->exists(h_IdentityInfo) &&
        sipMsg->exists(h_Date))
    {

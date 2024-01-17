@@ -1927,6 +1927,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 }
 
 
+// TODO !SLG!  RFC4474 has been deprecated by RFC8224 (Authenticated Identity Management).  We should remove/adjust this code.
 void
 BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
 {
@@ -1948,7 +1949,7 @@ BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
       {
          if ( checkIdentity(msg.const_header(h_From).uri().host(),
                             msg.getCanonicalIdentityString(),
-                            msg.const_header(h_Identity).value(),
+                            msg.const_header(h_Identities).front().value(),
                             cert ) )
          {
             sec->setIdentity(msg.const_header(h_From).uri().getAor());

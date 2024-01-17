@@ -1,3 +1,5 @@
+// TODO !SLG!  RFC4474 has been deprecated by RFC 8224 (Authenticated Identity Management).  We Should remove/adjust this code.
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -81,16 +83,15 @@ main(int argc, char* argv[])
       try
       {
          const Data& domain = msg->header(h_From).uri().host();
-         msg->header(h_Identity).value() = security->computeIdentity( domain,
-                                                                       msg->getCanonicalIdentityString());
+         msg->header(h_Identities).push_back(StringCategory(security->computeIdentity(domain,
+                                                            msg->getCanonicalIdentityString())));
+         ErrLog(<< "INVITE base64 identity is " << msg->header(h_Identities).front().value());
       }
       catch (Security::Exception& e)
       {
          ErrLog (<< "Couldn't add identity header: " << e);
-         msg->remove(h_Identity);
+         msg->remove(h_Identities);
       }
-      
-      ErrLog( << "INVITE base64 identity is " <<  msg->header(h_Identity).value() );
    }
 
    {
@@ -115,18 +116,17 @@ main(int argc, char* argv[])
       {
          const Data& domain = msg->header(h_From).uri().host();
 
-         Data identString = msg->getCanonicalIdentityString();
-         
-         msg->header(h_Identity).value() = security->computeIdentity( domain, identString );
+         msg->header(h_Identities).push_back(StringCategory(security->computeIdentity(domain,
+            msg->getCanonicalIdentityString())));
+
+         ErrLog(<< "BYE base64 identity is " << msg->header(h_Identities).front().value());
       }
       catch (Security::Exception& e)
       {
          ErrLog (<< "Couldn't add identity header: " << e);
-         msg->remove(h_Identity);
+         msg->remove(h_Identities);
       }
-      
-      ErrLog( << "BYE base64 identity is " <<  msg->header(h_Identity).value() );
-}
+   }
 
 
 
@@ -167,16 +167,15 @@ main(int argc, char* argv[])
       try
       {
          const Data& domain = msg->header(h_From).uri().host();
-         msg->header(h_Identity).value() = security->computeIdentity( domain,
-                                                                       msg->getCanonicalIdentityString());
+         msg->header(h_Identities).push_back(StringCategory(security->computeIdentity(domain,
+            msg->getCanonicalIdentityString())));
+         ErrLog(<< "base64 identity is " << msg->header(h_Identities).front().value());
       }
       catch (Security::Exception& e)
       {
          ErrLog (<< "Couldn't add identity header: " << e);
-         msg->remove(h_Identity);
+         msg->remove(h_Identities);
       }
-      
-      ErrLog( << "base64 identity is " <<  msg->header(h_Identity).value() );
    }
 
 
@@ -208,19 +207,17 @@ main(int argc, char* argv[])
       try
       {
          const Data& domain = msg->header(h_From).uri().host();
+         msg->header(h_Identities).push_back(StringCategory(security->computeIdentity(domain,
+            msg->getCanonicalIdentityString())));
 
-         Data identString = msg->getCanonicalIdentityString();
-         
-         msg->header(h_Identity).value() = security->computeIdentity( domain, identString );
+         ErrLog(<< "base64 identity is " << msg->header(h_Identities).front().value());
       }
       catch (Security::Exception& e)
       {
          ErrLog (<< "Couldn't add identity header: " << e);
-         msg->remove(h_Identity);
+         msg->remove(h_Identities);
       }
-      
-      ErrLog( << "base64 identity is " <<  msg->header(h_Identity).value() );
-}
+   }
 
 
 
@@ -248,23 +245,18 @@ main(int argc, char* argv[])
       try
       {
          const Data& domain = msg->header(h_From).uri().host();
-
-         Data identString = msg->getCanonicalIdentityString();
          
-         msg->header(h_Identity).value() = security->computeIdentity( domain, identString );
+         msg->header(h_Identities).push_back(StringCategory(security->computeIdentity(domain,
+            msg->getCanonicalIdentityString())));
+         ErrLog(<< "base64 identity is " << msg->header(h_Identities).front().value());
       }
       catch (Security::Exception& e)
       {
          ErrLog (<< "Couldn't add identity header: " << e);
-         msg->remove(h_Identity);
+         msg->remove(h_Identities);
       }
-       ErrLog( << "base64 identity is " <<  msg->header(h_Identity).value() );
 }     
    
-
-
-
-
 
 #endif // use_ssl 
 

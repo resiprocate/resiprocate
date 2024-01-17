@@ -1281,7 +1281,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          
          // !bwc! TODO make this configurable
          // See draft-ietf-sip-identity
-         if (mSecurity && msg->exists(h_Identity) && msg->const_header(h_Identity).value().empty())
+         // TODO !SLG!  RFC4474 has been deprecated by RFC8224 (Authenticated Identity Management).  We should remove/adjust this code.
+         if (mSecurity && msg->exists(h_Identities) &&
+             msg->header(h_Identities).size() > 0 && msg->const_header(h_Identities).front().value().empty())
          {
             DateCategory now;
             msg->header(h_Date) = now;
@@ -1289,13 +1291,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             try
             {
                const Data& domain = msg->const_header(h_From).uri().host();
-               msg->header(h_Identity).value() = mSecurity->computeIdentity( domain,
-                                                                             msg->getCanonicalIdentityString());
+               msg->header(h_Identities).front().value() = mSecurity->computeIdentity(domain, msg->getCanonicalIdentityString());
             }
             catch (Security::Exception& e)
             {
                InfoLog (<< "Couldn't add identity header: " << e);
-               msg->remove(h_Identity);
+               msg->remove(h_Identities);
                if (msg->exists(h_IdentityInfo))
                {
                   msg->remove(h_IdentityInfo);
