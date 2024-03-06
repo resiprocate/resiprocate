@@ -616,7 +616,40 @@ main(int argc, char** argv)
        msg->header(h_ContentDisposition);
        assert( msg->header(h_ContentLength).value() == 4 );
     }
-   {
+    {
+       resipCerr << "test single header validation\n";
+
+       Data txt(
+          "UPDATE sip:bob@biloxi.com SIP/2.0\r\n"
+          "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+          "To: Bob <sip:bob@biloxi.com>;tag=73b1cb2b\r\n"
+          "From: Alice <sip:alice@atlanta.com>;tag=A76BD40B-11F7\r\n"
+          "Call-ID: a84b4c76e66710\r\n"
+          "CSeq: 51 UPDATE\r\n"
+          "Max-Forwards: 69\r\n"
+          "Contact: <sip:alice@pc33.atlanta.com>;+sip.src\r\n"
+          "Require: siprec\r\n"
+          "Content-Disposition: session;handling=required,recording-session\r\n"
+          "Content-Type: application/rs-metadata\r\n"
+          "Content-Length: 4\r\n"
+          "\r\n"
+          "test"
+       );
+
+       std::unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+
+#ifdef PEDANTIC_STACK
+       assert(msg->isInvalid());
+#else
+       assert(!msg->isInvalid());
+#endif
+       assert(msg->exists(h_ContentDisposition));
+       assert(msg->header(h_ContentDisposition).value() == "session");
+       assert(msg->header(h_ContentLength).value() == 4);
+
+       resipCerr << "msg->header(h_ContentDisposition).value() == " << msg->header(h_ContentDisposition).value() << '\n';
+    }
+    {
       // exercise header remove
       const char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "Allow-Events: foo\r\n"
