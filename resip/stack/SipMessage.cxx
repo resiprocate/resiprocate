@@ -1232,6 +1232,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
       }
       else
       {
+#ifdef PEDANTIC_STACK
          if(hfvl->size()==1)
          {
             if(!mReason)
@@ -1248,7 +1249,11 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
             (*mReason)+=Headers::getHeaderName(header);
             return;
          }
-         hfvl->push_back(start ? start : Data::Empty.data(), len, false);
+#endif
+         if (hfvl->empty())
+         {
+            hfvl->push_back(start ? start : Data::Empty.data(), len, false);
+         }
       }
 
    }
