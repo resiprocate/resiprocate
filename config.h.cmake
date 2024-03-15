@@ -19,7 +19,6 @@
 #cmakedefine RESIP_BIG_ENDIAN
 #cmakedefine REPRO_BUILD_REV "@REPRO_BUILD_REV@"
 #cmakedefine REPRO_BUILD_HOST "localhost"
-#cmakedefine REPRO_RELEASE_VERSION "@REPRO_RELEASE_VERSION@"
 #cmakedefine DB_HEADER "@DB_HEADER@"
 #cmakedefine RESIP_SIP_MSG_MAX_BYTES @RESIP_SIP_MSG_MAX_BYTES@
 #cmakedefine USE_SIGCOMP

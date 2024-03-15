@@ -74,7 +74,6 @@ if(CMAKE_USE_PTHREADS_INIT)
 endif()
 
 set(REPRO_BUILD_REV ${PACKAGE_VERSION})
-set(REPRO_RELEASE_VERSION ${PACKAGE_VERSION})
 set(RESIP_SIP_MSG_MAX_BYTES 10485760)
 
 # https://cmake.org/cmake/help/latest/module/TestBigEndian.html
