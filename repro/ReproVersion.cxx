@@ -8,8 +8,6 @@
 ** RELEASE_VERSION
 */
 
-#include <string>
-
 #if defined(TESTDRIVER)
 #include <iostream>
 #endif
@@ -17,6 +15,9 @@
 #include "repro/ReproVersion.hxx"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+#ifdef HAVE_VERSION_H
+#include "version.h"
 #endif
 #if !defined(REPRO_BUILD_REV)
 # define REPRO_BUILD_REV "000000"
@@ -26,8 +27,8 @@
 # define REPRO_BUILD_HOST "unknown.invalid"
 #endif
 
-#if !defined(REPRO_RELEASE_VERSION)
-# define REPRO_RELEASE_VERSION "0.0"
+#if !defined(RESIPROCATE_VERSION_STR)
+# define RESIPROCATE_VERSION_STR "0.0.0"
 #endif
 
 #if !defined(REPRO_NAME)
@@ -40,7 +41,7 @@ namespace repro
 {
    VersionUtils::VersionUtils():
       mBuildHost(REPRO_BUILD_HOST),
-      mReleaseVersion(REPRO_RELEASE_VERSION),
+      mReleaseVersion(RESIPROCATE_VERSION_STR),
       mScmRevision(REPRO_BUILD_REV),
       mDisplayVersion(REPRO_NAME),
       mBuildStamp(REPRO_BUILD_REV)
