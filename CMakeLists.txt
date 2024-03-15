@@ -8,9 +8,11 @@ if(POLICY CMP0077)
    CMAKE_POLICY(SET CMP0077 NEW)
 endif(POLICY CMP0077)
 
-# FIXME - how to include suffix such as 1.13.0~alpha1 ?
 # https://cmake.org/cmake/help/latest/variable/PROJECT_VERSION.html
 project(resiprocate VERSION 1.13.0)
+
+# Specifies the pre-release tag, such as alphaN or betaN.
+set(RESIPROCATE_VERSION_PRE_RELEASE "")
 
 # Warning: CMAKE_BUILD_TYPE
 #
@@ -38,6 +40,14 @@ include(Utilities)
 include(CheckStructHasMember)
 
 enable_testing()
+
+# Library version file generation.
+add_definitions(-DHAVE_VERSION_H)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version.h.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/version.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/resip/)
 
 option(ENABLE_LOG_REPOSITORY_DETAILS "Log repository revision and branch" TRUE)
 if(ENABLE_LOG_REPOSITORY_DETAILS)
