@@ -32,6 +32,50 @@ main(int argc, char** argv)
    initNetwork();
 
    {
+      // Test tolerance of illegal embedded headers.  See first History-Info header where the ;'s are not legally escaped as
+      // specified in RFC3261.
+      Data txt("INVITE sip:00911206930000@10.52.83.198:5060;user=phone;transport=udp SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP 10.60.65.26:5061;branch=z9hG4bKUcrpwaklwomdpdwau0\r\n"
+         "Max-Forwards: 69\r\n"
+         "Contact: sip:09582369046@10.60.65.26:5061\r\n"
+         "To: \"00911206930000\"<sip:00911206930000@10.52.83.198;user=phone>\r\n"
+         "From: \"09582369046\"<sip:09582369046@10.60.65.26;user=phone>;tag=ucBE764F78\r\n"
+         "Call-ID: 9090F9658A51DB0A00@ngn.ttl.in\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Session-Expires: 1350\r\n"
+         "Allow: INVITE, ACK, OPTIONS, BYE, CANCEL, UPDATE, REGISTER, INFO, PRACK, SUBSCRIBE, NOTIFY, MESSAGE\r\n"
+         "Content-Type: application/sdp\r\n"
+         "Supported: 100rel, timer\r\n"
+         "P-Asserted-Identity: <sip:09582369046@10.60.65.26;user=phone> \r\n"
+         "History-Info: <sip:917053949033@68.53.60.10:5060?Reason=SIP;cause=302>;index=1\r\n"   // <-- technically the ;'s following the ? (and before the >) should be encoded as %3B
+         "History-Info: <sip:00911206930000@68.53.60.10:5060>;index=1.1\r\n"
+         "Content-Length: 190\r\n"
+         "\r\n"
+         "v=0\r\n"
+         "o=UTSTARCOM 812795211 4223640993 IN IP4 10.60.66.10\r\n"
+         "s=-\r\n"
+         "c=IN IP4 10.60.66.10\r\n"
+         "t=0 0\r\n"
+         "m=audio 30618 RTP/AVP 8 0 18 101\r\n"
+         "a=sendrecv\r\n"
+         "a=rtpmap:101 telephone-event/8000\r\n"
+         "a=fmtp:101 0-15\r\n"
+         "\r\n");
+
+      unique_ptr<SipMessage> msg(SipMessage::make(txt, true /* isExternal */));
+
+      NameAddr& historyInfo = msg->header(h_HistoryInfos).front();
+      assert(historyInfo.uri().user() == "917053949033");
+      assert(historyInfo.uri().hasEmbedded() == true);
+      SipMessage& embedded = historyInfo.uri().embedded();
+      assert(embedded.header(h_Reasons).size() == 1);
+      assert(embedded.header(h_Reasons).front().value() == "SIP");
+      assert(embedded.header(h_Reasons).front().param(p_cause) == 302);
+      assert(historyInfo.param(p_index) == "1");
+      assert(msg->header(h_HistoryInfos).back().uri().user() == "00911206930000");
+   }
+
+   {
       // This test excercises a now fixed use-after-free bug when adding multi-headers to a list that has been copied, and then
       // one of the headers is accessed (but not necessarily parsed).  
       Data txt("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
@@ -176,8 +220,6 @@ main(int argc, char** argv)
       
       unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
-
-      sdp->session().media().front();
       
       SdpContents osdp;
       osdp.session().version() = 0;

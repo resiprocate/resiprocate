@@ -237,6 +237,7 @@ NameAddr::parse(ParseBuffer& pb)
          }
       }
       pb.skipWhitespace();
+      mUri.setIsBetweenAngleQuotes(laQuote); // Tell Uri parser if the Uri is between angle quotes/brackets or not, so that it can relax embedded header parsing rules if so
       mUri.parse(pb);
       if (laQuote)
       {
