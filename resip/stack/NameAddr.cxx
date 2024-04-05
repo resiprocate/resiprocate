@@ -199,6 +199,7 @@ NameAddr::parse(ParseBuffer& pb)
          start = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          pb.skipToEndQuote();
          pb.data(mDisplayName, start);
+         adjustDisplayNameIfNeeded();
          pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          laQuote = true;
          pb.skipToChar(Symbols::LA_QUOTE[0]);
@@ -285,13 +286,11 @@ NameAddr::encodeParsed(EncodeStream& str) const
   {
      if (!mDisplayName.empty())
      {
-#ifndef HANDLE_EMBEDDED_QUOTES_DNAME
-        // .dlb. doesn't deal with embedded quotes
-        str << Symbols::DOUBLE_QUOTE << mDisplayName << Symbols::DOUBLE_QUOTE;
-#else
+#ifndef OMIT_DISPLAY_NAME_QUOTES_IF_NOT_REQUIRED
         // does nothing if display name is properly quoted
         if (mustQuoteDisplayName())
         {
+#endif
            str << Symbols::DOUBLE_QUOTE;
            for (unsigned int i=0; i < mDisplayName.size(); i++)
            {
@@ -307,13 +306,14 @@ NameAddr::encodeParsed(EncodeStream& str) const
               }
            }
            str << Symbols::DOUBLE_QUOTE;
+#ifndef OMIT_DISPLAY_NAME_QUOTES_IF_NOT_REQUIRED
         }
         else
         {
-           str << mDisplayName;           
+           str << mDisplayName;
         }
 #endif
-     }     
+     }
      str << Symbols::LA_QUOTE;
      mUri.encodeParsed(str);
      str << Symbols::RA_QUOTE;
@@ -423,6 +423,31 @@ NameAddr::mustQuoteDisplayName() const
    return false;
 }
 
+void NameAddr::adjustDisplayNameIfNeeded()
+{
+   if (mDisplayName.find("\\") != Data::npos)
+   {
+      // Double quotes must be encoded as \", so if displayName contains any backslashes, then we remove them
+      Data adjustedDisplayName;
+      {
+         DataStream ds(adjustedDisplayName);
+
+         for (unsigned int i = 0; i < mDisplayName.size(); i++)
+         {
+            if (mDisplayName[i] == '\\')
+            {
+               i++;
+            }
+            if (i < mDisplayName.size())
+            {
+               ds << mDisplayName[i];
+            }
+         }
+      }
+      mDisplayName = adjustedDisplayName;
+   }
+}
+
 ParameterTypes::Factory NameAddr::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
@@ -513,6 +538,7 @@ defineParam(np, "np", DataParameter, "RFC 4244-bis");
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2024, SIP Spectrum, Inc. http://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
