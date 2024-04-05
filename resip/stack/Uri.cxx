@@ -37,14 +37,16 @@ Uri::Uri(PoolBase* pool)
    : ParserCategory(pool),
      mScheme(Data::Share, Symbols::DefaultSipScheme),
      mPort(0),
-     mHostCanonicalized(false)
+     mHostCanonicalized(false),
+     mIsBetweenAngleQuotes(false)
 {
 }
 
 Uri::Uri(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool) :
    ParserCategory(hfv, type, pool),
    mPort(0),
-   mHostCanonicalized(false)
+   mHostCanonicalized(false),
+   mIsBetweenAngleQuotes(false)
 {}
 
 
@@ -53,7 +55,8 @@ Uri::Uri(const Data& data)
    : ParserCategory(), 
      mScheme(Symbols::DefaultSipScheme),
      mPort(0),
-     mHostCanonicalized(false)
+     mHostCanonicalized(false),
+     mIsBetweenAngleQuotes(false)
 {
    HeaderFieldValue hfv(data.data(), data.size());
    // must copy because parse creates overlays
@@ -75,6 +78,7 @@ Uri::Uri(const Uri& rhs,
      mPath(rhs.mPath),
      mHostCanonicalized(rhs.mHostCanonicalized),
      mCanonicalHost(rhs.mCanonicalHost),
+     mIsBetweenAngleQuotes(rhs.mIsBetweenAngleQuotes),
      mEmbeddedHeadersText(rhs.mEmbeddedHeadersText.get() ? new Data(*rhs.mEmbeddedHeadersText) : 0),
      mEmbeddedHeaders(rhs.mEmbeddedHeaders.get() ? new SipMessage(*rhs.mEmbeddedHeaders) : 0)
 {}
@@ -1136,7 +1140,23 @@ Uri::parse(ParseBuffer& pb)
    if (!pb.eof() && *pb.position() == Symbols::QUESTION[0])
    {
       const char* anchor = pb.position();
-      pb.skipToOneOf(">;", ParseBuffer::Whitespace);
+
+      if (mIsBetweenAngleQuotes)
+      {
+         // Embedded headers will either end at the angle bracket (when Uri is in a NameAddr that uses angle 
+         // brackets) or at a semi-colon (when Uri is in a NameAddr that doesn't use angle brackets and has 
+         // NameAddr parameters following the embedded headers), or in Whitespace.
+         // We used to just look for either of the 3 terminators, however to be more tolerant of endpoints 
+         // that do not properly escape ;'s in the embedded headers, we relax the rules, only when the uri
+         // falls between angle quotes/brackets - in this case we will allow non-escaped semi-colons by only
+         // looking for > and whitespace as a terminator.
+         pb.skipToOneOf(">", ParseBuffer::Whitespace);
+      }
+      else
+      {
+         pb.skipToOneOf(">;", ParseBuffer::Whitespace);
+      }
+
       if(!mEmbeddedHeadersText.get()) mEmbeddedHeadersText.reset(new Data);
       pb.data(*mEmbeddedHeadersText, anchor);
    }

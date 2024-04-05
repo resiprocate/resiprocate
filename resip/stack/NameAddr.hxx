@@ -38,6 +38,7 @@ class NameAddr : public ParserCategory
       const Uri& uri() const;
       Data& displayName();
       const Data& displayName() const;
+
       bool isAllContacts() const;
       void setAllContacts();
       
@@ -48,8 +49,6 @@ class NameAddr : public ParserCategory
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
       bool operator<(const NameAddr& other) const;
-
-      bool mustQuoteDisplayName() const;      
 
       // Inform the compiler that overloads of these may be found in
       // ParserCategory, too.
@@ -97,6 +96,9 @@ class NameAddr : public ParserCategory
 #undef defineParam
 
    protected:
+      bool mustQuoteDisplayName() const;
+      void adjustDisplayNameIfNeeded();
+
       bool mAllContacts;
       Uri mUri;
       Data mDisplayName;
@@ -114,6 +116,7 @@ typedef ParserContainer<NameAddr> NameAddrs;
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2024, SIP Spectrum, Inc. http://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

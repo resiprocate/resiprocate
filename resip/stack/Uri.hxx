@@ -185,6 +185,7 @@ class Uri : public ParserCategory
       bool operator<(const Uri& other) const;
       
       bool aorEqual(const Uri& rhs) const;
+      void setIsBetweenAngleQuotes(bool value) { mIsBetweenAngleQuotes = value; }
 
       typedef std::bitset<Uri::uriEncodingTableSize> EncodingTable;
 
@@ -271,6 +272,8 @@ class Uri : public ParserCategory
       void getAorInternal(bool dropScheme, bool addPort, Data& aor) const;
       mutable bool mHostCanonicalized;
       mutable Data mCanonicalHost;  ///< cache for IPv6 host comparison
+
+      bool mIsBetweenAngleQuotes;
 
    private:
       std::unique_ptr<Data> mEmbeddedHeadersText;

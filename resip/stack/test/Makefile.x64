@@ -1,8 +1,9 @@
 # This makefile can be called by VS nmake, after all of the resiprocate libraries (SSL-Debug) have already been compiled via the GUI 
 
-CFLAGS=/Od /I "../../" /I "../../../" /I "../../../contrib/OpenSSLx64/include" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "USE_ARES" /D "USE_IPV6" /D "USE_SSL" /D "_MBCS" /Gm /EHsc /RTC1 /MDd /GS /GR /W3 /c /Zi /TP
-RESIPLIBS=..\..\..\x64\SSL-Debug\rutil.lib ..\..\..\x64\SSL-Debug\resiprocate.lib ..\..\..\x64\SSL-Debug\ares.lib ..\..\..\x64\Debug\fmt.lib
-LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /PDB:"test.pdb" /SUBSYSTEM:CONSOLE /MACHINE:X64 legacy_stdio_definitions.lib Ws2_32.lib winmm.lib Iphlpapi.lib Dnsapi.lib crypt32.lib "..\..\..\contrib\opensslx64\lib\vc\static\libcrypto64MDd.lib" "..\..\..\contrib\opensslx64\lib\vc\static\libssl64MDd.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
+CFLAGS=/Od /I "../../" /I "../../../" /I "../../../packages\zeroc.openssl.v143.1.1.1.2\build\native\include" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "USE_ARES" /D "USE_IPV6" /D "USE_SSL" /D "_MBCS" /Gm /EHsc /RTC1 /MDd /GS /GR /W3 /c /Zi /TP
+RESIPLIBS=..\..\..\x64\SSL-Debug\rutil.lib ..\..\..\x64\SSL-Debug\resiprocate.lib ..\..\..\x64\SSL-Debug\ares.lib
+OPENSSLLIBS="..\..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\lib\x64\Debug\libcrypto.lib" "..\..\..\packages\zeroc.openssl.v143.1.1.1.2\build\native\lib\x64\Debug\libssl.lib"
+LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /PDB:"test.pdb" /SUBSYSTEM:CONSOLE /MACHINE:X64 legacy_stdio_definitions.lib Ws2_32.lib winmm.lib Iphlpapi.lib Dnsapi.lib crypt32.lib $(OPENSSLLIBS) kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
 
 #Note:  The following should be aligned with Makefile
 all: \

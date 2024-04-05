@@ -36,11 +36,33 @@ class TR
       ~TR() { end();}
 };
 
+void NameAddrDisplayNameEncodeDecodeTest(resip::Data displayName)
+{
+   resip::Uri uri("<sip:a@127.0.0.1:5060>");
+   resip::NameAddr testNameAddr;
+   testNameAddr.uri() = uri;
+   testNameAddr.displayName() = displayName;
+   resip::Data nameAddrString;
+   {
+      resip::DataStream os(nameAddrString);
+      testNameAddr.encode(os);
+   }
+   resip::NameAddr parsedNameAddr(nameAddrString);
+   assert(displayName == parsedNameAddr.displayName());
+}
+
 int
 main(int argc, char* argv[])
 {
    Log::Level l = Log::Debug;
    Log::initialize(Log::Cout, l, argv[0]);
+
+   {
+      TR _tr("Test display name with embedded double quotes and backslashes");
+      NameAddrDisplayNameEncodeDecodeTest("Diplay name w/o (double quote) and (backslash)");   // no escaping required
+      NameAddrDisplayNameEncodeDecodeTest("Diplay name w/ \"(double quote) and \\ (backslash)");
+      NameAddrDisplayNameEncodeDecodeTest("Diplay \"name\"");
+   }
 
    {
        TR _tr("Test odd name-addr from odd vendor");
