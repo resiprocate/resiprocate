@@ -286,7 +286,7 @@ NameAddr::encodeParsed(EncodeStream& str) const
   {
      if (!mDisplayName.empty())
      {
-#ifndef OMIT_DISPLAY_NAME_QUOTES_IF_NOT_REQUIRED
+#ifdef OMIT_DISPLAY_NAME_QUOTES_IF_NOT_REQUIRED
         // does nothing if display name is properly quoted
         if (mustQuoteDisplayName())
         {
@@ -306,7 +306,7 @@ NameAddr::encodeParsed(EncodeStream& str) const
               }
            }
            str << Symbols::DOUBLE_QUOTE;
-#ifndef OMIT_DISPLAY_NAME_QUOTES_IF_NOT_REQUIRED
+#ifdef OMIT_DISPLAY_NAME_QUOTES_IF_NOT_REQUIRED
         }
         else
         {
