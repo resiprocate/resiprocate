@@ -361,6 +361,14 @@ MessageWaitingContents::parse(ParseBuffer& pb)
       }
       resip_assert(ht != -1);
 
+      const char* bol = pb.position();
+      pb.skipToChars("essage");
+      if (pb.position() == bol)
+      {
+	pb.skipChars(Symbols::CRLF);
+	continue;
+      }
+
       pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::COLON);
       pb.skipWhitespace();
       pb.skipChar(Symbols::COLON[0]);
@@ -404,7 +412,7 @@ MessageWaitingContents::parse(ParseBuffer& pb)
          }
          mHeaders[ht] = new Header(numNew, numOld, numUrgentNew, numUrgentOld);
       }
-      
+
       pb.skipChars(Symbols::CRLF);
    }
 
