@@ -1266,7 +1266,7 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(hfv, Headers::UNKNOWN);
-      assert(nameAddr.displayName() == "Bob   \\\" asd   ");
+      assert(nameAddr.displayName() == "Bob   \" asd   ");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
