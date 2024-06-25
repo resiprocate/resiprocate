@@ -27,6 +27,13 @@
 #include <fmt/format.h>
 #endif
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#ifdef HAVE_VERSION_H
+#include "version.h"
+#endif
+
 using namespace resip;
 using namespace std;
 
@@ -337,15 +344,22 @@ Log::initialize(Type type, Level level, const Data& appName,
       }
 
    }
+
+   GenericLog(resip::Subsystem::NONE,
+              resip::Log::Info,
+              << "logger initialized app=" << appName
+              << " version="
+#ifdef RESIPROCATE_VERSION_STR
+              << RESIPROCATE_VERSION_STR
+#else
+              << "UNKNOWN"
+#endif  // RESIPROCATE_VERSION_STR
 #ifdef ENABLE_LOG_REPOSITORY_DETAILS
-   GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version=" << VERSION << " git-commit=" << RESIPROCATE_GIT_ID << " git-branch=" << RESIPROCATE_BRANCH_NAME);
+              << " git-commit=" << RESIPROCATE_GIT_ID << " git-branch=" << RESIPROCATE_BRANCH_NAME
 #else
-#ifdef VERSION
-   GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version=" << VERSION << " git repository details unknown");
-#else
-   GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version and git repository details unknown");
-#endif
-#endif
+              << " git repository details unknown"
+#endif  // ENABLE_LOG_REPOSITORY_DETAILS
+              );
 }
 
 void
