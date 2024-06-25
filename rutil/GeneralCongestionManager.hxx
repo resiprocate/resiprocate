@@ -134,15 +134,17 @@ class GeneralCongestionManager : public CongestionManager
          For how this function determines congestion-state, see registerFifo().       */
       virtual RejectionBehavior getRejectionBehavior(const FifoStatsInterface *fifo) const;
 
-      virtual void logCurrentState() const;
-      virtual EncodeStream& encodeCurrentState(EncodeStream& strm) const;
-
-   private:
       /**
          @brief Returns the percent of maximum tolerances that this queue is at.
       */
       virtual uint16_t getCongestionPercent(const FifoStatsInterface* fifo) const;
+
+      virtual void logCurrentState() const;
+      virtual EncodeStream& encodeCurrentState(EncodeStream& strm) const;
+
+   private:
       virtual RejectionBehavior getRejectionBehaviorInternal(const FifoStatsInterface *fifo) const;
+      uint16_t getCongestionPercentInternal(const FifoStatsInterface* fifo) const;
 
       virtual EncodeStream& encodeFifoStats(const FifoStatsInterface& fifoStats, EncodeStream& strm) const;
 

@@ -80,7 +80,7 @@ GeneralCongestionManager::getRejectionBehaviorInternal(const FifoStatsInterface 
    // !bwc! We need to also keep an eye on memory usage, and push back if it 
    // looks like we're going to start hitting swap sometime soon.
 
-   uint16_t percent=getCongestionPercent(fifo);
+   uint16_t percent=getCongestionPercentInternal(fifo);
 
    // .bwc. We exit this sooner the more congested we are.
    if(percent > mRejectionThresholds[REJECTING_NON_ESSENTIAL])
@@ -136,6 +136,13 @@ GeneralCongestionManager::encodeCurrentState(EncodeStream& strm) const
 
 uint16_t
 GeneralCongestionManager::getCongestionPercent(const FifoStatsInterface* fifo) const
+{
+    Lock lock(mFifosMutex);
+    return getCongestionPercentInternal(fifo);
+}
+
+uint16_t
+GeneralCongestionManager::getCongestionPercentInternal(const FifoStatsInterface* fifo) const
 {
    if(fifo->getRole() >= mFifos.size())
    {
