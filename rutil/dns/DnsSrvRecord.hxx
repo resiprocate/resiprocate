@@ -36,9 +36,10 @@ class DnsSrvRecord : public DnsResourceRecord
       int weight() const { return mWeight; }
       int port() const { return mPort; }
       const Data& target() const { return mTarget; }
-      const Data& name() const { return mName; }
-      bool isSameValue(const Data& value) const;
-      EncodeStream& dump(EncodeStream& strm) const;
+      virtual const Data& name() const { return mName; }
+      virtual int ttl() const { return mTTL; }
+      virtual bool isSameValue(const Data& value) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
       
    private:
       int mPriority;
@@ -46,6 +47,7 @@ class DnsSrvRecord : public DnsResourceRecord
       int mPort;
       Data mTarget; // domain name of the target host.
       Data mName;
+      int mTTL;
 };
 
 }

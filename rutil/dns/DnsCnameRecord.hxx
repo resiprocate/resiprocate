@@ -26,17 +26,19 @@ class DnsCnameRecord : public DnsResourceRecord
       };
 
       DnsCnameRecord(const RROverlay&);
-      ~DnsCnameRecord() {}
+      virtual ~DnsCnameRecord() {}
 
       // accessors.
-      const Data& cname() const { return mCname; }
-      const Data& name() const { return mName; }
-      bool isSameValue(const Data&) const;
-      EncodeStream& dump(EncodeStream& strm) const;
+      virtual const Data& cname() const { return mCname; }
+      virtual const Data& name() const { return mName; }
+      virtual int ttl() const { return mTTL; }
+      virtual bool isSameValue(const Data&) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
       
    private:
       Data mCname;
       Data mName;
+      int mTTL;
 };
 
 }

@@ -27,6 +27,7 @@ class DnsAAAARecord : public DnsResourceRecord
 #endif
 
       virtual const Data& name() const { return mName; }
+      virtual int ttl() const { return mTTL; }
       virtual bool isSameValue(const Data& value) const;
       EncodeStream& dump(EncodeStream& strm) const;
       
@@ -39,6 +40,7 @@ class DnsAAAARecord : public DnsResourceRecord
          char pad[28]; // this make union same size if v6 is in or out
       };
       Data mName;
+      int mTTL;
 };
 
 }

@@ -19,18 +19,20 @@ class DnsHostRecord : public DnsResourceRecord
    public:
       DnsHostRecord(const RROverlay&);
       DnsHostRecord(const Data name, const in_addr addr): mAddr(addr), mName(name){};
-      ~DnsHostRecord() {}
+      virtual ~DnsHostRecord() {}
 
       // accessors.
       Data host() const;
       in_addr addr() const { return mAddr; }
-      const Data& name() const { return mName; }
-      bool isSameValue(const Data& value) const;
-      EncodeStream& dump(EncodeStream& strm) const;
+      virtual const Data& name() const { return mName; }
+      virtual int ttl() const { return mTTL; }
+      virtual bool isSameValue(const Data& value) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
       
    private:
       in_addr mAddr;
       Data mName;
+      int mTTL;
 };
 
 }

@@ -33,6 +33,7 @@ DnsSrvRecord::DnsSrvRecord(const RROverlay& overlay)
    }
    mName = name;
    free(name);
+   mTTL = overlay.ttl();
 
    mPriority = DNS__16BIT(overlay.data());
    mWeight = DNS__16BIT(overlay.data() + 2);
@@ -54,7 +55,7 @@ bool DnsSrvRecord::isSameValue(const Data& value) const
 EncodeStream&
 DnsSrvRecord::dump(EncodeStream& strm) const
 {
-   strm << mName << " (SRV) --> p=" << mPriority << " w=" << mWeight << " " << mTarget << ":" << mPort;
+   strm << mName << " (SRV) --> p=" << mPriority << " w=" << mWeight << " " << mTarget << ":" << mPort << " ttl=" << mTTL;
    return strm;
 }
 

@@ -15,6 +15,7 @@ class DnsResourceRecord
       DnsResourceRecord() {}
       virtual ~DnsResourceRecord();
       virtual const Data& name() const = 0;
+      virtual int ttl() const = 0;
       virtual bool isSameValue(const Data& valueToCompare) const = 0;
       virtual EncodeStream& dump(EncodeStream& strm) const = 0;
 };

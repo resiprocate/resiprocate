@@ -33,6 +33,7 @@ DnsAAAARecord::DnsAAAARecord(const RROverlay& overlay)
    ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
    mName = name;
    free(name);
+   mTTL = overlay.ttl();
    memcpy(&mAddr, overlay.data(), sizeof(in6_addr));
 #else
    resip_assert(0);
@@ -53,7 +54,7 @@ EncodeStream&
 DnsAAAARecord::dump(EncodeStream& strm) const
 {
 #ifdef USE_IPV6
-   strm << mName << " (AAAA) --> " << DnsUtil::inet_ntop(mAddr);
+   strm << mName << " (AAAA) --> " << DnsUtil::inet_ntop(mAddr) << " ttl=" << mTTL;
    return strm;
 #else
    resip_assert(0);

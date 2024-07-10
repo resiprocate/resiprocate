@@ -34,6 +34,8 @@ DnsCnameRecord::DnsCnameRecord(const RROverlay& overlay)
    mName = name;
    free(name);
 
+   mTTL = overlay.ttl();
+
    if (ARES_SUCCESS != ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len))
    {
       throw CnameException("Failed parse of CNAME record", __FILE__, __LINE__);
@@ -51,7 +53,7 @@ bool DnsCnameRecord::isSameValue(const Data& value) const
 EncodeStream&
 DnsCnameRecord::dump(EncodeStream& strm) const
 {
-   strm << mName << " (CNAME) --> " << mCname;
+   strm << mName << " (CNAME) --> " << mCname << " ttl=" << mTTL;
    return strm;
 }
 

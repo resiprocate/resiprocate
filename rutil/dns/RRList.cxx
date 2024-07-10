@@ -159,8 +159,8 @@ RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
    case T_CNAME:
       {
          DnsCnameRecord* record = dynamic_cast<DnsCnameRecord*>(item.record);
-         resip_assert(record);         
-         strm << "CNAME: " << record->name() << " -> " << record->cname();
+         resip_assert(record);
+         strm << "CNAME: " << record->name() << " -> " << record->cname() << " ttl=" << record->ttl();
          break;
       }
 
@@ -170,7 +170,7 @@ RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
          resip_assert(record);
          strm << "NAPTR: " << record->name() << " -> repl=" << record->replacement() << " service=" << record->service() 
             << " order=" << record->order() << " pref=" << record->preference() << " flags=" << record->flags() 
-            << " regexp=" << record->regexp().regexp();
+            << " regexp=" << record->regexp().regexp() << " ttl=" << record->ttl();
          break;
       }
 
@@ -179,7 +179,7 @@ RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
          DnsSrvRecord* record = dynamic_cast<DnsSrvRecord*>(item.record);
          resip_assert(record);
          strm << "SRV: " << record->name() << " -> " << record->target() << ":" << record->port() 
-            << " priority=" << record->priority() << " weight=" << record->weight();               
+            << " priority=" << record->priority() << " weight=" << record->weight() << " ttl=" << record->ttl();
          break;
       }
 
@@ -188,7 +188,7 @@ RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
       {
          DnsAAAARecord* record = dynamic_cast<DnsAAAARecord*>(item.record);
          resip_assert(record);
-         strm << "AAAA(Host): " << record->name() << " -> " << DnsUtil::inet_ntop(record->v6Address());
+         strm << "AAAA(Host): " << record->name() << " -> " << DnsUtil::inet_ntop(record->v6Address()) << " ttl=" << record->ttl();
          break;
       }
 #endif
@@ -197,11 +197,11 @@ RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
       {
          DnsHostRecord* record = dynamic_cast<DnsHostRecord*>(item.record);
          resip_assert(record);
-         strm << "A(Host): " << record->name() << " -> " << record->host();
+         strm << "A(Host): " << record->name() << " -> " << record->host() << " ttl=" << record->ttl();
          break;
       }
    default:
-      strm << "UNKNOWN(" << mRRType << ")" << " key=" << mKey << " name=" << item.record->name();
+      strm << "UNKNOWN(" << mRRType << ")" << " key=" << mKey << " name=" << item.record->name() << " ttl=" << item.record->ttl();
       break;
    }
 

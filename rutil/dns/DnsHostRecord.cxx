@@ -33,6 +33,7 @@ DnsHostRecord::DnsHostRecord(const RROverlay& overlay)
    resip_assert(status == ARES_SUCCESS);	// .kw. what should we do if bad?
    mName = name;
    free(name);
+   mTTL = overlay.ttl();
    memcpy(&mAddr, overlay.data(), sizeof(in_addr));
 }
 
@@ -49,7 +50,7 @@ bool DnsHostRecord::isSameValue(const Data& value) const
 EncodeStream&
 DnsHostRecord::dump(EncodeStream& strm) const
 {
-   strm << mName << "(A)--> " << DnsUtil::inet_ntop(mAddr);
+   strm << mName << "(A)--> " << DnsUtil::inet_ntop(mAddr) << " ttl=" << mTTL;
    return strm;
 }
 
