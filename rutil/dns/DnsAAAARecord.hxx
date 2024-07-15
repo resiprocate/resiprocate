@@ -29,7 +29,7 @@ class DnsAAAARecord : public DnsResourceRecord
       virtual const Data& name() const { return mName; }
       virtual int ttl() const { return mTTL; }
       virtual bool isSameValue(const Data& value) const;
-      EncodeStream& dump(EncodeStream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
       
    private:
       union

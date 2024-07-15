@@ -28,7 +28,7 @@ class DnsSrvRecord : public DnsResourceRecord
       };
 
       DnsSrvRecord(const RROverlay&);
-      ~DnsSrvRecord() {}
+      virtual ~DnsSrvRecord() {}
 
       // accessors.
       int priority() const { return mPriority; }

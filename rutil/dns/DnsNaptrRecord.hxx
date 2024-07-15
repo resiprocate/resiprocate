@@ -63,7 +63,7 @@ class DnsNaptrRecord : public DnsResourceRecord
          
       DnsNaptrRecord() : mOrder(-1), mPreference(-1), mTTL(-1) {}
       DnsNaptrRecord(const RROverlay&);
-      ~DnsNaptrRecord() {}
+      virtual ~DnsNaptrRecord() {}
 
       // accessors.
       int order() const { return mOrder; }
