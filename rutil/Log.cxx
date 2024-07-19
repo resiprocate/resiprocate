@@ -345,21 +345,28 @@ Log::initialize(Type type, Level level, const Data& appName,
 
    }
 
+   // pre declare to prevent msvc build error C2121
+#ifdef RESIPROCATE_VERSION_STR
+#define STREAM_RESIPROCATE_VERSION_STR << RESIPROCATE_VERSION_STR
+#else 
+#define STREAM_RESIPROCATE_VERSION_STR << "UNKNOWN"
+#endif  // RESIPROCATE_VERSION_STR
+#ifdef ENABLE_LOG_REPOSITORY_DETAILS
+#define STREAM_ENABLE_LOG_REPOSITORY_DETAILS << " git-commit=" << RESIPROCATE_GIT_ID << " git-branch=" << RESIPROCATE_BRANCH_NAME
+#else
+#define STREAM_ENABLE_LOG_REPOSITORY_DETAILS << " git repository details unknown"
+#endif  // ENABLE_LOG_REPOSITORY_DETAILS
+
    GenericLog(resip::Subsystem::NONE,
               resip::Log::Info,
               << "logger initialized app=" << appName
               << " version="
-#ifdef RESIPROCATE_VERSION_STR
-              << RESIPROCATE_VERSION_STR
-#else
-              << "UNKNOWN"
-#endif  // RESIPROCATE_VERSION_STR
-#ifdef ENABLE_LOG_REPOSITORY_DETAILS
-              << " git-commit=" << RESIPROCATE_GIT_ID << " git-branch=" << RESIPROCATE_BRANCH_NAME
-#else
-              << " git repository details unknown"
-#endif  // ENABLE_LOG_REPOSITORY_DETAILS
+              STREAM_RESIPROCATE_VERSION_STR
+              STREAM_ENABLE_LOG_REPOSITORY_DETAILS
               );
+
+#undef LOG_ENABLE_LOG_REPOSITORY_DETAILS
+#undef LOG_RESIPROCATE_VERSION_STR
 }
 
 void
