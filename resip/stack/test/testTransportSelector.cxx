@@ -61,17 +61,18 @@ class TestTransportSelector : public TransportSelector
 
       ~TestTransportSelector() override = default;
 
-      void addTransport(const Data &interfaceObj, int portNum, IpVersion version, TransportType ttype)
+      uint addTransport(const Data &interfaceObj, int portNum, IpVersion version, TransportType ttype)
       {
          std::unique_ptr<Transport> transport;
+         uint actualTransportKey = mNextTransportKey;
 
          if (ttype == UDP)
          {
-            transport.reset(new TestUdpTransport { mFifo, mNextTransportKey++, portNum, version, interfaceObj });
+            transport.reset(new TestUdpTransport { mFifo, actualTransportKey, portNum, version, interfaceObj });
          }
          else if (ttype == TCP)
          {
-            transport.reset(new TestTcpTransport { mFifo, mNextTransportKey++, portNum, version, interfaceObj });
+            transport.reset(new TestTcpTransport { mFifo, actualTransportKey, portNum, version, interfaceObj });
          }
          else
          {
@@ -79,6 +80,9 @@ class TestTransportSelector : public TransportSelector
          }
 
          TransportSelector::addTransport(std::move(transport), false);
+         mNextTransportKey++;
+
+         return actualTransportKey;
       }
 
    private:
@@ -431,12 +435,121 @@ testFindTransportBySource()
    }
 }
 
+void
+testFindTransportByDest()
+{
+   {
+      // Target has the transport key for IPv4.
+      resipCout << "test transport selection by destination within V4 interfaces lookup - target with the transport key" << std::endl;
+
+      TestTransportSelector ts;
+      auto tk1 = ts.addTransport("192.168.1.1", 5060, V4, UDP);
+      auto tk2 = ts.addTransport("192.168.1.1", 5100, V4, UDP);
+
+      Tuple tuple1 { "1.2.3.4", 6050, V4, UDP };
+      tuple1.mTransportKey = tk1;
+      Transport *t = ts.findTransportByDest(tuple1);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5060);
+
+      Tuple tuple2 { "1.2.3.4", 6050, V4, UDP };
+      tuple2.mTransportKey = tk2;
+      t = ts.findTransportByDest(tuple2);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5100);
+   }
+
+   {
+      // Target has the transport key for IPv6.
+#ifdef USE_IPV6
+      resipCout << "test transport selection by destination within V6 interfaces lookup - target with the transport key" << std::endl;
+
+      TestTransportSelector ts;
+      auto tk1 = ts.addTransport("fe80::a00:27ff:fea3:e60e", 5060, V6, UDP);
+      auto tk2 = ts.addTransport("fe80::a00:27ff:fea3:e60e", 5100, V6, UDP);
+
+      Tuple tuple1 { "fe80::2e0e:c230:27ad:dcb5", 6050, V6, UDP };
+      tuple1.mTransportKey = tk1;
+      Transport *t = ts.findTransportByDest(tuple1);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5060);
+
+      Tuple tuple2 { "fe80::2e0e:c230:27ad:dcb5", 6050, V6, UDP };
+      tuple2.mTransportKey = tk2;
+      t = ts.findTransportByDest(tuple2);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5100);
+#endif // USE_IPV6
+   }
+
+   {
+      // Target does not have the transport key for IPv4.
+      resipCout << "test transport selection by destination within V4 interfaces lookup - target without the transport key" << std::endl;
+
+      TestTransportSelector ts;
+      ts.addTransport("192.168.1.1", 5060, V4, UDP);
+      ts.addTransport("192.168.1.1", 5100, V4, UDP);
+      ts.addTransport("192.168.1.20", 5200, V4, UDP);
+
+      Tuple tuple1 { "1.2.3.4", 6070, V4, UDP };
+      Transport *t = ts.findTransportByDest(tuple1);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5060);
+
+      Tuple tuple2 { "10.0.0.50", 36050, V4, UDP };
+      t = ts.findTransportByDest(tuple2);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5060);
+
+      Tuple tuple3 { "1.2.3.4", 6050, V4, TCP };
+      t = ts.findTransportByDest(tuple3);
+      resip_assert(t == nullptr);
+
+#ifdef USE_IPV6
+      Tuple v6tuple { "fe80::a00:27ff:fea3:e60e", 6070, V6, UDP };
+      t = ts.findTransportByDest(v6tuple);
+      resip_assert(t == nullptr);
+#endif // USE_IPV6
+   }
+
+   {
+      // Target does not have the transport key for IPv6.
+#ifdef USE_IPV6
+      resipCout << "test transport selection by destination within V4 interfaces lookup - target without the transport key" << std::endl;
+
+      TestTransportSelector ts;
+      ts.addTransport("fe80::a00:27ff:fea3:e60e", 5060, V6, UDP);
+      ts.addTransport("fe80::a00:27ff:fea3:e60e", 5100, V6, UDP);
+      ts.addTransport("fe80::a00:27ff:fea3:ffff", 5200, V6, UDP);
+
+      Tuple v6tuple1 { "fe80::a00:27ff:fea3:e60e", 6070, V6, UDP };
+      Transport *t = ts.findTransportByDest(v6tuple1);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5060);
+
+      Tuple v6tuple2 { "fe80::2e0e:c230:27ad:dcb5", 36050, V6, UDP };
+      t = ts.findTransportByDest(v6tuple2);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5060);
+
+      Tuple v6tuple3 { "fe80::a00:27ff:fea3:e60e", 6070, V6, TCP };
+      t = ts.findTransportByDest(v6tuple3);
+      resip_assert(t == nullptr);
+
+      Tuple tuple { "1.2.3.4", 6070, V4, UDP };
+      t = ts.findTransportByDest(tuple);
+      resip_assert(t == nullptr);
+#endif // USE_IPV6
+   }
+}
+
 int
 main(int argc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    testFindTransportBySource();
+   testFindTransportByDest();
 
    return 0;
 }

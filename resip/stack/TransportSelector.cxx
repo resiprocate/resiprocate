@@ -1483,12 +1483,8 @@ TransportSelector::findTransportByDest(const Tuple& target)
 
       if(range.first != range.second) // At least one match
       {
-         TypeToTransportMap::iterator i=range.first;
-         ++i;
-         if(i==range.second) // Exactly one match
-         {
-            return range.first->second;
-         }
+         // The first configured transport for the matched protocol.
+         return range.first->second;
       }
    }
 
