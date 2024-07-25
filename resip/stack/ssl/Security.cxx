@@ -69,6 +69,12 @@ static const Data userCert("user_cert_");
 static const Data userKey("user_key_");
 static const Data unknownKey("user_key_");
 
+#ifdef WIN32
+static const Data pathSeparator = "\\";
+#else
+static const Data pathSeparator = "/";
+#endif
+
 static const Data 
 pemTypePrefixes(  Security::PEMType pType )
 {
@@ -81,7 +87,7 @@ pemTypePrefixes(  Security::PEMType pType )
       case  Security::UserPrivateKey:   return userKey;
       default:
       {
-         ErrLog( << "Some unkonw pem type prefix requested" << (int)(pType) );
+         ErrLog( << "Some unknown pem type prefix requested" << (int)(pType) );
          resip_assert(0);
       }
    }
@@ -165,9 +171,9 @@ Security::Security(const Data& directory, const CipherList& cipherSuite, const D
    mPath(directory)
 {
    // since the preloader won't work otherwise and VERY difficult to figure out.
-   if (!mPath.empty() && !mPath.postfix(Symbols::SLASH))
+   if (!mPath.empty() && !mPath.postfix(pathSeparator))
    {
-      mPath += Symbols::SLASH;
+      mPath += pathSeparator;
    }
 }
 
@@ -176,9 +182,9 @@ Security::addCADirectory(const Data& caDirectory)
 {
    mCADirectories.push_back(caDirectory);
    Data &_dir = mCADirectories.back();
-   if ( !_dir.postfix(Symbols::SLASH))
+   if ( !_dir.postfix(pathSeparator))
    {
-      _dir += Symbols::SLASH;
+      _dir += pathSeparator;
    }
 }
 
@@ -244,7 +250,7 @@ Security::preload()
    // or a collection of root certificates
    struct stat s;
    Data fileName(mPath);
-   if(fileName.postfix("/"))
+   if(fileName.postfix(pathSeparator))
    {
       fileName.truncate(fileName.size() - 1);
    }
@@ -457,7 +463,7 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 {
    Data filename = mPath + pemTypePrefixes(type) + name + PEM;
 
-   InfoLog (<< "Reading PEM file " << filename << " into " << name);
+   InfoLog (<< "Reading PEM file " << filename << " for " << name);
    // .dlb. extra copy
    buffer = Data::fromFile(filename);
 }
@@ -1041,7 +1047,7 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
    resip_assert(pk);
 
    // write pk to out using key phrase p, with no cipher.
-   int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, p);  // paraters
+   int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, p);  // parameters
                                                                 // are in the wrong order
    (void)ret;
    resip_assert(ret == 1);
@@ -2568,9 +2574,9 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       commonName = name;
    }
 
-#if 0  // junk code to print certificates extentions for debugging 
+#if 0  // junk code to print certificates extensions for debugging
    int numExt = X509_get_ext_count(cert);
-   ErrLog(<< "Got peer certificate with " << numExt << " extentions" );
+   ErrLog(<< "Got peer certificate with " << numExt << " extensions" );
 
    for ( int i=0; i<numExt; i++ )
    {
@@ -2579,11 +2585,11 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       
       const char* str = OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
       resip_assert(str);
-      DebugLog(<< "Got certificate extention" << str );
+      DebugLog(<< "Got certificate extension" << str );
 
       if  ( OBJ_obj2nid(X509_EXTENSION_get_object(ext)) == NID_subject_alt_name )
       {   
-         DebugLog(<< "Got subjectAltName extention" );
+         DebugLog(<< "Got subjectAltName extension" );
       }
    }
 #endif 
@@ -2692,7 +2698,7 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
          }
          catch (...)
          {
-             InfoLog(<< "subjectAltName of TLS session cert contains unparseable URI");
+             InfoLog(<< "subjectAltName of TLS session cert contains unparsable URI");
          }
       }
    }
@@ -2715,7 +2721,7 @@ BaseSecurity::getCertName(X509 *cert)
    //get all the names (subjectAltName or CommonName)
    getCertNames(cert, cNames);
 
-   //prefere the subjectAltName
+   //prefer the subjectAltName
    for(std::list<PeerName>::const_iterator it = cNames.begin(); it != cNames.end(); it++)
    {
       if(it->mType == SubjectAltName)
