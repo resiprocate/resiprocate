@@ -161,11 +161,19 @@ class TransportSelector
       class TlsTransportKey
       {
          public:
+            TlsTransportKey() = delete;
             TlsTransportKey(const resip::Tuple& tuple) : mTuple(tuple) {}
-            TlsTransportKey(const resip::Data& domainName, resip::TransportType type, resip::IpVersion version) :
-               mTuple(Data::Empty, 0, version, type, domainName) {}
-            TlsTransportKey(const TlsTransportKey& orig) { mTuple = orig.mTuple; }
-            ~TlsTransportKey(){}
+            TlsTransportKey(const resip::Data& domainName,
+                            resip::TransportType type,
+                            resip::IpVersion version,
+                            const resip::Data& address,
+                            int port) :
+               mTuple(address, port, version, type, domainName) {}
+            TlsTransportKey(const TlsTransportKey&) = default;
+            TlsTransportKey& operator=(const TlsTransportKey&) = default;
+            TlsTransportKey(TlsTransportKey&&) = default;
+            TlsTransportKey& operator=(TlsTransportKey&&) = default;
+            ~TlsTransportKey() = default;
 
             bool operator<(const TlsTransportKey& rhs) const
             {
@@ -181,16 +189,27 @@ class TransportSelector
                   }
                   else if(mTuple.getType() == rhs.mTuple.getType())
                   {
-                     return mTuple.ipVersion() < rhs.mTuple.ipVersion();
+                     if(mTuple.ipVersion() < rhs.mTuple.ipVersion())
+                     {
+                        return true;
+                     }
+                     else if(mTuple.ipVersion() == rhs.mTuple.ipVersion())
+                     {
+                        if (mTuple.getPort() < rhs.mTuple.getPort())
+                        {
+                           return true;
+                        }
+                        else if (mTuple.getPort() == rhs.mTuple.getPort())
+                        {
+                           return mTuple.presentationFormat() < rhs.mTuple.presentationFormat();
+                        }
+                     }
                   }
                }
                return false;
             }
 
             resip::Tuple mTuple;
-
-         private:
-            TlsTransportKey();
       };
 
    protected:  // for unit tests (testTransportSelector)
@@ -202,7 +221,11 @@ class TransportSelector
       Connection* findConnection(const Tuple& dest) const;
       Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
       Transport* findTransportByVia(SipMessage* msg, const Tuple& dest, Tuple& src) const;
-      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv) const;
+      Transport* findTlsTransport(const Data& domain,
+                                  TransportType type,
+                                  IpVersion ipv,
+                                  const Data& address,
+                                  int port) const;
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
       void rebuildAnyPortTransportMaps(void);
 

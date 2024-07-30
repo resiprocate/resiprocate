@@ -514,8 +514,16 @@ testFindTransportBySourceTlsTransport()
       resip_assert(t != nullptr);
       resip_assert(t->port() == 5060);
 
-      Tuple tuple2 { "192.168.1.1", 5060, V4, WSS };
+      Tuple tuple2 { "192.168.1.1", 5100, V4, TLS };
       t = ts.findTransportBySource(tuple2, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple tuple3 { "192.168.1.2", 5060, V4, TLS };
+      t = ts.findTransportBySource(tuple3, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple tuple4 { "192.168.1.1", 5060, V4, WSS };
+      t = ts.findTransportBySource(tuple4, &msg);
       resip_assert(t == nullptr);
 
 #ifdef USE_IPV6
@@ -523,6 +531,35 @@ testFindTransportBySourceTlsTransport()
       t = ts.findTransportBySource(v6tuple, &msg);
       resip_assert(t == nullptr);
 #endif // USE_IPV6
+   }
+
+   {
+      // Multiple TLS IPv4 transports without an assigned domain name.
+      resipCout << "test TLS transport selection by source V4 interface lookup - "
+                << "multiple transports" << std::endl;
+
+      TestTransportSelector ts;
+      ts.addTransport("192.168.1.1", 5060, V4, TLS);
+      ts.addTransport("192.168.1.1", 5100, V4, TLS);
+
+      Tuple tuple1 { "192.168.1.1", 5060, V4, TLS };
+      Transport *t = ts.findTransportBySource(tuple1, &msg);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5060);
+      resip_assert(t->interfaceName() == "192.168.1.1");
+
+      Tuple tuple2 { "192.168.1.1", 5100, V4, TLS };
+      t = ts.findTransportBySource(tuple2, &msg);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5100);
+
+      Tuple tuple3 { "192.168.1.1", 5200, V4, TLS };
+      t = ts.findTransportBySource(tuple3, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple tuple4 { "192.168.1.2", 5100, V4, TLS };
+      t = ts.findTransportBySource(tuple4, &msg);
+      resip_assert(t == nullptr);
    }
 
    {
@@ -539,8 +576,16 @@ testFindTransportBySourceTlsTransport()
       resip_assert(t != nullptr);
       resip_assert(t->port() == 5060);
 
-      Tuple v6tuple2 { "fe80::a00:27ff:fea3:e60e", 5060, V6, WSS };
+      Tuple v6tuple2 { "fe80::a00:27ff:fea3:e60e", 5100, V6, TLS };
       t = ts.findTransportBySource(v6tuple2, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple v6tuple3 { "fe80::a00:27ff:fea3:1111", 5100, V6, TLS };
+      t = ts.findTransportBySource(v6tuple3, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple v6tuple4 { "fe80::a00:27ff:fea3:e60e", 5060, V6, WSS };
+      t = ts.findTransportBySource(v6tuple4, &msg);
       resip_assert(t == nullptr);
 
       Tuple tuple { "192.168.1.1", 5060, V4, TLS };
@@ -570,8 +615,16 @@ testFindTransportBySourceTlsTransport()
       t = ts.findTransportBySource(tuple2, &anotherMsg);
       resip_assert(t == nullptr);
 
-      Tuple tuple3 { "192.168.1.1", 5060, V4, WSS };
+      Tuple tuple3 { "192.168.1.1", 5100, V4, TLS };
       t = ts.findTransportBySource(tuple3, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple tuple4 { "192.168.1.2", 5060, V4, TLS };
+      t = ts.findTransportBySource(tuple4, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple tuple5 { "192.168.1.1", 5060, V4, WSS };
+      t = ts.findTransportBySource(tuple5, &msg);
       resip_assert(t == nullptr);
 
 #ifdef USE_IPV6
@@ -579,6 +632,54 @@ testFindTransportBySourceTlsTransport()
       t = ts.findTransportBySource(v6tuple, &msg);
       resip_assert(t == nullptr);
 #endif // USE_IPV6
+   }
+
+   {
+      // Multiple TLS IPv4 transport with the assigned domain name.
+      resipCout << "test TLS transport selection by source V4 interface lookup - "
+                << "multiple domain matching" << std::endl;
+
+      const resip::Data domainNameA = "sip-a.example.com";
+      const resip::Data domainNameB = "sip-b.example.com";
+
+      TestTransportSelector ts;
+      ts.addTransport("192.168.1.1", 5060, V4, TLS, domainNameA);
+      ts.addTransport("192.168.1.1", 5100, V4, TLS, domainNameB);
+
+      // Tests for domain name A.
+      msg.setTlsDomain(domainNameA);
+
+      Tuple tuple1 { "192.168.1.1", 5060, V4, TLS };
+      Transport *t = ts.findTransportBySource(tuple1, &msg);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5060);
+
+      Tuple tuple2 { "192.168.1.1", 5100, V4, TLS };
+      t = ts.findTransportBySource(tuple2, &msg);
+      resip_assert(t == nullptr);
+
+      // Tests for domain name B.
+      msg.setTlsDomain(domainNameB);
+
+      Tuple tuple3 { "192.168.1.1", 5100, V4, TLS };
+      t = ts.findTransportBySource(tuple2, &msg);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5100);
+
+      Tuple tuple4 { "192.168.1.1", 5060, V4, TLS };
+      t = ts.findTransportBySource(tuple4, &msg);
+      resip_assert(t == nullptr);
+
+      // Tests for unknown domain name.
+      msg.setTlsDomain("unknown.example.com");
+
+      Tuple tuple5 { "192.168.1.1", 5060, V4, TLS };
+      t = ts.findTransportBySource(tuple5, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple tuple6 { "192.168.1.1", 5100, V4, TLS };
+      t = ts.findTransportBySource(tuple6, &msg);
+      resip_assert(t == nullptr);
    }
 
    {
@@ -603,8 +704,16 @@ testFindTransportBySourceTlsTransport()
       t = ts.findTransportBySource(v6tuple2, &anotherMsg);
       resip_assert(t == nullptr);
 
-      Tuple v6tuple3 { "fe80::a00:27ff:fea3:e60e", 5060, V6, WSS };
+      Tuple v6tuple3 { "fe80::a00:27ff:fea3:e60e", 5100, V6, TLS };
       t = ts.findTransportBySource(v6tuple3, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple v6tuple4 { "fe80::a00:27ff:fea3:1111", 5100, V6, TLS };
+      t = ts.findTransportBySource(v6tuple4, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple v6tuple5 { "fe80::a00:27ff:fea3:e60e", 5060, V6, WSS };
+      t = ts.findTransportBySource(v6tuple5, &msg);
       resip_assert(t == nullptr);
 
       Tuple tuple { "192.168.1.1", 5060, V4, TLS };

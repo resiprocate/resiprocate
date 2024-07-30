@@ -1553,7 +1553,8 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
       // that does not have the cert we're attempting to use, even if the 
       // IP/port/proto match. If we have not specified which identity we want
       // to use, then proceed with the code below.
-      return findTlsTransport(msg->getTlsDomain(),search.getType(),search.ipVersion());
+      return findTlsTransport(msg->getTlsDomain(), search.getType(), search.ipVersion(),
+                              search.presentationFormat(), search.getPort());
    }
 
    bool ignorePort = (search.getPort() == 0);
@@ -1636,7 +1637,11 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
 }
 
 Transport*
-TransportSelector::findTlsTransport(const Data& domainname, TransportType type, IpVersion version) const
+TransportSelector::findTlsTransport(const Data& domainname,
+                                    TransportType type,
+                                    IpVersion version,
+                                    const Data& address,
+                                    int port) const
 {
    resip_assert(isSecure(type));
 
@@ -1650,7 +1655,9 @@ TransportSelector::findTlsTransport(const Data& domainname, TransportType type, 
          const TlsTransportKey &key = tlsTransport.first;
 
          if (key.mTuple.getType() == type &&
-             key.mTuple.ipVersion() == version)
+             key.mTuple.ipVersion() == version &&
+             key.mTuple.getPort() == port &&
+             key.mTuple.presentationFormat() == address)
          {
             DebugLog(<< "findTlsTransport (exact match) => " << *(tlsTransport.second));
             return tlsTransport.second;
@@ -1662,7 +1669,7 @@ TransportSelector::findTlsTransport(const Data& domainname, TransportType type, 
       DebugLog(<< "Searching for " << toData(type) << " transport for domain='"
                << domainname << "'. Secure transports list size = " << mTlsTransports.size());
 
-      TlsTransportKey key(domainname, type, version);
+      TlsTransportKey key(domainname, type, version, address, port);
       const auto& i = mTlsTransports.find(key);
 
       if(i != mTlsTransports.end())
