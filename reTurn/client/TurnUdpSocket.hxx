@@ -11,7 +11,7 @@
 
 namespace reTurn {
 
-   class TurnUdpSocket : public TurnSocket
+class TurnUdpSocket : public TurnSocket
 {
 public:
    explicit TurnUdpSocket(const asio::ip::address& address, unsigned short port);  

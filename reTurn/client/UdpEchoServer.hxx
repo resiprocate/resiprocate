@@ -1,38 +1,48 @@
-#ifndef CHANNELMANAGER_HXX
-#define CHANNELMANAGER_HXX
+#ifndef UDPECHOSERVER_HXX
+#define UDPECHOSERVER_HXX
 
-#include <map>
-#include "RemotePeer.hxx"
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
+
+#include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
+#include <rutil/ThreadIf.hxx>
+
+using namespace std;
+using namespace resip;
 
 namespace reTurn {
 
-#define MIN_CHANNEL_NUM 0x4000
-#define MAX_CHANNEL_NUM 0x7FFF
+   class UdpEchoServer : public resip::ThreadIf
+   {
+   public:
+      UdpEchoServer(const Data& localAddress, unsigned int port);
+      virtual ~UdpEchoServer() {}
 
-class ChannelManager
-{
-public:
-   explicit ChannelManager();
-   ~ChannelManager();
+      unsigned int getPort() { return mPort; }  // If port is passed in as 0 to constructor, this can be used to query the ephemeral port assigned
 
-   void clear();
-   RemotePeer* createChannelBinding(const StunTuple& peerTuple);
-   RemotePeer* createChannelBinding(const StunTuple& peerTuple, unsigned short channel);
+      void thread() override;
+      void shutdown() override;
 
-   RemotePeer* findRemotePeerByChannel(unsigned short channelNumber);
-   RemotePeer* findRemotePeerByPeerAddress(const StunTuple& peerAddress);
+   private:
+      void read();
+      void write();
+      void checkLog();
 
-private:
-   typedef std::map<unsigned short,RemotePeer*> ChannelRemotePeerMap;
-   typedef std::map<StunTuple,RemotePeer*> TupleRemotePeerMap;
-   ChannelRemotePeerMap mChannelRemotePeerMap;
-   TupleRemotePeerMap mTupleRemotePeerMap;
+      unsigned int mPort;
+      asio::io_context mIOContext;
+      asio::ip::udp::socket mSocket;
+      asio::ip::udp::endpoint mRemoteEndpoint;
+      char mReceiveBuffer[1500];
+      std::size_t mReceiveSize;
 
-   unsigned short getNextChannelNumber();
-   unsigned short mNextChannelNumber;
-};
-
-} 
+      unsigned int mIntervalReadCount;
+      std::chrono::time_point<chrono::steady_clock> mTimeOfFirstRead;
+   };
+}
 
 #endif
 
@@ -40,7 +50,6 @@ private:
 /* ====================================================================
 
  Copyright (c) 2024 SIP Spectrum, Inc http://www.sipspectrum.com
- Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

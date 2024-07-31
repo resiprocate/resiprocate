@@ -21,12 +21,20 @@ ChannelManager::ChannelManager()
 
 ChannelManager::~ChannelManager()
 {
+   clear();
+}
+
+void ChannelManager::clear()
+{
    // Cleanup RemotePeer Memory
-   TupleRemotePeerMap::iterator it;   
-   for(it = mTupleRemotePeerMap.begin(); it != mTupleRemotePeerMap.end(); it++)
+   TupleRemotePeerMap::iterator it;
+   for (it = mTupleRemotePeerMap.begin(); it != mTupleRemotePeerMap.end(); it++)
    {
       delete it->second;
    }
+   // Now clear both maps
+   mTupleRemotePeerMap.clear();
+   mChannelRemotePeerMap.clear();
 }
 
 unsigned short 
@@ -77,7 +85,7 @@ ChannelManager::findRemotePeerByChannel(unsigned short channelNumber)
       {
          // cleanup expired channel binding
          mTupleRemotePeerMap.erase(it->second->getPeerTuple());
-		 delete it->second;
+         delete it->second;
          mChannelRemotePeerMap.erase(it);
       }
    }
@@ -111,6 +119,7 @@ ChannelManager::findRemotePeerByPeerAddress(const StunTuple& peerAddress)
 
 /* ====================================================================
 
+ Copyright (c) 2024 SIP Spectrum, Inc http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -309,6 +309,7 @@
     <ClCompile Include="TurnTcpSocket.cxx" />
     <ClCompile Include="TurnTlsSocket.cxx" />
     <ClCompile Include="TurnUdpSocket.cxx" />
+    <ClCompile Include="UdpEchoServer.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\AsyncSocketBase.hxx" />
@@ -332,6 +333,7 @@
     <ClInclude Include="TurnTcpSocket.hxx" />
     <ClInclude Include="TurnTlsSocket.hxx" />
     <ClInclude Include="TurnUdpSocket.hxx" />
+    <ClInclude Include="UdpEchoServer.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -78,12 +78,12 @@ public:
    void connectivityCheck(const StunTuple& targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
 
    // Turn Allocation Methods
-   void createAllocation(unsigned int lifetime = UnspecifiedLifetime,
-                         unsigned int bandwidth = UnspecifiedBandwidth,
+   void createAllocation(unsigned int lifetimeSecs = UnspecifiedLifetime,
+                         unsigned int bandwidth = UnspecifiedBandwidth,  // kilobits per second
                          unsigned char requestedPortProps = StunMessage::PropsNone, 
                          uint64_t reservationToken = UnspecifiedToken,
                          StunTuple::TransportType requestedTransportType = StunTuple::None);
-   void refreshAllocation(unsigned int lifetime);
+   void refreshAllocation(unsigned int lifetimeSecs);
    void destroyAllocation();
 
    // Methods to control active destination
@@ -269,7 +269,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2023, SIP Specturm, Inc. http://sipspectrum.com
+ Copyright (c) 2023-2024, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

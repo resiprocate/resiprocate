@@ -6,15 +6,7 @@
 #pragma warning(disable : 4267)
 #endif
 
-#include <iostream>
-#include <string>
-#include <asio.hpp>
-#ifdef USE_SSL
-#include <asio/ssl.hpp>
-#endif
-#include <rutil/ThreadIf.hxx>
-
-#include "../TurnUdpSocket.hxx"
+#include "../UdpEchoServer.hxx"
 #include <rutil/Time.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
@@ -27,111 +19,6 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 // Simple Echo Server that can be used in TURN testing
-class EchoServer : public resip::ThreadIf
-{
-public:
-   EchoServer(const Data& localAddress, unsigned int port)
-      : mPort(port),
-        mSocket(mIOContext),
-        mIntervalReadCount(0)
-   {
-      asio::ip::address address = asio::ip::address::from_string(localAddress.c_str());
-      asio::error_code errorCode;
-      mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
-      if (!errorCode)
-      {
-         mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
-         mSocket.bind(asio::ip::udp::endpoint(address, port));
-      }
-      mIntervalReadCount = 0;
-      read();
-   }
-
-   void thread() override
-   {
-      mTimeOfFirstRead = chrono::steady_clock::now();
-      mIOContext.run();
-   }
-
-   void shutdown() override
-   {
-      mIOContext.stop();
-   }
-
-private:
-   void read() 
-   {
-      mSocket.async_receive_from(asio::buffer(mReceiveBuffer, sizeof(mReceiveBuffer)), mRemoteEndpoint,
-         [this](asio::error_code ec, std::size_t length) 
-         {
-            if (ec)
-            {
-               if (ec.value() == 10054 ||  // Ignore 10054 errors
-                   ec.value() == 10061)    // Ignore 10061 errors
-               {
-                  InfoLog(<< "EchoServer[" << mPort << "]: Received 10054 read error, ignoring!");
-                  read();
-                  return;
-               }
-
-               ErrLog(<< "EchoServer[" << mPort << "]: error calling async_receive_from: error=" << ec.value() << ", message=" << ec.message());
-               return;
-            }
-
-            mIntervalReadCount++;
-            checkLog();
-
-            mReceiveSize = length;
-            DebugLog(<< "EchoServer[" << mPort << "]: Received data from: " << mRemoteEndpoint << ", size=" << length);
-            if (!isShutdown())
-            {
-               write();
-            }
-         }
-      );
-   }
-
-   void write() 
-   {
-      mSocket.async_send_to(asio::buffer(mReceiveBuffer, mReceiveSize),
-         mRemoteEndpoint,
-         [this](asio::error_code ec, std::size_t length) 
-         {
-            if (ec)
-            {
-               ErrLog(<< "EchoServer[" << mPort << "]: error calling async_send_to: error=" << ec.value() << ", message=" << ec.message());
-               return;
-            }
-            if (!isShutdown())
-            {
-               read();
-            }
-         }
-      );
-   }
-
-   void checkLog()
-   {
-      std::chrono::time_point<chrono::steady_clock> now = chrono::steady_clock::now();
-      long long secondsPassed = chrono::duration_cast<chrono::seconds>(now - mTimeOfFirstRead).count();
-      if (secondsPassed > 30)
-      {
-         InfoLog(<< "EchoServer[" << mPort << "]: Echo'd " << mIntervalReadCount << " packets in the last " << secondsPassed << " seconds.");
-         mIntervalReadCount = 0;
-         mTimeOfFirstRead = now;
-      }
-   }
-
-   unsigned int mPort;
-   asio::io_context mIOContext;
-   asio::ip::udp::socket mSocket;
-   asio::ip::udp::endpoint mRemoteEndpoint;
-   char mReceiveBuffer[1500];
-   int mReceiveSize;
-
-   unsigned int mIntervalReadCount;
-   std::chrono::time_point<chrono::steady_clock> mTimeOfFirstRead;
-};
 
 class EchoServerConfig : public ConfigParse
 {
@@ -178,12 +65,12 @@ int main(int argc, char* argv[])
       InfoLog(<< "Using: LocalAddress=" << localAddress << ", StartingPort=" << startingPort << ", PortIncrement=" << portIncrement << ", NumPorts=" << numPorts);
 
       // Start Echo servers
-      std::list<EchoServer*> echoServers;
+      std::list<UdpEchoServer*> echoServers;
       for (unsigned int i = 0; i < numPorts; i++)
       {
 
          unsigned int port = startingPort + (portIncrement * i);
-         EchoServer* echoServer = new EchoServer(localAddress, port);
+         UdpEchoServer* echoServer = new UdpEchoServer(localAddress, port);
          echoServer->run();
          echoServers.push_back(echoServer);
          InfoLog(<< "EchoServer started " << localAddress << ":" << port);
@@ -223,7 +110,7 @@ int main(int argc, char* argv[])
 
 /* ====================================================================
 
- Copyright (c) 2023, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2023-2024, SIP Spectrum, Inc. http://sipspectrum.com
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

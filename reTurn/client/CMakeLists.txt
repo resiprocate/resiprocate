@@ -9,6 +9,7 @@ set(INCLUDES
    TurnTcpSocket.hxx
    TurnTlsSocket.hxx
    TurnUdpSocket.hxx
+   UdpEchoServer.hxx
 )
 
 add_library(reTurnClient
@@ -21,6 +22,7 @@ add_library(reTurnClient
    TurnTcpSocket.cxx
    TurnTlsSocket.cxx
    TurnUdpSocket.cxx
+   UdpEchoServer.cxx
 
    ${INCLUDES}
 )

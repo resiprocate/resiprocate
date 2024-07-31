@@ -176,17 +176,17 @@ TurnAsyncSocket::doConnectivityCheck(StunTuple* targetAddr, uint32_t peerRflxPri
 }
 
 void
-TurnAsyncSocket::createAllocation(unsigned int lifetime,
-                                  unsigned int bandwidth,
+TurnAsyncSocket::createAllocation(unsigned int lifetimeSecs,
+                                  unsigned int bandwidth,  // Kilobits per second
                                   unsigned char requestedProps, 
                                   uint64_t reservationToken,
                                   StunTuple::TransportType requestedTransportType)
 {
-    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doCreateAllocation(lifetime, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
+    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doCreateAllocation(lifetimeSecs, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
 }
 
 void
-TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
+TurnAsyncSocket::doCreateAllocation(unsigned int lifetimeSecs,
                                     unsigned int bandwidth,
                                     unsigned char requestedProps, 
                                     uint64_t reservationToken,
@@ -222,10 +222,10 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
 
    // Form Turn Allocate request
    StunMessage* request = createNewStunMessage(StunMessage::StunClassRequest, StunMessage::TurnAllocateMethod);
-   if(lifetime != UnspecifiedLifetime)
+   if(lifetimeSecs != UnspecifiedLifetime)
    {
       request->mHasTurnLifetime = true;
-      request->mTurnLifetime = lifetime;
+      request->mTurnLifetime = lifetimeSecs;
    }
 
    if(bandwidth != UnspecifiedBandwidth)
@@ -271,13 +271,13 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
 }
    
 void 
-TurnAsyncSocket::refreshAllocation(unsigned int lifetime)
+TurnAsyncSocket::refreshAllocation(unsigned int lifetimeSecs)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doRefreshAllocation(lifetime); }));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doRefreshAllocation(lifetimeSecs); }));
 }
 
 void 
-TurnAsyncSocket::doRefreshAllocation(unsigned int lifetime)
+TurnAsyncSocket::doRefreshAllocation(unsigned int lifetimeSecs)
 {
    if(!mHaveAllocation)
    {
@@ -287,7 +287,6 @@ TurnAsyncSocket::doRefreshAllocation(unsigned int lifetime)
       }
       if(mCloseAfterDestroyAllocationFinishes)
       {
-         mHaveAllocation = false;
          actualClose();
       }
       return;
@@ -295,10 +294,10 @@ TurnAsyncSocket::doRefreshAllocation(unsigned int lifetime)
 
    // Form Turn Refresh request
    StunMessage* request = createNewStunMessage(StunMessage::StunClassRequest, StunMessage::TurnRefreshMethod);
-   if(lifetime != UnspecifiedLifetime)
+   if(lifetimeSecs != UnspecifiedLifetime)
    {
       request->mHasTurnLifetime = true;
-      request->mTurnLifetime = lifetime;
+      request->mTurnLifetime = lifetimeSecs;
    }
    //if(mRequestedBandwidth != UnspecifiedBandwidth)
    //{
@@ -1020,6 +1019,7 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage &request, StunMessage &respon
       {
          cancelAllocationTimer();
          mHaveAllocation = false;
+         mChannelManager.clear();
          {
             RecursiveLock lock(mHandlerMutex);
             if (mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshSuccess(getSocketDescriptor(), 0);
@@ -1049,6 +1049,7 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage &request, StunMessage &respon
          {
             cancelAllocationTimer();
             mHaveAllocation = false;
+            mChannelManager.clear();
          }
       }
       else
@@ -1470,7 +1471,7 @@ TurnAsyncSocket::setOnBeforeSocketClosedFp(AsyncSocketBase::BeforeClosedHandler 
 
 /* ====================================================================
 
- Copyright (c) 2023, SIP Specturm, Inc. http://sipspectrum.com
+ Copyright (c) 2023-2024, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

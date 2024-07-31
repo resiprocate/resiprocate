@@ -29,10 +29,10 @@ public:
    virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple) = 0; 
    virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple) = 0;
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, uint64_t reservationToken) = 0; 
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetimeSecs, unsigned int bandwidth, uint64_t reservationToken) = 0; 
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
-   virtual void onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime) = 0;
+   virtual void onRefreshSuccess(unsigned int socketDesc, unsigned int lifetimeSecs) = 0;
    virtual void onRefreshFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
    virtual void onSetActiveDestinationSuccess(unsigned int socketDesc) = 0;
@@ -63,6 +63,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2024 SIP Spectrum, Inc http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
