@@ -10,5 +10,5 @@ function(test)
    target_link_libraries(${ARGV0} reTurnClient)
 endfunction()
 
-manual_test(TurnLoadGenClient TurnLoadGenClient.cxx)
+manual_test(TurnLoadGenClient TurnLoadGenClient.cxx TurnLoadGenAsyncSocketHandler.cxx)
 

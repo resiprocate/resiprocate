@@ -13,8 +13,6 @@ using namespace reTurn;
 using namespace std;
 using namespace resip;
 
-extern resip::Data* g_Payload;
-
 class TurnLoadGenAsyncSocketHandler : public TurnAsyncSocketHandler
 {
 public:

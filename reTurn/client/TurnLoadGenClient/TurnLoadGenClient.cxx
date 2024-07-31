@@ -51,6 +51,8 @@ void sleepMS(unsigned int ms)
 #endif
 }
 
+extern resip::Data* g_Payload;
+
 class TurnLoadGenConfig : public ConfigParse
 {
    void printHelpText(int argc, char** argv) override
