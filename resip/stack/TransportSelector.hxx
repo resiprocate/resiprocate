@@ -193,12 +193,14 @@ class TransportSelector
             TlsTransportKey();
       };
 
+   protected:  // for unit tests (testTransportSelector)
+      Transport* findTransportBySource(Tuple& src, const SipMessage* msg) const;
+      Transport* findTransportByDest(const Tuple& dest);
+
    private:
       void checkTransportAddRemoveQueue();
       Connection* findConnection(const Tuple& dest) const;
-      Transport* findTransportBySource(Tuple& src, const SipMessage* msg) const;
       Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
-      Transport* findTransportByDest(const Tuple& dest);
       Transport* findTransportByVia(SipMessage* msg, const Tuple& dest, Tuple& src) const;
       Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv) const;
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;

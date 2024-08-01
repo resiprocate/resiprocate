@@ -516,6 +516,7 @@
     <ClCompile Include="DnsResult.cxx" />
     <ClCompile Include="DtlsMessage.cxx" />
     <ClCompile Include="DtmfPayloadContents.cxx" />
+    <ClCompile Include="ReceivedParameter.cxx" />
     <ClCompile Include="ssl\DtlsTransport.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -719,6 +720,7 @@
     <ClInclude Include="InvokeAfterSocketCreationFunc.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="MessageDecorator.hxx" />
+    <ClInclude Include="ReceivedParameter.hxx" />
     <ClInclude Include="RemoveTransport.hxx" />
     <ClInclude Include="ssl\DtlsTransport.hxx" />
     <ClInclude Include="Embedded.hxx" />

@@ -427,6 +427,9 @@
       <Filter>DNS</Filter>
     </ClCompile>
     <ClCompile Include="TrickleIceContents.cxx" />
+    <ClCompile Include="ReceivedParameter.cxx">
+      <Filter>SIPParameters</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ssl\WinSecurity.hxx" />
@@ -906,6 +909,9 @@
       <Filter>DNS</Filter>
     </ClInclude>
     <ClInclude Include="TrickleIceContents.hxx" />
+    <ClInclude Include="ReceivedParameter.hxx">
+      <Filter>SIPParameters</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf">
