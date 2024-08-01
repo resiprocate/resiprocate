@@ -10,6 +10,7 @@
 #include "resip/stack/QValueParameter.hxx"
 #include "resip/stack/ExistsParameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
+#include "resip/stack/ReceivedParameter.hxx"
 #include "resip/stack/RportParameter.hxx"
 #include "resip/stack/Symbols.hxx"
 
@@ -146,7 +147,7 @@ defineParam2(purpose, "purpose", DataParameter, GenericUri, TokenOrQuotedStringC
 defineParam3(q, "q", QValueParameter, NameAddr, Token, Mime, "RFC 3261");
 defineParam(realm, "realm", QuotedDataParameter, Auth, "RFC 2617");
 defineParam(reason, "reason", DataParameter, Token, "RFC 3265");
-defineParam(received, "received", DataParameter, Via, "RFC 3261");
+defineParam(received, "received", ReceivedParameter, Via, "RFC 3261");
 defineParam(require, "require", ExistsParameter, Token, "RFC 5373");
 defineParam(response, "response", QuotedDataParameter, Auth, "RFC 3261");
 defineParam(retryAfter, "retry-after", UInt32Parameter, Token, "RFC 3265");

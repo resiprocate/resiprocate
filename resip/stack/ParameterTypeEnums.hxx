@@ -108,7 +108,7 @@ class ParameterTypes
 
          defineParam(realm, "realm", QuotedDataParameter, "RFC ????"),
          defineParam(reason, "reason", DataParameter, "RFC ????"),
-         defineParam(received, "received", DataParameter, "RFC ????"),
+         defineParam(received, "received", ReceivedParameter, "RFC 3261"),
          defineParam(require, "require", ExistsParameter, "RFC 5373"),
          defineParam(response, "response", QuotedDataParameter, "RFC ????"),
          defineParam(retryAfter, "retry-after", UInt32Parameter, "RFC ????"),
