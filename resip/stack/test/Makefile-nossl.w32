@@ -49,6 +49,7 @@ all: \
 	testTime.obj testTime.exe \
 	testTimer.obj testTimer.exe \
 #	testTransactionFSM.obj testTransactionFSM.exe \
+    testTransportSelector.obj testTransportSelector.exe \
 	testTuple.obj testTuple.exe \
 	testTypedef.obj testTypedef.exe \
 	testUdp.obj testUdp.exe \

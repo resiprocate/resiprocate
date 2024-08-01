@@ -5,7 +5,6 @@
 #include "resip/stack/UdpTransport.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
-#define private public
 #include "resip/stack/TransportSelector.hxx"
 
 using namespace resip;
@@ -16,7 +15,7 @@ class TestUdpTransport : public UdpTransport
 {
    public:
       TestUdpTransport(Fifo<TransactionMessage>& rxFifo,
-                       const uint transportKey,
+                       const unsigned int transportKey,
                        int portNum,
                        IpVersion version,
                        const Data& interfaceObj) :
@@ -36,7 +35,7 @@ class TestTcpTransport : public TcpTransport
 {
    public:
       TestTcpTransport(Fifo<TransactionMessage>& rxFifo,
-                       const uint transportKey,
+                       const unsigned int transportKey,
                        int portNum,
                        IpVersion version,
                        const Data& interfaceObj) :
@@ -61,10 +60,10 @@ class TestTransportSelector : public TransportSelector
 
       ~TestTransportSelector() override = default;
 
-      uint addTransport(const Data &interfaceObj, int portNum, IpVersion version, TransportType ttype)
+      unsigned int addTransport(const Data &interfaceObj, int portNum, IpVersion version, TransportType ttype)
       {
          std::unique_ptr<Transport> transport;
-         uint actualTransportKey = mNextTransportKey;
+         unsigned int actualTransportKey = mNextTransportKey;
 
          if (ttype == UDP)
          {
@@ -85,17 +84,28 @@ class TestTransportSelector : public TransportSelector
          return actualTransportKey;
       }
 
+      // Expose private methods
+      Transport* findTransportBySource(Tuple& src, const SipMessage* msg) const
+      {
+         return TransportSelector::findTransportBySource(src, msg);
+      }
+      
+      Transport* findTransportByDest(const Tuple& dest)
+      {
+         return TransportSelector::findTransportByDest(dest);
+      }
+
    private:
       static Fifo<TransactionMessage> mFifo;
       static DnsStub mDnsStub;
       static Compression mCompression;
-      static uint mNextTransportKey;
+      static unsigned int mNextTransportKey;
 };
 
 Fifo<TransactionMessage> TestTransportSelector::mFifo;
 DnsStub TestTransportSelector::mDnsStub;
 Compression TestTransportSelector::mCompression = Compression::NONE;
-uint TestTransportSelector::mNextTransportKey = 1;
+unsigned int TestTransportSelector::mNextTransportKey = 1;
 
 void
 testFindTransportBySource()
