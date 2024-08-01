@@ -2112,8 +2112,8 @@ main(int arc, char** argv)
    }
 
    {
-      TR _tr("Branch testing 1");
-      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
+      TR _tr("Via testing 1");
+      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj;ttl=70";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(hfv, Headers::UNKNOWN);
       
@@ -2124,13 +2124,12 @@ main(int arc, char** argv)
       
       via.param(p_rport);
       assert (via.exists(p_rport));      
-      assert (via.exists(p_rport));      
       assert (!via.param(p_rport).hasValue());
    }
 
    {
-      TR _tr("Branch testing 2");
-      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport";
+      TR _tr("Via testing 2 with empty parameters");
+      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj;ttl=70;rport;received";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(hfv, Headers::UNKNOWN);
       
@@ -2139,11 +2138,28 @@ main(int arc, char** argv)
       assert (via.param(p_ttl) == 70);
       assert (via.exists(p_rport));
       assert (!via.param(p_rport).hasValue());
+      assert (via.exists(p_received));
+      assert (via.param(p_received).empty());
    }
 
    {
-      TR _tr("Branch testing 3");
-      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport=100";
+      TR _tr("Via testing 2 with non-RFC empty parameters");
+      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj;ttl=70;rport=;received=";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(hfv, Headers::UNKNOWN);
+
+      assert (via.param(p_branch).hasMagicCookie());
+      assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
+      assert (via.param(p_ttl) == 70);
+      assert (via.exists(p_rport));
+      assert (!via.param(p_rport).hasValue());
+      assert (via.exists(p_received));
+      assert (via.param(p_received).empty());
+   }
+
+   {
+      TR _tr("Via testing 3");
+      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj;ttl=70;rport=100;received=1.2.3.4";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(hfv, Headers::UNKNOWN);
       
@@ -2153,6 +2169,8 @@ main(int arc, char** argv)
       assert (via.exists(p_rport));
       assert (via.param(p_rport).hasValue());
       assert (via.param(p_rport).port() == 100);
+      assert (via.exists(p_received));
+      assert (via.param(p_received) == "1.2.3.4");
    }
 
    {

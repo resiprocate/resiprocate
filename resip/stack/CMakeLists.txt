@@ -101,6 +101,7 @@ set(INCLUDES
    QValue.hxx
    QValueParameter.hxx
    RAckCategory.hxx
+   ReceivedParameter.hxx
    RemoveTransport.hxx
    RequestLine.hxx
    Rlmi.hxx
@@ -276,6 +277,7 @@ add_library(resip
    PrivacyCategory.cxx
    QuotedDataParameter.cxx
    RAckCategory.cxx
+   ReceivedParameter.cxx
    Rlmi.cxx
    RportParameter.cxx
    SERNonceHelper.cxx
