@@ -1547,15 +1547,14 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
 {
    DebugLog(<< "findTransportBySource(" << search << ")");
 
-   if(msg && 
-      !msg->getTlsDomain().empty() && 
-      isSecure(search.getType()))
+   if(msg && isSecure(search.getType()))
    {
       // We should not be willing to attempt sending on a TLS/DTLS/WSS transport 
       // that does not have the cert we're attempting to use, even if the 
       // IP/port/proto match. If we have not specified which identity we want
       // to use, then proceed with the code below.
-      return findTlsTransport(msg->getTlsDomain(),search.getType(),search.ipVersion());
+      return findTlsTransport(msg->getTlsDomain(), search.getType(), search.ipVersion(),
+                              search.presentationFormat(), search.getPort());
    }
 
    bool ignorePort = (search.getPort() == 0);
@@ -1638,37 +1637,50 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
 }
 
 Transport*
-TransportSelector::findTlsTransport(const Data& domainname, TransportType type, IpVersion version) const
+TransportSelector::findTlsTransport(const Data& domainname,
+                                    TransportType type,
+                                    IpVersion version,
+                                    const Data& address,
+                                    int port) const
 {
    resip_assert(isSecure(type));
-   DebugLog(<< "Searching for " << toData(type) << " transport for domain='"
-                  << domainname << "'" << " have " << mTlsTransports.size());
 
    if (domainname == Data::Empty)
    {
-      for(TlsTransportMap::const_iterator i=mTlsTransports.begin(); i != mTlsTransports.end();++i)
+      DebugLog(<< "Searching for " << toData(type) << " transport without domain."
+               << " Secure transports list size = " << mTlsTransports.size());
+
+      for(const auto& tlsTransport : mTlsTransports)
       {
-         if(i->first.mTuple.getType() == type && i->first.mTuple.ipVersion() == version)
+         const TlsTransportKey &key = tlsTransport.first;
+
+         if (key.mTuple.getType() == type &&
+             key.mTuple.ipVersion() == version &&
+             key.mTuple.getPort() == port &&
+             key.mTuple.presentationFormat() == address)
          {
-            DebugLog(<<"Found a default transport.");
-            return i->second;
+            DebugLog(<< "findTlsTransport (exact match) => " << *(tlsTransport.second));
+            return tlsTransport.second;
          }
       }
    }
    else
    {
-      TlsTransportKey key(domainname, type, version);
-      TlsTransportMap::const_iterator i=mTlsTransports.find(key);
+      DebugLog(<< "Searching for " << toData(type) << " transport for domain='"
+               << domainname << "'. Secure transports list size = " << mTlsTransports.size());
 
-      if(i!=mTlsTransports.end())
+      TlsTransportKey key(domainname, type, version, address, port);
+      const auto& i = mTlsTransports.find(key);
+
+      if(i != mTlsTransports.end())
       {
-         DebugLog(<< "Found a transport.");
+         DebugLog(<< "findTlsTransport (domain match) => " << *(i->second));
          return i->second;
       }
    }
 
-   DebugLog(<<"No transport found.");
-   return 0;
+   DebugLog(<< "No TLS transport found");
+   return nullptr;
 }
 
 unsigned int
