@@ -89,13 +89,14 @@ class Transport : public FdSetIOObserver
           virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data) {}
           virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg) = 0;
       };
-      typedef std::vector<std::shared_ptr<SipMessageLoggingHandler> > SipMessageLoggingHandlerList;
 
-      void setSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler) noexcept { mSipMessageLoggingHandlers.clear(); mSipMessageLoggingHandlers.push_back(handler); }
-      void addSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler) noexcept { mSipMessageLoggingHandlers.push_back(handler); }
-      void setSipMessageLoggingHandlers(const SipMessageLoggingHandlerList& handlers) { mSipMessageLoggingHandlers = handlers; };
-      void unsetSipMessageLoggingHandler() noexcept { mSipMessageLoggingHandlers.clear(); }
-      SipMessageLoggingHandlerList getSipMessageLoggingHandlers() const noexcept { return mSipMessageLoggingHandlers; }
+      using SipMessageLoggingHandlerList = std::vector<std::shared_ptr<SipMessageLoggingHandler> >;
+
+      void setSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler);
+      void addSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler);
+      void setSipMessageLoggingHandlers(const SipMessageLoggingHandlerList& handlers);
+      void unsetSipMessageLoggingHandler() noexcept;
+      SipMessageLoggingHandlerList getSipMessageLoggingHandlers() const noexcept;
 
       /**
          @brief General exception class for Transport.
