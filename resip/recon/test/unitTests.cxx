@@ -617,9 +617,9 @@ public:
 
    void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override
    {
-      // InfoLog(<< "onApplicationTimeout: id=" << id
-      //         << " dur=" << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
-      //         << " seq=" << seq);
+      InfoLog(<< "onApplicationTimeout: id=" << id
+              << " dur=" << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
+              << " seq=" << seq);
       BobConversationManager* bcm = dynamic_cast<BobConversationManager*>(getConversationManager());
       if(bcm)
       {
@@ -813,8 +813,8 @@ main (int argc, char** argv)
    sdpTests();
 #endif
 
-   Log::initialize(Log::Cout, LOG_LEVEL, argv[0]);
-   //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
+   // Log::initialize(Log::Cout, LOG_LEVEL, argv[0]);
+   Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
    initNetwork();
 
    cout << "Tests for sipXConversationMediaInterfaceMode" << endl;
