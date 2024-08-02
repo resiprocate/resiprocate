@@ -6,7 +6,7 @@ function(test)
 endfunction()
 
 test(sdpTests sdpTests.cxx)
-#[[test(unitTests unitTests.cxx) These are failing - TODO - fix me]]
+test(unitTests unitTests.cxx)
 
 add_executable(testUA
    testUA.cxx
