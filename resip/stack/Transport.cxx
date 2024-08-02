@@ -27,6 +27,44 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
+void
+Transport::setSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler)
+{
+   mSipMessageLoggingHandlers.clear();
+
+   if (handler)
+   {
+      mSipMessageLoggingHandlers.push_back(handler);
+   }
+}
+
+void
+Transport::addSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler)
+{
+   if (handler)
+   {
+      mSipMessageLoggingHandlers.push_back(handler);
+   }
+}
+
+void
+Transport::setSipMessageLoggingHandlers(const SipMessageLoggingHandlerList& handlers)
+{
+   mSipMessageLoggingHandlers = handlers;
+}
+
+void
+Transport::unsetSipMessageLoggingHandler() noexcept
+{
+   mSipMessageLoggingHandlers.clear();
+}
+
+Transport::SipMessageLoggingHandlerList
+Transport::getSipMessageLoggingHandlers() const noexcept
+{
+   return mSipMessageLoggingHandlers;
+}
+
 Transport::Exception::Exception(const Data& msg, const Data& file, const int line) :
    BaseException(msg,file,line)
 {

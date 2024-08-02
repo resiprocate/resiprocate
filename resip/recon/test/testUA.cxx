@@ -94,9 +94,11 @@ public:
    MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
       UserAgent(conversationManager, profile) {}
     
-   virtual void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override
+   void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override
    {
-      InfoLog(LOG_PREFIX << "onApplicationTimeout: id=" << id << " dur=" << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << "ms seq=" << seq);
+      InfoLog(LOG_PREFIX << "onApplicationTimeout: id=" << id
+              << " dur=" << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
+              << "ms seq=" << seq);
    }
 
    virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode) override

@@ -24,7 +24,7 @@ class MyUserAgent : public recon::UserAgent
 {
 public:
    MyUserAgent(reconserver::ReConServerConfig& configParse, recon::ConversationManager* conversationManager, std::shared_ptr<recon::UserAgentMasterProfile> profile);
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
+   void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override;
    virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
    virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
    virtual std::shared_ptr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);

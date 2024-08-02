@@ -50,9 +50,11 @@ tr::MyUserAgent::MyUserAgent(ConversationManager* conversationManager, std::shar
 }
 
 void
-tr::MyUserAgent::onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+tr::MyUserAgent::onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq)
 {
-   InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+   InfoLog(<< "onApplicationTimeout: id=" << id
+           << " dur=" << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
+           << " seq=" << seq);
 }
 
 void
