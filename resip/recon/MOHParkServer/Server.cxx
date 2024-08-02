@@ -63,7 +63,7 @@ public:
       UserAgent(&server, profile, socketFunc),
       mServer(server) {}
 
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+   void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override
    {
       if(id == MAXPARKTIMEOUT)
       {
@@ -71,7 +71,9 @@ public:
       }
       else
       {
-         InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+         InfoLog(<< "onApplicationTimeout: id=" << id
+                 << " dur=" << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
+                 << " seq=" << seq);
       }
       
    }
