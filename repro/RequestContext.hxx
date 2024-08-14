@@ -1,6 +1,7 @@
 #if !defined(RESIP_REQUEST_CONTEXT_HXX)
 #define RESIP_REQUEST_CONTEXT_HXX 
 
+#include <memory>
 #include <vector>
 #include <iosfwd>
 #include "resip/stack/Uri.hxx"
@@ -100,7 +101,7 @@ class RequestContext
       resip::NameAddr mTopRoute;
       bool mTopRouteFlowTupleSet;       // Provided so caller can avoid needing to compare mTopRouteFlowTuple to and empty Tuple() to check if set or not
       resip::Tuple mTopRouteFlowTuple;  // extracted from mTopRoute if valid Flow-Token is present
-      ResponseContext mResponseContext;
+      std::unique_ptr<ResponseContext> mResponseContext;
       bool mSessionCreatedEventSent;
       bool mSessionEstablishedEventSent;
       resip::KeyValueStore mKeyValueStore;
