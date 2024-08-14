@@ -35,7 +35,7 @@ class ResponseContext
             bool operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const;
       };      
       
-      ~ResponseContext();
+      virtual ~ResponseContext();
 
       /**
          Adds this Target as a SimpleTarget to the collection of Targets.
@@ -228,7 +228,7 @@ class ResponseContext
       std::list<std::list<resip::Data> > mTransactionQueueCollection;
       resip::Data mCurrentResponseTid;
 
-   private:
+   protected:
       // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
 
@@ -285,7 +285,7 @@ class ResponseContext
       static const int TimerCSerialInit = 0;
       std::unordered_map<resip::Data, int> mTimerCSerial; // Keeping track of the latest TimerC for each of the client TXs
 
-      void forwardBestResponse();
+      virtual void forwardBestResponse();
 
       friend class RequestContext;
       friend EncodeStream& operator<<(EncodeStream& strm, const repro::ResponseContext& rc);

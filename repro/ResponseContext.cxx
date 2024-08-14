@@ -1533,8 +1533,8 @@ ResponseContext::forwardBestResponse()
    
    if(mBestResponse.header(h_StatusLine).statusCode() == 503)
    {
-      //See RFC 3261 sec 16.7, page 110, paragraph 2
-      mBestResponse.header(h_StatusLine).statusCode() = 480;
+      // See RFC 3261 sec 16.7, page 111, paragraph 2
+      mBestResponse.header(h_StatusLine).statusCode() = 500;
    }
 
    if(mBestResponse.header(h_StatusLine).statusCode() == 408 &&
