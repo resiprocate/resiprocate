@@ -62,5 +62,7 @@ add_library(tfdum
 
 target_link_libraries(tfdum PUBLIC tfmrepro)
 
-test(TestLamba TestLamba.cxx)
-test(dumTests dumTests.cxx)
+if(BUILD_TESTING)
+    test(TestLamba TestLamba.cxx)
+    test(dumTests dumTests.cxx)
+endif()

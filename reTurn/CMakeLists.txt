@@ -85,4 +85,6 @@ install(FILES psql-user-extract DESTINATION ${INSTALL_RETURN_PKGLIB_DIR})
 install(FILES reTurnServer.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
 
 add_subdirectory(client)
-add_subdirectory(test)
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()

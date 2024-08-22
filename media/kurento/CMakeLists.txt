@@ -28,4 +28,6 @@ version_libname(kurentoclient)
 install(TARGETS kurentoclient DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/media/kurento ${INCLUDES})
 
-add_subdirectory(test)
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()

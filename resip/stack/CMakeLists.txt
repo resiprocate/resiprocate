@@ -412,4 +412,6 @@ set_target_properties(resip PROPERTIES FOLDER resip)
 install(TARGETS resip DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/resip/stack ${INCLUDES})
 
-add_subdirectory(test)
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()
