@@ -257,4 +257,6 @@ if(NOT WITH_C_ARES)
    add_subdirectory(dns/ares)
 endif()
 
-add_subdirectory(test)
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()

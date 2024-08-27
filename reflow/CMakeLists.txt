@@ -44,4 +44,6 @@ version_libname(reflow)
 install(TARGETS reflow DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/reflow ${INCLUDES})
 
-add_subdirectory(dtls_wrapper/test)
+if(BUILD_TESTING)
+    add_subdirectory(dtls_wrapper/test)
+endif()

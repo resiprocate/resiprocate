@@ -24,7 +24,9 @@ target_include_directories(tfmrepro PRIVATE ${POPT_INCLUDE_DIRS})
 target_link_libraries(tfmrepro PUBLIC repro tfm ${POPT_LIBRARIES})
 version_libname(tfmrepro)
 
-test(sanityTests sanityTests.cxx)
+if(BUILD_TESTING)
+    test(sanityTests sanityTests.cxx)
+endif()
 
 install(TARGETS tfmrepro DESTINATION ${CMAKE_INSTALL_LIBDIR})
 

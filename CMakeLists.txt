@@ -39,8 +39,6 @@ include(GNUInstallDirs)
 include(Utilities)
 include(CheckStructHasMember)
 
-enable_testing()
-
 # Library version file generation.
 add_definitions(-DHAVE_VERSION_H)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version.h.cmake
@@ -132,6 +130,7 @@ option(BUILD_PYTHON "Build components requiring Python" FALSE)
 option(BUILD_QPID_PROTON "Build components requiring qpid-proton (AMQP)" TRUE)
 option(RESIP_ASSERT_SYSLOG "Log assertion failures with Syslog" TRUE)
 option(REGENERATE_MEDIA_SAMPLES "Regenerate the header files containing raw audio samples (requires sox, xxd)" TRUE)
+option(BUILD_TESTING "Build manual & unit tests" TRUE)
 
 set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20 CACHE STRING "recon: Maximum connections on bridge")
 
@@ -176,6 +175,10 @@ option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
 option(USE_NUGET "Use NuGet package manager" ${USE_NUGET_DEFAULT})
 
 set(CMAKE_CXX_STANDARD 11)
+
+if(BUILD_TESTING)
+    enable_testing()
+endif()
 
 ########################
 ### Helper functions ###

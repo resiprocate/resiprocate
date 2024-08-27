@@ -206,4 +206,6 @@ set_target_properties(dum PROPERTIES FOLDER resip)
 install(TARGETS dum DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/resip/dum ${INCLUDES})
 
-add_subdirectory(test)
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()
