@@ -329,8 +329,24 @@ SipStack::reloadCertificates()
 }
 
 void
-SipStack::addTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept
+SipStack::setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler)
 {
+   mTransportSipMessageLoggingHandlers.clear();
+
+   if (handler)
+   {
+      mTransportSipMessageLoggingHandlers.push_back(handler);
+   }
+}
+
+void
+SipStack::addTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler)
+{
+   if (!handler)
+   {
+      return;
+   }
+
    mTransportSipMessageLoggingHandlers.push_back(handler);
    for(auto& t : mNonSecureTransports)
    {
