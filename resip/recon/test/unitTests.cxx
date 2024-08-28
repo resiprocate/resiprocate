@@ -635,12 +635,12 @@ public:
       }
    }
 
-   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode)
+   void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode) override
    {
       InfoLog(<< "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
    }
 
-   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
+   void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData) override
    {
       InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }

@@ -101,12 +101,12 @@ public:
               << "ms seq=" << seq);
    }
 
-   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode) override
+   void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode) override
    {
       InfoLog(LOG_PREFIX << "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
    }
 
-   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData) override
+   void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData) override
    {
       InfoLog(LOG_PREFIX << "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
@@ -153,28 +153,28 @@ public:
       }      
    }
 
-   virtual void onConversationDestroyed(ConversationHandle convHandle) override
+   void onConversationDestroyed(ConversationHandle convHandle) override
    {
       InfoLog(LOG_PREFIX << "onConversationDestroyed: handle=" << convHandle);
    }
 
-   virtual void onParticipantDestroyed(ParticipantHandle partHandle)
+   void onParticipantDestroyed(ParticipantHandle partHandle) override
    {
       // Should never get called if version of onParticipantDestroyed below is implemented
       assert(false);
    }
 
-   virtual void onParticipantDestroyed(ParticipantHandle partHandle, ParticipantType partType) override
+   void onParticipantDestroyed(ParticipantHandle partHandle, ParticipantType partType) override
    {
       InfoLog(LOG_PREFIX << "onParticipantDestroyed: handle=" << partHandle << ", type=" << ConversationManager::participantTypeToString(partType));
    }
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) override
+   void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) override
    {
       InfoLog(LOG_PREFIX << "onDtmfEvent: handle=" << partHandle << " tone=" << dtmf << " dur=" << duration << " up=" << up);
    }
 
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
+   void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
    {
       InfoLog(LOG_PREFIX << "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << OUTPUTMSG);
       if(autoAnswerEnabled)
@@ -214,7 +214,7 @@ public:
       }
    }
 
-   virtual void onIncomingIMPagerParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, ConversationProfile& conversationProfile) override
+   void onIncomingIMPagerParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, ConversationProfile& conversationProfile) override
    {
       InfoLog(LOG_PREFIX << "onIncomingIMPagerParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
       if (autoAnswerEnabled)
@@ -223,7 +223,7 @@ public:
       }
    }
 
-   virtual void onIncomingIMSessionParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
+   void onIncomingIMSessionParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
    {
       InfoLog(LOG_PREFIX << "onIncomingIMSessionParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << OUTPUTMSG);
       if (autoAnswerEnabled)
@@ -232,7 +232,7 @@ public:
       }
    }
 
-   virtual bool onReceiveIMFromParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg) override
+   bool onReceiveIMFromParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg) override
    {
       InfoLog(LOG_PREFIX << "onReceiveIMFromParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
       PlainContents* plainContents = dynamic_cast<PlainContents*>(msg.getContents());
@@ -243,12 +243,12 @@ public:
       return true;
    }
    
-   virtual void onParticipantSendIMFailure(ParticipantHandle partHandle, const SipMessage& msg, std::unique_ptr<Contents> contents) override
+   void onParticipantSendIMFailure(ParticipantHandle partHandle, const SipMessage& msg, std::unique_ptr<Contents> contents) override
    {
       InfoLog(LOG_PREFIX << "onParticipantSendIMFailure: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
 
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile) override
+   void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile) override
    {
       InfoLog(LOG_PREFIX << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
       /*
@@ -259,55 +259,55 @@ public:
       }*/
    }
 
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode) override
+   void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       // Should never get called if version of onParticipantTerminated below is implemented
       assert(false);
    }
 
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode, const resip::Data& reason) override
+   void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode, const resip::Data& reason) override
    {
       InfoLog(LOG_PREFIX << "onParticipantTerminated: handle=" << partHandle << ", statusCode=" << statusCode << ", reason=" << reason);
    }
     
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg) override
+   void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(LOG_PREFIX << "onParticipantProceeding: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
 
-   virtual void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
+   void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
                                       ConversationHandle origConvHandle, ParticipantHandle origPartHandle) override
    {
       InfoLog(LOG_PREFIX << "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
               << " origConvHandle=" << origConvHandle << " origPartHandle=" << origPartHandle);
    }
 
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg) override
+   void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(LOG_PREFIX << "onParticipantAlerting: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
     
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg) override
+   void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(LOG_PREFIX << "onParticipantConnected: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
 
-   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle) override
+   void onParticipantRedirectSuccess(ParticipantHandle partHandle) override
    {
       InfoLog(LOG_PREFIX << "onParticipantRedirectSuccess: handle=" << partHandle);
    }
 
-   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode) override
+   void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(LOG_PREFIX << "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
    }
 
-   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override
+   void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override
    {
       InfoLog(LOG_PREFIX << "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
    }
 
-   virtual void onApplicationTimer(unsigned int timerId, unsigned int sequenceId, unsigned int timerData2) override
+   void onApplicationTimer(unsigned int timerId, unsigned int sequenceId, unsigned int timerData2) override
    {
       InfoLog(LOG_PREFIX << "onApplicationTimer: timerId=" << timerId << " sequenceId=" << sequenceId);
    }

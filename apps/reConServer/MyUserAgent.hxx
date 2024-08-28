@@ -25,11 +25,11 @@ class MyUserAgent : public recon::UserAgent
 public:
    MyUserAgent(reconserver::ReConServerConfig& configParse, recon::ConversationManager* conversationManager, std::shared_ptr<recon::UserAgentMasterProfile> profile);
    void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override;
-   virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
-   virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
-   virtual std::shared_ptr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);
+   void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode) override;
+   void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData) override;
+   std::shared_ptr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg) override;
    virtual std::shared_ptr<recon::ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
-   virtual void process(int timeoutMs);
+   void process(int timeoutMs) override;
 
    virtual void addIncomingFeature(std::shared_ptr<resip::DumFeature> f) { getDialogUsageManager().addIncomingFeature(f); };
 
