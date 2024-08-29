@@ -163,14 +163,20 @@ class TransportSelector
          public:
             TlsTransportKey() = delete;
             TlsTransportKey(const resip::Data& domainName, const resip::Tuple& tuple);
-            TlsTransportKey(const resip::Data& domainName, resip::TransportType type, resip::IpVersion version);
             TlsTransportKey(const TlsTransportKey&) = default;
             TlsTransportKey& operator=(const TlsTransportKey&) = default;
             TlsTransportKey(TlsTransportKey&&) = default;
             TlsTransportKey& operator=(TlsTransportKey&&) = default;
             ~TlsTransportKey() = default;
 
+            // Comparison operators which follow strict rules.
             bool operator<(const TlsTransportKey& rhs) const;
+            bool strictEq(const TlsTransportKey& rhs) const;
+            bool strictEqWithoutDomain(const resip::Tuple& tuple) const;
+
+            // Comparison operators which follow relaxed rules.
+            bool relaxEq(const TlsTransportKey& rhs) const;
+            bool relaxEqWithoutDomain(const resip::Tuple& tuple) const;
 
             resip::Tuple mTuple;
       };
@@ -184,7 +190,7 @@ class TransportSelector
       Connection* findConnection(const Tuple& dest) const;
       Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
       Transport* findTransportByVia(SipMessage* msg, const Tuple& dest, Tuple& src) const;
-      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv) const;
+      Transport* findTlsTransport(const Data& domain, const Tuple& search) const;
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
       void rebuildAnyPortTransportMaps(void);
 
