@@ -246,8 +246,7 @@ TransportSelector::addTransport(std::unique_ptr<Transport> autoTransport, bool i
    }
    else
    {
-      tuple.setTargetDomain(transport->tlsDomain());
-      TlsTransportKey key(tuple);
+      TlsTransportKey key(transport->tlsDomain(), tuple);
       if(mTlsTransports.find(key) == mTlsTransports.end())
       {
          mTlsTransports[key] = transport;
@@ -327,9 +326,7 @@ TransportSelector::removeTransport(unsigned int transportKey)
       }
       else
       {
-         Tuple tlsRemoveTuple = transportToRemove->getTuple();
-         tlsRemoveTuple.setTargetDomain(transportToRemove->tlsDomain());
-         TlsTransportKey tlsKey(tlsRemoveTuple);
+         TlsTransportKey tlsKey(transportToRemove->tlsDomain(), transportToRemove->getTuple());
          mTlsTransports.erase(tlsKey);
       }
 

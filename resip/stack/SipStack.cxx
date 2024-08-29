@@ -548,8 +548,7 @@ SipStack::addTransport(std::unique_ptr<Transport> transport)
    }
    else
    {
-      tuple.setTargetDomain(transport->tlsDomain());
-      TransportSelector::TlsTransportKey tlsKey(tuple);
+      TransportSelector::TlsTransportKey tlsKey(transport->tlsDomain(), tuple);
       if(mSecureTransports.count(tlsKey) == 0)
       {
          // All is good - assign key to transport then add to mNonSecureTransports list

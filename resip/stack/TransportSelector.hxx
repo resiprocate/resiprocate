@@ -161,11 +161,19 @@ class TransportSelector
       class TlsTransportKey
       {
          public:
-            TlsTransportKey(const resip::Tuple& tuple) : mTuple(tuple) {}
+            TlsTransportKey() = delete;
+            TlsTransportKey(const resip::Data& domainName, const resip::Tuple& tuple) :
+               mTuple(tuple)
+            {
+               mTuple.setTargetDomain(domainName);
+            }
             TlsTransportKey(const resip::Data& domainName, resip::TransportType type, resip::IpVersion version) :
                mTuple(Data::Empty, 0, version, type, domainName) {}
-            TlsTransportKey(const TlsTransportKey& orig) { mTuple = orig.mTuple; }
-            ~TlsTransportKey(){}
+            TlsTransportKey(const TlsTransportKey&) = default;
+            TlsTransportKey& operator=(const TlsTransportKey&) = default;
+            TlsTransportKey(TlsTransportKey&&) = default;
+            TlsTransportKey& operator=(TlsTransportKey&&) = default;
+            ~TlsTransportKey() = default;
 
             bool operator<(const TlsTransportKey& rhs) const
             {
@@ -188,9 +196,6 @@ class TransportSelector
             }
 
             resip::Tuple mTuple;
-
-         private:
-            TlsTransportKey();
       };
 
    protected:  // for unit tests (testTransportSelector)
