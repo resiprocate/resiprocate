@@ -1550,7 +1550,7 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
       // that does not have the cert we're attempting to use, even if the 
       // IP/port/proto match. If we have not specified which identity we want
       // to use, then proceed with the code below.
-      return findTlsTransport(msg->getTlsDomain(),search.getType(),search.ipVersion());
+      return findTlsTransport(msg->getTlsDomain(), search);
    }
 
    bool ignorePort = (search.getPort() == 0);
@@ -1633,21 +1633,24 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
 }
 
 Transport*
-TransportSelector::findTlsTransport(const Data& domainname, TransportType type, IpVersion version) const
+TransportSelector::findTlsTransport(const Data& domainname,
+                                    const Tuple& search) const
 {
-   resip_assert(isSecure(type));
+   resip_assert(isSecure(search.getType()));
+
+   // Basically, the 'search' Tuple has a member called mTargetDomain.
+   // However, it is not used due to the current TransportSelector implementation logic.
 
    if (domainname == Data::Empty)
    {
-      DebugLog(<< "Searching for " << toData(type) << " transport without domain."
+      DebugLog(<< "Searching for " << toData(search.getType()) << " transport without domain."
                << " Secure transports list size = " << mTlsTransports.size());
 
       for(const auto& tlsTransport : mTlsTransports)
       {
          const TlsTransportKey &key = tlsTransport.first;
 
-         if (key.mTuple.getType() == type &&
-             key.mTuple.ipVersion() == version)
+         if (key.mTuple == search)  // Tuple does not compare domain names by default.
          {
             DebugLog(<< "findTlsTransport (exact match) => " << *(tlsTransport.second));
             return tlsTransport.second;
@@ -1656,10 +1659,10 @@ TransportSelector::findTlsTransport(const Data& domainname, TransportType type, 
    }
    else
    {
-      DebugLog(<< "Searching for " << toData(type) << " transport for domain='"
+      DebugLog(<< "Searching for " << toData(search.getType()) << " transport for domain='"
                << domainname << "'. Secure transports list size = " << mTlsTransports.size());
 
-      TlsTransportKey key(domainname, type, version);
+      TlsTransportKey key(domainname, search);
       const auto& i = mTlsTransports.find(key);
 
       if(i != mTlsTransports.end())

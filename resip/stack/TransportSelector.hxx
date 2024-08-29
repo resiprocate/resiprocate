@@ -167,8 +167,6 @@ class TransportSelector
             {
                mTuple.setTargetDomain(domainName);
             }
-            TlsTransportKey(const resip::Data& domainName, resip::TransportType type, resip::IpVersion version) :
-               mTuple(Data::Empty, 0, version, type, domainName) {}
             TlsTransportKey(const TlsTransportKey&) = default;
             TlsTransportKey& operator=(const TlsTransportKey&) = default;
             TlsTransportKey(TlsTransportKey&&) = default;
@@ -183,14 +181,7 @@ class TransportSelector
                }
                else if(mTuple.getTargetDomain() == rhs.mTuple.getTargetDomain())
                {
-                  if(mTuple.getType() < rhs.mTuple.getType())
-                  {
-                     return true;
-                  }
-                  else if(mTuple.getType() == rhs.mTuple.getType())
-                  {
-                     return mTuple.ipVersion() < rhs.mTuple.ipVersion();
-                  }
+                  return mTuple < rhs.mTuple;
                }
                return false;
             }
@@ -207,7 +198,7 @@ class TransportSelector
       Connection* findConnection(const Tuple& dest) const;
       Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
       Transport* findTransportByVia(SipMessage* msg, const Tuple& dest, Tuple& src) const;
-      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv) const;
+      Transport* findTlsTransport(const Data& domain, const Tuple& search) const;
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
       void rebuildAnyPortTransportMaps(void);
 
