@@ -161,36 +161,18 @@ class TransportSelector
       class TlsTransportKey
       {
          public:
-            TlsTransportKey(const resip::Tuple& tuple) : mTuple(tuple) {}
-            TlsTransportKey(const resip::Data& domainName, resip::TransportType type, resip::IpVersion version) :
-               mTuple(Data::Empty, 0, version, type, domainName) {}
-            TlsTransportKey(const TlsTransportKey& orig) { mTuple = orig.mTuple; }
-            ~TlsTransportKey(){}
+            TlsTransportKey() = delete;
+            TlsTransportKey(const resip::Data& domainName, const resip::Tuple& tuple);
+            TlsTransportKey(const resip::Data& domainName, resip::TransportType type, resip::IpVersion version);
+            TlsTransportKey(const TlsTransportKey&) = default;
+            TlsTransportKey& operator=(const TlsTransportKey&) = default;
+            TlsTransportKey(TlsTransportKey&&) = default;
+            TlsTransportKey& operator=(TlsTransportKey&&) = default;
+            ~TlsTransportKey() = default;
 
-            bool operator<(const TlsTransportKey& rhs) const
-            {
-               if(mTuple.getTargetDomain() < rhs.mTuple.getTargetDomain())
-               {
-                  return true;
-               }
-               else if(mTuple.getTargetDomain() == rhs.mTuple.getTargetDomain())
-               {
-                  if(mTuple.getType() < rhs.mTuple.getType())
-                  {
-                     return true;
-                  }
-                  else if(mTuple.getType() == rhs.mTuple.getType())
-                  {
-                     return mTuple.ipVersion() < rhs.mTuple.ipVersion();
-                  }
-               }
-               return false;
-            }
+            bool operator<(const TlsTransportKey& rhs) const;
 
             resip::Tuple mTuple;
-
-         private:
-            TlsTransportKey();
       };
 
    protected:  // for unit tests (testTransportSelector)

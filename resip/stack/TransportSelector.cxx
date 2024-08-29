@@ -67,6 +67,37 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
+TransportSelector::TlsTransportKey::TlsTransportKey(const resip::Data& domainName, const resip::Tuple& tuple) :
+   mTuple(tuple)
+{
+   mTuple.setTargetDomain(domainName);
+}
+
+TransportSelector::TlsTransportKey::TlsTransportKey(const resip::Data& domainName, resip::TransportType type, resip::IpVersion version) :
+   mTuple(Data::Empty, 0, version, type, domainName)
+{ }
+
+bool
+TransportSelector::TlsTransportKey::operator<(const TlsTransportKey& rhs) const
+{
+   if(mTuple.getTargetDomain() < rhs.mTuple.getTargetDomain())
+   {
+      return true;
+   }
+   else if(mTuple.getTargetDomain() == rhs.mTuple.getTargetDomain())
+   {
+      if(mTuple.getType() < rhs.mTuple.getType())
+      {
+         return true;
+      }
+      else if(mTuple.getType() == rhs.mTuple.getType())
+      {
+         return mTuple.ipVersion() < rhs.mTuple.ipVersion();
+      }
+   }
+   return false;
+}
+
 TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression, bool useDnsVip) :
    mDns(dnsStub, useDnsVip),
    mStateMacFifo(fifo),
@@ -246,15 +277,15 @@ TransportSelector::addTransport(std::unique_ptr<Transport> autoTransport, bool i
    }
    else
    {
-      tuple.setTargetDomain(transport->tlsDomain());
-      TlsTransportKey key(tuple);
+      TlsTransportKey key(transport->tlsDomain(), tuple);
       if(mTlsTransports.find(key) == mTlsTransports.end())
       {
          mTlsTransports[key] = transport;
       }
       else
       {
-         WarningLog (<< "Can't add transport, overlapping properties with existing transport: " << tuple);
+         WarningLog (<< "Can't add transport, overlapping properties with existing transport: "
+                     << tuple << " (domain=" << transport->tlsDomain() << ")");
          resip_assert(false); // should never get here - checked in SipStack first
          return;
       }
@@ -327,9 +358,7 @@ TransportSelector::removeTransport(unsigned int transportKey)
       }
       else
       {
-         Tuple tlsRemoveTuple = transportToRemove->getTuple();
-         tlsRemoveTuple.setTargetDomain(transportToRemove->tlsDomain());
-         TlsTransportKey tlsKey(tlsRemoveTuple);
+         TlsTransportKey tlsKey(transportToRemove->tlsDomain(), transportToRemove->getTuple());
          mTlsTransports.erase(tlsKey);
       }
 

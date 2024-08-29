@@ -548,8 +548,7 @@ SipStack::addTransport(std::unique_ptr<Transport> transport)
    }
    else
    {
-      tuple.setTargetDomain(transport->tlsDomain());
-      TransportSelector::TlsTransportKey tlsKey(tuple);
+      TransportSelector::TlsTransportKey tlsKey(transport->tlsDomain(), tuple);
       if(mSecureTransports.count(tlsKey) == 0)
       {
          // All is good - assign key to transport then add to mNonSecureTransports list
@@ -560,7 +559,8 @@ SipStack::addTransport(std::unique_ptr<Transport> transport)
       else
       {
          // Secure transport collision with existing transport
-         ErrLog(<< "Failed to add secure transport, transport with similar properties already exists: " << tuple);
+         ErrLog(<< "Failed to add secure transport, transport with similar properties already exists: "
+                << tuple << " (domain=" << transport->tlsDomain() << ")");
          throw Transport::Exception("Failed to add secure transport, transport with similar properties already exists.", __FILE__,__LINE__);
          return;
       }
