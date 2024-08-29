@@ -2,6 +2,9 @@
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TcpTransport.hxx"
+#include "resip/stack/SecurityTypes.hxx"
+#include "resip/stack/ssl/TlsTransport.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/UdpTransport.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
@@ -51,6 +54,46 @@ class TestTcpTransport : public TcpTransport
       ~TestTcpTransport() override = default;
 };
 
+class TestTlsTransport : public TlsTransport
+{
+   public:
+      TestTlsTransport(Fifo<TransactionMessage>& rxFifo,
+                       const uint transportKey,
+                       int portNum,
+                       IpVersion version,
+                       const Data& interfaceObj,
+                       const Data& sipDomain) :
+         TlsTransport(rxFifo, portNum, version, version == V6 ? "::1" : "127.0.0.1",
+                      mSecurity, sipDomain, SecurityTypes::SSLType::TLSv1)
+      {
+         // The transport is bound to localhost to avoid socket conflicts.
+         // However, the real host is used in comparisons.
+         mInterface = interfaceObj;
+
+         setKey(transportKey);
+      }
+
+      ~TestTlsTransport() override = default;
+
+   private:
+      class TestSecurity : public Security
+      {
+         public:
+            TestSecurity() = default;
+            ~TestSecurity() override = default;
+
+            SSL_CTX* createDomainCtx(const SSL_METHOD*, const Data&, const Data&,
+                                     const Data&, const Data&) override
+            {
+               // This is stub method as we do not care here about SSL stuff processing.
+               return nullptr;
+            }
+      };
+
+      static TestSecurity mSecurity;
+};
+TestTlsTransport::TestSecurity TestTlsTransport::mSecurity;
+
 class TestTransportSelector : public TransportSelector
 {
    public:
@@ -60,7 +103,11 @@ class TestTransportSelector : public TransportSelector
 
       ~TestTransportSelector() override = default;
 
-      unsigned int addTransport(const Data &interfaceObj, int portNum, IpVersion version, TransportType ttype)
+      unsigned int addTransport(const Data &interfaceObj,
+                                int portNum,
+                                IpVersion version,
+                                TransportType ttype,
+                                const Data& domainName = Data::Empty)
       {
          std::unique_ptr<Transport> transport;
          unsigned int actualTransportKey = mNextTransportKey;
@@ -72,6 +119,10 @@ class TestTransportSelector : public TransportSelector
          else if (ttype == TCP)
          {
             transport.reset(new TestTcpTransport { mFifo, actualTransportKey, portNum, version, interfaceObj });
+         }
+         else if (ttype == TLS)
+         {
+            transport.reset(new TestTlsTransport { mFifo, actualTransportKey, portNum, version, interfaceObj, domainName });
          }
          else
          {
@@ -446,6 +497,124 @@ testFindTransportBySource()
 }
 
 void
+testFindTransportBySourceTlsTransport()
+{
+   SipMessage msg;
+
+   {
+      // A single TLS IPv4 transport without an assigned domain name.
+      resipCout << "test TLS transport selection by source V4 interface lookup - "
+                << "exact matching" << std::endl;
+
+      TestTransportSelector ts;
+      ts.addTransport("192.168.1.1", 5060, V4, TLS);
+
+      Tuple tuple1 { "192.168.1.1", 5060, V4, TLS };
+      Transport *t = ts.findTransportBySource(tuple1, &msg);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5060);
+
+      Tuple tuple2 { "192.168.1.1", 5060, V4, WSS };
+      t = ts.findTransportBySource(tuple2, &msg);
+      resip_assert(t == nullptr);
+
+#ifdef USE_IPV6
+      Tuple v6tuple { "fe80::a00:27ff:fea3:e60e", 5060, V6, TLS };
+      t = ts.findTransportBySource(v6tuple, &msg);
+      resip_assert(t == nullptr);
+#endif // USE_IPV6
+   }
+
+   {
+      // A single TLS IPv6 transport without an assigned domain name.
+#ifdef USE_IPV6
+      resipCout << "test TLS transport selection by source V6 interface lookup - "
+                << "exact matching" << std::endl;
+
+      TestTransportSelector ts;
+      ts.addTransport("fe80::a00:27ff:fea3:e60e", 5060, V6, TLS);
+
+      Tuple v6tuple1 { "fe80::a00:27ff:fea3:e60e", 5060, V6, TLS };
+      Transport *t = ts.findTransportBySource(v6tuple1, &msg);
+      resip_assert(t != nullptr);
+      resip_assert(t->port() == 5060);
+
+      Tuple v6tuple2 { "fe80::a00:27ff:fea3:e60e", 5060, V6, WSS };
+      t = ts.findTransportBySource(v6tuple2, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple tuple { "192.168.1.1", 5060, V4, TLS };
+      t = ts.findTransportBySource(tuple, &msg);
+      resip_assert(t == nullptr);
+#endif // USE_IPV6
+   }
+
+   {
+      // A single TLS IPv4 transport with the assigned domain name.
+      resipCout << "test TLS transport selection by source V4 interface lookup - "
+                << "domain matching" << std::endl;
+
+      const resip::Data domainName = "sip.example.com";
+      msg.setTlsDomain(domainName);
+
+      TestTransportSelector ts;
+      ts.addTransport("192.168.1.1", 5060, V4, TLS, domainName);
+
+      Tuple tuple1 { "192.168.1.1", 5060, V4, TLS };
+      Transport *t = ts.findTransportBySource(tuple1, &msg);
+      resip_assert(t != nullptr);
+
+      auto anotherMsg { msg };
+      anotherMsg.setTlsDomain("another.example.com");
+      Tuple tuple2 { "192.168.1.1", 5060, V4, TLS };
+      t = ts.findTransportBySource(tuple2, &anotherMsg);
+      resip_assert(t == nullptr);
+
+      Tuple tuple3 { "192.168.1.1", 5060, V4, WSS };
+      t = ts.findTransportBySource(tuple3, &msg);
+      resip_assert(t == nullptr);
+
+#ifdef USE_IPV6
+      Tuple v6tuple { "fe80::a00:27ff:fea3:e60e", 5060, V6, TLS };
+      t = ts.findTransportBySource(v6tuple, &msg);
+      resip_assert(t == nullptr);
+#endif // USE_IPV6
+   }
+
+   {
+      // A single TLS IPv6 transport with the assigned domain name.
+#ifdef USE_IPV6
+      resipCout << "test TLS transport selection by source V6 interface lookup - "
+                << "domain matching" << std::endl;
+
+      const resip::Data domainName = "sip.example.com";
+      msg.setTlsDomain(domainName);
+
+      TestTransportSelector ts;
+      ts.addTransport("fe80::a00:27ff:fea3:e60e", 5060, V6, TLS, domainName);
+
+      Tuple v6tuple1 { "fe80::a00:27ff:fea3:e60e", 5060, V6, TLS };
+      Transport *t = ts.findTransportBySource(v6tuple1, &msg);
+      resip_assert(t != nullptr);
+
+      auto anotherMsg { msg };
+      anotherMsg.setTlsDomain("another.example.com");
+      Tuple v6tuple2 { "fe80::a00:27ff:fea3:e60e", 5060, V6, TLS };
+      t = ts.findTransportBySource(v6tuple2, &anotherMsg);
+      resip_assert(t == nullptr);
+
+      Tuple v6tuple3 { "fe80::a00:27ff:fea3:e60e", 5060, V6, WSS };
+      t = ts.findTransportBySource(v6tuple3, &msg);
+      resip_assert(t == nullptr);
+
+      Tuple tuple { "192.168.1.1", 5060, V4, TLS };
+      t = ts.findTransportBySource(tuple, &msg);
+      resip_assert(t == nullptr);
+#endif // USE_IPV6
+   }
+}
+
+void
 testFindTransportByDest()
 {
    {
@@ -555,6 +724,7 @@ main(int argc, char** argv)
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    testFindTransportBySource();
+   testFindTransportBySourceTlsTransport();
    testFindTransportByDest();
 
    return 0;
