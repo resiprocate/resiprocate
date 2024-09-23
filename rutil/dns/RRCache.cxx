@@ -96,23 +96,25 @@ RRCache::updateCache(const Data& target,
 {
    Data domain = (*begin).domain();
    FactoryMap::iterator it = mFactoryMap.find(rrType);
-   resip_assert(it != mFactoryMap.end());
-   RRList* key = new RRList(domain, rrType);         
-   RRSet::iterator lb = mRRSet.lower_bound(key);
-   if (lb != mRRSet.end() &&
-       !(mRRSet.key_comp()(key, *lb)))
+   if (it != mFactoryMap.end())  // If we don't understand rrType - ignore it
    {
-      (*lb)->update(it->second, begin, end, mUserDefinedTTL);
-      touch(*lb);
+      RRList* key = new RRList(domain, rrType);
+      RRSet::iterator lb = mRRSet.lower_bound(key);
+      if (lb != mRRSet.end() &&
+         !(mRRSet.key_comp()(key, *lb)))
+      {
+         (*lb)->update(it->second, begin, end, mUserDefinedTTL);
+         touch(*lb);
+      }
+      else
+      {
+         RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
+         mRRSet.insert(val);
+         mLruHead->push_back(val);
+         purge();
+      }
+      delete key;
    }
-   else
-   {
-      RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
-      mRRSet.insert(val);
-      mLruHead->push_back(val);
-      purge();
-   }
-   delete key;
 }
 
 void 
