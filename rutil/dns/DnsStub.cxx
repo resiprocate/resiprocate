@@ -219,18 +219,21 @@ DnsStub::cache(const Data& key,
       aptr = createOverlay(abuf, alen, aptr, overlays);
    }
 
-   // sort overlays by type.
-   sort(overlays.begin(), overlays.end());
-
-   vector<RROverlay>::iterator itLow = lower_bound(overlays.begin(), overlays.end(), *overlays.begin());
-   vector<RROverlay>::iterator itHigh = upper_bound(overlays.begin(), overlays.end(), *overlays.begin());
-   while (itLow != overlays.end())
+   if (overlays.size() > 0)
    {
-      mRRCache.updateCache(key, (*itLow).type(), itLow, itHigh);
-      itLow = itHigh;
-      if (itHigh != overlays.end())
+      // sort overlays by type.
+      sort(overlays.begin(), overlays.end());
+
+      vector<RROverlay>::iterator itLow = lower_bound(overlays.begin(), overlays.end(), *overlays.begin());
+      vector<RROverlay>::iterator itHigh = upper_bound(overlays.begin(), overlays.end(), *overlays.begin());
+      while (itLow != overlays.end())
       {
-         itHigh = upper_bound(itLow, overlays.end(), *itLow);
+         mRRCache.updateCache(key, (*itLow).type(), itLow, itHigh);
+         itLow = itHigh;
+         if (itHigh != overlays.end())
+         {
+            itHigh = upper_bound(itLow, overlays.end(), *itLow);
+         }
       }
    }
 }
