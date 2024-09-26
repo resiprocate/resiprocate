@@ -214,15 +214,21 @@ RRCache::getTTL(const RROverlay& overlay)
    char* name = 0;
    long len = 0;
    int status = ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
-   resip_assert( status == ARES_SUCCESS );
-   const unsigned char* pPos = overlay.data() + len;
-   free(name); name = 0;
-   status = ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
-   resip_assert( status == ARES_SUCCESS );
-   free(name);
-   pPos += len;
-   pPos += 16; // skip four 32 bit entities.
-   return DNS__32BIT(pPos);         
+   if (status == ARES_SUCCESS)
+   {
+      const unsigned char* pPos = overlay.data() + len;
+      free(name);
+      name = 0;
+      status = ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
+      if (status == ARES_SUCCESS)
+      {
+         free(name);
+         pPos += len;
+         pPos += 16; // skip four 32 bit entities.
+         return DNS__32BIT(pPos);
+      }
+   }
+   return -1;
 }
 
 void 
