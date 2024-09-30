@@ -588,7 +588,7 @@ TransportSelector::dnsResolve(DnsResult* result,
       // If this is an ACK we need to fix the tid to reflect that
       if (msg->hasForceTarget())
       {
-         //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
+         DebugLog(<< "Looking up dns entries (from forceTarget) for " << msg->getForceTarget());
          mDns.lookup(result, msg->getForceTarget());
       }
       else if (msg->exists(h_Routes) && !msg->const_header(h_Routes).empty())
@@ -922,6 +922,19 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    }
 }
 
+// TransportSelector::transmit (pseudo code)
+// If Request
+//   findTransportByVia - check top via for matching source host and port that matches a transport
+//   If not found->findTransportByDest
+//     If key set then select matching transport
+//     If target matches(AnyPortAnyInterfaceCompare) exactly one transport by type, ie: if target is TCP and we only have one TCP transport it is selected
+//     If not found->determineSourceInterface - takes the destination and queries the OS for the best interface to use to send to that destination
+//       ->findTransportBySource - find a transport that matches the source interface found above
+// If Response
+//   findTransportByDest
+//     If key set then select matching transport
+//     If target matches(AnyPortAnyInterfaceCompare) exactly one transport type
+// 
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.
 TransportSelector::TransmitState
