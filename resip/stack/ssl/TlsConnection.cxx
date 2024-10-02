@@ -298,7 +298,7 @@ TlsConnection::checkState()
                   switch(verifyErrorCode)
                   {
                      case X509_V_OK:
-                        DebugLog(<<"peer supplied a ceritifcate, but it has not been checked or it was checked successfully");
+                        DebugLog(<<"peer supplied a certificate, but it has not been checked or it was checked successfully");
                         break;
                      default:
                         ErrLog(<<"peer certificate validation failure: " << X509_verify_cert_error_string(verifyErrorCode));
@@ -320,7 +320,7 @@ TlsConnection::checkState()
                   }
                   else
                   {
-                     ErrLog(<<"Server did not present any certificiate to us, certificate invalid or protocol did not reach certificate exchange");
+                     ErrLog(<<"Server did not present any certificate to us, certificate invalid or protocol did not reach certificate exchange");
                   }
                }
             }
@@ -602,7 +602,7 @@ TlsConnection::hasDataToRead() // has data that can be read
 
 
 bool 
-TlsConnection::isGood() // has data that can be read 
+TlsConnection::isGood()
 {
 #if defined(USE_SSL)
    if ( mBio == 0 )
@@ -624,7 +624,7 @@ TlsConnection::isGood() // has data that can be read
    }
 
 #endif       
-   return true;
+   return false;
 }
 
 bool 
@@ -651,7 +651,7 @@ TlsConnection::isWritable()
 void TlsConnection::getPeerNames(std::list<Data> &peerNames) const
 {
    for(std::list<BaseSecurity::PeerName>::const_iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
-{
+   {
       peerNames.push_back(it->mName);
    }
 }
