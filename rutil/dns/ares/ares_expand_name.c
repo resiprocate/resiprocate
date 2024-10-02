@@ -24,8 +24,37 @@
 
 #include "ares.h"
 
+ /* Maximum number of indirections allowed for a name */
+#define MAX_INDIRS 50
+
 static int name_length(const unsigned char *encoded, const unsigned char *abuf,
 		       int alen);
+
+static int is_reservedch(int ch)
+{
+   switch (ch) {
+   case '"':
+   case '.':
+   case ';':
+   case '\\':
+   case '(':
+   case ')':
+   case '@':
+   case '$':
+      return 1;
+   default:
+      break;
+   }
+
+   return 0;
+}
+
+static int ares__isprint(int ch)
+{
+   if (ch >= 0x20 && ch <= 0x7E)
+      return 1;
+   return 0;
+}
 
 /* Expand an RFC1035-encoded domain name given by encoded.  The
  * containing message is given by abuf and alen.  The result given by
@@ -51,108 +80,162 @@ static int name_length(const unsigned char *encoded, const unsigned char *abuf,
  * backslashes to escape periods or backslashes in the expanded name.
  */
 
-int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
-		     int alen, char **s, long *enclen)
+int ares_expand_name(const unsigned char* encoded, const unsigned char* abuf,
+   int alen, char** s, long* enclen)
 {
-  int len, indir = 0;
-  char *q;
-  const unsigned char *p;
+   int len, indir = 0;
+   char* q;
+   const unsigned char* p;
 
-  len = name_length(encoded, abuf, alen);
-  if (len == -1)
-    return ARES_EBADNAME;
+   len = name_length(encoded, abuf, alen);
+   if (len == -1)
+      return ARES_EBADNAME;
 
-  *s = malloc(len + 1);
-  if (!*s)
-    return ARES_ENOMEM;
-  q = *s;
+   *s = malloc(len + 1);
+   if (!*s)
+      return ARES_ENOMEM;
+   q = *s;
 
-  /* No error-checking necessary; it was all done by name_length(). */
-  p = encoded;
-  while (*p)
-    {
-      if ((*p & INDIR_MASK) == INDIR_MASK)
-	{
-	  if (!indir)
-	    {
-	      *enclen = (long)(p + 2 - encoded);
-	      indir = 1;
-	    }
-	  p = abuf + ((*p & ~INDIR_MASK) << 8 | *(p + 1));
-	}
+   if (len == 0) {
+      /* RFC2181 says this should be ".": the root of the DNS tree.
+       * Since this function strips trailing dots though, it becomes ""
+       */
+      q[0] = '\0';
+
+      /* indirect root label (like 0xc0 0x0c) is 2 bytes long (stupid, but
+         valid) */
+      if ((*encoded & INDIR_MASK) == INDIR_MASK)
+         *enclen = 2L;
       else
-	{
-	  len = *p;
-	  p++;
-	  while (len--)
-	    {
-	      if (*p == '.' || *p == '\\')
-		*q++ = '\\';
-	      *q++ = *p;
-	      p++;
-	    }
-	  *q++ = '.';
-	}
-    }
-  if (!indir)
-    *enclen = (long)(p + 1 - encoded);
+         *enclen = 1L;  /* the caller should move one byte to get past this */
 
-  /* Nuke the trailing period if we wrote one. */
-  if (q > *s)
-    q--;
-  /* Write a trailing NUL in any case. */
-  *q = 0;
+      return ARES_SUCCESS;
+   }
 
-  return ARES_SUCCESS;
+   /* No error-checking necessary; it was all done by name_length(). */
+   p = encoded;
+   while (*p)
+   {
+      if ((*p & INDIR_MASK) == INDIR_MASK)
+      {
+         if (!indir)
+         {
+            *enclen = (long)(p + 2 - encoded);
+            indir = 1;
+         }
+         p = abuf + ((*p & ~INDIR_MASK) << 8 | *(p + 1));
+      }
+      else
+      {
+         len = *p;
+         p++;
+         while (len--)
+         {
+            /* Output as \DDD for consistency with RFC1035 5.1, except
+             * for the special case of a root name response  */
+            if (!ares__isprint(*p) && !(len == 1 && *p == 0))
+            {
+               *q++ = '\\';
+               *q++ = '0' + *p / 100;
+               *q++ = '0' + (*p % 100) / 10;
+               *q++ = '0' + (*p % 10);
+            }
+            else if (is_reservedch(*p))
+            {
+               *q++ = '\\';
+               *q++ = *p;
+            }
+            else
+            {
+               *q++ = *p;
+            }
+            p++;
+         }
+         *q++ = '.';
+      }
+   }
+   if (!indir)
+      *enclen = (long)(p + 1 - encoded);
+
+   /* Nuke the trailing period if we wrote one. */
+   if (q > *s)
+      q--;
+   /* Write a trailing NUL in any case. */
+   *q = 0;
+
+   return ARES_SUCCESS;
 }
 
 /* Return the length of the expansion of an encoded domain name, or
  * -1 if the encoding is invalid.
  */
-static int name_length(const unsigned char *encoded, const unsigned char *abuf,
-		       int alen)
+static int name_length(const unsigned char* encoded, const unsigned char* abuf,
+   int alen)
 {
-  int n = 0, offset, indir = 0;
+   int n = 0, offset, indir = 0, top;
 
-  /* Allow the caller to pass us abuf + alen and have us check for it. */
-  if (encoded == abuf + alen)
-    return -1;
+   /* Allow the caller to pass us abuf + alen and have us check for it. */
+   if (encoded >= abuf + alen)
+      return -1;
 
-  while (*encoded)
-    {
-      if ((*encoded & INDIR_MASK) == INDIR_MASK)
-	{
-	  /* Check the offset and go there. */
-	  if (encoded + 1 >= abuf + alen)
-	    return -1;
-	  offset = (*encoded & ~INDIR_MASK) << 8 | *(encoded + 1);
-	  if (offset >= alen)
-	    return -1;
-	  encoded = abuf + offset;
+   while (*encoded)
+   {
+      top = (*encoded & INDIR_MASK);
+      if (top == INDIR_MASK)
+      {
+         /* Check the offset and go there. */
+         if (encoded + 1 >= abuf + alen)
+            return -1;
+         offset = (*encoded & ~INDIR_MASK) << 8 | *(encoded + 1);
+         if (offset >= alen)
+            return -1;
+         encoded = abuf + offset;
 
-	  /* If we've seen more indirects than the message length,
-	   * then there's a loop.
-	   */
-	  if (++indir > alen)
-	    return -1;
-	}
+         /* If we've seen more indirects than the message length,
+          * then there's a loop.
+          */
+         ++indir;
+         if (indir > alen || indir > MAX_INDIRS)
+            return -1;
+      }
+      else if (top == 0x00)
+      {
+         int name_len = *encoded;
+         offset = name_len;
+         if (encoded + offset + 1 >= abuf + alen)
+            return -1;
+         encoded++;
+
+         while (offset--)
+         {
+            if (!ares__isprint(*encoded) && !(name_len == 1 && *encoded == 0))
+            {
+               n += 4;
+            }
+            else if (is_reservedch(*encoded))
+            {
+               n += 2;
+            }
+            else
+            {
+               n += 1;
+            }
+            encoded++;
+         }
+
+         n++;
+      }
       else
-	{
-	  offset = *encoded;
-	  if (encoded + offset + 1 >= abuf + alen)
-	    return -1;
-	  encoded++;
-	  while (offset--)
-	    {
-	      n += (*encoded == '.' || *encoded == '\\') ? 2 : 1;
-	      encoded++;
-	    }
-	  n++;
-	}
-    }
+      {
+         /* RFC 1035 4.1.4 says other options (01, 10) for top 2
+          * bits are reserved.
+          */
+         return -1;
+      }
+   }
 
-  /* If there were any labels at all, then the number of dots is one
-   * less than the number of labels, so subtract one.
-   */
-  return (n) ? n - 1 : n;
+   /* If there were any labels at all, then the number of dots is one
+    * less than the number of labels, so subtract one.
+    */
+   return (n) ? n - 1 : n;
 }
