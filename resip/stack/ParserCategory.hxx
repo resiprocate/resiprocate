@@ -266,6 +266,22 @@ class ParserCategory : public LazyParser
    protected:
       ParserCategory(PoolBase* pool=0);
 
+      /**
+         @internal
+         @brief Adds a recognised parameter to the internal ParameterList.
+         @param param The parameter to add.
+         @note Skips duplicate parameters.
+      */
+      bool addParameter(Parameter* param);
+
+      /**
+         @internal
+         @brief Adds an unrecognised parameter to the internal ParameterList.
+         @param unknownParam The parameter to add.
+         @note Skips duplicate parameters.
+      */
+      bool addParameter(UnknownParameter* unknownParam);
+
       Parameter* getParameterByData(const Data& data) const;
       void removeParameterByData(const Data& data);
       inline PoolBase* getPool()

@@ -232,13 +232,22 @@ ParserCategory::parseParameters(ParseBuffer& pb)
             if (type == ParameterTypes::UNKNOWN || 
                !(p=createParam(type, pb, terminators2,getPool())))
             {
-               mUnknownParameters.push_back(new (getPool()) UnknownParameter(keyStart, 
-                                                                 int((keyEnd - keyStart)), pb, terminators2));
+               UnknownParameter* unknownParam = new (getPool()) UnknownParameter(keyStart,
+                                                                                 int((keyEnd - keyStart)),
+                                                                                 pb,
+                                                                                 terminators2);
+
+               if(!addParameter(unknownParam))
+               {
+                  freeParameter(unknownParam);
+               }
             }
             else
             {
-               // invoke the particular factory
-               mParameters.push_back(p);
+               if(!addParameter(p))
+               {
+                  freeParameter(p);
+               }
             }
          }
       }
@@ -249,6 +258,47 @@ ParserCategory::parseParameters(ParseBuffer& pb)
       }
    }
 }      
+
+bool
+ParserCategory::addParameter(Parameter* param)
+{
+   resip_assert(param);
+
+   if (getParameterByEnum(param->getType()) == nullptr)
+   {
+      // invoke the particular factory
+      mParameters.push_back(param);
+      return true;
+   }
+   else
+   {
+      // RFC 3261 7.3.1 & 19.1.1
+      // any given parameter-name MUST NOT appear more than once
+      WarningLog(<< "Duplicate parameter-name \"" << param->getName() << "\", skip it.");
+      return false;
+   }
+}
+
+bool
+ParserCategory::addParameter(UnknownParameter* unknownParam)
+{
+   resip_assert(unknownParam);
+
+   const Data& unknownParamName = unknownParam->getName();
+
+   if (getParameterByData(unknownParamName) == nullptr)
+   {
+      mUnknownParameters.push_back(unknownParam);
+      return true;
+   }
+   else
+   {
+      // RFC 3261 7.3.1 & 19.1.1
+      // any given parameter-name MUST NOT appear more than once
+      WarningLog(<< "Duplicate parameter-name \"" << unknownParamName << "\", skip it.");
+      return false;
+   }
+}
 
 Parameter* 
 ParserCategory::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
