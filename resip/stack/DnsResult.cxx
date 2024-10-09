@@ -1120,6 +1120,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
       {
          SRV srv;
          srv.key = (*it).name();
+         srv.key.lowercase();
          srv.priority = (*it).priority();
          srv.weight = (*it).weight();
          srv.port = (*it).port();
