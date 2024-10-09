@@ -96,23 +96,25 @@ RRCache::updateCache(const Data& target,
 {
    Data domain = (*begin).domain();
    FactoryMap::iterator it = mFactoryMap.find(rrType);
-   resip_assert(it != mFactoryMap.end());
-   RRList* key = new RRList(domain, rrType);         
-   RRSet::iterator lb = mRRSet.lower_bound(key);
-   if (lb != mRRSet.end() &&
-       !(mRRSet.key_comp()(key, *lb)))
+   if (it != mFactoryMap.end())  // If we don't understand rrType - ignore it
    {
-      (*lb)->update(it->second, begin, end, mUserDefinedTTL);
-      touch(*lb);
+      RRList* key = new RRList(domain, rrType);
+      RRSet::iterator lb = mRRSet.lower_bound(key);
+      if (lb != mRRSet.end() &&
+         !(mRRSet.key_comp()(key, *lb)))
+      {
+         (*lb)->update(it->second, begin, end, mUserDefinedTTL);
+         touch(*lb);
+      }
+      else
+      {
+         RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
+         mRRSet.insert(val);
+         mLruHead->push_back(val);
+         purge();
+      }
+      delete key;
    }
-   else
-   {
-      RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
-      mRRSet.insert(val);
-      mLruHead->push_back(val);
-      purge();
-   }
-   delete key;
 }
 
 void 
@@ -204,7 +206,7 @@ RRCache::cleanup()
    mRRSet.clear();
 }
 
-int 
+int
 RRCache::getTTL(const RROverlay& overlay)
 {
    // overlay is a soa answer.
@@ -212,15 +214,21 @@ RRCache::getTTL(const RROverlay& overlay)
    char* name = 0;
    long len = 0;
    int status = ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
-   resip_assert( status == ARES_SUCCESS );
-   const unsigned char* pPos = overlay.data() + len;
-   free(name); name = 0;
-   status = ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
-   resip_assert( status == ARES_SUCCESS );
-   free(name);
-   pPos += len;
-   pPos += 16; // skip four 32 bit entities.
-   return DNS__32BIT(pPos);         
+   if (status == ARES_SUCCESS)
+   {
+      const unsigned char* pPos = overlay.data() + len;
+      free(name);
+      name = 0;
+      status = ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
+      if (status == ARES_SUCCESS)
+      {
+         free(name);
+         pPos += len;
+         pPos += 16; // skip four 32 bit entities.
+         return DNS__32BIT(pPos);
+      }
+   }
+   return -1;
 }
 
 void 
