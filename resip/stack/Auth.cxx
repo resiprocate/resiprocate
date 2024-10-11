@@ -124,25 +124,14 @@ Auth::parseAuthParameters(ParseBuffer& pb)
       if((int)(keyEnd-keyStart) != 0)
       {
          ParameterTypes::Type type = ParameterTypes::getType(keyStart, (unsigned int)(keyEnd - keyStart));
-         Parameter* p=createParam(type, pb, terminators, getPool());
+         auto p = createParam(type, pb, terminators, getPool());
          if (!p)
          {
-            UnknownParameter* unknownParam = new UnknownParameter(keyStart,
-                                                                  int((keyEnd - keyStart)),
-                                                                  pb,
-                                                                  terminators);
-
-            if(!addParameter(unknownParam))
-            {
-               freeParameter(unknownParam);
-            }
+            p = new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb, terminators);
          }
-         else
+         if (!addParameter(p))
          {
-            if(!addParameter(p))
-            {
-               freeParameter(p);
-            }
+            freeParameter(p);
          }
       }
       else
