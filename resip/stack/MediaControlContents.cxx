@@ -262,7 +262,7 @@ MediaControlContents::MediaControl::encode(EncodeStream& s) const
 /* ====================================================================
  *
  * Copyright (c) 2021, Daniel Pocock, https://danielpocock.com
- * Copyright (c) 2021, Software Freedom Institute SA, https://softwarefreedom.institute
+ * Copyright (c) 2021, Software Freedom Institute LLC, https://softwarefreedom.institute
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -55,7 +55,7 @@ private:
 /* ====================================================================
  *
  * Copyright (C) 2013-2022 Daniel Pocock https://danielpocock.com
- * Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
+ * Copyright (C) 2022 Software Freedom Institute LLC https://softwarefreedom.institute
  * Copyright 2013 Catalin Constantin Usurelu.
  *
  * Redistribution and use in source and binary forms, with or without

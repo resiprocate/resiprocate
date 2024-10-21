@@ -16,7 +16,7 @@
 #
 # See README_AMQP_Apache_Qpid_Proton.txt
 #
-# Copyright (c) 2022 Software Freedom Institute SA https://softwarefreedom.institute
+# Copyright (c) 2022 Software Freedom Institute LLC https://softwarefreedom.institute
 # Copyright (c) 2022 Daniel Pocock https://danielpocock.com
 #
 

@@ -122,7 +122,7 @@ private:
 
  Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
- Copyright (c) 2021-2022, Software Freedom Institute SA https://softwarefreedom.institute
+ Copyright (c) 2021-2022, Software Freedom Institute LLC https://softwarefreedom.institute
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

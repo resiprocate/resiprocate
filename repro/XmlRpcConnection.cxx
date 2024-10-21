@@ -334,7 +334,7 @@ XmlRpcProtonConnection::sendEvent(const resip::Data& eventData)
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
  * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
- * Copyright (c) 2022 Software Freedom Institute SA https://softwarefreedom.institute
+ * Copyright (c) 2022 Software Freedom Institute LLC https://softwarefreedom.institute
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

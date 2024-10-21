@@ -1536,7 +1536,7 @@ ReConServerProcess::onReload()
 /* ====================================================================
 
  Copyright (C) 2022 Daniel Pocock https://danielpocock.com
- Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
+ Copyright (C) 2022 Software Freedom Institute LLC https://softwarefreedom.institute
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

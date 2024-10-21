@@ -548,7 +548,7 @@ operator<<(EncodeStream& strm, const ConfigParse& config)
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (C) 2013-2023 Daniel Pocock https://danielpocock.com
- * Copyright (C) 2023 Software Freedom Institute SA https://softwarefreedom.institute
+ * Copyright (C) 2023 Software Freedom Institute LLC https://softwarefreedom.institute
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
