@@ -423,7 +423,7 @@ ReTurnUserFileScanner::timeout(const asio::error_code& e)
          mLoadedTime = time(0);
          mNextFileCheck = mLoadedTime + mReTurnConfig.mUserDatabaseCheckInterval;
       }
-      catch (ReTurnConfig::Exception& ex)
+      catch (ReTurnConfig::Exception&)
       {
          WarningLog(<<"user reload failed, will check again in " << mReTurnConfig.mUserDatabaseCheckInterval << " second(s).");
          mNextFileCheck = time(0) + mReTurnConfig.mUserDatabaseCheckInterval;

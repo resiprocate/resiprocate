@@ -269,7 +269,7 @@ class TestHolder : public ReproFixture
          // line all lies on one line.
          size_t endStartLine = msg.find("\r\n");
          Data result("SIP/2.0 200 OK");
-         result+=msg.substr(endStartLine);
+         result+=msg.substr((Data::size_type)endStartLine);
          return result;
       }
 
@@ -345,7 +345,7 @@ class TestHolder : public ReproFixture
          // Yes, this is evil. However, BranchParameter does not expose any API
          // for doing this evil, evil thing.
          Data& branch = *const_cast<Data*>(&(msg->header(h_Vias).front().param(p_branch).getTransactionId()));
-         for(size_t i=0;i<branch.size();++i)
+         for(Data::size_type i=0;i<branch.size();++i)
          {
             if(isupper(branch[i]))
             {
@@ -365,7 +365,7 @@ class TestHolder : public ReproFixture
          // Yes, this is evil. However, BranchParameter does not expose any API
          // for doing this evil, evil thing.
          Data& branch = *const_cast<Data*>(&(msg->header(h_Vias).front().param(p_branch).getTransactionId()));
-         for(size_t i=0;i<branch.size();++i)
+         for(Data::size_type i=0;i<branch.size();++i)
          {
             branch[i] = toupper(branch[i]);
          }

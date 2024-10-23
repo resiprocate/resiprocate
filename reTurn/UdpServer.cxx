@@ -100,7 +100,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
          // Try to parse stun message
          StunMessage request(StunTuple(StunTuple::UDP, mLocalAddress, mLocalPort),
                              StunTuple(StunTuple::UDP, address, port),
-                             (char*)&(*data)[0], data->size());
+                             (char*)&(*data)[0], (unsigned int)data->size());
          if(request.isValid())
          {
             StunMessage* response;

@@ -63,7 +63,7 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
      mBuffer(0),
      mBufferPos(0),
      mBufferSize(0),
-     mWsFrameExtractor(messageSizeMax),
+     mWsFrameExtractor((Data::size_type)messageSizeMax),
      mLastUsed(Timer::getTimeMs()),
      mConnState(NewMessage)
 {
@@ -473,7 +473,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          mBufferPos += bytesRead;
          if (mBufferPos >= contentLength)
          {
-            int overHang = mBufferPos - (int)contentLength;
+            size_t overHang = mBufferPos - contentLength;
             char *overHangStart = mBuffer + contentLength;
 
             mMessage->addBuffer(mBuffer);
@@ -498,7 +498,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                 DebugLog(<< "Extra bytes after message: " << overHang);
                 //DebugLog(<< Data(mBuffer, overHang));
 
-                bytesRead = overHang;
+                bytesRead = (int)overHang;
             }
 
             // .bwc. basicCheck takes up substantial CPU. Don't bother doing it
@@ -738,7 +738,7 @@ ConnectionBase::scanMsgHeader(int bytesRead)
 {
    mMsgHeaderScanner.prepareForMessage(mMessage);
    char *unprocessedCharPtr;
-   MsgHeaderScanner::ScanChunkResult scanResult = mMsgHeaderScanner.scanChunk(mBuffer, mBufferPos + bytesRead, &unprocessedCharPtr);
+   MsgHeaderScanner::ScanChunkResult scanResult = mMsgHeaderScanner.scanChunk(mBuffer, (int)mBufferPos + bytesRead, &unprocessedCharPtr);
    if (scanResult != MsgHeaderScanner::scrEnd)
    {
       if(scanResult != MsgHeaderScanner::scrNextChunk)
@@ -864,7 +864,7 @@ ConnectionBase::wsProcessData(int bytesRead)
          mMessage=0;
       }
 
-      unsigned int used = unprocessedCharPtr - sipBuffer;
+      unsigned int used = (unsigned int)(unprocessedCharPtr - sipBuffer);
       if (mMessage && (used < msg_len))
       {
          mMessage->setBody(sipBuffer+used, msg_len-used);
@@ -1063,7 +1063,7 @@ ConnectionBase::getCurrentWriteBuffer()
 char*
 ConnectionBase::getWriteBufferForExtraBytes(int bytesRead, int extraBytes)
 {
-   int currentPos = mBufferPos + bytesRead;
+   int currentPos = (int)mBufferPos + bytesRead;
    if (currentPos > 0 && extraBytes > 0)
    {
       if (((size_t)currentPos + (size_t)extraBytes) > mBufferSize)

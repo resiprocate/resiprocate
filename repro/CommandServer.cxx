@@ -807,7 +807,7 @@ CommandServer::handleHttpRequest(unsigned int connectionId, unsigned int request
       mWebAdmin->buildPage(uri, pageNumber, user, password);
       sendResponse(connectionId, requestId, Data::Empty, 200, "HTTP Request processed, response ignored");
    }
-   catch(std::exception& e)
+   catch(std::exception&)
    {
       sendResponse(connectionId, requestId, Data::Empty, 400, "Exception.");
       return;

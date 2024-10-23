@@ -78,7 +78,7 @@ size_t DataBuffer::putbuf(char ch)
 int
 DataBuffer::sync()
 {
-   size_t len = pptr() - pbase();
+   Data::size_type len = (Data::size_type)(pptr() - pbase());
    if (len > 0)
    {
       size_t pos = gptr() - eback();  // remember the get position
@@ -96,7 +96,7 @@ int
 DataBuffer::overflow(int c)
 {
    // sync, but reallocate
-   size_t len = pptr() - pbase();
+   Data::size_type len = (Data::size_type)(pptr() - pbase());
    // .kw. test below is always true. Checked with David Butcher
    // and he says this is safe but perhaps performs unrequired
    // re-allocs.

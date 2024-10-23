@@ -285,7 +285,7 @@ DnsResult::lookupInternalWithEnum(const Uri& uri)
       resip_assert(enums.size() >= 1);
       if (!enums.empty())
       {
-         mDoingEnum = enums.size();
+         mDoingEnum = (int)enums.size();
          for(std::vector<Data>::iterator it = enums.begin(); it != enums.end(); it++)
          {
             InfoLog (<< "Doing ENUM lookup on " << *it);

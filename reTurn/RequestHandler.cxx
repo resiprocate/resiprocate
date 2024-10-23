@@ -596,7 +596,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
          return RespondFromReceiving;
       }
    }
-   catch (const asio::system_error& e)
+   catch (const asio::system_error&)
    {
       // TODO - handle port in use error better - try to allocate a new port or something?
       ErrLog(<< "Error allocating socket for allocation.  Sending 500. Sender=" << request.mRemoteTuple);

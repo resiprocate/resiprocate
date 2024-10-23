@@ -590,7 +590,7 @@ ParseBuffer::dataUnescaped(Data& dataToUse, const char* start) const
   copy:
    if ((size_t)(mPosition-start) > dataToUse.mCapacity)
    {
-      dataToUse.resize(mPosition-start, false);
+      dataToUse.resize((Data::size_type)(mPosition-start), false);
    }
 
    char* target = dataToUse.mBuf;
@@ -639,7 +639,7 @@ ParseBuffer::dataUnescaped(Data& dataToUse, const char* start) const
       }
    }
    *target = 0;
-   dataToUse.mSize = target - dataToUse.mBuf;   
+   dataToUse.mSize = (Data::size_type)(target - dataToUse.mBuf);
 }
 
 Data
@@ -651,7 +651,7 @@ ParseBuffer::data(const char* start) const
       fail(__FILE__, __LINE__,"Bad anchor position");
    }
 
-   Data data(start, mPosition - start);
+   Data data(start, (Data::size_type)(mPosition - start));
    return data;
 }
 
@@ -679,7 +679,7 @@ ParseBuffer::integer()
    if (!isdigit(*mPosition))
    {
       Data msg("Expected a digit, got: ");
-      msg += Data(mPosition, (mEnd - mPosition));
+      msg += Data(mPosition, (Data::size_type)(mEnd - mPosition));
       fail(__FILE__, __LINE__,msg);
    }
 
@@ -854,7 +854,7 @@ ParseBuffer::floatVal()
    catch (ParseException&)
    {
       Data msg("Expected a floating point value, got: ");
-      msg += Data(s, mPosition - s);
+      msg += Data(s, (Data::size_type)(mPosition - s));
       fail(__FILE__, __LINE__,msg);
       return 0.0;
    }
@@ -896,7 +896,7 @@ ParseBuffer::qVal()
    catch (ParseException&)
    {
       Data msg("Expected a floating point value, got: ");
-      msg += Data(s, mPosition - s);
+      msg += Data(s, (Data::size_type)(mPosition - s));
       fail(__FILE__, __LINE__,msg);
       return 0;
    }
@@ -986,7 +986,7 @@ ParseBuffer::fail(const char* file, unsigned int line, const Data& detail) const
 
        ds << "in context: " << mErrorContext
           << std::endl
-          << escapeAndAnnotate(mBuff, mEnd - mBuff, mPosition);
+          << escapeAndAnnotate(mBuff, (Data::size_type)(mEnd - mBuff), mPosition);
           
        ds.flush();
    }

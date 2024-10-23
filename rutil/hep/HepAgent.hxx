@@ -194,7 +194,7 @@ class HepAgent
             hep_chunk_t correlation_chunk;
             correlation_chunk.vendor_id = htons(0x0000);
             correlation_chunk.type_id   = htons(0x0011);
-            correlation_chunk.length    = htons(sizeof(correlation_chunk) + correlationId.size());
+            correlation_chunk.length    = htons((uint16_t)sizeof(correlation_chunk) + (u_short)correlationId.size());
             chunk = Data(Data::Borrow, (char *)&correlation_chunk, sizeof(correlation_chunk));
             stream << chunk;
             stream << correlationId;
@@ -214,7 +214,7 @@ class HepAgent
          Data::size_type afterPayload = buf.size();
          DebugLog(<< "Final buf.size() == " << buf.size());
          hep_chunk_t *_payload_chunk = (hep_chunk_t *)(buf.data() + payloadChunkOffset);
-         _payload_chunk->length = htons(sizeof(payload_chunk) + afterPayload - beforePayload);
+         _payload_chunk->length = htons((uint16_t)(sizeof(payload_chunk) + afterPayload - beforePayload));
          hg = (struct hep_generic *)buf.data();
          hg->header.length = htons(afterPayload);
 

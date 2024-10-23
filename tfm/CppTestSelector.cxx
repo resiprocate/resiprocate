@@ -58,9 +58,9 @@ void CommandLineSelector::DisplayTestCases(std::vector<std::string>& names)
 void CommandLineSelector::DisplayTestCases2(std::vector<std::string>& names)
 {
    int i;
-   int off   = 0;
-   int off1  = 0;
-   int off2  = 0;
+   size_t off   = 0;
+   size_t off1  = 0;
+   size_t off2  = 0;
    const char *sep = "::";
    const char *indent0 = "  ";
    const char *indent1 = "    ";
@@ -187,9 +187,9 @@ void CommandLineSelector::GetUserSelection(std::vector<std::string>& names, std:
    if(startFrom > 0 && startFrom < names.size())
    {
       // Match by > or >=
-      for(unsigned int i = startFrom; i < names.size(); i++)
+      for(size_t i = startFrom; i < names.size(); i++)
       {
-         result.push_back(i);
+         result.push_back((int)i);
       }
       return;
    }

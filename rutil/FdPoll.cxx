@@ -115,7 +115,7 @@ class FdPollItemFdSetInfo
       Socket mSocketFd; // socket
       FdPollItemIf* mItemObj; // callback object
       FdPollEventMask mEvMask; // events the application wants
-      int mNextIdx;             // next link for live or free list
+      size_t mNextIdx;         // next link for live or free list
 };
 
 class FdPollImplFdSet : public FdPollGrp
@@ -152,8 +152,8 @@ class FdPollImplFdSet : public FdPollGrp
        * boost::intrusive::slist, except we use indices not pointers
        * since the vector may reallocate and move around.
        */
-      int mLiveHeadIdx;
-      int mFreeHeadIdx;
+      size_t mLiveHeadIdx;
+      size_t mFreeHeadIdx;
 
       /*
        * This is temporary cache of poll events. It is a member (and
@@ -195,7 +195,7 @@ FdPollImplFdSet::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *i
    resip_assert(item);
    resip_assert(fd!=INVALID_SOCKET);
 
-   unsigned useIdx;
+   size_t useIdx;
    if ( mFreeHeadIdx >= 0 )
    {
       useIdx = mFreeHeadIdx;
@@ -204,13 +204,13 @@ FdPollImplFdSet::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *i
    else
    {
       useIdx = mItems.size();
-      unsigned newsz = 10+useIdx + useIdx/3; // plus 30% margin
+      size_t newsz = 10+useIdx + useIdx/3; // plus 30% margin
       // WATCHOUT: below may trigger re-allocation, invalidating any iters
       // We don't use iters (only indices), but need to watchout for
       // cached pointers
       mItems.resize(newsz);
       // push new items onto the free list
-      unsigned itemIdx;
+      size_t itemIdx;
       for (itemIdx=useIdx+1; itemIdx < newsz; itemIdx++)
       {
          mItems[itemIdx].mNextIdx = mFreeHeadIdx;
@@ -234,8 +234,8 @@ FdPollImplFdSet::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *i
 void
 FdPollImplFdSet::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMask)
 {
-   int useIdx = IMPL_FDSET_HandleToIdx(handle);
-   resip_assert(useIdx>=0 && ((unsigned)useIdx) < mItems.size());
+   size_t useIdx = IMPL_FDSET_HandleToIdx(handle);
+   resip_assert(useIdx>=0 && (useIdx) < mItems.size());
    FdPollItemFdSetInfo& info = mItems[useIdx];
    resip_assert(info.mSocketFd!=INVALID_SOCKET);
    resip_assert(info.mItemObj);
@@ -255,9 +255,9 @@ FdPollImplFdSet::delPollItem(FdPollItemHandle handle)
 {
    if(!handle) return;
 
-   int useIdx = IMPL_FDSET_HandleToIdx(handle);
+   size_t useIdx = IMPL_FDSET_HandleToIdx(handle);
    //DebugLog(<<"deleting epoll item fd="<<fd);
-   resip_assert(useIdx>=0 && ((unsigned)useIdx) < mItems.size());
+   resip_assert(useIdx>=0 && (useIdx) < mItems.size());
    FdPollItemFdSetInfo& info = mItems[useIdx];
    resip_assert(info.mSocketFd!=INVALID_SOCKET);
    resip_assert(info.mItemObj);
@@ -358,9 +358,9 @@ FdPollImplFdSet::waitAndProcess(int ms)
 void 
 FdPollImplFdSet::buildFdSet(FdSet& fdset)
 {
-   int* prevIdxRef=&mLiveHeadIdx;
+   size_t* prevIdxRef=&mLiveHeadIdx;
    int loopCnt = 0;
-   int itemIdx;
+   size_t itemIdx;
 
    // Step 1: build a new FdSet from the Items vector
    while ( (itemIdx = *prevIdxRef) != -1 )
@@ -410,8 +410,8 @@ bool
 FdPollImplFdSet::processFdSet(FdSet& fdset)
 {
    bool didsomething = false;
-   int itemIdx;
-   int* prevIdxRef = &mLiveHeadIdx;
+   size_t itemIdx;
+   size_t* prevIdxRef = &mLiveHeadIdx;
    int loopCnt = 0;
 
    // Step 3: Invoke callbacks
@@ -574,7 +574,7 @@ FdPollImplPoll::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *it
    FdPollItemPollInfo& info = mItems[fd];
    info.mSocketFd = fd;
    info.mItemObj = item;
-   info.mFdPollCacheIndex = mPollFdCache.size();
+   info.mFdPollCacheIndex = (unsigned int)mPollFdCache.size();
 
    pollfd pollFD;
    pollFD.fd = fd;
@@ -587,7 +587,7 @@ FdPollImplPoll::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *it
 void
 FdPollImplPoll::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMask)
 {
-   int fd = IMPL_POLL_HandleToFd(handle);
+   int fd = (int)IMPL_POLL_HandleToFd(handle);
 
    RecursiveLock lock(mMutex);
    FdPollItemPollInfoMap::iterator it = mItems.find(fd);
@@ -607,7 +607,7 @@ FdPollImplPoll::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMa
 void
 FdPollImplPoll::delPollItem(FdPollItemHandle handle)
 {
-   int fd = IMPL_POLL_HandleToFd(handle);
+   int fd = (int)IMPL_POLL_HandleToFd(handle);
    //InfoLog(<<"deleting poll item fd="<<fd);
 
    RecursiveLock lock(mMutex);
@@ -733,7 +733,7 @@ FdPollImplPoll::waitAndProcess(int ms)
 
    pollfd *pollFDArray = &(mPollFds.front());
 #ifdef WIN32
-   int numReadyFDs = WSAPoll(pollFDArray, mPollFds.size(), waitMs);
+   int numReadyFDs = WSAPoll(pollFDArray, (ULONG)mPollFds.size(), waitMs);
 #else
    int numReadyFDs = poll(pollFDArray, mPollFds.size(), waitMs);
 #endif

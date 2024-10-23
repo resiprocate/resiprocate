@@ -75,7 +75,7 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
          // Try to parse stun message
          StunMessage request(StunTuple(StunTuple::TCP, mLocalAddress, mLocalPort),
                              StunTuple(StunTuple::TCP, address, port),
-                             (char*)&(*data)[0], data->size());
+                             (char*)&(*data)[0], (unsigned int)data->size());
          if(request.isValid())
          {
             StunMessage response;

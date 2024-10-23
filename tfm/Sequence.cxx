@@ -35,7 +35,7 @@ void SequenceClass::CPUSequenceSetup()
 int 
 SequenceClass::size()
 {
-   return mExpects.size();
+   return (int)mExpects.size();
 }
 
 bool 

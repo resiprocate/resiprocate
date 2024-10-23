@@ -117,7 +117,7 @@ TfmDns::makeSrvResponse(const char* target, const std::list<SRV>& srvs)
 {
    memset(mResponse, 0, sizeof(mResponse)/sizeof(char));   
    int nameLen = computeLength(target);
-   mResponseLength = (nameLen * (1 + srvs.size())) + HFIXEDSZ + QFIXEDSZ + (RRFIXEDSZ * srvs.size());
+   mResponseLength = (nameLen * (1 + (int)srvs.size())) + HFIXEDSZ + QFIXEDSZ + (RRFIXEDSZ * (int)srvs.size());
 
    for (list<SRV>::const_iterator it = srvs.begin(); it != srvs.end(); ++it)
    {
@@ -293,7 +293,7 @@ TfmDns::makeAResponse(const char* target, const std::list<Host>& hosts)
    int nameLen = computeLength(target);   
    static int addrLength = 4;
 
-   mResponseLength = (nameLen * (1 + hosts.size())) + HFIXEDSZ + QFIXEDSZ + (RRFIXEDSZ * hosts.size()) + hosts.size() * addrLength;
+   mResponseLength = (nameLen * (1 + (int)hosts.size())) + HFIXEDSZ + QFIXEDSZ + (RRFIXEDSZ * (int)hosts.size()) + (int)hosts.size() * addrLength;
 
    int len;
    unsigned char *q;

@@ -514,7 +514,7 @@ RendPubSubEvent::getNextPidfSn(unsigned pubAcctIdx, unsigned pubRptIdx,
          posture->mExpireAbsSecs = 0;
          return 0;
       }
-      posture->mExpireAbsSecs = REND_US2S(absExpTime);
+      posture->mExpireAbsSecs = (uint32_t)REND_US2S(absExpTime);
    }
    recordPublish(pubAcctIdx, pubRptIdx);
    return ++(posture->mPidfSn);
@@ -654,8 +654,8 @@ RendPubSubEvent::checkPublishDetail(RendTimeUs now,
    const RendEventPubPosture *posture = getPosture(pubAcctIdx, pubRptIdx);
    detail.mPubAcctIdx = pubAcctIdx;
    detail.mPubRptIdx = pubRptIdx;
-   detail.mPubExpireSecs = posture->mExpireAbsSecs 
-      ? posture->mExpireAbsSecs - REND_US2S(now) : 0;
+   detail.mPubExpireSecs = (int)(posture->mExpireAbsSecs 
+      ? posture->mExpireAbsSecs - REND_US2S(now) : 0);
    detail.mPubPidfSn = posture->mPidfSn; 
 
    uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
@@ -1585,7 +1585,7 @@ RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt)
 {
    RendSketchBase::getTroopReportCore(now, rpt);
    rpt.mWaveCnt = mWaveCnt;
-   rpt.mWaveStateSecs = REND_US2S(now - mWaveStateStartTime);
+   rpt.mWaveStateSecs = (int)REND_US2S(now - mWaveStateStartTime);
 
    const char *nm = "?";
 
@@ -1617,8 +1617,8 @@ RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt)
    rpt.mWavePubAliveCnt = mPubTroop.getSessionMoodCnt(REND_SM_GROUP_Alive);
    rpt.mWaveSubAliveCnt = mSubTroop.getSessionMoodCnt(REND_SM_GROUP_Alive);
 
-   rpt.mWaveLastPubDur = REND_US2S(mWaveLastPubDur);
-   rpt.mWaveLastSubDur = REND_US2S(mWaveLastSubDur);
+   rpt.mWaveLastPubDur = (int)REND_US2S(mWaveLastPubDur);
+   rpt.mWaveLastSubDur = (int)REND_US2S(mWaveLastSubDur);
 
    rpt.mWaveCurReqTotCnt = mCurWaveReqTotCnt;
    rpt.mWaveCurReqRemCnt = 
@@ -1641,15 +1641,15 @@ RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt)
    rpt.mWaveCurTupPendCnt = mPubTroop.mPendTupCurCnt;
    // add sub pend tups into above?
 
-   rpt.mWavePubReqAvgDur = REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendReq).avg());
-   rpt.mWavePubReqMaxDur = REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendReq).mMax);
-   rpt.mWavePubNotAvgDur = REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendNotify).avg());
-   rpt.mWavePubNotMaxDur = REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendNotify).mMax);
+   rpt.mWavePubReqAvgDur = (int)REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendReq).avg());
+   rpt.mWavePubReqMaxDur = (int)REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendReq).mMax);
+   rpt.mWavePubNotAvgDur = (int)REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendNotify).avg());
+   rpt.mWavePubNotMaxDur = (int)REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendNotify).mMax);
 
-   rpt.mWaveSubReqAvgDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendReq).avg());
-   rpt.mWaveSubReqMaxDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendReq).mMax);
-   rpt.mWaveSubNotAvgDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendNotify).avg());
-   rpt.mWaveSubNotMaxDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendNotify).mMax);
+   rpt.mWaveSubReqAvgDur = (int)REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendReq).avg());
+   rpt.mWaveSubReqMaxDur = (int)REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendReq).mMax);
+   rpt.mWaveSubNotAvgDur = (int)REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendNotify).avg());
+   rpt.mWaveSubNotMaxDur = (int)REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendNotify).mMax);
 }
 
 
@@ -1895,7 +1895,7 @@ operator<<(std::ostream& os, const RendFmtMoodStat stat)
    {
       char buf1[50];
       os<<"Most="<<stat.mTroop.getMostMoodCnt(stat.mMood)
-         <<" Dur="<<dur.fmt1(buf1, sizeof(buf1), .001, 3)
+         <<" Dur="<<dur.fmt1(buf1, sizeof(buf1), (float).001, 3)
          <<"ms";
    }
    if ( stat.mMood==REND_SM_PendReq ) 

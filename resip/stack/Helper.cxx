@@ -1894,7 +1894,7 @@ Helper::gruuUserPart(const Data& instanceId,
       throw std::runtime_error("Failed to encrypt GRUU user part");
 #endif
 
-   return GRUU + Data(out.data(), out.size()).base64encode(true/*safe URL*/);
+   return GRUU + Data(out.data(), (Data::size_type)out.size()).base64encode(true/*safe URL*/);
 }
 
 std::pair<Data, Data>
@@ -1969,7 +1969,7 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
       throw std::runtime_error("Failed to decrypt GRUU user part");
 #endif
 
-   const Data pair(out.data(), out.size());
+   const Data pair(out.data(), (Data::size_type)out.size());
 
    Data::size_type pos = pair.find(sep);
    if (pos == Data::npos)

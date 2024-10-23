@@ -22,7 +22,7 @@ FakeSelectSocketDescriptor::FakeSelectSocketDescriptor()
 {
 #ifdef WIN32
    sockaddr socketAddr;
-   mSocket = ::socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+   mSocket = (int)::socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
    sockaddr_in loopback;
    memset(&loopback, 0, sizeof(loopback));

@@ -306,7 +306,7 @@ AsyncTlsSocketBase::transportClose()
 {
    if (mOnBeforeSocketCloseFp)
    {
-      mOnBeforeSocketCloseFp(mSocket.lowest_layer().native_handle());
+      mOnBeforeSocketCloseFp((unsigned int)mSocket.lowest_layer().native_handle());
    }
 
    asio::error_code ec;

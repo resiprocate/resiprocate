@@ -1504,7 +1504,7 @@ SdpContents::Session::makeIceFragment(const Data& fragment,
       ret->addAttribute(Data("ice-ufrag"), m->getValues("ice-ufrag").front());
       ret->addAttribute(Data("ice-pwd"), m->getValues("ice-pwd").front());
       Medium _m(m->name(), m->port(), m->multicast(), m->protocol());
-      _m.addAttribute("candidate", fragment.substr(strlen("candidate:")));
+      _m.addAttribute("candidate", fragment.substr((Data::size_type)strlen("candidate:")));
       ret->addMedium(_m);
    }
    return ret;
@@ -1654,7 +1654,7 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
          {
             pb.fail(__FILE__, __LINE__, "IP address expected");
          }
-         size_t i = addr.size() - 1;
+         Data::size_type i = addr.size() - 1;
          for (; i; i--)
          {
             if (addr[i] == '.' || addr[i] == ':') // ipv4 or ipv6

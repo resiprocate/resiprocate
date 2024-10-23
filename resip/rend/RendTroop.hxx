@@ -136,19 +136,19 @@ public:
    int getRenewSecs(RendTimeUs now) const 
    {
       // secs until renewal is scheduled
-      return mRenewAbsTime==0?-123456:REND_US2S(mRenewAbsTime-now);
+      return (int)(mRenewAbsTime==0?-123456:REND_US2S(mRenewAbsTime-now));
    }
 
    int getExpireSecs(RendTimeUs now) const 
    {
       // secs until it expires
-      return mExpireAbsTime==0?-123456:REND_US2S(mExpireAbsTime-now);
+      return (int)(mExpireAbsTime==0?-123456:REND_US2S(mExpireAbsTime-now));
    }
 
    int getLastMoodSecs(RendTimeUs now) const 
    { 
       // secs since last mood change
-      return REND_US2S(now-mLastMoodTime);
+      return (int)REND_US2S(now-mLastMoodTime);
    }
 
    RendPendReason	getPendReason() const { return mPendReason; }
@@ -339,18 +339,18 @@ public:
    {
       if (mood==REND_SM_GROUP_Pend) 
       {
-         return mMoods[REND_SM_PendReq].mChain.size()
-            + mMoods[REND_SM_PendNotify].mChain.size();
+         return (int)(mMoods[REND_SM_PendReq].mChain.size()
+            + mMoods[REND_SM_PendNotify].mChain.size());
       } 
       else if (mood==REND_SM_GROUP_Alive) 
       {
-         return mMoods[REND_SM_Open].mChain.size()
+         return (int)(mMoods[REND_SM_Open].mChain.size()
             + mMoods[REND_SM_PendReq].mChain.size()
             + mMoods[REND_SM_PendNotify].mChain.size()
-            + mMoods[REND_SM_Wave].mChain.size();
+            + mMoods[REND_SM_Wave].mChain.size());
       }
       resip_assert( mood > REND_SM_None && mood < REND_SM_MAX );
-      return mMoods[mood].mChain.size();
+      return (int)mMoods[mood].mChain.size();
    }
 
    unsigned getMostMoodCnt(RendSessionMood mood) const 
@@ -365,7 +365,7 @@ public:
    
    void addMoodDur(RendSessionMood mood, RendTimeUs dur) 
    {
-      mMoods[mood].mDurStat.add(dur);
+      mMoods[mood].mDurStat.add((double)dur);
    }
 
    // local accumulator, access from TroopDlgs

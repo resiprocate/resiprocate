@@ -1624,9 +1624,9 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       {
          Uri aor(i->mKey1);
          ContactInstanceRecord rec;
-         size_t bar1 = i->mKey2.find("|");
-         size_t bar2 = i->mKey2.find("|",bar1+1);
-         size_t bar3 = i->mKey2.find("|",bar2+1);
+         Data::size_type bar1 = i->mKey2.find("|");
+         Data::size_type bar2 = i->mKey2.find("|",bar1+1);
+         Data::size_type bar3 = i->mKey2.find("|",bar2+1);
          
          if(bar1==Data::npos || bar2 == Data::npos || bar3==Data::npos)
          {
@@ -1860,7 +1860,7 @@ WebAdmin::buildPublicationsSubPage(DataStream& s)
       int j = 0;
       for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         size_t bar1 = i->mKey2.find("|");
+         Data::size_type bar1 = i->mKey2.find("|");
 
          if (bar1 == Data::npos)
          {

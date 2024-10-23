@@ -55,9 +55,9 @@ RendSketchBase::runTimerPause(RendTimeUs now)
 unsigned
 RendSketchBase::runTimerGetSecs(RendTimeUs now) 
 {
-   unsigned secs = REND_US2S(mRunPriorDuration);
+   unsigned secs = (unsigned)REND_US2S(mRunPriorDuration);
    if ( mRunCurStart != 0 )
-      secs += REND_US2S(now-mRunCurStart);
+      secs += (unsigned)REND_US2S(now-mRunCurStart);
    return secs;
 }
 
@@ -271,7 +271,7 @@ RendSketchBase::doWorkLoop(RendTimeUs reportPeriod)
 
    while ( mStopUrgency<2 ) 
    {
-      int stepSizeMs = REND_US2MS(mTickPeriod);
+      int stepSizeMs = (int)REND_US2MS(mTickPeriod);
       mTu.processAll(stepSizeMs);
 
       resip::Lock lock(mUpperMutex);
@@ -284,7 +284,7 @@ RendSketchBase::doWorkLoop(RendTimeUs reportPeriod)
          checkStale(now);
          // piggy back on StaleTime for slow-ish transaction rate
          int newCnt = mTu.mStats.mTransRxReqCnt + mTu.mStats.mTransTxReqCnt;
-         mLastTransRate = 1e6 * (newCnt - mLastTransCnt) / (double)staleDelta;
+         mLastTransRate = (float)1e6 * (newCnt - mLastTransCnt) / (float)staleDelta;
          mLastTransCnt = newCnt;
       }
 
@@ -353,8 +353,8 @@ RendSketchBase::doWorkLoop(RendTimeUs reportPeriod)
       if ( workDoneElapsed > workDonePeriod ) 
       {
          double workDoneLastAvg = 1e6 * workDoneSum / ((double)workDoneElapsed);
-         mActualWorkRate = workDoneLastAvg;
-         mActualLoopRate = 1e6*workDoneCnt / ((double)workDoneElapsed);
+         mActualWorkRate = (float)workDoneLastAvg;
+         mActualLoopRate = (float)(1e6*workDoneCnt / ((double)workDoneElapsed));
 #if 0
          InfoLog(<<"workdone: elapsed="<<workDoneElapsed<<" sum="<<workDoneSum<<" avg="<<workDoneLastAvg);
 #endif

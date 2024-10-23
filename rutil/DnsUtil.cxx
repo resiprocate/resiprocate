@@ -186,7 +186,7 @@ Data
 DnsUtil::getLocalDomainName()
 {
    Data lhn(getLocalHostName());
-   size_t dpos = lhn.find(".");
+   Data::size_type dpos = lhn.find(".");
    if (dpos != Data::npos)
    {
       return lhn.substr(dpos+1);

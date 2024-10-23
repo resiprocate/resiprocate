@@ -793,7 +793,7 @@ Log::timestamp(Data& res)
                                        the end, instead of a null terminator */
 
    // ugh, resize the Data
-   res.at(strlen(datebuf)-1);
+   res.at((Data::size_type)strlen(datebuf)-1);
    return res;
 }
 
@@ -1277,7 +1277,7 @@ Log::ThreadData::set(Type type, Level level,
       mLogFileName = logFileName;
       mLogFileName.replace("{timestamp}", Data((uint64_t)time(0)));
 #ifdef WIN32
-      mLogFileName.replace("{pid}", Data((int)GetCurrentProcess()));
+      mLogFileName.replace("{pid}", Data((uint64_t)GetCurrentProcess()));
 #else
       mLogFileName.replace("{pid}", Data(getpid()));
 #endif

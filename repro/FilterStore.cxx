@@ -52,7 +52,7 @@ FilterStore::FilterStore(AbstractDb& db):
          {
             filter.pcond1 = new std::regex(filter.filterRecord.mCondition1Regex.c_str(), flags);
          }
-         catch (std::regex_error& ex)
+         catch (std::regex_error&)
          {
             delete filter.pcond1;
             ErrLog( << "Condition1Regex has invalid match expression: "
@@ -67,7 +67,7 @@ FilterStore::FilterStore(AbstractDb& db):
          {
             filter.pcond2 = new std::regex(filter.filterRecord.mCondition2Regex.c_str(), flags);
          }
-         catch (std::regex_error& ex)
+         catch (std::regex_error&)
          {
             delete filter.pcond2;
             ErrLog( << "Condition2Regex has invalid match expression: "
@@ -147,7 +147,7 @@ FilterStore::addFilter(const resip::Data& cond1Header,
       {
          filter.pcond1 = new std::regex(filter.filterRecord.mCondition1Regex.c_str(), flags);
       }
-      catch (std::regex_error& ex)
+      catch (std::regex_error&)
       {
          delete filter.pcond1;
          filter.pcond1 = 0;
@@ -159,7 +159,7 @@ FilterStore::addFilter(const resip::Data& cond1Header,
       {
          filter.pcond2 = new std::regex(filter.filterRecord.mCondition2Regex.c_str(), flags);
       }
-      catch (std::regex_error& ex)
+      catch (std::regex_error&)
       {
          delete filter.pcond2;
          filter.pcond2 = 0;

@@ -453,7 +453,7 @@ void
 Contents::preParseHeaders(ParseBuffer& pb)
 {
    const char* start = pb.position();
-   Data all( start, pb.end()-start);
+   Data all( start, (Data::size_type)(pb.end()-start));
 
    Data headerName;
 

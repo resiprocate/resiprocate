@@ -40,7 +40,7 @@ void SHA1::update(const std::string &s)
 void SHA1::update(std::istream &is)
 {
     std::string rest_of_buffer;
-    read(is, rest_of_buffer, BLOCK_BYTES - buffer.size());
+    read(is, rest_of_buffer, BLOCK_BYTES - (int)buffer.size());
     buffer += rest_of_buffer;
 
     while (is)
@@ -101,7 +101,7 @@ void SHA1::createDigest()
 
     /* Padding */
     buffer += (char)0x80;
-    unsigned int orig_size = buffer.size();
+    unsigned int orig_size = (unsigned int)buffer.size();
     while (buffer.size() < BLOCK_BYTES)
     {
         buffer += (char)0x00;

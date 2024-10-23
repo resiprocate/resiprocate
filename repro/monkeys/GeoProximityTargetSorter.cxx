@@ -83,7 +83,7 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
       {
          mRUriRegularExpression = new regex(mRUriRegularExpressionData.c_str(), flags);
       }
-      catch(std::regex_error& ex)
+      catch(std::regex_error&)
       {
          delete mRUriRegularExpression;
          ErrLog( << "GeoProximityRequestUriFilter rule has invalid match expression: "

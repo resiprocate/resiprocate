@@ -71,7 +71,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
    {
       StackLog(<< "removing comments");
       lPb.reset(start);
-      mData.reserve(lPb.end() - lPb.start());
+      mData.reserve((Data::size_type)(lPb.end() - lPb.start()));
 
       const char* anchor = start;
       {
@@ -618,7 +618,7 @@ XMLCursor::Node::skipComments(ParseBuffer& pb)
 EncodeStream&
 resip::operator<<(EncodeStream& str, const XMLCursor::Node& node)
 {
-   Data::size_type size = node.mPb.end() - node.mPb.start();
+   Data::size_type size = (Data::size_type)(node.mPb.end() - node.mPb.start());
 
    static const Data::size_type showSize(35);
 

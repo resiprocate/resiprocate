@@ -177,7 +177,7 @@ TestEndPoint::And::queue(SequenceClass* parent)
    DebugLog(<<"!*!And::queue");
    DebugLog(<<"# sequences: " << mSequences.size());
 
-   parent->setBranchCount(mSequences.size());
+   parent->setBranchCount((unsigned int)mSequences.size());
    parent->setAfterAction(mAfterAction);
 
    for(list<SequenceClass*>::iterator seqit =  mSequences.begin();

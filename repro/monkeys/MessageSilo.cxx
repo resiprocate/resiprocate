@@ -85,7 +85,7 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
          // use the EMCAScript syntax.
          mDestFilterRegex = new std::regex(destFilterRegex.c_str(), std::regex_constants::ECMAScript | std::regex_constants::nosubs);
       }
-      catch (std::regex_error& e)
+      catch (std::regex_error&)
       {
          delete mDestFilterRegex;
          ErrLog( << "MessageSilo has invalid destination filter regular expression: " << destFilterRegex);
@@ -102,7 +102,7 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
          // use the EMCAScript syntax.
          mMimeTypeFilterRegex= new std::regex(mimeTypeFilterRegex.c_str(), std::regex_constants::ECMAScript | std::regex_constants::nosubs);
       }
-      catch (std::regex_error& e)
+      catch (std::regex_error&)
       {
          delete mMimeTypeFilterRegex;
          ErrLog( << "MessageSilo has invalid mime-type filter regular expression: " << mimeTypeFilterRegex);

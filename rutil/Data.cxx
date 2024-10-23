@@ -322,7 +322,7 @@ Data::Data(ShareEnum se, const char* buffer, size_type length, size_type capacit
 
 Data::Data(ShareEnum se, const char* buffer)
    : mBuf(const_cast<char*>(buffer)),
-     mSize(strlen(buffer)),
+     mSize((Data::size_type)strlen(buffer)),
      mCapacity(mSize),
      mShareEnum(se)
 {
@@ -344,12 +344,12 @@ Data::Data(ShareEnum se, const Data& staticData)
 
 Data::Data(const char* str)
 {
-   initFromString(str, str ? strlen(str) : 0);
+   initFromString(str, str ? (Data::size_type)strlen(str) : 0);
 }
 
 Data::Data(const string& str)
 {
-   initFromString(str.c_str(), str.size());
+   initFromString(str.c_str(), (Data::size_type)str.size());
 }
 
 Data::Data(const Data& data) 
@@ -773,7 +773,7 @@ bool
 resip::operator<(const Data& lhs, const char* rhs)
 {
    resip_assert(rhs);
-   Data::size_type l = strlen(rhs);
+   Data::size_type l = (Data::size_type)strlen(rhs);
    int res = memcmp(lhs.mBuf, rhs, resipMin(lhs.mSize, l));
 
    if (res < 0)
@@ -794,7 +794,7 @@ bool
 resip::operator<(const char* lhs, const Data& rhs)
 {
    resip_assert(lhs);
-   Data::size_type l = strlen(lhs);
+   Data::size_type l = (Data::size_type)strlen(lhs);
    int res = memcmp(lhs, rhs.mBuf, resipMin(l, rhs.mSize));
 
    if (res < 0)
@@ -981,7 +981,7 @@ Data
 Data::operator+(const char* str) const
 {
    resip_assert(str);
-   size_t l = strlen(str);
+   Data::size_type l = (Data::size_type)strlen(str);
    Data tmp(mSize + l, Data::Preallocate);
    tmp.mSize = mSize + l;
    tmp.mCapacity = tmp.mSize;
@@ -1863,7 +1863,7 @@ Data::find(const Data& match,
       pb.skipToChars(match);
       if (!pb.eof())
       {
-         return pb.position() - pb.start() + start;
+         return (Data::size_type)(pb.position() - pb.start() + start);
       }
    }
 
@@ -2041,7 +2041,7 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
 {
    // .bwc. Hsieh hash, with some bitmasking to get the case-insensitive 
    // property (this is what all the "0x2020 |" business is about.)
-   uint32_t hash = len, tmp;
+   uint32_t hash = (uint32_t)len, tmp;
    int rem;
 
     if (len <= 0 || data == NULL) return 0;
