@@ -469,7 +469,7 @@ TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned s
          StunMessage* stunMsg = new StunMessage(mLocalBinding, 
                                                 //StunTuple(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort()), 
                                                 StunTuple(mLocalBinding.getTransportType(), address, port), 
-                                                &(*data)[0], data->size());
+                                                &(*data)[0], (unsigned int)data->size());
          if(stunMsg->isValid())
          {
             handleStunMessage(*stunMsg);
@@ -1160,7 +1160,7 @@ TurnAsyncSocket::sendToRemotePeer(RemotePeer& remotePeer, const std::shared_ptr<
       StunMessage::setStunAtrAddressFromTuple(ind->mTurnXorPeerAddress[0], remotePeer.getPeerTuple());
       if(data->size() > 0)
       {
-         ind->setTurnData(data->data(), data->size());
+         ind->setTurnData(data->data(), (unsigned int)data->size());
       }
 
       // Send indication to Turn Server

@@ -702,7 +702,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
                   return false;
                }
                //StackLog(<< "MessageIntegrity = " << mMessageIntegrity.hash);
-               mMessageIntegrityMsgLength = body + attrLen - buf - sizeof(StunMsgHdr);
+               mMessageIntegrityMsgLength = (uint16_t)(body + attrLen - buf - sizeof(StunMsgHdr));
             }
             else
             {
@@ -1633,13 +1633,13 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    }
 
    // Update Length in header now - needed in message integrity calculations
-   uint16_t msgSize = ptr - buf - sizeof(StunMsgHdr);
+   uint16_t msgSize = (uint16_t)(ptr - buf - sizeof(StunMsgHdr));
    if(mHasMessageIntegrity) msgSize += 24;  // 4 (attribute header) + 20 (attribute value)
    encode16(lengthp, msgSize);
 
    if (mHasMessageIntegrity)
    {
-      int len = ptr - buf;
+      int len = (int)(ptr - buf);
       StackLog(<< "Adding message integrity: buffer size=" << len << ", hmacKey=" << mHmacKey.hex());
       StunAtrIntegrity integrity;
       computeHmac(integrity.hash, buf, len, mHmacKey.c_str(), (int)mHmacKey.size());
@@ -1713,11 +1713,11 @@ StunMessage::createUsernameAndPassword()
 
    if(mRemoteTuple.getAddress().is_v6())
    {
-      *mUsername = Data(mRemoteTuple.getAddress().to_v6().to_bytes().data(), mRemoteTuple.getAddress().to_v6().to_bytes().size()).base64encode() + ":";
+      *mUsername = Data(mRemoteTuple.getAddress().to_v6().to_bytes().data(), (Data::size_type)mRemoteTuple.getAddress().to_v6().to_bytes().size()).base64encode() + ":";
    }
    else
    {
-      *mUsername = Data(mRemoteTuple.getAddress().to_v4().to_bytes().data(), mRemoteTuple.getAddress().to_v4().to_bytes().size()).base64encode() + ":";
+      *mUsername = Data(mRemoteTuple.getAddress().to_v4().to_bytes().data(), (Data::size_type)mRemoteTuple.getAddress().to_v4().to_bytes().size()).base64encode() + ":";
    }
    unsigned int port = mRemoteTuple.getPort();
    *mUsername += Data((char*)&port, sizeof(unsigned int)).base64encode() + ":"; 

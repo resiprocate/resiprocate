@@ -313,7 +313,7 @@ ServerProcess::mainLoop()
 void
 ServerProcess::doWait()
 {
-   sleepMs(mWaitPeriod.count());
+   sleepMs((unsigned int)mWaitPeriod.count());
 }
 
 void
