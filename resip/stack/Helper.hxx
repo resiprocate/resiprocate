@@ -391,7 +391,7 @@ class Helper
       static Data computeUniqueBranch();
       static Data computeProxyBranch(const SipMessage& request);
 
-      static Data computeCallId();
+      static Data computeCallId(const Data &host);
       static Data computeTag(int numBytes);
 
       enum AuthResult {Failed = 1, Authenticated, Expired, BadlyFormed};
