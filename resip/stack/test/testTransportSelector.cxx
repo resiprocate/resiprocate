@@ -58,7 +58,7 @@ class TestTlsTransport : public TlsTransport
 {
    public:
       TestTlsTransport(Fifo<TransactionMessage>& rxFifo,
-                       const uint transportKey,
+                       const unsigned int transportKey,
                        int portNum,
                        IpVersion version,
                        const Data& interfaceObj,
