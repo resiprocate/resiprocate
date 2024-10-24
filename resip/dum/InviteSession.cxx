@@ -1729,6 +1729,11 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          handler->onOfferRejected(getSessionHandle(), &msg);
          break;
 
+      case OnAck:
+      case OnAckAnswer:
+         mCurrentRetransmit200 = 0; //stop the 200 retransmit timer
+      break;
+
       default:
          dispatchOthers(msg);
          break;
