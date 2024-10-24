@@ -67,6 +67,49 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
+TransportSelector::TlsTransportKey::TlsTransportKey(const resip::Data& domainName, const resip::Tuple& tuple) :
+   mTuple(tuple)
+{
+   mTuple.setTargetDomain(domainName);
+}
+
+
+
+bool
+TransportSelector::TlsTransportKey::operator<(const TlsTransportKey& rhs) const
+{
+   if(mTuple.getTargetDomain() < rhs.mTuple.getTargetDomain())
+   {
+      return true;
+   }
+   else if(mTuple.getTargetDomain() == rhs.mTuple.getTargetDomain())
+   {
+      return mTuple < rhs.mTuple;
+   }
+   return false;
+}
+
+bool
+TransportSelector::TlsTransportKey::strictEqWithoutDomain(const resip::Tuple& tuple) const
+{
+   return mTuple == tuple;    // Tuple does not compare domain names by default.
+}
+
+bool
+TransportSelector::TlsTransportKey::relaxEq(const TlsTransportKey &rhs) const
+{
+   return mTuple.getTargetDomain() == rhs.mTuple.getTargetDomain() &&
+          mTuple.getType() == rhs.mTuple.getType() &&
+          mTuple.ipVersion() == rhs.mTuple.ipVersion();
+}
+
+bool
+TransportSelector::TlsTransportKey::relaxEqWithoutDomain(const resip::Tuple& tuple) const
+{
+   return mTuple.getType() == tuple.getType() &&
+          mTuple.ipVersion() == tuple.ipVersion();
+}
+
 TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression, bool useDnsVip) :
    mDns(dnsStub, useDnsVip),
    mStateMacFifo(fifo),
@@ -246,15 +289,15 @@ TransportSelector::addTransport(std::unique_ptr<Transport> autoTransport, bool i
    }
    else
    {
-      tuple.setTargetDomain(transport->tlsDomain());
-      TlsTransportKey key(tuple);
+      TlsTransportKey key(transport->tlsDomain(), tuple);
       if(mTlsTransports.find(key) == mTlsTransports.end())
       {
          mTlsTransports[key] = transport;
       }
       else
       {
-         WarningLog (<< "Can't add transport, overlapping properties with existing transport: " << tuple);
+         WarningLog (<< "Can't add transport, overlapping properties with existing transport: "
+                     << tuple << " (domain=" << transport->tlsDomain() << ")");
          resip_assert(false); // should never get here - checked in SipStack first
          return;
       }
@@ -327,9 +370,7 @@ TransportSelector::removeTransport(unsigned int transportKey)
       }
       else
       {
-         Tuple tlsRemoveTuple = transportToRemove->getTuple();
-         tlsRemoveTuple.setTargetDomain(transportToRemove->tlsDomain());
-         TlsTransportKey tlsKey(tlsRemoveTuple);
+         TlsTransportKey tlsKey(transportToRemove->tlsDomain(), transportToRemove->getTuple());
          mTlsTransports.erase(tlsKey);
       }
 
@@ -1560,15 +1601,13 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
 {
    DebugLog(<< "findTransportBySource(" << search << ")");
 
-   if(msg && 
-      !msg->getTlsDomain().empty() && 
-      isSecure(search.getType()))
+   if(msg && isSecure(search.getType()))
    {
       // We should not be willing to attempt sending on a TLS/DTLS/WSS transport 
       // that does not have the cert we're attempting to use, even if the 
       // IP/port/proto match. If we have not specified which identity we want
       // to use, then proceed with the code below.
-      return findTlsTransport(msg->getTlsDomain(),search.getType(),search.ipVersion());
+      return findTlsTransport(msg->getTlsDomain(), search);
    }
 
    bool ignorePort = (search.getPort() == 0);
@@ -1651,37 +1690,69 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
 }
 
 Transport*
-TransportSelector::findTlsTransport(const Data& domainname, TransportType type, IpVersion version) const
+TransportSelector::findTlsTransport(const Data& domainname,
+                                    const Tuple& search) const
 {
-   resip_assert(isSecure(type));
-   DebugLog(<< "Searching for " << toData(type) << " transport for domain='"
-                  << domainname << "'" << " have " << mTlsTransports.size());
+   resip_assert(isSecure(search.getType()));
+
+   // Basically, the 'search' Tuple has a member called mTargetDomain.
+   // However, it is not used due to the current TransportSelector implementation logic.
 
    if (domainname == Data::Empty)
    {
-      for(TlsTransportMap::const_iterator i=mTlsTransports.begin(); i != mTlsTransports.end();++i)
+      DebugLog(<< "Searching for " << toData(search.getType()) << " transport without domain."
+               << " Secure transports list size = " << mTlsTransports.size());
+
+      for(const auto& tlsTransport : mTlsTransports)
       {
-         if(i->first.mTuple.getType() == type && i->first.mTuple.ipVersion() == version)
+         const TlsTransportKey &key = tlsTransport.first;
+
+         if (key.strictEqWithoutDomain(search))
          {
-            DebugLog(<<"Found a default transport.");
-            return i->second;
+            DebugLog(<< "findTlsTransport (strict match) => " << *(tlsTransport.second));
+            return tlsTransport.second;
+         }
+      }
+
+      for(const auto& tlsTransport : mTlsTransports)
+      {
+         const TlsTransportKey &key = tlsTransport.first;
+
+         if (key.relaxEqWithoutDomain(search))
+         {
+            DebugLog(<< "findTlsTransport (relaxed match) => " << *(tlsTransport.second));
+            return tlsTransport.second;
          }
       }
    }
    else
    {
-      TlsTransportKey key(domainname, type, version);
-      TlsTransportMap::const_iterator i=mTlsTransports.find(key);
+      DebugLog(<< "Searching for " << toData(search.getType()) << " transport for domain='"
+               << domainname << "'. Secure transports list size = " << mTlsTransports.size());
 
-      if(i!=mTlsTransports.end())
+      TlsTransportKey searchKey(domainname, search);
+      const auto& i = mTlsTransports.find(searchKey);
+
+      if(i != mTlsTransports.end())
       {
-         DebugLog(<< "Found a transport.");
+         DebugLog(<< "findTlsTransport (domain strict match) => " << *(i->second));
          return i->second;
+      }
+
+      for(const auto& tlsTransport : mTlsTransports)
+      {
+         const TlsTransportKey &key = tlsTransport.first;
+
+         if (key.relaxEq(searchKey))
+         {
+            DebugLog(<< "findTlsTransport (domain relaxed match) => " << *(tlsTransport.second));
+            return tlsTransport.second;
+         }
       }
    }
 
-   DebugLog(<<"No transport found.");
-   return 0;
+   DebugLog(<< "No TLS transport found");
+   return nullptr;
 }
 
 unsigned int
