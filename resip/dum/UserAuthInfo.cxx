@@ -5,8 +5,12 @@
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 
+#include <tuple>
+
 using namespace resip;
 using namespace std;
+
+constexpr const char* ServerErrorStatusText = "Server Error.";
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -17,7 +21,9 @@ UserAuthInfo::UserAuthInfo(const Data& user,
    DumFeatureMessage(transactionId),
    mMode(mode),
    mUser(user),
-   mRealm(realm)
+   mRealm(realm),
+   mErrorCode(503),
+   mErrorStatusText(ServerErrorStatusText)
 {
 }
 
@@ -29,7 +35,9 @@ UserAuthInfo::UserAuthInfo(const Data& user,
    mMode(RetrievedA1),
    mUser(user),
    mRealm(realm),
-   mA1(a1)
+   mA1(a1),
+   mErrorCode(503),
+   mErrorStatusText(ServerErrorStatusText)
 {
 }
 
@@ -40,7 +48,9 @@ UserAuthInfo::UserAuthInfo( const resip::Data& user,
    DumFeatureMessage(transactionId),
    mMode(RetrievedA1),
    mUser(user),
-   mRealm(realm)
+   mRealm(realm),
+   mErrorCode(503),
+   mErrorStatusText(ServerErrorStatusText)
 {
    mTu = transactionUser;
 }
@@ -73,10 +83,33 @@ UserAuthInfo::getUser() const
    return mUser;
 }
 
+#if RESIP_CPP_STANDARD >= 201703L
+const std::tuple<int32_t, resip::Data> 
+UserAuthInfo::getErrorInfo() const
+{
+   return std::tuple(mErrorCode, mErrorStatusText);
+}
+#else
+const void UserAuthInfo::getErrorInfo(int32_t& errorCode, resip::Data& errorStatusText) const
+{
+   errorCode = mErrorCode;
+   errorStatusText = mErrorStatusText;
+}
+#endif
+
 void 
-UserAuthInfo::setMode(InfoMode mode)
+UserAuthInfo::setMode(InfoMode mode, int32_t errorCode /* = 0 */, const resip::Data & statusText /* = resip::Data::Empty */)
 {
    mMode = mode;
+
+   if (mode == InfoMode::Error)
+   {
+      mErrorCode = errorCode;
+      if (errorCode > 0 && !statusText.empty())
+      {
+         mErrorStatusText = statusText;
+      }
+   }
 }
       
 void 

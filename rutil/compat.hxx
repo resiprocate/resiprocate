@@ -323,6 +323,27 @@ hton64(const uint64_t input)
 #define _CVTBUFSIZE 309+40
 #endif
 
+// Detect the compiler and define the C++ standard version macro
+
+#if defined(_MSC_VER)
+    // For Visual Studio
+
+    // Ensure _MSVC_LANG is defined
+#ifndef _MSVC_LANG
+#define _MSVC_LANG 0
+#endif
+
+// Use _MSVC_LANG to detect the C++ standard version
+#define RESIP_CPP_STANDARD _MSVC_LANG
+
+#else
+    // For GCC or Clang
+
+    // Use __cplusplus to detect the C++ standard version
+#define RESIP_CPP_STANDARD __cplusplus
+
+#endif
+
 #endif
 
 /* ====================================================================
