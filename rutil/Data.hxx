@@ -8,9 +8,6 @@
 #include <iostream>
 #include <string>
 #include <bitset>
-#if RESIP_CPP_STANDARD >= 201703L
-#include <string_view>
-#endif
 #include "rutil/ResipAssert.h"
 
 #include "rutil/compat.hxx"
@@ -183,13 +180,6 @@ class Data
         Creates a data with the contents of the string.
       */
       explicit Data(const std::string& str);
-
-#if RESIP_CPP_STANDARD >= 201703L
-      /**
-        Creates a data with the contents of the string_view.
-      */
-      explicit Data(const std::string_view sv);
-#endif
 
       /**
         Converts the passed in value into ascii-decimal
@@ -595,18 +585,6 @@ class Data
       const char* c_str() const;
 
       /**
-        Convert to a C++ string.
-      */
-      std::string toString();
-
-#if RESIP_CPP_STANDARD >= 201703L
-      /**
-        Creates a c++ string_view.
-      */
-      std::string_view toStringView();
-#endif
-
-      /**
         Returns a pointer to the beginning of the buffer used by the Data.
       */
       const char* begin() const noexcept
@@ -809,7 +787,7 @@ class Data
         prefix(Data("ab")) would be true; however, prefix(Data("abcd"))
         would be false.
       */
-      const bool prefix(const Data& pre) const noexcept;
+      bool prefix(const Data& pre) const;
 
       /**
         Returns true if this Data ends with the bytes indicated by
@@ -817,7 +795,7 @@ class Data
         postfix(Data("bc")) would be true; however, postfix(Data("ab"))
         would be false.
       */
-      const bool postfix(const Data& post) const noexcept;
+      bool postfix(const Data& post) const;
 
       /**
         Copies a portion of this Data into a new Data.
@@ -825,7 +803,7 @@ class Data
         @param first Index of the first byte to copy
         @param count Number of bytes to copy
       */
-      Data substr(size_type first, size_type count = Data::npos) const; 
+      Data substr(size_type first, size_type count = Data::npos) const;
 
       /**
         Finds a specified sequence of bytes in this Data.
@@ -1147,35 +1125,6 @@ bool operator==(const Data& lhs, const char* rhs);
 bool operator<(const Data& lhs, const Data& rhs);
 bool operator<(const Data& lhs, const char* rhs);
 bool operator<(const char* lhs, const Data& rhs);
-
-
-// Overload operator== for resip::Data and std::string
-bool operator==(const resip::Data& lhs, const std::string& rhs)
-{
-   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.c_str(), lhs.size()) == 0;
-}
-
-#if RESIP_CPP_STANDARD >= 201703L
-
-// Overload operator== for resip::Data and std::string_view
-bool operator==(const resip::Data& lhs, const std::string_view rhs)
-{
-   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), lhs.size()) == 0;
-}
-
-// Overload operator!= for resip::Data and std::string
-bool operator!=(const resip::Data& lhs, const std::string& rhs)
-{
-   return !(lhs == rhs);
-}
-
-// Overload operator!= for resip::Data and std::string_view
-bool operator!=(const resip::Data& lhs, const std::string_view rhs)
-{
-   return !(lhs == rhs);
-}
-
-#endif
 
 }
 
