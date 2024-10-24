@@ -352,6 +352,16 @@ Data::Data(const string& str)
    initFromString(str.c_str(), (Data::size_type)str.size());
 }
 
+#if RESIP_CPP_STANDARD >= 201703L
+/**
+  Creates a data with the contents of the string_view.
+*/
+ Data::Data(const std::string_view sv)
+{
+   initFromString(sv.data(), (Data::size_type)sv.size());
+}
+#endif
+
 Data::Data(const Data& data) 
 {
    initFromString(data.mBuf, data.mSize);
@@ -1050,6 +1060,18 @@ Data::c_str() const
    mBuf[mSize] = 0;
    return mBuf;
 }
+
+std::string Data::toString()
+{
+   return std::string(c_str(), size());
+}
+
+#if RESIP_CPP_STANDARD >= 201703L
+std::string_view Data::toStringView()
+{
+   return std::string_view(c_str(), size());
+}
+#endif
 
 void
 Data::own() const
@@ -1816,8 +1838,8 @@ decimals:
 }
 #endif
 
-bool
-Data::prefix(const Data& pre) const
+const bool
+Data::prefix(const Data& pre) const noexcept
 {
    if (pre.size() > size())
    {
@@ -1827,8 +1849,9 @@ Data::prefix(const Data& pre) const
    return memcmp(data(), pre.data(), pre.size()) == 0;
 }
 
-bool
-Data::postfix(const Data& post) const
+
+const bool
+Data::postfix(const Data& post) const noexcept
 {
    if (post.size() > size())
    {
