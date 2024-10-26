@@ -1557,8 +1557,6 @@ class TestData
 
 #endif
 
-         }
-
          std::cerr << "All OK" << endl;
          return 0;
       }
