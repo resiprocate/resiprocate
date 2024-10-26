@@ -149,12 +149,11 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
       InfoLog (<< "Error in auth procedure for " << userAuth->getUser() << " in " << userAuth->getRealm());
       auto response = std::make_shared<SipMessage>();
 
+#if RESIP_CPP_STANDARD >= 201703L
+      auto [code, statusText] = userAuth->getErrorInfo();
+#else
       int32_t code = 0;
       resip::Data statusText;
-
-#if RESIP_CPP_STANDARD >= 201703L
-      std::tie(code, statusText) = userAuth->getErrorInfo();
-#else
       userAuth->getErrorInfo(code, statusText);
 #endif
 
