@@ -182,13 +182,13 @@ class Data
       /**
         Creates a data with the contents of the string.
       */
-      explicit Data(const std::string& str);
+      Data(const std::string& str);
 
 #if RESIP_CPP_STANDARD >= 201703L
       /**
         Creates a data with the contents of the string_view.
       */
-      explicit Data(const std::string_view sv);
+      Data(const std::string_view sv);
 #endif
 
       /**
@@ -438,6 +438,19 @@ class Data
          return copy(str, (size_type)strlen(str));
       }
 
+
+      Data& operator=(const std::string& str)
+      {
+         return copy(str.c_str(), static_cast<size_type>(str.size()));
+      }
+
+#if RESIP_CPP_STANDARD >= 201703L
+      Data& operator=(const std::string_view sv)
+      {
+         return copy(sv.data(), static_cast<size_type>(sv.size()));
+      }
+#endif
+
       /**
         Concatenates two Data objects.
       */
@@ -597,13 +610,13 @@ class Data
       /**
         Convert to a C++ string.
       */
-      std::string toString();
+      const std::string toString() const;
 
 #if RESIP_CPP_STANDARD >= 201703L
       /**
         Creates a c++ string_view.
       */
-      std::string_view toStringView();
+      const std::string_view toStringView() const;
 #endif
 
       /**
@@ -1149,28 +1162,44 @@ bool operator<(const Data& lhs, const char* rhs);
 bool operator<(const char* lhs, const Data& rhs);
 
 
-// Overload operator== for resip::Data and std::string
-bool operator==(const resip::Data& lhs, const std::string& rhs)
+inline bool operator==(const resip::Data& lhs, const std::string& rhs) noexcept
 {
-   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.c_str(), lhs.size()) == 0;
+   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.c_str(), rhs.size()) == 0;
 }
 
-#if RESIP_CPP_STANDARD >= 201703L
-
-// Overload operator== for resip::Data and std::string_view
-bool operator==(const resip::Data& lhs, const std::string_view rhs)
+inline bool operator==(const std::string& lhs, const resip::Data& rhs) noexcept
 {
-   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), lhs.size()) == 0;
+   return lhs.size() == rhs.size() && std::memcmp(lhs.c_str(), rhs.data(), rhs.size()) == 0;
 }
 
-// Overload operator!= for resip::Data and std::string
-bool operator!=(const resip::Data& lhs, const std::string& rhs)
+inline bool operator!=(const resip::Data& lhs, const std::string& rhs) noexcept
 {
    return !(lhs == rhs);
 }
 
-// Overload operator!= for resip::Data and std::string_view
-bool operator!=(const resip::Data& lhs, const std::string_view rhs)
+inline bool operator!=(const std::string& lhs, const resip::Data& rhs) noexcept
+{
+   return !(lhs == rhs);
+}
+
+#if RESIP_CPP_STANDARD >= 201703L
+
+inline bool operator==(const resip::Data& lhs, const std::string_view rhs) noexcept
+{
+   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), rhs.size()) == 0;
+}
+
+inline bool operator==(const std::string_view lhs, const resip::Data& rhs) noexcept
+{
+   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), rhs.size()) == 0;
+}
+
+inline bool operator!=(const resip::Data& lhs, const std::string_view rhs) noexcept
+{
+   return !(lhs == rhs);
+}
+
+inline bool operator!=(const std::string_view lhs, const resip::Data& rhs) noexcept
 {
    return !(lhs == rhs);
 }
