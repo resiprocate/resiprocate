@@ -1061,14 +1061,14 @@ Data::c_str() const
    return mBuf;
 }
 
-const std::string 
+std::string 
 Data::toString() const
 {
    return std::string(c_str(), size());
 }
 
 #if RESIP_CPP_STANDARD >= 201703L
-const std::string_view 
+std::string_view 
 Data::toStringView() const
 {
    return std::string_view(c_str(), size());

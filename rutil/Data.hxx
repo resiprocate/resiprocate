@@ -610,13 +610,13 @@ class Data
       /**
         Convert to a C++ string.
       */
-      const std::string toString() const;
+      std::string toString() const;
 
 #if RESIP_CPP_STANDARD >= 201703L
       /**
         Creates a c++ string_view.
       */
-      const std::string_view toStringView() const;
+      std::string_view toStringView() const;
 #endif
 
       /**
