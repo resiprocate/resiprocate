@@ -1062,14 +1062,14 @@ Data::c_str() const
 }
 
 std::string 
-Data::toString() const
+Data::toString()
 {
    return std::string(c_str(), size());
 }
 
 #if RESIP_CPP_STANDARD >= 201703L
 std::string_view 
-Data::toStringView() const
+Data::toStringView()
 {
    return std::string_view(c_str(), size());
 }
