@@ -2148,6 +2148,7 @@ InviteSession::dispatchOthers(const SipMessage& msg)
 {
    // handle OnGeneralFailure
    // handle OnRedirect
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
    switch (msg.header(h_CSeq).method())
    {
@@ -2184,6 +2185,7 @@ InviteSession::dispatchOthers(const SipMessage& msg)
          else
          {
             mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+            handler->onAckReceived(getSessionHandle(), msg);
          }
          break;
       default:
