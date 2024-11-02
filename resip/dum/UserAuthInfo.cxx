@@ -83,19 +83,11 @@ UserAuthInfo::getUser() const
    return mUser;
 }
 
-#if RESIP_CPP_STANDARD >= 201703L
-const std::tuple<int32_t, resip::Data> 
-UserAuthInfo::getErrorInfo() const
-{
-   return std::tuple(mErrorCode, mErrorStatusText);
-}
-#else
 const void UserAuthInfo::getErrorInfo(int32_t& errorCode, resip::Data& errorStatusText) const
 {
    errorCode = mErrorCode;
    errorStatusText = mErrorStatusText;
 }
-#endif
 
 void 
 UserAuthInfo::setMode(InfoMode mode, int32_t errorCode /* = 0 */, const resip::Data & statusText /* = resip::Data::Empty */)
