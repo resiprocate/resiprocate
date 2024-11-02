@@ -10,7 +10,7 @@
 
 /**
    @file
-   This file is used to handle compatibility fixes/tweaks so reSIProcate can 
+   This file is used to handle compatibility fixes/tweaks so reSIProcate can
    function on multiple platforms.
 */
 
@@ -62,26 +62,26 @@
 
 inline int c99_vsnprintf(char* str, size_t size, const char* format, va_list ap)
 {
-    int count = -1;
+   int count = -1;
 
-    if (size != 0)
-        count = _vsnprintf_s(str, size, _TRUNCATE, format, ap);
-    if (count == -1)
-        count = _vscprintf(format, ap);
+   if (size != 0)
+      count = _vsnprintf_s(str, size, _TRUNCATE, format, ap);
+   if (count == -1)
+      count = _vscprintf(format, ap);
 
-    return count;
+   return count;
 }
 
 inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 {
-    int count;
-    va_list ap;
+   int count;
+   va_list ap;
 
-    va_start(ap, format);
-    count = c99_vsnprintf(str, size, format, ap);
-    va_end(ap);
+   va_start(ap, format);
+   count = c99_vsnprintf(str, size, format, ap);
+   va_end(ap);
 
-    return count;
+   return count;
 }
 #endif
 #endif // _MSC_VER
@@ -91,7 +91,7 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 #define RESIP_MAX_SOCKADDR_SIZE 28
 
 #if defined(__APPLE__)
-   // .amr. If you get linker or type conflicts around UInt32, then use this define
+// .amr. If you get linker or type conflicts around UInt32, then use this define
 #  if defined(RESIP_APPLE_USE_SYSTEM_TYPES)
 #     include <TargetConditionals.h>
 #     include <CoreServices/CoreServices.h>
@@ -102,7 +102,7 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 #     include <arpa/nameser_compat.h>
 #  else
       // you include the SDK and you're running Mac OS 10.2 or below
-      typedef int socklen_t;
+typedef int socklen_t;
 #  endif
 #  ifdef __MWERKS__ /* this is a <limits.h> bug filed with Apple, Radar# 3657629. */
 #    ifndef __SCHAR_MAX__ 
@@ -113,7 +113,7 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 
 #if defined(__SUNPRO_CC)
 #  if defined(_TIME_T)
-    using std::time_t;
+using std::time_t;
 #  endif
 #  include <time.h>
 #  include <memory.h>
@@ -158,85 +158,85 @@ namespace resip
 #endif
 
 #if defined(__QNX__) || defined(__sun) || defined(WIN32)
-  typedef unsigned int u_int32_t;
+   typedef unsigned int u_int32_t;
 #endif
 
-template<typename _Tp>
-inline const _Tp&
-resipMin(const _Tp& __a, const _Tp& __b)
-{
-   if (__b < __a)
+   template<typename _Tp>
+   inline const _Tp&
+      resipMin(const _Tp& __a, const _Tp& __b)
    {
-      return __b;
+      if (__b < __a)
+      {
+         return __b;
+      }
+
+      return __a;
    }
 
-   return __a;
-}
-
-template<typename _Tp>
-inline const _Tp&
-resipMax(const _Tp& __a, const _Tp& __b) 
-{
-   if (__a < __b)
+   template<typename _Tp>
+   inline const _Tp&
+      resipMax(const _Tp& __a, const _Tp& __b)
    {
-      return __b;
+      if (__a < __b)
+      {
+         return __b;
+      }
+
+      return __a;
    }
 
-   return __a;
-}
-
-template<typename _Tp1, typename _Tp2>
-inline const _Tp1
-resipIntDiv(const _Tp1& __a, const _Tp2& __b)
-{
-   // .bwc. Divide-round-nearest without using any floating-point.
-   if(__a%__b > __b/2)
+   template<typename _Tp1, typename _Tp2>
+   inline const _Tp1
+      resipIntDiv(const _Tp1& __a, const _Tp2& __b)
    {
-      return __a/__b+1;
-   }
+      // .bwc. Divide-round-nearest without using any floating-point.
+      if (__a % __b > __b / 2)
+      {
+         return __a / __b + 1;
+      }
 
-   return __a/__b;
-}
+      return __a / __b;
+   }
 
 #if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN) || defined( __BIG_ENDIAN__ ) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || defined(RESIP_BIG_ENDIAN)
 
-inline uint64_t
-ntoh64(const uint64_t input)
-{
-   return input;
-}
+   inline uint64_t
+      ntoh64(const uint64_t input)
+   {
+      return input;
+   }
 
-inline uint64_t
-hton64(const uint64_t input)
-{
-   return input;
-}
+   inline uint64_t
+      hton64(const uint64_t input)
+   {
+      return input;
+   }
 
 #else
 
-inline uint64_t
-ntoh64(const uint64_t input)
-{
-   uint64_t rval;
-   uint8_t *data = (uint8_t *)&rval;
+   inline uint64_t
+      ntoh64(const uint64_t input)
+   {
+      uint64_t rval;
+      uint8_t* data = (uint8_t*)&rval;
 
-   data[0] = (uint8_t)((input >> 56) & 0xFF);
-   data[1] = (uint8_t)((input >> 48) & 0xFF);
-   data[2] = (uint8_t)((input >> 40) & 0xFF);
-   data[3] = (uint8_t)((input >> 32) & 0xFF);
-   data[4] = (uint8_t)((input >> 24) & 0xFF);
-   data[5] = (uint8_t)((input >> 16) & 0xFF);
-   data[6] = (uint8_t)((input >> 8) & 0xFF);
-   data[7] = (uint8_t)((input >> 0) & 0xFF);
+      data[0] = (uint8_t)((input >> 56) & 0xFF);
+      data[1] = (uint8_t)((input >> 48) & 0xFF);
+      data[2] = (uint8_t)((input >> 40) & 0xFF);
+      data[3] = (uint8_t)((input >> 32) & 0xFF);
+      data[4] = (uint8_t)((input >> 24) & 0xFF);
+      data[5] = (uint8_t)((input >> 16) & 0xFF);
+      data[6] = (uint8_t)((input >> 8) & 0xFF);
+      data[7] = (uint8_t)((input >> 0) & 0xFF);
 
-   return rval;
-}
+      return rval;
+   }
 
-inline uint64_t
-hton64(const uint64_t input)
-{
-   return (ntoh64(input));
-}
+   inline uint64_t
+      hton64(const uint64_t input)
+   {
+      return (ntoh64(input));
+   }
 
 #endif
 
@@ -323,46 +323,25 @@ hton64(const uint64_t input)
 #define _CVTBUFSIZE 309+40
 #endif
 
-// Detect the compiler and define the C++ standard version macro
-
-#if defined(_MSC_VER)
-    // For Visual Studio
-
-    // Ensure _MSVC_LANG is defined
-#ifndef _MSVC_LANG
-#define _MSVC_LANG 0
-#endif
-
-// Use _MSVC_LANG to detect the C++ standard version
-#define RESIP_CPP_STANDARD _MSVC_LANG
-
-#else
-    // For GCC or Clang
-
-    // Use __cplusplus to detect the C++ standard version
-#define RESIP_CPP_STANDARD __cplusplus
-
-#endif
-
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -372,7 +351,7 @@ hton64(const uint64_t input)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -386,6 +365,6 @@ hton64(const uint64_t input)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
  */

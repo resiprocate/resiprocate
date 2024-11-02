@@ -2,7 +2,6 @@
 #define RESIP_USER_AUTH_INFO_HXX 
 
 #include "rutil/Data.hxx"
-#include "rutil/compat.hxx"
 #include "resip/dum/DumFeatureMessage.hxx"
 
 namespace resip
@@ -45,11 +44,7 @@ class UserAuthInfo : public resip::DumFeatureMessage
       const resip::Data& getRealm() const;
       const resip::Data& getUser() const;
 
-#if RESIP_CPP_STANDARD >= 201703L
-      const std::tuple<int32_t, resip::Data> getErrorInfo() const;
-#else
       const void getErrorInfo(int32_t & errorCode, resip::Data & errorStatusText) const;
-#endif
 
       void setMode(InfoMode mode, int32_t errorCode = 0, const resip::Data & statusText = resip::Data::Empty);
       void setA1(const resip::Data& a1);
