@@ -147,12 +147,16 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
    if (userAuth->getMode() == UserAuthInfo::Error)
    {
       InfoLog (<< "Error in auth procedure for " << userAuth->getUser() << " in " << userAuth->getRealm());
+      auto response = std::make_shared<SipMessage>();
 
+#if RESIP_CPP_STANDARD >= 201703L
+      auto [code, statusText] = userAuth->getErrorInfo();
+#else
       int32_t code = 0;
       resip::Data statusText;
       userAuth->getErrorInfo(code, statusText);
+#endif
 
-      auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *requestWithAuth, code, statusText);
 
       mDum.send(response);
