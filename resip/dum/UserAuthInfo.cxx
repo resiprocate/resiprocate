@@ -5,8 +5,6 @@
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 
-#include <tuple>
-
 using namespace resip;
 using namespace std;
 
@@ -96,9 +94,9 @@ UserAuthInfo::setMode(InfoMode mode, int32_t errorCode /* = 0 */, const resip::D
 
    if (mode == InfoMode::Error)
    {
-      mErrorCode = errorCode;
       if (errorCode > 0 && !statusText.empty())
       {
+         mErrorCode = errorCode;
          mErrorStatusText = statusText;
       }
    }
