@@ -1840,7 +1840,7 @@ decimals:
 }
 #endif
 
-const bool
+bool
 Data::prefix(const Data& pre) const noexcept
 {
    if (pre.size() > size())
@@ -1852,7 +1852,7 @@ Data::prefix(const Data& pre) const noexcept
 }
 
 
-const bool
+bool
 Data::postfix(const Data& post) const noexcept
 {
    if (post.size() > size())
