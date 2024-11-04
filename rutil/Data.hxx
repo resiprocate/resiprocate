@@ -822,7 +822,7 @@ class Data
         prefix(Data("ab")) would be true; however, prefix(Data("abcd"))
         would be false.
       */
-      const bool prefix(const Data& pre) const noexcept;
+      bool prefix(const Data& pre) const noexcept;
 
       /**
         Returns true if this Data ends with the bytes indicated by
@@ -830,7 +830,7 @@ class Data
         postfix(Data("bc")) would be true; however, postfix(Data("ab"))
         would be false.
       */
-      const bool postfix(const Data& post) const noexcept;
+      bool postfix(const Data& post) const noexcept;
 
       /**
         Copies a portion of this Data into a new Data.
