@@ -425,6 +425,11 @@ class Data
       Data& operator=(Data &&data);
 #endif
 
+      operator std::string() const 
+      {
+         return std::string(c_str(), size());
+      }
+
       /**
         Assigns a null-terminated string to the buffer.
 
@@ -445,6 +450,12 @@ class Data
       }
 
 #if RESIP_CPP_STANDARD >= 201703L
+
+      operator std::string_view() const 
+      {
+         return std::string_view(c_str(), size());
+      }
+
       Data& operator=(const std::string_view sv)
       {
          return copy(sv.data(), static_cast<size_type>(sv.size()));

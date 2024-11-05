@@ -1527,6 +1527,38 @@ class TestData
             resip_assert(d2.toString() != str1);
          }
 
+         {
+            resip::Data d1("resip");
+            std::string str1 = d1;
+            resip_assert(str1 == d1);
+            resip_assert(d1 == str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string str1(d1);
+            resip_assert(str1 == d1);
+            resip_assert(d1 == str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string str1 = d1;
+
+            resip::Data d2("resip2");
+            resip_assert(str1 != d2);
+            resip_assert(d2 != str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string str1(d1);
+
+            resip::Data d2("resip2");
+            resip_assert(str1 != d2);
+            resip_assert(d2 != str1);
+         }
+
 
 #if RESIP_CPP_STANDARD >= 201703L
 
@@ -1563,6 +1595,37 @@ class TestData
             resip_assert(d2.toStringView() != sv1);
          }
 
+         {
+            resip::Data d1("resip");
+            std::string_view str1 = d1;
+            resip_assert(str1 == d1);
+            resip_assert(d1 == str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string_view str1(d1);
+            resip_assert(str1 == d1);
+            resip_assert(d1 == str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string_view str1 = d1;
+
+            resip::Data d2("resip2");
+            resip_assert(str1 != d2);
+            resip_assert(d2 != str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string_view str1(d1);
+
+            resip::Data d2("resip2");
+            resip_assert(str1 != d2);
+            resip_assert(d2 != str1);
+         }
 #endif
 
          std::cerr << "All OK" << endl;
