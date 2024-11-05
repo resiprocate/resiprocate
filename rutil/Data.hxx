@@ -8,6 +8,9 @@
 #include <iostream>
 #include <string>
 #include <bitset>
+#if RESIP_CPP_STANDARD >= 201703L
+#include <string_view>
+#endif
 #include "rutil/ResipAssert.h"
 
 #include "rutil/compat.hxx"
@@ -179,7 +182,14 @@ class Data
       /**
         Creates a data with the contents of the string.
       */
-      explicit Data(const std::string& str);
+      Data(const std::string& str);
+
+#if RESIP_CPP_STANDARD >= 201703L
+      /**
+        Creates a data with the contents of the string_view.
+      */
+      Data(const std::string_view sv);
+#endif
 
       /**
         Converts the passed in value into ascii-decimal
@@ -415,6 +425,11 @@ class Data
       Data& operator=(Data &&data);
 #endif
 
+      operator std::string() const 
+      {
+         return std::string(c_str(), size());
+      }
+
       /**
         Assigns a null-terminated string to the buffer.
 
@@ -427,6 +442,25 @@ class Data
       {
          return copy(str, (size_type)strlen(str));
       }
+
+
+      Data& operator=(const std::string& str)
+      {
+         return copy(str.c_str(), static_cast<size_type>(str.size()));
+      }
+
+#if RESIP_CPP_STANDARD >= 201703L
+
+      operator std::string_view() const 
+      {
+         return std::string_view(c_str(), size());
+      }
+
+      Data& operator=(const std::string_view sv)
+      {
+         return copy(sv.data(), static_cast<size_type>(sv.size()));
+      }
+#endif
 
       /**
         Concatenates two Data objects.
@@ -583,6 +617,18 @@ class Data
                  a null in the middle of the Data).
       */
       const char* c_str() const;
+
+      /**
+        Convert to a C++ string.
+      */
+      std::string toString() const;
+
+#if RESIP_CPP_STANDARD >= 201703L
+      /**
+        Creates a c++ string_view.
+      */
+      std::string_view toStringView() const;
+#endif
 
       /**
         Returns a pointer to the beginning of the buffer used by the Data.
@@ -787,7 +833,7 @@ class Data
         prefix(Data("ab")) would be true; however, prefix(Data("abcd"))
         would be false.
       */
-      bool prefix(const Data& pre) const;
+      bool prefix(const Data& pre) const noexcept;
 
       /**
         Returns true if this Data ends with the bytes indicated by
@@ -795,7 +841,7 @@ class Data
         postfix(Data("bc")) would be true; however, postfix(Data("ab"))
         would be false.
       */
-      bool postfix(const Data& post) const;
+      bool postfix(const Data& post) const noexcept;
 
       /**
         Copies a portion of this Data into a new Data.
@@ -803,7 +849,7 @@ class Data
         @param first Index of the first byte to copy
         @param count Number of bytes to copy
       */
-      Data substr(size_type first, size_type count = Data::npos) const;
+      Data substr(size_type first, size_type count = Data::npos) const; 
 
       /**
         Finds a specified sequence of bytes in this Data.
@@ -1125,6 +1171,51 @@ bool operator==(const Data& lhs, const char* rhs);
 bool operator<(const Data& lhs, const Data& rhs);
 bool operator<(const Data& lhs, const char* rhs);
 bool operator<(const char* lhs, const Data& rhs);
+
+
+inline bool operator==(const resip::Data& lhs, const std::string& rhs) noexcept
+{
+   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.c_str(), rhs.size()) == 0;
+}
+
+inline bool operator==(const std::string& lhs, const resip::Data& rhs) noexcept
+{
+   return lhs.size() == rhs.size() && std::memcmp(lhs.c_str(), rhs.data(), rhs.size()) == 0;
+}
+
+inline bool operator!=(const resip::Data& lhs, const std::string& rhs) noexcept
+{
+   return !(lhs == rhs);
+}
+
+inline bool operator!=(const std::string& lhs, const resip::Data& rhs) noexcept
+{
+   return !(lhs == rhs);
+}
+
+#if RESIP_CPP_STANDARD >= 201703L
+
+inline bool operator==(const resip::Data& lhs, const std::string_view rhs) noexcept
+{
+   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), rhs.size()) == 0;
+}
+
+inline bool operator==(const std::string_view lhs, const resip::Data& rhs) noexcept
+{
+   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), rhs.size()) == 0;
+}
+
+inline bool operator!=(const resip::Data& lhs, const std::string_view rhs) noexcept
+{
+   return !(lhs == rhs);
+}
+
+inline bool operator!=(const std::string_view lhs, const resip::Data& rhs) noexcept
+{
+   return !(lhs == rhs);
+}
+
+#endif
 
 }
 

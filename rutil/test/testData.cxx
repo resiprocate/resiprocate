@@ -1,6 +1,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Log.hxx"
+#include "rutil/compat.hxx"
 #include "assert.h"
 #include <iostream>
 #include <limits>
@@ -1394,32 +1395,32 @@ class TestData
             Data u4(Data::Share, ubuf4+3, 16-i);
 
             // All of these point to the same data, but aligned differently.
-            assert(d1.hash()==d2.hash());
-            assert(d1.hash()==d3.hash());
-            assert(d1.hash()==d4.hash());
+            assert(d1.hash() == d2.hash());
+            assert(d1.hash() == d3.hash());
+            assert(d1.hash() == d4.hash());
 
-            assert(d1.hash()!=u1.hash());
-            assert(d1.hash()!=u2.hash());
-            assert(d1.hash()!=u3.hash());
-            assert(d1.hash()!=u4.hash());
+            assert(d1.hash() != u1.hash());
+            assert(d1.hash() != u2.hash());
+            assert(d1.hash() != u3.hash());
+            assert(d1.hash() != u4.hash());
 
-            assert(d1.caseInsensitivehash()==d2.caseInsensitivehash());
-            assert(d1.caseInsensitivehash()==d3.caseInsensitivehash());
-            assert(d1.caseInsensitivehash()==d4.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == d2.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == d3.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == d4.caseInsensitivehash());
 
-            assert(d1.caseInsensitivehash()==u1.caseInsensitivehash());
-            assert(d1.caseInsensitivehash()==u2.caseInsensitivehash());
-            assert(d1.caseInsensitivehash()==u3.caseInsensitivehash());
-            assert(d1.caseInsensitivehash()==u4.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == u1.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == u2.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == u3.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == u4.caseInsensitivehash());
 
-            assert(d1.caseInsensitiveTokenHash()==d2.caseInsensitiveTokenHash());
-            assert(d1.caseInsensitiveTokenHash()==d3.caseInsensitiveTokenHash());
-            assert(d1.caseInsensitiveTokenHash()==d4.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == d2.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == d3.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == d4.caseInsensitiveTokenHash());
 
-            assert(d1.caseInsensitiveTokenHash()==u1.caseInsensitiveTokenHash());
-            assert(d1.caseInsensitiveTokenHash()==u2.caseInsensitiveTokenHash());
-            assert(d1.caseInsensitiveTokenHash()==u3.caseInsensitiveTokenHash());
-            assert(d1.caseInsensitiveTokenHash()==u4.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == u1.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == u2.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == u3.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == u4.caseInsensitiveTokenHash());
 
             assert(d1.caseInsensitiveTokenCompare(d1));
             assert(d1.caseInsensitiveTokenCompare(d2));
@@ -1493,6 +1494,140 @@ class TestData
             assert(u4.caseInsensitiveTokenCompare(u3));
             assert(u4.caseInsensitiveTokenCompare(u4));
          }
+
+         {
+            std::string str1 = "resip";
+            resip::Data d1(str1);
+
+            resip_assert(d1 == str1);
+            resip_assert(str1 == d1);
+            resip_assert(d1.toString() == str1);
+         }
+
+         {
+            std::string str1 = "resip";
+            resip::Data d1 = str1;
+
+            resip_assert(d1 == str1);
+            resip_assert(str1 == d1);
+            resip_assert(d1.toString() == str1);
+         }
+
+
+         {
+            std::string str1 = "resip";
+            resip::Data d1 = "resipr";
+            resip_assert(d1 != str1);
+            resip_assert(str1 != d1);
+            resip_assert(d1.toString() != str1);
+
+            resip::Data d2(std::string("resipr"));
+            resip_assert(d2 != str1);
+            resip_assert(str1 != d2);
+            resip_assert(d2.toString() != str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string str1 = d1;
+            resip_assert(str1 == d1);
+            resip_assert(d1 == str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string str1(d1);
+            resip_assert(str1 == d1);
+            resip_assert(d1 == str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string str1 = d1;
+
+            resip::Data d2("resip2");
+            resip_assert(str1 != d2);
+            resip_assert(d2 != str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string str1(d1);
+
+            resip::Data d2("resip2");
+            resip_assert(str1 != d2);
+            resip_assert(d2 != str1);
+         }
+
+
+#if RESIP_CPP_STANDARD >= 201703L
+
+         {
+            std::string_view sv1 = "resip";
+            resip::Data d1(sv1);
+
+            resip_assert(d1 == sv1);
+            resip_assert(sv1 == d1);
+            resip_assert(d1.toStringView() == sv1);
+         }
+
+         {
+            std::string_view sv1 = "resip";
+            resip::Data d1 = sv1;
+
+            resip_assert(d1 == sv1);
+            resip_assert(sv1 == d1);
+            resip_assert(d1.toStringView() == sv1);
+         }
+
+
+         {
+            std::string_view sv1 = "resip";
+            resip::Data d1 = "resipr";
+            resip_assert(d1 != sv1);
+            resip_assert(sv1 != d1);
+            resip_assert(d1.toStringView() != sv1);
+
+
+            resip::Data d2(std::string_view("resipr"));
+            resip_assert(d2 != sv1);
+            resip_assert(sv1 != d2);
+            resip_assert(d2.toStringView() != sv1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string_view str1 = d1;
+            resip_assert(str1 == d1);
+            resip_assert(d1 == str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string_view str1(d1);
+            resip_assert(str1 == d1);
+            resip_assert(d1 == str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string_view str1 = d1;
+
+            resip::Data d2("resip2");
+            resip_assert(str1 != d2);
+            resip_assert(d2 != str1);
+         }
+
+         {
+            resip::Data d1("resip");
+            std::string_view str1(d1);
+
+            resip::Data d2("resip2");
+            resip_assert(str1 != d2);
+            resip_assert(d2 != str1);
+         }
+#endif
+
          std::cerr << "All OK" << endl;
          return 0;
       }
