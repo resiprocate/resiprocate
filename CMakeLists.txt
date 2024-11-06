@@ -174,7 +174,7 @@ option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT
 option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
 option(USE_NUGET "Use NuGet package manager" ${USE_NUGET_DEFAULT})
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11 CACHE STRING "CXX standard to use")
 
 if(BUILD_TESTING)
     enable_testing()
