@@ -435,6 +435,10 @@ bool Uri::compareUriParametersEqual(Parameter* param1, Parameter* param2)
          return dynamic_cast<UInt32Parameter*>(param1)->value() ==
                 dynamic_cast<UInt32Parameter*>(param2)->value();
 
+      case ParameterTypes::gr:
+         return isEqualNoCase(dynamic_cast<ExistsOrDataParameter*>(param1)->value(),
+                              dynamic_cast<ExistsOrDataParameter*>(param2)->value());
+
       case ParameterTypes::lr:
          // Exists parameters are equal.
          return true;

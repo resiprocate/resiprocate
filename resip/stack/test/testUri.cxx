@@ -515,6 +515,43 @@ main(int argc, char* argv[])
       assert(uri1 == uri2);
    }
    
+   // Test known `gr` URI parameter.
+   {
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      assert(sip1 == sip2);  // Ignored when appearing in only one URI.
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr=urn:uuid:123");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:321");
+      assert(sip1 != sip2);  // Considered when appearing in both URIs.
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr=urn:uuid:123");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;gr");
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr");
+      Uri sip2("sip:janet@example.com;gr");
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      assert(sip1 != sip2);
+   }
+
 
    // tests from 3261 19.1.4
    {
