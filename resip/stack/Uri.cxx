@@ -450,6 +450,40 @@ bool Uri::compareUriParametersEqual(Parameter* param1, Parameter* param2)
    }
 }
 
+bool Uri::compareUriParametersLessThan(Parameter* param1, Parameter* param2)
+{
+   if (!param1 || !param2)
+   {
+      return false;
+   }
+
+   switch (param1->getType()) {
+      case ParameterTypes::user:
+      case ParameterTypes::method:
+      case ParameterTypes::maddr:
+      case ParameterTypes::transport:
+         return isLessThanNoCase(dynamic_cast<DataParameter*>(param1)->value(),
+                                 dynamic_cast<DataParameter*>(param2)->value());
+
+      case ParameterTypes::ttl:
+         return dynamic_cast<UInt32Parameter*>(param1)->value() <
+                dynamic_cast<UInt32Parameter*>(param2)->value();
+
+      case ParameterTypes::gr:
+         return isLessThanNoCase(dynamic_cast<ExistsOrDataParameter*>(param1)->value(),
+                                 dynamic_cast<ExistsOrDataParameter*>(param2)->value());
+
+      case ParameterTypes::lr:
+         // Exists parameters are equal.
+         return false;
+
+      default:
+         // Other parameters are not considered.
+         // Parameters may be added accordingly to RFCs.
+         return false;
+   }
+}
+
 bool Uri::isSignificantUriParameter(const ParameterTypes::Type type) noexcept
 {
    return type == ParameterTypes::user ||
@@ -669,7 +703,109 @@ Uri::operator<(const Uri& other) const
       return false;
    }
 
-   return mPort < other.mPort;
+   if (mPort < other.mPort)
+   {
+      return true;
+   }
+
+   if (mPort > other.mPort)
+   {
+      return false;
+   }
+
+   for (ParameterList::const_iterator it = mParameters.begin(); it != mParameters.end(); ++it)
+      {
+         Parameter* otherParam = other.getParameterByEnum((*it)->getType());
+
+         if (otherParam)
+         {
+            if (Uri::compareUriParametersLessThan(*it, otherParam)) {
+               return true;
+            }
+
+            if (Uri::compareUriParametersLessThan(otherParam, *it)) {
+               return false;
+            }
+         }
+         else if (Uri::isSignificantUriParameter((*it)->getType()))
+         {
+            return true;  // Significant URI params should not be ignored.
+         }
+      }
+
+   // Sort unknown parameters from both URIs by their name using comparator class.
+   OrderUnknownParameters orderUnknown;
+
+#if defined(__SUNPRO_CC) || defined(WIN32) || defined(__sun__)
+   // The Solaris Forte STL implementation does not support the
+   // notion of a list.sort() function taking a BinaryPredicate.
+   // The hacky workaround is to load the Parameter pointers into
+   // an STL set which does support an ordering function.
+
+   using std::set<Parameter*, OrderUnknownParameters> ParameterSet;
+   ParameterSet thisUriParamList, otherUriParamList;
+
+   for (ParameterList::const_iterator i = mUnknownParameters.begin();
+        i != mUnknownParameters.end(); ++i)
+   {
+      thisUriParamList.insert(*i);
+   }
+   for (ParameterList::const_iterator i = other.mUnknownParameters.begin();
+        i != other.mUnknownParameters.end(); ++i)
+   {
+      otherUriParamList.insert(*i);
+   }
+#else
+   ParameterList thisUriParamList = mUnknownParameters;
+   ParameterList otherUriParamList = other.mUnknownParameters;
+
+   sort(thisUriParamList.begin(), thisUriParamList.end(), orderUnknown);
+   sort(otherUriParamList.begin(), otherUriParamList.end(), orderUnknown);
+#endif
+
+   auto thisUriParam = thisUriParamList.begin();
+   auto otherUriParam = otherUriParamList.begin();
+
+   // Iterate through unknown parameters of both URIs.
+   // Advance iterators to compare values of parameters with matching names.
+   while(thisUriParam != thisUriParamList.end() && otherUriParam != otherUriParamList.end())
+   {
+      if (orderUnknown(*thisUriParam, *otherUriParam))
+      {
+         // this < other param name.
+         ++thisUriParam;
+      }
+      else if (orderUnknown(*otherUriParam, *thisUriParam))
+      {
+         // other < this param name.
+         ++otherUriParam;
+      }
+      else
+      {
+         // this == other param name.
+         // Unknown parameter names are the same. Compare their values.
+         const Data& thisParamValue = dynamic_cast<UnknownParameter*>(*thisUriParam)->value();
+         const Data& otherParamValue = dynamic_cast<UnknownParameter*>(*otherUriParam)->value();
+
+         if (isLessThanNoCase(thisParamValue,
+                              otherParamValue))
+         {
+            return true;
+         }
+
+         if (isLessThanNoCase(otherParamValue,
+                              thisParamValue))
+         {
+            return false;
+         }
+
+         // Move iterators to the next position.
+         ++thisUriParam;
+         ++otherUriParam;
+      }
+   }
+
+   return false;
 }
 
 bool

@@ -196,6 +196,16 @@ class Uri : public ParserCategory
       static bool compareUriParametersEqual(Parameter* param1, Parameter* param2);
 
       /**
+         @brief Compares two URI parameters to determine if the first is less
+                than the second.
+         @param param1 The first parameter to compare.
+         @param param2 The second parameter to compare.
+         @return `true` if the first parameter is less than the second;
+                 otherwise, `false`.
+      */
+      static bool compareUriParametersLessThan(Parameter* param1, Parameter* param2);
+
+      /**
          @brief Checks if the URI-parameter appearing in only one URI must not
                 be ignored when comparing the URIs.
          @param type The type of the parameter to check.
