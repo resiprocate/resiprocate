@@ -835,6 +835,51 @@ resip::operator<(const char* lhs, const Data& rhs)
    }
 }
 
+bool
+resip::operator<(const Data& lhs, const std::string& rhs) noexcept
+{
+   const Data::size_type l = rhs.size();
+   if (lhs.mSize != l)
+   {
+      return lhs.mSize < l;
+   }
+   return memcmp(lhs.mBuf, rhs.c_str(), lhs.mSize) < 0;
+}
+
+bool
+resip::operator<(const std::string& lhs, const Data& rhs) noexcept
+{
+   const Data::size_type lhsSize = lhs.size();
+   if (lhsSize != rhs.mSize)
+   {
+      return lhsSize < rhs.mSize;
+   }
+   return memcmp(lhs.c_str(), rhs.mBuf, lhsSize) < 0;
+}
+
+#if RESIP_CPP_STANDARD >= 201703L
+bool
+resip::operator<(const Data& lhs, const std::string_view rhs) noexcept
+{
+   const Data::size_type rhsSize = rhs.size();
+   if (lhs.mSize != rhsSize)
+   {
+      return lhs.mSize < rhsSize;
+   }
+   return memcmp(lhs.mBuf, rhs.data(), lhs.mSize) < 0;
+}
+
+bool
+resip::operator<(const std::string_view lhs, const Data& rhs) noexcept
+{
+   const Data::size_type lhsSize = lhs.size();
+   if (lhsSize != rhs.mSize)
+   {
+      return lhsSize < rhs.mSize;
+   }
+   return memcmp(lhs.data(), rhs.mBuf, lhsSize) < 0;
+}
+#endif
 
 
 #if 0

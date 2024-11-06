@@ -417,6 +417,12 @@ class Data
       friend bool operator<(const Data& lhs, const Data& rhs);
       friend bool operator<(const Data& lhs, const char* rhs);
       friend bool operator<(const char* lhs, const Data& rhs);
+      friend bool operator<(const Data& lhs, const std::string& rhs) noexcept;
+      friend bool operator<(const std::string& lhs, const Data& rhs) noexcept;
+#if RESIP_CPP_STANDARD >= 201703L
+      friend bool operator<(const Data& lhs, const std::string_view rhs) noexcept;
+      friend bool operator<(const std::string_view lhs, const Data& rhs) noexcept;
+#endif
 
       Data& operator=(const Data& data)
       {
@@ -1158,15 +1164,27 @@ inline bool operator<=(const char* lhs, const Data& rhs) { return !(rhs < lhs); 
 inline bool operator>=(const char* lhs, const Data& rhs) { return !(lhs < rhs); }
 
 inline bool operator!=(const Data& lhs, const std::string& rhs) noexcept { return !(lhs == rhs); }
+inline bool operator>(const Data& lhs, const std::string& rhs) { return rhs < lhs; }
+inline bool operator<=(const Data& lhs, const std::string& rhs) { return !(rhs < lhs); }
+inline bool operator>=(const Data& lhs, const std::string& rhs) { return !(lhs < rhs); }
 
 inline bool operator==(const std::string& lhs, const Data& rhs) noexcept { return rhs == lhs; }
 inline bool operator!=(const std::string& lhs, const Data& rhs) noexcept { return !(rhs == lhs); }
+inline bool operator>(const std::string& lhs, const Data& rhs) { return rhs < lhs; }
+inline bool operator<=(const std::string& lhs, const Data& rhs) { return !(rhs < lhs); }
+inline bool operator>=(const std::string& lhs, const Data& rhs) { return !(lhs < rhs); }
 
 #if RESIP_CPP_STANDARD >= 201703L
 inline bool operator!=(const Data& lhs, const std::string_view rhs) noexcept { return !(lhs == rhs); }
+inline bool operator>(const Data& lhs, const std::string_view rhs) { return rhs < lhs; }
+inline bool operator<=(const Data& lhs, const std::string_view rhs) { return !(rhs < lhs); }
+inline bool operator>=(const Data& lhs, const std::string_view rhs) { return !(lhs < rhs); }
 
 inline bool operator==(const std::string_view lhs, const Data& rhs) noexcept { return rhs == lhs; }
 inline bool operator!=(const std::string_view lhs, const Data& rhs) noexcept { return !(rhs == lhs); }
+inline bool operator>(const std::string_view lhs, const Data& rhs) { return rhs < lhs; }
+inline bool operator<=(const std::string_view lhs, const Data& rhs) { return !(rhs < lhs); }
+inline bool operator>=(const std::string_view lhs, const Data& rhs) { return !(lhs < rhs); }
 #endif
 
 #ifndef  RESIP_USE_STL_STREAMS
@@ -1194,6 +1212,12 @@ bool operator==(const Data& lhs, const std::string_view rhs) noexcept;
 bool operator<(const Data& lhs, const Data& rhs);
 bool operator<(const Data& lhs, const char* rhs);
 bool operator<(const char* lhs, const Data& rhs);
+bool operator<(const Data& lhs, const std::string& rhs) noexcept;
+bool operator<(const std::string& lhs, const Data& rhs) noexcept;
+#if RESIP_CPP_STANDARD >= 201703L
+bool operator<(const Data& lhs, const std::string_view rhs) noexcept;
+bool operator<(const std::string_view lhs, const Data& rhs) noexcept;
+#endif
 }
 
 HashValue(resip::Data);

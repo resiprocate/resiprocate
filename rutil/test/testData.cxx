@@ -1559,6 +1559,40 @@ class TestData
             assert(d2 != str1);
          }
 
+         {
+            Data data("abc");
+            std::string strA = "abc";
+            std::string strB = "abcd";
+
+            // Test `<`
+            assert((data < strB) == true);
+            assert((data < strA) == false);
+
+            assert((strB < data) == false);
+            assert((strA < data) == false);
+
+            // Test `>`
+            assert((data > strB) == false);
+            assert((data > strA) == false);
+
+            assert((strB > data) == true);
+            assert((strA > data) == false);
+
+            // Test `<=`
+            assert((data <= strB) == true);
+            assert((data <= strA) == true);
+
+            assert((strB <= data) == false);
+            assert((strA <= data) == true);
+
+            // Test `>=`
+            assert((data >= strB) == false);
+            assert((data >= strA) == true);
+
+            assert((strB >= data) == true);
+            assert((strA >= data) == true);
+         }
+
 
 #if RESIP_CPP_STANDARD >= 201703L
 
@@ -1625,6 +1659,40 @@ class TestData
             Data d2("resip2");
             assert(str1 != d2);
             assert(d2 != str1);
+         }
+
+         {
+            Data data("abc");
+            std::string_view viewA = "abc";
+            std::string_view viewB = "abcd";
+
+            // Test `<`
+            assert((data < viewB) == true);
+            assert((data < viewA) == false);
+
+            assert((viewB < data) == false);
+            assert((viewA < data) == false);
+
+            // Test `>`
+            assert((data > viewB) == false);
+            assert((data > viewA) == false);
+
+            assert((viewB > data) == true);
+            assert((viewA > data) == false);
+
+            // Test `<=`
+            assert((data <= viewB) == true);
+            assert((data <= viewA) == true);
+
+            assert((viewB <= data) == false);
+            assert((viewA <= data) == true);
+
+            // Test `>=`
+            assert((data >= viewB) == false);
+            assert((data >= viewA) == true);
+
+            assert((viewB >= data) == true);
+            assert((viewA >= data) == true);
          }
 #endif
 
