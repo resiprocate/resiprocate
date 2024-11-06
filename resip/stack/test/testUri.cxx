@@ -475,6 +475,45 @@ main(int argc, char* argv[])
       assert (sip1 == sip2);
       assert (sip2 == sip1);
    }
+
+   // Test significant URI params.
+   // user/ttl/method/maddr/transport in one URI only should never match.
+   {
+      Uri uri1("sip:bob@example.com;user=phone");
+      Uri uri2("sip:bob@example.com");
+      assert(uri1 != uri2);
+   }
+
+   {
+      Uri uri1("sip:bob@example.com;ttl=60");
+      Uri uri2("sip:bob@example.com");
+      assert(uri1 != uri2);
+   }
+
+   {
+      Uri uri1("sip:bob@example.com;method=INVITE");
+      Uri uri2("sip:bob@example.com");
+      assert(uri1 != uri2);
+   }
+
+   {
+      Uri uri1("sip:carol@example.com;maddr=192.168.1.1");
+      Uri uri2("sip:carol@example.com");
+      assert(uri1 != uri2);
+   }
+
+   // Other parameters in one URI only should be ignored.
+   {
+      Uri uri1("sip:dave@example.com;lr");
+      Uri uri2("sip:dave@example.com");
+      assert(uri1 == uri2);
+   }
+
+   {
+      Uri uri1("sip:eve@example.com;test=123");
+      Uri uri2("sip:eve@example.com");
+      assert(uri1 == uri2);
+   }
    
 
    // tests from 3261 19.1.4

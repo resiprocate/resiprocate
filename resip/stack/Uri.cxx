@@ -416,6 +416,45 @@ class OrderUnknownParameters
       bool notUsed;
 };
 
+bool Uri::compareUriParametersEqual(Parameter* param1, Parameter* param2)
+{
+   if (!param1 || !param2)
+   {
+      return false;
+   }
+
+   switch (param1->getType()) {
+      case ParameterTypes::user:
+      case ParameterTypes::method:
+      case ParameterTypes::maddr:
+      case ParameterTypes::transport:
+         return isEqualNoCase(dynamic_cast<DataParameter*>(param1)->value(),
+                              dynamic_cast<DataParameter*>(param2)->value());
+
+      case ParameterTypes::ttl:
+         return dynamic_cast<UInt32Parameter*>(param1)->value() ==
+                dynamic_cast<UInt32Parameter*>(param2)->value();
+
+      case ParameterTypes::lr:
+         // Exists parameters are equal.
+         return true;
+
+      default:
+         // Other parameters are not considered.
+         // Parameters may be added accordingly to RFCs.
+         return true;
+   }
+}
+
+bool Uri::isSignificantUriParameter(const ParameterTypes::Type type) noexcept
+{
+   return type == ParameterTypes::user ||
+          type == ParameterTypes::ttl ||
+          type == ParameterTypes::method ||
+          type == ParameterTypes::maddr ||
+          type == ParameterTypes::transport;
+}
+
 bool 
 Uri::operator==(const Uri& other) const
 {
@@ -467,80 +506,12 @@ Uri::operator==(const Uri& other) const
       {
          Parameter* otherParam = other.getParameterByEnum((*it)->getType());
 
-         switch ((*it)->getType())
+         if (Uri::isSignificantUriParameter((*it)->getType()) || otherParam)
          {
-            case ParameterTypes::user:
+            if (!Uri::compareUriParametersEqual(*it, otherParam))
             {
-               if (!(otherParam &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(otherParam)->value())))
-               {
-                  return false;
-               }
+               return false;
             }
-            break;
-            case ParameterTypes::ttl:
-            {
-               if (!(otherParam &&
-                     (dynamic_cast<UInt32Parameter*>(*it)->value() ==
-                      dynamic_cast<UInt32Parameter*>(otherParam)->value())))
-               {
-                  return false;
-               }
-               break;
-            }
-            case ParameterTypes::method:
-            {
-               // this should possibly be case sensitive, but is allowed to be
-               // case insensitive for robustness.  
-               
-               if (otherParam)
-               {
-                  DataParameter* dp1 = dynamic_cast<DataParameter*>(*it);
-                  DataParameter* dp2 = dynamic_cast<DataParameter*>(otherParam);
-                  (void)dp1;
-                  (void)dp2;
-                  // ?bwc? It looks like we're just assuming the dynamic_cast 
-                  // will succeed everywhere else; why are we bothering to 
-                  // assert()?
-                  resip_assert(dp1);
-                  resip_assert(dp2);
-               }
-               if (!(otherParam &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(otherParam)->value())))
-               {
-                  return false;
-               }
-               break;
-            }
-            case ParameterTypes::maddr:
-            {               
-               if (!(otherParam &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(otherParam)->value())))
-               {
-                  return false;
-               }
-            }
-            break;
-            case ParameterTypes::transport:
-            {
-               if (!(otherParam &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(otherParam)->value())))
-               {
-                  return false;
-               }
-            }
-            break;
-            // the parameters that follow don't affect comparison if only present
-            // in one of the URI's
-            case ParameterTypes::lr:
-               break;
-            default:
-               break;
-               //treat as unknown parameter?
          }
       }         
 
@@ -548,67 +519,13 @@ Uri::operator==(const Uri& other) const
       for (ParameterList::const_iterator it = other.mParameters.begin(); it != other.mParameters.end(); ++it)
       {
          Parameter* param = getParameterByEnum((*it)->getType());
-         switch ((*it)->getType())
+
+         if (Uri::isSignificantUriParameter((*it)->getType()) || param)
          {
-            case ParameterTypes::user:
+            if (!Uri::compareUriParametersEqual(*it, param))
             {
-               if (!(param &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(param)->value())))
-               {
-                  return false;
-               }
+               return false;
             }
-            break;
-            case ParameterTypes::ttl:
-            {
-               if (!(param &&
-                     (dynamic_cast<UInt32Parameter*>(*it)->value() == 
-                      dynamic_cast<UInt32Parameter*>(param)->value())))
-               {
-                  return false;
-               }
-               break;
-            }
-            case ParameterTypes::method:
-            {
-               // this should possilby be case sensitive, but is allowed to be
-               // case insensitive for robustness.  
-               if (!(param &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(param)->value())))
-               {
-                  return false;
-               }
-            }
-            break;
-            case ParameterTypes::maddr:
-            {               
-               if (!(param &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(param)->value())))
-               {
-                  return false;
-               }
-            }
-            break;
-            case ParameterTypes::transport:
-            {
-               if (!(param &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(param)->value())))
-               {
-                  return false;
-               }
-            }
-            break;
-            // the parameters that follow don't affect comparison if only present
-            // in one of the URI's
-            case ParameterTypes::lr:
-               break;
-            default:
-               break;
-               //treat as unknown parameter?
          }
       }
    }
