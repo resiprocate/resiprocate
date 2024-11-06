@@ -761,6 +761,20 @@ resip::operator==(const Data& lhs, const char* rhs)
 }
 
 bool
+resip::operator==(const Data& lhs, const std::string& rhs) noexcept
+{
+   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.c_str(), rhs.size()) == 0;
+}
+
+#if RESIP_CPP_STANDARD >= 201703L
+bool
+resip::operator==(const Data& lhs, const std::string_view rhs) noexcept
+{
+   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), rhs.size()) == 0;
+}
+#endif
+
+bool
 resip::operator<(const Data& lhs, const Data& rhs)
 {
    int res = memcmp(lhs.mBuf, rhs.mBuf, resipMin(lhs.mSize, rhs.mSize));

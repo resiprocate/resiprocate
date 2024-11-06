@@ -1497,7 +1497,7 @@ class TestData
 
          {
             std::string str1 = "resip";
-            resip::Data d1(str1);
+            Data d1(str1);
 
             assert(d1 == str1);
             assert(str1 == d1);
@@ -1506,7 +1506,7 @@ class TestData
 
          {
             std::string str1 = "resip";
-            resip::Data d1 = str1;
+            Data d1 = str1;
 
             assert(d1 == str1);
             assert(str1 == d1);
@@ -1516,45 +1516,45 @@ class TestData
 
          {
             std::string str1 = "resip";
-            resip::Data d1 = "resipr";
+            Data d1 = "resipr";
             assert(d1 != str1);
             assert(str1 != d1);
             assert(d1.toString() != str1);
 
-            resip::Data d2(std::string("resipr"));
+            Data d2(std::string("resipr"));
             assert(d2 != str1);
             assert(str1 != d2);
             assert(d2.toString() != str1);
          }
 
          {
-            resip::Data d1("resip");
+            Data d1("resip");
             std::string str1 = d1;
             assert(str1 == d1);
             assert(d1 == str1);
          }
 
          {
-            resip::Data d1("resip");
+            Data d1("resip");
             std::string str1(d1);
             assert(str1 == d1);
             assert(d1 == str1);
          }
 
          {
-            resip::Data d1("resip");
+            Data d1("resip");
             std::string str1 = d1;
 
-            resip::Data d2("resip2");
+            Data d2("resip2");
             assert(str1 != d2);
             assert(d2 != str1);
          }
 
          {
-            resip::Data d1("resip");
+            Data d1("resip");
             std::string str1(d1);
 
-            resip::Data d2("resip2");
+            Data d2("resip2");
             assert(str1 != d2);
             assert(d2 != str1);
          }
@@ -1564,7 +1564,7 @@ class TestData
 
          {
             std::string_view sv1 = "resip";
-            resip::Data d1(sv1);
+            Data d1(sv1);
 
             assert(d1 == sv1);
             assert(sv1 == d1);
@@ -1573,7 +1573,7 @@ class TestData
 
          {
             std::string_view sv1 = "resip";
-            resip::Data d1 = sv1;
+            Data d1 = sv1;
 
             assert(d1 == sv1);
             assert(sv1 == d1);
@@ -1583,46 +1583,46 @@ class TestData
 
          {
             std::string_view sv1 = "resip";
-            resip::Data d1 = "resipr";
+            Data d1 = "resipr";
             assert(d1 != sv1);
             assert(sv1 != d1);
             assert(d1.toStringView() != sv1);
 
 
-            resip::Data d2(std::string_view("resipr"));
+            Data d2(std::string_view("resipr"));
             assert(d2 != sv1);
             assert(sv1 != d2);
             assert(d2.toStringView() != sv1);
          }
 
          {
-            resip::Data d1("resip");
+            Data d1("resip");
             std::string_view str1 = d1;
             assert(str1 == d1);
             assert(d1 == str1);
          }
 
          {
-            resip::Data d1("resip");
+            Data d1("resip");
             std::string_view str1(d1);
             assert(str1 == d1);
             assert(d1 == str1);
          }
 
          {
-            resip::Data d1("resip");
+            Data d1("resip");
             std::string_view str1 = d1;
 
-            resip::Data d2("resip2");
+            Data d2("resip2");
             assert(str1 != d2);
             assert(d2 != str1);
          }
 
          {
-            resip::Data d1("resip");
+            Data d1("resip");
             std::string_view str1(d1);
 
-            resip::Data d2("resip2");
+            Data d2("resip2");
             assert(str1 != d2);
             assert(d2 != str1);
          }

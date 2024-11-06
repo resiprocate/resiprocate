@@ -409,6 +409,10 @@ class Data
 
       friend bool operator==(const Data& lhs, const Data& rhs);
       friend bool operator==(const Data& lhs, const char* rhs);
+      friend bool operator==(const Data& lhs, const std::string& rhs) noexcept;
+#if RESIP_CPP_STANDARD >= 201703L
+      friend bool operator==(const Data& lhs, const std::string_view rhs) noexcept;
+#endif
 
       friend bool operator<(const Data& lhs, const Data& rhs);
       friend bool operator<(const Data& lhs, const char* rhs);
@@ -1141,15 +1145,30 @@ inline bool operator!=(const Data& lhs, const Data& rhs) { return !(lhs == rhs);
 inline bool operator>(const Data& lhs, const Data& rhs) { return rhs < lhs; }
 inline bool operator<=(const Data& lhs, const Data& rhs) { return !(rhs < lhs); }
 inline bool operator>=(const Data& lhs, const Data& rhs) { return !(lhs < rhs); }
+
 inline bool operator!=(const Data& lhs, const char* rhs) { return !(lhs == rhs); }
 inline bool operator>(const Data& lhs, const char* rhs) { return rhs < lhs; }
 inline bool operator<=(const Data& lhs, const char* rhs) { return !(rhs < lhs); }
 inline bool operator>=(const Data& lhs, const char* rhs) { return !(lhs < rhs); }
+
 inline bool operator==(const char* lhs, const Data& rhs) { return rhs == lhs; }
 inline bool operator!=(const char* lhs, const Data& rhs) { return !(rhs == lhs); }
 inline bool operator>(const char* lhs, const Data& rhs) { return rhs < lhs; }
 inline bool operator<=(const char* lhs, const Data& rhs) { return !(rhs < lhs); }
 inline bool operator>=(const char* lhs, const Data& rhs) { return !(lhs < rhs); }
+
+inline bool operator!=(const Data& lhs, const std::string& rhs) noexcept { return !(lhs == rhs); }
+
+inline bool operator==(const std::string& lhs, const Data& rhs) noexcept { return rhs == lhs; }
+inline bool operator!=(const std::string& lhs, const Data& rhs) noexcept { return !(rhs == lhs); }
+
+#if RESIP_CPP_STANDARD >= 201703L
+inline bool operator!=(const Data& lhs, const std::string_view rhs) noexcept { return !(lhs == rhs); }
+
+inline bool operator==(const std::string_view lhs, const Data& rhs) noexcept { return rhs == lhs; }
+inline bool operator!=(const std::string_view lhs, const Data& rhs) noexcept { return !(rhs == lhs); }
+#endif
+
 #ifndef  RESIP_USE_STL_STREAMS
 EncodeStream& operator<<(EncodeStream& strm, const Data& d);
 #endif
@@ -1167,56 +1186,14 @@ operator+(const char* c, const Data& d)
 
 bool operator==(const Data& lhs, const Data& rhs);
 bool operator==(const Data& lhs, const char* rhs);
+bool operator==(const Data& lhs, const std::string& rhs) noexcept;
+#if RESIP_CPP_STANDARD >= 201703L
+bool operator==(const Data& lhs, const std::string_view rhs) noexcept;
+#endif
 
 bool operator<(const Data& lhs, const Data& rhs);
 bool operator<(const Data& lhs, const char* rhs);
 bool operator<(const char* lhs, const Data& rhs);
-
-
-inline bool operator==(const resip::Data& lhs, const std::string& rhs) noexcept
-{
-   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.c_str(), rhs.size()) == 0;
-}
-
-inline bool operator==(const std::string& lhs, const resip::Data& rhs) noexcept
-{
-   return lhs.size() == rhs.size() && std::memcmp(lhs.c_str(), rhs.data(), rhs.size()) == 0;
-}
-
-inline bool operator!=(const resip::Data& lhs, const std::string& rhs) noexcept
-{
-   return !(lhs == rhs);
-}
-
-inline bool operator!=(const std::string& lhs, const resip::Data& rhs) noexcept
-{
-   return !(lhs == rhs);
-}
-
-#if RESIP_CPP_STANDARD >= 201703L
-
-inline bool operator==(const resip::Data& lhs, const std::string_view rhs) noexcept
-{
-   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), rhs.size()) == 0;
-}
-
-inline bool operator==(const std::string_view lhs, const resip::Data& rhs) noexcept
-{
-   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), rhs.size()) == 0;
-}
-
-inline bool operator!=(const resip::Data& lhs, const std::string_view rhs) noexcept
-{
-   return !(lhs == rhs);
-}
-
-inline bool operator!=(const std::string_view lhs, const resip::Data& rhs) noexcept
-{
-   return !(lhs == rhs);
-}
-
-#endif
-
 }
 
 HashValue(resip::Data);
