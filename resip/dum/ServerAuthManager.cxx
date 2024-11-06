@@ -147,8 +147,13 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
    if (userAuth->getMode() == UserAuthInfo::Error)
    {
       InfoLog (<< "Error in auth procedure for " << userAuth->getUser() << " in " << userAuth->getRealm());
+      int32_t code = 0;
+      resip::Data statusText;
+      userAuth->getErrorInfo(code, statusText);
+
       auto response = std::make_shared<SipMessage>();
-      Helper::makeResponse(*response, *requestWithAuth, 503, "Server Error.");
+      Helper::makeResponse(*response, *requestWithAuth, code, statusText);
+
       mDum.send(response);
       onAuthFailure(Error, *requestWithAuth);
       delete requestWithAuth;
