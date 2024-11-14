@@ -1239,7 +1239,7 @@ FdPollGrp::create(const char *implName)
 #ifdef RESIP_POLL_IMPL_POLL
    if ( implName==0 || strcmp(implName,"poll")==0 )
    {
-      //return new FdPollImplPoll();
+      return new FdPollImplPoll();
    }
 #endif
    if ( implName==0 || strcmp(implName,"fdset")==0 )

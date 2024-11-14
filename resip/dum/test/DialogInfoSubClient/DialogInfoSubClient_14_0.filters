@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="DialogInfoSubClient.cxx" />
+    <ClCompile Include="Call.cxx" />
+    <ClCompile Include="CmdLineParser.cxx" />
+    <ClCompile Include="UserAgent.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="UserAgent.hxx" />
+    <ClInclude Include="Call.hxx" />
+    <ClInclude Include="CmdLineParser.hxx" />
+  </ItemGroup>
+</Project>
