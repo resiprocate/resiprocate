@@ -29,7 +29,7 @@ using namespace reTurn;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
-#define CONTINUOUSTESTMODE 
+//#define CONTINUOUSTESTMODE 
 
 resip::Data address;
 
@@ -99,12 +99,7 @@ public:
    virtual void onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onConnectSuccess: socketDest=" << socketDesc << ", address=" << address.to_string() << ", port=" << port);
-      //mTurnAsyncSocket->bindRequest();
-      mTurnAsyncSocket->createAllocation(30,       // TurnAsyncSocket::UnspecifiedLifetime, 
-         TurnAsyncSocket::UnspecifiedBandwidth,
-         StunMessage::PropsPortPair,
-         TurnAsyncSocket::UnspecifiedToken,
-         StunTuple::UDP);
+      mTurnAsyncSocket->bindRequest();
    }
    virtual void onConnectFailure(unsigned int socketDesc, const asio::error_code& e)
    {
@@ -232,14 +227,11 @@ public:
             sleepSeconds(1);    
             resip::Data turnData("This test is for ChannelData message!");
             InfoLog( << "CLIENT: Sending: " << turnData);
-            mTurnAsyncSocket->send(turnData.c_str(), turnData.size()+1);
-            break;
+            mTurnAsyncSocket->send(turnData.c_str(), turnData.size()+1);       
          }
 #else
          mTurnAsyncSocket->destroyAllocation(); 
 #endif
-      case 30:
-         mTurnAsyncSocket->destroyAllocation();
          //mTurnAsyncSocket->close();
          break;
       }
@@ -286,7 +278,7 @@ int main(int argc, char* argv[])
 
     asio::error_code rc;
     char username[256] = "test";
-    char password[256] = "pwd";
+    char password[256] = "1234";
     TurnPeer turnPeer;
     turnPeer.run();
     asio::io_service ioService;
