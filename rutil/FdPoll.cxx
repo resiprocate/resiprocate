@@ -196,7 +196,7 @@ FdPollImplFdSet::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *i
    resip_assert(fd!=INVALID_SOCKET);
 
    size_t useIdx;
-   if ( mFreeHeadIdx >= 0 )
+   if (mFreeHeadIdx != -1)
    {
       useIdx = mFreeHeadIdx;
       mFreeHeadIdx = mItems[useIdx].mNextIdx;
@@ -235,7 +235,7 @@ void
 FdPollImplFdSet::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMask)
 {
    size_t useIdx = IMPL_FDSET_HandleToIdx(handle);
-   resip_assert(useIdx>=0 && (useIdx) < mItems.size());
+   resip_assert(useIdx != -1 && useIdx < mItems.size());
    FdPollItemFdSetInfo& info = mItems[useIdx];
    resip_assert(info.mSocketFd!=INVALID_SOCKET);
    resip_assert(info.mItemObj);
@@ -257,7 +257,7 @@ FdPollImplFdSet::delPollItem(FdPollItemHandle handle)
 
    size_t useIdx = IMPL_FDSET_HandleToIdx(handle);
    //DebugLog(<<"deleting epoll item fd="<<fd);
-   resip_assert(useIdx>=0 && (useIdx) < mItems.size());
+   resip_assert(useIdx != -1 && useIdx < mItems.size());
    FdPollItemFdSetInfo& info = mItems[useIdx];
    resip_assert(info.mSocketFd!=INVALID_SOCKET);
    resip_assert(info.mItemObj);
@@ -1239,7 +1239,7 @@ FdPollGrp::create(const char *implName)
 #ifdef RESIP_POLL_IMPL_POLL
    if ( implName==0 || strcmp(implName,"poll")==0 )
    {
-      return new FdPollImplPoll();
+      //return new FdPollImplPoll();
    }
 #endif
    if ( implName==0 || strcmp(implName,"fdset")==0 )

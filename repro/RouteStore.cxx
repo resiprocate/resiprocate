@@ -358,7 +358,7 @@ RouteStore::process(const resip::Uri& ruri,
          
          if ( rewrite.find("$") != Data::npos )
          {
-            for ( int i=1; i<matches.size(); i++)
+            for ( int i=1; i<(int)matches.size(); i++)
             {
                Data subExp(matches[i]);
                DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
