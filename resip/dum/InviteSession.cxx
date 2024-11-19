@@ -2127,7 +2127,7 @@ InviteSession::dispatchTerminated(const SipMessage& msg)
          mDialog.makeResponse(*response, msg, 200);
          send(response);
       }
-      else
+      else if(ACK != msg.header(h_CSeq).method()) // Shouldn't 481 an ACK
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 481);
