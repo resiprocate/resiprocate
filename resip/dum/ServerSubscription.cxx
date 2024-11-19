@@ -252,7 +252,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
          }
          send(response);
          return;
-      }     
+      }
 
       InviteSessionHandle invSession;
       if (getAppDialog().isValid())
@@ -281,6 +281,14 @@ ServerSubscription::dispatch(const SipMessage& msg)
             {
                handler->onNewSubscriptionFromRefer(getHandle(), msg);
             }
+            else
+            {
+               // Event type is "refer" and we have no invite sesion, respond to the REFER with an error
+               handler->onError(getHandle(), msg);
+               auto response = reject(481);  // Call/transaction does not exist
+               send(response);
+            }
+
             // note:  it might be nice to call onExpiredByClient here, but it's dangerous, since inline calls 
             //        to reject or the inline sending of a Notify in the onNewSubscription handler will cause 
             //        'this' to be deleted
@@ -312,11 +320,18 @@ ServerSubscription::dispatch(const SipMessage& msg)
             DebugLog(<< "onNewSubscriptionFromRefer called");
             handler->onNewSubscriptionFromRefer(getHandle(), msg);
          }
+         else
+         {
+            // Event type is "refer" and we have no invite sesion, respond to the REFER with an error
+            handler->onError(getHandle(), msg);
+            auto response = reject(481);  // Call/transaction does not exist
+            send(response);
+         }
       }
       else
       {
          DebugLog(<< "onRefresh called");
-         handler->onRefresh(getHandle(), msg);            
+         handler->onRefresh(getHandle(), msg);
       }
    }
    else
