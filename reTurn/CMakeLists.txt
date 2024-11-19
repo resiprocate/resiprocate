@@ -80,6 +80,7 @@ set_target_properties(reTurnServer PROPERTIES FOLDER reTurn)
 
 install(TARGETS reTurnCommon DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(TARGETS reTurnServer DESTINATION ${CMAKE_INSTALL_SBINDIR})
+install(FILES reTurnServer.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/reTurn ${INCLUDES_COMMON} ${INCLUDES})
 install(FILES psql-user-extract DESTINATION ${INSTALL_RETURN_PKGLIB_DIR})
 install(FILES reTurnServer.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)

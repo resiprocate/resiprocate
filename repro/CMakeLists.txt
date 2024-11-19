@@ -7,6 +7,7 @@ target_link_libraries(repro-bin PUBLIC repro)
 set_target_properties(repro-bin PROPERTIES OUTPUT_NAME repro)
 
 install(TARGETS repro-bin DESTINATION ${CMAKE_INSTALL_SBINDIR})
+install(FILES repro.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
 install(FILES doc/repro.8 doc/reprocmd.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
 
 set(INCLUDES
