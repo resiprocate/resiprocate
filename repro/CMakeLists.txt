@@ -1,11 +1,9 @@
 add_executable(repro
    repro.cxx
-   BerkeleyDb.cxx
    HttpBase.cxx
    HttpConnection.cxx
    ReproRunner.cxx
    ReproVersion.cxx
-   SqlDb.cxx
    WebAdmin.cxx
    WebAdminThread.cxx
    )
@@ -104,6 +102,7 @@ set(INCLUDES
 )
 
 add_library(reprolib
+   BerkeleyDb.cxx
    RouteStore.cxx
    UserStore.cxx
    ConfigStore.cxx
@@ -132,6 +131,7 @@ add_library(reprolib
    RequestContext.cxx
    ResponseContext.cxx
    RRDecorator.cxx
+   SqlDb.cxx
    Processor.cxx
    ProcessorChain.cxx
    Target.cxx
@@ -200,19 +200,19 @@ if(USE_MAXMIND_GEOIP)
    target_link_libraries(reprolib PUBLIC ${GEOIP_LIBRARIES})
 endif()
 
-target_add_conditional_sources(repro MySQL_FOUND
+target_add_conditional_sources(reprolib MySQL_FOUND
    MySqlDb.cxx
    )
-target_link_libraries(repro PUBLIC ${MySQL_LIBRARIES})
-target_include_directories(repro PUBLIC ${MySQL_INCLUDE_DIRS})
+target_link_libraries(reprolib PUBLIC ${MySQL_LIBRARIES})
+target_include_directories(reprolib PUBLIC ${MySQL_INCLUDE_DIRS})
 
-target_add_conditional_sources(repro USE_POSTGRESQL
+target_add_conditional_sources(reprolib USE_POSTGRESQL
    PostgreSqlDb.cxx
    )
 
 if(USE_POSTGRESQL)
    # for some reason we can't use PostgreSQL_LIBRARIES here...
-   target_link_libraries(repro PUBLIC PostgreSQL::PostgreSQL)
+   target_link_libraries(reprolib PUBLIC PostgreSQL::PostgreSQL)
 endif()
 
 version_libname(reprolib)
