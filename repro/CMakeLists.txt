@@ -1,13 +1,19 @@
-add_executable(repro-bin
+add_executable(repro
    repro.cxx
+   BerkeleyDb.cxx
+   HttpBase.cxx
+   HttpConnection.cxx
+   ReproRunner.cxx
+   ReproVersion.cxx
+   SqlDb.cxx
+   WebAdmin.cxx
+   WebAdminThread.cxx
    )
 
-target_link_libraries(repro-bin PUBLIC repro)
+target_link_libraries(repro PUBLIC reprolib)
 
-set_target_properties(repro-bin PROPERTIES OUTPUT_NAME repro)
-
-install(TARGETS repro-bin DESTINATION ${CMAKE_INSTALL_SBINDIR})
-install(FILES repro.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
+install(TARGETS repro DESTINATION ${CMAKE_INSTALL_SBINDIR})
+install(FILES users.txt repro.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
 install(FILES doc/repro.8 doc/reprocmd.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
 
 set(INCLUDES
@@ -97,7 +103,7 @@ set(INCLUDES
    XmlRpcServerBase.hxx
 )
 
-add_library(repro
+add_library(reprolib
    RouteStore.cxx
    UserStore.cxx
    ConfigStore.cxx
@@ -107,17 +113,11 @@ add_library(repro
    SiloStore.cxx
    Store.cxx
    AbstractDb.cxx
-   BerkeleyDb.cxx
    BasicWsConnectionValidator.cxx
 
    CommandServer.cxx
    CommandServerThread.cxx
    ProxyConfig.cxx
-   ReproVersion.cxx
-   HttpBase.cxx
-   HttpConnection.cxx
-   WebAdmin.cxx
-   WebAdminThread.cxx
 
    AccountingCollector.cxx
    Proxy.cxx
@@ -125,7 +125,6 @@ add_library(repro
    RegSyncClient.cxx
    RegSyncServer.cxx
    RegSyncServerThread.cxx
-   ReproRunner.cxx
    ReproAuthenticatorFactory.cxx
    ReproRADIUSServerAuthManager.cxx
    ReproServerAuthManager.cxx
@@ -135,7 +134,6 @@ add_library(repro
    RRDecorator.cxx
    Processor.cxx
    ProcessorChain.cxx
-   SqlDb.cxx
    Target.cxx
    TlsPeerIdentityStore.cxx
    UserAuthGrabber.cxx
@@ -170,7 +168,7 @@ add_library(repro
    ${INCLUDES}
 )
 
-target_add_conditional_sources(repro OPENSSL_FOUND
+target_add_conditional_sources(reprolib OPENSSL_FOUND
    stateAgents/CertServer.cxx
    stateAgents/CertPublicationHandler.cxx
    stateAgents/CertSubscriptionHandler.cxx
@@ -178,26 +176,28 @@ target_add_conditional_sources(repro OPENSSL_FOUND
    stateAgents/PrivateKeySubscriptionHandler.cxx
 )
 
-target_add_conditional_sources(repro BUILD_DSO_PLUGINS
+target_add_conditional_sources(reprolib BUILD_DSO_PLUGINS
    Plugin.cxx
 )
 
-target_link_libraries(repro PUBLIC dum)
+target_link_libraries(reprolib PUBLIC dum)
 if(BUILD_DSO_PLUGINS)
-   target_link_libraries(repro PUBLIC ${CMAKE_DL_LIBS})
+   target_link_libraries(reprolib PUBLIC ${CMAKE_DL_LIBS})
 endif()
 
-target_include_directories(repro PUBLIC ${PROJECT_SOURCE_DIR})
-target_include_directories(repro PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(repro PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(reprolib PUBLIC ${BERKELEYDB_INCLUDE_DIRS})
+target_link_libraries(reprolib PUBLIC ${BERKELEYDB_LIBRARIES})
 
-target_include_directories(repro PUBLIC ${CAJUN_INCLUDE_DIRS})
-target_include_directories(repro PUBLIC ${BERKELEYDB_INCLUDE_DIRS})
-target_include_directories(repro PUBLIC ${PCRE_INCLUDE_DIRS})
-target_link_libraries(repro PUBLIC ${BERKELEYDB_LIBRARIES})
-target_link_libraries(repro PUBLIC ${PCRE_LIBRARIES})
+target_include_directories(reprolib PUBLIC ${PROJECT_SOURCE_DIR})
+target_include_directories(reprolib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(reprolib PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+
+target_include_directories(reprolib PUBLIC ${CAJUN_INCLUDE_DIRS})
+target_include_directories(reprolib PUBLIC ${PCRE_INCLUDE_DIRS})
+target_link_libraries(reprolib PUBLIC ${PCRE_LIBRARIES})
 if(USE_MAXMIND_GEOIP)
-   target_link_libraries(repro PUBLIC ${GEOIP_LIBRARY})
+   target_include_directories(reprolib PUBLIC ${GEOIP_INCLUDE_DIRS})
+   target_link_libraries(reprolib PUBLIC ${GEOIP_LIBRARIES})
 endif()
 
 target_add_conditional_sources(repro MySQL_FOUND
@@ -215,11 +215,11 @@ if(USE_POSTGRESQL)
    target_link_libraries(repro PUBLIC PostgreSQL::PostgreSQL)
 endif()
 
-version_libname(repro)
+version_libname(reprolib)
 
 target_include_directories(repro PUBLIC ${PostgreSQL_INCLUDE_DIR})
 
-install(TARGETS repro DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS reprolib DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/repro ${INCLUDES})
 
