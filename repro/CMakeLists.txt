@@ -11,8 +11,12 @@ add_executable(repro
 target_link_libraries(repro PUBLIC reprolib)
 
 install(TARGETS repro DESTINATION ${CMAKE_INSTALL_SBINDIR})
-install(FILES users.txt repro.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
-install(FILES doc/repro.8 doc/reprocmd.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
+if(WIN32)
+    # For windows only - move config and users.txt to install location, so repro can be run in place
+    install(FILES users.txt repro.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
+else()
+    install(FILES doc/repro.8 doc/reprocmd.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
+endif()
 
 set(INCLUDES
    AbstractDb.hxx

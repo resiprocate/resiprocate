@@ -532,7 +532,7 @@ endif()
 # Debian: libcppunit-dev
 if(USE_CPPUNIT)
    if(USE_CONTRIB)
-      add_subdirectory(contrib/cppunit)
+      add_subdirectory(contrib/cppunit/src/cppunit)
       set(CPPUNIT_LIBRARIES cppunit)
    else()
       pkg_check_modules(CPPUNIT cppunit REQUIRED)

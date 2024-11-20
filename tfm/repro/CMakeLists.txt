@@ -21,7 +21,7 @@ add_library(tfmrepro
 )
 
 target_include_directories(tfmrepro PRIVATE ${POPT_INCLUDE_DIRS})
-target_link_libraries(tfmrepro PUBLIC repro tfm ${POPT_LIBRARIES})
+target_link_libraries(tfmrepro PUBLIC reprolib tfm ${POPT_LIBRARIES})
 version_libname(tfmrepro)
 
 if(BUILD_TESTING)
