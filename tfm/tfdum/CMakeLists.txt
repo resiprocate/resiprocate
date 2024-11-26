@@ -66,3 +66,8 @@ if(BUILD_TESTING)
     test(TestLamba TestLamba.cxx)
     test(dumTests dumTests.cxx)
 endif()
+
+# For windows - put all TFM executables into a central install location to make it easier to run
+if(WIN32)
+    install(TARGETS dumTests DESTINATION tfm)
+endif()

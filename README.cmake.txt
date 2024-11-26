@@ -16,6 +16,12 @@ $ cd cmake_build
 $ cmake ..
 $ make
 
+Windows:
+>mkdir cmake_build # Or any other name
+>cd cmake_build
+>cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TFM=1 ..
+Open reciprocate.sln in visual studio 
+
 Once this is built, you can run the unit tests with:
 
 $ ctest

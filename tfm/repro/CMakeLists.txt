@@ -30,3 +30,10 @@ endif()
 
 install(TARGETS tfmrepro DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+# For windows - put all TFM executables into a central install location to make it easier to run
+if(WIN32)
+    install(TARGETS sanityTests DESTINATION tfm)
+    install(FILES root_cert_resipCA.pem domain_key_localhost.pem domain_cert_localhost.pem DESTINATION tfm)
+endif()
+
+

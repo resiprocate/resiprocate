@@ -11,6 +11,7 @@
 *.ilk
 *.idb
 *.log
+*.cache
 /Makefile
 /Makefile.in
 /.deps
@@ -72,4 +73,6 @@ CPackSourceConfig.cmake
 **/lib*.so
 **/lib*.so.*
 **/Testing/
+TestResult.xml
+CMakeSettings.json
 

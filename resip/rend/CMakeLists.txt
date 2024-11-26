@@ -32,6 +32,7 @@ add_executable(rendIt
 
 target_include_directories(rend PUBLIC ${ASIO_INCLUDE_DIRS})
 target_include_directories(rend PUBLIC ${POPT_INCLUDE_DIRS})
+target_include_directories(rend PUBLIC ${BOOST_INCLUDE_DIRS})
 target_link_libraries(rend PUBLIC dum ${POPT_LIBRARIES})
 version_libname(rend)
 

@@ -27,3 +27,5 @@ test(basicMessage basicMessage.cxx ${SHARED_SRC})
 manual_test(basicClient basicClient.cxx ${SHARED_SRC})
 test(testContactInstanceRecord testContactInstanceRecord.cxx)
 test(testRequestValidationHandler testRequestValidationHandler.cxx ${SHARED_SRC})
+
+add_subdirectory(DialogInfoSubClient)
