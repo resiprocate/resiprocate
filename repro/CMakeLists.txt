@@ -12,10 +12,24 @@ target_link_libraries(repro PUBLIC reprolib)
 
 install(TARGETS repro DESTINATION ${CMAKE_INSTALL_SBINDIR})
 if(WIN32)
-    # For windows only - move config and users.txt to install location, so repro can be run in place
-    install(FILES users.txt repro.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
+  if(WITH_SSL)
+     add_custom_command ( TARGET repro POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+       $<TARGET_FILE:OPENSSL> $<TARGET_FILE_DIR:repro>
+       COMMAND_EXPAND_LISTS
+     )
+  endif()
+  if(USE_BDB)
+     add_custom_command ( TARGET repro POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+       $<TARGET_FILE:BERKELEYDB> $<TARGET_FILE_DIR:repro>
+       COMMAND_EXPAND_LISTS
+     )
+  endif()
+  # For windows only - move config and users.txt to install location, so repro can be run in place
+  install(FILES users.txt repro.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
 else()
-    install(FILES doc/repro.8 doc/reprocmd.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
+  install(FILES doc/repro.8 doc/reprocmd.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
 endif()
 
 set(INCLUDES
@@ -190,7 +204,11 @@ if(BUILD_DSO_PLUGINS)
 endif()
 
 target_include_directories(reprolib PUBLIC ${BERKELEYDB_INCLUDE_DIRS})
-target_link_libraries(reprolib PUBLIC ${BERKELEYDB_LIBRARIES})
+if(USE_NUGET)
+  target_link_libraries(reprolib PUBLIC BERKELEYDB)
+else()
+  target_link_libraries(reprolib PUBLIC ${BERKELEYDB_LIBRARIES})
+endif()
 
 target_include_directories(reprolib PUBLIC ${PROJECT_SOURCE_DIR})
 target_include_directories(reprolib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

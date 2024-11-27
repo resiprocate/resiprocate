@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules")
 
+# For Visual Studio Solution Generation
+ set(CMAKE_MAP_IMPORTED_CONFIG_RELEASE Release)
+ set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+ set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+
 if(POLICY CMP0042)
    CMAKE_POLICY(SET CMP0042 NEW)
 endif(POLICY CMP0042)
@@ -323,7 +328,7 @@ function(nuget_inst)
    set(${ARGV0}_TARGETS ${CMAKE_BINARY_DIR}/packages/${ARGV1}/build/native/${ARGV1}.targets PARENT_SCOPE)
 
    set(PKG_TOP "${CMAKE_BINARY_DIR}/packages/${ARGV1}/build/native")
-   set(PKG_LIB "${PKG_TOP}/lib/${WIN_ARCH}/${CMAKE_BUILD_TYPE}")
+   set(PKG_LIB "${PKG_TOP}/lib/${WIN_ARCH}/Release")  # TODO - fix this
 
    set(${ARGV0}_ROOT_DIR "${PKG_TOP}" PARENT_SCOPE)
    set(${ARGV0}_PKG_DIR "${CMAKE_BINARY_DIR}/packages/${ARGV1}" PARENT_SCOPE)
@@ -344,15 +349,39 @@ if(WITH_SSL)
       # this is an argument to FindOpenSSL
       # https://cmake.org/cmake/help/latest/module/FindOpenSSL.html
       set(OPENSSL_USE_STATIC_LIBS True)
-#      set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_LIBRARIES}/libcrypto.lib")
       set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT_DIR}/include)
-      set(OPENSSL_LIBRARIES
-            "${OPENSSL_LIBRARIES_DIR}/libssl.lib"
-            "${OPENSSL_LIBRARIES_DIR}/libcrypto.lib")
       set(OPENSSL_FOUND TRUE)
-      install(DIRECTORY ${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/${CMAKE_BUILD_TYPE}/ DESTINATION ${CMAKE_INSTALL_SBINDIR})
-      install(DIRECTORY ${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/${CMAKE_BUILD_TYPE}/ DESTINATION ${CMAKE_INSTALL_BINDIR})
-      install(DIRECTORY ${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/${CMAKE_BUILD_TYPE}/ DESTINATION tfm)
+
+      # CMakes Visual Studio generation can't properly handle having multiple lib files listed in a single 
+      # IMPORTED_IMPLIB property like the following:
+      #set_property(TARGET OPENSSL PROPERTY IMPORTED_IMPLIB_RELEASE 
+      #  "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libssl.lib"
+      #  "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libcrypto.lib")
+      #set_property(TARGET OPENSSL PROPERTY IMPORTED_IMPLIB_DEBUG 
+      #  "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libssl.lib"
+      #  "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libcrypto.lib")
+      # To around this we must break the OpenSSL library into 2 add_library calls 
+      # (named OPENSSL and OPENSSL_CRYPTO) in order for the library linking to work.
+      add_library(OPENSSL SHARED IMPORTED GLOBAL)
+      add_library(OPENSSL_CRYPTO SHARED IMPORTED GLOBAL)
+      set_property(TARGET OPENSSL PROPERTY IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libssl.lib")
+      set_property(TARGET OPENSSL_CRYPTO PROPERTY IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libcrypto.lib")
+      set_property(TARGET OPENSSL PROPERTY IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libssl.lib")
+      set_property(TARGET OPENSSL_CRYPTO PROPERTY IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libcrypto.lib")
+
+      # These are used to add Custom PostBuild copy steps to executables that need these dll's to run
+      set_property(TARGET OPENSSL PROPERTY IMPORTED_LOCATION_RELEASE 
+        "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libssl-1_1-${WIN_ARCH}.dll"
+        "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libcrypto-1_1-${WIN_ARCH}.dll"
+      )
+      set_property(TARGET OPENSSL PROPERTY IMPORTED_LOCATION_DEBUG 
+        "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libssl-1_1-${WIN_ARCH}.dll"
+        "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libcrypto-1_1-${WIN_ARCH}.dll"
+      )
+
+      install(DIRECTORY ${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/ DESTINATION ${CMAKE_INSTALL_SBINDIR})
+      install(DIRECTORY ${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/ DESTINATION ${CMAKE_INSTALL_BINDIR})
+      install(DIRECTORY ${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/ DESTINATION tfm)
    elseif(USE_NDKPORTS_HACKS)
       if(NOT ANDROID_ABI)
          message(FATAL_ERROR "ndkports hack requested but ANDROID_ABI not set")
@@ -432,7 +461,7 @@ if(USE_MYSQL)
       #add_subdirectory(contrib/MySQLConnectorC)
       set(MySQL_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/contrib/MySQLConnectorC")
       set(MySQL_INCLUDE_DIRS "${MySQL_ROOT}/include")
-      set(MySQL_LIBRARIES "${MySQL_ROOT}/lib/${CMAKE_BUILD_TYPE}/libmysql.lib")
+      set(MySQL_LIBRARIES "${MySQL_ROOT}/lib/Release/libmysql.lib") # TODO Fix this
       set(MySQL_FOUND TRUE)
    else()
       find_package(MySQL REQUIRED)
@@ -549,17 +578,19 @@ endif()
 # Debian: libdb++-dev
 if(USE_BDB)
    if(USE_NUGET)
-      #nuget_inst(BERKELEYDB "BerkeleyDB-4_8_30-Cpp" "4.8.30.2")
-      #set(BERKELEYDB_LIBRARIES_DIR "${BERKELEYDB_ROOT_DIR}/bin")
-      #set(BERKELEYDB_LIBRARIES
-      #      "${BERKELEYDB_LIBRARIES_DIR}/lib/${WIN_ARCH}/Debug/libdb48d.lib")
       # https://www.nuget.org/packages/berkeley.db.v140
       nuget_inst(BERKELEYDB "berkeley.db.v140" "5.3.28.3")
-      set(BERKELEYDB_LIBRARIES_DIR "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/${CMAKE_BUILD_TYPE}")
-      set(BERKELEYDB_LIBRARIES "${BERKELEYDB_LIBRARIES_DIR}/libdb53d.lib")
+
+      add_library(BERKELEYDB SHARED IMPORTED GLOBAL)
+      set_property(TARGET BERKELEYDB PROPERTY IMPORTED_IMPLIB_RELEASE "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/Release/libdb53.lib")
+      set_property(TARGET BERKELEYDB PROPERTY IMPORTED_IMPLIB_DEBUG "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libdb53d.lib")
+      # These are used to add Custom PostBuild copy steps to executables that need these dll's to run
+      set_property(TARGET BERKELEYDB PROPERTY IMPORTED_LOCATION_RELEASE "${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Release/libdb53.dll")
+      set_property(TARGET BERKELEYDB PROPERTY IMPORTED_LOCATION_DEBUG "${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libdb53d.dll")
+
       set(BERKELEYDB_FOUND TRUE)
-      install(DIRECTORY ${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/${CMAKE_BUILD_TYPE}/ DESTINATION ${CMAKE_INSTALL_SBINDIR})
-      install(DIRECTORY ${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/${CMAKE_BUILD_TYPE}/ DESTINATION tfm)
+      install(DIRECTORY ${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Relese/ DESTINATION ${CMAKE_INSTALL_SBINDIR})
+      install(DIRECTORY ${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Release/ DESTINATION tfm)
    elseif(USE_CONTRIB)
       add_subdirectory(contrib/db)
    else()
@@ -580,13 +611,9 @@ if(USE_PCRE)
          set(WIN_LIB_LINKING "static")
          add_definitions(-DPCRE_STATIC)
       endif()
-      set(PCRE_LIBRARIES_DIR "${PCRE_ROOT_DIR}/lib/v110/${WIN_ARCH}/${CMAKE_BUILD_TYPE}/${WIN_LIB_LINKING}/utf8")
+      set(PCRE_LIBRARIES_DIR "${PCRE_ROOT_DIR}/lib/v110/${WIN_ARCH}/Release/${WIN_LIB_LINKING}/utf8") # TODO Fix this
       set(PCRE_LIBRARIES
               "${PCRE_LIBRARIES_DIR}/pcre8.lib")
-      # FIXME - check if those libraries and headers really exist
-      if(NOT EXISTS "${PCRE_LIBRARIES}")
-         message(FATAL_ERROR "could not find ${PCRE_LIBRARIES}")
-      endif()
       set(PCRE_FOUND TRUE)
    elseif(USE_CONTRIB)
       add_subdirectory(contrib/pcre)
@@ -663,7 +690,7 @@ if(USE_SRTP)
          #set(libsrtp2_LIBRARIES "${libsrtp2_LIBRARIES}")
          # FIXME - these shouldn't be hard-coded, need to fix the above variables
          set(SRTP2_INCLUDE_DIRS "${libsrtp2_SOURCE_DIR}/include")
-         set(SRTP2_LIBRARIES "${libsrtp2_BINARY_DIR}/contrib/srtp/${CMAKE_BUILD_TYPE}/srtp2.lib")
+         set(SRTP2_LIBRARIES "${libsrtp2_BINARY_DIR}/contrib/srtp/Release/srtp2.lib")  # TODO fix this
          set(SRTP_FOUND TRUE)
       else()
          find_package(srtp2 REQUIRED)

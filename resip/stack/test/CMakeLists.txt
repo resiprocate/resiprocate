@@ -3,6 +3,13 @@ function(manual_test)
    target_include_directories(${ARGV0} PRIVATE ${POPT_INCLUDE_DIRS})
    target_link_libraries(${ARGV0} resip ${POPT_LIBRARIES})
    set_target_properties(${ARGV0} PROPERTIES FOLDER resip/ManualTests)
+   if(WIN32 AND WITH_SSL)
+     add_custom_command ( TARGET ${ARGV0} POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+       $<TARGET_FILE:OPENSSL> $<TARGET_FILE_DIR:${ARGV0}>
+       COMMAND_EXPAND_LISTS
+     )
+   endif()
 endfunction()
 
 function(test)
@@ -10,6 +17,13 @@ function(test)
    target_include_directories(${ARGV0} PRIVATE ${POPT_INCLUDE_DIRS})
    target_link_libraries(${ARGV0} resip ${POPT_LIBRARIES})
    set_target_properties(${ARGV0} PROPERTIES FOLDER resip/Tests)
+   if(WIN32 AND WITH_SSL)
+     add_custom_command ( TARGET ${ARGV0} POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+       $<TARGET_FILE:OPENSSL> $<TARGET_FILE_DIR:${ARGV0}>
+       COMMAND_EXPAND_LISTS
+     )
+   endif()
 endfunction()
 
 manual_test(UAS UAS.cxx)
