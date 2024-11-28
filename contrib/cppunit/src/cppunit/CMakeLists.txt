@@ -138,5 +138,6 @@ add_library(cppunit STATIC
     "XmlDocument.cpp"
     "XmlElement.cpp"
 )
+set_target_properties(cppunit PROPERTIES FOLDER contrib)
 target_include_directories(cppunit PRIVATE ../../include)
 target_include_directories(cppunit INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../../include)

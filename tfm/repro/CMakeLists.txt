@@ -1,6 +1,6 @@
 function(test)
    test_base(${ARGV})
-   set_target_properties(${ARGV0} PROPERTIES FOLDER tfm/repro)
+   set_target_properties(${ARGV0} PROPERTIES FOLDER tfm/tfmrepro)
    target_link_libraries(${ARGV0} PUBLIC tfmrepro)
    set_tests_properties(${ARGV0} PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
    if(WIN32 AND WITH_SSL)
@@ -34,20 +34,28 @@ add_library(tfmrepro
    ${INCLUDES}
 )
 
+set_target_properties(tfmrepro PROPERTIES FOLDER tfm/tfmrepro)
 target_include_directories(tfmrepro PRIVATE ${POPT_INCLUDE_DIRS})
 target_link_libraries(tfmrepro PUBLIC reprolib tfm ${POPT_LIBRARIES})
 version_libname(tfmrepro)
 
+set(CERTS
+   ${CMAKE_SOURCE_DIR}/tfm/repro/root_cert_resipCA.pem
+   ${CMAKE_SOURCE_DIR}/tfm/repro/domain_key_localhost.pem 
+   ${CMAKE_SOURCE_DIR}/tfm/repro/domain_cert_localhost.pem
+)
+
 if(BUILD_TESTING)
     test(sanityTests sanityTests.cxx)
+    set_tests_properties(sanityTests PROPERTIES TIMEOUT 3600)  # Set timeout to 60 mins
+    add_custom_command ( TARGET sanityTests POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+       ${CERTS} $<TARGET_FILE_DIR:sanityTests>
+       COMMAND_EXPAND_LISTS
+    )
 endif()
 
 install(TARGETS tfmrepro DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-# For windows - put all TFM executables into a central install location to make it easier to run
-if(WIN32)
-    install(TARGETS sanityTests DESTINATION tfm)
-    install(FILES root_cert_resipCA.pem domain_key_localhost.pem domain_cert_localhost.pem DESTINATION tfm)
-endif()
 
 

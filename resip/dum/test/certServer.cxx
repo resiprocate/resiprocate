@@ -14,6 +14,7 @@
 #include "resip/stack/Symbols.hxx"
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/X509Contents.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/DialogUsageManager.hxx"

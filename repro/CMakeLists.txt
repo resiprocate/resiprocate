@@ -8,7 +8,19 @@ add_executable(repro
    WebAdminThread.cxx
    )
 
+set_target_properties(repro PROPERTIES FOLDER repro)
 target_link_libraries(repro PUBLIC reprolib)
+
+set(CONFIG_FILES
+   ${CMAKE_SOURCE_DIR}/repro/users.txt
+   ${CMAKE_SOURCE_DIR}/repro/repro.config 
+)
+
+add_custom_command ( TARGET repro POST_BUILD
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+   ${CONFIG_FILES} $<TARGET_FILE_DIR:repro>
+   COMMAND_EXPAND_LISTS
+)
 
 install(TARGETS repro DESTINATION ${CMAKE_INSTALL_SBINDIR})
 if(WIN32)
@@ -240,6 +252,8 @@ endif()
 version_libname(reprolib)
 
 target_include_directories(repro PUBLIC ${PostgreSQL_INCLUDE_DIR})
+
+set_target_properties(reprolib PROPERTIES FOLDER repro)
 
 install(TARGETS reprolib DESTINATION ${CMAKE_INSTALL_LIBDIR})
 

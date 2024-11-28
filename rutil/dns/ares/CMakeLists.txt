@@ -54,7 +54,7 @@ if(APPLE)
 endif()
 
 version_libname(resipares)
-set_target_properties(resipares PROPERTIES FOLDER ares)
+set_target_properties(resipares PROPERTIES FOLDER rutil/ares)
 
 install(TARGETS resipares DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES ${INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rutil/dns/ares)
@@ -68,15 +68,15 @@ target_include_directories(adig PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(ahost resipares)
 target_link_libraries(adig resipares)
 
-set_target_properties(ahost PROPERTIES FOLDER ares)
-set_target_properties(adig PROPERTIES FOLDER ares)
+set_target_properties(ahost PROPERTIES FOLDER rutil/ares/tools)
+set_target_properties(adig PROPERTIES FOLDER rutil/ares/tools)
 
 # fuzzing targets
 
 add_fuzzing_executable(aresfuzz ares-test-fuzz.c)
-set_target_properties(aresfuzz PROPERTIES FOLDER ares)
+set_target_properties(aresfuzz PROPERTIES FOLDER rutil/ares/tools)
 target_link_libraries(aresfuzz PRIVATE resipares)
 
 add_fuzzing_executable(aresfuzzname ares-test-fuzz-name.c)
-set_target_properties(aresfuzzname PROPERTIES FOLDER ares)
+set_target_properties(aresfuzzname PROPERTIES FOLDER rutil/ares/tools)
 target_link_libraries(aresfuzzname PRIVATE resipares)

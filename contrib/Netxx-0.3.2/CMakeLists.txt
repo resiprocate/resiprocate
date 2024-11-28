@@ -45,6 +45,7 @@ add_library(Netxx STATIC
     src/StreamBase.cxx
     src/StreamServer.cxx
 )
+set_target_properties(Netxx PROPERTIES FOLDER contrib)
 target_include_directories(Netxx PRIVATE include)
 target_include_directories(Netxx INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_compile_definitions(NETXX_NO_INET6)

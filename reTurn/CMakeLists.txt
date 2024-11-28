@@ -74,9 +74,28 @@ target_link_libraries(reTurnCommon rutil)
 set_target_properties(reTurnCommon PROPERTIES FOLDER reTurn)
 version_libname(reTurnCommon)
 
+set(CONFIG_FILES
+   ${CMAKE_SOURCE_DIR}/reTurn/reTurnServer.config
+   ${CMAKE_SOURCE_DIR}/reTurn/users.txt
+)
+
+add_custom_command ( TARGET reTurnServer POST_BUILD
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+   ${CONFIG_FILES} $<TARGET_FILE_DIR:reTurnServer>
+   COMMAND_EXPAND_LISTS
+)
+
 target_include_directories(reTurnServer PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(reTurnServer reTurnCommon)
 set_target_properties(reTurnServer PROPERTIES FOLDER reTurn)
+
+if(WIN32 AND WITH_SSL)
+  add_custom_command ( TARGET reTurnServer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE:OPENSSL> $<TARGET_FILE_DIR:reTurnServer>
+    COMMAND_EXPAND_LISTS
+  )
+endif()
 
 install(TARGETS reTurnCommon DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(TARGETS reTurnServer DESTINATION ${CMAKE_INSTALL_SBINDIR})

@@ -20,8 +20,10 @@ add_executable(sipdialer
 
 target_link_libraries(sipdialer PUBLIC sipdial)
 
+set_target_properties(sipdialer PROPERTIES FOLDER apps/sipdial)
 install(TARGETS sipdialer DESTINATION ${CMAKE_INSTALL_BINDIR})
 
+set_target_properties(sipdial PROPERTIES FOLDER apps/sipdial)
 install(TARGETS sipdial DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/sipdial ${INCLUDES})
 

@@ -1,6 +1,6 @@
 function(test)
    test_base(${ARGV})
-   set_target_properties(${ARGV0} PROPERTIES FOLDER tfm/repro)
+   set_target_properties(${ARGV0} PROPERTIES FOLDER tfm/tfdum)
    target_link_libraries(${ARGV0} tfdum)
    set_tests_properties(${ARGV0} PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
    if(WIN32 AND WITH_SSL)
@@ -74,14 +74,12 @@ add_library(tfdum
    ${INCLUDES}
 )
 
+set_target_properties(tfdum PROPERTIES FOLDER tfm/tfdum)
 target_link_libraries(tfdum PUBLIC tfmrepro)
 
 if(BUILD_TESTING)
     test(TestLamba TestLamba.cxx)
     test(dumTests dumTests.cxx)
+    set_tests_properties(dumTests PROPERTIES TIMEOUT 1800)  # Normal run time is about 15-20 mins, set timeout to 30 mins
 endif()
 
-# For windows - put all TFM executables into a central install location to make it easier to run
-if(WIN32)
-    install(TARGETS dumTests DESTINATION tfm)
-endif()
