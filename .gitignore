@@ -89,6 +89,8 @@ PACKAGE.vcxproj*
 RUN_TESTS.vcxproj*
 ALL_BUILD.vcxproj*
 ZERO_CHECK.vcxproj*
+*.vcxproj.bak
+*.vcxproj.user
 
 
 
