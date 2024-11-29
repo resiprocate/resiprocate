@@ -18,7 +18,7 @@ set(CONFIG_FILES
 
 add_custom_command ( TARGET repro POST_BUILD
    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-   ${CONFIG_FILES} $<TARGET_FILE_DIR:repro>
+   ${CONFIG_FILES} ${CMAKE_BINARY_DIR}/repro
    COMMAND_EXPAND_LISTS
 )
 

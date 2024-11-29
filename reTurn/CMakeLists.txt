@@ -77,11 +77,14 @@ version_libname(reTurnCommon)
 set(CONFIG_FILES
    ${CMAKE_SOURCE_DIR}/reTurn/reTurnServer.config
    ${CMAKE_SOURCE_DIR}/reTurn/users.txt
+   ${CMAKE_SOURCE_DIR}/reTurn/server.key
+   ${CMAKE_SOURCE_DIR}/reTurn/server.pem
+   ${CMAKE_SOURCE_DIR}/reTurn/dh2048.pem
 )
 
 add_custom_command ( TARGET reTurnServer POST_BUILD
    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-   ${CONFIG_FILES} $<TARGET_FILE_DIR:reTurnServer>
+   ${CONFIG_FILES} ${CMAKE_BINARY_DIR}/reTurn
    COMMAND_EXPAND_LISTS
 )
 

@@ -344,7 +344,7 @@ endfunction()
 # OpenSSL
 if(WITH_SSL)
    if(USE_NUGET)
-      nuget_inst(OPENSSL "zeroc.openssl.v142" "1.1.1.2")
+      nuget_inst(OPENSSL "zeroc.openssl.v142" "1.1.1.3")  # VS2019 compatible version, also compatible with VS2022
       message("Using ${OPENSSL_ROOT_DIR} and ${OPENSSL_LIBRARIES_DIR}")
       # this is an argument to FindOpenSSL
       # https://cmake.org/cmake/help/latest/module/FindOpenSSL.html

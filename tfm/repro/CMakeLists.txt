@@ -47,10 +47,10 @@ set(CERTS
 
 if(BUILD_TESTING)
     test(sanityTests sanityTests.cxx)
-    set_tests_properties(sanityTests PROPERTIES TIMEOUT 3600)  # Set timeout to 60 mins
+    set_tests_properties(sanityTests PROPERTIES TIMEOUT 2700)  # Normal run time is about 20-25 mins (longer if there are errors), set timeout to 45 mins
     add_custom_command ( TARGET sanityTests POST_BUILD
        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-       ${CERTS} $<TARGET_FILE_DIR:sanityTests>
+       ${CERTS} ${CMAKE_BINARY_DIR}/tfm/repro
        COMMAND_EXPAND_LISTS
     )
 endif()

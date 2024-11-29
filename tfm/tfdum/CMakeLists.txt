@@ -80,6 +80,6 @@ target_link_libraries(tfdum PUBLIC tfmrepro)
 if(BUILD_TESTING)
     test(TestLamba TestLamba.cxx)
     test(dumTests dumTests.cxx)
-    set_tests_properties(dumTests PROPERTIES TIMEOUT 1800)  # Normal run time is about 15-20 mins, set timeout to 30 mins
+    set_tests_properties(dumTests PROPERTIES TIMEOUT 1800)  # Normal run time is about 15-20 mins (longer if there are errors), set timeout to 30 mins
 endif()
 
