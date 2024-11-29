@@ -555,23 +555,23 @@ option_def(BUILD_ICHAT_GW)
 # Netxx
 # Debian: libnetxx-dev
 if(USE_NETXX)
-   #if(USE_CONTRIB)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/Netxx-0.3.2)
       set(Netxx_LIBRARIES Netxx)
-   #else()
-   #   find_package(Netxx REQUIRED)
-   #endif()
+   else()
+      find_package(Netxx REQUIRED)
+   endif()
 endif()
 
 # cppunit
 # Debian: libcppunit-dev
 if(USE_CPPUNIT)
-   #if(USE_CONTRIB)
+   if(USE_CONTRIB)
       add_subdirectory(contrib/cppunit/src/cppunit)
       set(CPPUNIT_LIBRARIES cppunit)
-   #else()
-   #   pkg_check_modules(CPPUNIT cppunit REQUIRED)
-   #endif()
+   else()
+      pkg_check_modules(CPPUNIT cppunit REQUIRED)
+   endif()
 endif()
 
 # BerkeleyDb
@@ -626,14 +626,14 @@ endif()
 # Cajun
 # Debian: libcajun-dev
 if(USE_CAJUN)
-   if(USE_CONTRIB)
+   #if(USE_CONTRIB)
       # FIXME: convert Cajun to CMake build system
       # FIXME: include Cajun as a Git submodule or NuGet
       #add_subdirectory(contrib/cajun)
       set(CAJUN_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun/include")
-   else()
-      find_package(cajun REQUIRED)
-   endif()
+   #else()
+   #   find_package(cajun REQUIRED)
+   #endif()
 endif()
 
 # ASIO
