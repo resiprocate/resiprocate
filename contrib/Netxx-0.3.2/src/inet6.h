@@ -66,10 +66,10 @@
 
 #if defined(NETXX_NO_INET6)
     /// INET6s inet_pton
-    int inet_pton (int family, const char *strptr, void *addrptr);
+    int inet_pton (int family, const char *strptr, void *addrptr) noexcept;
 
     /// INET6s inet_ntop
-    const char* inet_ntop (int family, const void *addrptr, char *strptr, size_t len);
+    const char* inet_ntop (int family, const void *addrptr, char *strptr, size_t len) noexcept;
 #endif
 
 #endif

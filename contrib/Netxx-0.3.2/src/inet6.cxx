@@ -55,7 +55,7 @@
 #include <cstring>
 
 //####################################################################
-int inet_pton (int family, const char *strptr, void *addrptr) {
+int inet_pton (int family, const char *strptr, void *addrptr) noexcept {
     if (family == AF_INET) {
 	unsigned long in_val;
 
@@ -77,7 +77,7 @@ int inet_pton (int family, const char *strptr, void *addrptr) {
     return -1;
 }
 //####################################################################
-const char *inet_ntop (int family, const void *addrptr, char *strptr, size_t len) {
+const char *inet_ntop (int family, const void *addrptr, char *strptr, size_t len) noexcept {
     const unsigned char *p = reinterpret_cast<const unsigned char*>(addrptr);
 
     if (family == AF_INET) {
