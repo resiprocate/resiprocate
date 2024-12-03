@@ -65,7 +65,6 @@ jobs:
             libwebsocketpp-dev \
             libxerces-c-dev \
             libnetxx-dev \
-            libcppunit-dev \
             lld-13 \
             make \
             perl \
