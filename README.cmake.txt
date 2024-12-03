@@ -4,9 +4,6 @@ CMake Instructions
 This is currently an experiement to see how CMake could be used to build
 reSIProcate.
 
-Currently, only the core of rutil and its unit tests are built. This is a proof
-of concept...
-
 This was quickly tested on Mac OS, Linux (CentOS) and Windows 7...
 
 To build an _out of tree_ build:
@@ -15,12 +12,6 @@ $ mkdir cmake_build # Or any other name
 $ cd cmake_build
 $ cmake ..
 $ make
-
-Windows:
->mkdir cmake_build # Or any other name
->cd cmake_build
->cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TFM=1 ..
-Open reciprocate.sln in visual studio 
 
 Once this is built, you can run the unit tests with:
 
@@ -32,6 +23,15 @@ $ ctest -V
 
 If you want to start fresh either delete the out of tree build directory or
 delete the CMakeCache.txt file.
+
+Windows:
+>mkdir cmake_build # Or any other name
+>cd cmake_build
+>cmake ..
+Open resiprocate.sln in visual studio 
+
+If you want to the unit tests, then right click on the RUN_TESTS project and Build it.
+
 
 Configuration Flags
 ===================
