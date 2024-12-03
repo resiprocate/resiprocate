@@ -12,7 +12,8 @@ set(INCLUDES
    RendWavePres.hxx
 )
 
-add_library(rend
+add_executable(rend
+   rendIt.cxx
    RendAcct.cxx
    RendDlg.cxx
    RendDlgAcct.cxx
@@ -26,19 +27,18 @@ add_library(rend
    ${INCLUDES}
 )
 
-add_executable(rendIt
-   rendIt.cxx
-)
-
 target_include_directories(rend PUBLIC ${ASIO_INCLUDE_DIRS})
 target_include_directories(rend PUBLIC ${POPT_INCLUDE_DIRS})
+target_include_directories(rend PUBLIC ${BOOST_INCLUDE_DIRS})
+set_target_properties(rend PROPERTIES FOLDER resip/ManualTests)
 target_link_libraries(rend PUBLIC dum ${POPT_LIBRARIES})
-version_libname(rend)
 
-target_link_libraries(rendIt PUBLIC rend)
+if(WIN32 AND WITH_SSL)
+  add_custom_command ( TARGET rend POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE:OPENSSL> $<TARGET_FILE_DIR:rend>
+    COMMAND_EXPAND_LISTS
+  )
+endif()
 
-install(TARGETS rend DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-install(TARGETS rendIt DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/rend ${INCLUDES})

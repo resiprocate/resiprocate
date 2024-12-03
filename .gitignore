@@ -11,6 +11,7 @@
 *.ilk
 *.idb
 *.log
+*.cache
 /Makefile
 /Makefile.in
 /.deps
@@ -55,6 +56,8 @@ bin.prof.*
 **/x64
 *.vcxproj.user
 **/Debug Dll
+**/Debug
+**/Release
 **/Release Dll
 **/x64-Debug
 **/packages
@@ -72,4 +75,22 @@ CPackSourceConfig.cmake
 **/lib*.so
 **/lib*.so.*
 **/Testing/
+TestResult.xml
+CMakeSettings.json
+/version.h
+
+# Exclude all vcxproj and sln files that don't contain an underscore - ie: CMake gen'd files
+*.sln
+!*_*.sln
+*.vcxproj*
+!*_*.vcxproj*
+INSTALL.vcxproj*
+PACKAGE.vcxproj*
+RUN_TESTS.vcxproj*
+ALL_BUILD.vcxproj*
+ZERO_CHECK.vcxproj*
+*.vcxproj.bak
+*.vcxproj.user
+
+
 

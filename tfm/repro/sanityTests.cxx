@@ -2258,7 +2258,7 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               david->expect(INVITE/480, contact(derek),WaitForResponse,david->ack())
+               david->expect(INVITE/500, contact(derek),WaitForResponse,david->ack())
             )
             
          ),
@@ -2416,7 +2416,7 @@ class TestHolder : public ReproFixture
             (
                optional(jason->expect(INVITE/100,from(proxy),WaitForResponse,jason->noAction())),
                jason->expect(INVITE/180,contact(derek),WaitForResponse,jason->noAction()),
-               jason->expect(INVITE/480,contact(derek),WaitForResponse,chain(jason->cancel(),jason->pause(30),jason->ack())),
+               jason->expect(INVITE/500,contact(derek),WaitForResponse,chain(jason->cancel(),jason->pause(30),jason->ack())),
                jason->expect(CANCEL/200,from(proxy),WaitForResponse,jason->noAction())
             ),
             Sub
@@ -2531,7 +2531,7 @@ class TestHolder : public ReproFixture
           And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
               Sub(jason->expect(INVITE, contact(derek), WaitForCommand, chain(jason->send100(),jason->send503())),
                   jason->expect(ACK, from(proxy), WaitForAck, jason->noAction()),
-                  derek->expect(INVITE/480, from(proxy), WaitForResponse, derek->ack()))),
+                  derek->expect(INVITE/500, from(proxy), WaitForResponse, derek->ack()))),
           WaitForEndOfTest);
       
       ExecuteSequences();  
@@ -3829,7 +3829,7 @@ class TestHolder : public ReproFixture
             ),
             Sub //Client side
             (
-               derek->expect(INVITE/480,contact(jason),WaitForResponse,derek->ack())
+               derek->expect(INVITE/500,contact(jason),WaitForResponse,derek->ack())
             )
          ),
          WaitForEndOfTest
@@ -3884,7 +3884,7 @@ class TestHolder : public ReproFixture
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
           jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
-          jason->expect(INVITE/480, from(proxy), 5000, jason->ack()),
+          jason->expect(INVITE/500, from(proxy), 5000, jason->ack()),
           WaitForEndOfTest);
       ExecuteSequences();  
    }
@@ -3898,7 +3898,7 @@ class TestHolder : public ReproFixture
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
           jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
-          jason->expect(INVITE/480, from(proxy), 5000, jason->ack()),
+          jason->expect(INVITE/500, from(proxy), 5000, jason->ack()),
           WaitForEndOfTest);
       ExecuteSequences();  
    }
@@ -3934,7 +3934,7 @@ class TestHolder : public ReproFixture
           // Note:  Under windows when using WSAPoll - there is a bug in WSAPoll where it won't properly notify of
           //        TCP connection errors.  The implemented work around is to check the socket on the next send.
           //        This means that this test case will fail.
-          derek->expect(INVITE/480, from(proxy), WaitForResponseSpiral, derek->ack()),  // Give more time than just WaitForResponse - TCP connection failure detection can take some time
+          derek->expect(INVITE/500, from(proxy), WaitForResponseSpiral, derek->ack()),  // Give more time than just WaitForResponse - TCP connection failure detection can take some time
           WaitForEndOfTest);
       ExecuteSequences();  
    }
@@ -4585,7 +4585,7 @@ class TestHolder : public ReproFixture
                   cullen->expect(ACK,from(proxy),WaitForCommand,cullen->noAction())),
               Sub(enlai->expect(INVITE, contact(jason), WaitForCommand, enlai->send503()),
                   enlai->expect(ACK,from(proxy),WaitForCommand,enlai->noAction())),
-               Sub(jason->expect(INVITE/480, from(proxy), 3*WaitForCommand, jason->ack()))),
+               Sub(jason->expect(INVITE/500, from(proxy), 3*WaitForCommand, jason->ack()))),
           WaitForEndOfTest);
       
       ExecuteSequences();  
@@ -5853,7 +5853,7 @@ class TestHolder : public ReproFixture
                   ),
                   Sub
                   (
-                     jason->expect(INVITE/480, from(proxy), 3*WaitForCommand, jason->ack())
+                     jason->expect(INVITE/500, from(proxy), 3*WaitForCommand, jason->ack())
                   )
                )
             )

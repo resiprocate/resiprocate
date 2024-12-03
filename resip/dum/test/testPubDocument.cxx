@@ -5,7 +5,6 @@
 #include "rutil/Random.hxx"
 #include "rutil/Timer.hxx"
 #include "resip/stack/Uri.hxx"
-#include "resip/stack/Pidf.hxx"
 #include "resip/stack/GenericPidfContents.hxx"
 #include "resip/dum/PublicationPersistenceManager.hxx"
 
@@ -17,10 +16,9 @@ int main(int argc, const char* argv[])
 {
     Uri uri("sip:pub@test.com");
 
-    Pidf pidf;
-    pidf.setSimpleStatus(true);
+    GenericPidfContents pidf;
+    pidf.setSimplePresenceTupleNode("a75e5e0fb2cf", true);
     pidf.setEntity(uri);
-    pidf.setSimpleId("a75e5e0fb2cf");
 
     Data eventType("presence");
     Data aorString(uri.getAor());
@@ -60,9 +58,11 @@ int main(int argc, const char* argv[])
         "  <contentssubtype>pidf+xml</contentssubtype>\r\n"
         "  <contents>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;\r\n"
         "&lt;presence xmlns=&quot;urn:ietf:params:xml:ns:pidf&quot;\r\n"
-        "          entity=&quot;sip:pub@test.com&quot;&gt;\r\n"
-        "  &lt;tuple id=&quot;a75e5e0fb2cf&quot; &gt;\r\n"
-        "     &lt;status&gt;&lt;basic&gt;open&lt;/basic&gt;&lt;/status&gt;\r\n"
+        "        entity=&quot;sip:pub@test.com&quot;&gt;\r\n"
+        "  &lt;tuple id=&quot;a75e5e0fb2cf&quot;&gt;\r\n"
+        "    &lt;status&gt;\r\n"
+        "      &lt;basic&gt;open&lt;/basic&gt;\r\n"
+        "    &lt;/status&gt;\r\n"
         "  &lt;/tuple&gt;\r\n"
         "&lt;/presence&gt;\r\n"
         "</contents>\r\n"
@@ -107,13 +107,12 @@ int main(int argc, const char* argv[])
     cout << "Content type: " << reconstituted.mContents->getType() << endl;
     cout << "Content: " << reconstituted.mContents->getBodyData() << endl;
    
-    // It seems Pidf and GenericPidfContents both register the exact same Mime type.
-    // So the factory give us back a GenericPidfContents instead of a Pidf 
+    // Note: Pidf and GenericPidfContents both register the exact same Mime type.
+    // Since we don't include Pidf.hxx, the factory give us back a GenericPidfContents
     GenericPidfContents* streamedPidf = dynamic_cast<GenericPidfContents*> (reconstituted.mContents->getContents());
     assert(streamedPidf);
     assert(streamedPidf->getSimplePresenceOnline() == true);
     assert(streamedPidf->getEntity() == uri);
-
 
     cout << "testPubDocument succeeded" << endl;
     return(0); 

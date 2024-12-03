@@ -64,6 +64,7 @@ jobs:
             libtelepathy-qt5-dev \
             libwebsocketpp-dev \
             libxerces-c-dev \
+            libnetxx-dev \
             lld-13 \
             make \
             perl \

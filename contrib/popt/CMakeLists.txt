@@ -11,4 +11,5 @@ add_library(popt STATIC
         popthelp.c
         poptparse.c
         )
+set_target_properties(popt PROPERTIES FOLDER contrib)
 target_include_directories(popt INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

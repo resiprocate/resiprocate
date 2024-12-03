@@ -8,11 +8,41 @@ add_executable(repro
    WebAdminThread.cxx
    )
 
+set_target_properties(repro PROPERTIES FOLDER repro)
 target_link_libraries(repro PUBLIC reprolib)
 
+set(CONFIG_FILES
+   ${CMAKE_SOURCE_DIR}/repro/users.txt
+   ${CMAKE_SOURCE_DIR}/repro/repro.config 
+)
+
+add_custom_command ( TARGET repro POST_BUILD
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+   ${CONFIG_FILES} ${CMAKE_BINARY_DIR}/repro
+   COMMAND_EXPAND_LISTS
+)
+
 install(TARGETS repro DESTINATION ${CMAKE_INSTALL_SBINDIR})
-install(FILES users.txt repro.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
-install(FILES doc/repro.8 doc/reprocmd.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
+if(WIN32)
+  if(WITH_SSL)
+     add_custom_command ( TARGET repro POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+       $<TARGET_FILE:OPENSSL> $<TARGET_FILE_DIR:repro>
+       COMMAND_EXPAND_LISTS
+     )
+  endif()
+  if(USE_BDB)
+     add_custom_command ( TARGET repro POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+       $<TARGET_FILE:BERKELEYDB> $<TARGET_FILE_DIR:repro>
+       COMMAND_EXPAND_LISTS
+     )
+  endif()
+  # For windows only - move config and users.txt to install location, so repro can be run in place
+  install(FILES users.txt repro.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
+else()
+  install(FILES doc/repro.8 doc/reprocmd.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
+endif()
 
 set(INCLUDES
    AbstractDb.hxx
@@ -186,7 +216,11 @@ if(BUILD_DSO_PLUGINS)
 endif()
 
 target_include_directories(reprolib PUBLIC ${BERKELEYDB_INCLUDE_DIRS})
-target_link_libraries(reprolib PUBLIC ${BERKELEYDB_LIBRARIES})
+if(USE_NUGET)
+  target_link_libraries(reprolib PUBLIC BERKELEYDB)
+else()
+  target_link_libraries(reprolib PUBLIC ${BERKELEYDB_LIBRARIES})
+endif()
 
 target_include_directories(reprolib PUBLIC ${PROJECT_SOURCE_DIR})
 target_include_directories(reprolib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -218,6 +252,8 @@ endif()
 version_libname(reprolib)
 
 target_include_directories(repro PUBLIC ${PostgreSQL_INCLUDE_DIR})
+
+set_target_properties(reprolib PROPERTIES FOLDER repro)
 
 install(TARGETS reprolib DESTINATION ${CMAKE_INSTALL_LIBDIR})
 

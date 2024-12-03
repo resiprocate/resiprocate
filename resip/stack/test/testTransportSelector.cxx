@@ -79,7 +79,11 @@ class TestTlsTransport : public TlsTransport
       class TestSecurity : public Security
       {
          public:
-            TestSecurity() = default;
+            // Note: This class is declared as a static (below).  BaseSecurity::StrongestSuite is also a static variable, 
+            //       and on some OS's is not created before this static variable, and the Security constructor will
+            //       throw an assert with an empty CipherList.  To work around this we just create a CipherList here and use
+            //       it instead of relying static initialization order.
+            TestSecurity() : Security(BaseSecurity::CipherList("HIGH:-COMPLEMENTOFDEFAULT")) {}
             ~TestSecurity() override = default;
 
             SSL_CTX* createDomainCtx(const SSL_METHOD*, const Data&, const Data&,

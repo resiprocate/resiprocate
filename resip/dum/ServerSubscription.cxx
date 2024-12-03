@@ -248,7 +248,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
 
          if (errorResponseCode == 423 && handler->hasMinExpires())
          {
-            response->header(h_MinExpires).value() = handler->getMinExpires();		   
+            response->header(h_MinExpires).value() = handler->getMinExpires();
          }
          send(response);
          return;

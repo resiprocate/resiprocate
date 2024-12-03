@@ -28,7 +28,7 @@ add_library(reTurnClient
 )
 
 target_link_libraries(reTurnClient reTurnCommon)
-set_target_properties(reTurnClient PROPERTIES FOLDER reTurn)
+set_target_properties(reTurnClient PROPERTIES FOLDER reTurn/client)
 version_libname(reTurnClient)
 
 install(TARGETS reTurnClient DESTINATION ${CMAKE_INSTALL_LIBDIR})
