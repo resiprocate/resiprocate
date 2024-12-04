@@ -42,6 +42,8 @@ add_executable(prompt2wav
    ${INCLUDES}
 )
 
+set_target_properties(prompt2wav PROPERTIES FOLDER recon)
+
 #target_include_directories(prompt2wav PRIVATE ${CMAKE_BINARY_DIR})
 
 # don't need to install this, it is only used during development

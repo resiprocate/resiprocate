@@ -22,3 +22,4 @@ version_libname(resipmedia)
 install(TARGETS resipmedia DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/media ${INCLUDES})
 
+set_target_properties(resipmedia PROPERTIES FOLDER recon)

@@ -113,7 +113,7 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
 
 MessageSilo::~MessageSilo()
 {
-   // Clean up pcre memory
+   // Clean up regex memory
    if(mDestFilterRegex)
    {
       delete mDestFilterRegex;

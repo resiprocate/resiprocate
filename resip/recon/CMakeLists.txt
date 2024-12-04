@@ -175,3 +175,6 @@ if(USE_SIPXTAPI)
    endif()
 endif()
 
+set_target_properties(recon PROPERTIES FOLDER recon)
+
+

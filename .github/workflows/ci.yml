@@ -50,7 +50,6 @@ jobs:
             libgeoip-dev \
             libgloox-dev \
             libgstreamermm-1.0-dev \
-            libpcre3-dev \
             libpopt-dev \
             libpq-dev \
             postgresql-server-dev-all \

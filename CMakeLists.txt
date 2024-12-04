@@ -117,12 +117,12 @@ option(USE_NETSNMP "Link against NetSNMP client libraries" FALSE)
 option(BUILD_REPRO "Build repro SIP proxy" TRUE)
 option(BUILD_RETURN "Build reTurn server" TRUE)
 option(BUILD_REFLOW "Build reflow library" TRUE)
-option(BUILD_REND "Build rend" FALSE)
+option(BUILD_REND "Build rend" TRUE)
 option(BUILD_TFM "Build TFM, requires Netxx and cppunit" TRUE)
 option(BUILD_CLICKTOCALL "Build Click to call application" FALSE)
 option(BUILD_ICHAT_GW "Build iChat gateway, requires gloox" FALSE)
 option(BUILD_TELEPATHY_CM "Build Telepathy connection manager" FALSE)
-option(BUILD_RECON "Build reCon Conversation Manager library" FALSE)
+option(BUILD_RECON "Build reCon Conversation Manager library" TRUE)
 option(USE_SRTP1 "Use srtp 1.x instead of current version" FALSE)
 option(BUILD_RECONSERVER "Build reConServer" FALSE)
 option(USE_SIPXTAPI "Link against sipXtapi" FALSE)
@@ -245,31 +245,31 @@ endif()
 ### Per-program dependencies ###
 ################################
 
-set(USE_PCRE FALSE)
 set(USE_WEBSOCKETPP FALSE)
 
 if(BUILD_REPRO)
    set(USE_BDB TRUE)
-   set(USE_PCRE TRUE)
    set(USE_CAJUN TRUE)
 endif()
 
 if(BUILD_RECON)
    set(USE_SRTP TRUE)
+   set(BUILD_RELOW TRUE)
+   set(BUILD_RETURN TRUE)
+endif()
+
+if(BUILD_REFLOW)
+   set(USE_SRTP TRUE)
+   set(BUILD_RETURN TRUE)
+endif()
+
+if(BUILD_RETURN)
+   set(USE_ASIO TRUE)
 endif()
 
 if(BUILD_TFM)
    set(USE_NETXX TRUE)
    set(USE_CPPUNIT TRUE)
-endif()
-
-if(BUILD_RETURN)
-   set(USE_ASIO TRUE)
-   #set(USE_BOOST TRUE)  # Dependency has been replaced by C++11
-endif()
-
-if(BUILD_REFLOW)
-   set(USE_SRTP TRUE)
 endif()
 
 if(BUILD_REND)
@@ -281,9 +281,6 @@ if(USE_KURENTO)
    set(USE_WEBSOCKETPP TRUE)
 endif()
 
-if(BUILD_CLICKTOCALL)
-   set(USE_PCRE TRUE)
-endif()
 
 ####################
 ### Dependencies ###
@@ -604,30 +601,6 @@ if(USE_BDB)
    set(DB_HEADER "db_cxx.h")
 endif()
 
-# PCRE
-# Debian: libpcre3-dev
-# FIXME - deprecate PCRE in favour of C++11 <regex>
-if(USE_PCRE)
-   if(USE_NUGET)
-      nuget_inst(PCRE "pcre" "8.33.0.1")
-      if(BUILD_SHARED_LIBS)
-         set(WIN_LIB_LINKING "dynamic")
-      else()
-         set(WIN_LIB_LINKING "static")
-         add_definitions(-DPCRE_STATIC)
-      endif()
-      set(PCRE_LIBRARIES_DIR "${PCRE_ROOT_DIR}/lib/v110/${WIN_ARCH}/Release/${WIN_LIB_LINKING}/utf8") # TODO Fix this
-      set(PCRE_LIBRARIES
-              "${PCRE_LIBRARIES_DIR}/pcre8.lib")
-      set(PCRE_FOUND TRUE)
-   elseif(USE_CONTRIB)
-      add_subdirectory(contrib/pcre)
-      set(PCRE_LIBRARIES pcre)
-   else()
-      pkg_check_modules(PCRE REQUIRED libpcre)
-   endif()
-endif()
-
 # Cajun
 # Debian: libcajun-dev
 if(USE_CAJUN)
@@ -849,10 +822,6 @@ if(BUILD_RETURN)
 endif()
 
 if(BUILD_REFLOW)
-   add_subdirectory(reflow)
-endif()
-
-if(BUILD_RECON)
    add_subdirectory(reflow)
 endif()
 
