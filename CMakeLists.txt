@@ -116,6 +116,7 @@ option(RESIP_HAVE_RADCLI "Link against radcli RADIUS client library" FALSE)
 option(USE_NETSNMP "Link against NetSNMP client libraries" FALSE)
 option(BUILD_REPRO "Build repro SIP proxy" TRUE)
 option(BUILD_RETURN "Build reTurn server" TRUE)
+option(BUILD_REFLOW "Build reflow library" TRUE)
 option(BUILD_REND "Build rend" FALSE)
 option(BUILD_TFM "Build TFM, requires Netxx and cppunit" TRUE)
 option(BUILD_CLICKTOCALL "Build Click to call application" FALSE)
@@ -265,6 +266,10 @@ endif()
 if(BUILD_RETURN)
    set(USE_ASIO TRUE)
    #set(USE_BOOST TRUE)  # Dependency has been replaced by C++11
+endif()
+
+if(BUILD_REFLOW)
+   set(USE_SRTP TRUE)
 endif()
 
 if(BUILD_REND)
@@ -841,6 +846,10 @@ endif()
 
 if(BUILD_RETURN)
    add_subdirectory(reTurn)
+endif()
+
+if(BUILD_REFLOW)
+   add_subdirectory(reflow)
 endif()
 
 if(BUILD_RECON)

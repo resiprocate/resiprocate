@@ -65,7 +65,7 @@ set(OPENSSL ${ENABLE_OPENSSL} CACHE BOOL INTERNAL)
 set(GCM ${ENABLE_OPENSSL} CACHE BOOL INTERNAL)
 
 set(CONFIG_FILE_DIR ${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${CONFIG_FILE_DIR})
+include_directories(BEFORE ${CONFIG_FILE_DIR})
 
 configure_file(config_in_cmake.h ${CONFIG_FILE_DIR}/config.h)
 add_definitions(-DHAVE_CONFIG_H)
@@ -204,3 +204,7 @@ endif()
   target_link_libraries(srtp_driver srtp2)
   add_test(srtp_driver srtp_driver -v)
 endif()
+
+set_target_properties(srtp2 PROPERTIES FOLDER contrib/libsrtp2)
+set_target_properties(srtp_driver PROPERTIES FOLDER contrib/libsrtp2)
+set_target_properties(test_srtp PROPERTIES FOLDER contrib/libsrtp2)

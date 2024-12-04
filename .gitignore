@@ -83,7 +83,7 @@ CMakeSettings.json
 *.sln
 !*_*.sln
 *.vcxproj*
-!*_*.vcxproj*
+!*_1*.vcxproj*
 INSTALL.vcxproj*
 PACKAGE.vcxproj*
 RUN_TESTS.vcxproj*
@@ -91,6 +91,9 @@ ALL_BUILD.vcxproj*
 ZERO_CHECK.vcxproj*
 *.vcxproj.bak
 *.vcxproj.user
+
+contrib/srtp/config.h
+
 
 
 
