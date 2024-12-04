@@ -29,6 +29,11 @@ add_executable(MOHParkServer
 )
 
 target_link_libraries(MOHParkServer PUBLIC recon)
+if(WIN32 AND USE_SIPXTAPI)
+   add_dependencies(MOHParkServer sipXtapi-pcre sipXportLib sipXsdpLib sipXmediaLib sipXmediaAdapterLib)
+endif()
 
 install(TARGETS MOHParkServer DESTINATION ${CMAKE_INSTALL_SBINDIR})
+
+set_target_properties(MOHParkServer PROPERTIES FOLDER recon/Apps)
 

@@ -151,7 +151,13 @@ option(RESIP_ASSERT_SYSLOG "Log assertion failures with Syslog" ${RESIP_ASSERT_S
 option(REGENERATE_MEDIA_SAMPLES "Regenerate the header files containing raw audio samples (requires sox, xxd)" ${REGENERATE_MEDIA_SAMPLES_DEFAULT})
 option(BUILD_DSO_PLUGINS "Build DSO plugins" ${BUILD_DSO_PLUGINS_DEFAULT})
 
-set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20 CACHE STRING "recon: Maximum connections on bridge")
+if(WIN32)
+    # Windows vcxproj files specify 10
+    set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 10 CACHE STRING "recon: Maximum connections on bridge (must match value sipXtapi was compiled with)")
+else()
+    # Pre-build linux packages uses 20
+    set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20 CACHE STRING "recon: Maximum connections on bridge (must match value sipXtapi was compiled with)")
+endif()
 
 # This must be enabled when building with the Android ndkports tools.
 # It should not be enabled for any other case.
@@ -661,14 +667,13 @@ if(USE_SRTP)
    if(USE_SRTP1)
       find_package(srtp REQUIRED)
    else()
-      # FIXME - not in NuGet, not CMake native
       if(USE_CONTRIB)
          add_subdirectory("contrib/srtp")
-         #set(libsrtp2_INCLUDE_DIRS "${libsrtp2_INCLUDE_DIRS}")
-         #set(libsrtp2_LIBRARIES "${libsrtp2_LIBRARIES}")
-         # FIXME - these shouldn't be hard-coded, need to fix the above variables
+
          set(SRTP2_INCLUDE_DIRS "${libsrtp2_SOURCE_DIR}/include")
-         set(SRTP2_LIBRARIES "${libsrtp2_BINARY_DIR}/contrib/srtp/Release/srtp2.lib")  # TODO fix this
+         set_property(TARGET srtp2 PROPERTY IMPORTED_IMPLIB_RELEASE "${libsrtp2_BINARY_DIR}/Release/srtp2.lib")
+         set_property(TARGET srtp2 PROPERTY IMPORTED_IMPLIB_DEBUG "${libsrtp2_BINARY_DIR}/Debug/srtp2.lib")
+
          set(SRTP_FOUND TRUE)
       else()
          find_package(srtp2 REQUIRED)
@@ -680,8 +685,87 @@ endif()
 # Debian: libsipxtapi-dev
 if(USE_SIPXTAPI)
    option_def(USE_SIPXTAPI)
-   find_package(sipXtapi REQUIRED)
-   if(NOT WIN32)
+   if(WIN32)
+      # Include VS2022 projects for sipXtapi - TODO Detect VS version and use other versions appropriately
+      # Note:  this requires the user the manually pull sipXtapi source code into a folder that is called sipXtapi and
+      #        is at the same folder level at the resiprocate git repro, ie:
+      #        <basedir>/resiprocate/<resip-git-root>
+      #        <basedir>/sipXtapi/<sipXtapi-git-root>
+      set(SIPXTAPI_ROOT_DIR "${CMAKE_BINARY_DIR}/../sipXtapi")
+      include_external_msproject(sipXtapi-pcre ${SIPXTAPI_ROOT_DIR}/sipXportLib/contrib/pcre/pcre_17_0.vcxproj)
+      include_external_msproject(sipXportLib ${SIPXTAPI_ROOT_DIR}/sipXportLib/sipXportLib-msvc17.vcxproj)
+      include_external_msproject(sipXsdpLib ${SIPXTAPI_ROOT_DIR}/sipXsdpLib/sipXsdpLib-msvc17.vcxproj)
+      include_external_msproject(sipXmediaLib ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/sipXmediaLib-msvc17.vcxproj)
+      include_external_msproject(sipXmediaAdapterLib ${SIPXTAPI_ROOT_DIR}/sipXmediaAdapterLib/sipXmediaAdapterLib-msvc17.vcxproj)
+
+      # Setup VS folders
+      set_target_properties(sipXtapi-pcre PROPERTIES FOLDER sipXtapi)
+      set_target_properties(sipXportLib PROPERTIES FOLDER sipXtapi)
+      set_target_properties(sipXsdpLib PROPERTIES FOLDER sipXtapi)
+      set_target_properties(sipXmediaLib PROPERTIES FOLDER sipXtapi)
+      set_target_properties(sipXmediaAdapterLib PROPERTIES FOLDER sipXtapi)
+
+      # Setup Includes
+      set(SIPXTAPI_INCLUDE_DIRS 
+          "${SIPXTAPI_ROOT_DIR}/sipXportLib/include"
+          "${SIPXTAPI_ROOT_DIR}/sipXsdpLib/include"
+          "${SIPXTAPI_ROOT_DIR}/sipXmediaLib/include"
+          "${SIPXTAPI_ROOT_DIR}/sipXtackLib/include"
+          "${SIPXTAPI_ROOT_DIR}/sipXcallLib/include"
+          "${SIPXTAPI_ROOT_DIR}/sipXmediaAdapterLib/interface"
+          "${SIPXTAPI_ROOT_DIR}/sipXmediaAdapterLib/sipXmediaMediaProcessing/include"
+      )
+
+      # No need to setup libraries, executables will use add_dependencies to get VS linker to link in appropriate libs
+
+      # Codec contrib projects
+      include_external_msproject(libg729a ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/contrib/libg729a/libg729a-msvc17.vcxproj)
+      include_external_msproject(libgsm ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/contrib/libgsm/libgsm-msvc17.vcxproj)
+      include_external_msproject(libilbc ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/contrib/libilbc/VS2022/libilbc-msvc17.vcxproj)
+      include_external_msproject(libogg ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/contrib/libopus/libogg/win32/VS2022/libogg.vcxproj)
+      include_external_msproject(libspeex ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/contrib/libspeex/win32/VS2022/libspeex/libspeex.vcxproj)
+      include_external_msproject(libspeexdsp ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/contrib/libspeex/win32/VS2022/libspeexdsp/libspeexdsp.vcxproj)
+      include_external_msproject(opus ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/contrib/libopus/opus/win32/VS2022/opus.vcxproj)
+      include_external_msproject(opusenc ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/contrib/libopus/libopusenc/win32/VS2022/opusenc.vcxproj)
+      include_external_msproject(opusfile ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/contrib/libopus/opusfile/win32/VS2022/opusfile.vcxproj)
+      # Make sure we pickup the NoHTTP versions of these projects
+      set_property(TARGET opusfile PROPERTY MAP_IMPORTED_CONFIG_RELEASE "Release-NoHTTP")
+      set_property(TARGET opusfile PROPERTY MAP_IMPORTED_CONFIG_DEBUG "Debug-NoHTTP")
+
+      # Setup VS folders
+      set_target_properties(libg729a PROPERTIES FOLDER sipXtapi/ThirdPartyCodecs)
+      set_target_properties(libgsm PROPERTIES FOLDER sipXtapi/ThirdPartyCodecs)
+      set_target_properties(libilbc PROPERTIES FOLDER sipXtapi/ThirdPartyCodecs)
+      set_target_properties(libogg PROPERTIES FOLDER sipXtapi/ThirdPartyCodecs)
+      set_target_properties(libspeex PROPERTIES FOLDER sipXtapi/ThirdPartyCodecs)
+      set_target_properties(libspeexdsp PROPERTIES FOLDER sipXtapi/ThirdPartyCodecs)
+      set_target_properties(opus PROPERTIES FOLDER sipXtapi/ThirdPartyCodecs)
+      set_target_properties(opusenc PROPERTIES FOLDER sipXtapi/ThirdPartyCodecs)
+      set_target_properties(opusfile PROPERTIES FOLDER sipXtapi/ThirdPartyCodecs)
+
+
+      # Codec plugin projects
+      include_external_msproject(plgg729 ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/src/mp/codecs/plgg729/plgg729-msvc17.vcxproj)
+      include_external_msproject(plggsm ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/src/mp/codecs/plggsm/plggsm-msvc17.vcxproj)
+      include_external_msproject(plgilbc ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/src/mp/codecs/plgilbc/plgilbc-msvc17.vcxproj)
+      include_external_msproject(plgl16 ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/src/mp/codecs/plgl16/plgl16-msvc17.vcxproj)
+      include_external_msproject(plgopus ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/src/mp/codecs/plgopus/plgopus-msvc17.vcxproj)
+      include_external_msproject(plgpcmapcmu ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/src/mp/codecs/plgpcmapcmu/plgpcmapcmu-msvc17.vcxproj)
+      include_external_msproject(plgspeex ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/src/mp/codecs/plgspeex/plgspeex-msvc17.vcxproj)
+      include_external_msproject(plgtones ${SIPXTAPI_ROOT_DIR}/sipXmediaLib/src/mp/codecs/plgtones/plgtones-msvc17.vcxproj)
+
+      # Setup VS folders
+      set_target_properties(plgg729 PROPERTIES FOLDER sipXtapi/CodecPlugins)
+      set_target_properties(plggsm PROPERTIES FOLDER sipXtapi/CodecPlugins)
+      set_target_properties(plgilbc PROPERTIES FOLDER sipXtapi/CodecPlugins)
+      set_target_properties(plgl16 PROPERTIES FOLDER sipXtapi/CodecPlugins)
+      set_target_properties(plgopus PROPERTIES FOLDER sipXtapi/CodecPlugins)
+      set_target_properties(plgpcmapcmu PROPERTIES FOLDER sipXtapi/CodecPlugins)
+      set_target_properties(plgspeex PROPERTIES FOLDER sipXtapi/CodecPlugins)
+      set_target_properties(plgtones PROPERTIES FOLDER sipXtapi/CodecPlugins)
+
+   else()
+      find_package(sipXtapi REQUIRED)
       set(SIPX_NO_RECORD true)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__pingtel_on_posix__")
    endif()

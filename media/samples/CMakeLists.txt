@@ -42,7 +42,7 @@ add_executable(prompt2wav
    ${INCLUDES}
 )
 
-set_target_properties(prompt2wav PROPERTIES FOLDER recon)
+set_target_properties(prompt2wav PROPERTIES FOLDER recon/Tools)
 
 #target_include_directories(prompt2wav PRIVATE ${CMAKE_BINARY_DIR})
 

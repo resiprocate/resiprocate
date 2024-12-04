@@ -92,7 +92,11 @@ ZERO_CHECK.vcxproj*
 *.vcxproj.bak
 *.vcxproj.user
 
+# Gen'd files
 contrib/srtp/config.h
+media/samples/music.h
+media/samples/playback_prompt.h
+media/samples/record_prompt.h
 
 
 
