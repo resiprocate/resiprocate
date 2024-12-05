@@ -27,8 +27,17 @@ add_executable(testUA
 )
 
 target_link_libraries(testUA recon)
-if(WIN32 AND USE_SIPXTAPI)
-   add_dependencies(testUA sipXtapi-pcre sipXportLib sipXsdpLib sipXmediaLib sipXmediaAdapterLib)
+if(WIN32)
+  if(USE_SIPXTAPI)
+     add_dependencies(testUA sipXtapi-pcre sipXportLib sipXsdpLib sipXmediaLib sipXmediaAdapterLib)
+  endif()
+  if(WITH_SSL)
+    add_custom_command ( TARGET testUA POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:OPENSSL> $<TARGET_FILE_DIR:testUA>
+      COMMAND_EXPAND_LISTS
+    )
+  endif()
 endif()
 
 install(TARGETS testUA DESTINATION ${CMAKE_INSTALL_BINDIR})

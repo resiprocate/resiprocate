@@ -29,8 +29,17 @@ add_executable(MOHParkServer
 )
 
 target_link_libraries(MOHParkServer PUBLIC recon)
-if(WIN32 AND USE_SIPXTAPI)
-   add_dependencies(MOHParkServer sipXtapi-pcre sipXportLib sipXsdpLib sipXmediaLib sipXmediaAdapterLib)
+if(WIN32)
+  if(USE_SIPXTAPI)
+     add_dependencies(MOHParkServer sipXtapi-pcre sipXportLib sipXsdpLib sipXmediaLib sipXmediaAdapterLib)
+  endif()
+  if(WITH_SSL)
+    add_custom_command ( TARGET MOHParkServer POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:OPENSSL> $<TARGET_FILE_DIR:MOHParkServer>
+      COMMAND_EXPAND_LISTS
+    )
+  endif()
 endif()
 
 install(TARGETS MOHParkServer DESTINATION ${CMAKE_INSTALL_SBINDIR})
