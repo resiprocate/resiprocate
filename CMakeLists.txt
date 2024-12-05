@@ -691,7 +691,8 @@ if(USE_SIPXTAPI)
       #        is at the same folder level at the resiprocate git repro, ie:
       #        <basedir>/resiprocate/<resip-git-root>
       #        <basedir>/sipXtapi/<sipXtapi-git-root>
-      set(SIPXTAPI_ROOT_DIR "${CMAKE_BINARY_DIR}/../sipXtapi")
+      set(SIPXTAPI_ROOT_DIR "${CMAKE_SOURCE_DIR}/../sipXtapi")
+      message("Using SIPXTAPI_ROOT_DIR=${SIPXTAPI_ROOT_DIR}")
       include_external_msproject(sipXtapi-pcre ${SIPXTAPI_ROOT_DIR}/sipXportLib/contrib/pcre/pcre_17_0.vcxproj)
       include_external_msproject(sipXportLib ${SIPXTAPI_ROOT_DIR}/sipXportLib/sipXportLib-msvc17.vcxproj)
       include_external_msproject(sipXsdpLib ${SIPXTAPI_ROOT_DIR}/sipXsdpLib/sipXsdpLib-msvc17.vcxproj)
