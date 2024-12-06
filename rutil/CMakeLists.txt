@@ -225,6 +225,9 @@ target_add_conditional_sources(rutil WIN32
 
 # %HOME...%\source\repos\resiprocate\builds\packages\zeroc.openssl.v142\build\native\bin\x64\Debug
 
+# Enable MONOTONIC clock for rutil
+add_definitions(-D_RESIP_MONOTONIC_CLOCK)
+
 if(WIN32)
    target_link_libraries(rutil PUBLIC winmm)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
