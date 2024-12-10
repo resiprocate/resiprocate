@@ -742,7 +742,7 @@ Uri::operator<(const Uri& other) const
    // The hacky workaround is to load the Parameter pointers into
    // an STL set which does support an ordering function.
 
-   using std::set<Parameter*, OrderUnknownParameters> ParameterSet;
+   typedef std::set<Parameter*, OrderUnknownParameters> ParameterSet;
    ParameterSet thisUriParamList, otherUriParamList;
 
    for (ParameterList::const_iterator i = mUnknownParameters.begin();
