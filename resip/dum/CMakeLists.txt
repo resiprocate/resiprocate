@@ -201,7 +201,7 @@ target_add_conditional_sources(dum OPENSSL_FOUND
 target_include_directories(dum PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 target_link_libraries(dum resip)
 version_libname(dum)
-set_target_properties(dum PROPERTIES FOLDER resip)
+set_target_properties(dum PROPERTIES FOLDER dum)
 
 install(TARGETS dum DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/resip/dum ${INCLUDES})

@@ -873,6 +873,7 @@ set(GPERF_SIZE_TYPE "size_t")
 
 if(WIN32)
    add_definitions(-DNOMINMAX)
+   add_compile_definitions(_WIN32_WINNT=0x0601)
 endif()
 
 ##############################
