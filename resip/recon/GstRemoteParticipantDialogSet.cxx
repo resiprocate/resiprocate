@@ -151,7 +151,7 @@ GstRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& finger
 }
 
 bool
-GstRemoteParticipantDialogSet::createSRTPSession(MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen)
+GstRemoteParticipantDialogSet::createSRTPSession(MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, size_t remoteKeyLen)
 {
    // FIXME Gst
    WarningLog(<<"createSRTPSession: FIXME");

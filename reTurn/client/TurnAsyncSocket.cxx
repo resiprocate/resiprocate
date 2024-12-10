@@ -818,8 +818,8 @@ TurnAsyncSocket::handleSharedSecretResponse(StunMessage &request, StunMessage &r
       }
 
       RecursiveLock lock(mHandlerMutex);
-      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSharedSecretSuccess(getSocketDescriptor(), response.mUsername->c_str(), response.mUsername->size(),
-                                                                            response.mPassword->c_str(), response.mPassword->size());
+      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSharedSecretSuccess(getSocketDescriptor(), response.mUsername->c_str(), (unsigned int)response.mUsername->size(),
+                                                                            response.mPassword->c_str(), (unsigned int)response.mPassword->size());
    }
    else
    {
@@ -1180,7 +1180,7 @@ TurnAsyncSocket::doSetSoftware(Data* software)
    mSoftware = *software;
    delete software;
 
-   const uint32_t unpaddedSize = mSoftware.size();
+   const uint32_t unpaddedSize = (unsigned int)mSoftware.size();
    if(unpaddedSize > 0)
    {
       // Pad size to a multiple of 4, to help compatibility with older clients

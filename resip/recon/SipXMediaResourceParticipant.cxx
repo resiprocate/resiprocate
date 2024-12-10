@@ -225,7 +225,7 @@ SipXMediaResourceParticipant::startResourceImpl()
 #else
          OsStatus status = mediaInterface->getInterface()->playBuffer(mSipXResourceName.c_str(), 
             (char*)buffer->data(),
-            buffer->size(),
+            (unsigned long)buffer->size(),
             8000, /* rate */
             type,
             isRepeat() ? TRUE : FALSE,
@@ -272,7 +272,7 @@ SipXMediaResourceParticipant::startResourceImpl()
 #else
             OsStatus status = mediaInterface->getInterface()->playBuffer(mSipXResourceName.c_str(),
                (char*)buffer->data(),
-               buffer->size(),
+               (unsigned long)buffer->size(),
                8000, /* rate */
                0,  // RAW_PCM_16 = 0 - always correct for SipXMedia:  see sipXTapi.h: SIPX_AUDIO_DATA_FORMAT
                isRepeat() ? TRUE : FALSE,

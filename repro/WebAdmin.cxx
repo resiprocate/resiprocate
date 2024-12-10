@@ -2102,7 +2102,7 @@ WebAdmin::buildRestartSubPage(DataStream& s)
                if(rc >= 0) 
                {
                   Data request("<Restart>\r\n  <Request>\r\b  </Request>\r\n</Restart>\r\n");
-                  rc = send(sd, request.c_str(), request.size(), 0);
+                  rc = send(sd, request.c_str(), (int)request.size(), 0);
                   if(rc >= 0)
                   {
                      s << "Restarting proxy..." << endl;

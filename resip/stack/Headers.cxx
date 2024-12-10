@@ -346,7 +346,7 @@ RequestLineType resip::h_RequestLine;
 StatusLineType resip::h_StatusLine;
 
 Headers::Type
-Headers::getType(const char* name, int len)
+Headers::getType(const char* name, size_t len)
 {
    const struct headers* p;
    p = HeaderHash::in_word_set(name, len);

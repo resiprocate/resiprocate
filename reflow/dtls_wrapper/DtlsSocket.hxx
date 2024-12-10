@@ -63,7 +63,7 @@ class DtlsSocket
       ~DtlsSocket(); 
 
       // Inspects packet to see if it's a DTLS packet, if so continue processing
-      bool handlePacketMaybe(const unsigned char* bytes, unsigned int len);
+      bool handlePacketMaybe(const unsigned char* bytes, size_t len);
       
       // Called by DtlSocketTimer when timer expires - causes a retransmission (forceRetransmit)
       void expired(DtlsSocketTimer*);
@@ -73,7 +73,7 @@ class DtlsSocket
 
       // Retrieves the finger print of the certificate presented by the remote party and checks
       // it agains the passed in certificate
-      bool checkFingerprint(const char* fingerprint, unsigned int len);
+      bool checkFingerprint(const char* fingerprint, size_t len);
 
       // Retrieves the finger print of our local certificate, same as getMyCertFingerprint from DtlsFactory
       void getMyCertFingerprint(char *fingerprint);
@@ -122,13 +122,13 @@ class DtlsSocket
       DtlsFactory* mFactory;
       DtlsTimer *mReadTimer;  // Timer used during handshake process
       
-      // OpenSSL context data    
-      SSL *mSsl;      
+      // OpenSSL context data
+      SSL *mSsl;
       BIO *mInBio;
       BIO *mOutBio;
       
       SocketType mSocketType;
-      bool mHandshakeCompleted;      
+      bool mHandshakeCompleted;
 };
 
 }

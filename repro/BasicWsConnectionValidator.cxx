@@ -32,7 +32,7 @@ bool BasicWsConnectionValidator::validateConnection(const resip::WsCookieContext
 {
    Data message = wsCookieContext.getWsSessionInfo() + ':' + wsCookieContext.getWsSessionExtra();
    unsigned char hmac[20];
-   computeHmac((char*)hmac, message.data(), message.size(), mWsCookieAuthSharedSecret.data(), mWsCookieAuthSharedSecret.size());
+   computeHmac((char*)hmac, message.data(), (int)message.size(), mWsCookieAuthSharedSecret.data(), (int)mWsCookieAuthSharedSecret.size());
 
    if(strncasecmp(wsCookieContext.getWsSessionMAC().data(), Data(hmac, 20).hex().data(), 40) != 0)
    {

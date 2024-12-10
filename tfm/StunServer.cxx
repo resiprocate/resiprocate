@@ -222,7 +222,7 @@ StunServer::sendTurnAllocateErrorResponse(std::shared_ptr<StunRequestContext> re
    response->msg.errorCode.errorClass = code / 100;
    response->msg.errorCode.number = code % 100;
    Data reason = getReason(code);
-   response->msg.errorCode.sizeReason = reason.size();
+   response->msg.errorCode.sizeReason = (uint16_t)reason.size();
    strcpy(response->msg.errorCode.reason, reason.c_str());
 
    response->dest = request->from;
@@ -247,7 +247,7 @@ StunServer::sendTurnAllocateErrorResponse300(std::shared_ptr<StunRequestContext>
    response->msg.errorCode.errorClass = 3;
    response->msg.errorCode.number = 0;
    Data reason = getReason(300);
-   response->msg.errorCode.sizeReason = reason.size();
+   response->msg.errorCode.sizeReason = (uint16_t)reason.size();
    strcpy(response->msg.errorCode.reason, reason.c_str());
 
 
@@ -366,7 +366,7 @@ StunServer::createResponse(std::shared_ptr<StunRequestContext> request, std::sha
    response->secondary.addr = 0;
 
    return stunServerProcessMsg((char*)request->data.data(), 
-                               request->data.size(), 
+                               (unsigned int)request->data.size(), 
                                request->from, 
                                response->secondary,
                                request->recvAltIp ? mInfo.altAddr : mInfo.myAddr,

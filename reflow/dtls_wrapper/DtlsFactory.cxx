@@ -86,7 +86,7 @@ DtlsFactory::setCipherSuites(const char *str)
 }
 
 DtlsFactory::PacketType
-DtlsFactory::demuxPacket(const unsigned char *data, unsigned int len) 
+DtlsFactory::demuxPacket(const unsigned char *data, size_t len) 
 {
    resip_assert(len>=1);
 

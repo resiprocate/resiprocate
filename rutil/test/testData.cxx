@@ -1163,10 +1163,14 @@ class TestData
             assert(empt1 == "");
             assert("sdf" != empt1);
             assert(Data("SAfdsaf") != empt1);
+#ifndef WIN32
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wself-assign-overloaded"
+#endif
             empt = empt;
+#ifndef WIN32
 #pragma clang diagnostic pop
+#endif
             empt = empt1;
             empt = "sdfasf";
          }

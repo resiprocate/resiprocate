@@ -48,7 +48,7 @@ main()
       {
          XMLCursor xmlc(ParseBuffer(test.data(), test.size()));
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
          // should not leak memory
       }
@@ -193,7 +193,7 @@ main()
          assert(!xmlc.nextSibling());
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
       }
    }

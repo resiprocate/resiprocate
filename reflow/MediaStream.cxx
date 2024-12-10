@@ -127,7 +127,7 @@ MediaStream::~MediaStream()
 }
 
 bool 
-MediaStream::createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen)
+MediaStream::createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, size_t keyLen)
 {
    if(keyLen != SRTP_MASTER_KEY_LEN)
    {
@@ -192,7 +192,7 @@ MediaStream::createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cr
 }
 
 bool 
-MediaStream::createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen)
+MediaStream::createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, size_t keyLen)
 {
    if(keyLen != SRTP_MASTER_KEY_LEN)
    {

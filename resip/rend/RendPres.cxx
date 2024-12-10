@@ -1386,15 +1386,15 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess)
    resip::Data body;
    bodyHfv.toShareData(body);
    const resip::Data& tupPre = mTroop.mEventInfo.getTuplePrefix();
-   unsigned ofs = 0;
-   const unsigned siglen = 8+1+tupPre.size()+1+10+1+5+1+10+1+8;
+   resip::Data::size_type ofs = 0;
+   const unsigned siglen = 8+1+(unsigned)tupPre.size()+1+10+1+5+1+10+1+8;
    uint32_t gotPubMask = 0;
    while ( (ofs = body.find(tag, ofs)) != resip::Data::npos )
    {
       // RENDNOTE.tupPrefix.pubAcctIdx.pubRptIdx.pidfSn.rendnote
       // 8       1   ?     1    10    1   5     1  10  1   8
       unsigned long pubAcctIdx, pubAcctRpt, pubPidfSn;
-      unsigned signext = ofs + siglen;
+      resip::Data::size_type signext = ofs + siglen;
 
       if ( signext > body.size() )
          break; // not error, just false positive

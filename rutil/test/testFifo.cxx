@@ -166,7 +166,7 @@ main()
       uint64_t end(Timer::getTimeMs());
       cerr << begin << " " << end << " " << end-begin << endl;      
       
-      int offMark = 2000 - (end - begin);
+      int offMark = 2000 - (int)(end - begin);
       
       assert(abs(offMark) < 200);
    }

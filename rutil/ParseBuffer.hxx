@@ -182,7 +182,7 @@ class ParseBuffer
       }
 
       const char* skipToEndQuote(char quote = '"');
-      CurrentPosition skipN(int count)
+      CurrentPosition skipN(size_t count)
       {
          mPosition += count;
          if (mPosition > mEnd)

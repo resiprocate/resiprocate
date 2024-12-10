@@ -61,7 +61,7 @@ public:
    void setActiveDestination(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
    void startDtlsClient(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
    void setRemoteSDPFingerprint(const resip::Data& fingerprint);
-   bool createSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen);
+   bool createSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, size_t remoteKeyLen);
 
    // Media Stream Processing
    virtual void processMediaStreamReadyEvent(std::shared_ptr<MediaStreamReadyEvent::StreamParams> streamParams);

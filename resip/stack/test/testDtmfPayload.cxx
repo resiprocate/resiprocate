@@ -69,14 +69,18 @@ main(int argc, char* argv[])
       try
       {
          DtmfPayloadContents payload(hfv, type);
+#ifndef WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
          char button = payload.dtmfPayload().getButton();
+#ifndef WIN32
 #pragma GCC diagnostic pop
+#endif
          ErrLog(<<"Failed to detect a bad DTMF signal");
          assert(0);
       }
-      catch (ParseException& ex)
+      catch (ParseException&)
       {
          // expected exception because of lowercase 'a'
          InfoLog(<<"detected the bad DTMF signal correctly");

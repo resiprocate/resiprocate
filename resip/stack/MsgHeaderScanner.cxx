@@ -40,7 +40,7 @@ enum CharCategoryEnum
 typedef char CharCategory;
 
 char* 
-MsgHeaderScanner::allocateBuffer(int size)
+MsgHeaderScanner::allocateBuffer(size_t size)
 {
    return new char[size + MaxNumCharsChunkOverflow];
 }

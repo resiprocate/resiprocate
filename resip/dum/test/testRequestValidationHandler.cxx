@@ -258,7 +258,7 @@ main (int argc, char** argv)
                   "a=rtpmap:101 telephone-event/8000\r\n"
                   "a=fmtp:101 0-15\r\n");
 
-   hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
+   hfv = new HeaderFieldValue(txt->data(), txt->size());
    Mime type("application", "sdp");
    dummySdp = new SdpContents(*hfv, type);
 

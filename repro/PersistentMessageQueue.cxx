@@ -242,7 +242,7 @@ PersistentMessageEnqueue::push(const resip::Data& data)
 
       db_recno_t recno; 
       recno = 0;
-      Dbt val((void*)data.c_str(), data.size());
+      Dbt val((void*)data.c_str(), (u_int32_t)data.size());
       Dbt key((void*)&recno, sizeof(recno));
 
       key.set_ulen(sizeof(recno));

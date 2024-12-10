@@ -229,7 +229,7 @@ RegSyncClient::tryParse()
          pb.skipToChars("</" + initialTag + ">");
          if (!pb.eof())
          {
-            pb.skipN((int)initialTag.size() + 3);  // Skip past </InitialTag>            
+            pb.skipN(initialTag.size() + 3);  // Skip past </InitialTag>            
             handleXml(pb.data(start));
 
             // Remove processed data from RxBuffer

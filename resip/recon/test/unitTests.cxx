@@ -623,14 +623,14 @@ public:
       BobConversationManager* bcm = dynamic_cast<BobConversationManager*>(getConversationManager());
       if(bcm)
       {
-         bcm->onApplicationTimer(id, std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(), seq);
+         bcm->onApplicationTimer(id, (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(), seq);
       }
       else
       {
          AliceConversationManager* acm = dynamic_cast<AliceConversationManager*>(getConversationManager());
          if(acm)
          {
-            acm->onApplicationTimer(id, std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(), seq);
+            acm->onApplicationTimer(id, (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(), seq);
          }
       }
    }

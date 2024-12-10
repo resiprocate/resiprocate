@@ -106,7 +106,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -405,7 +405,7 @@ Content-Length: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -651,7 +651,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -862,7 +862,7 @@ L:0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -1072,7 +1072,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -1270,7 +1270,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -1477,7 +1477,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -1777,7 +1777,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -1959,7 +1959,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -2169,7 +2169,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -2434,7 +2434,7 @@ hÎÿ®<½+ÿuÝÕdŽY=ÖG(òb ÷éAtž3
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -2696,7 +2696,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -2931,7 +2931,7 @@ Contact: <sip:user@host105.example.com>
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3110,7 +3110,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3191,7 +3191,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3281,7 +3281,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3368,7 +3368,7 @@ Content-Length: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3442,7 +3442,7 @@ Content-Length: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3523,7 +3523,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3603,7 +3603,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3681,7 +3681,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3761,7 +3761,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3832,7 +3832,7 @@ Content-Length: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3913,7 +3913,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -3999,7 +3999,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4070,7 +4070,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4137,7 +4137,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4212,7 +4212,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4279,7 +4279,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4344,7 +4344,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4421,7 +4421,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4485,7 +4485,7 @@ Contact: <sip:user@host105.example.com>
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4556,7 +4556,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4732,7 +4732,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4797,7 +4797,7 @@ Content-Length: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4861,7 +4861,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4925,7 +4925,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -4993,7 +4993,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5062,7 +5062,7 @@ m=audio 49217 RTP/AVP 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5130,7 +5130,7 @@ Content-Length: 40
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5197,7 +5197,7 @@ There's no way to know how many octets are supposed to be here.
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5277,7 +5277,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5340,7 +5340,7 @@ Content-Length: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5404,7 +5404,7 @@ Content-Length:0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5468,7 +5468,7 @@ L:0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5542,7 +5542,7 @@ a=rtpmap:31 LPC
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5605,7 +5605,7 @@ Content-Length: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5669,7 +5669,7 @@ l: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);
@@ -5732,7 +5732,7 @@ Content-Length: 0
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
-   int result;
+   size_t result;
    while(!feof(fid))
    {
       result = fread(&mBuf,1,1024,fid);

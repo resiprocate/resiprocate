@@ -844,7 +844,7 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
       }
       if(dtlsSocket)
       { 
-         dtlsSocket->handlePacketMaybe((const unsigned char*) data->data(), (unsigned int)data->size());
+         dtlsSocket->handlePacketMaybe((const unsigned char*) data->data(), data->size());
       }
 
       // Packet was a DTLS packet - do not queue for app

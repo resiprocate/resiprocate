@@ -892,7 +892,7 @@ main(int arc, char** argv)
          via.sentPort();
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
          resipCerr << "Caught parse exception for Via" << endl;
       }
@@ -912,7 +912,7 @@ main(int arc, char** argv)
          via.exists(p_foobar);
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
          resipCerr << "Caught parse exception for Via" << endl;
       }
@@ -930,7 +930,7 @@ main(int arc, char** argv)
          via.sentPort();
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
          resipCerr << "Caught parse exception for Via " << endl;
       }
@@ -948,7 +948,7 @@ main(int arc, char** argv)
          via.sentPort();
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
          resipCerr << "Caught parse exception for Via " << endl;
       }
@@ -2076,7 +2076,7 @@ main(int arc, char** argv)
          bpcc.getTransactionId();
          assert(false);
       }
-      catch (ParseException &e)
+      catch (ParseException&)
       {
       }
    }

@@ -170,7 +170,7 @@ defineParam(wsSrcPort, "ws-src-port", UInt32Parameter, Uri, "RESIP INTERNAL (Web
 #include "resip/stack/ParameterHash.hxx"
 
 ParameterTypes::Type
-ParameterTypes::getType(const char* pname, unsigned int len)
+ParameterTypes::getType(const char* pname, size_t len)
 {
    const struct params* p;
    p = ParameterHash::in_word_set(pname, len);

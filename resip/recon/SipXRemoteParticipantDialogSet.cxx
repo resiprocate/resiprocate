@@ -395,7 +395,7 @@ SipXRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& finge
 }
 
 bool 
-SipXRemoteParticipantDialogSet::createSRTPSession(MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen)
+SipXRemoteParticipantDialogSet::createSRTPSession(MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, size_t remoteKeyLen)
 {
    if(mMediaStream)
    {

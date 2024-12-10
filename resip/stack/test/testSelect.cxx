@@ -36,7 +36,7 @@ main(int argc, char* argv[])
    // open the fd 
    for( int port=startPort; port<endPort; port++)
    {
-      fd[port] =  socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+      fd[port] = (int)socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
       if( fd[port] ==  INVALID_SOCKET )
       {
          cerr << "Fail on creating socket for port " << port << endl;

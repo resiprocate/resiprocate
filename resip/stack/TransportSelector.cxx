@@ -1383,7 +1383,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          // !bwc! Moving average of message size. (Used to intelligently
          // predict how much space to reserve in the buffer, to minimize
          // dynamic resizing.)
-         mAvgBufferSize = (255*mAvgBufferSize + send->data.size()+128)/256;
+         mAvgBufferSize = (255*mAvgBufferSize + (int)send->data.size()+128)/256;
 
          resip_assert(!send->data.empty());
          DebugLog (<< "Transmitting to " << target

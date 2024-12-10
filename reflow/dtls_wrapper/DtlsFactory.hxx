@@ -55,7 +55,7 @@ class DtlsFactory
      void setCipherSuites(const char *cipherSuites);
 
      // Examines the first few bits of a packet to determine its type: rtp, dtls, stun or unknown
-     static PacketType demuxPacket(const unsigned char *buf, unsigned int len);
+     static PacketType demuxPacket(const unsigned char *buf, size_t len);
      
 private:
      friend class DtlsSocket;

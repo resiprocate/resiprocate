@@ -157,7 +157,7 @@ main (int argc, char** argv)
 
    //cout << "Sending:\r\n" << request << endl;
 
-   rc = send(sd, request.c_str(), request.size(), 0);
+   rc = send(sd, request.c_str(), (int)request.size(), 0);
    if(rc < 0) 
    {
       cerr << "error sending request on socket." << endl;

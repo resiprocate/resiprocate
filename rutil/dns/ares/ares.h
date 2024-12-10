@@ -20,20 +20,14 @@
 #include "config.h"
 #endif
 
-// include this early to resolve some build issues
-// FIXME: maybe we need to update our copy of c-ares
-//        with the upstream version that resolves
-//        a lot of these issues
-#include "ares_nameser.h"
-
 #ifdef WIN32
-	#include <winsock2.h>
-	#include <stdlib.h>
-	#include <errno.h>
-	#include <io.h>
-	#include <string.h>
-	#include <stdio.h>
-	#include <WS2tcpip.h>
+   #include <winsock2.h>
+   #include <stdlib.h>
+   #include <errno.h>
+   #include <io.h>
+   #include <string.h>
+   #include <stdio.h>
+   #include <WS2tcpip.h>
    // Remove compiler warnings: "warning C4996: 'xxxxx': The POSIX name for this item is deprecated. Instead, use the ISO C++ conformant name: _xxxxxx."  
    #define strdup _strdup 
    #define stricmp _stricmp 
@@ -41,6 +35,11 @@
    #define write _write
 #endif
 
+// include this early to resolve some build issues
+// FIXME: maybe we need to update our copy of c-ares
+//        with the upstream version that resolves
+//        a lot of these issues
+#include "ares_nameser.h"
 
 #if !defined(DNS__16BIT)
 #  define DNS__16BIT(p)             (((p)[0] << 8) | (p)[1])   

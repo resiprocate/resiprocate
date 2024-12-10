@@ -119,25 +119,33 @@ main(int argc, const char** argv)
    assert(Security::parseSSLType("SSLv23") == SecurityTypes::SSLv23);
    try
    {
+#ifndef WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
       SecurityTypes::SSLType val = BaseSecurity::parseSSLType("BigBrotherIsWatching");
+#ifndef WIN32
 #pragma GCC diagnostic pop
+#endif
       assert(0); // should have thrown an exception
    }
-   catch (const invalid_argument& ia) { } // ignore, expected exception
+   catch (const invalid_argument&) { } // ignore, expected exception
 
    assert(Security::parseOpenSSLCTXOption("SSL_OP_NO_SSLv2") == SSL_OP_NO_SSLv2);
    assert(Security::parseOpenSSLCTXOption("SSL_OP_NO_SSLv3") == SSL_OP_NO_SSLv3);
    try
    {
+#ifndef WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
       SecurityTypes::SSLType val = BaseSecurity::parseSSLType("BigBrotherIsWatching");
+#ifndef WIN32
 #pragma GCC diagnostic pop
+#endif
       assert(0); // should have thrown an exception
    }
-   catch (const invalid_argument& ia) { } // ignore, expected exception
+   catch (const invalid_argument&) { } // ignore, expected exception
 
 #if 0
    testMultiple();

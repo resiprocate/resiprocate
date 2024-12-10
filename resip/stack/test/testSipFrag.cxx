@@ -58,7 +58,7 @@ main(int argc, char* argv[])
         assert(frag->message().header(h_ContentLength).value() == 11);
         assert(!(frag->message().isRequest() ||frag->message().isResponse()));
      }
-     catch (BaseException& e)
+     catch (BaseException&)
      {
         assert(false);
      }
@@ -83,7 +83,7 @@ main(int argc, char* argv[])
         {
            unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -107,7 +107,7 @@ main(int argc, char* argv[])
         {
            unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -134,7 +134,7 @@ main(int argc, char* argv[])
         {
            unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -159,7 +159,7 @@ main(int argc, char* argv[])
         {
            unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -188,7 +188,7 @@ main(int argc, char* argv[])
         {
            unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -225,7 +225,7 @@ main(int argc, char* argv[])
         {
            unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }

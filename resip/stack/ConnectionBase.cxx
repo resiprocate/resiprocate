@@ -255,7 +255,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             char* newBuffer = 0;
             try
             {
-               newBuffer=MsgHeaderScanner::allocateBuffer((int)size);
+               newBuffer=MsgHeaderScanner::allocateBuffer(size);
             }
             catch(std::bad_alloc&)
             {
@@ -305,7 +305,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                char* newBuffer = 0;
                try
                {
-                  newBuffer = MsgHeaderScanner::allocateBuffer((int)size);
+                  newBuffer = MsgHeaderScanner::allocateBuffer(size);
                }
                catch(std::bad_alloc&)
                {
@@ -362,7 +362,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                size_t newSize=resipMin(resipMax((size_t)numUnprocessedChars*3/2,
                                              (size_t)ConnectionBase::ChunkSize),
                                     contentLength);
-               char* newBuffer = MsgHeaderScanner::allocateBuffer((int)newSize);
+               char* newBuffer = MsgHeaderScanner::allocateBuffer(newSize);
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBufferPos = numUnprocessedChars;
                mBufferSize = newSize;
@@ -387,7 +387,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   {
                      size = ConnectionBase::ChunkSize;
                   }
-                  char* newBuffer = MsgHeaderScanner::allocateBuffer((int)size);
+                  char* newBuffer = MsgHeaderScanner::allocateBuffer(size);
                   memcpy(newBuffer,
                          unprocessedCharPtr + contentLength,
                          overHang);
@@ -489,7 +489,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                 {
                     size = ConnectionBase::ChunkSize;
                 }
-                char* newBuffer = MsgHeaderScanner::allocateBuffer((int)size);
+                char* newBuffer = MsgHeaderScanner::allocateBuffer(size);
                 memcpy(newBuffer, overHangStart, overHang);
                 mBuffer = newBuffer;
                 mBufferPos = 0;
@@ -854,7 +854,7 @@ ConnectionBase::wsProcessData(int bytesRead)
       mMsgHeaderScanner.prepareForMessage(mMessage);
       char *unprocessedCharPtr;
       if (mMsgHeaderScanner.scanChunk(sipBuffer,
-                                 msg_len,
+                                 (unsigned int)msg_len,
                                  &unprocessedCharPtr) !=
                     MsgHeaderScanner::scrEnd)
       {
@@ -867,7 +867,7 @@ ConnectionBase::wsProcessData(int bytesRead)
       unsigned int used = (unsigned int)(unprocessedCharPtr - sipBuffer);
       if (mMessage && (used < msg_len))
       {
-         mMessage->setBody(sipBuffer+used, msg_len-used);
+         mMessage->setBody(sipBuffer+used, (uint32_t)msg_len-used);
       }
 
       if (mMessage && !transport()->basicCheck(*mMessage))
@@ -1069,7 +1069,7 @@ ConnectionBase::getWriteBufferForExtraBytes(int bytesRead, int extraBytes)
       if (((size_t)currentPos + (size_t)extraBytes) > mBufferSize)
       {
          mBufferSize = currentPos + extraBytes;
-         char* buffer = MsgHeaderScanner::allocateBuffer((int)mBufferSize);
+         char* buffer = MsgHeaderScanner::allocateBuffer(mBufferSize);
          memcpy(buffer, mBuffer, currentPos);
          delete[] mBuffer;
          mBuffer = buffer;

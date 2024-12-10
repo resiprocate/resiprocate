@@ -106,7 +106,7 @@ DtlsSocket::startClient()
 }
 
 bool
-DtlsSocket::handlePacketMaybe(const unsigned char* bytes, unsigned int len)
+DtlsSocket::handlePacketMaybe(const unsigned char* bytes, size_t len)
 {
    DtlsFactory::PacketType pType=DtlsFactory::demuxPacket(bytes,len);
 
@@ -117,7 +117,7 @@ DtlsSocket::handlePacketMaybe(const unsigned char* bytes, unsigned int len)
    BIO_reset(mInBio);
    BIO_reset(mOutBio);
 
-   r=BIO_write(mInBio,bytes,len);
+   r=BIO_write(mInBio,bytes,(int)len);
    resip_assert(r==(int)len);  // Can't happen
 
    // Note: we must catch any below exceptions--if there are any
@@ -216,7 +216,7 @@ DtlsSocket::getRemoteFingerprint(char *fprint)
 }
 
 bool
-DtlsSocket::checkFingerprint(const char* fingerprint, unsigned int len)
+DtlsSocket::checkFingerprint(const char* fingerprint, size_t len)
 {
    char fprint[100];
 

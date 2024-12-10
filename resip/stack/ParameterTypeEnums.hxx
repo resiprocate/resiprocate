@@ -172,7 +172,7 @@ class ParameterTypes
       /**
         @brief does a convert to enum from a pointer into the HFV raw buffer
         */
-      static Type getType(const char* start, unsigned int length);
+      static Type getType(const char* start, size_t length);
 
       /**
          @param ParameterTypes::Type class on which to call decode to get 

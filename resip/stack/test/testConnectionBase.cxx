@@ -115,7 +115,7 @@ class TestConnection : public ConnectionBase
          unsigned int chunk = Random::getRandom() % max;
          chunk = resipMax(chunk, min);
          chunk = resipMin(chunk, max);
-         unsigned int chunkPos = mTestStream.size() - mStreamPos;
+         unsigned int chunkPos = (unsigned int)mTestStream.size() - mStreamPos;
          chunk = resipMin(chunk, chunkPos);
          return chunk;
       }

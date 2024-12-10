@@ -46,7 +46,7 @@ process(TcpBaseTransport* sender,
    {
       if (receiver) receiver->process(fdset);
    }
-   catch(std::exception& e)
+   catch(std::exception&)
    {
       // .bwc. Do nothing substantive, since the stack thread doesn't
    }

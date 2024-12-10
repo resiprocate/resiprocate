@@ -37,7 +37,7 @@ void waddstr(WINDOW*, const char* text) { std::clog << text; };
 char getch()
 {
    char buf[1];
-   int r = read(fileno(stdin),&buf,1);
+   int r = _read(_fileno(stdin),&buf,1);
    if ( r ==1 )
    {
       return buf[0];

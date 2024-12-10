@@ -258,7 +258,7 @@ HepAgent::sendRTCP(const TransportType type, const GenericIPAddress& source, con
 bool
 HepAgent::sendToWire(const Data& buf) const
 {
-   return sendto(mSocket, buf.data(), buf.size(), 0, &mDestination.address, (int)mDestination.length()) < 0;
+   return sendto(mSocket, buf.data(), (int)buf.size(), 0, &mDestination.address, (int)mDestination.length()) < 0;
 }
 
 /* ====================================================================

@@ -151,7 +151,7 @@ LibWebRTCRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& 
 }
 
 bool
-LibWebRTCRemoteParticipantDialogSet::createSRTPSession(MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen)
+LibWebRTCRemoteParticipantDialogSet::createSRTPSession(MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, size_t remoteKeyLen)
 {
    // FIXME LibWebRTC
    WarningLog(<<"createSRTPSession: FIXME");

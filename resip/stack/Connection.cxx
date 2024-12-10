@@ -286,7 +286,7 @@ Connection::performWrite()
          mSendPos = 0;
          removeFrontOutstandingSend();
       }
-      return bytesWritten;
+      return (int)bytesWritten;
    }
 }
 

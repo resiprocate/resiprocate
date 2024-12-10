@@ -263,7 +263,7 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
 //                                      -1, 0);
    resip_assert(ret);
    ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_ASC, 
-                                     (unsigned char *) aor.data(), aor.size(), 
+                                     (unsigned char *) aor.data(), (int)aor.size(), 
                                      -1, 0);
    resip_assert(ret);
    

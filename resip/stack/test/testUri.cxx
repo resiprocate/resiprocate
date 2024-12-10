@@ -233,7 +233,7 @@ main(int argc, char* argv[])
          Uri("noscheme@foo.com:1202");
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
       }
    }

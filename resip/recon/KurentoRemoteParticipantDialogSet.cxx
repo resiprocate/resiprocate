@@ -151,7 +151,7 @@ KurentoRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& fi
 }
 
 bool
-KurentoRemoteParticipantDialogSet::createSRTPSession(MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen)
+KurentoRemoteParticipantDialogSet::createSRTPSession(MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, size_t remoteKeyLen)
 {
    // FIXME Kurento
    WarningLog(<<"createSRTPSession: FIXME");

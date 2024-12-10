@@ -191,7 +191,7 @@ RemoteParticipant::addExtraHeader(const std::shared_ptr<SipMessage>& invitemsg, 
 {
    try
    {
-      Headers::Type headerType = Headers::getType(headerName.data(), (int)headerName.size());
+      Headers::Type headerType = Headers::getType(headerName.data(), headerName.size());
       if (headerType == Headers::UNKNOWN)
       {
          ExtensionHeader h_Tmp(headerName.c_str());

@@ -149,7 +149,7 @@ class Headers
       };
 
       // get enum from header name
-      static Type getType(const char* name, int len);
+      static Type getType(const char* name, size_t len);
       static bool isCommaTokenizing(Type type);
       static bool isCommaEncoding(Type type);
       static const Data& getHeaderName(int);

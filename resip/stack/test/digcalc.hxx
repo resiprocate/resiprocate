@@ -11,8 +11,8 @@
 typedef char HASH[HASHLEN];
 #define HASHHEXLEN 32
 typedef char HASHHEX[HASHHEXLEN+1];
-#define IN const
-#define OUT
+#define IN_PARAM const
+#define OUT_PARAM
 
 
 using namespace std;
@@ -37,31 +37,31 @@ MD5_Final(char digest[16], struct MD5Context *ctx)
 
 /* calculate H(A1) as per HTTP Digest spec */
 void DigestCalcHA1(
-    IN char * pszAlg,
-    IN char * pszUserName,
-    IN char * pszRealm,
-    IN char * pszPassword,
-    IN char * pszNonce,
-    IN char * pszCNonce,
-    OUT HASHHEX SessionKey
+    IN_PARAM char * pszAlg,
+    IN_PARAM char * pszUserName,
+    IN_PARAM char * pszRealm,
+    IN_PARAM char * pszPassword,
+    IN_PARAM char * pszNonce,
+    IN_PARAM char * pszCNonce,
+    OUT_PARAM HASHHEX SessionKey
     );
 
 /* calculate request-digest/response-digest as per HTTP Digest spec */
 void DigestCalcResponse(
-    IN HASHHEX HA1,           /* H(A1) */
-    IN char * pszNonce,       /* nonce from server */
-    IN char * pszNonceCount,  /* 8 hex digits */
-    IN char * pszCNonce,      /* client nonce */
-    IN char * pszQop,         /* qop-value: "", "auth", "auth-int" */
-    IN char * pszMethod,      /* method from the request */
-    IN char * pszDigestUri,   /* requested URL */
-    IN HASHHEX HEntity,       /* H(entity body) if qop="auth-int" */
-    OUT HASHHEX Response      /* request-digest or response-digest */
+    IN_PARAM HASHHEX HA1,           /* H(A1) */
+    IN_PARAM char * pszNonce,       /* nonce from server */
+    IN_PARAM char * pszNonceCount,  /* 8 hex digits */
+    IN_PARAM char * pszCNonce,      /* client nonce */
+    IN_PARAM char * pszQop,         /* qop-value: "", "auth", "auth-int" */
+    IN_PARAM char * pszMethod,      /* method from the request */
+    IN_PARAM char * pszDigestUri,   /* requested URL */
+    IN_PARAM HASHHEX HEntity,       /* H(entity body) if qop="auth-int" */
+    OUT_PARAM HASHHEX Response      /* request-digest or response-digest */
     );
 
 void CvtHex(
-    IN HASH Bin,
-    OUT HASHHEX Hex
+    IN_PARAM HASH Bin,
+    OUT_PARAM HASHHEX Hex
     )
 {
     unsigned short i;
@@ -84,32 +84,32 @@ void CvtHex(
 
 /* calculate H(A1) as per spec */
 void DigestCalcHA1(
-    IN char * pszAlg,
-    IN char * pszUserName,
-    IN char * pszRealm,
-    IN char * pszPassword,
-    IN char * pszNonce,
-    IN char * pszCNonce,
-    OUT HASHHEX SessionKey
+    IN_PARAM char * pszAlg,
+    IN_PARAM char * pszUserName,
+    IN_PARAM char * pszRealm,
+    IN_PARAM char * pszPassword,
+    IN_PARAM char * pszNonce,
+    IN_PARAM char * pszCNonce,
+    OUT_PARAM HASHHEX SessionKey
     )
 {
       MD5_CTX Md5Ctx;
       HASH HA1;
 
       MD5Init(&Md5Ctx);
-      MD5_Update(&Md5Ctx, pszUserName, strlen(pszUserName));
+      MD5_Update(&Md5Ctx, pszUserName, (unsigned int)strlen(pszUserName));
       MD5_Update(&Md5Ctx, ":", 1);
-      MD5_Update(&Md5Ctx, pszRealm, strlen(pszRealm));
+      MD5_Update(&Md5Ctx, pszRealm, (unsigned int)strlen(pszRealm));
       MD5_Update(&Md5Ctx, ":", 1);
-      MD5_Update(&Md5Ctx, pszPassword, strlen(pszPassword));
+      MD5_Update(&Md5Ctx, pszPassword, (unsigned int)strlen(pszPassword));
       MD5_Final(HA1, &Md5Ctx);
       if (strcasecmp(pszAlg, "md5-sess") == 0) {
             MD5Init(&Md5Ctx);
             MD5_Update(&Md5Ctx, HA1, HASHLEN);
             MD5_Update(&Md5Ctx, ":", 1);
-            MD5_Update(&Md5Ctx, pszNonce, strlen(pszNonce));
+            MD5_Update(&Md5Ctx, pszNonce, (unsigned int)strlen(pszNonce));
             MD5_Update(&Md5Ctx, ":", 1);
-            MD5_Update(&Md5Ctx, pszCNonce, strlen(pszCNonce));
+            MD5_Update(&Md5Ctx, pszCNonce, (unsigned int)strlen(pszCNonce));
             MD5_Final(HA1, &Md5Ctx);
       };
       CvtHex(HA1, SessionKey);
@@ -117,15 +117,15 @@ void DigestCalcHA1(
 
 /* calculate request-digest/response-digest as per HTTP Digest spec */
 void DigestCalcResponse(
-    IN HASHHEX HA1,           /* H(A1) */
-    IN char * pszNonce,       /* nonce from server */
-    IN char * pszNonceCount,  /* 8 hex digits */
-    IN char * pszCNonce,      /* client nonce */
-    IN char * pszQop,         /* qop-value: "", "auth", "auth-int" */
-    IN char * pszMethod,      /* method from the request */
-    IN char * pszDigestUri,   /* requested URL */
-    IN HASHHEX HEntity,       /* H(entity body) if qop="auth-int" */
-    OUT HASHHEX Response      /* request-digest or response-digest */
+    IN_PARAM HASHHEX HA1,           /* H(A1) */
+    IN_PARAM char * pszNonce,       /* nonce from server */
+    IN_PARAM char * pszNonceCount,  /* 8 hex digits */
+    IN_PARAM char * pszCNonce,      /* client nonce */
+    IN_PARAM char * pszQop,         /* qop-value: "", "auth", "auth-int" */
+    IN_PARAM char * pszMethod,      /* method from the request */
+    IN_PARAM char * pszDigestUri,   /* requested URL */
+    IN_PARAM HASHHEX HEntity,       /* H(entity body) if qop="auth-int" */
+    OUT_PARAM HASHHEX Response      /* request-digest or response-digest */
     )
 {
       MD5_CTX Md5Ctx;
@@ -135,9 +135,9 @@ void DigestCalcResponse(
 
       // calculate H(A2)
       MD5Init(&Md5Ctx);
-      MD5_Update(&Md5Ctx, pszMethod, strlen(pszMethod));
+      MD5_Update(&Md5Ctx, pszMethod, (unsigned int)strlen(pszMethod));
       MD5_Update(&Md5Ctx, ":", 1);
-      MD5_Update(&Md5Ctx, pszDigestUri, strlen(pszDigestUri));
+      MD5_Update(&Md5Ctx, pszDigestUri, (unsigned int)strlen(pszDigestUri));
       if (strcasecmp(pszQop, "auth-int") == 0) {
             MD5_Update(&Md5Ctx, ":", 1);
             MD5_Update(&Md5Ctx, HEntity, HASHHEXLEN);
@@ -150,14 +150,14 @@ void DigestCalcResponse(
       MD5Init(&Md5Ctx);
       MD5_Update(&Md5Ctx, HA1, HASHHEXLEN);
       MD5_Update(&Md5Ctx, ":", 1);
-      MD5_Update(&Md5Ctx, pszNonce, strlen(pszNonce));
+      MD5_Update(&Md5Ctx, pszNonce, (unsigned int)strlen(pszNonce));
       MD5_Update(&Md5Ctx, ":", 1);
       if (*pszQop) {
-          MD5_Update(&Md5Ctx, pszNonceCount, strlen(pszNonceCount));
+          MD5_Update(&Md5Ctx, pszNonceCount, (unsigned int)strlen(pszNonceCount));
           MD5_Update(&Md5Ctx, ":", 1);
-          MD5_Update(&Md5Ctx, pszCNonce, strlen(pszCNonce));
+          MD5_Update(&Md5Ctx, pszCNonce, (unsigned int)strlen(pszCNonce));
           MD5_Update(&Md5Ctx, ":", 1);
-          MD5_Update(&Md5Ctx, pszQop, strlen(pszQop));
+          MD5_Update(&Md5Ctx, pszQop, (unsigned int)strlen(pszQop));
           MD5_Update(&Md5Ctx, ":", 1);
       };
       MD5_Update(&Md5Ctx, HA2Hex, HASHHEXLEN);

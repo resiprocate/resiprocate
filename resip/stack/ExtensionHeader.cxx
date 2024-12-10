@@ -22,7 +22,7 @@ ExtensionHeader::ExtensionHeader(const char* name)
       resip_assert(false);
       throw Exception("Empty extension header",__FILE__,__LINE__);
    }
-   if (Headers::getType(mName.data(), (int)mName.size()) != Headers::UNKNOWN) {
+   if (Headers::getType(mName.data(), mName.size()) != Headers::UNKNOWN) {
       throw Exception("Extension header name is not unknown",__FILE__,__LINE__);
    }
 }
@@ -35,7 +35,7 @@ ExtensionHeader::ExtensionHeader(const Data& name)
       resip_assert(false);
       throw Exception("Empty extension header",__FILE__,__LINE__);
    }
-   if (Headers::getType(mName.data(), (int)mName.size()) != Headers::UNKNOWN) {
+   if (Headers::getType(mName.data(), mName.size()) != Headers::UNKNOWN) {
       throw Exception("Extension header name is not unknown",__FILE__,__LINE__);
    }
 }

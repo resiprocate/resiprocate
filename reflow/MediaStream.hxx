@@ -84,8 +84,8 @@ public:
    Flow* getRtcpFlow() { return mRtcpFlow; }
 
    // SRTP methods - should be called before sending or receiving on RTP or RTCP flows
-   bool createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
-   bool createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
+   bool createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, size_t keyLen);
+   bool createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, size_t keyLen);
 
 protected:
    friend class Flow;

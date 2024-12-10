@@ -167,8 +167,8 @@ void DialInstance::sendInvite()
 Data DialInstance::processNumber(const Data& verboseNumber)
 {
    Data num = Data("");
-   int len = verboseNumber.size();
-   for(int i = 0; i < len; i++)
+   size_t len = verboseNumber.size();
+   for(size_t i = 0; i < len; i++)
    {
       char c = verboseNumber[i];
       switch(c)

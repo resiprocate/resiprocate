@@ -1851,7 +1851,7 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
       // Calculate HMAC
       int iHMACBufferSize = mMessageIntegrityMsgLength - 24 /* MessageIntegrity size */ + sizeof(StunMsgHdr); // The entire message proceeding the message integrity attribute
       StackLog(<< "Checking message integrity: length=" << mMessageIntegrityMsgLength << ", size=" << iHMACBufferSize << ", hmacKey=" << hmacKey.hex());
-      computeHmac((char*)hmac, mBuffer.data(), iHMACBufferSize, hmacKey.c_str(), hmacKey.size());
+      computeHmac((char*)hmac, mBuffer.data(), iHMACBufferSize, hmacKey.c_str(), (int)hmacKey.size());
 
       // Restore original stun message length in mBuffer
       memcpy(lengthposition, &originalLength, 2);

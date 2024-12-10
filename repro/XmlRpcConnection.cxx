@@ -151,7 +151,7 @@ XmlRpcSocketConnection::tryParse()
          pb.skipToChars("</" + initialTag + ">");
          if (!pb.eof())
          {
-            pb.skipN((int)initialTag.size() + 3);  // Skip past </InitialTag>            
+            pb.skipN(initialTag.size() + 3);  // Skip past </InitialTag>            
             unsigned int requestId = getNextRequestId();
             mRequests[requestId] = pb.data(start);
             mXmlRcpServer.handleRequest(getConnectionId(), requestId, mRequests[requestId]);

@@ -471,7 +471,7 @@ Contents::preParseHeaders(ParseBuffer& pb)
       anchor = pb.skipWhitespace();
       pb.skipToTermCRLF();
 
-      Headers::Type type = Headers::getType(headerName.data(), (int)headerName.size());
+      Headers::Type type = Headers::getType(headerName.data(), headerName.size());
       ParseBuffer subPb(anchor, pb.position() - anchor);
 
       switch (type)

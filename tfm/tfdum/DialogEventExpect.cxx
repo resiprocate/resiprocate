@@ -198,7 +198,7 @@ DialogEventExpect::layout() const
       bool previousActive = false;
       prettyPrint(str, previousActive, 0);
    }
-   mBox.mWidth = out.size()+2;
+   mBox.mWidth = (unsigned int)out.size()+2;
 
    //InfoLog(<< "TestSipEndPoint::SipExpect::layout: " << mBox);
 

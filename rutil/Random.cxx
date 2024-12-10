@@ -489,6 +489,8 @@ Random::Initializer::setInitialized()
 bool 
 Random::Initializer::isInitialized() 
 { 
+#pragma warning ( disable:4311)
+#pragma warning ( disable:4302)
    // Note:  if value is not set yet then 0 (false) is returned
    return (BOOL) ::TlsGetValue(mThreadStorage) == TRUE; 
 }

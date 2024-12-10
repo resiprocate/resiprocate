@@ -444,7 +444,7 @@ main(int argc, char* argv[])
          assert(sdp.session().media().front().codecs().size() == 2);
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
          // bad bandwidth
       }
@@ -591,7 +591,7 @@ main(int argc, char* argv[])
          SdpContents::Session::Medium medium;
          medium.parse(input);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
          // expected to fail, but don't do out-of-bounds access
       }

@@ -118,7 +118,7 @@ main(int argc, char** argv)
             *pb.position();
             assert(false);
          }
-         catch (BaseException& e)
+         catch (BaseException&)
          {
             break;
          }
@@ -137,7 +137,7 @@ main(int argc, char** argv)
          {
             pb.skipChars("Here isn't a");
          }
-         catch (ParseException& e)
+         catch (ParseException&)
          {
              //std::cerr<< e << std::endl;
              break;
@@ -161,7 +161,7 @@ main(int argc, char** argv)
             pb.skipChars("buff");
             pb.skipChar('g');
          }
-         catch (ParseException& e)
+         catch (ParseException&)
          {
              //using namespace std;
              //cerr << e << endl;
@@ -210,7 +210,7 @@ main(int argc, char** argv)
          (void)foo;
          assert(0);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {}
    }
 
@@ -290,7 +290,7 @@ main(int argc, char** argv)
          {
             pb.skipChars("Here isn't a");
          }
-         catch (ParseException& e)
+         catch (ParseException&)
          {
             break;
          }
@@ -309,7 +309,7 @@ main(int argc, char** argv)
             pb.skipChars("Here is a ");
             pb.skipChars("buffer");
          }
-         catch (ParseException& e)
+         catch (ParseException&)
          {
             break;
          }
@@ -452,7 +452,7 @@ main(int argc, char** argv)
          pb.integer();
          assert(0);
       }
-      catch(ParseException& e)
+      catch(ParseException&)
       {}
    }
    
@@ -464,7 +464,7 @@ main(int argc, char** argv)
          pb.integer();
          assert(0);
       }
-      catch(ParseException& e)
+      catch(ParseException&)
       {}
    }
 
@@ -551,7 +551,7 @@ main(int argc, char** argv)
             ParseBuffer test(stringValue);
             test.integer();
          }
-         catch (ParseException& e)
+         catch (ParseException&)
          {
             catchedException = true;
          }

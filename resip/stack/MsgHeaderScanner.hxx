@@ -53,7 +53,7 @@ class MsgHeaderScanner
       
    public:
       enum { MaxNumCharsChunkOverflow = 5 };
-      static char* allocateBuffer(int size);
+      static char* allocateBuffer(size_t size);
       
       enum TextPropBitMaskEnum 
       {

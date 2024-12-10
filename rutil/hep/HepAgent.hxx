@@ -216,7 +216,7 @@ class HepAgent
          hep_chunk_t *_payload_chunk = (hep_chunk_t *)(buf.data() + payloadChunkOffset);
          _payload_chunk->length = htons((uint16_t)(sizeof(payload_chunk) + afterPayload - beforePayload));
          hg = (struct hep_generic *)buf.data();
-         hg->header.length = htons(afterPayload);
+         hg->header.length = htons((uint16_t)afterPayload);
 
          if(sendToWire(buf))
          {

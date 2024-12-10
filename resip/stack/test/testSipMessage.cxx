@@ -168,7 +168,7 @@ main(int argc, char** argv)
          empty.header(h_Vias).push_back(Via());
          resipCerr << empty.brief() << endl;
       }
-      catch (SipMessage::Exception& e)
+      catch (SipMessage::Exception&)
       {}
    }
    
@@ -289,7 +289,7 @@ main(int argc, char** argv)
          resipCerr << "transport=" << message1->header(h_Vias).front().transport() << endl;
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
       }
    }
@@ -311,7 +311,7 @@ main(int argc, char** argv)
          unique_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
          if (message1->header(h_StatusLine).statusCode() == 407){;}
       }
-      catch (BaseException& e)
+      catch (BaseException&)
       {
          assert(false);
       }

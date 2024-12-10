@@ -91,7 +91,7 @@ class Data
    public:
       RESIP_HeapCount(Data);
 
-      typedef uint32_t size_type;
+      typedef size_t size_type;
 
       inline Data()
          : mBuf(mPreBuffer),

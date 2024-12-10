@@ -128,7 +128,7 @@ TurnSocket::setSoftware(const char* software)
 {
    mSoftware = software;
 
-   const uint32_t unpaddedSize = mSoftware.size();
+   const uint32_t unpaddedSize = (unsigned int)mSoftware.size();
    if(unpaddedSize > 0)
    {
       // Pad size to a multiple of 4, to help compatibility with older clients

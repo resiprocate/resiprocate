@@ -69,7 +69,7 @@ main(int argc, char* argv[])
          ua.process();
       }
    }
-   catch (BaseSecurity::Exception& e)
+   catch (BaseSecurity::Exception&)
    {
       WarningLog (<< "Couldn't set up security object");
       exit(-1);
