@@ -1,5 +1,8 @@
 #if !defined(RESIP_MSG_HEADER_SCANNER_HXX)
 #define RESIP_MSG_HEADER_SCANNER_HXX
+
+#include <stdlib.h>
+
 namespace resip 
 {
 

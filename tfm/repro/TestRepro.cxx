@@ -421,7 +421,7 @@ TestRepro::setQValueTargetHandlerCancelGroups(bool enabled)
     {
         mQValueTargetHandler->setCancelBetweenForkGroups(enabled);
     }
-    else
+    else if(!enabled) // Only log error if failed to disable (enabled by default)
     {
         ErrLog(<< "Unable to adjust QValueCancelBetweenForkGroups setting: QValueTargetHandler is NULL");
     }
