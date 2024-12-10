@@ -475,7 +475,178 @@ main(int argc, char* argv[])
       assert (sip1 == sip2);
       assert (sip2 == sip1);
    }
+
+   // Test significant URI params.
+   // user/ttl/method/maddr/transport in one URI only should never match.
+   {
+      Uri uri1("sip:bob@example.com;user=phone");
+      Uri uri2("sip:bob@example.com");
+      assert(uri1 != uri2);
+   }
+
+   {
+      Uri uri1("sip:bob@example.com;ttl=60");
+      Uri uri2("sip:bob@example.com");
+      assert(uri1 != uri2);
+   }
+
+   {
+      Uri uri1("sip:bob@example.com;method=INVITE");
+      Uri uri2("sip:bob@example.com");
+      assert(uri1 != uri2);
+   }
+
+   {
+      Uri uri1("sip:carol@example.com;maddr=192.168.1.1");
+      Uri uri2("sip:carol@example.com");
+      assert(uri1 != uri2);
+   }
+
+   // Other parameters in one URI only should be ignored.
+   {
+      Uri uri1("sip:dave@example.com;lr");
+      Uri uri2("sip:dave@example.com");
+      assert(uri1 == uri2);
+   }
+
+   {
+      Uri uri1("sip:eve@example.com;test=123");
+      Uri uri2("sip:eve@example.com");
+      assert(uri1 == uri2);
+   }
    
+   // Test known `gr` URI parameter.
+   {
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      assert(sip1 == sip2);  // Ignored when appearing in only one URI.
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr=urn:uuid:123");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:321");
+      assert(sip1 != sip2);  // Considered when appearing in both URIs.
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr=urn:uuid:123");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;gr");
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr");
+      Uri sip2("sip:janet@example.com;gr");
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      assert(sip1 != sip2);
+   }
+
+   // Test parameters ordering.
+   {
+      // Known significant parameter single URI.
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;ttl=5");
+
+      assert(sip1 != sip2);
+      assert((sip1 < sip2) == false);
+      assert(sip2 < sip1);
+   }
+
+   {
+      // Known significant parameter both URIs.
+      Uri sip1("sip:janet@example.com;ttl=5");
+      Uri sip2("sip:janet@example.com;ttl=5");
+      Uri sip3("sip:janet@example.com;ttl=17");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+
+      assert(sip2 < sip3);
+      assert((sip3 < sip2) == false);
+      assert(sip2 != sip3);
+   }
+
+   {
+      // Known parameter single URI.
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      // Known parameter both URIs.
+      Uri sip1("sip:janet@example.com;gr=urn:uuid:123");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      Uri sip3("sip:janet@example.com;gr=urn:uuid:321");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+
+      assert(sip2 < sip3);
+      assert((sip3 < sip2) == false);
+      assert(sip2 != sip3);
+   }
+
+   {
+      // Unknown parameter single URI.
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;test=135");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      // Unknown parameter both URIs.
+      Uri sip1("sip:janet@example.com;test=135");
+      Uri sip2("sip:janet@example.com;test=135");
+      Uri sip3("sip:janet@example.com;test=531");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+
+      assert(sip2 < sip3);
+      assert((sip3 < sip2) == false);
+      assert(sip2 != sip3);
+   }
+
+   {
+      // Mixed params.
+      Uri sip1("sip:janet@example.com;ttl=5;gr=urn:uuid:123");
+      Uri sip2("sip:janet@example.com;ttl=5;gr=urn:uuid:123;test=135");
+      Uri sip3("sip:janet@example.com;ttl=17;gr=urn:uuid:123;test=135");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+
+      assert(sip1 < sip3);
+      assert((sip3 < sip1) == false);
+      assert(sip1 != sip3);
+
+      assert(sip2 < sip3);
+      assert((sip3 < sip2) == false);
+      assert(sip2 != sip3);
+   }
+
 
    // tests from 3261 19.1.4
    {
