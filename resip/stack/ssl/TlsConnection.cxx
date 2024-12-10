@@ -298,7 +298,7 @@ TlsConnection::checkState()
                   switch(verifyErrorCode)
                   {
                      case X509_V_OK:
-                        DebugLog(<<"peer supplied a ceritifcate, but it has not been checked or it was checked successfully");
+                        DebugLog(<<"peer supplied a certificate, but it has not been checked or it was checked successfully");
                         break;
                      default:
                         ErrLog(<<"peer certificate validation failure: " << X509_verify_cert_error_string(verifyErrorCode));
@@ -320,7 +320,7 @@ TlsConnection::checkState()
                   }
                   else
                   {
-                     ErrLog(<<"Server did not present any certificiate to us, certificate invalid or protocol did not reach certificate exchange");
+                     ErrLog(<<"Server did not present any certificate to us, certificate invalid or protocol did not reach certificate exchange");
                   }
                }
             }
@@ -623,7 +623,7 @@ TlsConnection::isGood() // has data that can be read
       return false;
    }
 
-#endif       
+#endif
    return true;
 }
 
@@ -651,7 +651,7 @@ TlsConnection::isWritable()
 void TlsConnection::getPeerNames(std::list<Data> &peerNames) const
 {
    for(std::list<BaseSecurity::PeerName>::const_iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
-{
+   {
       peerNames.push_back(it->mName);
    }
 }
@@ -674,7 +674,6 @@ TlsConnection::getPeerNamesData() const
    return peerNamesString;
 }
 
-
 void
 TlsConnection::computePeerName()
 {
@@ -689,7 +688,7 @@ TlsConnection::computePeerName()
       return;
    }
 
-   // print session infor       
+   // print session info
    const SSL_CIPHER *ciph;
    ciph=SSL_get_current_cipher(mSsl);
    InfoLog( << "TLS sessions set up with " 
@@ -717,8 +716,7 @@ TlsConnection::computePeerName()
    resip_assert(t);
 
    mPeerNames.clear();
-   BaseSecurity::getCertNames(cert, mPeerNames,
-      t->isUseEmailAsSIP());
+   BaseSecurity::getCertNames(cert, mPeerNames, t->isUseEmailAsSIP());
    if(mPeerNames.empty())
    {
       ErrLog(<< "Invalid certificate: no subjectAltName/CommonName found");
