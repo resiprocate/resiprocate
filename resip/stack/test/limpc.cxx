@@ -16,8 +16,19 @@
 
 #ifdef WIN32
 #include <io.h>
+#include <conio.h>
 #else
 #include <unistd.h>
+char getch()
+{
+   char buf[1];
+   int r = read(fileno(stdin), &buf, 1);
+   if (r == 1)
+   {
+      return buf[0];
+   }
+   return 0;
+};
 #endif
 
 typedef void WINDOW;
@@ -34,16 +45,6 @@ char ACS_VLINE=2;
 WINDOW* stdscr=0;
 WINDOW* newwin(...) { return NULL; };
 void waddstr(WINDOW*, const char* text) { std::clog << text; };
-char getch()
-{
-   char buf[1];
-   int r = _read(_fileno(stdin),&buf,1);
-   if ( r ==1 )
-   {
-      return buf[0];
-   }
-   return 0;
-};
 
 void werase(WINDOW*) {};
 void wrefresh(...) {};
@@ -126,7 +127,11 @@ processStdin( Uri* dest, bool sign, bool encryp )
    static unsigned int num=0;
    static char buf[1024];
 
-   char c = getch();	
+   char c = getch();
+#ifdef WIN32
+   // Output to console windows
+   std::cout << c;
+#endif
       
    if ( c == 0 )
    {
@@ -794,12 +799,15 @@ myMain(int argc, char* argv[])
    Security* security=NULL;
    try
    {
-      char cert_dir[ 1024 ] ;
+#ifdef WIN32
+      char cert_dir[] = "./";
+#else
+      char cert_dir[1024];
       char *home_dir = getenv( "HOME" ) ;
-
-      cert_dir[ 0 ] = '\0' ;
-      ::strcat( cert_dir, home_dir ) ;
-      ::strcat( cert_dir, "/.sipCerts/" ) ;
+      cert_dir[0] = '\0';
+      ::strcat(cert_dir, home_dir);
+      ::strcat(cert_dir, "/.sipCerts/");
+#endif
 
       security = new Security( cert_dir ) ;
 
@@ -1027,7 +1035,9 @@ myMain(int argc, char* argv[])
    }
 
    StdInWatcher watcher(&dest,sign,encryp);
+#ifndef WIN32
    FdPollItemHandle wh=sipStack.getPollGrp()->addPollItem(fileno(stdin), FPEM_Read, &watcher);
+#endif
 
    while (1)
    {
@@ -1040,6 +1050,12 @@ myMain(int argc, char* argv[])
          ErrLog( << "Got a exception from sipStack::process" );
       }
 
+#ifdef WIN32
+      if (_kbhit())
+      {
+         watcher.processPollEvent(0);
+      }
+#endif
       if(!watcher.keepGoing())
       {
          break;
@@ -1055,7 +1071,9 @@ myMain(int argc, char* argv[])
       }
    }
 
+#ifndef WIN32
    sipStack.getPollGrp()->delPollItem(wh);
+#endif
 
    return 0;
 }
