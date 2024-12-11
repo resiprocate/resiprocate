@@ -393,10 +393,6 @@
       <Project>{9f26ed15-437c-4a8a-9062-75bf0e5a0f39}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\contrib\pcre\pcre_17_0.vcxproj">
-      <Project>{b933f895-8efb-4fdd-a46d-09b8c00d1d26}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\..\contrib\popt\popt_17_0.vcxproj">
       <Project>{25d97d59-9407-af5e-355d-b60a17ae3567}</Project>
       <Private>true</Private>
