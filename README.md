@@ -21,7 +21,7 @@ Please see the following wiki for more information: www.resiprocate.org
 To create an in-tree build:
 Navigate to git root folder where top level CMakeLists.txt file is
 ```
-$ cmake
+$ cmake .
 $ make
 ```
 
@@ -48,7 +48,7 @@ delete the CMakeCache.txt file.
 ### Tips
 * Some linux packages can be hard to track down.  If you don't need the features that enabling these packages provides you can disable them in the build.  One such package is QPID Proton.
 ```
-$ cmake -DBUILD_QPID_PROTON=OFF
+$ cmake -DBUILD_QPID_PROTON=OFF .
 ```
 
 ### Required Packages For Default Enabled CMake Settings
@@ -96,7 +96,7 @@ $ cmake -DBUILD_QPID_PROTON=OFF
 
 Navigate to git root folder where top level CMakeLists.txt file is.
 ```
-> cmake
+> cmake .
 ```
 Open resiprocate.sln in visual studio:  Build -> Build Solution
 
@@ -113,7 +113,7 @@ Required structure
 > cd <basedir>
 > git clone https://github.com/sipXtapi/sipXtapi.git sipXtapi
 > cd ../<resipclonedirname>
-> cmake -DUSE_SIPXTAPI=ON
+> cmake -DUSE_SIPXTAPI=ON .
 ```
 
 
@@ -139,7 +139,7 @@ $ cmake -LH
 You can set them on the command line like:
 
 ```
-$ cmake -DWITH_C_ARES=true
+$ cmake -DWITH_C_ARES=true .
 ```
 
 # Future Considerations
