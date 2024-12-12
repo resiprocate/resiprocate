@@ -106,6 +106,13 @@ To build recon with sipXtapi media support you need to do the following:
 * Clone sipXtapi github repo to same folder as level as you have closed resiprocate github repo.  **The root folder name MUST be: sipXtapi**.
 * Run cmake in the resiprocate cloned folder with the following argument:
 ```
+Required structure
+<basedir>/<resipclonedirname> (contains resip git clone)
+<basedir>/sipXtapi (contains sipXtapi git clone)
+
+> cd <basedir>
+> git clone https://github.com/sipXtapi/sipXtapi.git sipXtapi
+> cd ../<resipclonedirname>
 > cmake -DUSE_SIPXTAPI=ON
 ```
 
@@ -123,16 +130,16 @@ To build recon with sipXtapi media support you need to do the following:
 ## Configuration Flags
 
 CMake "cached" variables are used to specify options such as whether c-ares
-should be used or not. You can get the list and tweak them with:
+should be used or not. You can get the list with:
 
 ```
-$ cmake -i ..
+$ cmake -LH
 ```
 
-You can also set them on the command line like:
+You can set them on the command line like:
 
 ```
-$ cmake -DWITH_C_ARES=true ..
+$ cmake -DWITH_C_ARES=true
 ```
 
 # Future Considerations
