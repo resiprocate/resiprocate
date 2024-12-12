@@ -11,79 +11,142 @@ This file does not cover the material in the contrib/ directory of
 the source control system, as each of those components is
 unmodified and distributed with it's own AUTHORS file.
 
-$ git log | grep ^Author | sort -u | cut -f2 -d' '
+$ git log --format='%aN <%aE>' | sort -uf | grep -v "resiprocate\.org"
 
-adam
-adamr
-alan
-arosenberg
-bbramwel
-bcampen
-bko
-bob
-brocha
-bryan
-cbond
-cisco
-cktam
-dabryan
-daniel
-danweber
-Danweber
-davidb
-dbozzali
-dean
-derek
-Derek
-derekm
-dlb
-dpetrie
-dpocock: Daniel Pocock <daniel@pocock.com.au>
-dragos
-dsuh
-duanestorey
-dworley
-ekr
-emcmurry
-fjoanis
-fluffy
-greg
-jason
-jdeverick
-jgeras
-jmatthewsr
-jozsef
-kchmilar
-kdc
-kenho
-ken
-kittlitz
-kwhite
-lowekamp
-matthias
-maxb
-mfroman
-moetje
-nagendra
-nash
-nils
-(no
-partim
-pckizer
-rjsparks
-rohan
-ronh
-ryker
-sailesh
-satluri
-schanin
-sgodin
-shaun
-troll
-vann
-veer
-vinit
-wensong
-xmlscott
-
-
+Adam Roach <adam@nostrum.com>
+Alan Hawrylyshen <ahawrylyshen@polyphase.ca>
+Alan Hawrylyshen <alan@polyphase.ca>
+Alexander G. Pronchenkov <apronchenkov@users.noreply.github.com>
+Alex Curlio <alex@counterpath.com>
+alienpenguin <alienpenguin@gmail.com>
+Anders Kristensen <andersk@google.com>
+Andrey Semashev <andrey.semashev@gmail.com>
+Aron Rosenberg <aron_rosenberg@logitech.com>
+arrayt <tomtang_cn@163.com>
+Balram Pariyarath <balbbrl@gmail.com>
+Benjamin Prestele <benjamin.prestele@logmein.com>
+Ben Walden <benwalden@gmail.com>
+Ben Walden <bwalden@redboxrecorders.com>
+Ben Walden <bwalden@redboxvoice.com>
+Björn Andersson <bjorn.andersson@mitel.com>
+Bob Andreasen <bandreasen@pingtel.com>
+Bob Bramwell <bob@jasomi.com>
+bogdan_mabo <102626527+bogdanvasilescu-opentext@users.noreply.github.com>
+Brocha Strous <Brocha.Strous@xconnect.co.il>
+Bruce Lowekamp <bbl@lowekamp.net>
+Bryan Ogawa <bko@cisco.com>
+Byron Campen <docfaraday@gmail.com>
+Catalin Constantin Usurelu <catalin.usurelu5@gmail.com>
+Catalin Usurelu <catalin.usurelu5@gmail.com>
+Cheung Tam <cheung.tam@teltel.com>
+Chris Bond <chris@counterpath.org>
+Chris West (Faux) <git@goeswhere.com>
+Cullen Jennings <fluffy@cisco.com>
+Dale Worley <dworley@pingtel.com>
+Daniel G Petrie <dpetrie@sipez.com>
+Daniel Pocock <daniel@pocock.com.au>
+Daniel Pocock <daniel@pocock.pro>
+Daniel Shi <daniel@xten.com>
+Daniel Tacalau <dtacalau@ezuce.com>
+Dan Petrie <dpetrie@sipez.com>
+Dan Weber <dan@marketsoup.com>
+Dario Bozzali <dario.bozzali@ifmgroup.it>
+Dario Bozzali <dbozzali@users.noreply.github.com>
+Darren-Wade <139340137+Darren-Wade@users.noreply.github.com>
+David Bryan <bryan@ethernot.org>
+David Butcher <davidlbutcher@gmail.com>
+David Suh <dsuhpublic@gmail.com>
+dbozzali <dario.bozzali@ifmgroup.it>
+Derek MacDonald <derek.macdonald@gmail.com>
+dgpetrie <dpetrie@sipez.com>
+docfaraday <docfaraday@gmail.com>
+Dragos Liciu <dragos@counterpath.com>
+Duane Storey <duanestorey@gmail.com>
+Egil Hasting <egil.hasting@higen.org>
+Eric McMurry <emcmurry@estacado.net>
+Eric Rescorla <ekr@rtfm.com>
+Fedor Brunner <fedor.brunner@azet.sk>
+fnRice <doraismydora@gmail.com>
+Francisco Hong <cisco@counterpath.com>
+Francis Joanis <francis.joanis@gmail.com>
+German Korovkin <german.korovkin@ivcs.su>
+Greg McGarry <greg@xten.com>
+Gregor Jasny <gjasny@googlemail.com>
+Gregor Jasny <Gregor.Jasny@citrix.com>
+Gregor Jasny <gregor.jasny@logmein.com>
+Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
+Henrik Romnes <hbr@synergysky.com>
+hypherion2 <adiavr@gmail.com>
+Ingo Feinerer <feinerer@logic.at>
+ionut <ionut@islaveanu-10.dev-ezuce.ro>
+Ivan Ribakov <i.ribakov@zaleos.net>
+jagr <jan.granqvist@advoco.se>
+Jared K. Smith <jsmith@fedoraproject.org>
+Jason Fischl <jason.fischl@gmail.com>
+Jason Vasquez <jason.vasquez@developertown.com>
+Jeremy Geras <jgeras@newheights.com>
+JerryLove <zhurui19920621@gmail.com>
+Jim Deverick <jdeverick@sipeerior.com>
+Jordan Rupprecht <rupprecht@google.com>
+Jozsef Vass <jozsef@counterpath.com>
+jryden2 <62726250+jryden2@users.noreply.github.com>
+Justin Matthews <jmatthewsr@gmail.com>
+Ken Ho <kenho@bluebottle.com>
+Ken Kittlitz <ken@jasomi.com>
+Kennard White <Kennard_White@logitech.com>
+Kevin Chmilar <kchmilar@jasomi.com>
+Kevin Green <kevygreen@gmail.com>
+Martin Hoffmann <hn@nvnc.de>
+Mateus Bellomo <mateusbellomo@gmail.com>
+mateus <mateus@mateus.mateus>
+Matthias Granberry <matthias@estacado.net>
+Matthias Moetje <moetje@terasens.com>
+Max Bowsher <maxb@f2s.com>
+Michael Froman <mfroman@estacado.net>
+Mihai <961778+mihaicodrean@users.noreply.github.com>
+Milan Kral <milan.kral@azet.sk>
+Mykhailo Popivniak <mykhailo18@gmail.com>
+Nagendra Modadugu <nagendra@cs.stanford.edu>
+Nash Tsai <nash.teltel@gmail.com>
+Nikolai Orekhov <no@3cx.com>
+Nils Ohlmeier <nils@iptel.org>
+okhowang(王沛文) <okhowang@tencent.com>
+Olle Johansson <oej@edvina.net>
+Pavel Balashov <pavel.balashov@iva-tech.ru>
+pengbo <pengbo@portsip.com>
+Philip Kizer <pckizer@estacado.net>
+portsip <sales@portsip.com>
+Qiuhao Li <qiuhao.li@zoom.us>
+qsbgw3ihnjw <qsbgw3ihnjw@protonmail.com>
+Reiner Herrmann <reiner@reiner-h.de>
+Renaud S <renaud.schoonbroodt@gmail.com>
+Renaud S <renaud.schoonbroodt@on-hertz.com>
+Robert Sparks <rjsparks@nostrum.com>
+Rohan Mahy <rohan@ekabal.com>
+Ron Hough <hough.ron@gmail.com>
+russhousley <housley@vigilsec.com>
+Ryan Kereliuk <ryker@ryker.org>
+Sailesh Agrawal <sailesh@xten.com>
+Scott Godin <sgodin@sipspectrum.com>
+Scott Godin <slgodin@gmail.com>
+Scott Lawrence <slawrence@pingtel.com>
+Sebastian Kupiecki <sk@synergysky.com>
+Sergey Menshikov <sergem155@users.noreply.github.com>
+sgodin <sgodin@sipspectrum.com>
+Shaun Dawson <scdawson@gmail.com>
+Steve Chanin <Schanin@sapient.com>
+Sudheera Atluri <sudheera.atluri@teltel.com>
+Szókovács Róbert <robert.szokovacs@gamma.co.uk>
+szokovacs <szokovacs@users.noreply.github.com>
+Taras Shypytiak <Taras.Shypytiak@portaone.com>
+Thomas Thorne <TafThorne@GoogleMail.com>
+Tibor Velencei <tibor.velencei@gamma.co.uk>
+Udit Raikwar <udit043@users.noreply.github.com>
+Van Nguyen <vann@counterpath.com>
+Vasil Kolev <vasil.kolev@securax.org>
+Vinit Karandikar <vinit@estacado.net>
+Vyacheslav Khudan <37107993+vak-oskh@users.noreply.github.com>
+Vyacheslav Khudan <vyacheslav.oskh@gmail.com>
+Wensong Zhang <wensong@purplecomm.com>
+Wolfgang Rosenauer <wr@rosenauer.org>
+xiexin0606 <88698200+xiexin0606@users.noreply.github.com>
