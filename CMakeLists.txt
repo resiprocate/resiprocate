@@ -93,7 +93,6 @@ endif()
 # Top-level user-settable variables (with defaults)
 # Those can be queried from the command line using "cmake -LH" and can be
 # specified on the command line, using cmake-gui or ccmake.
-option(WITH_C_ARES "Link against libc-ares (rather than rutil/dns/ares)" FALSE)
 option(WITH_SSL "Link against SSL libraries" TRUE)
 option(USE_POPT "Link against POPT libraries" TRUE)
 option(USE_SIGCOMP "Use OpenSigComp" FALSE)
@@ -136,23 +135,26 @@ option(BUILD_TESTING "Build manual & unit tests" TRUE)
 
 # Enable/disable linux based settings appropriately
 if(WIN32)
+   set(WITH_C_ARES_DEFAULT OFF)
    set(BUILD_QPID_PROTON_DEFAULT OFF)
    set(RESIP_ASSERT_SYSLOG_DEFAULT OFF)
    set(REGENERATE_MEDIA_SAMPLES_DEFAULT OFF)
    set(BUILD_DSO_PLUGINS_DEFAULT OFF)
 else()
+   set(WITH_C_ARES_DEFAULT ON)  # Needed for TFM to build correctly on linux
    set(BUILD_QPID_PROTON_DEFAULT ON)
    set(RESIP_ASSERT_SYSLOG_DEFAULT ON)
    set(REGENERATE_MEDIA_SAMPLES_DEFAULT ON)
    set(BUILD_DSO_PLUGINS_DEFAULT ON)
 endif()
+option(WITH_C_ARES "Link against libc-ares (rather than rutil/dns/ares)" ${WITH_C_ARES_DEFAULT})
 option(BUILD_QPID_PROTON "Build components requiring qpid-proton (AMQP)" ${BUILD_QPID_PROTON_DEFAULT})
 option(RESIP_ASSERT_SYSLOG "Log assertion failures with Syslog" ${RESIP_ASSERT_SYSLOG_DEFAULT})
 option(REGENERATE_MEDIA_SAMPLES "Regenerate the header files containing raw audio samples (requires sox, xxd)" ${REGENERATE_MEDIA_SAMPLES_DEFAULT})
 option(BUILD_DSO_PLUGINS "Build DSO plugins" ${BUILD_DSO_PLUGINS_DEFAULT})
 
 if(WIN32)
-    # Windows vcxproj files specify 10
+    # Windows vcxproj files specify 10 in sipXtapi
     set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 10 CACHE STRING "recon: Maximum connections on bridge (must match value sipXtapi was compiled with)")
 else()
     # Pre-build linux packages uses 20
