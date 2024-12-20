@@ -6,9 +6,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules")
  set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL Release)
  set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
 
-if(POLICY CMP0042)
-   CMAKE_POLICY(SET CMP0042 NEW)
-endif(POLICY CMP0042)
 if(POLICY CMP0077)
    CMAKE_POLICY(SET CMP0077 NEW)
 endif(POLICY CMP0077)
@@ -42,6 +39,7 @@ set(SO_RELEASE "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 
 include(GNUInstallDirs)
 include(Utilities)
+include(CheckCXXSourceCompiles)
 include(CheckStructHasMember)
 
 # Library version file generation.
@@ -84,6 +82,14 @@ set(RESIP_SIP_MSG_MAX_BYTES 10485760)
 # https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_BYTE_ORDER.html
 include (TestBigEndian)
 test_big_endian(RESIP_BIG_ENDIAN)
+
+check_cxx_source_compiles("
+#include <string_view>
+int main() {
+    std::string_view sv = \"test\";
+    return 0;
+}
+" RESIP_HAVE_STRING_VIEW)
 
 CHECK_STRUCT_HAS_MEMBER(sockaddr_in sin_len arpa/inet.h HAVE_sockaddr_in_len)
 if(HAVE_sockaddr_in_len)
@@ -200,8 +206,6 @@ endif()
 option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT})
 option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
 option(USE_NUGET "Use NuGet package manager" ${USE_NUGET_DEFAULT})
-
-set(CMAKE_CXX_STANDARD 11 CACHE STRING "CXX standard to use")
 
 if(BUILD_TESTING)
     enable_testing()
