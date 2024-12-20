@@ -69,11 +69,13 @@ main(int argc, char* argv[])
          ua.process();
       }
    }
+#ifdef USE_SSL
    catch (BaseSecurity::Exception&)
    {
       WarningLog (<< "Couldn't set up security object");
       exit(-1);
    }
+#endif
    catch (BaseException& e)
    {
       ErrLog (<< "Caught: " << e);
