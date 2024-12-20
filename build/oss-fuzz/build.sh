@@ -32,6 +32,7 @@ cmake -S . -B _build \
     -DUSE_KURENTO=OFF \
     -DUSE_MAXMIND_GEOIP=OFF \
     -DUSE_POPT=OFF \
+    -DWITH_C_ARES=OFF \
     -DWITH_SSL=OFF
 
 cmake --build _build --target fuzzUtil fuzzStack aresfuzz aresfuzzname
