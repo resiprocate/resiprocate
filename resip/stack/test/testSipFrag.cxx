@@ -435,7 +435,7 @@ main(int argc, char* argv[])
                "Max-Forwards: 70\r\n"
                "Content-Type: multipart/mixed;type=\"message/sipfrag\";\r\n"
                "    start=\"<foo@example.com>\";boundary=\"ncpq7w94hfb\"\r\n"
-               "Content-Length: " + Data(contents.size()) + "\r\n"
+               "Content-Length: " + std::to_string(contents.size()) + "\r\n"
                "\r\n" + contents;
                
       unique_ptr<SipMessage> message(TestSupport::makeMessage(msg.c_str()));
