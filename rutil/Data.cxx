@@ -367,13 +367,11 @@ Data::Data(const Data& data)
    initFromString(data.mBuf, data.mSize);
 }
 
-#ifdef RESIP_HAS_RVALUE_REFS
 Data::Data(Data &&data)
    : mBuf(mPreBuffer),mSize(0),mCapacity(LocalAlloc),mShareEnum(Borrow)
 {
    *this = std::move(data);
 }
-#endif
 
 // -2147483646
 static const int Int32MaxSize = 11;
@@ -915,7 +913,6 @@ Data::operator=(const Data& data)
 }
 #endif
 
-#ifdef RESIP_HAS_RVALUE_REFS
 Data& Data::operator=(Data &&data)
 {
    if (&data != this)
@@ -937,7 +934,6 @@ Data& Data::operator=(Data &&data)
    
    return *this;
 }
-#endif
 
 Data::size_type
 Data::truncate(size_type len)

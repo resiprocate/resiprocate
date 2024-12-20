@@ -176,9 +176,8 @@ class Data
 
       Data(const Data& data);
 
-#ifdef RESIP_HAS_RVALUE_REFS
       Data(Data &&data);
-#endif
+
       /**
         Creates a data with the contents of the string.
       */
@@ -431,9 +430,7 @@ class Data
          return copy(data.mBuf,data.mSize);
       }
 
-#ifdef RESIP_HAS_RVALUE_REFS
       Data& operator=(Data &&data);
-#endif
 
       operator std::string() const 
       {
