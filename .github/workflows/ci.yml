@@ -8,7 +8,7 @@ concurrency:
 jobs:
   build:
     name: Build with ${{ matrix.c-compiler }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     container:
       image: debian:bullseye-slim
       options: --ulimit memlock=-1
@@ -26,7 +26,7 @@ jobs:
       CXX: /usr/bin/${{ matrix.cxx-compiler }}
     steps:
       - name: Get number of CPU cores
-        uses: SimenB/github-actions-cpu-cores@v1.1.0
+        uses: SimenB/github-actions-cpu-cores@v2
         id: cpu-cores
 
       - name: Install Dependencies
@@ -77,7 +77,7 @@ jobs:
             xxd
 
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Bootstrap
         run: ./build/travis/bootstrap
@@ -93,4 +93,4 @@ jobs:
         run: run-clang-tidy-13 -j ${{ steps.cpu-cores.outputs.count }} -quiet
 
       - name: Test
-        run: make -j1 CTEST_OUTPUT_ON_FAILURE=1 test
+        run: make -j${{ steps.cpu-cores.outputs.count }} CTEST_OUTPUT_ON_FAILURE=1 test
