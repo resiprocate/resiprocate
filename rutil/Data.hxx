@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 #include <bitset>
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
 #include <string_view>
 #endif
 #include "rutil/ResipAssert.h"
@@ -184,7 +184,7 @@ class Data
       */
       Data(const std::string& str);
 
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
       /**
         Creates a data with the contents of the string_view.
       */
@@ -410,7 +410,7 @@ class Data
       friend bool operator==(const Data& lhs, const Data& rhs);
       friend bool operator==(const Data& lhs, const char* rhs);
       friend bool operator==(const Data& lhs, const std::string& rhs) noexcept;
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
       friend bool operator==(const Data& lhs, const std::string_view rhs) noexcept;
 #endif
 
@@ -419,7 +419,7 @@ class Data
       friend bool operator<(const char* lhs, const Data& rhs);
       friend bool operator<(const Data& lhs, const std::string& rhs) noexcept;
       friend bool operator<(const std::string& lhs, const Data& rhs) noexcept;
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
       friend bool operator<(const Data& lhs, const std::string_view rhs) noexcept;
       friend bool operator<(const std::string_view lhs, const Data& rhs) noexcept;
 #endif
@@ -459,7 +459,7 @@ class Data
          return copy(str.c_str(), static_cast<size_type>(str.size()));
       }
 
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
 
       operator std::string_view() const 
       {
@@ -633,7 +633,7 @@ class Data
       */
       std::string toString() const;
 
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
       /**
         Creates a c++ string_view.
       */
@@ -1174,7 +1174,7 @@ inline bool operator>(const std::string& lhs, const Data& rhs) { return rhs < lh
 inline bool operator<=(const std::string& lhs, const Data& rhs) { return !(rhs < lhs); }
 inline bool operator>=(const std::string& lhs, const Data& rhs) { return !(lhs < rhs); }
 
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
 inline bool operator!=(const Data& lhs, const std::string_view rhs) noexcept { return !(lhs == rhs); }
 inline bool operator>(const Data& lhs, const std::string_view rhs) { return rhs < lhs; }
 inline bool operator<=(const Data& lhs, const std::string_view rhs) { return !(rhs < lhs); }
@@ -1205,7 +1205,7 @@ operator+(const char* c, const Data& d)
 bool operator==(const Data& lhs, const Data& rhs);
 bool operator==(const Data& lhs, const char* rhs);
 bool operator==(const Data& lhs, const std::string& rhs) noexcept;
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
 bool operator==(const Data& lhs, const std::string_view rhs) noexcept;
 #endif
 
@@ -1214,7 +1214,7 @@ bool operator<(const Data& lhs, const char* rhs);
 bool operator<(const char* lhs, const Data& rhs);
 bool operator<(const Data& lhs, const std::string& rhs) noexcept;
 bool operator<(const std::string& lhs, const Data& rhs) noexcept;
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
 bool operator<(const Data& lhs, const std::string_view rhs) noexcept;
 bool operator<(const std::string_view lhs, const Data& rhs) noexcept;
 #endif

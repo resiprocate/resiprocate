@@ -1598,7 +1598,7 @@ class TestData
          }
 
 
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
 
          {
             std::string_view sv1 = "resip";
