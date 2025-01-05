@@ -76,6 +76,9 @@ jobs:
             sox \
             xxd
 
+      - name: Upgrade CMake
+        run: apt-get install -y cmake/bullseye-backports
+
       - name: Checkout source
         uses: actions/checkout@v3
 
