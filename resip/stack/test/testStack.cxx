@@ -603,7 +603,7 @@ main(int argc, char* argv[])
    const char* logLevel = "WARNING";
    const char* proto = "tcp";
    const char* bindAddr = "127.0.0.1";
-   const char* domain = "";
+   const char* domain = "resiprocate.test";
    int doListen = 1;
 
    int verbose = 0;

@@ -32,4 +32,3 @@ jobs:
           --test-dir ${{ github.workspace }}/_build
           --build-config Debug
           --output-on-failure
-          --exclude-regex "(sanityTests|testStack)"
