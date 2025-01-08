@@ -96,35 +96,36 @@ $ cmake -DBUILD_QPID_PROTON=OFF .
 
 Navigate to git root folder where top level CMakeLists.txt file is.
 ```
-> cmake .
+> cmake . -B _build
 ```
-Open resiprocate.sln in visual studio:  Build -> Build Solution
-
-If you want to run the unit tests, then right click on the RUN_TESTS project and Build it.
-
 To build recon with sipXtapi media support you need to do the following:
-* Clone sipXtapi github repo to same folder as level as you have closed resiprocate github repo.  **The root folder name MUST be: sipXtapi**.
-* Run cmake in the resiprocate cloned folder with the following argument:
 ```
-Required structure
-<basedir>/<resipclonedirname> (contains resip git clone)
-<basedir>/sipXtapi (contains sipXtapi git clone)
-
-> cd <basedir>
-> git clone https://github.com/sipXtapi/sipXtapi.git sipXtapi
-> cd ../<resipclonedirname>
-> cmake -DUSE_SIPXTAPI=ON .
+> cmake . -B _build -DUSE_SIPXTAPI=ON
+```
+Or if you plan on using VS GUI you might want to enable the following to get the full sipXtapi projects into the resip solution file:
+```
+> cmake . -B _build -DUSE_SIPXTAPI=ON -DSIPXTAPI_PROJS_IN_VS_GUI=ON
 ```
 
+#### Using Visual Studio GUI
+* Open resiprocate.sln (from _build folder) in visual studio:  Build -> Build Solution
+* If you want to run the unit tests, then right click on the RUN_TESTS project and Build it.
 
-### Using Ninja via Visual Studio
+#### Using CMake Command line
+Navigate to git root folder where top level CMakeLists.txt file is.
+```
+> cmake --build _build --config Debug --parallel
+```
+For unit tests:
+```
+> cd _build
+> ctest --build-config Debug --output-on-failure
+```
+
+### Using Ninja via Visual Studio GUI
 * Open the resiprocate folder by using Visual Studio Open Folder feature
 * Use CMake GUI for changing CMake build settings and options: Project->CMake Settings for resiprocate
 * Build -> Build All
-
-> WARNING: You must not enable sipXtapi(recon) if you are using Ninja, since Ninja won't integrate nicely
-> with sipXtapi's linked VS project and solution builds.  For sipXtapi(recon) use the above instructions to generate 
-> Visual Studio solution and project files for resip.  We may address this short coming in the future.
 
 
 ## Configuration Flags
