@@ -1,4 +1,4 @@
-name: Windows
+name: Windows-CI
 on: [push, pull_request]
 
 concurrency:
@@ -18,6 +18,7 @@ jobs:
           cmake
           -S ${{ github.workspace }}
           -B ${{ github.workspace }}/_build
+          -DUSE_SIPXTAPI=ON
 
       - name: "Build"
         run: >
@@ -32,4 +33,3 @@ jobs:
           --test-dir ${{ github.workspace }}/_build
           --build-config Debug
           --output-on-failure
-          --exclude-regex "(sanityTests|testStack)"
