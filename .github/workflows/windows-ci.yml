@@ -18,6 +18,7 @@ jobs:
           cmake
           -S ${{ github.workspace }}
           -B ${{ github.workspace }}/_build
+          -DUSE_SIPXTAPI=ON
 
       - name: "Build"
         run: >
