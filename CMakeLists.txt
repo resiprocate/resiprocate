@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules")
 
 # For Visual Studio Solution Generation
@@ -6,9 +6,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules")
  set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL Release)
  set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
 
-if(POLICY CMP0042)
-   CMAKE_POLICY(SET CMP0042 NEW)
-endif(POLICY CMP0042)
 if(POLICY CMP0077)
    CMAKE_POLICY(SET CMP0077 NEW)
 endif(POLICY CMP0077)
@@ -42,6 +39,7 @@ set(SO_RELEASE "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 
 include(GNUInstallDirs)
 include(Utilities)
+include(CheckCXXSourceCompiles)
 include(CheckStructHasMember)
 
 # Library version file generation.
@@ -84,6 +82,14 @@ set(RESIP_SIP_MSG_MAX_BYTES 10485760)
 # https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_BYTE_ORDER.html
 include (TestBigEndian)
 test_big_endian(RESIP_BIG_ENDIAN)
+
+check_cxx_source_compiles("
+#include <string_view>
+int main() {
+    std::string_view sv = \"test\";
+    return 0;
+}
+" RESIP_HAVE_STRING_VIEW)
 
 CHECK_STRUCT_HAS_MEMBER(sockaddr_in sin_len arpa/inet.h HAVE_sockaddr_in_len)
 if(HAVE_sockaddr_in_len)
@@ -200,8 +206,6 @@ endif()
 option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT})
 option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
 option(USE_NUGET "Use NuGet package manager" ${USE_NUGET_DEFAULT})
-
-set(CMAKE_CXX_STANDARD 11 CACHE STRING "CXX standard to use")
 
 if(BUILD_TESTING)
     enable_testing()
@@ -332,23 +336,11 @@ if(USE_NUGET)
 endif()
 
 function(nuget_inst)
-   exec_program(${NUGET_EXE}
-      ARGS install "${ARGV1}" -Version ${ARGV2} -ExcludeVersion -OutputDirectory ${CMAKE_BINARY_DIR}/packages
+   execute_process(
+      COMMAND ${NUGET_EXE} install "${ARGV1}" -Version ${ARGV2} -ExcludeVersion -OutputDirectory ${CMAKE_BINARY_DIR}/packages
+      COMMAND_ERROR_IS_FATAL ANY
       )
-   set(${ARGV0}_TARGETS ${CMAKE_BINARY_DIR}/packages/${ARGV1}/build/native/${ARGV1}.targets PARENT_SCOPE)
-
-   set(PKG_TOP "${CMAKE_BINARY_DIR}/packages/${ARGV1}/build/native")
-   set(PKG_LIB "${PKG_TOP}/lib/${WIN_ARCH}/Release")  # TODO - fix this
-
-   set(${ARGV0}_ROOT_DIR "${PKG_TOP}" PARENT_SCOPE)
    set(${ARGV0}_PKG_DIR "${CMAKE_BINARY_DIR}/packages/${ARGV1}" PARENT_SCOPE)
-
-   # These vary a lot from one package to the next.  We
-   # set them to some common default values but in many
-   # cases the subsequent code needs to override these
-   # values with package-specific values.
-   set(${ARGV0}_INCLUDE_DIRS "${PKG_TOP}/include" PARENT_SCOPE)
-   set(${ARGV0}_LIBRARIES_DIR "${PKG_LIB}" PARENT_SCOPE)
 endfunction()
 
 # OpenSSL
@@ -358,40 +350,35 @@ if(WITH_SSL)
       message("Using ${OPENSSL_ROOT_DIR} and ${OPENSSL_LIBRARIES_DIR}")
       # this is an argument to FindOpenSSL
       # https://cmake.org/cmake/help/latest/module/FindOpenSSL.html
+      set(OPENSSL_ROOT_DIR ${OPENSSL_PKG_DIR}/build/native)
       set(OPENSSL_USE_STATIC_LIBS True)
       set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT_DIR}/include)
+      set(OPENSSL_LIBRARIES OPENSSL OPENSSL_CRYPTO)
       set(OPENSSL_FOUND TRUE)
 
-      # CMakes Visual Studio generation can't properly handle having multiple lib files listed in a single 
-      # IMPORTED_IMPLIB property like the following:
-      #set_property(TARGET OPENSSL PROPERTY IMPORTED_IMPLIB_RELEASE 
-      #  "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libssl.lib"
-      #  "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libcrypto.lib")
-      #set_property(TARGET OPENSSL PROPERTY IMPORTED_IMPLIB_DEBUG 
-      #  "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libssl.lib"
-      #  "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libcrypto.lib")
-      # To around this we must break the OpenSSL library into 2 add_library calls 
-      # (named OPENSSL and OPENSSL_CRYPTO) in order for the library linking to work.
       add_library(OPENSSL SHARED IMPORTED GLOBAL)
       add_library(OPENSSL_CRYPTO SHARED IMPORTED GLOBAL)
-      set_property(TARGET OPENSSL PROPERTY IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libssl.lib")
-      set_property(TARGET OPENSSL_CRYPTO PROPERTY IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libcrypto.lib")
-      set_property(TARGET OPENSSL PROPERTY IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libssl.lib")
-      set_property(TARGET OPENSSL_CRYPTO PROPERTY IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libcrypto.lib")
 
-      # These are used to add Custom PostBuild copy steps to executables that need these dll's to run
-      set_property(TARGET OPENSSL PROPERTY IMPORTED_LOCATION_RELEASE 
-        "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libssl-1_1-${WIN_ARCH}.dll"
-        "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libcrypto-1_1-${WIN_ARCH}.dll"
-      )
-      set_property(TARGET OPENSSL PROPERTY IMPORTED_LOCATION_DEBUG 
-        "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libssl-1_1-${WIN_ARCH}.dll"
-        "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libcrypto-1_1-${WIN_ARCH}.dll"
+      set_target_properties(OPENSSL_CRYPTO PROPERTIES
+         IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libcrypto.lib"
+         IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libcrypto.lib"
+         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libcrypto-1_1-${WIN_ARCH}.dll"
+         IMPORTED_LOCATION_DEBUG "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libcrypto-1_1-${WIN_ARCH}.dll"
+         INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_ROOT_DIR}/include"
       )
 
-      install(DIRECTORY ${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/ DESTINATION ${CMAKE_INSTALL_SBINDIR})
-      install(DIRECTORY ${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/ DESTINATION ${CMAKE_INSTALL_BINDIR})
-      install(DIRECTORY ${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/ DESTINATION tfm)
+      set_target_properties(OPENSSL PROPERTIES
+         IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libssl.lib"
+         IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libssl.lib"
+         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libssl-1_1-${WIN_ARCH}.dll"
+         IMPORTED_LOCATION_DEBUG "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libssl-1_1-${WIN_ARCH}.dll"
+         IMPORTED_LINK_INTERFACE_LIBRARIES "OPENSSL_CRYPTO"
+         INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_ROOT_DIR}/include"
+      )
+
+      install(IMPORTED_RUNTIME_ARTIFACTS OPENSSL_CRYPTO OPENSSL RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})
+      install(IMPORTED_RUNTIME_ARTIFACTS OPENSSL_CRYPTO OPENSSL RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+      install(IMPORTED_RUNTIME_ARTIFACTS OPENSSL_CRYPTO OPENSSL RUNTIME DESTINATION tfm)
    elseif(USE_NDKPORTS_HACKS)
       if(NOT ANDROID_ABI)
          message(FATAL_ERROR "ndkports hack requested but ANDROID_ABI not set")
@@ -590,17 +577,21 @@ if(USE_BDB)
    if(USE_NUGET)
       # https://www.nuget.org/packages/berkeley.db.v140
       nuget_inst(BERKELEYDB "berkeley.db.v140" "5.3.28.3")
+      set(BERKELEYDB_ROOT_DIR "${BERKELEYDB_PKG_DIR}/build/native")
+      set(BERKELEYDB_INCLUDE_DIRS "${BERKELEYDB_ROOT_DIR}/include")
+      set(BERKELEYDB_FOUND TRUE)
 
       add_library(BERKELEYDB SHARED IMPORTED GLOBAL)
-      set_property(TARGET BERKELEYDB PROPERTY IMPORTED_IMPLIB_RELEASE "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/Release/libdb53.lib")
-      set_property(TARGET BERKELEYDB PROPERTY IMPORTED_IMPLIB_DEBUG "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libdb53d.lib")
-      # These are used to add Custom PostBuild copy steps to executables that need these dll's to run
-      set_property(TARGET BERKELEYDB PROPERTY IMPORTED_LOCATION_RELEASE "${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Release/libdb53.dll")
-      set_property(TARGET BERKELEYDB PROPERTY IMPORTED_LOCATION_DEBUG "${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libdb53d.dll")
+      set_target_properties(BERKELEYDB PROPERTIES
+         IMPORTED_IMPLIB_RELEASE "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/Release/libdb53.lib"
+         IMPORTED_IMPLIB_DEBUG "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libdb53d.lib"
+         IMPORTED_LOCATION_RELEASE "${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Release/libdb53.dll"
+         IMPORTED_LOCATION_DEBUG "${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libdb53d.dll"
+         INTERFACE_INCLUDE_DIRECTORIES "${BERKELEYDB_ROOT_DIR}/include"
+      )
 
-      set(BERKELEYDB_FOUND TRUE)
-      install(DIRECTORY ${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Relese/ DESTINATION ${CMAKE_INSTALL_SBINDIR})
-      install(DIRECTORY ${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Release/ DESTINATION tfm)
+      install(IMPORTED_RUNTIME_ARTIFACTS BERKELEYDB RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})
+      install(IMPORTED_RUNTIME_ARTIFACTS BERKELEYDB RUNTIME DESTINATION tfm)
    elseif(USE_CONTRIB)
       add_subdirectory(contrib/db)
    else()
@@ -640,7 +631,6 @@ if(USE_BOOST)
    if(USE_NUGET)
       nuget_inst(BOOST "boost" "1.80.0")
       message("Using ${BOOST_PKG_DIR}")
-      #set(BOOST_LIBRARIES "${BOOST_LIBRARIES_DIR}/libboostcore.lib")
       set(BOOST_INCLUDE_DIRS "${BOOST_PKG_DIR}/lib/native/include")
       set(BOOST_FOUND TRUE)
    else()
@@ -808,17 +798,7 @@ endif()
 # Apache Qpid Proton
 # Debian: libqpid-proton-cpp12-dev
 if(BUILD_QPID_PROTON)
-   if(USE_NUGET)
-      # FIXME - they only publish the C API, need full C++ API
-      nuget_inst(QPIDPROTON "Apache.Qpid.Proton" "1.0.0-M6")
-      message("Using ${QPIDPROTON_ROOT_DIR} and ${QPIDPROTON_LIBRARIES}")
-      set(QPIDPROTON_LIBRARIES
-            "${QPIDPROTON_LIBRARIES_DIR}/libqpidproton.lib")
-      # FIXME - check if those libraries and headers really exist
-      set(QPIDPROTON_FOUND TRUE)
-   else()
-      pkg_check_modules(QPIDPROTON libqpid-proton-cpp REQUIRED)
-   endif()
+   pkg_check_modules(QPIDPROTON libqpid-proton-cpp REQUIRED)
    option_def(BUILD_QPID_PROTON)
 endif()
 
@@ -837,10 +817,8 @@ option_def(RESIP_ASSERT_SYSLOG)
 if(USE_WEBSOCKETPP)
    if(USE_NUGET)
       nuget_inst(WEBSOCKETPP "websocketpp-mtk.repack" "0.7.0-mtk19")
-      message("Using ${WEBSOCKETPP_ROOT_DIR} and ${WEBSOCKETPP_LIBRARIES}")
-      set(WEBSOCKETPP_LIBRARIES
-            "${WEBSOCKETPP_LIBRARIES_DIR}/libwebsocketpp.lib")
-      # FIXME - check if those libraries and headers really exist
+      message("Using ${WEBSOCKETPP_PKG_DIR}")
+      set(WEBSOCKETPP_INCLUDE_DIRS "${PKG_DIR}/build/native/include")
       set(WEBSOCKETPP_FOUND TRUE)
    else()
       find_package(websocketpp REQUIRED)

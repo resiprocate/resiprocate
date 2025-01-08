@@ -352,7 +352,7 @@ Data::Data(const string& str)
    initFromString(str.c_str(), (Data::size_type)str.size());
 }
 
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
 /**
   Creates a data with the contents of the string_view.
 */
@@ -766,7 +766,7 @@ resip::operator==(const Data& lhs, const std::string& rhs) noexcept
    return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.c_str(), rhs.size()) == 0;
 }
 
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
 bool
 resip::operator==(const Data& lhs, const std::string_view rhs) noexcept
 {
@@ -857,7 +857,7 @@ resip::operator<(const std::string& lhs, const Data& rhs) noexcept
    return memcmp(lhs.c_str(), rhs.mBuf, lhsSize) < 0;
 }
 
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
 bool
 resip::operator<(const Data& lhs, const std::string_view rhs) noexcept
 {
@@ -1126,7 +1126,7 @@ Data::toString() const
    return std::string(c_str(), size());
 }
 
-#if RESIP_CPP_STANDARD >= 201703L
+#if RESIP_HAVE_STRING_VIEW
 std::string_view 
 Data::toStringView() const
 {
