@@ -18,7 +18,7 @@ PKG_CHECK_MODULES(PC_NETXX QUIET libnetxx-dev)  # NetXX doesn't include a .pc fi
 SET(NETXX_DEFINITIONS ${PC_NETXX_CFLAGS_OTHER})
 
 FIND_PATH(NETXX_INCLUDE_DIR Netbuf.h
-          HINTS ${PC_NETXX_INCLUDEDIR} ${PC_NETXX_INCLUDE_DIRS} /usr/include/Netxx)
+          HINTS ${PC_NETXX_INCLUDEDIR} ${PC_NETXX_INCLUDE_DIRS} /usr/include/Netxx /usr/local/include/Netxx)
 
 FIND_LIBRARY(NETXX_LIBRARY NAMES Netxx
              HINTS ${PC_NETXX_LIBDIR} ${PC_NETXX_LIBRARY_DIRS})

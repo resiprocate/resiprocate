@@ -252,10 +252,10 @@ inline bool Object::Member::operator == (const Member& member) const
           element == member.element;
 }
 
-#if !_HAS_CXX17
-class Object::Finder : public std::unary_function<Object::Member, bool>
-#else
+#if _HAS__CXX17 || __cplusplus >= 201703L
 class Object::Finder
+#else
+class Object::Finder : public std::unary_function<Object::Member, bool>
 #endif
 {
 public:
