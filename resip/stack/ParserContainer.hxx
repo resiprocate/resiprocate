@@ -164,11 +164,17 @@ class ParserContainer : public ParserContainerBase
       class const_iterator;
       
       /**
-         @brief An iterator class, derived from std::iterator (bidirectional)
+         @brief An iterator class (bidirectional)
       */
-      class iterator : public std::iterator<std::bidirectional_iterator_tag, T>
+      class iterator //: public std::iterator<std::bidirectional_iterator_tag, T>  // Note: std::iterator deprecated in C++17 usings below cover same functionality
       {
          public:
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = T;
+            using difference_type = std::ptrdiff_t;
+            using pointer = T*;
+            using reference = T&;
+
             iterator(typename Parsers::iterator i,ParserContainer* ref) : mIt(i),mRef(ref){}
             iterator() : mRef(0) {}
             iterator(const iterator& orig) : mIt(orig.mIt), mRef(orig.mRef) {}
@@ -198,12 +204,17 @@ class ParserContainer : public ParserContainerBase
       };
 
       /**
-         @brief A const_iterator class, derived from std::iterator 
-            (bidirectional)
+         @brief A const_iterator class (bidirectional)
       */
-      class const_iterator : public std::iterator<std::bidirectional_iterator_tag, T>
+      class const_iterator //: public std::iterator<std::bidirectional_iterator_tag, T> // Note: std::iterator deprecated in C++17 usings below cover same functionality
       {
          public:
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = T;
+            using difference_type = std::ptrdiff_t;
+            using pointer = T*;
+            using reference = T&;
+
             const_iterator(Parsers::const_iterator i,const ParserContainer* ref) : mIt(i),mRef(ref){}
             const_iterator(const const_iterator& orig) : mIt(orig.mIt), mRef(orig.mRef) {}
             const_iterator(const iterator& orig) : mIt(orig.mIt), mRef(orig.mRef) {}

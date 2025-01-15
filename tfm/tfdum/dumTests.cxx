@@ -5374,7 +5374,6 @@ class DumTestCase : public DumFixture
               WaitForEndOfSeq);
           ExecuteSequences();
 
-          TestSipEndPoint* sheila = sipEndPoint;
           TestServerInviteSession uas(scott);
           std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
 

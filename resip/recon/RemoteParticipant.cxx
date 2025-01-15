@@ -225,7 +225,7 @@ RemoteParticipant::addExtraHeader(const std::shared_ptr<SipMessage>& invitemsg, 
             if (existingHfvl)
             {
                Data existingHeaderValue;
-               for (int i = 0; i < existingHfvl->getNumHeaderValues(); i++)
+               for (size_t i = 0; i < existingHfvl->getNumHeaderValues(); i++)
                {
                   existingHfvl->getHeaderValueByIndex(i, existingHeaderValue);
 

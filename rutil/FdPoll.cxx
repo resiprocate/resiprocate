@@ -196,7 +196,7 @@ FdPollImplFdSet::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *i
    resip_assert(fd!=INVALID_SOCKET);
 
    size_t useIdx;
-   if (mFreeHeadIdx != -1)
+   if (mFreeHeadIdx != (size_t)-1)
    {
       useIdx = mFreeHeadIdx;
       mFreeHeadIdx = mItems[useIdx].mNextIdx;
@@ -235,7 +235,7 @@ void
 FdPollImplFdSet::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMask)
 {
    size_t useIdx = IMPL_FDSET_HandleToIdx(handle);
-   resip_assert(useIdx != -1 && useIdx < mItems.size());
+   resip_assert(useIdx != (size_t)-1 && useIdx < mItems.size());
    FdPollItemFdSetInfo& info = mItems[useIdx];
    resip_assert(info.mSocketFd!=INVALID_SOCKET);
    resip_assert(info.mItemObj);
@@ -257,7 +257,7 @@ FdPollImplFdSet::delPollItem(FdPollItemHandle handle)
 
    size_t useIdx = IMPL_FDSET_HandleToIdx(handle);
    //DebugLog(<<"deleting epoll item fd="<<fd);
-   resip_assert(useIdx != -1 && useIdx < mItems.size());
+   resip_assert(useIdx != (size_t)-1 && useIdx < mItems.size());
    FdPollItemFdSetInfo& info = mItems[useIdx];
    resip_assert(info.mSocketFd!=INVALID_SOCKET);
    resip_assert(info.mItemObj);
@@ -363,7 +363,7 @@ FdPollImplFdSet::buildFdSet(FdSet& fdset)
    size_t itemIdx;
 
    // Step 1: build a new FdSet from the Items vector
-   while ( (itemIdx = *prevIdxRef) != -1 )
+   while ( (itemIdx = *prevIdxRef) != (size_t)-1 )
    {
       resip_assert( ++loopCnt < 99123123 );
       FdPollItemFdSetInfo& info = mItems[itemIdx];
@@ -417,7 +417,7 @@ FdPollImplFdSet::processFdSet(FdSet& fdset)
    // Step 3: Invoke callbacks
    // Could take advantage of early via numReady, but book keeping
    // seems tedious especially if items are deleted during walk
-   while ( (itemIdx = *prevIdxRef) != -1 )
+   while ( (itemIdx = *prevIdxRef) != (size_t)-1 )
    {
       FdPollItemFdSetInfo& info = mItems[itemIdx];
       resip_assert( ++loopCnt < 99123123 );
