@@ -11,7 +11,7 @@ int main()
 {
    {
       // test overflow and synch with flush
-      char buf[16];
+      char buf[16] = "";
       Data data(Data::Borrow, buf, sizeof(buf));
       data.clear();
 

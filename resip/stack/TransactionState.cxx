@@ -975,7 +975,7 @@ TransactionState::processStateless(TransactionMessage* message)
       else
       {
          delete timer;
-         resip_assert(0);
+         //resip_assert(0); // Don't assert a poorly behaving client can cause this, ie: client sends an ACK in response to response on a non-INVITE transaction
       }
    }
    else if(dynamic_cast<DnsResultMessage*>(message))

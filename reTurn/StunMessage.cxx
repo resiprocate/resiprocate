@@ -1,6 +1,6 @@
 
 #if defined(HAVE_CONFIG_H)
-  #include "config.h"
+#include "config.h"
 #endif
 
 #include "StunMessage.hxx"
@@ -41,15 +41,15 @@ namespace reTurn {
 
 bool operator<(const UInt128& lhs, const UInt128& rhs)
 {
-   if(lhs.longpart[0] != rhs.longpart[0])
+   if (lhs.longpart[0] != rhs.longpart[0])
    {
       return lhs.longpart[0] < rhs.longpart[0];
    }
-   else if(lhs.longpart[1] != rhs.longpart[1])
+   else if (lhs.longpart[1] != rhs.longpart[1])
    {
       return lhs.longpart[1] < rhs.longpart[1];
    }
-   else if(lhs.longpart[2] != rhs.longpart[2])
+   else if (lhs.longpart[2] != rhs.longpart[2])
    {
       return lhs.longpart[2] < rhs.longpart[2];
    }
@@ -60,23 +60,23 @@ bool operator<(const UInt128& lhs, const UInt128& rhs)
 bool operator==(const UInt128& lhs, const UInt128& rhs)
 {
    return lhs.longpart[0] == rhs.longpart[0] &&
-          lhs.longpart[1] == rhs.longpart[1] &&
-          lhs.longpart[2] == rhs.longpart[2] &&
-          lhs.longpart[3] == rhs.longpart[3];
+      lhs.longpart[1] == rhs.longpart[1] &&
+      lhs.longpart[2] == rhs.longpart[2] &&
+      lhs.longpart[3] == rhs.longpart[3];
 }
 
 StunMessage::StunMessage(const StunTuple& localTuple,
-                         const StunTuple& remoteTuple,
-                         char* buf, unsigned int bufLen) :
+   const StunTuple& remoteTuple,
+   char* buf, unsigned int bufLen) :
    mLocalTuple(localTuple),
-   mRemoteTuple(remoteTuple),   
+   mRemoteTuple(remoteTuple),
    mBuffer(buf, bufLen)  // !slg! copies buffer from Socket buffer assuming for now that StunMessages will persist past one request/response transaction
-                         //       could make this more efficient by having the transports allocate buffer dynamically and pass ownership over
+   //       could make this more efficient by having the transports allocate buffer dynamically and pass ownership over
 {
    init();
    mIsValid = stunParseMessage(buf, bufLen);
-  
-   if(mIsValid)
+
+   if (mIsValid)
    {
       DebugLog(<< "Successfully parsed StunMessage: " << mHeader);
    }
@@ -93,7 +93,7 @@ StunMessage::StunMessage(const StunMessage& from)
    *this = from;
 }
 
-StunMessage& 
+StunMessage&
 StunMessage::operator=(const StunMessage& rhs)
 {
    if (this != &rhs)
@@ -106,16 +106,16 @@ StunMessage::operator=(const StunMessage& rhs)
 
 StunMessage::~StunMessage()
 {
-   if(mErrorCode.reason) delete mErrorCode.reason;
-   if(mUsername) delete mUsername;
-   if(mPassword) delete mPassword;
-   if(mRealm) delete mRealm;
-   if(mNonce) delete mNonce;
-   if(mSoftware) delete mSoftware;
-   if(mTurnData) delete mTurnData;
+   if (mErrorCode.reason) delete mErrorCode.reason;
+   if (mUsername) delete mUsername;
+   if (mPassword) delete mPassword;
+   if (mRealm) delete mRealm;
+   if (mNonce) delete mNonce;
+   if (mSoftware) delete mSoftware;
+   if (mTurnData) delete mTurnData;
 }
 
-void 
+void
 StunMessage::init()
 {
    mHasMappedAddress = false;
@@ -166,7 +166,7 @@ StunMessage::init()
    mUnknownRequiredAttributes.numAttributes = 0;
 }
 
-void 
+void
 StunMessage::createHeader(uint16_t stunclass, uint16_t method)
 {
    mClass = stunclass;
@@ -178,14 +178,14 @@ StunMessage::createHeader(uint16_t stunclass, uint16_t method)
    memcpy(&mHeader.id.tid, random.data(), sizeof(mHeader.id.tid));
 }
 
-void 
+void
 StunMessage::setErrorCode(unsigned short errorCode, const char* reason)
 {
    resip_assert(errorCode >= 100 && errorCode <= 699);
    mHasErrorCode = true;
    mErrorCode.errorClass = errorCode / 100;
    mErrorCode.number = errorCode % 100;
-   if(mErrorCode.reason)
+   if (mErrorCode.reason)
    {
       *mErrorCode.reason = reason;
    }
@@ -195,11 +195,11 @@ StunMessage::setErrorCode(unsigned short errorCode, const char* reason)
    }
 }
 
-void 
+void
 StunMessage::setUsername(const char* username)
 {
    mHasUsername = true;
-   if(mUsername)
+   if (mUsername)
    {
       *mUsername = username;
    }
@@ -209,11 +209,11 @@ StunMessage::setUsername(const char* username)
    }
 }
 
-void 
+void
 StunMessage::setPassword(const char* password)
 {
    mHasPassword = true;
-   if(mPassword)
+   if (mPassword)
    {
       *mPassword = password;
    }
@@ -222,12 +222,12 @@ StunMessage::setPassword(const char* password)
       mPassword = new Data(password);
    }
 }
- 
-void 
+
+void
 StunMessage::setRealm(const char* realm)
 {
    mHasRealm = true;
-   if(mRealm)
+   if (mRealm)
    {
       *mRealm = realm;
    }
@@ -237,11 +237,11 @@ StunMessage::setRealm(const char* realm)
    }
 }
 
-void 
+void
 StunMessage::setNonce(const char* nonce)
 {
    mHasNonce = true;
-   if(mNonce)
+   if (mNonce)
    {
       *mNonce = nonce;
    }
@@ -250,12 +250,12 @@ StunMessage::setNonce(const char* nonce)
       mNonce = new Data(nonce);
    }
 }
-   
-void 
+
+void
 StunMessage::setSoftware(const char* software)
 {
    mHasSoftware = true;
-   if(mSoftware)
+   if (mSoftware)
    {
       *mSoftware = software;
    }
@@ -264,12 +264,12 @@ StunMessage::setSoftware(const char* software)
       mSoftware = new Data(software);
    }
 }
- 
-void 
+
+void
 StunMessage::setTurnData(const char* data, unsigned int len)
 {
    mHasTurnData = true;
-   if(mTurnData)
+   if (mTurnData)
    {
       mTurnData->clear();
       mTurnData->append(data, len);
@@ -280,20 +280,20 @@ StunMessage::setTurnData(const char* data, unsigned int len)
    }
 }
 
-void 
+void
 StunMessage::setIcePriority(uint32_t priority)
 {
    mHasIcePriority = true;
    mIcePriority = priority;
 }
 
-void 
+void
 StunMessage::setIceUseCandidate()
 {
    mHasIceUseCandidate = true;
 }
 
-void 
+void
 StunMessage::setIceControlled()
 {
    mHasIceControlled = true;
@@ -301,7 +301,7 @@ StunMessage::setIceControlled()
    memcpy(&mIceControlledTieBreaker, tieBreaker.begin(), sizeof(mIceControlledTieBreaker));
 }
 
-void 
+void
 StunMessage::setIceControlling()
 {
    mHasIceControlling = true;
@@ -309,49 +309,49 @@ StunMessage::setIceControlling()
    memcpy(&mIceControllingTieBreaker, tieBreaker.begin(), sizeof(mIceControllingTieBreaker));
 }
 
-void 
+void
 StunMessage::applyXorToAddress(const StunAtrAddress& in, StunAtrAddress& out)
 {
-   if(&in != &out) memcpy(&out, &in, sizeof(out));
+   if (&in != &out) memcpy(&out, &in, sizeof(out));
 
-   out.port = out.port^(StunMessage::StunMagicCookie>>16); // Xor with most significate 16 bits of magic cookie
-   if(out.family == IPv6Family) 
+   out.port = out.port ^ (StunMessage::StunMagicCookie >> 16); // Xor with most significate 16 bits of magic cookie
+   if (out.family == IPv6Family)
    {
-      for(int i = 0; i < 4; i++)
+      for (int i = 0; i < 4; i++)
       {
          // Note:  MagicCookieAndTid are stored in network byte order
-         out.addr.ipv6.longpart[i] = out.addr.ipv6.longpart[i]^mHeader.magicCookieAndTid.longpart[i];
+         out.addr.ipv6.longpart[i] = out.addr.ipv6.longpart[i] ^ mHeader.magicCookieAndTid.longpart[i];
       }
    }
    else
    {
-      out.addr.ipv4 = out.addr.ipv4^StunMessage::StunMagicCookie;
+      out.addr.ipv4 = out.addr.ipv4 ^ StunMessage::StunMagicCookie;
    }
 }
 
-void 
+void
 StunMessage::setStunAtrAddressFromTuple(StunAtrAddress& address, const StunTuple& tuple)
 {
    address.port = tuple.getPort();
-   if(tuple.getAddress().is_v6())
+   if (tuple.getAddress().is_v6())
    {
       // Note:  addr.ipv6 is stored in network byte order
-      address.family = StunMessage::IPv6Family;  
+      address.family = StunMessage::IPv6Family;
       memcpy(&address.addr.ipv6, tuple.getAddress().to_v6().to_bytes().data(), sizeof(address.addr.ipv6));
    }
    else
    {
       // Note:  addr.ipv4 is stored in host byte order
-      address.family = StunMessage::IPv4Family;  
-      address.addr.ipv4 = tuple.getAddress().to_v4().to_ulong();   
+      address.family = StunMessage::IPv4Family;
+      address.addr.ipv4 = tuple.getAddress().to_v4().to_ulong();
    }
 }
 
-void 
+void
 StunMessage::setTupleFromStunAtrAddress(StunTuple& tuple, const StunAtrAddress& address)
 {
    tuple.setPort(address.port);
-   if(address.family == StunMessage::IPv6Family)
+   if (address.family == StunMessage::IPv6Family)
    {
       // Note:  addr.ipv6 is stored in network byte order
       asio::ip::address_v6::bytes_type bytes;
@@ -368,20 +368,20 @@ StunMessage::setTupleFromStunAtrAddress(StunTuple& tuple, const StunAtrAddress& 
 }
 
 bool
-StunMessage::stunParseAtrXorAddress( char* body, unsigned int hdrLen, StunAtrAddress& result )
+StunMessage::stunParseAtrXorAddress(char* body, unsigned int hdrLen, StunAtrAddress& result)
 {
    bool ret = stunParseAtrAddress(body, hdrLen, result);
-   if(ret)
+   if (ret)
    {
       applyXorToAddress(result, result);
    }
    return ret;
 }
 
-bool 
-StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddress& result )
+bool
+StunMessage::stunParseAtrAddress(char* body, unsigned int hdrLen, StunAtrAddress& result)
 {
-   if ( hdrLen != 8 /* ipv4 size */ && hdrLen != 20 /* ipv6 size */ )
+   if (hdrLen != 8 /* ipv4 size */ && hdrLen != 20 /* ipv6 size */)
    {
       WarningLog(<< "hdrLen wrong for Address");
       return false;
@@ -390,20 +390,20 @@ StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddres
    result.family = *body++;
 
    uint16_t nport;
-   memcpy(&nport, body, 2); body+=2;
+   memcpy(&nport, body, 2); body += 2;
    result.port = ntohs(nport);
 
    if (result.family == IPv4Family)
-   {		
+   {
       uint32_t naddr;
-      memcpy(&naddr, body, sizeof(uint32_t)); body+=sizeof(uint32_t);
+      memcpy(&naddr, body, sizeof(uint32_t)); body += sizeof(uint32_t);
       result.addr.ipv4 = ntohl(naddr);
       // Note:  addr.ipv4 is stored in host byte order
       return true;
    }
    else if (result.family == IPv6Family)
    {
-      memcpy(&result.addr.ipv6, body, sizeof(result.addr.ipv6)); body+=sizeof(result.addr.ipv6);
+      memcpy(&result.addr.ipv6, body, sizeof(result.addr.ipv6)); body += sizeof(result.addr.ipv6);
       // Note:  addr.ipv6 is stored in host byte order
       return true;
    }
@@ -411,27 +411,27 @@ StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddres
    {
       WarningLog(<< "bad address family: " << result.family);
    }
-	
+
    return false;
 }
 
-bool 
-StunMessage::stunParseAtrEvenPort( char* body, unsigned int hdrLen,  TurnAtrEvenPort& result )
+bool
+StunMessage::stunParseAtrEvenPort(char* body, unsigned int hdrLen, TurnAtrEvenPort& result)
 {
-   if ( hdrLen != 1 )
+   if (hdrLen != 1)
    {
       WarningLog(<< "hdrLen wrong for EvenPort");
       return false;
    }
    result.propType = *body & 0x80;  // copy first 8 bits into propType - but only look at highest order
-	
+
    return true;
 }
 
-bool 
-StunMessage::stunParseAtrUInt32( char* body, unsigned int hdrLen,  uint32_t& result )
+bool
+StunMessage::stunParseAtrUInt32(char* body, unsigned int hdrLen, uint32_t& result)
 {
-   if ( hdrLen != 4 )
+   if (hdrLen != 4)
    {
       WarningLog(<< "hdrLen wrong for UInt32 attribute");
       return false;
@@ -444,10 +444,10 @@ StunMessage::stunParseAtrUInt32( char* body, unsigned int hdrLen,  uint32_t& res
    }
 }
 
-bool 
-StunMessage::stunParseAtrUInt64( char* body, unsigned int hdrLen,  uint64_t& result )
+bool
+StunMessage::stunParseAtrUInt64(char* body, unsigned int hdrLen, uint64_t& result)
 {
-   if ( hdrLen != 8 )
+   if (hdrLen != 8)
    {
       WarningLog(<< "hdrLen wrong for UInt64 attribute");
       return false;
@@ -460,22 +460,25 @@ StunMessage::stunParseAtrUInt64( char* body, unsigned int hdrLen,  uint64_t& res
    }
 }
 
-bool 
-StunMessage::stunParseAtrError( char* body, unsigned int hdrLen,  StunAtrError& result )
+bool
+StunMessage::stunParseAtrError(char* body, unsigned int hdrLen, StunAtrError& result)
 {
-   body+=2;  // skip pad
+   // Ensure min len
+   if (hdrLen < 4) return false;
+
+   body += 2;  // skip pad
    result.errorClass = *body++ & 0x7;
    result.number = *body++;
-	
-   int reasonLen = (hdrLen -4) > MAX_ERRORCODE_REASON_BYTES ? MAX_ERRORCODE_REASON_BYTES : hdrLen-4;
+
+   int reasonLen = (hdrLen - 4) > MAX_ERRORCODE_REASON_BYTES ? MAX_ERRORCODE_REASON_BYTES : hdrLen - 4;
    result.reason = new resip::Data(resip::Data::Share, body, reasonLen);
    return true;
 }
 
-bool 
-StunMessage::stunParseAtrUnknown( char* body, unsigned int hdrLen,  StunAtrUnknown& result )
+bool
+StunMessage::stunParseAtrUnknown(char* body, unsigned int hdrLen, StunAtrUnknown& result)
 {
-   if ( hdrLen >= sizeof(result) )
+   if (hdrLen >= sizeof(result))
    {
       WarningLog(<< "hdrLen wrong for Unknown attribute or too many unknown attributes present");
       return false;
@@ -484,19 +487,19 @@ StunMessage::stunParseAtrUnknown( char* body, unsigned int hdrLen,  StunAtrUnkno
    {
       if (hdrLen % 2 != 0) return false;
       result.numAttributes = hdrLen / 2;
-      for (int i=0; i<result.numAttributes; i++)
+      for (int i = 0; i < result.numAttributes; i++)
       {
-         memcpy(&result.attrType[i], body, 2); body+=2;
+         memcpy(&result.attrType[i], body, 2); body += 2;
          result.attrType[i] = ntohs(result.attrType[i]);
       }
       return true;
    }
 }
 
-bool 
-StunMessage::stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrIntegrity& result )
+bool
+StunMessage::stunParseAtrIntegrity(char* body, unsigned int hdrLen, StunAtrIntegrity& result)
 {
-   if ( hdrLen != 20)
+   if (hdrLen != 20)
    {
       WarningLog(<< "hdrLen wrong for message integrity");
       return false;
@@ -511,33 +514,33 @@ StunMessage::stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrInt
 
 
 bool
-StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
+StunMessage::stunParseMessage(char* buf, unsigned int bufLen)
 {
    StackLog(<< "Received stun message: " << bufLen << " bytes");
-	
+
    if (sizeof(StunMsgHdr) > bufLen)
    {
       WarningLog(<< "Bad message, bufLen=" << bufLen);
       return false;
    }
-	
+
    memcpy(&mHeader, buf, sizeof(StunMsgHdr));
    mHeader.msgType = ntohs(mHeader.msgType);
    mHeader.msgLength = ntohs(mHeader.msgLength);
-	
+
    if (mHeader.msgLength + sizeof(StunMsgHdr) != bufLen)
    {
-      WarningLog(<< "Message header length (" << mHeader.msgLength << ") + header size (" <<  sizeof(StunMsgHdr) << ") doesn't match message size (" << bufLen << ")"); 
+      WarningLog(<< "Message header length (" << mHeader.msgLength << ") + header size (" << sizeof(StunMsgHdr) << ") doesn't match message size (" << bufLen << ")");
       return false;
    }
 
    // Check if class and method are valid
    mClass = mHeader.msgType & 0x0110;
    mMethod = mHeader.msgType & 0x000F;
-	
+
    // Look for stun magic cookie
    mHasMagicCookie = mHeader.id.magicCookie == htonl(StunMagicCookie);
-   if(!mHasMagicCookie)
+   if (!mHasMagicCookie)
    {
       StackLog(<< "stun magic cookie not found.");
    }
@@ -545,647 +548,647 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
    char* body = buf + sizeof(StunMsgHdr);
    unsigned int size = mHeader.msgLength;
    mUnknownRequiredAttributes.numAttributes = 0;
-	
+
    StackLog(<< "bytes after header = " << size);
-	
-   while ( size > 0 )
+
+   while (size > 0)
    {
       // !jf! should check that there are enough bytes left in the buffer
-		
+
       StunAtrHdr* attr = reinterpret_cast<StunAtrHdr*>(body);
-		
+
       unsigned int attrLen = ntohs(attr->length);
       // attrLen may not be on 4 byte boundary, in which case we need to pad to 4 bytes when advancing to next attribute
-      unsigned int attrLenPad = attrLen % 4 == 0 ? 0 : 4 - (attrLen % 4);  
+      unsigned int attrLenPad = attrLen % 4 == 0 ? 0 : 4 - (attrLen % 4);
       int atrType = ntohs(attr->type);
-		
+
       StackLog(<< "Found attribute type=" << atrType << " length=" << attrLen);
-      if ( attrLen+attrLenPad+4 > size ) 
+      if (attrLen + attrLenPad + 4 > size)
       {
-         WarningLog(<< "claims attribute is larger than size of message " <<"(attribute type="<<atrType<<")");
+         WarningLog(<< "claims attribute is larger than size of message " << "(attribute type=" << atrType << ")");
          return false;
       }
-		
+
       body += 4; // skip the length and type in attribute header
       size -= 4;
 
-      switch ( atrType )
+      switch (atrType)
       {
-         case MappedAddress:        
-            if(!mHasMappedAddress)
+      case MappedAddress:
+         if (!mHasMappedAddress)
+         {
+            mHasMappedAddress = true;
+            if (stunParseAtrAddress(body, attrLen, mMappedAddress) == false)
             {
-               mHasMappedAddress = true;
-               if ( stunParseAtrAddress(  body,  attrLen,  mMappedAddress )== false )
-               {
-                  WarningLog(<< "problem parsing MappedAddress");
-                  return false;
-               }
-               StackLog(<< "MappedAddress = " << mMappedAddress);
+               WarningLog(<< "problem parsing MappedAddress");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate MappedAddress in message - ignoring.");
-            }
-            break;  
+            StackLog(<< "MappedAddress = " << mMappedAddress);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate MappedAddress in message - ignoring.");
+         }
+         break;
 
-         case ResponseAddress:  // deprecated
-            if(!mHasResponseAddress)
+      case ResponseAddress:  // deprecated
+         if (!mHasResponseAddress)
+         {
+            mHasResponseAddress = true;
+            if (stunParseAtrAddress(body, attrLen, mResponseAddress) == false)
             {
-               mHasResponseAddress = true;
-               if ( stunParseAtrAddress(  body,  attrLen,  mResponseAddress )== false )
-               {
-                  WarningLog(<< "problem parsing ResponseAddress");
-                  return false;
-               }
-               StackLog(<< "ResponseAddress = " << mResponseAddress);
+               WarningLog(<< "problem parsing ResponseAddress");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate ResponseAddress in message - ignoring.");
-            }
-            break;  
-				
-         case ChangeRequest:  // deprecated
-            if(!mHasChangeRequest)
-            {
-               mHasChangeRequest = true;
-               if (stunParseAtrUInt32( body, attrLen, mChangeRequest) == false)
-               {
-                  WarningLog(<< "problem parsing ChangeRequest");
-                  return false;
-               }
-               StackLog(<< "ChangeRequest = " << mChangeRequest);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate ChangeRequest in message - ignoring.");
-            }
-            break;
-				
-         case SourceAddress:  // deprecated
-            if(!mHasSourceAddress)
-            {
-               mHasSourceAddress = true;
-               if ( stunParseAtrAddress(  body,  attrLen,  mSourceAddress )== false )
-               {
-                  WarningLog(<< "problem parsing SourceAddress");
-                  return false;
-               }
-               StackLog(<< "SourceAddress = " << mSourceAddress);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate SourceAddress in message - ignoring.");
-            }
-            break;  
-				
-         case ChangedAddress:  // deprecated
-            if(!mHasChangedAddress)
-            {
-               mHasChangedAddress = true;
-               if ( stunParseAtrAddress(  body,  attrLen,  mChangedAddress )== false )
-               {
-                  WarningLog(<< "problem parsing ChangedAddress");
-                  return false;
-               }
-               StackLog(<< "ChangedAddress = " << mChangedAddress);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate ChangedAddress in message - ignoring.");
-            }
-            break;  
-				
-         case Username: 
-            if(!mHasUsername)
-            {
-               if(attrLen > MAX_USERNAME_BYTES)
-               {
-                  WarningLog(<< "Username length=" << attrLen << " is longer than max allowed=" << MAX_USERNAME_BYTES);
-                  return false;
-               }
-               mHasUsername = true;
-               mUsername = new resip::Data(resip::Data::Share, body, attrLen);
-               StackLog(<< "Username = " << *mUsername);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate Username in message - ignoring.");
-            }
-            break;
-				
-         case Password: 
-            if(!mHasPassword)
-            {
-               if(attrLen > MAX_PASSWORD_BYTES)
-               {
-                  WarningLog(<< "Password length=" << attrLen << " is longer than max allowed=" << MAX_PASSWORD_BYTES);
-                  return false;
-               }
-               mHasPassword = true;
-               mPassword = new resip::Data(resip::Data::Share, body, attrLen);
-               StackLog(<< "Password = " << *mPassword);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate Password in message - ignoring.");
-            }
-            break;
-				
-         case MessageIntegrity:
-            if(!mHasMessageIntegrity)
-            {
-               mHasMessageIntegrity = true;
-               if (stunParseAtrIntegrity( body, attrLen, mMessageIntegrity) == false)
-               {
-                  WarningLog(<< "problem parsing MessageIntegrity");
-                  return false;
-               }
-               //StackLog(<< "MessageIntegrity = " << mMessageIntegrity.hash);
-               mMessageIntegrityMsgLength = (uint16_t)(body + attrLen - buf - sizeof(StunMsgHdr));
-            }
-            else
-            {
-               WarningLog(<< "Duplicate MessageIntegrity in message - ignoring.");
-            }
-            break;
-				
-         case ErrorCode:
-            if(!mHasErrorCode)
-            {
-               if(attrLen-4 > MAX_ERRORCODE_REASON_BYTES)
-               {
-                  WarningLog(<< "ErrorCode reason length=" << attrLen-4 << " is longer than max allowed=" << MAX_ERRORCODE_REASON_BYTES);
-                  return false;
-               }
-               mHasErrorCode = true;
-               if (stunParseAtrError(body, attrLen, mErrorCode) == false)
-               {
-                  WarningLog(<< "problem parsing ErrorCode");
-                  return false;
-               }
-               StackLog(<< "ErrorCode = " << (int(mErrorCode.errorClass) * 100 + int(mErrorCode.number)) 
-                                 << " (" << *mErrorCode.reason << ")");
-            }
-            else
-            {
-               WarningLog(<< "Duplicate ErrorCode in message - ignoring.");
-            }
-            break;
-				
-         case UnknownAttribute:
-            if(!mHasUnknownAttributes)
-            {
-               mHasUnknownAttributes = true;
-               if (stunParseAtrUnknown(body, attrLen, mUnknownAttributes) == false)
-               {
-                  WarningLog(<< "problem parsing UnknownAttribute");
-                  return false;
-               }
-               // TODO output
-            }
-            else
-            {
-               WarningLog(<< "Duplicate UnknownAttribute in message - ignoring.");
-            }
-            break;
-				
-         case ReflectedFrom:  // deprecated
-            if(!mHasReflectedFrom)
-            {
-               mHasReflectedFrom = true;
-               if ( stunParseAtrAddress(  body,  attrLen,  mReflectedFrom ) == false )
-               {
-                  WarningLog(<< "problem parsing ReflectedFrom");
-                  return false;
-               }
-               StackLog(<< "ReflectedFrom = " << mReflectedFrom);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate ReflectedFrom in message - ignoring.");
-            }
-            break;  
-				
-         case Realm: 
-            if(!mHasRealm)
-            {
-               if(attrLen > MAX_REALM_BYTES)
-               {
-                  WarningLog(<< "Realm length=" << attrLen << " is longer than max allowed=" << MAX_REALM_BYTES);
-                  return false;
-               }
-               mHasRealm = true;
-               mRealm = new resip::Data(resip::Data::Share, body, attrLen);
-               StackLog(<< "Realm = " << *mRealm);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate Realm in message - ignoring.");
-            }
-            break;
+            StackLog(<< "ResponseAddress = " << mResponseAddress);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate ResponseAddress in message - ignoring.");
+         }
+         break;
 
-         case Nonce: 
-            if(!mHasNonce)
+      case ChangeRequest:  // deprecated
+         if (!mHasChangeRequest)
+         {
+            mHasChangeRequest = true;
+            if (stunParseAtrUInt32(body, attrLen, mChangeRequest) == false)
             {
-               if(attrLen > MAX_NONCE_BYTES)
-               {
-                  WarningLog(<< "Nonce length=" << attrLen << " is longer than max allowed=" << MAX_NONCE_BYTES);
-                  return false;
-               }
-               mHasNonce = true;
-               mNonce = new resip::Data(resip::Data::Share, body, attrLen);
-               StackLog(<< "Nonce = " << *mNonce);
+               WarningLog(<< "problem parsing ChangeRequest");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate Nonce in message - ignoring.");
-            }
-            break;
+            StackLog(<< "ChangeRequest = " << mChangeRequest);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate ChangeRequest in message - ignoring.");
+         }
+         break;
 
-         case XorMappedAddress_old:
-         case XorMappedAddress:
-            if(!mHasXorMappedAddress)
+      case SourceAddress:  // deprecated
+         if (!mHasSourceAddress)
+         {
+            mHasSourceAddress = true;
+            if (stunParseAtrAddress(body, attrLen, mSourceAddress) == false)
             {
-               mHasXorMappedAddress = true;
-               if ( stunParseAtrXorAddress(  body,  attrLen,  mXorMappedAddress ) == false )
-               {
-                  WarningLog(<< "problem parsing XorMappedAddress");
-                  return false;
-               }
-               StackLog(<< "XorMappedAddress = " << mXorMappedAddress);
+               WarningLog(<< "problem parsing SourceAddress");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate XorMappedAddress in message - ignoring.");
-            }
-            break;  				
+            StackLog(<< "SourceAddress = " << mSourceAddress);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate SourceAddress in message - ignoring.");
+         }
+         break;
 
-         case Fingerprint:
-            if(!mHasFingerprint)
+      case ChangedAddress:  // deprecated
+         if (!mHasChangedAddress)
+         {
+            mHasChangedAddress = true;
+            if (stunParseAtrAddress(body, attrLen, mChangedAddress) == false)
             {
-               mHasFingerprint = true;
-               if (stunParseAtrUInt32( body, attrLen, mFingerprint) == false)
-               {
-                  WarningLog(<< "problem parsing Fingerprint");
-                  return false;
-               }
-               StackLog(<< "Fingerprint = " << mFingerprint);
+               WarningLog(<< "problem parsing ChangedAddress");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate Fingerprint in message - ignoring.");
-            }
-            break;
+            StackLog(<< "ChangedAddress = " << mChangedAddress);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate ChangedAddress in message - ignoring.");
+         }
+         break;
 
-         case Software: 
-            if(!mHasSoftware)
+      case Username:
+         if (!mHasUsername)
+         {
+            if (attrLen > MAX_USERNAME_BYTES)
             {
-               if(attrLen > MAX_SOFTWARE_BYTES)
-               {
-                  WarningLog(<< "Software length=" << attrLen << " is longer than max allowed=" << MAX_SOFTWARE_BYTES);
-                  return false;
-               }
-               mHasSoftware = true;
-               mSoftware = new resip::Data(resip::Data::Share, body, attrLen);
-               StackLog(<< "Software = " << *mSoftware);
+               WarningLog(<< "Username length=" << attrLen << " is longer than max allowed=" << MAX_USERNAME_BYTES);
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate Software in message - ignoring.");
-            }
-            break;
+            mHasUsername = true;
+            mUsername = new resip::Data(resip::Data::Share, body, attrLen);
+            StackLog(<< "Username = " << *mUsername);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate Username in message - ignoring.");
+         }
+         break;
 
-         case AlternateServer:
-            if(!mHasAlternateServer)
+      case Password:
+         if (!mHasPassword)
+         {
+            if (attrLen > MAX_PASSWORD_BYTES)
             {
-               mHasAlternateServer = true;
-               if ( stunParseAtrAddress(  body,  attrLen,  mAlternateServer ) == false )
-               {
-                  WarningLog(<< "problem parsing AlternateServer");
-                  return false;
-               }
-               StackLog(<< "AlternateServer = " << mAlternateServer);
+               WarningLog(<< "Password length=" << attrLen << " is longer than max allowed=" << MAX_PASSWORD_BYTES);
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate AlternateServer in message - ignoring.");
-            }
-            break;  
+            mHasPassword = true;
+            mPassword = new resip::Data(resip::Data::Share, body, attrLen);
+            StackLog(<< "Password = " << *mPassword);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate Password in message - ignoring.");
+         }
+         break;
 
-         case SecondaryAddress:
-            if(!mHasSecondaryAddress)
+      case MessageIntegrity:
+         if (!mHasMessageIntegrity)
+         {
+            mHasMessageIntegrity = true;
+            if (stunParseAtrIntegrity(body, attrLen, mMessageIntegrity) == false)
             {
-               mHasSecondaryAddress = true;
-               if ( stunParseAtrAddress(  body,  attrLen,  mSecondaryAddress ) == false )
-               {
-                  WarningLog(<< "problem parsing secondaryAddress");
-                  return false;
-               }
-               StackLog(<< "SecondaryAddress = " << mSecondaryAddress);
+               WarningLog(<< "problem parsing MessageIntegrity");
+               return false;
             }
-            else
+            //StackLog(<< "MessageIntegrity = " << mMessageIntegrity.hash);
+            mMessageIntegrityMsgLength = (uint16_t)(body + attrLen - buf - sizeof(StunMsgHdr));
+         }
+         else
+         {
+            WarningLog(<< "Duplicate MessageIntegrity in message - ignoring.");
+         }
+         break;
+
+      case ErrorCode:
+         if (!mHasErrorCode)
+         {
+            if (attrLen - 4 > MAX_ERRORCODE_REASON_BYTES)
             {
-               WarningLog(<< "Duplicate SecondaryAddress in message - ignoring.");
+               WarningLog(<< "ErrorCode reason length=" << attrLen - 4 << " is longer than max allowed=" << MAX_ERRORCODE_REASON_BYTES);
+               return false;
             }
-            break;  
+            mHasErrorCode = true;
+            if (stunParseAtrError(body, attrLen, mErrorCode) == false)
+            {
+               WarningLog(<< "problem parsing ErrorCode");
+               return false;
+            }
+            StackLog(<< "ErrorCode = " << (int(mErrorCode.errorClass) * 100 + int(mErrorCode.number))
+               << " (" << *mErrorCode.reason << ")");
+         }
+         else
+         {
+            WarningLog(<< "Duplicate ErrorCode in message - ignoring.");
+         }
+         break;
+
+      case UnknownAttribute:
+         if (!mHasUnknownAttributes)
+         {
+            mHasUnknownAttributes = true;
+            if (stunParseAtrUnknown(body, attrLen, mUnknownAttributes) == false)
+            {
+               WarningLog(<< "problem parsing UnknownAttribute");
+               return false;
+            }
+            // TODO output
+         }
+         else
+         {
+            WarningLog(<< "Duplicate UnknownAttribute in message - ignoring.");
+         }
+         break;
+
+      case ReflectedFrom:  // deprecated
+         if (!mHasReflectedFrom)
+         {
+            mHasReflectedFrom = true;
+            if (stunParseAtrAddress(body, attrLen, mReflectedFrom) == false)
+            {
+               WarningLog(<< "problem parsing ReflectedFrom");
+               return false;
+            }
+            StackLog(<< "ReflectedFrom = " << mReflectedFrom);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate ReflectedFrom in message - ignoring.");
+         }
+         break;
+
+      case Realm:
+         if (!mHasRealm)
+         {
+            if (attrLen > MAX_REALM_BYTES)
+            {
+               WarningLog(<< "Realm length=" << attrLen << " is longer than max allowed=" << MAX_REALM_BYTES);
+               return false;
+            }
+            mHasRealm = true;
+            mRealm = new resip::Data(resip::Data::Share, body, attrLen);
+            StackLog(<< "Realm = " << *mRealm);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate Realm in message - ignoring.");
+         }
+         break;
+
+      case Nonce:
+         if (!mHasNonce)
+         {
+            if (attrLen > MAX_NONCE_BYTES)
+            {
+               WarningLog(<< "Nonce length=" << attrLen << " is longer than max allowed=" << MAX_NONCE_BYTES);
+               return false;
+            }
+            mHasNonce = true;
+            mNonce = new resip::Data(resip::Data::Share, body, attrLen);
+            StackLog(<< "Nonce = " << *mNonce);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate Nonce in message - ignoring.");
+         }
+         break;
+
+      case XorMappedAddress_old:
+      case XorMappedAddress:
+         if (!mHasXorMappedAddress)
+         {
+            mHasXorMappedAddress = true;
+            if (stunParseAtrXorAddress(body, attrLen, mXorMappedAddress) == false)
+            {
+               WarningLog(<< "problem parsing XorMappedAddress");
+               return false;
+            }
+            StackLog(<< "XorMappedAddress = " << mXorMappedAddress);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate XorMappedAddress in message - ignoring.");
+         }
+         break;
+
+      case Fingerprint:
+         if (!mHasFingerprint)
+         {
+            mHasFingerprint = true;
+            if (stunParseAtrUInt32(body, attrLen, mFingerprint) == false)
+            {
+               WarningLog(<< "problem parsing Fingerprint");
+               return false;
+            }
+            StackLog(<< "Fingerprint = " << mFingerprint);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate Fingerprint in message - ignoring.");
+         }
+         break;
+
+      case Software:
+         if (!mHasSoftware)
+         {
+            if (attrLen > MAX_SOFTWARE_BYTES)
+            {
+               WarningLog(<< "Software length=" << attrLen << " is longer than max allowed=" << MAX_SOFTWARE_BYTES);
+               return false;
+            }
+            mHasSoftware = true;
+            mSoftware = new resip::Data(resip::Data::Share, body, attrLen);
+            StackLog(<< "Software = " << *mSoftware);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate Software in message - ignoring.");
+         }
+         break;
+
+      case AlternateServer:
+         if (!mHasAlternateServer)
+         {
+            mHasAlternateServer = true;
+            if (stunParseAtrAddress(body, attrLen, mAlternateServer) == false)
+            {
+               WarningLog(<< "problem parsing AlternateServer");
+               return false;
+            }
+            StackLog(<< "AlternateServer = " << mAlternateServer);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate AlternateServer in message - ignoring.");
+         }
+         break;
+
+      case SecondaryAddress:
+         if (!mHasSecondaryAddress)
+         {
+            mHasSecondaryAddress = true;
+            if (stunParseAtrAddress(body, attrLen, mSecondaryAddress) == false)
+            {
+               WarningLog(<< "problem parsing secondaryAddress");
+               return false;
+            }
+            StackLog(<< "SecondaryAddress = " << mSecondaryAddress);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate SecondaryAddress in message - ignoring.");
+         }
+         break;
 
          // TURN attributes
 
-         case TurnChannelNumber:
-            if(!mHasTurnChannelNumber)
+      case TurnChannelNumber:
+         if (!mHasTurnChannelNumber)
+         {
+            uint32_t channelNumber;
+            mHasTurnChannelNumber = true;
+            if (stunParseAtrUInt32(body, attrLen, channelNumber) == false)
             {
-               uint32_t channelNumber;
-               mHasTurnChannelNumber = true;
-               if(stunParseAtrUInt32( body, attrLen, channelNumber) == false)
-               {
-                  WarningLog(<< "problem parsing channel number");
-                  return false;
-               }
-               mTurnChannelNumber = (channelNumber & 0xFFFF0000) >> 16;
-               StackLog(<< "Turn ChannelNumber = " << mTurnChannelNumber);
+               WarningLog(<< "problem parsing channel number");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate TurnChannelNumber in message - ignoring.");
-            }
-            break;
+            mTurnChannelNumber = (channelNumber & 0xFFFF0000) >> 16;
+            StackLog(<< "Turn ChannelNumber = " << mTurnChannelNumber);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnChannelNumber in message - ignoring.");
+         }
+         break;
 
-         case TurnLifetime:
-            if(!mHasTurnLifetime)
+      case TurnLifetime:
+         if (!mHasTurnLifetime)
+         {
+            mHasTurnLifetime = true;
+            if (stunParseAtrUInt32(body, attrLen, mTurnLifetime) == false)
             {
-               mHasTurnLifetime = true;
-               if (stunParseAtrUInt32( body, attrLen, mTurnLifetime) == false)
-               {
-                  WarningLog(<< "problem parsing turn lifetime");
-                  return false;
-               }
-               StackLog(<< "Turn Lifetime = " << mTurnLifetime);
+               WarningLog(<< "problem parsing turn lifetime");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate TurnLifetime in message - ignoring.");
-            }
-            break;
+            StackLog(<< "Turn Lifetime = " << mTurnLifetime);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnLifetime in message - ignoring.");
+         }
+         break;
 
-         case TurnBandwidth:
-            if(!mHasTurnBandwidth)
+      case TurnBandwidth:
+         if (!mHasTurnBandwidth)
+         {
+            mHasTurnBandwidth = true;
+            if (stunParseAtrUInt32(body, attrLen, mTurnBandwidth) == false)
             {
-               mHasTurnBandwidth = true;
-               if (stunParseAtrUInt32( body, attrLen, mTurnBandwidth) == false)
-               {
-                  WarningLog(<< "problem parsing turn bandwidth");
-                  return false;
-               }
-               StackLog(<< "Turn Bandwidth = " << mTurnBandwidth);
+               WarningLog(<< "problem parsing turn bandwidth");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate TurnBandwidth in message - ignoring.");
-            }
-            break;
+            StackLog(<< "Turn Bandwidth = " << mTurnBandwidth);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnBandwidth in message - ignoring.");
+         }
+         break;
 
-         case TurnXorPeerAddress:
-            if(mCntTurnXorPeerAddress < TURN_MAX_XOR_PEER_ADDR)
+      case TurnXorPeerAddress:
+         if (mCntTurnXorPeerAddress < TURN_MAX_XOR_PEER_ADDR)
+         {
+            if (stunParseAtrXorAddress(body, attrLen, mTurnXorPeerAddress[mCntTurnXorPeerAddress]) == false)
             {
-               if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnXorPeerAddress[mCntTurnXorPeerAddress]) == false )
-               {
-                  WarningLog(<< "problem parsing turn peer address");
-                  return false;
-               }
-               StackLog(<< "Turn Peer Address = " << mTurnXorPeerAddress[mCntTurnXorPeerAddress]);
-               mCntTurnXorPeerAddress++;
+               WarningLog(<< "problem parsing turn peer address");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate TurnXorPeerAddress in message - ignoring.");
-            }
-            break;
+            StackLog(<< "Turn Peer Address = " << mTurnXorPeerAddress[mCntTurnXorPeerAddress]);
+            mCntTurnXorPeerAddress++;
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnXorPeerAddress in message - ignoring.");
+         }
+         break;
 
          //overlay on parse, ownership is buffer parsed from
-         case TurnData:
-            if(!mHasTurnData)
-            {
-               mHasTurnData = true;
-               mTurnData = new resip::Data(resip::Data::Share, body, attrLen);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate TurnData in message - ignoring.");
-            }
-            break;
+      case TurnData:
+         if (!mHasTurnData)
+         {
+            mHasTurnData = true;
+            mTurnData = new resip::Data(resip::Data::Share, body, attrLen);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnData in message - ignoring.");
+         }
+         break;
 
-         case TurnXorRelayedAddress:
-            if(!mHasTurnXorRelayedAddress)
+      case TurnXorRelayedAddress:
+         if (!mHasTurnXorRelayedAddress)
+         {
+            mHasTurnXorRelayedAddress = true;
+            if (stunParseAtrXorAddress(body, attrLen, mTurnXorRelayedAddress) == false)
             {
-               mHasTurnXorRelayedAddress = true;
-               if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnXorRelayedAddress ) == false )
-               {
-                  WarningLog(<< "problem parsing turn relay address");
-                  return false;
-               }
-               StackLog(<< "Turn Relayed Address = " << mTurnXorRelayedAddress);
+               WarningLog(<< "problem parsing turn relay address");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate TurnXorRelayedAddress in message - ignoring.");
-            }
-            break;
+            StackLog(<< "Turn Relayed Address = " << mTurnXorRelayedAddress);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnXorRelayedAddress in message - ignoring.");
+         }
+         break;
 
-         case TurnEvenPort:
-            if(!mHasTurnEvenPort)
+      case TurnEvenPort:
+         if (!mHasTurnEvenPort)
+         {
+            mHasTurnEvenPort = true;
+            if (stunParseAtrEvenPort(body, attrLen, mTurnEvenPort) == false)
             {
-               mHasTurnEvenPort = true;
-               if (stunParseAtrEvenPort( body, attrLen, mTurnEvenPort) == false)
-               {
-                  WarningLog(<< "problem parsing turn even port");
-                  return false;
-               }
-               StackLog(<< "Turn Even Port = " << (int)mTurnEvenPort.propType);
+               WarningLog(<< "problem parsing turn even port");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate TurnEvenPort in message - ignoring.");
-            }
-            break;
+            StackLog(<< "Turn Even Port = " << (int)mTurnEvenPort.propType);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnEvenPort in message - ignoring.");
+         }
+         break;
 
-         case TurnRequestedTransport:
-            if(!mHasTurnRequestedTransport)
+      case TurnRequestedTransport:
+         if (!mHasTurnRequestedTransport)
+         {
+            mHasTurnRequestedTransport = true;
+            uint32_t requestedTransport;
+            if (stunParseAtrUInt32(body, attrLen, requestedTransport) == false)
             {
-               mHasTurnRequestedTransport = true;
-               uint32_t requestedTransport;
-               if (stunParseAtrUInt32( body, attrLen, requestedTransport) == false)
-               {
-                  WarningLog(<< "problem parsing turn requested transport");
-                  return false;
-               }
-               mTurnRequestedTransport = requestedTransport >> 24;
-               StackLog(<< "Turn Requested Transport = " << (int)mTurnRequestedTransport);
+               WarningLog(<< "problem parsing turn requested transport");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate TurnRequestedTransport in message - ignoring.");
-            }
-            break;
+            mTurnRequestedTransport = requestedTransport >> 24;
+            StackLog(<< "Turn Requested Transport = " << (int)mTurnRequestedTransport);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnRequestedTransport in message - ignoring.");
+         }
+         break;
 
-         case TurnDontFragment:
-            if(!mHasTurnDontFragment)
+      case TurnDontFragment:
+         if (!mHasTurnDontFragment)
+         {
+            mHasTurnDontFragment = true;
+            if (attrLen != 0)
             {
-               mHasTurnDontFragment = true;
-               if(attrLen != 0)
-               {
-                  WarningLog(<< "invalid attribute length for DontFragment attribute");
-                  return false;
-               }
-               StackLog(<< "Turn Dont Fragement = <exists>");
+               WarningLog(<< "invalid attribute length for DontFragment attribute");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate TurnDontFragment in message - ignoring.");
-            }
-            break;
+            StackLog(<< "Turn Dont Fragement = <exists>");
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnDontFragment in message - ignoring.");
+         }
+         break;
 
-         case TurnReservationToken:
-            if(!mHasTurnReservationToken)
+      case TurnReservationToken:
+         if (!mHasTurnReservationToken)
+         {
+            mHasTurnReservationToken = true;
+            if (stunParseAtrUInt64(body, attrLen, mTurnReservationToken) == false)
             {
-               mHasTurnReservationToken = true;
-               if ( stunParseAtrUInt64(  body,  attrLen,  mTurnReservationToken ) == false )
-               {
-                  WarningLog(<< "problem parsing turn reservation token");
-                  return false;
-               }
-               StackLog(<< "Turn Reservation Token = " << mTurnReservationToken);
+               WarningLog(<< "problem parsing turn reservation token");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate TurnReservationToken in message - ignoring.");
-            }
-            break;
+            StackLog(<< "Turn Reservation Token = " << mTurnReservationToken);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnReservationToken in message - ignoring.");
+         }
+         break;
 
-         case TurnConnectStat:
-            if(!mHasTurnConnectStat)
+      case TurnConnectStat:
+         if (!mHasTurnConnectStat)
+         {
+            mHasTurnConnectStat = true;
+            if (stunParseAtrUInt32(body, attrLen, mTurnConnectStat) == false)
             {
-               mHasTurnConnectStat = true;
-               if (stunParseAtrUInt32( body, attrLen, mTurnConnectStat) == false)
-               {
-                  WarningLog(<< "problem parsing turn connect stat");
-                  return false;
-               }
-               StackLog(<< "Turn Connect Stat = " << mTurnConnectStat);
+               WarningLog(<< "problem parsing turn connect stat");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate TurnConnectStat in message - ignoring.");
-            }
-            break;
-					
+            StackLog(<< "Turn Connect Stat = " << mTurnConnectStat);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate TurnConnectStat in message - ignoring.");
+         }
+         break;
+
          // ICE attributes
-         case IcePriority:
-            if(!mHasIcePriority)
+      case IcePriority:
+         if (!mHasIcePriority)
+         {
+            mHasIcePriority = true;
+            if (stunParseAtrUInt32(body, attrLen, mIcePriority) == false)
             {
-               mHasIcePriority = true;
-               if (stunParseAtrUInt32( body, attrLen, mIcePriority) == false)
-               {
-                  WarningLog(<< "problem parsing ICE priority");
-                  return false;
-               }
-               StackLog(<< "Ice Priority = " << mIcePriority);
+               WarningLog(<< "problem parsing ICE priority");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate IcePriority in message - ignoring.");
-            }
-            break;
+            StackLog(<< "Ice Priority = " << mIcePriority);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate IcePriority in message - ignoring.");
+         }
+         break;
 
-         case IceUseCandidate:
-            if(!mHasIceUseCandidate)
+      case IceUseCandidate:
+         if (!mHasIceUseCandidate)
+         {
+            mHasIceUseCandidate = true;
+            if (attrLen != 0)
             {
-               mHasIceUseCandidate = true;
-               if(attrLen != 0)
-               {
-                  WarningLog(<< "invalid attribute length for IceUseCandidate attribute");
-                  return false;
-               }
-               StackLog(<< "Ice UseCandidate = <exists>");
+               WarningLog(<< "invalid attribute length for IceUseCandidate attribute");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate IceUseCandidate in message - ignoring.");
-            }
-            break;
+            StackLog(<< "Ice UseCandidate = <exists>");
+         }
+         else
+         {
+            WarningLog(<< "Duplicate IceUseCandidate in message - ignoring.");
+         }
+         break;
 
-         case IceControlled:
-            if(!mHasIceControlled)
+      case IceControlled:
+         if (!mHasIceControlled)
+         {
+            mHasIceControlled = true;
+            if (stunParseAtrUInt64(body, attrLen, mIceControlledTieBreaker) == false)
             {
-               mHasIceControlled = true;
-               if (stunParseAtrUInt64( body, attrLen, mIceControlledTieBreaker) == false)
-               {
-                  WarningLog(<< "problem parsing ICE controlled");
-                  return false;
-               }
-               StackLog(<< "Ice controlled = " << mIceControlledTieBreaker);
+               WarningLog(<< "problem parsing ICE controlled");
+               return false;
             }
-            else
-            {
-               WarningLog(<< "Duplicate IceControlled in message - ignoring.");
-            }
-            break;
+            StackLog(<< "Ice controlled = " << mIceControlledTieBreaker);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate IceControlled in message - ignoring.");
+         }
+         break;
 
-         case IceControlling:
-            if(!mHasIceControlling)
+      case IceControlling:
+         if (!mHasIceControlling)
+         {
+            mHasIceControlling = true;
+            if (stunParseAtrUInt64(body, attrLen, mIceControllingTieBreaker) == false)
             {
-               mHasIceControlling = true;
-               if (stunParseAtrUInt64( body, attrLen, mIceControllingTieBreaker) == false)
-               {
-                  WarningLog(<< "problem parsing ICE controlling");
-                  return false;
-               }
-               StackLog(<< "Ice controlling = " << mIceControllingTieBreaker);
+               WarningLog(<< "problem parsing ICE controlling");
+               return false;
             }
-            else
+            StackLog(<< "Ice controlling = " << mIceControllingTieBreaker);
+         }
+         else
+         {
+            WarningLog(<< "Duplicate IceControlling in message - ignoring.");
+         }
+         break;
+
+      default:
+         if (atrType <= 0x7FFF)
+         {
+            if (mUnknownRequiredAttributes.numAttributes < STUN_MAX_UNKNOWN_ATTRIBUTES)
             {
-               WarningLog(<< "Duplicate IceControlling in message - ignoring.");
+               mUnknownRequiredAttributes.attrType[mUnknownRequiredAttributes.numAttributes++] = atrType;
             }
-            break;
-					
-         default:
-            if ( atrType <= 0x7FFF ) 
-            {
-               if(mUnknownRequiredAttributes.numAttributes < STUN_MAX_UNKNOWN_ATTRIBUTES)
-               {
-                  mUnknownRequiredAttributes.attrType[mUnknownRequiredAttributes.numAttributes++] = atrType;
-               }
-               WarningLog(<< "Unknown comprehension required attribute: " << atrType);
-            }
-            else
-            {
-               InfoLog(<< "Ignoring unknown comprehension optional attribute: " << atrType);
-            }
+            WarningLog(<< "Unknown comprehension required attribute: " << atrType);
+         }
+         else
+         {
+            InfoLog(<< "Ignoring unknown comprehension optional attribute: " << atrType);
+         }
       }
-		
-      body += attrLen+attrLenPad;
-      size -= attrLen+attrLenPad;
+
+      body += attrLen + attrLenPad;
+      size -= attrLen + attrLenPad;
    }
-    
+
    return true;
 }
 
-EncodeStream& 
-operator<< ( EncodeStream& strm, const UInt128& r )
+EncodeStream&
+operator<< (EncodeStream& strm, const UInt128& r)
 {
    strm << int(r.longpart[0]);
-   for ( int i=1; i<4; i++ )
+   for (int i = 1; i < 4; i++)
    {
       strm << ':' << int(r.longpart[i]);
    }
-    
+
    return strm;
 }
 
-EncodeStream& 
-operator<<( EncodeStream& strm, const StunMessage::StunAtrAddress& addr)
+EncodeStream&
+operator<<(EncodeStream& strm, const StunMessage::StunAtrAddress& addr)
 {
-   if(addr.family == StunMessage::IPv6Family)
+   if (addr.family == StunMessage::IPv6Family)
    {
       asio::ip::address_v6::bytes_type bytes = {};
       memcpy(bytes.data(), &addr.addr.ipv6, bytes.size());
@@ -1196,14 +1199,14 @@ operator<<( EncodeStream& strm, const StunMessage::StunAtrAddress& addr)
    else
    {
       uint32_t ip = addr.addr.ipv4;
-      strm << ((int)(ip>>24)&0xFF) << ".";
-      strm << ((int)(ip>>16)&0xFF) << ".";
-      strm << ((int)(ip>> 8)&0xFF) << ".";
-      strm << ((int)(ip>> 0)&0xFF) ;
-   	
+      strm << ((int)(ip >> 24) & 0xFF) << ".";
+      strm << ((int)(ip >> 16) & 0xFF) << ".";
+      strm << ((int)(ip >> 8) & 0xFF) << ".";
+      strm << ((int)(ip >> 0) & 0xFF);
+
       strm << ":" << addr.port;
    }
-	
+
    return strm;
 }
 
@@ -1211,17 +1214,17 @@ EncodeStream&
 operator<<(EncodeStream& os, const StunMessage::StunMsgHdr& h)
 {
    os << "STUN ";
-   bool outputMethod=true;
-   
-   switch(h.msgType & 0x0110)
-   { 
+   bool outputMethod = true;
+
+   switch (h.msgType & 0x0110)
+   {
    case StunMessage::StunClassRequest:
       os << "Request: ";
       break;
    case StunMessage::StunClassIndication:
       os << "Indication: ";
       outputMethod = false;
-      switch (h.msgType & 0x000F) 
+      switch (h.msgType & 0x000F)
       {
       case StunMessage::TurnSendMethod:
          os << "Send";
@@ -1244,9 +1247,9 @@ operator<<(EncodeStream& os, const StunMessage::StunMsgHdr& h)
       os << "Unknown class (" << int(h.msgType & 0x0110) << "): ";
    }
 
-   if(outputMethod)
+   if (outputMethod)
    {
-      switch (h.msgType & 0x000F) 
+      switch (h.msgType & 0x000F)
       {
       case StunMessage::BindMethod:
          os << "Bind";
@@ -1254,36 +1257,36 @@ operator<<(EncodeStream& os, const StunMessage::StunMsgHdr& h)
       case StunMessage::SharedSecretMethod:
          os << "SharedSecret";
          break;
-		case StunMessage::TurnAllocateMethod:
-            os << "Allocate";
-			break;
-		case StunMessage::TurnRefreshMethod:
-            os << "Refresh";
-			break;
-		case StunMessage::TurnCreatePermissionMethod:
-			os << "CreatePermission";
-			break;
-		case StunMessage::TurnChannelBindMethod:
-            os << "ChannelBind";
-			break;
+      case StunMessage::TurnAllocateMethod:
+         os << "Allocate";
+         break;
+      case StunMessage::TurnRefreshMethod:
+         os << "Refresh";
+         break;
+      case StunMessage::TurnCreatePermissionMethod:
+         os << "CreatePermission";
+         break;
+      case StunMessage::TurnChannelBindMethod:
+         os << "ChannelBind";
+         break;
       default:
          os << "Unknown method (" << int(h.msgType & 0x000F) << ")";
          break;
       }
    }
 
-    os << ", id ";
+   os << ", id ";
 
-    os << std::hex;
-    for (unsigned int i = 0; i < 4; i++) {
-        os << static_cast<int>(h.magicCookieAndTid.longpart[i]);
-    }
-    os << std::dec;
+   os << std::hex;
+   for (unsigned int i = 0; i < 4; i++) {
+      os << static_cast<int>(h.magicCookieAndTid.longpart[i]);
+   }
+   os << std::dec;
 
-    return os;
+   return os;
 }
 
-char* 
+char*
 StunMessage::encode16(char* buf, uint16_t data)
 {
    uint16_t ndata = htons(data);
@@ -1291,7 +1294,7 @@ StunMessage::encode16(char* buf, uint16_t data)
    return buf + sizeof(uint16_t);
 }
 
-char* 
+char*
 StunMessage::encode32(char* buf, uint32_t data)
 {
    uint32_t ndata = htonl(data);
@@ -1307,15 +1310,15 @@ StunMessage::encode64(char* buf, const uint64_t data)
    return buf + sizeof(uint64_t);
 }
 
-char* 
+char*
 StunMessage::encode(char* buf, const char* data, unsigned int length)
 {
    memcpy(buf, data, length);
    return buf + length;
 }
 
-char* 
-StunMessage::encodeTurnData(char *ptr, const resip::Data* td)
+char*
+StunMessage::encodeTurnData(char* ptr, const resip::Data* td)
 {
    uint16_t padsize = (uint16_t)td->size() % 4 == 0 ? 0 : 4 - ((uint16_t)td->size() % 4);
 
@@ -1324,7 +1327,7 @@ StunMessage::encodeTurnData(char *ptr, const resip::Data* td)
    memcpy(ptr, td->data(), td->size());
    ptr += td->size();
    memset(ptr, 0, padsize);  // zero out padded data (note: this is not required by the RFC)
-   return ptr+padsize;
+   return ptr + padsize;
 }
 
 char*
@@ -1353,7 +1356,7 @@ StunMessage::encodeAtrXorAddress(char* ptr, uint16_t type, const StunAtrAddress&
    return encodeAtrAddress(ptr, type, xorAtr);
 }
 
-char* 
+char*
 StunMessage::encodeAtrAddress(char* ptr, uint16_t type, const StunAtrAddress& atr)
 {
    ptr = encode16(ptr, type);
@@ -1361,7 +1364,7 @@ StunMessage::encodeAtrAddress(char* ptr, uint16_t type, const StunAtrAddress& at
    *ptr++ = (uint8_t)0;  // pad
    *ptr++ = atr.family;
    ptr = encode16(ptr, atr.port);
-   if(atr.family == IPv6Family)
+   if (atr.family == IPv6Family)
    {
       // Note:  addr.ipv6 is stored in network byte order
       memcpy(ptr, &atr.addr.ipv6, sizeof(atr.addr.ipv6));
@@ -1372,54 +1375,54 @@ StunMessage::encodeAtrAddress(char* ptr, uint16_t type, const StunAtrAddress& at
       // Note:  addr.ipv4 is stored in host byte order - encode32 will conver to network byte order
       ptr = encode32(ptr, atr.addr.ipv4);
    }
-	
+
    return ptr;
 }
 
-char* 
+char*
 StunMessage::encodeAtrError(char* ptr, const StunAtrError& atr)
 {
    resip_assert(atr.reason);
    uint16_t padsize = (unsigned int)atr.reason->size() % 4 == 0 ? 0 : 4 - ((unsigned int)atr.reason->size() % 4);
 
    ptr = encode16(ptr, ErrorCode);
-   ptr = encode16(ptr, 4 + (uint16_t)atr.reason->size()); 
+   ptr = encode16(ptr, 4 + (uint16_t)atr.reason->size());
    ptr = encode16(ptr, 0); // pad
    *ptr++ = atr.errorClass & 0x7;  // first 3 bits only
    *ptr++ = atr.number;
    ptr = encode(ptr, atr.reason->data(), (unsigned int)atr.reason->size());
    memset(ptr, 0, padsize);
-   return ptr+padsize;
+   return ptr + padsize;
 }
 
-char* 
+char*
 StunMessage::encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr)
 {
-   uint16_t padsize = (2*atr.numAttributes) % 4 == 0 ? 0 : 4 - ((2*atr.numAttributes) % 4);
+   uint16_t padsize = (2 * atr.numAttributes) % 4 == 0 ? 0 : 4 - ((2 * atr.numAttributes) % 4);
    ptr = encode16(ptr, UnknownAttribute);
-   ptr = encode16(ptr, 2*atr.numAttributes);
-   for (int i=0; i<atr.numAttributes; i++)
+   ptr = encode16(ptr, 2 * atr.numAttributes);
+   for (int i = 0; i < atr.numAttributes; i++)
    {
       ptr = encode16(ptr, atr.attrType[i]);
    }
-   return ptr+padsize;
+   return ptr + padsize;
 }
 
-char* 
+char*
 StunMessage::encodeAtrString(char* ptr, uint16_t type, const Data* atr, uint16_t maxBytes)
 {
    resip_assert(atr);
    uint16_t size = atr->size() > maxBytes ? maxBytes : (uint16_t)atr->size();
    uint16_t padsize = size % 4 == 0 ? 0 : 4 - (size % 4);
-	
+
    ptr = encode16(ptr, type);
-   ptr = encode16(ptr, size);  
+   ptr = encode16(ptr, size);
    ptr = encode(ptr, atr->data(), size);
    memset(ptr, 0, padsize);  // zero out padded data (note: this is not required by the RFC)
    return ptr + padsize;
 }
 
-char* 
+char*
 StunMessage::encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr)
 {
    ptr = encode16(ptr, MessageIntegrity);
@@ -1428,25 +1431,25 @@ StunMessage::encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr)
    return ptr;
 }
 
-char* 
+char*
 StunMessage::encodeAtrEvenPort(char* ptr, const TurnAtrEvenPort& atr)
 {
    ptr = encode16(ptr, TurnEvenPort);
    ptr = encode16(ptr, 1);
-   *ptr++ = atr.propType;  
+   *ptr++ = atr.propType;
    *ptr++ = 0; // pad
    ptr = encode16(ptr, 0); // pad
    return ptr;
 }
 
-bool 
+bool
 StunMessage::hasMagicCookie()
 {
    return mHeader.id.magicCookie == htonl(StunMessage::StunMagicCookie);
 }
 
 unsigned int
-StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen) 
+StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
 {
    resip_assert(bufLen >= sizeof(StunMsgHdr));
    char* ptr = buf;
@@ -1463,7 +1466,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasMappedAddress)
    {
       StackLog(<< "Encoding MappedAddress: " << mMappedAddress);
-      ptr = encodeAtrAddress (ptr, MappedAddress, mMappedAddress);
+      ptr = encodeAtrAddress(ptr, MappedAddress, mMappedAddress);
    }
    if (mHasResponseAddress)
    {
@@ -1498,11 +1501,11 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasErrorCode)
    {
       StackLog(<< "Encoding ErrorCode: "
-			<< int(mErrorCode.errorClass)  
-			<< " number=" << int(mErrorCode.number) 
-			<< " reason=" 
-			<< *mErrorCode.reason);
-		
+         << int(mErrorCode.errorClass)
+         << " number=" << int(mErrorCode.number)
+         << " reason="
+         << *mErrorCode.reason);
+
       ptr = encodeAtrError(ptr, mErrorCode);
    }
    if (mHasUnknownAttributes)
@@ -1560,35 +1563,35 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    {
       StackLog(<< "Encoding Turn Bandwidth: " << mTurnBandwidth);
       ptr = encodeAtrUInt32(ptr, TurnBandwidth, mTurnBandwidth);
-   }   
+   }
    if (mCntTurnXorPeerAddress > 0)
    {
       for (int i = 0; i < mCntTurnXorPeerAddress; i++)
-      { 
+      {
          StackLog(<< "Encoding Turn XorPeerAddress: " << mTurnXorPeerAddress[i]);
-         ptr = encodeAtrXorAddress (ptr, TurnXorPeerAddress, mTurnXorPeerAddress[i]);
+         ptr = encodeAtrXorAddress(ptr, TurnXorPeerAddress, mTurnXorPeerAddress[i]);
       }
    }
    if (mHasTurnData)
    {
       StackLog(<< "Encoding TurnData (not shown)");
-      ptr = encodeTurnData (ptr, mTurnData);
+      ptr = encodeTurnData(ptr, mTurnData);
    }
    if (mHasTurnXorRelayedAddress)
    {
       StackLog(<< "Encoding Turn XorRelayedAddress: " << mTurnXorRelayedAddress);
-      ptr = encodeAtrXorAddress (ptr, TurnXorRelayedAddress, mTurnXorRelayedAddress);
+      ptr = encodeAtrXorAddress(ptr, TurnXorRelayedAddress, mTurnXorRelayedAddress);
    }
    if (mHasTurnEvenPort)
    {
       StackLog(<< "Encoding Turn EvenPort: " << (int)mTurnEvenPort.propType);
       ptr = encodeAtrEvenPort(ptr, mTurnEvenPort);
-   }   
+   }
    if (mHasTurnRequestedTransport)
    {
       StackLog(<< "Encoding Turn RequestedTransport: " << (int)mTurnRequestedTransport);
       ptr = encodeAtrUInt32(ptr, TurnRequestedTransport, uint32_t(mTurnRequestedTransport << 24));
-   }   
+   }
    if (mHasTurnDontFragment)
    {
       StackLog(<< "Encoding Turn DontFragment: <exists>");
@@ -1598,13 +1601,13 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasTurnReservationToken)
    {
       StackLog(<< "Encoding Turn ReservationToken: " << mTurnReservationToken);
-      ptr = encodeAtrUInt64 (ptr, TurnReservationToken, mTurnReservationToken);
+      ptr = encodeAtrUInt64(ptr, TurnReservationToken, mTurnReservationToken);
    }
    if (mHasTurnConnectStat)
    {
       StackLog(<< "Encoding Turn Connect Stat: " << mTurnConnectStat);
       ptr = encodeAtrUInt32(ptr, TurnConnectStat, mTurnConnectStat);
-   }   
+   }
    if (mHasTurnRequestedAddressFamily)
    {
       StackLog(<< "Encoding Turn RequestedAddressFamily: " << mTurnRequestedAddressFamily);
@@ -1634,7 +1637,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
 
    // Update Length in header now - needed in message integrity calculations
    uint16_t msgSize = (uint16_t)(ptr - buf - sizeof(StunMsgHdr));
-   if(mHasMessageIntegrity) msgSize += 24;  // 4 (attribute header) + 20 (attribute value)
+   if (mHasMessageIntegrity) msgSize += 24;  // 4 (attribute header) + 20 (attribute value)
    encode16(lengthp, msgSize);
 
    if (mHasMessageIntegrity)
@@ -1643,18 +1646,18 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       StackLog(<< "Adding message integrity: buffer size=" << len << ", hmacKey=" << mHmacKey.hex());
       StunAtrIntegrity integrity;
       computeHmac(integrity.hash, buf, len, mHmacKey.c_str(), (int)mHmacKey.size());
-	   ptr = encodeAtrIntegrity(ptr, integrity);
+      ptr = encodeAtrIntegrity(ptr, integrity);
    }
 
    // Update Length in header now - may be needed in fingerprint calculations
-   if(mHasFingerprint) msgSize += 8;        // 4 (attribute header) + 4 (attribute value)
+   if (mHasFingerprint) msgSize += 8;        // 4 (attribute header) + 4 (attribute value)
    encode16(lengthp, msgSize);
 
    // add finger print if required
    if (mHasFingerprint)
    {
-      StackLog(<< "Calculating fingerprint for data of size " << ptr-buf);
-      uint32_t fingerprint = crc32_fast(buf, ptr-buf) ^ STUN_CRC_FINAL_XOR;
+      StackLog(<< "Calculating fingerprint for data of size " << ptr - buf);
+      uint32_t fingerprint = crc32_fast(buf, ptr - buf) ^ STUN_CRC_FINAL_XOR;
       ptr = encodeAtrUInt32(ptr, Fingerprint, fingerprint);
    }
 
@@ -1664,14 +1667,14 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
 unsigned int
 StunMessage::stunEncodeFramedMessage(char* buf, unsigned int bufLen)
 {
-   unsigned short size = (unsigned short)stunEncodeMessage(&buf[4], bufLen-4);
+   unsigned short size = (unsigned short)stunEncodeMessage(&buf[4], bufLen - 4);
 
    // Add Frame Header info
    buf[0] = 0; // Channel 0 for Stun Messages
-   buf[1] = 0; 
+   buf[1] = 0;
    uint16_t frameSize = htons(size);
    memcpy(&buf[2], (void*)&frameSize, 2);  // size is not needed if udp - but should be harmless
-   return size+4;
+   return size + 4;
 }
 
 #ifndef USE_SSL
@@ -1679,7 +1682,7 @@ void
 StunMessage::computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
 {
    // !slg! TODO - use newly added rutil/SHA1.hxx class  - will need to add new method to it to support this
-   strncpy(hmac,"hmac-not-implemented",20);
+   strncpy(hmac, "hmac-not-implemented", 20);
 }
 #else
 void
@@ -1687,11 +1690,11 @@ StunMessage::computeHmac(char* hmac, const char* input, int length, const char* 
 {
    //StackLog(<< "***computeHmac: input='" << Data(input, length).hex() << "', length=" << length << ", key='" << Data(key, sizeKey).hex() << "', keySize=" << sizeKey);
 
-   unsigned int resultSize=20;
-   HMAC(EVP_sha1(), 
-        key, sizeKey, 
-        reinterpret_cast<const unsigned char*>(input), length, 
-        reinterpret_cast<unsigned char*>(hmac), &resultSize);
+   unsigned int resultSize = 20;
+   HMAC(EVP_sha1(),
+      key, sizeKey,
+      reinterpret_cast<const unsigned char*>(input), length,
+      reinterpret_cast<unsigned char*>(hmac), &resultSize);
    resip_assert(resultSize == 20);
 }
 #endif
@@ -1700,18 +1703,18 @@ void
 StunMessage::createUsernameAndPassword()
 {
    uint64_t time = resip::Timer::getTimeSecs();
-   time -= (time % 20*60);  // rounded time - current time modulo 20 minutes
+   time -= (time % 20 * 60);  // rounded time - current time modulo 20 minutes
    //uint64_t hitime = time >> 32;
    //uint64_t lotime = time & 0xFFFFFFFF;
 
    mHasUsername = true;
-   if(!mUsername)
+   if (!mUsername)
    {
       mUsername = new Data;
    }
    resip_assert(mUsername);
 
-   if(mRemoteTuple.getAddress().is_v6())
+   if (mRemoteTuple.getAddress().is_v6())
    {
       *mUsername = Data(mRemoteTuple.getAddress().to_v6().to_bytes().data(), (Data::size_type)mRemoteTuple.getAddress().to_v6().to_bytes().size()).base64encode() + ":";
    }
@@ -1720,21 +1723,21 @@ StunMessage::createUsernameAndPassword()
       *mUsername = Data(mRemoteTuple.getAddress().to_v4().to_bytes().data(), (Data::size_type)mRemoteTuple.getAddress().to_v4().to_bytes().size()).base64encode() + ":";
    }
    unsigned int port = mRemoteTuple.getPort();
-   *mUsername += Data((char*)&port, sizeof(unsigned int)).base64encode() + ":"; 
+   *mUsername += Data((char*)&port, sizeof(unsigned int)).base64encode() + ":";
    *mUsername += resip::Random::getCryptoRandomHex(8) + ":";   // 8 bytes, 64 bits of randomness
    *mUsername += Data((char*)&time, sizeof(time)).hex() + ":";
    char hmac[20];
    computeHmac(hmac, mUsername->data(), (int)mUsername->size(), USERNAME_KEY.data(), (int)USERNAME_KEY.size());
    *mUsername += Data(hmac, sizeof(hmac)).hex();
-	
-   resip_assert( mUsername->size()%4 == 0 );
-   	
+
+   resip_assert(mUsername->size() % 4 == 0);
+
    StackLog(<< "computed username=" << *mUsername);
 
    // Compute Password
    mHasPassword = true;
 
-   if(!mPassword)
+   if (!mPassword)
    {
       mPassword = new Data;
    }
@@ -1743,7 +1746,7 @@ StunMessage::createUsernameAndPassword()
 
    StackLog(<< "computed password=" << *mPassword);
 }
- 
+
 void
 StunMessage::generateShortTermPasswordForUsername(Data& password)
 {
@@ -1760,9 +1763,9 @@ StunMessage::getTupleFromUsername(StunTuple& tuple)
    resip_assert(mUsername && mUsername->size() >= 92);
    resip_assert(mUsername->size() == 92 || mUsername->size() == 108);
 
-   if(mUsername->size() > 92)  // if over a certain size, then contains IPv6 address
+   if (mUsername->size() > 92)  // if over a certain size, then contains IPv6 address
    {
-      Data addressPart(Data::Share, mUsername->data(), 24); 
+      Data addressPart(Data::Share, mUsername->data(), 24);
       addressPart = addressPart.base64decode();
       asio::ip::address_v6::bytes_type bytes;
       memcpy(bytes.data(), addressPart.data(), bytes.size());
@@ -1770,14 +1773,14 @@ StunMessage::getTupleFromUsername(StunTuple& tuple)
       tuple.setAddress(addressv6);
 
       unsigned int port;
-      Data portPart(Data::Share, mUsername->data()+25, 4);
+      Data portPart(Data::Share, mUsername->data() + 25, 4);
       portPart = portPart.base64decode();
       memcpy(&port, portPart.data(), sizeof(port));
       tuple.setPort(port);
    }
    else
    {
-      Data addressPart(Data::Share, mUsername->data(), 8);  
+      Data addressPart(Data::Share, mUsername->data(), 8);
       addressPart = addressPart.base64decode();
       asio::ip::address_v4::bytes_type bytes;
       memcpy(bytes.data(), addressPart.data(), bytes.size());
@@ -1785,7 +1788,7 @@ StunMessage::getTupleFromUsername(StunTuple& tuple)
       tuple.setAddress(addressv4);
 
       unsigned int port;
-      Data portPart(Data::Share, mUsername->data()+9, 4);
+      Data portPart(Data::Share, mUsername->data() + 9, 4);
       portPart = portPart.base64decode();
       memcpy(&port, portPart.data(), sizeof(port));
       tuple.setPort(port);
@@ -1797,7 +1800,7 @@ StunMessage::calculateHmacKey(Data& hmacKey, const Data& longtermAuthenticationP
 {
    resip_assert(mHasUsername);
 
-   if(mHasRealm)  // Longterm authenicationmode
+   if (mHasRealm)  // Longterm authenicationmode
    {
       calculateHmacKey(hmacKey, *mUsername, *mRealm, longtermAuthenticationPassword);
    }
@@ -1812,7 +1815,7 @@ StunMessage::calculateHmacKeyForHa1(Data& hmacKey, const Data& ha1)
 {
    resip_assert(mHasUsername);
 
-   if(mHasRealm)  // Longterm authenicationmode
+   if (mHasRealm)  // Longterm authenicationmode
    {
       hmacKey = ha1;
    }
@@ -1828,19 +1831,19 @@ StunMessage::calculateHmacKey(Data& hmacKey, const Data& username, const Data& r
    MD5Stream r;
    r << username << ":" << realm << ":" << longtermAuthenticationPassword;
    hmacKey = r.getBin();
-  
+
    StackLog(<< "calculateHmacKey: '" << username << ":" << realm << ":" << longtermAuthenticationPassword << "' = '" << hmacKey.hex() << "'");
 }
 
-bool 
+bool
 StunMessage::checkMessageIntegrity(const Data& hmacKey)
 {
-   if(mHasMessageIntegrity)
+   if (mHasMessageIntegrity)
    {
       unsigned char hmac[20];
 
       // Store original stun message length from mBuffer 
-      char *lengthposition = (char*)mBuffer.data() + 2;
+      char* lengthposition = (char*)mBuffer.data() + 2;
       uint16_t originalLength;
       memcpy(&originalLength, lengthposition, 2);
 
@@ -1872,17 +1875,17 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
    }
 }
 
-bool 
+bool
 StunMessage::checkFingerprint()
 {
-   if(mHasFingerprint)
+   if (mHasFingerprint)
    {
       StackLog(<< "Calculating fingerprint to check for data of size " << mBuffer.size() - 8);
 
       // Calculate CRC across entire message, except the fingerprint attribute
-      unsigned long crc_checksum = crc32_fast(mBuffer.data(), mBuffer.size()-8);
+      unsigned long crc_checksum = crc32_fast(mBuffer.data(), mBuffer.size() - 8);
       unsigned long crc = crc_checksum ^ STUN_CRC_FINAL_XOR;
-      if(crc == mFingerprint)
+      if (crc == mFingerprint)
       {
          return true;
       }
@@ -1904,30 +1907,30 @@ StunMessage::checkFingerprint()
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are 
+ modification, are permitted provided that the following conditions are
  met:
 
- 1. Redistributions of source code must retain the above copyright 
-    notice, this list of conditions and the following disclaimer. 
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
 
  2. Redistributions in binary form must reproduce the above copyright
     notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution. 
+    documentation and/or other materials provided with the distribution.
 
- 3. Neither the name of Plantronics nor the names of its contributors 
-    may be used to endorse or promote products derived from this 
-    software without specific prior written permission. 
+ 3. Neither the name of Plantronics nor the names of its contributors
+    may be used to endorse or promote products derived from this
+    software without specific prior written permission.
 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
- A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
- LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */

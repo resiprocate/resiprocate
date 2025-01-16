@@ -40,10 +40,17 @@ add_custom_command ( TARGET MOHParkServer POST_BUILD
 
 target_link_libraries(MOHParkServer PUBLIC recon)
 if(WIN32)
-  if(USE_SIPXTAPI)
-     add_dependencies(MOHParkServer sipXtapi-pcre sipXportLib sipXsdpLib sipXmediaLib sipXmediaAdapterLib)
-  endif()
-  if(WITH_SSL)
+   if(USE_SIPXTAPI)
+     if(SIPXTAPI_PROJS_IN_VS_GUI)
+       add_dependencies(MOHParkServer ${SIPXTAPI_VSPROJ_DEPS})
+     endif()
+     add_custom_command ( TARGET MOHParkServer POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+       $<TARGET_FILE:SIPXTAPI_CODEC_PLUGINS> $<TARGET_FILE_DIR:MOHParkServer>
+       COMMAND_EXPAND_LISTS
+     )
+   endif()
+   if(WITH_SSL)
     add_custom_command ( TARGET MOHParkServer POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
       $<TARGET_FILE:OPENSSL> $<TARGET_FILE_DIR:MOHParkServer>

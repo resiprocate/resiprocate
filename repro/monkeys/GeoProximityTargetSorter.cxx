@@ -4,6 +4,7 @@
 
 #ifndef RESIP_FIXED_POINT
 #include <algorithm>
+#include <random>
 
 #ifdef USE_MAXMIND_GEOIP
 // MaxMind GeoIP header
@@ -282,8 +283,10 @@ GeoProximityTargetSorter::process(RequestContext &rc)
 
          if(mLoadBalanceEqualDistantTargets)
          {
+            random_device rd;
+            mt19937 randomgen(rd());
             // Shuffle Targets - so that targets of equal distance will be in random order
-            random_shuffle(flatTargetList.begin(), flatTargetList.end());
+            shuffle(flatTargetList.begin(), flatTargetList.end(), randomgen);
          }
 
          // Sort List by distance - note:  if we don't know the client location, there is no point in sorting

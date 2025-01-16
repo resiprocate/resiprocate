@@ -1,0 +1,35 @@
+name: Windows-CI
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build with Visual Studio
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: "Configure"
+        run: >
+          cmake
+          -S ${{ github.workspace }}
+          -B ${{ github.workspace }}/_build
+          -DUSE_SIPXTAPI=ON
+
+      - name: "Build"
+        run: >
+          cmake
+          --build ${{ github.workspace }}/_build
+          --config Debug
+          --parallel
+
+      - name: "Test Debug"
+        run: >
+          ctest
+          --test-dir ${{ github.workspace }}/_build
+          --build-config Debug
+          --output-on-failure

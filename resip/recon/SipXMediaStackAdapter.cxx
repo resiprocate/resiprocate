@@ -45,6 +45,23 @@ using namespace recon;
 using namespace resip;
 using namespace std;
 
+#ifdef WIN32
+std::string getExecutableDir()
+{
+   char buf[MAX_PATH];
+   memset(buf, 0, sizeof(buf));
+   DWORD len = GetModuleFileNameA(GetModuleHandle(NULL), buf, sizeof(buf) - 1);
+   // Remove executable name
+   for (char* p = buf + len; p > buf; p--) {
+      if (*p == '\\') {
+         *p = 0;
+         break;
+      }
+   }
+   return std::string(buf);
+}
+#endif
+
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 constexpr char SipXMediaStackAdapter::DEFAULT_FROM_FILE_2_RESOURCE_NAME[];
@@ -79,10 +96,10 @@ SipXMediaStackAdapter::init(int defaultSampleRate, int maxSampleRate)
 #ifdef _DEBUG
 
   #if _WIN64
-     UtlString codecPaths[] = {".", "../../../x64/Debug"};
+     UtlString codecPaths[] = { ".", getExecutableDir().c_str(), "../../../x64/Debug"};
   #else
     #if _WIN32
-      UtlString codecPaths[] = { ".", "../../../Win32/Debug" };
+      UtlString codecPaths[] = { ".", getExecutableDir().c_str(), "../../../Win32/Debug" };
     #else
       UtlString codecPaths[] = { "." };
     #endif
@@ -91,10 +108,10 @@ SipXMediaStackAdapter::init(int defaultSampleRate, int maxSampleRate)
 #else
 
   #if _WIN64
-    UtlString codecPaths[] = { ".", "../../../x64/Release" };
+    UtlString codecPaths[] = { ".", getExecutableDir().c_str(), "../../../x64/Release" };
   #else
     #if _WIN32
-      UtlString codecPaths[] = { ".", "../../../Win32/Release" };
+      UtlString codecPaths[] = { ".", getExecutableDir().c_str(), "../../../Win32/Release" };
     #else
       UtlString codecPaths[] = { "." };
     #endif

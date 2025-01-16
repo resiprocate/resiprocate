@@ -228,6 +228,8 @@ target_add_conditional_sources(rutil WIN32
 # Enable MONOTONIC clock for rutil
 add_definitions(-D_RESIP_MONOTONIC_CLOCK)
 
+target_compile_features(rutil PUBLIC cxx_std_11)
+
 if(WIN32)
    target_link_libraries(rutil PUBLIC winmm)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")

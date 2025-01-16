@@ -1,5 +1,9 @@
-name: CI
+name: Linux-CI
 on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -71,6 +75,9 @@ jobs:
             python3-dev \
             sox \
             xxd
+
+      - name: Upgrade CMake
+        run: apt-get install -y cmake/bullseye-backports
 
       - name: Checkout source
         uses: actions/checkout@v3

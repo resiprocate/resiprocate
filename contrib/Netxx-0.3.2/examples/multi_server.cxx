@@ -48,6 +48,7 @@
 #include <iostream>
 #include <exception>
 #include <ctime>
+#include <cstring>
 
 namespace {
     const Netxx::port_type const_port_echo	= 4000;

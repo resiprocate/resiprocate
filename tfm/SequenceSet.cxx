@@ -96,7 +96,7 @@ void
 SequenceSet::globalFailure(const resip::Data& message)
 {
    // keep first fail info
-   if (this && !mFailed) 
+   if (!mFailed) 
    {
       mFailed = true;
       mExplanation = message;
@@ -107,7 +107,7 @@ void
 SequenceSet::globalFailure(const resip::BaseException& e)
 {
    // keep first fail info
-   if (this && !mFailed) 
+   if (!mFailed) 
    {
       mFailed = true;
       mExplanation.clear();

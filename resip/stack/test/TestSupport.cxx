@@ -22,7 +22,7 @@ namespace resip
    public:
       static void fb(size_t w, char c = ' ')
       {
-         for (int i = 0; i < boxWidth - w; i++) cout << c;
+         for (size_t i = 0; i < boxWidth - w; i++) cout << c;
       }
 
       static void labels(size_t len, size_t row)

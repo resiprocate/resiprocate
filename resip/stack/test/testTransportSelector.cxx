@@ -3,8 +3,10 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TcpTransport.hxx"
 #include "resip/stack/SecurityTypes.hxx"
+#ifdef USE_SSL
 #include "resip/stack/ssl/TlsTransport.hxx"
 #include "resip/stack/ssl/Security.hxx"
+#endif // USE_SSL
 #include "resip/stack/UdpTransport.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
@@ -54,6 +56,7 @@ class TestTcpTransport : public TcpTransport
       ~TestTcpTransport() override = default;
 };
 
+#ifdef USE_SSL
 class TestTlsTransport : public TlsTransport
 {
    public:
@@ -97,6 +100,7 @@ class TestTlsTransport : public TlsTransport
       static TestSecurity mSecurity;
 };
 TestTlsTransport::TestSecurity TestTlsTransport::mSecurity;
+#endif
 
 class TestTransportSelector : public TransportSelector
 {
@@ -124,10 +128,12 @@ class TestTransportSelector : public TransportSelector
          {
             transport.reset(new TestTcpTransport { mFifo, actualTransportKey, portNum, version, interfaceObj });
          }
+#ifdef USE_SSL
          else if (ttype == TLS)
          {
             transport.reset(new TestTlsTransport { mFifo, actualTransportKey, portNum, version, interfaceObj, domainName });
          }
+#endif // USE_SSL
          else
          {
             resip_assert(0);  // Tests do not support the provided transport type.
@@ -500,6 +506,7 @@ testFindTransportBySource()
    }
 }
 
+#ifdef USE_SSL
 void
 testFindTransportBySourceTlsTransport()
 {
@@ -708,6 +715,8 @@ testFindTransportBySourceTlsTransport()
 #endif // USE_IPV6
    }
 }
+#endif // USE_SSL
+
 
 void
 testFindTransportByDest()
@@ -819,7 +828,9 @@ main(int argc, char** argv)
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    testFindTransportBySource();
+#ifdef USE_SSL
    testFindTransportBySourceTlsTransport();
+#endif // USE_SSL
    testFindTransportByDest();
 
    return 0;

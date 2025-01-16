@@ -121,13 +121,13 @@ DumUserAgent::clean()
 
 DumUserAgent::DumUserAgent(std::shared_ptr<resip::MasterProfile> profile) :
    mProfile(profile),
-   mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
-   mInterruptor(new EventThreadInterruptor(*mPollGrp)),
 #if defined(USE_SSL)
    mSecurity(new Security),
 #else
    mSecurity(0),
 #endif
+   mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
+   mInterruptor(new EventThreadInterruptor(*mPollGrp)),
    mStack(new SipStack(mSecurity, DnsStub::EmptyNameserverList, mInterruptor)),
    mStackThread(new EventStackThread(*mStack, *mInterruptor, *mPollGrp)),
    mDum(new DialogUsageManager(*mStack, true)),
@@ -144,13 +144,14 @@ DumUserAgent::DumUserAgent(std::shared_ptr<resip::MasterProfile> profile) :
 DumUserAgent::DumUserAgent(std::shared_ptr<resip::MasterProfile> profile,
                            TestProxy* proxy) : 
    mProfile(profile),
-   mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
-   mInterruptor(new EventThreadInterruptor(*mPollGrp)),
 #if defined(USE_SSL)
    mSecurity(new Security),
 #else
    mSecurity(0),
 #endif
+   mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
+   mInterruptor(new EventThreadInterruptor(*mPollGrp)),
+
    mStack(new SipStack(mSecurity, DnsStub::EmptyNameserverList, mInterruptor)),
    mStackThread(new EventStackThread(*mStack, *mInterruptor, *mPollGrp)),
    mDum(new DialogUsageManager(*mStack, true)),
