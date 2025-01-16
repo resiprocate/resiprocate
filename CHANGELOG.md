@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.13.1 Changes
+* various build system and compilation fixes
+* add Windows CI script for GitHub actions
+* fix assert in TransactionState that is possible if client sends an ACK to a response on a non-INVITE transaction
+* allow recon(sipXtapi) on windows to find codec dll's in same directory as the executable
+* ensure a STUN error attribute is at least minimum size   
+
+
 ## 1.13 Changes
 
 ### General

@@ -11,7 +11,7 @@ if(POLICY CMP0077)
 endif(POLICY CMP0077)
 
 # https://cmake.org/cmake/help/latest/variable/PROJECT_VERSION.html
-project(resiprocate VERSION 1.13.0)
+project(resiprocate VERSION 1.13.1)
 
 # Specifies the pre-release tag, such as alphaN or betaN.
 set(RESIPROCATE_VERSION_PRE_RELEASE "")
