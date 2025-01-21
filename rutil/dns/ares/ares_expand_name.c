@@ -83,7 +83,7 @@ static int ares__isprint(int ch)
 int ares_expand_name(const unsigned char* encoded, const unsigned char* abuf,
    int alen, char** s, long* enclen)
 {
-   int len, indir = 0;
+   int len, remaining, indir = 0;
    char* q;
    const unsigned char* p;
 
@@ -128,8 +128,9 @@ int ares_expand_name(const unsigned char* encoded, const unsigned char* abuf,
       else
       {
          len = *p;
+         remaining = len;
          p++;
-         while (len--)
+         while (remaining--)
          {
             /* Output as \DDD for consistency with RFC1035 5.1, except
              * for the special case of a root name response  */
