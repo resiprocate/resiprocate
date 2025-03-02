@@ -1213,7 +1213,7 @@ class SipStack : public FdSetIOObserver
       /** @brief store all domains that this stack is responsible for.
           @note Controlled by addAlias and addTransport interface
           and checks can be made with isMyDomain() */
-      typedef std::map<Data, unsigned int> DomainsMap;
+      typedef std::unordered_map<Data, unsigned int> DomainsMap;
       DomainsMap mDomains;  // Second item (unsigned int) is for reference counting
       Uri mUri;
       mutable Mutex mDomainsMutex;  // Protects both mDomains and mUri, since they are related

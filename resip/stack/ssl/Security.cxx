@@ -1615,8 +1615,8 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    resip_assert(chain);
 
    DebugLog( << "searching for cert/key for <" << senderAor << ">" );
-   if (mUserCerts.count(senderAor) == 0 ||
-       mUserPrivateKeys.count(senderAor) == 0)
+   if (mUserCerts.find(senderAor) == mUserCerts.end() ||
+       mUserPrivateKeys.find(senderAor) == mUserPrivateKeys.end())
    {
       BIO_free(in);
       BIO_free(out);
@@ -1725,7 +1725,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    DebugLog( << "created out BIO" );
 
    InfoLog( << "target cert name is <" << recipCertName << ">" );
-   if (mUserCerts.count(recipCertName) == 0)
+   if (mUserCerts.find(recipCertName) == mUserCerts.end())
    {
       BIO_free(in);
       BIO_free(out);
@@ -2062,7 +2062,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
 
       case NID_pkcs7_enveloped:
       {
-         if (mUserPrivateKeys.count(decryptorAor) == 0)
+         if (mUserPrivateKeys.find(decryptorAor) == mUserPrivateKeys.end())
          {
             BIO_free(in);
             BIO_free(out);
@@ -2071,7 +2071,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
             InfoLog( << "Don't have a private key for " << decryptorAor << " for  PKCS7_decrypt" );
             throw Exception("Missing private key", __FILE__, __LINE__);
          }
-         else if (mUserCerts.count(decryptorAor) == 0)
+         else if (mUserCerts.find(decryptorAor) == mUserCerts.end())
          {
             BIO_free(in);
             BIO_free(out);
@@ -2306,7 +2306,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    }
    else
    {
-      if (mUserCerts.count( *signedBy ))
+      if (mUserCerts.find( *signedBy ) != mUserCerts.end())
       {
          InfoLog( <<"Adding cert from " <<  *signedBy << " to check sig" );
          X509* cert = mUserCerts[ *signedBy ];
@@ -2996,25 +2996,45 @@ BaseSecurity::dumpAsn(const char* name, Data data)
 X509*     
 BaseSecurity::getDomainCert( const Data& domain )
 {
-   return mDomainCerts.count(domain) ? mDomainCerts[domain] : 0;
+   auto it = mDomainCerts.find(domain);
+   if (it != mDomainCerts.end())
+   {
+      return it->second;
+   }
+   return nullptr;
 }
 
 X509*     
 BaseSecurity::getUserCert( const Data& aor )
 {
-   return mUserCerts.count(aor) ? mUserCerts[aor] : 0;
+   auto it = mUserCerts.find(aor);
+   if (it != mUserCerts.end())
+   {
+      return it->second;
+   }
+   return nullptr;
 }
 
 EVP_PKEY* 
 BaseSecurity::getDomainKey(  const Data& domain )
 {
-   return mDomainPrivateKeys.count(domain) ? mDomainPrivateKeys[domain] : 0;
+   auto it = mDomainPrivateKeys.find(domain);
+   if (it != mDomainPrivateKeys.end())
+   {
+      return it->second;
+   }
+   return nullptr;
 }
 
 EVP_PKEY*
 BaseSecurity::getUserPrivateKey( const Data& aor )
 {
-   return mUserPrivateKeys.count(aor) ? mUserPrivateKeys[aor] : 0;
+   auto it = mUserPrivateKeys.find(aor);
+   if (it != mUserPrivateKeys.end())
+   {
+      return it->second;
+   }
+   return nullptr;
 }
 
 void

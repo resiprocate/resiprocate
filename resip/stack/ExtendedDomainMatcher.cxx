@@ -22,21 +22,21 @@ ExtendedDomainMatcher::isMyDomain(const Data& domain) const
       return true;
    }
 
-   // Domain search should be case insensitive - search in lowercase only
-   Data _domain(domain);
-   _domain.lowercase();
-
-   if(mDomainSuffixList.empty())
+   if (mDomainSuffixList.empty())
    {
       return false;
    }
+
+   // Domain search should be case insensitive - search in lowercase only
+   Data _domain(domain);
+   _domain.lowercase();
 
    static const Data dot(".");
    Data::size_type i = 0;
    for(i = _domain.find(dot, i); i < _domain.size() && i != Data::npos; i++)
    {
       Data _search = _domain.substr(i);
-      if(mDomainSuffixList.count(_search) > 0)
+      if (mDomainSuffixList.find(_search) != mDomainSuffixList.end())
       {
          return true;
       }
@@ -48,7 +48,7 @@ void
 ExtendedDomainMatcher::addDomainSuffix(const Data& domainSuffix)
 {
    // Domain search should be case insensitive - store in lowercase only
-   mDomainSuffixList.insert(Data(domainSuffix).lowercase());
+   mDomainSuffixList.emplace(Data(domainSuffix).lowercase());
 }
 
 void

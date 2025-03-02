@@ -1,6 +1,8 @@
 #if !defined(RESIP_EXTENDEDDOMAINMATCHER_HXX)
 #define RESIP_EXTENDEDDOMAINMATCHER_HXX
 
+#include<unordered_set>
+
 #include "resip/stack/BasicDomainMatcher.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/HashMap.hxx"
@@ -22,7 +24,7 @@ class ExtendedDomainMatcher : public BasicDomainMatcher
 
    private:
 
-      typedef std::set<Data> DomainSuffixList;
+      typedef std::unordered_set<Data> DomainSuffixList;
       DomainSuffixList mDomainSuffixList;
 };
 

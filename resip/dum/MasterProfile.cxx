@@ -49,7 +49,7 @@ MasterProfile::addSupportedScheme(const Data& scheme)
 bool 
 MasterProfile::isSchemeSupported(const Data& scheme) const
 {
-   return mSupportedSchemes.count(scheme) != 0;
+   return mSupportedSchemes.find(scheme) != mSupportedSchemes.end();
 }
 
 void 
@@ -86,7 +86,7 @@ MasterProfile::removeSupportedMethod(const MethodTypes& method)
 bool 
 MasterProfile::isMethodSupported(MethodTypes method) const
 {
-   return mSupportedMethodTypes.count(method) != 0;
+   return mSupportedMethodTypes.find(method) != mSupportedMethodTypes.end();
 }
 
 Tokens 

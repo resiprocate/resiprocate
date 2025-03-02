@@ -146,14 +146,16 @@ bool
 DnsInterface::isSupported(const Data& service)
 {
    Lock lock(mSupportedMutex);
-   return mSupportedNaptrs.count(service) != 0;
+   return mSupportedNaptrs.find(service) != mSupportedNaptrs.end();
 }
 
 bool
 DnsInterface::isSupported(TransportType t, IpVersion version)
 {
+   auto ts = std::make_pair(t, version);
+
    Lock lock(mSupportedMutex);
-   return mSupportedTransports.find(std::make_pair(t, version)) != mSupportedTransports.end();
+   return mSupportedTransports.find(ts) != mSupportedTransports.end();
 }
 
 bool
