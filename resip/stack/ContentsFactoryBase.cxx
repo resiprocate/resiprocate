@@ -6,20 +6,23 @@
 using namespace resip;
 using namespace std;
 
-HashMap<Mime, ContentsFactoryBase*>* ContentsFactoryBase::FactoryMap = 0;
+HashMap<Mime, ContentsFactoryBase*>* ContentsFactoryBase::FactoryMap = nullptr;
 
 ContentsFactoryBase::ContentsFactoryBase(const Mime& contentType)
    : mContentType(contentType)
 {
    // .amr. Due to multiple static initializers, this can be called more than once for a mimetype
    // so gracefully handle it
-   if(ContentsFactoryBase::getFactoryMap().count(contentType) == 0)
-      ContentsFactoryBase::getFactoryMap()[contentType] = this;
+   auto& factoryMap = ContentsFactoryBase::getFactoryMap();
+   if (factoryMap.find(contentType) == factoryMap.end())
+   {
+      factoryMap[contentType] = this;
+   }
 }
 
 ContentsFactoryBase::~ContentsFactoryBase()
 {
-   if (ContentsFactoryBase::FactoryMap == 0)
+   if (!ContentsFactoryBase::FactoryMap)
       return;
 	
    HashMap<Mime, ContentsFactoryBase*>::iterator i;
@@ -27,17 +30,17 @@ ContentsFactoryBase::~ContentsFactoryBase()
    // .amr.	Need to check if iterator is valid since on some STL instances erase(i) will crash if i is invalid.
    if (i != ContentsFactoryBase::getFactoryMap().end())
       ContentsFactoryBase::getFactoryMap().erase(i);
-   if (ContentsFactoryBase::getFactoryMap().size() == 0)
+   if (ContentsFactoryBase::getFactoryMap().empty())
    {
       delete &ContentsFactoryBase::getFactoryMap();
-      ContentsFactoryBase::FactoryMap = 0;
+      ContentsFactoryBase::FactoryMap = nullptr;
    }
 }
 
 HashMap<Mime, ContentsFactoryBase*>& 
 ContentsFactoryBase::getFactoryMap()
 {
-   if (ContentsFactoryBase::FactoryMap == 0)
+   if (!ContentsFactoryBase::FactoryMap)
    {
       ContentsFactoryBase::FactoryMap = new HashMap<Mime, ContentsFactoryBase*>();
    }

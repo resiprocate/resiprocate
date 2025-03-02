@@ -87,7 +87,7 @@ InMemoryRegistrationDatabase::lockRecord(const Uri& aor)
     mDatabase[aor];
   }
 
-  while (mLockedRecords.count(aor))
+  while (mLockedRecords.find(aor) != mLockedRecords.end())
   {
     mRecordUnlocked.wait(g2);
   }

@@ -501,7 +501,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
             
-      typedef std::map<Data, DialogSet*> CancelMap;
+      typedef std::unordered_map<Data, DialogSet*> CancelMap;
       CancelMap mCancelMap;
       
       typedef HashMap<DialogSetId, DialogSet*> DialogSetMap;

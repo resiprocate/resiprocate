@@ -465,7 +465,7 @@ Profile::isAdvertisedCapability(const Headers::Type header) const
    {
        return mBaseProfile->isAdvertisedCapability(header);
    }
-   return mAdvertisedCapabilities.count(header) != 0;
+   return mAdvertisedCapabilities.find(header) != mAdvertisedCapabilities.end();
 }
 
 void 

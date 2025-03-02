@@ -3215,7 +3215,7 @@ InviteSession::sendAck(const Contents *answer)
       source = mLastLocalSessionModification;
    }
 
-   resip_assert(mAcks.count(source->getTransactionId()) == 0);
+   resip_assert(mAcks.find(source->getTransactionId()) == mAcks.end());
 
    mDialog.makeRequest(*ack, ACK);
 

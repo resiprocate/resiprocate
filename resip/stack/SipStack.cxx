@@ -531,7 +531,7 @@ SipStack::addTransport(std::unique_ptr<Transport> transport)
                transport->netNs());
    if(!isSecure(transport->transport()))
    {
-      if(mNonSecureTransports.count(tuple) == 0)
+      if(mNonSecureTransports.find(tuple) == mNonSecureTransports.end())
       {
          // All is good - assign key to transport then add to mNonSecureTransports list
          transport->setKey(mNextTransportKey++);
@@ -549,7 +549,7 @@ SipStack::addTransport(std::unique_ptr<Transport> transport)
    else
    {
       TransportSelector::TlsTransportKey tlsKey(transport->tlsDomain(), tuple);
-      if(mSecureTransports.count(tlsKey) == 0)
+      if(mSecureTransports.find(tlsKey) == mSecureTransports.end())
       {
          // All is good - assign key to transport then add to mNonSecureTransports list
          transport->setKey(mNextTransportKey++);
@@ -839,16 +839,18 @@ SipStack::getHostAddress()
 bool
 SipStack::isMyDomain(const Data& domain, int port) const
 {
+   auto key = domain + ":" +
+      Data(port == 0 ? Symbols::DefaultSipPort : port);
+
    Lock lock(mDomainsMutex);
-   return (mDomains.count(domain + ":" +
-                          Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
+   return mDomains.find(key) != mDomains.end();
 }
 
 bool
 SipStack::isMyPort(int port) const
 {
    Lock lock(mPortsMutex);
-   return mPorts.count(port) != 0;
+   return mPorts.find(port) != mPorts.end();
 }
 
 const Uri&

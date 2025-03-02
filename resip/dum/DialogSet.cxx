@@ -76,12 +76,18 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mDum.mMergedRequests.insert(mMergeKey);
    if (request.header(h_RequestLine).method() == INVITE)
    {
-      if(mDum.mCancelMap.count(request.getTransactionId()) != 0)
-      {
-         WarningLog ( << "An endpoint is using the same tid in multiple INVITE requests, ability to match CANCEL requests correctly may be comprimised, tid=" << request.getTransactionId() );
-      }
       mCancelKey = request.getTransactionId();
-      mDum.mCancelMap[mCancelKey] = this;
+
+      auto it = mDum.mCancelMap.find(mCancelKey);
+      if (it != mDum.mCancelMap.end())
+      {
+         WarningLog ( << "An endpoint is using the same tid in multiple INVITE requests, ability to match CANCEL requests correctly may be comprimised, tid=" << mCancelKey );
+         it->second = this;
+      }
+      else
+      {
+         mDum.mCancelMap[mCancelKey] = this;
+      }
    }
    DebugLog ( << " ************* Created DialogSet(UAS) *************: " << mId);
 }

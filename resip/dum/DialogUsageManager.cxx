@@ -427,7 +427,7 @@ void
 DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler* handler)
 {
    resip_assert(handler);
-   resip_assert(mClientSubscriptionHandlers.count(eventType) == 0);
+   resip_assert(mClientSubscriptionHandlers.find(eventType) == mClientSubscriptionHandlers.end());
    mClientSubscriptionHandlers[eventType] = handler;
 }
 
@@ -436,11 +436,15 @@ DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSu
 {
    resip_assert(handler);
    //default do-nothing server side refer handler can be replaced
-   if (eventType == "refer" && mServerSubscriptionHandlers.count(eventType))
+   if (eventType == "refer")
    {
-      delete mServerSubscriptionHandlers[eventType];
-      mIsDefaultServerReferHandler = false;
-      //mServerSubscriptionHandlers.erase(eventType);
+      auto it = mServerSubscriptionHandlers.find(eventType);
+      if (it != mServerSubscriptionHandlers.end())
+      {
+         delete it->second;
+         mIsDefaultServerReferHandler = false;
+         //mServerSubscriptionHandlers.erase(eventType);
+      }
    }
 
    mServerSubscriptionHandlers[eventType] = handler;
@@ -450,7 +454,7 @@ void
 DialogUsageManager::addClientPublicationHandler(const Data& eventType, ClientPublicationHandler* handler)
 {
    resip_assert(handler);
-   resip_assert(mClientPublicationHandlers.count(eventType) == 0);
+   resip_assert(mClientPublicationHandlers.find(eventType) == mClientPublicationHandlers.end());
    mClientPublicationHandlers[eventType] = handler;
 }
 
@@ -458,7 +462,7 @@ void
 DialogUsageManager::addServerPublicationHandler(const Data& eventType, ServerPublicationHandler* handler)
 {
    resip_assert(handler);
-   resip_assert(mServerPublicationHandlers.count(eventType) == 0);
+   resip_assert(mServerPublicationHandlers.find(eventType) == mServerPublicationHandlers.end());
    mServerPublicationHandlers[eventType] = handler;
 }
 
@@ -466,7 +470,7 @@ void
 DialogUsageManager::addOutOfDialogHandler(MethodTypes type, OutOfDialogHandler* handler)
 {
    resip_assert(handler);
-   resip_assert(mOutOfDialogHandlers.count(type) == 0);
+   resip_assert(mOutOfDialogHandlers.find(type) == mOutOfDialogHandlers.end());
    mOutOfDialogHandlers[type] = handler;
 }
 
@@ -2025,7 +2029,7 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
 
    if (!request.header(h_To).exists(p_tag))
    {
-      if (mMergedRequests.count(MergedRequestKey(request, getMasterProfile()->checkReqUriInMergeDetectionEnabled())))
+      if (mMergedRequests.find(MergedRequestKey(request, getMasterProfile()->checkReqUriInMergeDetectionEnabled())) != mMergedRequests.end())
       {
          SipMessage failure;
          makeResponse(failure, request, 482, "Merged Request");

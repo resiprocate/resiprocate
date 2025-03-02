@@ -17,14 +17,14 @@ bool
 BasicDomainMatcher::isMyDomain(const Data& domain) const
 {
    // Domain search should be case insensitive - search in lowercase only
-   return mDomainList.count(Data(domain).lowercase()) > 0;
+   return mDomainList.find(Data(domain).lowercase()) != mDomainList.end();
 }
 
 void
 BasicDomainMatcher::addDomain(const Data& domain)
 {
    // Domain search should be case insensitive - store in lowercase only
-   mDomainList.insert(Data(domain).lowercase());
+   mDomainList.emplace(Data(domain).lowercase());
 }
 
 void
