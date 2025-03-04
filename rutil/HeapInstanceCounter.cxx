@@ -89,11 +89,11 @@ HeapInstanceCounter::deallocate(void* addr,
       // WarningLog(<< "deallocated " << ti.name());
       Lock l(allocationMutex);
       const Data name(Data::Share, ti.name(), strlen(ti.name()));
-      if (allocationMap.count(name) != 0)
+      if (allocationMap.find(name) != allocationMap.end())
       {
          InstanceCounts &counts = allocationMap[name];
 
-         if (counts.allocationSizes.count(addr) != 0)
+         if (counts.allocationSizes.find(addr) != counts.allocationSizes.end())
          {
             counts.outstanding -= 1;
             counts.totalBytesOutstanding -= counts.allocationSizes[addr];

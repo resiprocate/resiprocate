@@ -1,6 +1,8 @@
 #if !defined(RESIP_BASICDOMAINMATCHER_HXX)
 #define RESIP_BASICDOMAINMATCHER_HXX
 
+#include <unordered_set>
+
 #include "resip/stack/DomainMatcher.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/HashMap.hxx"
@@ -22,7 +24,7 @@ class BasicDomainMatcher : public DomainMatcher
 
    private:
 
-      typedef std::set<Data> DomainList;
+      typedef std::unordered_set<Data> DomainList;
       DomainList mDomainList;
 };
 
