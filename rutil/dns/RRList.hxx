@@ -46,6 +46,7 @@ class RRList : public IntrusiveListElement<RRList*>
 
       void update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl);
       Records records(const int protocol);
+      size_t numRecords() { return mRecords.size(); }
 
       const Data& key() const { return mKey; }
       int status() const { return mStatus; }

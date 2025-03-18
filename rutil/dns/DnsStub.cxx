@@ -743,6 +743,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
                cached = mStub.mRRCache.lookup(targetToQuery, T_CNAME, mProto, cnames, status);
                if (cached)
                {
+                  if (cnames.size() == 0) break;  // There is a cached item with no destination (empty cnames list) - ignore
                   ++mReQuery;
                   targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
                }

@@ -104,14 +104,29 @@ RRCache::updateCache(const Data& target,
          !(mRRSet.key_comp()(key, *lb)))
       {
          (*lb)->update(it->second, begin, end, mUserDefinedTTL);
-         touch(*lb);
+         // *lb might be a RRList with no records if parsing failed - remove from cache
+         if ((*lb)->numRecords() == 0)
+         {
+            (*lb)->remove();
+            delete *lb;
+            mRRSet.erase(lb);
+         }
+         else
+         {
+            // update good - touch entry
+            touch(*lb);
+         }
       }
       else
       {
          RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
-         mRRSet.insert(val);
-         mLruHead->push_back(val);
-         purge();
+         // val might be a RRList with no records if parsing failed - don't cache
+         if (val->numRecords() > 0)
+         {
+            mRRSet.insert(val);
+            mLruHead->push_back(val);
+            purge();
+         }
       }
       delete key;
    }
@@ -168,6 +183,7 @@ RRCache::lookup(const Data& target,
    {
       if (Timer::getTimeSecs() >= (*it)->absoluteExpiry())
       {
+         (*it)->remove();
          delete *it;
          mRRSet.erase(it);
          return false;
@@ -237,10 +253,12 @@ RRCache::purge()
    if (mRRSet.size() < mSize) return;
    RRList* lst = *(mLruHead->begin());
    RRSet::iterator it = mRRSet.find(lst);
-   resip_assert(it != mRRSet.end());
-   lst->remove();
-   delete *it;
-   mRRSet.erase(it);
+   if (it != mRRSet.end()) // safety check incase code forgets to remove from LRU list when removing from mRRset
+   {
+      lst->remove();
+      delete* it;
+      mRRSet.erase(it);
+   }
 }
 
 void 
@@ -251,6 +269,7 @@ RRCache::logCache()
    {
       if (now >= (*it)->absoluteExpiry())
       {
+         (*it)->remove();
          delete *it;
          mRRSet.erase(it++);
       }
@@ -271,6 +290,7 @@ RRCache::getCacheDump(Data& dnsCacheDump)
    {
       if (now >= (*it)->absoluteExpiry())
       {
+         (*it)->remove();
          delete *it;
          mRRSet.erase(it++);
       }
