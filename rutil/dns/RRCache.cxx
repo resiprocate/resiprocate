@@ -104,9 +104,9 @@ RRCache::updateCache(const Data& target,
          !(mRRSet.key_comp()(key, *lb)))
       {
          (*lb)->update(it->second, begin, end, mUserDefinedTTL);
-         // *lb might be a RRList with no records if parsing failed - remove from cache
          if ((*lb)->numRecords() == 0)
          {
+            // *lb might be a RRList with no records if parsing failed - remove from cache
             (*lb)->remove();
             delete *lb;
             mRRSet.erase(lb);
@@ -120,8 +120,12 @@ RRCache::updateCache(const Data& target,
       else
       {
          RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
-         // val might be a RRList with no records if parsing failed - don't cache
-         if (val->numRecords() > 0)
+         if (val->numRecords() == 0)
+         {
+            // val might be a RRList with no records if parsing failed - don't cache
+            delete val;
+         }
+         else
          {
             mRRSet.insert(val);
             mLruHead->push_back(val);
