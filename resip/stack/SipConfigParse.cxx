@@ -63,7 +63,7 @@ SipConfigParse::getConfigValue(const resip::Data& name, resip::Uri &value)
 }
 
 resip::Uri
-SipConfigParse::getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty)
+SipConfigParse::getConfigUri(const resip::Data& name, const resip::Uri& defaultValue, bool useDefaultIfEmpty)
 {
    Uri ret(defaultValue);
    if(getConfigValue(name, ret) && ret.host().empty() && useDefaultIfEmpty)
@@ -105,7 +105,7 @@ SipConfigParse::getConfigValue(const resip::Data& name, resip::NameAddr &value)
 }
 
 resip::NameAddr
-SipConfigParse::getConfigNameAddr(const resip::Data& name, const resip::NameAddr defaultValue,  bool useDefaultIfEmpty)
+SipConfigParse::getConfigNameAddr(const resip::Data& name, const resip::NameAddr& defaultValue,  bool useDefaultIfEmpty)
 {
    resip::NameAddr ret(defaultValue);
    if(getConfigValue(name, ret) && ret.uri().host().empty() && useDefaultIfEmpty)

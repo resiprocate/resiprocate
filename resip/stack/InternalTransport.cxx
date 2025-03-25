@@ -40,11 +40,11 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
 
 InternalTransport::~InternalTransport()
 {
-   if (mPollItemHandle)
+   if (mPollGrp && mPollItemHandle)
    {
       mPollGrp->delPollItem(mPollItemHandle);
    }
-   if (mInterruptorHandle)
+   if (mPollGrp && mInterruptorHandle)
    {
       mPollGrp->delPollItem(mInterruptorHandle);
    }

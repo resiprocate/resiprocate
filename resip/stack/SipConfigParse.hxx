@@ -20,10 +20,10 @@ public:
 
    using resip::ConfigParse::getConfigValue;
    bool getConfigValue(const resip::Data& name, resip::Uri &value);
-   resip::Uri getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty=false);
+   resip::Uri getConfigUri(const resip::Data& name, const resip::Uri& defaultValue, bool useDefaultIfEmpty=false);
 
    bool getConfigValue(const resip::Data& name, resip::NameAddr &value);
-   resip::NameAddr getConfigNameAddr(const resip::Data& name, const resip::NameAddr defaultValue, bool useDefaultIfEmpty=false);
+   resip::NameAddr getConfigNameAddr(const resip::Data& name, const resip::NameAddr& defaultValue, bool useDefaultIfEmpty=false);
 
    bool getConfigValue(const resip::Data& name, SecurityTypes::SSLType &value);
    SecurityTypes::SSLType getConfigSSLType(const resip::Data& name, SecurityTypes::SSLType defaultValue);

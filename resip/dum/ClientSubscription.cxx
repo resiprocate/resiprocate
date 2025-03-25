@@ -463,17 +463,23 @@ ClientSubscription::dispatch(const DumTimeout& timer)
       if(timer.type() == DumTimeout::WaitForNotify)
       {
          ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-         if(mEnded)
+         if (mEnded)
          {
             InfoLog(<< "ClientSubscription: received NOTIFY timeout when trying to end, terminating...");
-            // NOTIFY terminated didn't come in
-            handler->onTerminated(getHandle(),0);
+            if (handler)
+            {
+               // NOTIFY terminated didn't come in
+               handler->onTerminated(getHandle(), 0);
+            }
             delete this;
             return;
          }
 
-         // Initial NOTIFY never came in; let app decide what to do
-         handler->onNotifyNotReceived(getHandle());
+         if (handler)
+         {
+            // Initial NOTIFY never came in; let app decide what to do
+            handler->onNotifyNotReceived(getHandle());
+         }
       }
       else if (timer.type() == DumTimeout::SubscriptionRetry)
       {

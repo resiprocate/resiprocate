@@ -1036,7 +1036,7 @@ stunCreateUserName(const StunAddress4& source, StunAtrString* username)
    //UInt64 hitime = time >> 32;
    uint64_t lotime = time & 0xFFFFFFFF;
 
-   constexpr size_t bufferSize = 1024;
+   constexpr size_t bufferSize = 256;
    char buffer[bufferSize];
    int expectedSize = std::snprintf(buffer,
       bufferSize,
@@ -1314,7 +1314,8 @@ stunCreateErrorResponse(StunMessage& response, int cl, int number, const char* m
    response.hasErrorCode = true;
    response.errorCode.errorClass = cl;
    response.errorCode.number = number;
-   strcpy(response.errorCode.reason, msg);
+   strncpy(response.errorCode.reason, msg, sizeof(response.errorCode.reason));
+   response.errorCode.reason[sizeof(response.errorCode.reason) - 1] = '\0';
    response.errorCode.sizeReason = (uint16_t)strlen(msg);
 }
 
@@ -2147,6 +2148,7 @@ stunTest(StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr, uns
    // make socket non-blocking
    if (!makeSocketNonBlocking(myFd))
    {
+      closeSocket(myFd);
       return false;
    }
 
@@ -2171,6 +2173,7 @@ stunTest(StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr, uns
    if (myFdSet.selectMilliSeconds(timeoutMs) < 1)
    {
       // no packet received or an error occured
+      closeSocket(myFd);
       return false;
    }
 
@@ -2237,6 +2240,8 @@ stunNatType(StunAddress4& dest,
 
    if ((myFd1 == INVALID_SOCKET) || (myFd2 == INVALID_SOCKET))
    {
+      if (myFd1 != INVALID_SOCKET) closeSocket(myFd1);
+      if (myFd2 != INVALID_SOCKET) closeSocket(myFd2);
       cerr << "Some problem opening port/interface to send on" << endl;
       return StunTypeFailure;
    }
@@ -2292,6 +2297,8 @@ stunNatType(StunAddress4& dest,
       if (err == SOCKET_ERROR)
       {
          // error occured
+         closeSocket(myFd1);
+         closeSocket(myFd2);
          cerr << "Error " << e << " " << strerror(e) << " in select" << endl;
          return StunTypeFailure;
       }
@@ -2625,6 +2632,7 @@ stunOpenSocket(StunAddress4& dest, StunAddress4* mapAddr,
    bool ok = stunParseMessage(msg, msgLen, resp, verbose);
    if (!ok)
    {
+      closeSocket(myFd);
       return -1;
    }
 

@@ -105,7 +105,9 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
       mGeoIPv4 = (GeoIP*)GeoIP_open(geoIPv4Database.c_str(), GEOIP_MEMORY_CACHE);  // Cache entire DB in memory - could make this configurable
       if(mGeoIPv4 != 0)
       {
-         InfoLog(<< "GeoProximityTargetSorter: IPv4 db info: " << GeoIP_database_info((GeoIP*)mGeoIPv4));
+         char* dbInfo = GeoIP_database_info((GeoIP*)mGeoIPv4);
+         InfoLog(<< "GeoProximityTargetSorter: IPv4 db info: " << dbInfo);
+         free(dbInfo);
 
          int i = GeoIP_database_edition((GeoIP*)mGeoIPv4);
    
@@ -137,7 +139,9 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
       mGeoIPv6 = (GeoIP*)GeoIP_open(geoIPv6Database.c_str(), GEOIP_MEMORY_CACHE);  // Cache entire DB in memory - could make this configurable
       if(mGeoIPv6 != 0)
       {
-         InfoLog(<< "GeoProximityTargetSorter: IPv6 db info: " << GeoIP_database_info((GeoIP*)mGeoIPv6));
+         char* dbInfo = GeoIP_database_info((GeoIP*)mGeoIPv6);
+         InfoLog(<< "GeoProximityTargetSorter: IPv6 db info: " << dbInfo);
+         free(dbInfo);
 
          int i = GeoIP_database_edition((GeoIP*)mGeoIPv6);
 

@@ -99,9 +99,12 @@ ConnectionBase::~ConnectionBase()
    while (!mOutstandingSends.empty())
    {
       SendData* sendData = mOutstandingSends.front();
-      mTransport->fail(sendData->transactionId,
-         mFailureReason ? mFailureReason : TransportFailure::ConnectionUnknown,
-         mFailureSubCode);
+      if (mTransport)
+      {
+         mTransport->fail(sendData->transactionId,
+            mFailureReason ? mFailureReason : TransportFailure::ConnectionUnknown,
+            mFailureSubCode);
+      }
       delete sendData;
       mOutstandingSends.pop_front();
    }
