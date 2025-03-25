@@ -117,95 +117,95 @@ int ares_init_options(ares_channel *channelptr, struct ares_options *options,
    return ares_init_options_with_socket_function(channelptr, options, optmask, NULL);
 }
 
-int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares_options *options,
-                      int optmask, socket_function_ptr socketFunc)
+int ares_init_options_with_socket_function(ares_channel* channelptr, struct ares_options* options,
+   int optmask, socket_function_ptr socketFunc)
 {
-  ares_channel channel;
-  int i, status;
-  struct server_state *server;
+   ares_channel channel;
+   int i, status;
+   struct server_state* server;
 #if defined(WIN32) && !defined(_M_ARM)
-	{
-		HKEY hKey;  
-		char hostpath[256];
-  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-		{
-			DWORD dwSize = sizeof(hostpath);
-      if(RegQueryValueEx(hKey, TEXT("DatabasePath"), 0, 0, (LPBYTE)&hostpath, &dwSize) == ERROR_SUCCESS)
-			{
-				hostpath[dwSize] = '\0';
+   {
+      HKEY hKey;
+      char hostpath[256];
+      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+      {
+         DWORD dwSize = sizeof(hostpath);
+         if (RegQueryValueEx(hKey, TEXT("DatabasePath"), 0, 0, (LPBYTE)&hostpath, &dwSize) == ERROR_SUCCESS)
+         {
+            hostpath[dwSize] = '\0';
 #if defined(UNDER_CE)
-			ZeroMemory(hostpath,strlen(hostpath)*sizeof(TCHAR));
+            ZeroMemory(hostpath, strlen(hostpath) * sizeof(TCHAR));
 #else
-				ExpandEnvironmentStrings(hostpath, w32hostspath, sizeof(w32hostspath));
+            ExpandEnvironmentStrings(hostpath, w32hostspath, sizeof(w32hostspath));
 #endif
-				if(strlen(w32hostspath) < sizeof(w32hostspath) - 6) 
-				{
-					strcat(w32hostspath, "\\hosts");
-				}
-			}
+            if (strlen(w32hostspath) < sizeof(w32hostspath) - 6)
+            {
+               strcat(w32hostspath, "\\hosts");
+            }
+         }
          RegCloseKey(hKey);
-		}
-	}
+      }
+   }
 #endif
- //  struct timeval tv;
+   //  struct timeval tv;
 
-  channel = malloc(sizeof(struct ares_channeldata));
-  if (!channel)
-    return ARES_ENOMEM;
+   channel = malloc(sizeof(struct ares_channeldata));
+   if (!channel)
+      return ARES_ENOMEM;
 
-  /* Set everything to distinguished values so we know they haven't
-   * been set yet.
-   */
-  channel->socket_function = socketFunc;  
-  channel->poll_cb_func = NULL;
-  channel->poll_cb_data = NULL;
-  channel->flags = -1;
-  channel->timeout = -1;
-  channel->tries = -1;
-  channel->ndots = -1;
-  channel->udp_port = -1;
-  channel->tcp_port = -1;
-  channel->nservers = -1;
-  channel->ndomains = -1;
-  channel->nsort = -1;
-  channel->lookups = NULL;
-  channel->servers = NULL;
+   /* Set everything to distinguished values so we know they haven't
+    * been set yet.
+    */
+   channel->socket_function = socketFunc;
+   channel->poll_cb_func = NULL;
+   channel->poll_cb_data = NULL;
+   channel->flags = -1;
+   channel->timeout = -1;
+   channel->tries = -1;
+   channel->ndots = -1;
+   channel->udp_port = -1;
+   channel->tcp_port = -1;
+   channel->nservers = -1;
+   channel->ndomains = -1;
+   channel->nsort = -1;
+   channel->lookups = NULL;
+   channel->servers = NULL;
 
-  /* Initialize configuration by each of the four sources, from highest
-   * precedence to lowest.
-   */
-  status = init_by_options(channel, options, optmask);
-  if (status == ARES_SUCCESS)
-    status = init_by_environment(channel);
-  if (status == ARES_SUCCESS)
-    status = init_by_resolv_conf(channel);
-  if (status == ARES_SUCCESS)
-    status = init_by_defaults(channel);
-  if (status != ARES_SUCCESS)
-    {
+   /* Initialize configuration by each of the four sources, from highest
+    * precedence to lowest.
+    */
+   status = init_by_options(channel, options, optmask);
+   if (status == ARES_SUCCESS)
+      status = init_by_environment(channel);
+   if (status == ARES_SUCCESS)
+      status = init_by_resolv_conf(channel);
+   if (status == ARES_SUCCESS)
+      status = init_by_defaults(channel);
+   if (status != ARES_SUCCESS)
+   {
       /* Something failed; clean up memory we may have allocated. */
       if (channel->nservers != -1)
-	free(channel->servers);
+         free(channel->servers);
       if (channel->ndomains != -1)
-	{
-	  for (i = 0; i < channel->ndomains; i++)
-	    free(channel->domains[i]);
-	  free(channel->domains);
-	}
+      {
+         for (i = 0; i < channel->ndomains; i++)
+            free(channel->domains[i]);
+         free(channel->domains);
+      }
       if (channel->nsort != -1)
-	free(channel->sortlist);
+         free(channel->sortlist);
       free(channel->lookups);
       free(channel);
       return status;
-    }
+   }
 
-  /* Trim to one server if ARES_FLAG_PRIMARY is set. */
-  if ((channel->flags & ARES_FLAG_PRIMARY) && channel->nservers > 1)
-    channel->nservers = 1;
+   /* Trim to one server if ARES_FLAG_PRIMARY is set. */
+   if ((channel->flags & ARES_FLAG_PRIMARY) && channel->nservers > 1)
+      channel->nservers = 1;
 
-  /* Initialize server states. */
-  for (i = 0; i < channel->nservers; i++)
-    {
+   /* Initialize server states. */
+   for (i = 0; i < channel->nservers; i++)
+   {
       server = &channel->servers[i];
       server->udp_socket = -1;
       server->tcp_socket = -1;
@@ -213,192 +213,192 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
       server->tcp_buffer = NULL;
       server->qhead = NULL;
       server->qtail = NULL;
-    }
+   }
 
-  /* Choose a somewhat random query ID.  The main point is to avoid
-   * collisions with stale queries.  An attacker trying to spoof a DNS
-   * answer also has to guess the query ID, but it's only a 16-bit
-   * field, so there's not much to be done about that.
-   */
-//  gettimeofday(&tv, NULL);
-//  channel->next_id = (tv.tv_sec ^ tv.tv_usec ^ getpid()) & 0xffff;
-  {
-	static int cjNextID=1;
-	  channel->next_id = cjNextID++;
-  }
+   /* Choose a somewhat random query ID.  The main point is to avoid
+    * collisions with stale queries.  An attacker trying to spoof a DNS
+    * answer also has to guess the query ID, but it's only a 16-bit
+    * field, so there's not much to be done about that.
+    */
+    //  gettimeofday(&tv, NULL);
+    //  channel->next_id = (tv.tv_sec ^ tv.tv_usec ^ getpid()) & 0xffff;
+   {
+      static int cjNextID = 1;
+      channel->next_id = cjNextID++;
+   }
 
-  channel->queries = NULL;
+   channel->queries = NULL;
 
-  *channelptr = channel;
-  return ARES_SUCCESS;
+   *channelptr = channel;
+   return ARES_SUCCESS;
 }
 
-static int init_by_options(ares_channel channel, struct ares_options *options,
-			   int optmask)
+static int init_by_options(ares_channel channel, struct ares_options* options,
+   int optmask)
 {
-  int i;
+   int i;
 
-  /* Easy stuff. */
-  if ((optmask & ARES_OPT_FLAGS) && channel->flags == -1)
-    channel->flags = options->flags;
-  if ((optmask & ARES_OPT_TIMEOUT) && channel->timeout == -1)
-    channel->timeout = options->timeout;
-  if ((optmask & ARES_OPT_TRIES) && channel->tries == -1)
-    channel->tries = options->tries;
-  if ((optmask & ARES_OPT_NDOTS) && channel->ndots == -1)
-    channel->ndots = options->ndots;
-  if ((optmask & ARES_OPT_UDP_PORT) && channel->udp_port == -1)
-     channel->udp_port = options->udp_port;
-  if ((optmask & ARES_OPT_TCP_PORT) && channel->tcp_port == -1)
-     channel->tcp_port = options->tcp_port;
+   /* Easy stuff. */
+   if ((optmask & ARES_OPT_FLAGS) && channel->flags == -1)
+      channel->flags = options->flags;
+   if ((optmask & ARES_OPT_TIMEOUT) && channel->timeout == -1)
+      channel->timeout = options->timeout;
+   if ((optmask & ARES_OPT_TRIES) && channel->tries == -1)
+      channel->tries = options->tries;
+   if ((optmask & ARES_OPT_NDOTS) && channel->ndots == -1)
+      channel->ndots = options->ndots;
+   if ((optmask & ARES_OPT_UDP_PORT) && channel->udp_port == -1)
+      channel->udp_port = options->udp_port;
+   if ((optmask & ARES_OPT_TCP_PORT) && channel->tcp_port == -1)
+      channel->tcp_port = options->tcp_port;
 
-  /* Copy the servers, if given. */
-  if ((optmask & ARES_OPT_SERVERS) && channel->nservers == -1 && options->nservers>0 )
-  {
-     channel->servers = malloc(options->nservers * sizeof(struct server_state));
-     if (channel->servers == NULL)
-        return ARES_ENOMEM;
-     memset(channel->servers, '\0', options->nservers * sizeof(struct server_state));
-     for (i = 0; i < options->nservers; i++)
-     {
+   /* Copy the servers, if given. */
+   if ((optmask & ARES_OPT_SERVERS) && channel->nservers == -1 && options->nservers > 0)
+   {
+      channel->servers = malloc(options->nservers * sizeof(struct server_state));
+      if (channel->servers == NULL)
+         return ARES_ENOMEM;
+      memset(channel->servers, '\0', options->nservers * sizeof(struct server_state));
+      for (i = 0; i < options->nservers; i++)
+      {
 #ifdef USE_IPV6
-       channel->servers[i].family = options->servers[i].family;
-       if (options->servers[i].family == AF_INET6)
-       {
-         channel->servers[i].addr6 = options->servers[i].addr6;
-       }
-       else
-       {
-         resip_assert( channel->servers[i].family == AF_INET );
-         channel->servers[i].addr = options->servers[i].addr;
-       }
+         channel->servers[i].family = options->servers[i].family;
+         if (options->servers[i].family == AF_INET6)
+         {
+            channel->servers[i].addr6 = options->servers[i].addr6;
+         }
+         else
+         {
+            resip_assert(channel->servers[i].family == AF_INET);
+            channel->servers[i].addr = options->servers[i].addr;
+         }
 #else
-       channel->servers[i].addr = options->servers[i];
+         channel->servers[i].addr = options->servers[i];
 #endif
-     }
-     channel->nservers = options->nservers;
-  }
+      }
+      channel->nservers = options->nservers;
+   }
 
-  /* Copy the domains, if given.  Keep channel->ndomains consistent so
-   * we can clean up in case of error.
-   */
-  if ((optmask & ARES_OPT_DOMAINS) && channel->ndomains == -1)
-    {
-      channel->domains = malloc(options->ndomains * sizeof(char *));
+   /* Copy the domains, if given.  Keep channel->ndomains consistent so
+    * we can clean up in case of error.
+    */
+   if ((optmask & ARES_OPT_DOMAINS) && channel->ndomains == -1)
+   {
+      channel->domains = malloc(options->ndomains * sizeof(char*));
       if (!channel->domains && options->ndomains != 0)
-	return ARES_ENOMEM;
+         return ARES_ENOMEM;
       for (i = 0; i < options->ndomains; i++)
-	{
-	  channel->ndomains = i;
-	  channel->domains[i] = strdup(options->domains[i]);
-	  if (!channel->domains[i])
-	    return ARES_ENOMEM;
-	}
+      {
+         channel->ndomains = i;
+         channel->domains[i] = strdup(options->domains[i]);
+         if (!channel->domains[i])
+            return ARES_ENOMEM;
+      }
       channel->ndomains = options->ndomains;
-    }
+   }
 
-  /* Set lookups, if given. */
-  if ((optmask & ARES_OPT_LOOKUPS) && !channel->lookups)
-    {
+   /* Set lookups, if given. */
+   if ((optmask & ARES_OPT_LOOKUPS) && !channel->lookups)
+   {
       channel->lookups = strdup(options->lookups);
       if (!channel->lookups)
-	return ARES_ENOMEM;
-    }
+         return ARES_ENOMEM;
+   }
 
-  return ARES_SUCCESS;
+   return ARES_SUCCESS;
 }
 
 static int init_by_environment(ares_channel channel)
 {
-  const char *localdomain, *res_options;
-  int status;
+   const char* localdomain, * res_options;
+   int status;
 
 #if defined(UNDER_CE)
-  localdomain = NULL;
+   localdomain = NULL;
 #else
-  localdomain = getenv("LOCALDOMAIN");
+   localdomain = getenv("LOCALDOMAIN");
 #endif
-  if (localdomain && channel->ndomains == -1)
-    {
+   if (localdomain && channel->ndomains == -1)
+   {
       status = set_search(channel, localdomain);
       if (status != ARES_SUCCESS)
-	return status;
-    }
+         return status;
+   }
 
 #if defined(UNDER_CE)
-  res_options = NULL;
+   res_options = NULL;
 #else
-  res_options = getenv("RES_OPTIONS");
+   res_options = getenv("RES_OPTIONS");
 #endif
-  if (res_options)
-    {
+   if (res_options)
+   {
       status = set_options(channel, res_options);
       if (status != ARES_SUCCESS)
-	return status;
-    }
+         return status;
+   }
 
-  return ARES_SUCCESS;
+   return ARES_SUCCESS;
 }
 
 static int init_by_resolv_conf(ares_channel channel)
 {
-  FILE *fp;
-  char *line = NULL, *p;
-  int linesize, status, nservers = 0, nsort = 0;
-  struct server_state *servers = NULL;
-  struct apattern *sortlist = NULL;
+   FILE* fp;
+   char* line = NULL, * p;
+   int linesize, status, nservers = 0, nsort = 0;
+   struct server_state* servers = NULL;
+   struct apattern* sortlist = NULL;
 
-  fp = fopen(PATH_RESOLV_CONF, "r");
+   fp = fopen(PATH_RESOLV_CONF, "r");
 #if defined(UNDER_CE)
-  errno = ENOENT;
+   errno = ENOENT;
 #endif
-  if (!fp)
-    return (errno == ENOENT) ? ARES_SUCCESS : ARES_EFILE;
-  while ((status = ares__read_line(fp, &line, &linesize)) == ARES_SUCCESS)
-    {
+   if (!fp)
+      return (errno == ENOENT) ? ARES_SUCCESS : ARES_EFILE;
+   while ((status = ares__read_line(fp, &line, &linesize)) == ARES_SUCCESS)
+   {
       if ((p = try_config(line, "domain")) && channel->ndomains == -1)
-	status = config_domain(channel, p);
+         status = config_domain(channel, p);
       else if ((p = try_config(line, "lookup")) && !channel->lookups)
-	status = config_lookup(channel, p);
+         status = config_lookup(channel, p);
       else if ((p = try_config(line, "search")) && channel->ndomains == -1)
-	status = set_search(channel, p);
+         status = set_search(channel, p);
       else if ((p = try_config(line, "nameserver")) && channel->nservers == -1)
-	status = config_nameserver(&servers, &nservers, p);
+         status = config_nameserver(&servers, &nservers, p);
       else if ((p = try_config(line, "sortlist")) && channel->nsort == -1)
-	status = config_sortlist(&sortlist, &nsort, p);
+         status = config_sortlist(&sortlist, &nsort, p);
       else if ((p = try_config(line, "options")))
-	status = set_options(channel, p);
+         status = set_options(channel, p);
       else
-	status = ARES_SUCCESS;
+         status = ARES_SUCCESS;
       if (status != ARES_SUCCESS)
-	break;
-    }
-  free(line);
-  fclose(fp);
+         break;
+   }
+   free(line);
+   fclose(fp);
 
-  /* Handle errors. */
-  if (status != ARES_EOF)
-    {
+   /* Handle errors. */
+   if (status != ARES_EOF)
+   {
       free(servers);
       free(sortlist);
       return status;
-    }
+   }
 
-  /* If we got any name server entries, fill them in. */
-  if (servers)
-    {
+   /* If we got any name server entries, fill them in. */
+   if (servers)
+   {
       channel->servers = servers;
       channel->nservers = nservers;
-    }
+   }
 
-  /* If we got any sortlist entries, fill them in. */
-  if (sortlist)
-    {
+   /* If we got any sortlist entries, fill them in. */
+   if (sortlist)
+   {
       channel->sortlist = sortlist;
       channel->nsort = nsort;
-    }
+   }
 
-  return ARES_SUCCESS;
+   return ARES_SUCCESS;
 }
 
 #if defined(__APPLE__) || defined(__MACH__)

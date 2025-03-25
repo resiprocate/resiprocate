@@ -61,12 +61,15 @@ ServerPublication::updateMatchingSubscriptions()
    subs = mDum.mServerSubscriptions.equal_range(key);
    
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
-   for (DialogUsageManager::ServerSubscriptions::iterator i=subs.first; i!=subs.second; ++i)
+   if (handler)
    {
-      handler->onPublished(i->second->getHandle(), 
-                           getHandle(), 
-                           mLastBody.mContents.get(), 
-                           mLastBody.mAttributes.get());
+      for (DialogUsageManager::ServerSubscriptions::iterator i = subs.first; i != subs.second; ++i)
+      {
+         handler->onPublished(i->second->getHandle(),
+                              getHandle(),
+                              mLastBody.mContents.get(),
+                              mLastBody.mAttributes.get());
+      }
    }
    mLastBody.mContents.reset();
    mLastBody.mAttributes.reset();

@@ -2087,7 +2087,7 @@ WebAdmin::buildRestartSubPage(DataStream& s)
             // Create TCP Socket
             sd = (int)socket(AF_INET, SOCK_STREAM, 0);
          }
-         if(sd > 0) 
+         if(sd >= 0) 
          {
             // bind to any local interface/port
             localAddr.sin_family = AF_INET;

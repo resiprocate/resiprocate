@@ -175,6 +175,7 @@ TcpBaseTransport::processListen()
       }
       if(!configureConnectedSocket(sock))
       {
+         closeSocket(sock);
          throw Exception("Failed to configure connected socket", __FILE__,__LINE__);
       }
       makeSocketNonBlocking(sock);

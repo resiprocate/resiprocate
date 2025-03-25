@@ -1008,14 +1008,17 @@ TransactionState::saveOriginalContactAndVia(const SipMessage& sip)
 
 void TransactionState::restoreOriginalContactAndVia()
 {
-   if (mOriginalContact.get())
+   if (mNextTransmission)
    {
-      mNextTransmission->header(h_Contacts).front() = *mOriginalContact;
-   }                  
-   if (mOriginalVia.get())
-   {
-      mOriginalVia->param(p_branch).incrementTransportSequence();
-      mNextTransmission->header(h_Vias).front() = *mOriginalVia;
+      if (mOriginalContact.get())
+      {
+         mNextTransmission->header(h_Contacts).front() = *mOriginalContact;
+      }
+      if (mOriginalVia.get())
+      {
+         mOriginalVia->param(p_branch).incrementTransportSequence();
+         mNextTransmission->header(h_Vias).front() = *mOriginalVia;
+      }
    }
 }
 

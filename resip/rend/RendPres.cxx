@@ -317,7 +317,7 @@ public:
 class RendPubSubEvent
 {
 public:
-   RendPubSubEvent(resip::Data evName, resip::Mime contentType)
+   RendPubSubEvent(const resip::Data& evName, const resip::Mime& contentType)
       : mEventName(evName), mContentType(contentType), 
         mTuplePrefix(resip::Random::getRandomBase64(4)), // should be 6 char long
         mPosture(0),

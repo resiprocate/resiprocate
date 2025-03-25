@@ -1256,7 +1256,7 @@ DialogUsageManager::findDialog(const DialogId& id)
 
 
 InviteSessionHandle
-DialogUsageManager::findInviteSession(DialogId id)
+DialogUsageManager::findInviteSession(const DialogId& id)
 {
    Dialog* dialog = findDialog(id);
    if (dialog && dialog->mInviteSession)
@@ -1268,7 +1268,7 @@ DialogUsageManager::findInviteSession(DialogId id)
 }
 
 pair<InviteSessionHandle, int>
-DialogUsageManager::findInviteSession(CallId replaces)
+DialogUsageManager::findInviteSession(const CallId& replaces)
 {
    //486/481/603 decision making logic where?  App may not wish to keep track of
    //invitesession state
@@ -1430,7 +1430,7 @@ DialogUsageManager::internalProcess(std::unique_ptr<Message> msg)
          {
             mKeepAliveManager->process(*keepAliveMsg);
          }
-         return;      
+         return;
       }
    }
 
@@ -1443,7 +1443,7 @@ DialogUsageManager::internalProcess(std::unique_ptr<Message> msg)
          {
             mKeepAliveManager->process(*keepAlivePongMsg);
          }
-         return;      
+         return;
       }
    }
 
@@ -1483,6 +1483,7 @@ DialogUsageManager::internalProcess(std::unique_ptr<Message> msg)
          DebugLog(<< "connection terminated message");
          if (mConnectionTerminatedEventDispatcher.dispatch(msg.get()))
          {
+            // If EventDispatcher returns true, then it took ownership of msg, so we release it
             msg.release();
          }
          return;
@@ -1495,7 +1496,7 @@ DialogUsageManager::internalProcess(std::unique_ptr<Message> msg)
       {
          //DebugLog(<< "DumCommand" );
          command->executeCommand();
-         return;      
+         return;
       }
    }
 
@@ -1586,7 +1587,7 @@ DialogUsageManager::incomingProcess(std::unique_ptr<Message> msg)
    }
    if (tid != Data::Empty && !mIncomingFeatureList.empty())
    {
-      FeatureChainMap::iterator it;     
+      FeatureChainMap::iterator it;
       //efficiently find or create FeatureChain, should prob. be a utility template
       {
          FeatureChainMap::iterator lb = mIncomingFeatureChainMap.lower_bound(tid);

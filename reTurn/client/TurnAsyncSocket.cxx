@@ -1293,6 +1293,7 @@ TurnAsyncSocket::RequestEntry::~RequestEntry()
 { 
    //std::cout << "RequestEntry::~RequestEntry() " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
    delete mRequestMessage; 
+   delete mDest;
    stopTimer();
 }
 

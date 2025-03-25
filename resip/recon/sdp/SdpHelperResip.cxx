@@ -142,6 +142,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
                sdpTimeRepeat->addOffsetFromStartTime(*it3);
             }
             sdpTime->addRepeat(*sdpTimeRepeat);
+            delete sdpTimeRepeat;
          }
          sdp->addTime(*sdpTime);
          delete sdpTime;

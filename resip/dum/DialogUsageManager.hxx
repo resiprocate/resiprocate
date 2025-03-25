@@ -301,9 +301,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       AppDialogHandle findAppDialog(const DialogId& id);
       AppDialogSetHandle findAppDialogSet(const DialogSetId& id);
 
-      InviteSessionHandle findInviteSession(DialogId id);
+      InviteSessionHandle findInviteSession(const DialogId& id);
       //if the handle is inValid, int represents the errorcode
-      std::pair<InviteSessionHandle, int> findInviteSession(CallId replaces);
+      std::pair<InviteSessionHandle, int> findInviteSession(const CallId& replaces);
 
       ClientPublicationHandler* getClientPublicationHandler(const Data& eventType);
       ServerPublicationHandler* getServerPublicationHandler(const Data& eventType);
@@ -317,7 +317,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       template<typename UnaryFunction>
       UnaryFunction applyToServerSubscriptions(const Data& aor, 
                                                const Data& eventType, 
-                                               UnaryFunction applyFn)
+                                               UnaryFunction& applyFn)
       {
          Data key = eventType + aor;
          std::pair<ServerSubscriptions::iterator,ServerSubscriptions::iterator> 
@@ -328,7 +328,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             ServerSubscriptionHandle h = i->second->getHandle();
             applyFn(h);
          }
-         return applyFn;         
+         return applyFn;
       }
 
       //DUM will delete features in its destructor. Feature manipulation should
