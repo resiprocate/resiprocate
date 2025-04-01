@@ -724,6 +724,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
       ErrLog(<< "Failed to cache result for " << targetToQuery << ": " << e.getMessage());
       mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink);
       bGotAnswers = false;
+      free(name);
       return;
    }
 

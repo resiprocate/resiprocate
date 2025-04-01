@@ -90,6 +90,7 @@ void RRList::update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
    this->clear();
    mAbsoluteExpiry = ULONG_MAX;
    
+   // Add each record and track the lowest ttl of all the records
    for (Itr it = begin; it != end; it++)
    {
       try
@@ -108,7 +109,7 @@ void RRList::update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
       }
    }
 
-   if (mAbsoluteExpiry < (uint64_t)ttl)
+   if (mAbsoluteExpiry == ULONG_MAX || mAbsoluteExpiry < (uint64_t)ttl)
    {
       mAbsoluteExpiry = ttl;
    }
