@@ -93,7 +93,7 @@ class RRCache
       typedef std::map<int, resip::RRFactoryBase*> FactoryMap;
       FactoryMap  mFactoryMap;
       
-      int mUserDefinedTTL; // used when the ttl in RR is 0 or less than default(60). in seconds.
+      int mUserDefinedTTL; // used when the ttl in RR is 0 or less than default(10). in seconds.
       unsigned int mSize;
 };
 

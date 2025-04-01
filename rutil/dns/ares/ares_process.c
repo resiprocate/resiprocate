@@ -966,7 +966,6 @@ void ares__kill_socket(int s)
 #else
    close(s);
 #endif
-   s = -1;	// otherwise we will try using it again!
 }
 
 int make_socket_non_blocking(int s)
