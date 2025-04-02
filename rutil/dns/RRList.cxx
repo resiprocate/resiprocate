@@ -23,6 +23,7 @@
 #include "rutil/BaseException.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/DnsUtil.hxx"
+#include "rutil/dns/AresDns.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
 #include "rutil/dns/DnsHostRecord.hxx"
 #include "rutil/dns/RRFactory.hxx"
@@ -151,85 +152,15 @@ void RRList::clear()
 }
 
 EncodeStream&
-RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
+RRList::encodeRRList(EncodeStream& strm)
 {
-   strm << "DNSCACHE: Type=";
-
-   switch(mRRType)
-   {
-   case T_CNAME:
-      {
-         DnsCnameRecord* record = dynamic_cast<DnsCnameRecord*>(item.record);
-         resip_assert(record);
-         strm << "CNAME: " << record->name() << " -> " << record->cname() << " ttl=" << record->ttl();
-         break;
-      }
-
-   case T_NAPTR:
-      {
-         DnsNaptrRecord* record = dynamic_cast<DnsNaptrRecord*>(item.record);
-         resip_assert(record);
-         strm << "NAPTR: " << record->name() << " -> repl=" << record->replacement() << " service=" << record->service() 
-            << " order=" << record->order() << " pref=" << record->preference() << " flags=" << record->flags() 
-            << " regexp=" << record->regexp().regexp() << " ttl=" << record->ttl();
-         break;
-      }
-
-   case T_SRV:
-      {
-         DnsSrvRecord* record = dynamic_cast<DnsSrvRecord*>(item.record);
-         resip_assert(record);
-         strm << "SRV: " << record->name() << " -> " << record->target() << ":" << record->port() 
-            << " priority=" << record->priority() << " weight=" << record->weight() << " ttl=" << record->ttl();
-         break;
-      }
-
-#ifdef USE_IPV6
-   case T_AAAA:
-      {
-         DnsAAAARecord* record = dynamic_cast<DnsAAAARecord*>(item.record);
-         resip_assert(record);
-         strm << "AAAA(Host): " << record->name() << " -> " << DnsUtil::inet_ntop(record->v6Address()) << " ttl=" << record->ttl();
-         break;
-      }
-#endif
-
-   case T_A:
-      {
-         DnsHostRecord* record = dynamic_cast<DnsHostRecord*>(item.record);
-         resip_assert(record);
-         strm << "A(Host): " << record->name() << " -> " << record->host() << " ttl=" << record->ttl();
-         break;
-      }
-   default:
-      strm << "UNKNOWN(" << mRRType << ")" << " key=" << mKey << " name=" << item.record->name() << " ttl=" << item.record->ttl();
-      break;
-   }
-
-   strm << " secsToExpirey=" << (mAbsoluteExpiry - Timer::getTimeSecs()) << " status=" << mStatus;
-   strm.flush();
-   return strm;
-}
-
-void RRList::log()
-{
+   strm << "Key=" << mKey << ", Type=" << AresDns::dnsRRTypeToString(mRRType) << ", secsToExpirey=" << (mAbsoluteExpiry - Timer::getTimeSecs()) << ", status=" << mStatus << ", numRecords=" << mRecords.size();
+   int recNum = 0;
    for (RecordArr::iterator it = mRecords.begin(); it != mRecords.end(); ++it)
    {
-      Data buffer;
-      DataStream strm(buffer);
-
-      encodeRecordItem(*it, strm);
-      WarningLog( << buffer);
-   }
-}
-
-EncodeStream&
-RRList:: encodeRRList(EncodeStream& strm)
-{
-   for (RecordArr::iterator it = mRecords.begin(); it != mRecords.end(); ++it)
-   {
-      encodeRecordItem(*it, strm);
-      strm << endl;
+      recNum++;
+      strm << endl << "  Record " << recNum << ": ";
+      it->record->dump(strm);
    }
    return strm;
 }

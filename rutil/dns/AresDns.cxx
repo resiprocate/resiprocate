@@ -729,6 +729,38 @@ resip_AresDns_caresCallback(void *arg, int status, int timeouts,
    return ::resip_AresDns_aresCallback(arg, status, abuf, alen);
 }
 
+char* 
+AresDns::dnsRRTypeToString(int rrtype)
+{
+   if (rrtype == T_A)
+   {
+      return "A";
+   }
+#if defined(USE_IPV6)
+   else if (rrtype == T_AAAA)
+   {
+      return "AAAA";
+   }
+#endif
+   else if (rrtype == T_NAPTR)
+   {
+      return "NAPTR";
+   }
+   else if (rrtype == T_SRV)
+   {
+      return "SRV";
+   }
+   else if (rrtype == T_CNAME)
+   {
+      return "CNAME";
+   }
+   else
+   {
+      return "Unknown";
+   }
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *

@@ -17,6 +17,17 @@ class RROverlay;
 class DnsHostRecord : public DnsResourceRecord
 {
    public:
+      class HostException final : public BaseException
+      {
+      public:
+         HostException(const Data& msg, const Data& file, const int line)
+            : BaseException(msg, file, line)
+         {
+         }
+
+         const char* name() const noexcept override { return "HostException"; }
+      };
+
       DnsHostRecord(const RROverlay&);
       DnsHostRecord(const Data name, const in_addr addr): mAddr(addr), mName(name), mTTL(-1) {};
       virtual ~DnsHostRecord() {}

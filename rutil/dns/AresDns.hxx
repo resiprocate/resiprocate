@@ -64,6 +64,8 @@ class AresDns : public ExternalDns, public FdSetIOObserver
       friend void ::resip_AresDns_aresCallback(void *arg, int status, unsigned char* abuf, int alen);
       friend void ::resip_AresDns_caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
 
+      static char* dnsRRTypeToString(int rrtype);
+
       // used for epoll() interface to ares lib
       // time_t mNow;
 
@@ -81,7 +83,6 @@ class AresDns : public ExternalDns, public FdSetIOObserver
       FdPollGrp*	mPollGrp;
       typedef std::vector<std::pair<AresDnsPollItem*, AresDnsPollItem*> > PollItems;
       PollItems mPollItems;  // first item is for UDP socket, 2nd is for TCP socket
-
 };
 
 }
