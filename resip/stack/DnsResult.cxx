@@ -890,10 +890,10 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 {
    if (!mInterface.isSupported(mTransport, V4) && !mInterface.isSupported(mTransport, V6))
    {
+      StackLog(<< "DnsResult::onDnsResult(): A record, for unsupported transport: target=" << mTarget << ", status=" << result.status);
       return;
    }
-   StackLog (<< "Received dns result for: " << mTarget);
-   StackLog (<< "DnsResult::onDnsResult() " << result.status);
+   StackLog (<< "DnsResult::onDnsResult(): A record, target=" << mTarget << ", status=" << result.status);
    
    // This function assumes that the A query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -1048,12 +1048,12 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 {
 #ifdef USE_IPV6
-   StackLog (<< "Received AAAA result for: " << mTarget);
    if (!mInterface.isSupported(mTransport, V6))
    {
+      StackLog(<< "DnsResult::onDnsResult(): AAAA record, for unsupported transport: target=" << mTarget << ", status=" << result.status);
       return;
    }
-   StackLog (<< "DnsResult::onDnsResult() " << result.status);
+   StackLog(<< "DnsResult::onDnsResult(): AAAA record, target=" << mTarget << ", status=" << result.status);
    resip_assert(mInterface.isSupported(mTransport, V6));
 
    // This function assumes that the AAAA query that caused this callback
@@ -1100,10 +1100,10 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 
 void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
 {
-   StackLog (<< "Received SRV result for: " << mTarget);
    resip_assert(mSRVCount>=0);
    mSRVCount--;
-   StackLog (<< "DnsResult::onDnsResult() " << mSRVCount << " status=" << result.status);
+
+   StackLog(<< "DnsResult::onDnsResult(): SRV record, target=" << mTarget << ", numRemainingSRV=" << mSRVCount << ", status = " << result.status);
 
    // There could be multiple SRV queries outstanding, but there will be no
    // other DNS queries outstanding that might cause a callback into this
@@ -1251,7 +1251,7 @@ DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result, int order)
 
    mDoingEnum--;
 
-   StackLog(<< "checking result of ENUM query, remaining queries outstanding = " << mDoingEnum);
+   StackLog(<< "DnsResult::onDnsResult(): ENUM NAPTR record, target=" << mTarget << ", numRemainingEnum=" << mDoingEnum << ", status = " << result.status);
    
    if (result.status == 0)
    {
@@ -1443,8 +1443,7 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
 void 
 DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
 {
-   StackLog (<< "Received NAPTR result for: " << mInputUri << " target=" << mTarget);
-   StackLog (<< "DnsResult::onDnsResult() " << result.status);
+   StackLog(<< "DnsResult::onDnsResult(): NAPTR record, inputUri=" << mInputUri << ", target=" << mTarget << ", status=" << result.status);
 
    // This function assumes that the NAPTR query that caused this
    // callback is the ONLY outstanding query that might cause

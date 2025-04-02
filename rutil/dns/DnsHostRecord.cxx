@@ -28,9 +28,10 @@ DnsHostRecord::DnsHostRecord(const RROverlay& overlay)
 {
    char* name = 0;
    long len = 0;
-   int status = ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
-   (void)status;
-   resip_assert(status == ARES_SUCCESS);	// .kw. what should we do if bad?
+   if (ARES_SUCCESS != ares_expand_name(overlay.data() - overlay.nameLength() - RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
+   {
+      throw HostException("Failed parse of Host record", __FILE__, __LINE__);
+   }
    mName = name;
    free(name);
    mTTL = overlay.ttl();

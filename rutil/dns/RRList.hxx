@@ -77,7 +77,6 @@ class RRList : public IntrusiveListElement<RRList*>
 
       RecordItr find(const Data&);
       void clear();
-      EncodeStream& encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm);
 };
 
 }

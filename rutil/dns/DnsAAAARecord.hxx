@@ -19,6 +19,17 @@ class RROverlay;
 class DnsAAAARecord : public DnsResourceRecord
 {
    public:
+      class AaaaException final : public BaseException
+      {
+      public:
+         AaaaException(const Data& msg, const Data& file, const int line)
+            : BaseException(msg, file, line)
+         {
+         }
+
+         const char* name() const noexcept override { return "AaaaException"; }
+      };
+
       DnsAAAARecord(const RROverlay& overlay);
       virtual ~DnsAAAARecord() {}
 

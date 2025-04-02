@@ -30,7 +30,10 @@ DnsAAAARecord::DnsAAAARecord(const RROverlay& overlay)
 #ifdef USE_IPV6
    char* name = 0;
    long len = 0;
-   ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
+   if (ARES_SUCCESS != ares_expand_name(overlay.data() - overlay.nameLength() - RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
+   {
+      throw AaaaException("Failed parse of AAAA record", __FILE__, __LINE__);
+   }
    mName = name;
    free(name);
    mTTL = overlay.ttl();
