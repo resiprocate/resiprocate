@@ -246,9 +246,9 @@ Transport::error(int e)
 }
 
 void
-Transport::flowTerminated(const Tuple& flow)
+Transport::flowTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode)
 {
-   mStateMachineFifo.add(new ConnectionTerminated(flow));
+   mStateMachineFifo.add(new ConnectionTerminated(flow, failureReason, failureSubCode));
 }
 
 void

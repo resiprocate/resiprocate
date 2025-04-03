@@ -294,7 +294,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mProfile->setKeepAliveTimeForStream(120);
 
    // Install Handlers
-   mDum->setInviteSessionHandler(this); 
+   mDum->setInviteSessionHandler(this);
    mDum->setDialogSetHandler(this);
    mDum->addOutOfDialogHandler(OPTIONS, this);
    //mDum->addOutOfDialogHandler(REFER, this);
@@ -439,10 +439,16 @@ BasicClientUserAgent::addTransport(TransportType type, int port)
 void 
 BasicClientUserAgent::post(Message* msg)
 {
-   ConnectionTerminated* terminated = dynamic_cast<ConnectionTerminated*>(msg);
-   if (terminated)
+   ConnectionTerminated* pTerminated = dynamic_cast<ConnectionTerminated*>(msg);
+   if (pTerminated)
    {
-      InfoLog(<< "BasicClientUserAgent received connection terminated message for: " << terminated->getFlow());
+      InfoLog(<< "BasicClientUserAgent received: " << *pTerminated);
+#if defined(USE_SSL)
+      if (pTerminated->getFailureReason() == TransportFailure::CertValidationFailure)
+      {
+         InfoLog(<< "Certificate Validation Failure Reason: " << X509_verify_cert_error_string(pTerminated->getFailureSubCode()));
+      }
+#endif
       delete msg;
       return;
    }

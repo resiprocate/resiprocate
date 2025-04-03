@@ -289,40 +289,39 @@ TlsConnection::checkState()
             }
             else if (err == SSL_ERROR_SSL)
             {
-               mFailureReason = TransportFailure::CertValidationFailure;
-               WarningLog(<<"SSL cipher or certificate failure SSL_ERROR_SSL");
-               if(SSL_get_peer_certificate(mSsl))
+               WarningLog(<< "SSL cipher or certificate failure SSL_ERROR_SSL");
+               int verifyErrorCode = SSL_get_verify_result(mSsl);
+               switch (verifyErrorCode)
                {
-                  DebugLog(<<"a certificate was received from the peer");
-                  int verifyErrorCode = SSL_get_verify_result(mSsl);
-                  switch(verifyErrorCode)
+               case X509_V_OK:
+                  if (SSL_get_peer_certificate(mSsl))
                   {
-                     case X509_V_OK:
-                        DebugLog(<<"peer supplied a certificate, but it has not been checked or it was checked successfully");
-                        break;
-                     default:
-                        ErrLog(<<"peer certificate validation failure: " << X509_verify_cert_error_string(verifyErrorCode));
-                        DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
-                        break;
+                     DebugLog(<< "peer supplied a certificate, it has either not been checked or it was checked successfully");
+                  }
+                  else
+                  {
+                     DebugLog(<< "no peer supplied certificate");
+                  }
+                  break;
+               default:
+                  ErrLog(<< "peer certificate validation failure: " << X509_verify_cert_error_string(verifyErrorCode));
+                  DebugLog(<< "additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
+                  break;
+               }
+               if (mServer)
+               {
+                  TlsBaseTransport* t = dynamic_cast<TlsBaseTransport*>(transport());
+                  resip_assert(t);
+                  if (t->getClientVerificationMode() == SecurityTypes::Mandatory)
+                  {
+                     ErrLog(<< "Mandatory client certificate verification required, protocol failed, client did not send a certificate or it was not valid");
                   }
                }
                else
                {
-                  DebugLog(<<"protocol did not reach certificate exchange phase, peer does not have a certificate or the certificate was not accepted");
-                  if(mServer)
-                  {
-                     TlsBaseTransport *t = dynamic_cast<TlsBaseTransport*>(transport());
-                     resip_assert(t);
-                     if(t->getClientVerificationMode() == SecurityTypes::Mandatory)
-                     {
-                        ErrLog(<<"Mandatory client certificate verification required, protocol failed, client did not send a certificate or it was not valid");
-                     }
-                  }
-                  else
-                  {
-                     ErrLog(<<"Server did not present any certificate to us, certificate invalid or protocol did not reach certificate exchange");
-                  }
+                  ErrLog(<< "Server did not present any certificate to us, certificate invalid or protocol did not reach certificate exchange");
                }
+               setFailureReason(TransportFailure::CertValidationFailure, verifyErrorCode);
             }
             else
             {
@@ -363,7 +362,7 @@ TlsConnection::checkState()
                  << who().getTargetDomain()
                  << "> remote cert domain(s) are <" 
                  << getPeerNamesData() << ">" );
-         mFailureReason = TransportFailure::CertNameMismatch;         
+         setFailureReason(TransportFailure::CertNameMismatch, 0);
          return mTlsState;
       }
    }
@@ -378,7 +377,6 @@ TlsConnection::checkState()
    return mTlsState;
 }
 
-      
 int 
 TlsConnection::read(char* buf, int count )
 {

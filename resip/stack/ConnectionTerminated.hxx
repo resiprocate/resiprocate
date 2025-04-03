@@ -3,6 +3,7 @@
 
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/TransactionMessage.hxx"
+#include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/Tuple.hxx"
 
 namespace resip
@@ -13,31 +14,28 @@ class ConnectionTerminated : public TransactionMessage
    public:
       RESIP_HeapCount(ConnectionTerminated);
 
-      ConnectionTerminated(const Tuple& flow) : 
-         mFlow(flow)
+      ConnectionTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode) :
+         mFlow(flow), mFailureReason(failureReason), mFailureSubCode(failureSubCode)
       {
       }
       virtual const Data& getTransactionId() const { resip_assert(0); return Data::Empty; }
       virtual bool isClientTransaction() const { resip_assert(0); return false; }
-      virtual Message* clone() const { return new ConnectionTerminated(mFlow); }
+      virtual Message* clone() const { return new ConnectionTerminated(mFlow, mFailureReason, mFailureSubCode); }
       virtual EncodeStream& encode(EncodeStream& strm) const { return encodeBrief(strm); }
       virtual EncodeStream& encodeBrief(EncodeStream& str) const 
       {
-         return str << "ConnectionTerminated " << mFlow;
+         return str << "ConnectionTerminated: flow=" << mFlow << ", failureReason=" << TransportFailure::failureReasonToString(mFailureReason) << ", failureSubCode=" << mFailureSubCode;
       }
 
-      FlowKey getFlowKey() const 
-      {
-         return mFlow.mFlowKey;
-      }
-      
-      const Tuple& getFlow() const
-      {
-         return mFlow;
-      }
-      
+      FlowKey getFlowKey() const { return mFlow.mFlowKey; }
+      const Tuple& getFlow() const { return mFlow; }
+      TransportFailure::FailureReason getFailureReason() const { return mFailureReason; }
+      int getFailureSubCode() const { return mFailureSubCode; }
+
    private:
       const Tuple mFlow;
+      TransportFailure::FailureReason mFailureReason;
+      int mFailureSubCode;
 };
 
 }
