@@ -93,7 +93,7 @@ ConnectionBase::~ConnectionBase()
 {
    if(mTransport)
    {
-      mTransport->flowTerminated(mWho);
+      mTransport->flowTerminated(mWho, mFailureReason, mFailureSubCode);
    }
 
    while (!mOutstandingSends.empty())

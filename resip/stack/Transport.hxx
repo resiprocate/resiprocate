@@ -228,7 +228,7 @@ class Transport : public FdSetIOObserver
          Posts a ConnectionTerminated message to TransactionMessage
          Fifo.
       */
-      void flowTerminated(const Tuple& flow);
+      void flowTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode);
       void keepAlivePong(const Tuple& flow);
 
       /**
