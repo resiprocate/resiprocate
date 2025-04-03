@@ -1476,7 +1476,7 @@ DialogUsageManager::internalProcess(std::unique_ptr<Message> msg)
             (*it2)->flowTerminated(terminated->getFlow());
          }
 
-         DebugLog(<< "connection terminated message");
+         DebugLog(<< *msg);
          if (mConnectionTerminatedEventDispatcher.dispatch(msg.get()))
          {
             // If EventDispatcher returns true, then it took ownership of msg, so we release it
