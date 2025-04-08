@@ -308,7 +308,10 @@ static void read_tcp_data(ares_channel channel, int server_idx, fd_set* read_fds
                | server->tcp_lenbuf[1];
             server->tcp_buffer = malloc(server->tcp_length);
             if (!server->tcp_buffer)
+            {
                handle_error(channel, i, now);
+               return; /* bail out on malloc failure. TODO: make this function return error codes */
+            }
             server->tcp_buffer_pos = 0;
          }
       }
@@ -619,7 +622,10 @@ void ares__send_query(ares_channel channel, struct query* query, time_t now)
       }
       sendreq = malloc(sizeof(struct send_request));
       if (!sendreq)
+      {
          end_query(channel, query, ARES_ENOMEM, NULL, 0);
+         return;
+      }
       sendreq->data = query->tcpbuf;
       sendreq->len = query->tcplen;
       sendreq->next = NULL;
@@ -674,10 +680,11 @@ void ares__send_query(ares_channel channel, struct query* query, time_t now)
          next_server(channel, query, now);
          return;
       }
-      query->timeout = now
-         + ((query->itry == 0) ? channel->timeout
-            : channel->timeout << query->itry / channel->nservers);
    }
+   // Start timeout for either UDP or TCP
+   query->timeout = now
+      + ((query->itry == 0) ? channel->timeout
+         : channel->timeout << query->itry / channel->nservers);
 }
 
 static int open_tcp_socket(ares_channel channel, struct server_state* server)
@@ -730,31 +737,20 @@ static int open_tcp_socket(ares_channel channel, struct server_state* server)
       }
    }
    else // IPv4 DNS server
+#endif
    {
       memset(&sin, 0, sizeof(sin));
       sin.sin_family = AF_INET;
       sin.sin_addr = server->addr;
       sin.sin_port = channel->tcp_port;
 
-      if (connect(s, (struct sockaddr*)&sin, sizeof(sin)) == -1 && getErrno() != PORTABLE_INPROGRESS_ERR)
+      if (connect(s, (struct sockaddr*)&sin, sizeof(sin)) == -1 && 
+          getErrno() != PORTABLE_INPROGRESS_ERR)
       {
          ares__kill_socket(s);
          return -1;
       }
    }
-#else
-   memset(&sin, 0, sizeof(sin));
-   sin.sin_family = AF_INET;
-   sin.sin_addr = server->addr;
-   sin.sin_port = channel->tcp_port;
-
-   if (connect(s, (struct sockaddr*)&sin, sizeof(sin)) == -1
-      && getErrno() != PORTABLE_INPROGRESS_ERR)
-   {
-      ares__kill_socket(s);
-      return -1;
-   }
-#endif
 
    server->tcp_socket = s;
    return 0;
