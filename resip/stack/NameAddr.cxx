@@ -194,6 +194,7 @@ NameAddr::parse(ParseBuffer& pb)
    else
    {
       pb.reset(start);
+      // Check if we have a double quoted displayname
       if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
       {
          start = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
@@ -215,21 +216,29 @@ NameAddr::parse(ParseBuffer& pb)
             pb.skipChar(Symbols::LA_QUOTE[0]);
          }
       }
+      // Check if we have a URI without a displayname surrounded by angle brackets
       else if (*pb.position() == Symbols::LA_QUOTE[0])
       {
          pb.skipChar(Symbols::LA_QUOTE[0]);
          laQuote = true;
       }
+      // else, we could have a URI with a displayname that is not surrounded by double quotes
       else
       {
          start = pb.position();
-         pb.skipToChar(Symbols::LA_QUOTE[0]);
-         if (pb.eof())
+         // Note: An angle bracket can appear in a quoted parameter, we want to avoid matching those,
+         //       so if we see a double quote before <, then we ignore the <.  If the displayname
+         //       itself is double quoted that would have been picked off in the first condition 
+         //       of this if statement.
+         pb.skipToOneOf(Symbols::LA_QUOTE, Symbols::DOUBLE_QUOTE);
+         if (pb.eof() || *pb.position() == Symbols::DOUBLE_QUOTE[0])
          {
+            // We must have no displayname and a URI that is not surrounded by angle brackets
             pb.reset(start);
          }
          else
          {
+            // We have a displayname that is not surrounded by double quotes and a URI surround by angle brackets
             laQuote = true;
             pb.skipBackWhitespace();
             pb.data(mDisplayName, start);

@@ -26,102 +26,117 @@ main(int argc, char* argv[])
    Log::Level l = Log::Debug;
    Log::initialize(Log::Cerr, l, argv[0]);
    initNetwork();
-   
+
+   {
+      const char* problem_uri = "sip:p66640t1741689630m63140c193s3@10.106.171.88:5094;+g.3gpp.accesstype=\"cellular\";+sip.instance=\"<urn:gsma:imei:35548888-144050-0>\";+g.3gpp.icsi-ref=\"urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel\"";
+
+      try
+      {
+         NameAddr contact(problem_uri);
+         //cout << Data::from(problem_uri) << endl;
+         assert(contact.param(p_Instance) == Data("<urn:gsma:imei:35548888-144050-0>"));
+         assert(contact.param(UnknownParameterType("+g.3gpp.accesstype")) == Data("cellular"));
+         assert(contact.param(UnknownParameterType("+g.3gpp.icsi-ref")) == Data("urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel"));
+      }
+      catch (ParseException e)
+      {
+         cout << e.getMessage();
+         return -1;
+      }
+   }
+
    {
       Uri uri("sip:speedy_AT_home.com@whistler.gloo.net:5062");
       uri.scheme() = Symbols::Pres;
       assert(Data::from(uri) == "pres:speedy_AT_home.com@whistler.gloo.net:5062");
    }
+
    {
-       const char * a = "alice";
-       const char * e = "example.com";
+      const char* a = "alice";
+      const char* e = "example.com";
 
-       NameAddr alice;
-       alice.uri().user() = a;
-       alice.uri().host() = e;
+      NameAddr alice;
+      alice.uri().user() = a;
+      alice.uri().host() = e;
 
-       NameAddr realm;
-       realm.uri().host() = e;
+      NameAddr realm;
+      realm.uri().host() = e;
 
-       NameAddr aliceContact;
-       aliceContact.uri().user() = a;
-       aliceContact.uri().host() = "127.1.0.1";
-       aliceContact.uri().port() = 32678;
+      NameAddr aliceContact;
+      aliceContact.uri().user() = a;
+      aliceContact.uri().host() = "127.1.0.1";
+      aliceContact.uri().port() = 32678;
 
+      unique_ptr<SipMessage> msg(Helper::makeRegister(alice, alice, aliceContact));
 
-       
-       unique_ptr<SipMessage> msg(Helper::makeRegister(alice,alice,aliceContact));
+      cout << *msg << endl;
 
-       cout << *msg << endl;
+      // Make the data
+      NameAddr original(aliceContact);
+      original.uri().param(UnknownParameterType("x")) = Data("\"1\"");
 
-       // Make the data
-       NameAddr original(aliceContact);
-       original.uri().param(UnknownParameterType("x")) = Data("\"1\"");
+      Uri tmp = original.uri();
+      Data buf;
+      DataStream oldNA(buf);
+      oldNA << Symbols::LA_QUOTE;
+      oldNA << original.uri().scheme();
+      oldNA << Symbols::COLON;
+      oldNA << original.uri().getAor();
+      oldNA << Symbols::RA_QUOTE;
+      oldNA.flush();
 
-       Uri tmp = original.uri();
-       Data buf;
-       DataStream oldNA(buf);
-       oldNA << Symbols::LA_QUOTE;
-       oldNA << original.uri().scheme();
-       oldNA << Symbols::COLON;
-       oldNA << original.uri().getAor();
-       oldNA << Symbols::RA_QUOTE;
-       oldNA.flush();
+      NameAddr modified;
+      modified.uri() = tmp; // copy parameters;
+      modified.uri().host() = e;
+      modified.uri().port() = 65530;
+      modified.uri().user() = "alphabet-soup";
 
-       NameAddr modified;
-       modified.uri() = tmp; // copy parameters;
-       modified.uri().host() = e;
-       modified.uri().port() = 65530;
-       modified.uri().user() = "alphabet-soup";
+      Data gruuData(Data::from(modified.uri()));
+      msg->header(h_Contacts).back().param(p_pubGruu) = gruuData;
 
-       Data gruuData ( Data::from(modified.uri())) ;
-       msg->header(h_Contacts).back().param(p_pubGruu) = gruuData;
+      cout << *msg << endl;
 
+      Uri s1("sip:alice@example.com;gr=\"foo@example.com\"");
+      Uri s2("sip:alice@example.com;gr=\"foo@example.com\"");
+      assert(s1.param(p_gr) == Data("foo@example.com"));
+      assert(s2.param(p_gr) == Data("foo@example.com"));
+      cout << s1 << endl;
+      cout << s2 << endl;
+      cout << endl;
+      Uri s3("sip:alice@example.com");
+      s3.param(UnknownParameterType("foo")) = Data("value");
+      Uri s4("sip:alice@example.com");
+      s4.param(UnknownParameterType("foo")) = Data("\"value\"");
+      cout << "s3's param =" << s3.param(UnknownParameterType("foo")) << endl;
+      cout << "s4's param =" << s4.param(UnknownParameterType("foo")) << endl;
+      cout << "s3 = " << s3 << endl;
+      cout << "s4 = " << s4 << endl;
+      Uri s5(s4);
+      cout << "s5 = " << s5 << endl;
+      Data s5d(Data::from(s5));
+      cout << "s5d = " << s5d << endl;
 
-       cout << *msg << endl;
+      Uri s6("sip:bob@example.com");
+      s6.host();
 
-       Uri s1("sip:alice@example.com;gr=\"foo@example.com\"");
-       Uri s2("sip:alice@example.com;gr=\"foo@example.com\"");
-       assert(s1.param(p_gr) == Data("foo@example.com"));
-       assert(s2.param(p_gr) == Data("foo@example.com"));
-       cout << s1 << endl;
-       cout << s2 << endl;
-       cout << endl;
-       Uri s3("sip:alice@example.com");
-       s3.param(UnknownParameterType("foo")) = Data("value");
-       Uri s4("sip:alice@example.com");
-       s4.param(UnknownParameterType("foo")) = Data("\"value\"");
-       cout << "s3's param =" << s3.param(UnknownParameterType("foo")) << endl;
-       cout << "s4's param =" << s4.param(UnknownParameterType("foo")) << endl;
-       cout << "s3 = " << s3 << endl;
-       cout << "s4 = " << s4 << endl;
-       Uri s5(s4);
-       cout << "s5 = " << s5 << endl;
-       Data s5d(Data::from(s5));
-       cout << "s5d = " << s5d << endl;
+      Uri s7("sip:testproxy.example.com");
+      assert(s7.user().empty());
+      s7.user() = "test";
+      assert(!s7.user().empty());
+      s7.user().clear();
+      assert(s7.user().empty());
 
-       Uri s6("sip:bob@example.com");
-       s6.host();
+      NameAddr na1;
+      na1.uri().user() = "alice";
+      na1.uri().host() = "example.com";
 
-       Uri s7("sip:testproxy.example.com");
-	   assert (s7.user().empty());
-	   s7.user() = "test";
-	   assert (!s7.user().empty());
-	   s7.user().clear();
-	   assert (s7.user().empty());
-
-       NameAddr na1;
-       na1.uri().user() = "alice";
-       na1.uri().host() = "example.com";
-
-       Data q("\"");
-       na1.param(UnknownParameterType("foo")) = Data(q + Data::from(s6) +q);
-       NameAddr na2(na1);
-       cout << "na1=" << na1 << endl;
-       cout << "na2=" << na2 << endl;
-       
+      Data q("\"");
+      na1.param(UnknownParameterType("foo")) = Data(q + Data::from(s6) + q);
+      NameAddr na2(na1);
+      cout << "na1=" << na1 << endl;
+      cout << "na2=" << na2 << endl;
    }
-   //assert(0);
+
    {
       // Test order irrelevance of known parameters
       Uri sip1("sip:user@domain;ttl=15;method=foo");
