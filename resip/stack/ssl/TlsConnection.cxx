@@ -428,9 +428,21 @@ TlsConnection::read(char* buf, int count )
             }
             else
             {
-               // This puts the error return code into bytesRead to
-               // be used in the conditional block later in this method.
-               bytesRead = bytesPending;
+               // It's not clear why SSL_read would return an error after SSL_pending returned > 0, however we have
+               // seen a case where it has returned 0 with an error of SSL_ERROR_WANT_READ.  So we check the error
+               // code returned, and if it is a retyable error, then we proceed with the bytes we already read in the 
+               // in the initial SSL_read call.
+               // Note:  SSL_read docs say the following: "Old documentation indicated a difference between 0 and -1 (return code), 
+               //        and that -1 was retryable. You should instead call SSL_get_error() to find out if it's retryable."
+               int err = SSL_get_error(mSsl, bytesPending);
+               if (err != SSL_ERROR_WANT_READ &&
+                   err != SSL_ERROR_WANT_WRITE &&
+                   err != SSL_ERROR_NONE)
+               {
+                  // Not a retryable error, put the error return code into bytesRead to
+                  // be used in the conditional block later in this method.
+                  bytesRead = bytesPending;
+               }
             }
          }
          else
