@@ -1246,31 +1246,23 @@ static Data enumService2("sip+e2u");
 void
 DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result, int order)
 {
-   Lock l(mEnumDestinationsMutex);
-   resip_assert(mDoingEnum > 0);
+   DnsNaptrRecord best;
 
-   mDoingEnum--;
-
-   StackLog(<< "DnsResult::onDnsResult(): ENUM NAPTR record, target=" << mTarget << ", numRemainingEnum=" << mDoingEnum << ", status = " << result.status);
-   
    if (result.status == 0)
    {
-      DnsNaptrRecord best;
-      best.order() = -1;
-
       for (vector<DnsNaptrRecord>::const_iterator i = result.records.begin(); i != result.records.end(); ++i)
       {
-         InfoLog (<< "service=" << i->service()
-                  << " order=" << i->order()
-                  << " flags="  << i->flags() 
-                  << " regexp substitution=" << i->regexp().replacement()
-                  << " replacement=" << i->replacement());
+         InfoLog(<< "service=" << i->service()
+            << " order=" << i->order()
+            << " flags=" << i->flags()
+            << " regexp substitution=" << i->regexp().replacement()
+            << " replacement=" << i->replacement());
 
-         if ( (isEqualNoCase(i->service(), enumService1) ||
-               isEqualNoCase(i->service(), enumService2) )  && // only E2U records
-              //i->flags().find("u") != Data::npos && // must be terminal record
-              i->replacement().empty() )
-               
+         if ((isEqualNoCase(i->service(), enumService1) ||
+            isEqualNoCase(i->service(), enumService2)) && // only E2U records
+            //i->flags().find("u") != Data::npos && // must be terminal record
+            i->replacement().empty())
+
          {
             if (best.order() == -1)
             {
@@ -1280,30 +1272,37 @@ DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result, int order)
             {
                best = *i;
             }
-            else if (i->order() == best.order() && 
-                     i->preference() < best.preference())
+            else if (i->order() == best.order() &&
+               i->preference() < best.preference())
             {
                best = *i;
             }
          }
       }
-      
-      if (best.order() != -1)
+   }
+
+   Lock l(mEnumDestinationsMutex);
+   resip_assert(mDoingEnum > 0);
+
+   mDoingEnum--;
+
+   StackLog(<< "DnsResult::onDnsResult(): ENUM NAPTR record, target=" << mTarget << ", numRemainingEnum=" << mDoingEnum << ", status = " << result.status);
+   
+   if (best.order() != -1)
+   {
+      InfoLog(<< "Found an enum result: " << best.regexp().replacement());
+      try
       {
-         InfoLog (<< "Found an enum result: " << best.regexp().replacement());
-         try
-         {
-            Uri rewrite(best.regexp().apply(Data::from(mInputUri)));
-            InfoLog (<< "Rewrote uri " << mInputUri << " -> " << rewrite);
-            mEnumDestinations[order] = rewrite;
-         }
-         catch (ParseException&  e )
-         {
-            ErrLog(<<"Caught exception: "<< e);
-            // we just don't add anything to mEnumDestinations...
-            // later, if mEnumDestinations is empty after all ENUM queries,
-            // it will fall back to mInputUri
-         }
+         Uri rewrite(best.regexp().apply(Data::from(mInputUri)));
+         InfoLog(<< "Rewrote uri " << mInputUri << " -> " << rewrite);
+         mEnumDestinations[order] = rewrite;
+      }
+      catch (ParseException& e)
+      {
+         ErrLog(<< "Caught exception: " << e);
+         // we just don't add anything to mEnumDestinations...
+         // later, if mEnumDestinations is empty after all ENUM queries,
+         // it will fall back to mInputUri
       }
    }
 

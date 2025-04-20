@@ -67,8 +67,9 @@ InMemorySyncPubDb::shouldEraseDocument(PubDocument& document, uint64_t now)
 void
 InMemorySyncPubDb::initialSync(unsigned int connectionId)
 {
-   Lock g(mDatabaseMutex);
    uint64_t now = Timer::getTimeSecs();
+
+   Lock g(mDatabaseMutex);
 
    // Iterate through keys
    KeyToETagMap::iterator keyIt = mPublicationDb.begin();
@@ -104,9 +105,10 @@ InMemorySyncPubDb::initialSync(unsigned int connectionId)
 void 
 InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
 {
-   Lock g(mDatabaseMutex);
    Data mapKey = document.mEventType + document.mDocumentKey;
    bool found = false;
+
+   Lock g(mDatabaseMutex);
    KeyToETagMap::iterator keyIt = mPublicationDb.find(mapKey);
    if (keyIt != mPublicationDb.end())
    {
@@ -213,6 +215,8 @@ InMemorySyncPubDb::removeDocument(const Data& eventType, const Data& documentKey
 bool 
 InMemorySyncPubDb::getMergedETags(const Data& eventType, const Data& documentKey, ETagMerger& merger, Contents* destination)
 {
+   uint64_t now = Timer::getTimeSecs();
+
    Lock g(mDatabaseMutex);
 
    // Find entity
@@ -220,7 +224,6 @@ InMemorySyncPubDb::getMergedETags(const Data& eventType, const Data& documentKey
    if (keyIt != mPublicationDb.end())
    {
       bool isFirst = true;
-      uint64_t now = Timer::getTimeSecs();
 
       // Iterate through all Etags
       ETagToDocumentMap::iterator eTagIt = keyIt->second.begin();
@@ -288,6 +291,8 @@ InMemorySyncPubDb::documentExists(const Data& eventType, const Data& documentKey
 // expired hasn't been made obsolete due to a new update.
 bool InMemorySyncPubDb::checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated)
 {
+   uint64_t now = Timer::getTimeSecs();
+
    Lock g(mDatabaseMutex);
 
    // First find entity in map
@@ -298,7 +303,6 @@ bool InMemorySyncPubDb::checkExpired(const Data& eventType, const Data& document
       ETagToDocumentMap::iterator eTagIt = keyIt->second.find(eTag);
       if (eTagIt != keyIt->second.end())
       {
-         uint64_t now = Timer::getTimeSecs();
          if (eTagIt->second.mExpirationTime >= now &&
             (lastUpdated == 0 || lastUpdated == eTagIt->second.mLastUpdated))
          {
