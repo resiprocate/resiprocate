@@ -997,8 +997,9 @@ SipStack::post(const ApplicationMessage& message,
    resip_assert(!mShuttingDown);
    Message* toPost = message.clone();
    if (tu) toPost->setTransactionUser(tu);
+
+   auto ms = (uint32_t)std::chrono::duration_cast<std::chrono::milliseconds>(interval).count();
    Lock lock(mAppTimerMutex);
-   unsigned int ms = (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(interval).count();
    mAppTimers.add(ms,toPost);
    //.dcm. timer update rather than process cycle...optimize by checking if sooner
    //than current timeTillNextProcess?
@@ -1029,8 +1030,9 @@ SipStack::post( std::unique_ptr<ApplicationMessage> message,
 {
    resip_assert(!mShuttingDown);
    if (tu) message->setTransactionUser(tu);
+
+   auto ms = (uint32_t)std::chrono::duration_cast<std::chrono::milliseconds>(interval).count();
    Lock lock(mAppTimerMutex);
-   unsigned int ms = (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(interval).count();
    mAppTimers.add(ms, message.release());
    //.dcm. timer update rather than process cycle...optimize by checking if sooner
    //than current timeTillNextProcess?
