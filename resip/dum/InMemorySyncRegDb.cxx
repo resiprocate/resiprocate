@@ -254,9 +254,8 @@ InMemorySyncRegDb::aorIsRegistered(const Uri& aor, uint64_t* maxExpires)
 void
 InMemorySyncRegDb::lockRecord(const Uri& aor)
 {
-   DebugLog(<< "InMemorySyncRegDb::lockRecord:  aor=" << aor << " threadid=" << ThreadIf::selfId());
-
    Lock g2(mLockedRecordsMutex);
+   DebugLog(<< "InMemorySyncRegDb::lockRecord:  aor=" << aor << " threadid=" << ThreadIf::selfId());
 
    {
       Lock g1(mDatabaseMutex);
@@ -275,9 +274,9 @@ InMemorySyncRegDb::lockRecord(const Uri& aor)
 void
 InMemorySyncRegDb::unlockRecord(const Uri& aor)
 {
+   Lock g2(mLockedRecordsMutex);
    DebugLog(<< "InMemorySyncRegDb::unlockRecord:  aor=" << aor << " threadid=" << ThreadIf::selfId());
 
-   Lock g2(mLockedRecordsMutex);
    {
       Lock g1(mDatabaseMutex);
       // If the pointer is null, we remove the record from the map.
