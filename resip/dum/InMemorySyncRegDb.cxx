@@ -120,8 +120,8 @@ InMemorySyncRegDb::invokeOnInitialSyncAor(unsigned int connectionId, const resip
 void 
 InMemorySyncRegDb::initialSync(unsigned int connectionId)
 {
-   Lock g(mDatabaseMutex);
    uint64_t now = Timer::getTimeSecs();
+   Lock g(mDatabaseMutex);
    for(database_map_t::iterator it = mDatabase.begin(); it != mDatabase.end(); it++)
    {
       if(it->second)
@@ -217,8 +217,9 @@ InMemorySyncRegDb::aorIsRegistered(const Uri& aor)
 bool 
 InMemorySyncRegDb::aorIsRegistered(const Uri& aor, uint64_t* maxExpires)
 {
-   Lock g(mDatabaseMutex);
    bool registered = false;
+
+   Lock g(mDatabaseMutex);
    database_map_t::iterator i = mDatabase.find(aor);
    if (i != mDatabase.end() && i->second != 0)
    {
@@ -254,7 +255,6 @@ void
 InMemorySyncRegDb::lockRecord(const Uri& aor)
 {
    Lock g2(mLockedRecordsMutex);
-
    DebugLog(<< "InMemorySyncRegDb::lockRecord:  aor=" << aor << " threadid=" << ThreadIf::selfId());
 
    {
@@ -275,7 +275,6 @@ void
 InMemorySyncRegDb::unlockRecord(const Uri& aor)
 {
    Lock g2(mLockedRecordsMutex);
-
    DebugLog(<< "InMemorySyncRegDb::unlockRecord:  aor=" << aor << " threadid=" << ThreadIf::selfId());
 
    {
