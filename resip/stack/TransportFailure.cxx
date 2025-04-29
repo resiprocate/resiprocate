@@ -33,6 +33,41 @@ TransportFailure::encode(EncodeStream& strm) const
    return encodeBrief(strm);
 }
 
+const char*
+TransportFailure::failureReasonToString(FailureReason failureReason)
+{
+   switch (failureReason)
+   {
+   case TransportFailure::None:
+      return "None";
+   case TransportFailure::TransportNoExistConn:
+      return "TransportNoExistConn";
+   case TransportFailure::Failure:
+      return "Failure";
+   case TransportFailure::TransportNoSocket:
+      return "TransportNoSocket";
+   case TransportFailure::TransportBadConnect:
+      return "TransportBadConnect";
+   case TransportFailure::TransportShutdown:
+      return "TransportShutdown";
+   case TransportFailure::ConnectionUnknown:
+      return "ConnectionUnknown";
+   case TransportFailure::ConnectionException:
+      return "ConnectionException";
+   case TransportFailure::NoTransport:
+      return "NoTransport";
+   case TransportFailure::NoRoute:
+      return "NoRoute";
+   case TransportFailure::CertNameMismatch:
+      return "CertNameMismatch";
+   case TransportFailure::CertValidationFailure:
+      return "CertValidationFailure";
+   default:
+      resip_assert(false);
+      return "UNKNOWN";
+   }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *

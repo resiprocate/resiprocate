@@ -729,7 +729,7 @@ resip_AresDns_caresCallback(void *arg, int status, int timeouts,
    return ::resip_AresDns_aresCallback(arg, status, abuf, alen);
 }
 
-char* 
+const char* 
 AresDns::dnsRRTypeToString(int rrtype)
 {
    if (rrtype == T_A)
