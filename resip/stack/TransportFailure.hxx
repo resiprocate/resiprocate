@@ -40,7 +40,7 @@ class TransportFailure : public TransactionMessage
       FailureReason getFailureReason() const { return mFailureReason; }
       int getFailureSubCode() const { return mFailureSubCode; }
 
-      static char* failureReasonToString(FailureReason failureReason);
+      static const char* failureReasonToString(FailureReason failureReason);
 
       virtual EncodeStream& encodeBrief(EncodeStream& str) const;
       virtual EncodeStream& encode(EncodeStream& strm) const;

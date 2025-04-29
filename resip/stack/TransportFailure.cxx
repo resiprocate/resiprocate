@@ -33,7 +33,7 @@ TransportFailure::encode(EncodeStream& strm) const
    return encodeBrief(strm);
 }
 
-char*
+const char*
 TransportFailure::failureReasonToString(FailureReason failureReason)
 {
    switch (failureReason)
