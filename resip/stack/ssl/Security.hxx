@@ -55,7 +55,7 @@ class BaseSecurity
       {
          public:
             CipherList(){}
-            CipherList(const Data& cipherList) : mCipherList(cipherList) {}            
+            CipherList(const Data& cipherList) : mCipherList(cipherList) {}
             Data cipherList() const { return mCipherList; }
          private:
             Data mCipherList;
@@ -67,7 +67,7 @@ class BaseSecurity
       {
          SubjectAltName,
          CommonName
-      }NameType;
+      } NameType;
 
       struct PeerName
       {
@@ -90,7 +90,17 @@ class BaseSecurity
       static long OpenSSLCTXSetOptions;
       static long OpenSSLCTXClearOptions;
 
-      BaseSecurity(const CipherList& cipherSuite = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty, const Data& dHParamsFilename = Data::Empty);
+      /*
+       * Set this callback function to receive a callback whenever the OpenSSL certificate
+       * verify callback reports a certificate validation error.  It can be used by an application
+       * to get access to the validation failure, outside of the resip logs.
+      */
+      typedef void(*SSLVerifyErrorFuncPtrType)(X509* cert, int errorCode, int errorDepth, const char* errorString);
+      static SSLVerifyErrorFuncPtrType SSLVerifyErrorFuncPtr;
+
+      BaseSecurity(const CipherList& cipherSuite = StrongestSuite, 
+                   const Data& defaultPrivateKeyPassPhrase = Data::Empty, 
+                   const Data& dHParamsFilename = Data::Empty);
       virtual ~BaseSecurity();
 
       // used to initialize the openssl library

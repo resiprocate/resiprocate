@@ -97,29 +97,41 @@ getAor(const Data& filename, const  Security::PEMType &pemType )
 
 extern "C"
 {
-   
+
 static int 
-verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
+verifyCallback(int iInCode, X509_STORE_CTX* pInStore)
 {
-   char cBuf1[257];
-   char cBuf2[1024];
-   X509 *pErrCert;
-   int iErr = 0;
-   int iDepth = 0;
-   pErrCert = X509_STORE_CTX_get_current_cert(pInStore);
-   iErr = X509_STORE_CTX_get_error(pInStore);
-   iDepth = X509_STORE_CTX_get_error_depth(pInStore);
-
-   if (NULL != pErrCert)
-      X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
-
-   snprintf(cBuf2, 1023, ", iErr='%s' depth=%d %s\n", X509_verify_cert_error_string(iErr), iDepth, cBuf1);
-   if(!iInCode)
+   if (!iInCode)
    {
-      ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(X509_STORE_CTX_get_error(pInStore)) << cBuf2 );
-      DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
+      char subjectNameBuf[257];
+      X509* cert = X509_STORE_CTX_get_current_cert(pInStore);  // Doesn't appear to require X509_free call
+      int errorCode = X509_STORE_CTX_get_error(pInStore);
+      // This is a nonnegative integer representing where in the certificate chain the error occurred. 
+      // If it is zero it occurred in the end entity certificate, one if it is the certificate which 
+      // signed the end entity certificate and so on.
+      int errorDepth = X509_STORE_CTX_get_error_depth(pInStore);
+
+      if (NULL != cert)
+      {
+         X509_NAME_oneline(X509_get_subject_name(cert), subjectNameBuf, 256);
+      }
+      else
+      {
+         subjectNameBuf[0] = '\0';
+      }
+
+      Data errorString;
+      {
+         DataStream ds(errorString);
+         ds << "Error when verifying peer's chain of certificates: '" << X509_verify_cert_error_string(errorCode) << "', errorDepth=" << errorDepth << ", subjectName=[" << subjectNameBuf << "]";
+      }
+      if (BaseSecurity::SSLVerifyErrorFuncPtr != nullptr)
+      {
+         (*BaseSecurity::SSLVerifyErrorFuncPtr)(cert, errorCode, errorDepth, errorString.c_str());
+      }
+      ErrLog(<< errorString);
    }
- 
+
    return iInCode;
 }
  
@@ -144,6 +156,9 @@ BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT
  */
 long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
 long BaseSecurity::OpenSSLCTXClearOptions = 0;
+
+BaseSecurity::SSLVerifyErrorFuncPtrType BaseSecurity::SSLVerifyErrorFuncPtr = nullptr;
+
 
 Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase, const Data& dHParamsFilename) :
    BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase, dHParamsFilename)

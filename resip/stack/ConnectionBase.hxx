@@ -91,7 +91,7 @@ class ConnectionBase
       Data::size_type mSendPos;
       std::list<SendData*> mOutstandingSends; // !jacob! intrusive queue?
 
-      void setFailureReason(TransportFailure::FailureReason failReason, int subCode);
+      void setFailureReason(TransportFailure::FailureReason failReason, int subCode, const Data& failureString);
 
       virtual ~ConnectionBase();
       // no value semantics
@@ -108,8 +108,9 @@ class ConnectionBase
       virtual void onSingleCRLF(){}
       Transport* mTransport;
       Tuple mWho;
-      TransportFailure::FailureReason mFailureReason;      
+      TransportFailure::FailureReason mFailureReason;
       int mFailureSubCode;
+      Data mFailureString;
       Compression &mCompression;
       osc::Stack *mSigcompStack;
       osc::TcpStream *mSigcompFramer;

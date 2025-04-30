@@ -496,8 +496,13 @@ Connection::checkConnectionTimedout()
       if (errNum == ETIMEDOUT || errNum == EHOSTUNREACH || 
           errNum == ECONNREFUSED || errNum == ECONNABORTED)
       {
-         InfoLog(<< "Exception on socket " << mWho.mFlowKey << " code: " << errNum << "; closing connection");
-         setFailureReason(TransportFailure::ConnectionException, errNum);
+         Data failureString;
+         {
+            DataStream ds(failureString);
+            ds << "Exception on socket " << mWho.mFlowKey << ", errNum=" << errNum << ", err=" << strerror(errNum) << "; closing connection";
+         }
+         InfoLog(<< failureString);
+         setFailureReason(TransportFailure::ConnectionException, errNum, failureString);
          delete this;
          return true;
       }
@@ -529,8 +534,14 @@ Connection::processPollEvent(FdPollEventMask mask)
    {
       Socket fd = getSocket();
       int errNum = getSocketError(fd);
-      InfoLog(<< "Exception on socket " << fd << " code: " << errNum << "; closing connection");
-      setFailureReason(TransportFailure::ConnectionException, errNum);
+      Data failureString;
+      {
+         DataStream ds(failureString);
+         ds << "Exception on socket " << fd << ", errNum=" << errNum << ", err=" << strerror(errNum) << "; closing connection";
+      }
+
+      InfoLog(<< failureString);
+      setFailureReason(TransportFailure::ConnectionException, errNum, failureString);
       delete this;
       return;
    }

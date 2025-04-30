@@ -93,7 +93,7 @@ ConnectionBase::~ConnectionBase()
 {
    if(mTransport)
    {
-      mTransport->flowTerminated(mWho, mFailureReason, mFailureSubCode);
+      mTransport->flowTerminated(mWho, mFailureReason, mFailureSubCode, mFailureString);
    }
 
    while (!mOutstandingSends.empty())
@@ -118,12 +118,13 @@ ConnectionBase::~ConnectionBase()
 }
 
 void
-ConnectionBase::setFailureReason(TransportFailure::FailureReason failReason, int subCode)
+ConnectionBase::setFailureReason(TransportFailure::FailureReason failReason, int subCode, const Data& failureString)
 {
-   if ( failReason > mFailureReason )
+   if (failReason > mFailureReason)
    {
       mFailureReason = failReason;
       mFailureSubCode = subCode;
+      mFailureString = failureString;
    }
 }
 

@@ -3,3 +3,6 @@ indent_style=space
 
 [*.{hxx,cxx,hpp,cpp,h,c}]
 indent_size=3
+cpp_indent_case_labels = true
+cpp_indent_case_contents = true
+cpp_indent_case_contents_when_block = false
