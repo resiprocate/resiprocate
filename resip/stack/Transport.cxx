@@ -124,131 +124,141 @@ Transport::onReload()
 void
 Transport::error(int e)
 {
+   if (e != EAGAIN)
+   {
+      InfoLog(<< errorToString(e));
+   }
+}
+
+Data
+Transport::errorToString(int e)
+{
+   Data errorString;
+   DataStream ds(errorString);
    switch (e)
    {
       case EAGAIN:
-         //InfoLog (<< "No data ready to read" << strerror(e));
+         ds << "No data ready to read: " << strerror(e);
          break;
       case EINTR:
-         InfoLog (<< "The call was interrupted by a signal before any data was read : " << strerror(e));
+         ds << "The call was interrupted by a signal before any data was read: " << strerror(e);
          break;
       case EIO:
-         InfoLog (<< "I/O error : " << strerror(e));
+         ds << "I/O error: " << strerror(e);
          break;
       case EBADF:
-         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << strerror(e));
+         ds << "fd is not a valid file descriptor or is not open for reading: " << strerror(e);
          break;
       case EINVAL:
-         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << strerror(e));
+         ds << "fd is attached to an object which is unsuitable for reading: " << strerror(e);
          break;
       case EFAULT:
-         InfoLog (<< "buf is outside your accessible address space : " << strerror(e));
+         ds << "buf is outside your accessible address space: " << strerror(e);
          break;
 
 #if defined(WIN32)
       case WSAENETDOWN:
-         InfoLog (<<" The network subsystem has failed.  ");
+         ds << "The network subsystem has failed.";
          break;
       case WSAEFAULT:
-         InfoLog (<<" The buf or from parameters are not part of the user address space, "
-                   "or the fromlen parameter is too small to accommodate the peer address.  ");
+         ds << "The buf or from parameters are not part of the user address space, "
+               "or the fromlen parameter is too small to accommodate the peer address.";
          break;
       case WSAEINTR:
-         InfoLog (<<" The (blocking) call was canceled through WSACancelBlockingCall.  ");
+         ds << "The (blocking) call was canceled through WSACancelBlockingCall.";
          break;
       case WSAEINPROGRESS:
-         InfoLog (<<" A blocking Windows Sockets 1.1 call is in progress, or the "
-                   "service provider is still processing a callback function.  ");
+         ds << "A blocking Windows Sockets 1.1 call is in progress, or the "
+               "service provider is still processing a callback function.";
          break;
       case WSAEINVAL:
-         InfoLog (<<" The socket has not been bound with bind, or an unknown flag was specified, "
-                   "or MSG_OOB was specified for a socket with SO_OOBINLINE enabled, "
-                   "or (for byte stream-style sockets only) len was zero or negative.  ");
+         ds << "The socket has not been bound with bind, or an unknown flag was specified, "
+               "or MSG_OOB was specified for a socket with SO_OOBINLINE enabled, "
+               "or (for byte stream-style sockets only) len was zero or negative.";
          break;
       case WSAEISCONN :
-         InfoLog (<<"The socket is connected. This function is not permitted with a connected socket, "
-                  "whether the socket is connection-oriented or connectionless.  ");
+         ds << "The socket is connected. This function is not permitted with a connected socket, "
+               "whether the socket is connection-oriented or connectionless.";
          break;
       case WSAENETRESET:
-         InfoLog (<<" The connection has been broken due to the keep-alive activity "
-                  "detecting a failure while the operation was in progress.  ");
+         ds << "The connection has been broken due to the keep-alive activity "
+               "detecting a failure while the operation was in progress.";
          break;
-      case WSAENOTSOCK :
-         InfoLog (<<"The descriptor is not a socket.  ");
+      case WSAENOTSOCK:
+         ds << "The descriptor is not a socket.";
          break;
       case WSAEOPNOTSUPP:
-         InfoLog (<<" MSG_OOB was specified, but the socket is not stream-style such as type "
-                   "SOCK_STREAM, OOB data is not supported in the communication domain associated with this socket, "
-                   "or the socket is unidirectional and supports only send operations.  ");
+         ds << " MSG_OOB was specified, but the socket is not stream-style such as type "
+               "SOCK_STREAM, OOB data is not supported in the communication domain associated with this socket, "
+               "or the socket is unidirectional and supports only send operations.";
          break;
       case WSAESHUTDOWN:
-         InfoLog (<<"The socket has been shut down; it is not possible to recvfrom on a socket after "
-                  "shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.  ");
+         ds << "The socket has been shut down; it is not possible to recvfrom on a socket after "
+               "shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.";
          break;
       case WSAEMSGSIZE:
-         InfoLog (<<" The message was too large to fit into the specified buffer and was truncated.  ");
+         ds << "The message was too large to fit into the specified buffer and was truncated.";
          break;
       case WSAETIMEDOUT:
-         InfoLog (<<" The connection has been dropped, because of a network failure or because the "
-                  "system on the other end went down without notice.  ");
+         ds << "The connection has been dropped, because of a network failure or because the "
+               "system on the other end went down without notice.";
          break;
       case WSAECONNRESET :
-         InfoLog (<<"Connection reset ");
+         ds << "Connection reset.";
          break;
-
       case WSAEWOULDBLOCK:
-         DebugLog (<<"Would Block ");
+         ds << "Would block.";
          break;
-
       case WSAEHOSTUNREACH:
-         InfoLog (<<"A socket operation was attempted to an unreachable host ");
+         ds << "A socket operation was attempted to an unreachable host.";
          break;
       case WSANOTINITIALISED:
-         InfoLog (<<"Either the application has not called WSAStartup or WSAStartup failed. "
-                  "The application may be accessing a socket that the current active task does not own (that is, trying to share a socket between tasks),"
-                  "or WSACleanup has been called too many times.  ");
+         ds << "Either the application has not called WSAStartup or WSAStartup failed. "
+               "The application may be accessing a socket that the current active task does not own (that is, trying to share a socket between tasks),"
+               "or WSACleanup has been called too many times.";
          break;
       case WSAEACCES:
-         InfoLog (<<"An attempt was made to access a socket in a way forbidden by its access permissions ");
+         ds << "An attempt was made to access a socket in a way forbidden by its access permissions.";
          break;
       case WSAENOBUFS:
-         InfoLog (<<"An operation on a socket could not be performed because the system lacked sufficient "
-                  "buffer space or because a queue was full");
+         ds << "An operation on a socket could not be performed because the system lacked sufficient "
+               "buffer space or because a queue was full.";
          break;
       case WSAENOTCONN:
-         InfoLog (<<"A request to send or receive data was disallowed because the socket is not connected "
-                  "and (when sending on a datagram socket using sendto) no address was supplied");
+         ds << "A request to send or receive data was disallowed because the socket is not connected "
+               "and (when sending on a datagram socket using sendto) no address was supplied.";
          break;
       case WSAECONNABORTED:
-         InfoLog (<<"An established connection was aborted by the software in your host computer, possibly "
-                  "due to a data transmission time-out or protocol error");
+         ds << "An established connection was aborted by the software in your host computer, possibly "
+               "due to a data transmission time-out or protocol error.";
          break;
       case WSAEADDRNOTAVAIL:
-         InfoLog (<<"The requested address is not valid in its context. This normally results from an attempt to "
-                  "bind to an address that is not valid for the local computer");
+         ds << "The requested address is not valid in its context. This normally results from an attempt to "
+               "bind to an address that is not valid for the local computer.";
          break;
       case WSAEAFNOSUPPORT:
-         InfoLog (<<"An address incompatible with the requested protocol was used");
+         ds << "An address incompatible with the requested protocol was used.";
          break;
       case WSAEDESTADDRREQ:
-         InfoLog (<<"A required address was omitted from an operation on a socket");
+         ds << "A required address was omitted from an operation on a socket.";
          break;
       case WSAENETUNREACH:
-         InfoLog (<<"A socket operation was attempted to an unreachable network");
+         ds << "A socket operation was attempted to an unreachable network.";
          break;
-
 #endif
 
       default:
-         InfoLog (<< "Some other error (" << e << "): " << strerror(e));
+         ds << "Some other error (" << e << "): " << strerror(e);
          break;
    }
+   ds.flush();
+   return errorString;
 }
 
 void
-Transport::flowTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode)
+Transport::flowTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode, const Data& failureString)
 {
-   mStateMachineFifo.add(new ConnectionTerminated(flow, failureReason, failureSubCode));
+   mStateMachineFifo.add(new ConnectionTerminated(flow, failureReason, failureSubCode, failureString));
 }
 
 void

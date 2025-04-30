@@ -51,6 +51,13 @@ static unsigned int FailedSubscriptionRetryTime = 60;
 
 namespace resip
 {
+#if defined (USE_SSL)
+   void SSLVerifyErrorCallback(X509* cert, int errorCode, int errorDepth, const char* errorString)
+   {
+      InfoLog(<< "SSLVerifyErrorCallback: errorCode=" << errorCode << ", errorDepth=" << errorDepth << ", errorString=" << errorString);
+   }   
+#endif
+
 class ClientAppDialogSetFactory : public AppDialogSetFactory
 {
 public:
@@ -143,6 +150,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    addTransport(TCP, mTcpPort);
 #if defined(USE_SSL)
    addTransport(TLS, mTlsPort);
+   BaseSecurity::SSLVerifyErrorFuncPtr = &SSLVerifyErrorCallback;
 #endif
 #if defined(USE_DTLS)
    addTransport(DTLS, mDtlsPort);
@@ -584,6 +592,7 @@ int
 BasicClientUserAgent::onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const SipMessage& msg)
 {
    mRegHandle = h;
+   mStack->logDnsCache();
    if(mShuttingdown)
    {
        return -1;

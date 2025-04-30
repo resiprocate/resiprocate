@@ -62,9 +62,13 @@ TcpConnection::read( char* buf, int count )
             break;
       }
 
-      InfoLog (<< "Failed read on " << getSocket() << " " << strerror(e));
-      Transport::error(e);
-      setFailureReason(TransportFailure::ConnectionException, e+2000);
+      Data failureString;
+      {
+         DataStream ds(failureString);
+         ds << "Failed read on " << getSocket() << ", errNum=" << e << ", err=" << Transport::errorToString(e);
+      }
+      InfoLog (<< failureString);
+      setFailureReason(TransportFailure::ConnectionException, e+2000, failureString);
       return -1;
    }
    else if (bytesRead == 0)

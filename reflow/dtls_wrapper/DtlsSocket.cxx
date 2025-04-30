@@ -211,7 +211,7 @@ DtlsSocket::getRemoteFingerprint(char *fprint)
       return false;
 
    computeFingerprint(x,fprint);
-
+   X509_free(x);
    return true;
 }
 

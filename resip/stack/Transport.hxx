@@ -228,7 +228,7 @@ class Transport : public FdSetIOObserver
          Posts a ConnectionTerminated message to TransactionMessage
          Fifo.
       */
-      void flowTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode);
+      void flowTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode, const Data& reasonString);
       void keepAlivePong(const Tuple& flow);
 
       /**
@@ -250,6 +250,7 @@ class Transport : public FdSetIOObserver
          @param e the socket error number
       */
       static void error(int e);
+      static Data errorToString(int e);
 
       // These methods are used by the TransportSelector
       const Data& interfaceName() const { return mInterface; }
