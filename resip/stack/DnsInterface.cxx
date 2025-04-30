@@ -49,19 +49,23 @@ DnsInterface::~DnsInterface()
 void 
 DnsInterface::addTransportType(TransportType type, IpVersion version)
 {
-   Lock lock(mSupportedMutex);
-   mSupportedTransports[std::make_pair(type, version)]++;
    const Data* pNaptrType = getSupportedNaptrType(type);
-   if(pNaptrType)
+   auto ts = std::make_pair(type, version);
+   Lock lock(mSupportedMutex);
+   mSupportedTransports[std::move(ts)]++;
+   if (pNaptrType)
    {
-       mSupportedNaptrs[*pNaptrType]++;
+      mSupportedNaptrs[*pNaptrType]++;
    }
+
    //logSupportedTransports();
 }
 
 void 
 DnsInterface::removeTransportType(TransportType type, IpVersion version)
 {
+   const Data* pNaptrType = getSupportedNaptrType(type);
+
    Lock lock(mSupportedMutex);
    TransportMap::iterator itTrans = mSupportedTransports.find(std::make_pair(type, version));
    if(itTrans != mSupportedTransports.end())
@@ -73,7 +77,6 @@ DnsInterface::removeTransportType(TransportType type, IpVersion version)
       }
    }
 
-   const Data* pNaptrType = getSupportedNaptrType(type);
    if(pNaptrType)
    {
       SupportedNaptrMap::iterator itNT = mSupportedNaptrs.find(*pNaptrType);

@@ -391,8 +391,9 @@ UdpTransport::processRxParse(int len, const Tuple& sender)
    // this must be a STUN response (or garbage)
    if (mRxBuffer[0] == 1 && mRxBuffer[1] == 1 && ipVersion() == V4)
    {
-      resip::Lock lock(myMutex);
       StunMessage resp;
+
+      resip::Lock lock(myMutex);
 
       // Change the stored stun result to parse failed since we now have response
       // Once parsing is successful below, the return code will be updated
