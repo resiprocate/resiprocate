@@ -137,6 +137,9 @@ Transport::errorToString(int e)
    DataStream ds(errorString);
    switch (e)
    {
+      case 0:
+         ds << "None";
+         break;
       case EAGAIN:
          ds << "No data ready to read: " << strerror(e);
          break;

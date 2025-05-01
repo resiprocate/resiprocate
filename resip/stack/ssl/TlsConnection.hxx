@@ -60,6 +60,7 @@ class TlsConnection : public Connection
       void computePeerName();
       Data getPeerNamesData() const;
       TlsState checkState();
+      bool handleOpenSSLErrorQueue(int ret, unsigned long err, const char* op, bool addToAdditionalFailureStrings = false);
 
       bool mServer;
       Security* mSecurity;

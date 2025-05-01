@@ -88,8 +88,11 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
    mLogLevel = logLevel;
    if (tlsDomain) mTlsDomain = tlsDomain;
    if (certPath) mCertPath = certPath;
+#ifndef WIN32
    else mCertPath = basePath + "/.sipCerts";
-
+#else
+   else mCertPath = ".";
+#endif
    mUdpPort = udpPort;
    mTcpPort = tcpPort;
    mTlsPort = tlsPort;

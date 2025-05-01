@@ -133,7 +133,7 @@ class BaseSecurity
 
       void addDomainCertPEM(const Data& domainName, const Data& certPEM);
       void addDomainCertDER(const Data& domainName, const Data& certDER);
-      bool hasDomainCert(const Data& domainName) const;
+      bool hasDomainCert(const Data& domainName, bool logErrors = true) const;
       void removeDomainCert(const Data& domainName);
       Data getDomainCertDER(const Data& domainName) const;
 
@@ -246,7 +246,7 @@ class BaseSecurity
 
       void addCertPEM (PEMType type, const Data& name, const Data& certPEM, bool write);
       void addCertDER (PEMType type, const Data& name, const Data& certDER, bool write);
-      bool hasCert    (PEMType type, const Data& name) const;
+      bool hasCert    (PEMType type, const Data& name, bool logErrors = true) const;
       void removeCert (PEMType type, const Data& name);
       Data getCertDER (PEMType type, const Data& name) const;
       void addCertX509(PEMType type, const Data& name, X509* cert, bool write);
