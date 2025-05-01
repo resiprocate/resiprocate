@@ -16,6 +16,7 @@
 #include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/Transport.hxx"
+#include "resip/stack/ConnectionBase.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/ResipAssert.h"
 #include "rutil/BaseException.hxx"
@@ -60,6 +61,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+int BaseSecurity::resip_connection_ssl_ex_data_idx = 0;  // Override as needed
+
 static const Data PEM(".pem");
 
 static const Data rootCert("root_cert_");
@@ -99,17 +102,17 @@ extern "C"
 {
 
 static int 
-verifyCallback(int iInCode, X509_STORE_CTX* pInStore)
+verifyCallback(int preverifyOk, X509_STORE_CTX* storeCtx)
 {
-   if (!iInCode)
+   if (!preverifyOk)
    {
       char subjectNameBuf[257];
-      X509* cert = X509_STORE_CTX_get_current_cert(pInStore);  // Doesn't appear to require X509_free call
-      int errorCode = X509_STORE_CTX_get_error(pInStore);
+      X509* cert = X509_STORE_CTX_get_current_cert(storeCtx);  // Doesn't appear to require X509_free call
+      int errorCode = X509_STORE_CTX_get_error(storeCtx);
       // This is a nonnegative integer representing where in the certificate chain the error occurred. 
       // If it is zero it occurred in the end entity certificate, one if it is the certificate which 
       // signed the end entity certificate and so on.
-      int errorDepth = X509_STORE_CTX_get_error_depth(pInStore);
+      int errorDepth = X509_STORE_CTX_get_error_depth(storeCtx);
 
       if (NULL != cert)
       {
@@ -120,19 +123,27 @@ verifyCallback(int iInCode, X509_STORE_CTX* pInStore)
          subjectNameBuf[0] = '\0';
       }
 
+      // Retrieve the associated resip transport connection object (if available)
+      SSL* ssl = (SSL*)X509_STORE_CTX_get_ex_data(storeCtx, SSL_get_ex_data_X509_STORE_CTX_idx());
+      ConnectionBase* connection = (ConnectionBase*)SSL_get_ex_data(ssl, BaseSecurity::resip_connection_ssl_ex_data_idx);
+
       Data errorString;
       {
          DataStream ds(errorString);
-         ds << "Error when verifying peer's chain of certificates: '" << X509_verify_cert_error_string(errorCode) << "', errorDepth=" << errorDepth << ", subjectName=[" << subjectNameBuf << "]";
+         ds << "'" << X509_verify_cert_error_string(errorCode) << "', errorDepth=" << errorDepth << ", subjectName=[" << subjectNameBuf << "]";
       }
-      if (BaseSecurity::SSLVerifyErrorFuncPtr != nullptr)
+      if (connection)
       {
-         (*BaseSecurity::SSLVerifyErrorFuncPtr)(cert, errorCode, errorDepth, errorString.c_str());
+         connection->addAdditionalFailureString(errorString);
+         ErrLog(<< "Error when verifying peer's chain of certificates: tuple=" << connection->who() << ", error=" << errorString);
       }
-      ErrLog(<< errorString);
+      else
+      {
+         ErrLog(<< errorString << "Error when verifying peer's chain of certificates: error=" << errorString);
+      }
    }
 
-   return iInCode;
+   return preverifyOk;
 }
  
 }
@@ -156,8 +167,6 @@ BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT
  */
 long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
 long BaseSecurity::OpenSSLCTXClearOptions = 0;
-
-BaseSecurity::SSLVerifyErrorFuncPtrType BaseSecurity::SSLVerifyErrorFuncPtr = nullptr;
 
 
 Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase, const Data& dHParamsFilename) :

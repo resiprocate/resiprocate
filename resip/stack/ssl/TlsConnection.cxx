@@ -120,7 +120,7 @@ TlsConnection::TlsConnection(Transport* transport, const Tuple& tuple,
          default:
             resip_assert(0);
       }
-      SSL_set_verify(mSsl, verify_mode, 0);
+      SSL_set_verify(mSsl, verify_mode, 0);  // Modify verify flags, but leave callback same as set in Security.cxx
    }
 
    mBio = BIO_new_socket((int)fd, 0/*close flag*/);
@@ -131,6 +131,8 @@ TlsConnection::TlsConnection(Transport* transport, const Tuple& tuple,
    }
 
    SSL_set_bio(mSsl, mBio, mBio);
+   // Set application/ex data on context so that this Connection can be queried in certificate validation callback
+   SSL_set_ex_data(mSsl, BaseSecurity::resip_connection_ssl_ex_data_idx, this);
 
    mTlsState = Initial;
    mHandShakeWantsRead = false;
@@ -307,8 +309,7 @@ TlsConnection::checkState()
                   }
 
                   default:
-                     ds << "peer certificate validation failure: " << X509_verify_cert_error_string(verifyErrorCode)
-                        << " (additional validation checks may have failed but only one is ever logged - please check peer certificate carefully)";
+                     ds << "peer certificate validation failure: " << X509_verify_cert_error_string(verifyErrorCode);
                      break;
                }
                if (mServer)
