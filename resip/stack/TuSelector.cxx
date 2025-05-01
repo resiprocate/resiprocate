@@ -99,7 +99,7 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
 void
 TuSelector::add(ConnectionTerminated* term)
 {
-   InfoLog (<< "Sending " << *term << " to TUs");
+   InfoLog (<< "Sending " << term->brief() << " to TUs");
    
    for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
    {

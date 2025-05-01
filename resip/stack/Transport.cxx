@@ -256,9 +256,9 @@ Transport::errorToString(int e)
 }
 
 void
-Transport::flowTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode, const Data& failureString)
+Transport::flowTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode, const Data& failureString, const std::list<Data> additionalFailureStrings)
 {
-   mStateMachineFifo.add(new ConnectionTerminated(flow, failureReason, failureSubCode, failureString));
+   mStateMachineFifo.add(new ConnectionTerminated(flow, failureReason, failureSubCode, failureString, additionalFailureStrings));
 }
 
 void

@@ -128,7 +128,7 @@ TlsBaseTransport::getCtx()
          ErrLog(<<"failed to read the certificate/private key files");
       }
       // an extra log entry so we can see how long it took
-      StackLog(<<"TlsBaseTransport::createConnection, updated certificate and private key for domain " << tlsDomain());
+      StackLog(<<"TlsBaseTransport::getCtx, updated certificate and private key for domain " << tlsDomain());
       mReloadCertificate = false;
    }
    return ctx;

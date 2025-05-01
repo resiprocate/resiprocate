@@ -93,7 +93,7 @@ ConnectionBase::~ConnectionBase()
 {
    if(mTransport)
    {
-      mTransport->flowTerminated(mWho, mFailureReason, mFailureSubCode, mFailureString);
+      mTransport->flowTerminated(mWho, mFailureReason, mFailureSubCode, mFailureString, mAdditionalFailureStrings);
    }
 
    while (!mOutstandingSends.empty())
@@ -126,6 +126,12 @@ ConnectionBase::setFailureReason(TransportFailure::FailureReason failReason, int
       mFailureSubCode = subCode;
       mFailureString = failureString;
    }
+}
+
+void
+ConnectionBase::addAdditionalFailureString(const Data& additionalFailureString)
+{
+   mAdditionalFailureStrings.push_back(additionalFailureString);
 }
 
 FlowKey

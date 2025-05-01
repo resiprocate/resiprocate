@@ -40,10 +40,11 @@ class Security;
 class MultipartSignedContents;
 class SipMessage;
 
-
 class BaseSecurity
 {
    public:
+      static int resip_connection_ssl_ex_data_idx;
+
       class Exception final : public BaseException
       {
          public:
@@ -89,14 +90,6 @@ class BaseSecurity
        */
       static long OpenSSLCTXSetOptions;
       static long OpenSSLCTXClearOptions;
-
-      /*
-       * Set this callback function to receive a callback whenever the OpenSSL certificate
-       * verify callback reports a certificate validation error.  It can be used by an application
-       * to get access to the validation failure, outside of the resip logs.
-      */
-      typedef void(*SSLVerifyErrorFuncPtrType)(X509* cert, int errorCode, int errorDepth, const char* errorString);
-      static SSLVerifyErrorFuncPtrType SSLVerifyErrorFuncPtr;
 
       BaseSecurity(const CipherList& cipherSuite = StrongestSuite, 
                    const Data& defaultPrivateKeyPassPhrase = Data::Empty, 

@@ -77,42 +77,42 @@ using namespace resip;
 //       You should use at least version 0.9.8g for both client and server.
 
 DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
-                             int portNum,
-                             IpVersion version,
-                             const Data& interfaceObj,
-                             Security& security,
-                             const Data& sipDomain,
-                             AfterSocketCreationFuncPtr socketFunc,
-                             Compression& compression,
-                             const Data& certificateFilename, 
-                             const Data& privateKeyFilename,
-                             const Data& privateKeyPassPhrase)
- : UdpTransport( fifo, portNum, version, StunDisabled, interfaceObj, socketFunc, compression ),
-   mTimer( mHandshakePending ),
-   mSecurity( &security ),
+   int portNum,
+   IpVersion version,
+   const Data& interfaceObj,
+   Security& security,
+   const Data& sipDomain,
+   AfterSocketCreationFuncPtr socketFunc,
+   Compression& compression,
+   const Data& certificateFilename,
+   const Data& privateKeyFilename,
+   const Data& privateKeyPassPhrase)
+   : UdpTransport(fifo, portNum, version, StunDisabled, interfaceObj, socketFunc, compression),
+   mTimer(mHandshakePending),
+   mSecurity(&security),
    mDomain(sipDomain)
 {
    // Note on AfterSocketCreateFuncPtr:  because this class uses UdpTransport the bind operation 
    //   is called in the UdpTransport constructor and the transport type passed to AfterSocketCreationFuncPtr
    //   will end up being UDP and not DTLS.  TODO - this should be fixed.  Creating a UdpBaseTransport is one
    //   solution that would align with the TCP flavour of transports.
-   
+
    setTlsDomain(sipDomain);
-   InfoLog ( << "Creating DTLS transport host=" << interfaceObj
-             << " port=" << mTuple.getPort()
-             << " ipv4=" << version ) ;
+   InfoLog(<< "Creating DTLS transport host=" << interfaceObj
+      << " port=" << mTuple.getPort()
+      << " ipv4=" << version);
 
    mTxFifo.setDescription("DtlsTransport::mTxFifo");
 
-   mTuple.setType( DTLS );
+   mTuple.setType(DTLS);
 
-   mClientCtx = mSecurity->createDomainCtx(DTLS_client_method(), Data::Empty, certificateFilename, privateKeyFilename, privateKeyPassPhrase) ;
-   mServerCtx = mSecurity->createDomainCtx(DTLS_server_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase) ;
-   resip_assert( mClientCtx ) ;
-   resip_assert( mServerCtx ) ;
+   mClientCtx = mSecurity->createDomainCtx(DTLS_client_method(), Data::Empty, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+   mServerCtx = mSecurity->createDomainCtx(DTLS_server_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+   resip_assert(mClientCtx);
+   resip_assert(mServerCtx);
 
-   mDummyBio = BIO_new( BIO_s_mem() ) ;
-   resip_assert( mDummyBio ) ;
+   mDummyBio = BIO_new(BIO_s_mem());
+   resip_assert(mDummyBio);
 
    mSendData = nullptr;
 
@@ -124,21 +124,21 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
    SSL_CTX_set_read_ahead(mServerCtx, 1);
 
    /* trying to read from this BIO always returns retry */
-   BIO_set_mem_eof_return( mDummyBio, -1 ) ;
+   BIO_set_mem_eof_return(mDummyBio, -1);
 }
 
 DtlsTransport::~DtlsTransport()
 {
-   DebugLog (<< "Shutting down " << mTuple);
+   DebugLog(<< "Shutting down " << mTuple);
 
-   while(mDtlsConnections.begin() != mDtlsConnections.end())
+   while (mDtlsConnections.begin() != mDtlsConnections.end())
    {
-       _cleanupConnectionState(mDtlsConnections.begin()->second, mDtlsConnections.begin()->first);
+      _cleanupConnectionState(mDtlsConnections.begin()->second, mDtlsConnections.begin()->first);
    }
-   SSL_CTX_free(mClientCtx);mClientCtx=nullptr;
-   SSL_CTX_free(mServerCtx);mServerCtx=nullptr;
+   SSL_CTX_free(mClientCtx); mClientCtx = nullptr;
+   SSL_CTX_free(mServerCtx); mServerCtx = nullptr;
 
-   BIO_free( mDummyBio) ;
+   BIO_free(mDummyBio);
 }
 
 void
@@ -151,14 +151,14 @@ DtlsTransport::_read()
       return;
    }
 
-   SSL *ssl ;
-   BIO *rbio ;
-   BIO *wbio ;
+   SSL* ssl;
+   BIO* rbio;
+   BIO* wbio;
 
    /* begin SSL stuff */
    struct sockaddr peer = sender.getMutableSockaddr();
 
-   ssl = mDtlsConnections[ *((struct sockaddr_in *)&peer) ] ;
+   ssl = mDtlsConnections[*((struct sockaddr_in*)&peer)];
 
    /*
     * If we don't have a binding for this peer,
@@ -166,146 +166,145 @@ DtlsTransport::_read()
     */
    if (ssl == nullptr)
    {
-      ssl = SSL_new( mServerCtx ) ;
-      resip_assert( ssl ) ;
+      ssl = SSL_new(mServerCtx);
+      resip_assert(ssl);
 
       // clear SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE set in SSL_CTX if we are a server
       SSL_set_verify(ssl, 0, nullptr);
 
-      InfoLog( << "DTLS handshake starting (Server mode)" );
+      InfoLog(<< "DTLS handshake starting (Server mode)");
 
-      SSL_set_accept_state( ssl ) ;
+      SSL_set_accept_state(ssl);
 
-      wbio = BIO_new_dgram( (int)mFd, BIO_NOCLOSE ) ;
-      resip_assert( wbio ) ;
+      wbio = BIO_new_dgram((int)mFd, BIO_NOCLOSE);
+      resip_assert(wbio);
 
-      BIO_dgram_set_peer( wbio, &peer ) ;
+      BIO_dgram_set_peer(wbio, &peer);
 
-      SSL_set_bio( ssl, nullptr, wbio ) ;
+      SSL_set_bio(ssl, nullptr, wbio);
 
       /* remember this connection */
-      mDtlsConnections[ *((struct sockaddr_in *)&peer) ] = ssl ;
+      mDtlsConnections[*((struct sockaddr_in*)&peer)] = ssl;
    }
 
    rbio = BIO_new_mem_buf(mRxBuffer.data(), len);
-   BIO_set_mem_eof_return( rbio, -1 ) ;
+   BIO_set_mem_eof_return(rbio, -1);
 
-   SSL_set0_rbio( ssl, rbio );
+   SSL_set0_rbio(ssl, rbio);
 
    len = SSL_read(ssl, mRxSslBuffer.data(), static_cast<int>(mRxSslBuffer.size()));
-   int err = SSL_get_error( ssl, len ) ;
+   int err = SSL_get_error(ssl, len);
 
    /* done with the rbio */
-   SSL_set0_rbio( ssl, mDummyBio );
+   SSL_set0_rbio(ssl, mDummyBio);
 
-   if ( len <= 0 )
+   if (len <= 0)
    {
       char errorString[1024];
 
-      switch( err )
+      switch (err)
       {
          case SSL_ERROR_NONE:
-            break ;
+            break;
          case SSL_ERROR_SSL:
-            {
-               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
-               DebugLog( << "Got DTLS read condition SSL_ERROR_SSL on"
-                         << " addr = " << inet_ntoa(((struct sockaddr_in *)&peer)->sin_addr)
-                         << " port = " << ntohs(((struct sockaddr_in *)&peer)->sin_port)
-                         << " error = " << errorString );
-            }
-            break ;
+         {
+            ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+            DebugLog(<< "Got DTLS read condition SSL_ERROR_SSL on"
+               << " addr = " << inet_ntoa(((struct sockaddr_in*)&peer)->sin_addr)
+               << " port = " << ntohs(((struct sockaddr_in*)&peer)->sin_port)
+               << " error = " << errorString);
+         }
+         break;
          case SSL_ERROR_WANT_READ:
-            break ;
+            break;
          case SSL_ERROR_WANT_WRITE:
-            break ;
+            break;
          case SSL_ERROR_SYSCALL:
-            {
-               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
-               DebugLog( << "Got DTLS read condition SSL_ERROR_SYSCALL on"
-                         << " addr = " << inet_ntoa(((struct sockaddr_in *)&peer)->sin_addr)
-                         << " port = " << ntohs(((struct sockaddr_in *)&peer)->sin_port)
-                         << " error = " << errorString );
-            }
-            break ;
-            /* connection closed */
+         {
+            ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+            DebugLog(<< "Got DTLS read condition SSL_ERROR_SYSCALL on"
+               << " addr = " << inet_ntoa(((struct sockaddr_in*)&peer)->sin_addr)
+               << " port = " << ntohs(((struct sockaddr_in*)&peer)->sin_port)
+               << " error = " << errorString);
+         }
+         break;
+         /* connection closed */
          case SSL_ERROR_ZERO_RETURN:
-            {
-               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
-               DebugLog( << "Got DTLS read condition SSL_ERROR_ZERO_RETURN on"
-                         << " addr = " << inet_ntoa(((struct sockaddr_in *)&peer)->sin_addr)
-                         << " port = " << ntohs(((struct sockaddr_in *)&peer)->sin_port)
-                         << " error = " << errorString );
+         {
+            ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+            DebugLog(<< "Got DTLS read condition SSL_ERROR_ZERO_RETURN on"
+               << " addr = " << inet_ntoa(((struct sockaddr_in*)&peer)->sin_addr)
+               << " port = " << ntohs(((struct sockaddr_in*)&peer)->sin_port)
+               << " error = " << errorString);
 
-               _cleanupConnectionState( ssl, *((struct sockaddr_in *)&peer) ) ;
-            }
-            break ;
+            _cleanupConnectionState(ssl, *((struct sockaddr_in*)&peer));
+         }
+         break;
          case SSL_ERROR_WANT_CONNECT:
-            break ;
+            break;
          case SSL_ERROR_WANT_ACCEPT:
-            break ;
+            break;
          default:
-            break ;
+            break;
       }
    }
 
-   if ( len <= 0 )
+   if (len <= 0)
    {
-       return ;
+      return;
    }
 
-   if ( SSL_in_init( ssl ) )
+   if (SSL_in_init(ssl))
    {
-      mTimer.add( ssl, DtlsReceiveTimeout ) ;
+      mTimer.add(ssl, DtlsReceiveTimeout);
    }
 
    processRxParseSip(mRxSslBuffer.data(), len, sender);
 }
 
-void DtlsTransport::_write( FdSet& fdset )
+void DtlsTransport::_write(FdSet& fdset)
 {
-   SSL *ssl ;
-   BIO *wBio ;
-   int retry = 0 ;
+   SSL* ssl;
+   BIO* wBio;
+   int retry = 0;
 
-   SendData *sendData ;
-   if ( mSendData != nullptr)
-       sendData = mSendData ;
+   SendData* sendData;
+   if (mSendData != nullptr)
+      sendData = mSendData;
    else
-       sendData = mTxFifo.getNext() ;
+      sendData = mTxFifo.getNext();
 
    //DebugLog (<< "Sent: " <<  sendData->data);
    //DebugLog (<< "Sending message on udp.");
 
-   resip_assert( &(*sendData) );
-   resip_assert( sendData->destination.getPort() != 0 );
+   resip_assert(&(*sendData));
+   resip_assert(sendData->destination.getPort() != 0);
 
    sockaddr peer = sendData->destination.getSockaddr();
 
-   ssl = mDtlsConnections[ *((struct sockaddr_in *)&peer) ] ;
+   ssl = mDtlsConnections[*((struct sockaddr_in*)&peer)];
 
    /* If we don't have a binding, then we're a client */
-   if ( ssl == nullptr)
+   if (ssl == nullptr)
    {
-      ssl = SSL_new( mClientCtx ) ;
-      resip_assert( ssl ) ;
+      ssl = SSL_new(mClientCtx);
+      resip_assert(ssl);
 
+      InfoLog(<< "DTLS handshake starting (client mode)");
 
-      InfoLog( << "DTLS handshake starting (client mode)" );
+      SSL_set_connect_state(ssl);
 
-      SSL_set_connect_state( ssl ) ;
+      wBio = BIO_new_dgram((int)mFd, BIO_NOCLOSE);
+      resip_assert(wBio);
 
-      wBio = BIO_new_dgram( (int)mFd, BIO_NOCLOSE ) ;
-      resip_assert( wBio ) ;
-
-      BIO_dgram_set_peer( wBio, &peer) ;
+      BIO_dgram_set_peer(wBio, &peer);
 
       /* the real rbio will be set by _read */
-      SSL_set_bio( ssl, mDummyBio, wBio ) ;
+      SSL_set_bio(ssl, mDummyBio, wBio);
 
       /* we should be ready to take this out if the
        * connection fails later */
-      mDtlsConnections [ *((struct sockaddr_in *)&peer) ] = ssl ;
+      mDtlsConnections[*((struct sockaddr_in*)&peer)] = ssl;
    }
 
    int expected;
@@ -314,24 +313,24 @@ void DtlsTransport::_write( FdSet& fdset )
 #ifdef USE_SIGCOMP
    // If message needs to be compressed, compress it here.
    if (mSigcompStack &&
-       sendData->sigcompId.size() > 0 &&
-       !sendData->isAlreadyCompressed )
+      sendData->sigcompId.size() > 0 &&
+      !sendData->isAlreadyCompressed)
    {
-       osc::SigcompMessage *sm = mSigcompStack->compressMessage
-         (sendData->data.data(), sendData->data.size(),
-          sendData->sigcompId.data(), sendData->sigcompId.size(),
-          isReliable());
+      osc::SigcompMessage* sm = mSigcompStack->compressMessage
+      (sendData->data.data(), sendData->data.size(),
+         sendData->sigcompId.data(), sendData->sigcompId.size(),
+         isReliable());
 
-       DebugLog (<< "Compressed message from "
-                 << sendData->data.size() << " bytes to "
-                 << sm->getDatagramLength() << " bytes");
+      DebugLog(<< "Compressed message from "
+         << sendData->data.size() << " bytes to "
+         << sm->getDatagramLength() << " bytes");
 
-       expected = sm->getDatagramLength();
+      expected = sm->getDatagramLength();
 
-       count = SSL_write(ssl,
-                         sm->getDatagramMessage(),
-                         sm->getDatagramLength());
-       delete sm;
+      count = SSL_write(ssl,
+         sm->getDatagramMessage(),
+         sm->getDatagramLength());
+      delete sm;
    }
    else
 #endif
@@ -339,9 +338,9 @@ void DtlsTransport::_write( FdSet& fdset )
       expected = (int)sendData->data.size();
 
       count = SSL_write(ssl, sendData->data.data(),
-                        (int)sendData->data.size());
+         (int)sendData->data.size());
 
-      if(count < expected)
+      if (count < expected)
       {
          WarningLog(<< "expected = " << expected << " but SSL_write only sent " << count);
       }
@@ -352,64 +351,64 @@ void DtlsTransport::_write( FdSet& fdset )
     * will be SSL_ERROR_WANT_READ
     */
 
-   if ( count <= 0 )
+   if (count <= 0)
    {
       /* cache unqueued data */
-      mSendData = sendData ;
+      mSendData = sendData;
 
-      int err = SSL_get_error( ssl, count ) ;
+      int err = SSL_get_error(ssl, count);
 
       char errorString[1024];
 
-      switch( err )
+      switch (err)
       {
          case SSL_ERROR_NONE:
             break;
          case SSL_ERROR_SSL:
-            {
-               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
-               DebugLog( << "Got DTLS write condition SSL_ERROR_SSL on "
-                         << sendData->destination
-                         << " error = " << errorString );
-            }
-            break;
+         {
+            ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+            DebugLog(<< "Got DTLS write condition SSL_ERROR_SSL on "
+               << sendData->destination
+               << " error = " << errorString);
+         }
+         break;
          case SSL_ERROR_WANT_READ:
-            retry = 1 ;
+            retry = 1;
             break;
          case SSL_ERROR_WANT_WRITE:
-             retry = 1 ;
-             fdset.setWrite(mFd);
+            retry = 1;
+            fdset.setWrite(mFd);
             break;
          case SSL_ERROR_SYSCALL:
-            {
-               int e = getErrno();
-               error(e);
+         {
+            int e = getErrno();
+            error(e);
 
-               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
-               DebugLog( << "Got DTLS write condition SSL_ERROR_SYSCALL "
-                         << "Failed (" << e << ") sending to "
-                         << sendData->destination
-                         << " error = " << errorString );
+            ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+            DebugLog(<< "Got DTLS write condition SSL_ERROR_SYSCALL "
+               << "Failed (" << e << ") sending to "
+               << sendData->destination
+               << " error = " << errorString);
 
-               fail(sendData->transactionId);
-            }
-            break;
+            fail(sendData->transactionId);
+         }
+         break;
          case SSL_ERROR_ZERO_RETURN:
-            {
-               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
-               DebugLog( << "Got DTLS write condition SSL_ERROR_ZERO_RETURN on "
-                         << sendData->destination
-                         << " error = " << errorString );
+         {
+            ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+            DebugLog(<< "Got DTLS write condition SSL_ERROR_ZERO_RETURN on "
+               << sendData->destination
+               << " error = " << errorString);
 
-               _cleanupConnectionState( ssl, *((struct sockaddr_in *)&peer) ) ;
-            }
-            break ;
+            _cleanupConnectionState(ssl, *((struct sockaddr_in*)&peer));
+         }
+         break;
          case SSL_ERROR_WANT_CONNECT:
             break;
          case SSL_ERROR_WANT_ACCEPT:
             break;
          default:
-            break ;
+            break;
       }
    }
    else
@@ -422,24 +421,24 @@ void DtlsTransport::_write( FdSet& fdset )
     * checking with UdpTransport
     */
 
-   if ( ! retry && count != int(sendData->data.size()) )
+   if (!retry && count != int(sendData->data.size()))
    {
-      ErrLog (<< "UDPTransport - send buffer full" );
+      ErrLog(<< "UDPTransport - send buffer full");
       fail(sendData->transactionId);
    }
 }
 
 void
-DtlsTransport::_doHandshake( void )
+DtlsTransport::_doHandshake(void)
 {
-   DtlsMessage *msg = mHandshakePending.getNext() ;
-   SSL *ssl = msg->getSsl() ;
+   DtlsMessage* msg = mHandshakePending.getNext();
+   SSL* ssl = msg->getSsl();
 
-   delete msg ;
+   delete msg;
 
    ERR_clear_error();
 
-   int ret = SSL_do_handshake( ssl ) ;
+   int ret = SSL_do_handshake(ssl);
 
    if (ret <= 0) {
       int err = SSL_get_error(ssl, ret);
@@ -451,36 +450,36 @@ DtlsTransport::_doHandshake( void )
          case SSL_ERROR_NONE:
             break;
          case SSL_ERROR_SSL:
-            {
-               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
-               DebugLog( << "Got DTLS handshake code SSL_ERROR_SSL"
-                         << " error = " << errorString );
-            }
-            break;
+         {
+            ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+            DebugLog(<< "Got DTLS handshake code SSL_ERROR_SSL"
+               << " error = " << errorString);
+         }
+         break;
          case SSL_ERROR_WANT_READ:
             break;
          case SSL_ERROR_WANT_WRITE:
             break;
          case SSL_ERROR_SYSCALL:
-            {
-               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
-               DebugLog( << "Got DTLS handshake code SSL_ERROR_SYSCALL"
-                         << " error = " << errorString );
-            }
-            break;
+         {
+            ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+            DebugLog(<< "Got DTLS handshake code SSL_ERROR_SYSCALL"
+               << " error = " << errorString);
+         }
+         break;
          case SSL_ERROR_ZERO_RETURN:
-            {
-               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
-               DebugLog( << "Got DTLS handshake code SSL_ERROR_ZERO_RETURN"
-                         << " error = " << errorString );
-            }
-            break;
+         {
+            ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+            DebugLog(<< "Got DTLS handshake code SSL_ERROR_ZERO_RETURN"
+               << " error = " << errorString);
+         }
+         break;
          case SSL_ERROR_WANT_CONNECT:
             break;
          case SSL_ERROR_WANT_ACCEPT:
             break;
          default:
-            break ;
+            break;
       }
    }
 }
@@ -492,36 +491,35 @@ DtlsTransport::process(FdSet& fdset)
    // receive datagrams from fd
    // preparse and stuff into RxFifo
 
-   mTimer.process() ;
+   mTimer.process();
 
-   while ( mHandshakePending.messageAvailable() )
-      _doHandshake() ;
+   while (mHandshakePending.messageAvailable())
+      _doHandshake();
 
-   if ( ( mSendData != nullptr || mTxFifo.messageAvailable() )
-       && fdset.readyToWrite( mFd ) )
-      _write( fdset ) ;
+   if ((mSendData != nullptr || mTxFifo.messageAvailable())
+      && fdset.readyToWrite(mFd))
+      _write(fdset);
 
    // !jf! this may have to change - when we read a message that is too big
-   if ( fdset.readyToRead(mFd) )
+   if (fdset.readyToRead(mFd))
    {
       _read();
    }
 }
 
-
 void
-DtlsTransport::buildFdSet( FdSet& fdset )
+DtlsTransport::buildFdSet(FdSet& fdset)
 {
    fdset.setRead(mFd);
 
-   if ( mSendData != nullptr || mTxFifo.messageAvailable() )
+   if (mSendData != nullptr || mTxFifo.messageAvailable())
    {
-     fdset.setWrite(mFd);
+      fdset.setWrite(mFd);
    }
 }
 
 void
-DtlsTransport::_cleanupConnectionState( SSL *ssl, struct sockaddr_in peer )
+DtlsTransport::_cleanupConnectionState(SSL* ssl, struct sockaddr_in peer)
 {
    /*
     * SSL_free decrements the ref-count for mDummyBio by 1, so
@@ -529,22 +527,22 @@ DtlsTransport::_cleanupConnectionState( SSL *ssl, struct sockaddr_in peer )
     */
    BIO_up_ref(mDummyBio);
    SSL_shutdown(ssl);
-   SSL_free(ssl) ;
-   mDtlsConnections.erase(peer) ;
+   SSL_free(ssl);
+   mDtlsConnections.erase(peer);
 }
 
 void
-DtlsTransport::_mapDebug( const char *where, const char *action, SSL *ssl )
+DtlsTransport::_mapDebug(const char* where, const char* action, SSL* ssl)
 {
-   fprintf( stderr, "%s: %s\t%p\n", where, action, ssl ) ;
-   fprintf( stderr, "map sizet = %d\n", (unsigned int)mDtlsConnections.size() ) ;
+   fprintf(stderr, "%s: %s\t%p\n", where, action, ssl);
+   fprintf(stderr, "map sizet = %d\n", (unsigned int)mDtlsConnections.size());
 }
 
 void
-DtlsTransport::_printSock( const struct sockaddr_in *sock )
+DtlsTransport::_printSock(const struct sockaddr_in* sock)
 {
-   fprintf( stderr, "addr = %s\t port = %d\n", inet_ntoa( sock->sin_addr ),
-            ntohs( sock->sin_port ) ) ;
+   fprintf(stderr, "addr = %s\t port = %d\n", inet_ntoa(sock->sin_addr),
+      ntohs(sock->sin_port));
 }
 
 #endif /* USE_DTLS */

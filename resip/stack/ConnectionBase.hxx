@@ -50,6 +50,8 @@ class ConnectionBase
       const uint64_t& whenLastUsed() { return mLastUsed; }
       void resetLastUsed() { mLastUsed = Timer::getTimeMs(); }
 
+      void addAdditionalFailureString(const Data& additionalFailureString);
+
       enum { ChunkSize = 8192 }; // !jf! what is the optimal size here?
          // !dp! 8192 seems to be consistent with a multiple of a page size and
          //      also good for the larger SDP coming in with ICE attributes,
@@ -111,6 +113,7 @@ class ConnectionBase
       TransportFailure::FailureReason mFailureReason;
       int mFailureSubCode;
       Data mFailureString;
+      std::list<Data> mAdditionalFailureStrings;
       Compression &mCompression;
       osc::Stack *mSigcompStack;
       osc::TcpStream *mSigcompFramer;

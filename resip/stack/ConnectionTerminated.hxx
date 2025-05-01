@@ -14,20 +14,37 @@ class ConnectionTerminated : public TransactionMessage
    public:
       RESIP_HeapCount(ConnectionTerminated);
 
-      ConnectionTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode, const Data& failureString) :
-         mFlow(flow), mFailureReason(failureReason), mFailureSubCode(failureSubCode), mFailureString(failureString)
+      ConnectionTerminated(const Tuple& flow, 
+         TransportFailure::FailureReason failureReason, 
+         int failureSubCode, 
+         const Data& failureString, 
+         const std::list<Data>& additionalFailureStrings) :
+         mFlow(flow), 
+         mFailureReason(failureReason), 
+         mFailureSubCode(failureSubCode), 
+         mFailureString(failureString),
+         mAdditionalFailureStrings(additionalFailureStrings)
       {
       }
       virtual const Data& getTransactionId() const { resip_assert(0); return Data::Empty; }
       virtual bool isClientTransaction() const { resip_assert(0); return false; }
-      virtual Message* clone() const { return new ConnectionTerminated(mFlow, mFailureReason, mFailureSubCode, mFailureString); }
-      virtual EncodeStream& encode(EncodeStream& strm) const { return encodeBrief(strm); }
-      virtual EncodeStream& encodeBrief(EncodeStream& str) const 
+      virtual Message* clone() const { return new ConnectionTerminated(mFlow, mFailureReason, mFailureSubCode, mFailureString, mAdditionalFailureStrings); }
+      virtual EncodeStream& encode(EncodeStream& strm) const
       {
-         return str << "ConnectionTerminated: flow=" << mFlow 
-                    << ", failureReason=" << TransportFailure::failureReasonToString(mFailureReason) 
-                    << ", failureSubCode=" << mFailureSubCode
-                    << ", failureString=" << mFailureString;
+         encodeBrief(strm);
+         strm << ", failureString=" << mFailureString;
+         for (std::list<Data>::const_iterator it = mAdditionalFailureStrings.begin(); it != mAdditionalFailureStrings.end(); ++it)
+         {
+            strm << std::endl << "  " << *it;
+         }
+         return strm;
+      }
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const 
+      {
+         strm << "ConnectionTerminated: flow=" << mFlow
+              << ", failureReason=" << TransportFailure::failureReasonToString(mFailureReason)
+              << ", failureSubCode=" << mFailureSubCode;
+         return strm;
       }
 
       FlowKey getFlowKey() const { return mFlow.mFlowKey; }
@@ -35,12 +52,14 @@ class ConnectionTerminated : public TransactionMessage
       TransportFailure::FailureReason getFailureReason() const { return mFailureReason; }
       int getFailureSubCode() const { return mFailureSubCode; }
       const Data& getFailureString() const { return mFailureString; }
+      const std::list<Data>& getAdditionalFailureStrings() const { return mAdditionalFailureStrings; }
 
    private:
       const Tuple mFlow;
       TransportFailure::FailureReason mFailureReason;
       int mFailureSubCode;
       const Data mFailureString;
+      const std::list<Data> mAdditionalFailureStrings;  // Note:  SSL certificate validation callback errors end up here
 };
 
 }

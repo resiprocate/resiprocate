@@ -228,15 +228,19 @@ class Transport : public FdSetIOObserver
          Posts a ConnectionTerminated message to TransactionMessage
          Fifo.
       */
-      void flowTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode, const Data& reasonString);
+      void flowTerminated(const Tuple& flow, 
+                          TransportFailure::FailureReason failureReason, 
+                          int failureSubCode, 
+                          const Data& failureString, 
+                          const std::list<Data> additionalFailureStrings);
       void keepAlivePong(const Tuple& flow);
 
       /**
          Posts a TransportFailure to the TransactionMessage Fifo.
       */
       void fail(const Data& tid,
-            TransportFailure::FailureReason reason = TransportFailure::Failure,
-            int subCode = 0);
+                TransportFailure::FailureReason reason = TransportFailure::Failure,
+                int subCode = 0);
 
       /**
          Posts a TcpConnectState to the TransactionMessage Fifo.
