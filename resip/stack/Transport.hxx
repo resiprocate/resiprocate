@@ -12,6 +12,7 @@
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/SendData.hxx"
 
+#include <list>
 #include <memory>
 #include <utility>
 
