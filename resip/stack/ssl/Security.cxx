@@ -268,24 +268,24 @@ Security::preload()
    // or a collection of root certificates
    struct stat s;
    Data fileName(mPath);
-   if(fileName.postfix("/"))
+   if (fileName.postfix("/"))
    {
       fileName.truncate(fileName.size() - 1);
    }
-   if(fileName.size() > 0)
+   if (fileName.size() > 0)
    {
-      StackLog(<<"calling stat() for " << fileName);
-      if(stat(fileName.c_str(), &s) < 0)
+      StackLog(<< "calling stat() for " << fileName);
+      if (stat(fileName.c_str(), &s) < 0)
       {
-         ErrLog(<<"Error calling stat() for " << fileName.c_str()
-                << ": " << strerror(errno));
+         ErrLog(<< "Error calling stat() for " << fileName.c_str()
+            << ": " << strerror(errno));
       }
       else
       {
-         if(!S_ISDIR(s.st_mode))
+         if (!S_ISDIR(s.st_mode))
          {
-            WarningLog(<<"mPath argument is a file rather than a directory, "
-                         "treating mPath as a file of trusted root certificates");
+            WarningLog(<< "mPath argument is a file rather than a directory, "
+               "treating mPath as a file of trusted root certificates");
             loadCAFile(fileName);
             count++;
          }
@@ -298,30 +298,30 @@ Security::preload()
    for (; it != dir.end(); ++it)
    {
       Data name = *it;
-           
+
       if (name.postfix(PEM))
       {
          Data fileName = mPath + name;
          bool attemptedToLoad = true;
-         
-         DebugLog(<< "Checking to load file " << name );
+
+         DebugLog(<< "Checking to load file " << name);
          try
          {
             if (name.prefix(pemTypePrefixes(UserCert)))
             {
-               addCertPEM( UserCert, getAor(name, UserCert), Data::fromFile(fileName), false );
+               addCertPEM(UserCert, getAor(name, UserCert), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(UserPrivateKey)))
             {
-               addPrivateKeyPEM( UserPrivateKey, getAor(name, UserPrivateKey), Data::fromFile(fileName), false);
+               addPrivateKeyPEM(UserPrivateKey, getAor(name, UserPrivateKey), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(DomainCert)))
             {
-               addCertPEM( DomainCert, getAor(name, DomainCert), Data::fromFile(fileName), false);
+               addCertPEM(DomainCert, getAor(name, DomainCert), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(DomainPrivateKey)))
             {
-               addPrivateKeyPEM( DomainPrivateKey, getAor(name, DomainPrivateKey), Data::fromFile(fileName), false);
+               addPrivateKeyPEM(DomainPrivateKey, getAor(name, DomainPrivateKey), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(RootCert)))
             {
@@ -338,25 +338,25 @@ Security::preload()
             ErrLog(<< "Some problem reading " << fileName << ": " << e);
          }
          catch (...)
-         {  
-            ErrLog(<< "Some problem reading " << fileName );
-         }
-         
-         if(attemptedToLoad)
          {
-            InfoLog(<<"Successfully loaded " << fileName );
+            ErrLog(<< "Some problem reading " << fileName);
+         }
+
+         if (attemptedToLoad)
+         {
+            InfoLog(<< "Successfully loaded " << fileName);
             count++;
          }
       }
    }
-   InfoLog(<<"Files loaded by prefix: " << count);
+   InfoLog(<< "Files loaded by prefix: " << count);
 
-   if(count == 0 && mCADirectories.empty() && mCAFiles.empty() && mPath.size() > 0)
+   if (count == 0 && mCADirectories.empty() && mCAFiles.empty() && mPath.size() > 0)
    {
       // If no other source of trusted roots exists,
       // assume mPath was meant to be in mCADirectories
-      InfoLog(<<"No root certificates found using legacy prefixes, "
-                   "treating mPath as a normal directory of root certs");
+      InfoLog(<< "No root certificates found using legacy prefixes, "
+                 "treating mPath=" << mPath << " as a normal directory of root certs");
       loadCADirectory(mPath);
    }
 
@@ -656,9 +656,9 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
 }
 
 bool
-BaseSecurity::hasCert (PEMType type, const Data& aor) const
+BaseSecurity::hasCert(PEMType type, const Data& aor, bool logErrors) const
 {
-   resip_assert( !aor.empty() );
+   resip_assert(!aor.empty());
    const X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
    X509Map::const_iterator where = certs.find(aor);
@@ -666,7 +666,7 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
    {
       return true;
    }
-   
+
    try
    {
       Data certPEM;
@@ -675,28 +675,28 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
       {
          return false;
       }
-      BaseSecurity*  mutable_this = const_cast<BaseSecurity*>(this);
+      BaseSecurity* mutable_this = const_cast<BaseSecurity*>(this);
       mutable_this->addCertPEM(type, aor, certPEM, false);
    }
    catch (const BaseException& e)
    {
-      ErrLog(<<"Caught exception: " << e);
-      return   false;
+      if(logErrors) ErrLog(<< "Caught exception: " << e);
+      return false;
    }
    catch (const std::exception& e)
    {
-      ErrLog(<<"Caught exception: " << e.what());
-      return   false;
+      if (logErrors) ErrLog(<< "Caught exception: " << e.what());
+      return false;
    }
    catch (...)
    {
-      ErrLog(<<"Caught exception: ");
-      return   false;
+      if (logErrors) ErrLog(<< "Caught exception: ");
+      return false;
    }
 
-   resip_assert(  certs.find(aor) != certs.end() );
-   
-   return   true;
+   resip_assert(certs.find(aor) != certs.end());
+
+   return true;
 }
 
 void
@@ -1319,7 +1319,6 @@ BaseSecurity::addDomainCertPEM(const Data& domainName, const Data& certPEM)
    addCertPEM(DomainCert, domainName, certPEM, false);
 }
 
-
 void
 BaseSecurity::addDomainCertDER(const Data& domainName, const Data& certDER)
 {
@@ -1327,22 +1326,21 @@ BaseSecurity::addDomainCertDER(const Data& domainName, const Data& certDER)
 }
 
 bool
-BaseSecurity::hasDomainCert(const Data& domainName) const
+BaseSecurity::hasDomainCert(const Data& domainName, bool logErrors) const
 {
-   return   hasCert(DomainCert, domainName);
+   return hasCert(DomainCert, domainName, logErrors);
 }
-
 
 void
 BaseSecurity::removeDomainCert(const Data& domainName)
 {
-   return   removeCert(DomainCert, domainName);
+   return removeCert(DomainCert, domainName);
 }
 
 Data
 BaseSecurity::getDomainCertDER(const Data& domainName) const
 {
-   return   getCertDER(DomainCert, domainName);
+   return getCertDER(DomainCert, domainName);
 }
 
 void
@@ -1363,7 +1361,6 @@ BaseSecurity::removeDomainPrivateKey(const Data& domainName)
    removePrivateKey(DomainPrivateKey, domainName);
 }
 
-
 Data
 BaseSecurity::getDomainPrivateKeyPEM(const Data& domainName) const
 {
@@ -1376,7 +1373,6 @@ BaseSecurity::addUserCertPEM(const Data& aor, const Data& certPEM)
    addCertPEM(UserCert, aor, certPEM, false);
 }
 
-
 void
 BaseSecurity::addUserCertDER(const Data& aor, const Data& certDER)
 {
@@ -1386,9 +1382,8 @@ BaseSecurity::addUserCertDER(const Data& aor, const Data& certDER)
 bool
 BaseSecurity::hasUserCert(const Data& aor) const
 {
-   return   hasCert(UserCert, aor);
+   return hasCert(UserCert, aor);
 }
-
 
 void
 BaseSecurity::removeUserCert(const Data& aor)
@@ -1399,7 +1394,7 @@ BaseSecurity::removeUserCert(const Data& aor)
 Data
 BaseSecurity::getUserCertDER(const Data& aor) const
 {
-   return   getCertDER(UserCert, aor);
+   return getCertDER(UserCert, aor);
 }
 
 void
@@ -1422,11 +1417,11 @@ BaseSecurity::hasUserPassPhrase(const Data& aor) const
    PassPhraseMap::const_iterator iter = mUserPassPhrases.find(aor);
    if (iter == mUserPassPhrases.end())
    {
-      return   false;
+      return false;
    }
    else
    {
-      return   true;
+      return true;
    }
 }
 
@@ -1450,11 +1445,11 @@ BaseSecurity::getUserPassPhrase(const Data& aor) const
    PassPhraseMap::const_iterator iter = mUserPassPhrases.find(aor);
    if(iter == mUserPassPhrases.end())
    {
-      return   iter->second;
+      return iter->second;
    }
    else
    {
-      return   Data::Empty;
+      return Data::Empty;
    }
 }
 
@@ -1485,13 +1480,13 @@ BaseSecurity::removeUserPrivateKey(const Data& aor)
 Data
 BaseSecurity::getUserPrivateKeyPEM(const Data& aor) const
 {
-   return   getPrivateKeyPEM(UserPrivateKey, aor);
+   return getPrivateKeyPEM(UserPrivateKey, aor);
 }
 
 Data
 BaseSecurity::getUserPrivateKeyDER(const Data& aor) const
 {
-   return   getPrivateKeyDER(UserPrivateKey, aor);
+   return getPrivateKeyDER(UserPrivateKey, aor);
 }
 
 void

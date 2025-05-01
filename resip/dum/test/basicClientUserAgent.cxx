@@ -144,6 +144,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    addTransport(TCP, mTcpPort);
 #if defined(USE_SSL)
    addTransport(TLS, mTlsPort);
+   BaseSecurity::setAllowWildcardCertificates(true);
 #endif
 #if defined(USE_DTLS)
    addTransport(DTLS, mDtlsPort);

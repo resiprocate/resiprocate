@@ -499,9 +499,9 @@ Connection::checkConnectionTimedout()
          Data failureString;
          {
             DataStream ds(failureString);
-            ds << "Exception on socket " << mWho.mFlowKey << ", errNum=" << errNum << ", err=" << strerror(errNum) << "; closing connection";
+            ds << "Exception on socket " << mWho.mFlowKey << ", errNum=" << errNum << ", err=" << Transport::errorToString(errNum);
          }
-         InfoLog(<< failureString);
+         InfoLog(<< failureString << "; closing connection");
          setFailureReason(TransportFailure::ConnectionException, errNum, failureString);
          delete this;
          return true;
@@ -537,10 +537,10 @@ Connection::processPollEvent(FdPollEventMask mask)
       Data failureString;
       {
          DataStream ds(failureString);
-         ds << "Exception on socket " << fd << ", errNum=" << errNum << ", err=" << strerror(errNum) << "; closing connection";
+         ds << "Exception on socket " << fd << ", errNum=" << errNum << ", err=" << Transport::errorToString(errNum);
       }
 
-      InfoLog(<< failureString);
+      InfoLog(<< failureString << "; closing connection");
       setFailureReason(TransportFailure::ConnectionException, errNum, failureString);
       delete this;
       return;

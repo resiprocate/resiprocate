@@ -28,34 +28,6 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-inline bool 
-handleOpenSSLErrorQueue(int ret, unsigned long err, const char* op)
-{
-   bool hadReason = false;
-   ErrLog(<< op << " error=" << err << ", ret=" << ret);
-   while (true)
-   {
-      const char* file;
-      int line;
-
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
-      unsigned long code = ERR_get_error_line(&file, &line);
-#else
-      unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
-#endif
-      if (code == 0)
-      {
-         break;
-      }
-
-      char buf[256];
-      ERR_error_string_n(code, buf, sizeof(buf));
-      ErrLog(<< "  " << buf << " (file=" << file << ", line=" << line << ")");
-      hadReason = true;
-   }
-   return hadReason;
-}
-
 TlsConnection::TlsConnection(Transport* transport, const Tuple& tuple,
    Socket fd, Security* security,
    bool server, Data domain, SecurityTypes::SSLType sslType,
@@ -259,6 +231,7 @@ TlsConnection::checkState()
             int failureSubCode = 0;
             Data failureString;
             DataStream ds(failureString);
+            bool addToAdditionalFailureStrings = true;
             ds << "TLS handshake failed: ";
             if (err == SSL_ERROR_SYSCALL)
             {
@@ -310,6 +283,9 @@ TlsConnection::checkState()
 
                   default:
                      ds << "peer certificate validation failure: " << X509_verify_cert_error_string(verifyErrorCode);
+                     // We will have failure strings already added from the certificate validation callback already (Security.cxx), 
+                     // adding errors from the SSL error queue doesn't appear to provide any additional information - disable it
+                     addToAdditionalFailureStrings = false;
                      break;
                }
                if (mServer)
@@ -331,8 +307,8 @@ TlsConnection::checkState()
             }
             ds.flush();
             ErrLog(<< failureString);
+            handleOpenSSLErrorQueue(handshakeRet, err, "SSL_do_handshake", addToAdditionalFailureStrings);
             setFailureReason(failureReason, failureSubCode, failureString);
-            handleOpenSSLErrorQueue(handshakeRet, err, "SSL_do_handshake");
             mBio = NULL;
             mTlsState = Broken;
             return mTlsState;
@@ -384,6 +360,43 @@ TlsConnection::checkState()
    }
 #endif // USE_SSL
    return mTlsState;
+}
+
+bool
+TlsConnection::handleOpenSSLErrorQueue(int ret, unsigned long err, const char* op, bool addToAdditionalFailureStrings)
+{
+   bool hadReason = false;
+   ErrLog(<< op << " error=" << err << ", ret=" << ret);
+   while (true)
+   {
+      const char* file;
+      int line;
+
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+      unsigned long code = ERR_get_error_line(&file, &line);
+#else
+      unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
+      if (code == 0)
+      {
+         break;
+      }
+
+      char buf[256];
+      ERR_error_string_n(code, buf, sizeof(buf));
+      Data errorString;
+      {
+         DataStream ds(errorString);
+         ds << "  " << buf << " (file=" << file << ", line=" << line << ")";
+      }
+      ErrLog(<< errorString);
+      if (addToAdditionalFailureStrings)
+      {
+         addAdditionalFailureString(errorString);
+      }
+      hadReason = true;
+   }
+   return hadReason;
 }
 
 int
@@ -706,7 +719,7 @@ TlsConnection::computePeerName()
    // print session info
    const SSL_CIPHER* ciph;
    ciph = SSL_get_current_cipher(mSsl);
-   InfoLog(<< "TLS sessions set up with "
+   InfoLog(<< "TLS session set up with "
            << SSL_get_version(mSsl) << " "
            << SSL_CIPHER_get_version(ciph) << " "
            << SSL_CIPHER_get_name(ciph) << " ");
@@ -746,7 +759,7 @@ TlsConnection::computePeerName()
       Data derCert(buf, len);
       for (std::list<BaseSecurity::PeerName>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
       {
-         if (!mSecurity->hasDomainCert(it->mName))
+         if (!mSecurity->hasDomainCert(it->mName, false /* logErrors? */))
          {
             mSecurity->addDomainCertDER(it->mName, derCert);
          }
