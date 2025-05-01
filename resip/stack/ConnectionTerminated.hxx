@@ -6,6 +6,8 @@
 #include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/Tuple.hxx"
 
+#include <list>
+
 namespace resip
 {
 
