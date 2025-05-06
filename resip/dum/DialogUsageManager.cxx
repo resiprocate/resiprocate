@@ -1137,23 +1137,18 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, std
    if (userProfile.hasOutboundProxy() && 
       (!findDialog(id) || userProfile.getForceOutboundProxyOnAllRequestsEnabled()))
    {
-      DebugLog ( << "Using outbound proxy: " 
-                 << userProfile.getOutboundProxy().uri() 
-                 << " -> " << msg->brief());
-
       if (userProfile.getExpressOutboundAsRouteSetEnabled())
       {
          // prepend the outbound proxy to the service route
          msg->header(h_Routes).push_front(NameAddr(userProfile.getOutboundProxy().uri()));
          if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
          {
-            DebugLog ( << "Sending with client outbound flow tuple to express outbound" );
-            DebugLog ( << "Flow Tuple: " << userProfile.mClientOutboundFlowTuple << " and key: " << userProfile.mClientOutboundFlowTuple.mFlowKey);
+            DebugLog(<< "Sending with OutboundProxy=" << userProfile.getOutboundProxy().uri() << " in route set, to FlowTuple=" << userProfile.mClientOutboundFlowTuple << ", FlowKey=" << userProfile.mClientOutboundFlowTuple.mFlowKey << ": " << msg->brief());
             mStack.sendTo(std::move(msg), userProfile.mClientOutboundFlowTuple, this);
          }
          else
          {
-            DebugLog ( << "Sending to express outbound w/o flow tuple");
+            DebugLog(<< "Sending with OutboundProxy=" << userProfile.getOutboundProxy().uri() << " in route set: " << msg->brief());
             mStack.send(std::move(msg), this);
          }
       }
@@ -1161,25 +1156,26 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, std
       {
          if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
          {
-            DebugLog ( << "Sending to outbound (no express) with flow tuple");
+            DebugLog(<< "Sending to FlowTuple=" << userProfile.mClientOutboundFlowTuple << ", FlowKey=" << userProfile.mClientOutboundFlowTuple.mFlowKey << ": " << msg->brief());
             mStack.sendTo(std::move(msg), userProfile.mClientOutboundFlowTuple, this);
          }
          else
          {
-            DebugLog ( << "Sending to outbound uri");
+            DebugLog(<< "Sending to OutboundProxy=" << userProfile.getOutboundProxy().uri() << ": " << msg->brief());
             mStack.sendTo(std::move(msg), userProfile.getOutboundProxy().uri(), this);
          }
       }
    }
    else
    {
-      DebugLog (<< "Send: " << msg->brief());
       if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
       {
+         DebugLog(<< "Sending to FlowTuple=" << userProfile.mClientOutboundFlowTuple << ", FlowKey=" << userProfile.mClientOutboundFlowTuple.mFlowKey << ": " << msg->brief());
          mStack.sendTo(std::move(msg), userProfile.mClientOutboundFlowTuple, this);
       }
       else
       {
+         DebugLog(<< "Send: " << msg->brief());
          mStack.send(std::move(msg), this);
       }
    }
