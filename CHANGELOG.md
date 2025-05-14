@@ -33,6 +33,14 @@
 * If SSL_read fails after SSL_pending returns > 0, then keep bytes from original read if error code is retryable
 * Optimize lock scopes for improved efficiency
 * Improve logging in DialogUsageManager::sendUsingOutboundIfAppropriate
+* Allow applications to see low level connection error information, including TLS handshake failure errors
+  * add transport FailureReason and FailureSubCode FailureString and AdditionalFailureStrings to ConnectionTerminated messaging
+  * make sure we store certificate validation errors in mFailureSubCode
+  * make sure we get the client cert validation error in scenarios where a client cert isn't available for querying
+  * reduce number of log statements during SSL/TLS errors - but maintain same level of information
+  * Propogate SSL Certificate Validation errors to ConnecitonTerminated event/message (AdditionalFailureStrings)
+* fixed 2 memory leaks from SSL_get_peer_certificate calls (DtlsSocket and TlsConnection - missing X509_free calls)
+* remove error log in BaseSecurity::hasCert when first connecting to a new Tls domain
 
 
 ## 1.13.1 Changes
