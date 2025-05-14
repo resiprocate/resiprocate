@@ -1,5 +1,40 @@
 # Change Log
 
+## 1.13.2 Changes
+* DNS fixes
+  * ares__send_query: make sure if a query goes over TCP that it times out correctly
+  * fix DNS parsing bug if NULLs are embedded into domain name
+  * if we fail to parse a DNS record when adding to the cache, then avoid caching it
+  * if a DNS record ends up in cache with no destination records, then ensure we don't try to access non-existing record
+  * ensure items removed from cache are properly removed from LRU list
+  * fix memory leak in DNSStub logic
+  * ares_parse_a_reply - bring over a leak fix from c-ares
+  * ares_send.c - bring over fix from c-ares - returns correct error code when we are out of servers, and avoids extra allocations
+  * RRList::update - make sure we don't use ULONG_MAX as TTL
+  * AresDns - added helper method dnsRRTypeToString
+  * DnsResult - reduce number of log statements leaving detail the same (or better)
+  * DnsAAAARecord and DnsHostRecord - throw if name fails to parse
+  * RRList - cleanup DNSCache logging - reduce complexity and ensure cached failure lookups are logged as well
+  * DnsStub - fix bug in typeToData
+  * DnsStub - ensure we won't infinite loop on CName lookups
+  * ares read_tcp_data and ares__send_query - if malloc fails don't continue to use memory
+* update linux CI to use ubuntu-22.04, since 20.04 will be decommissioned in April 2025
+* bump contrib\srtp\CMakeLists.txt cmake_minumum_required version to match base resip CMakeList.txt
+* Fix inconsistent include guards in p2p/DictionaryValue.hxx
+* Replace set with unordered_set in BasicDomainMatcher and ExtendedDomainMatcher
+* Use find() instead of count() for element existence checks in STL containers
+* Optimize locking in DnsInterface::isSupported()
+* Early return in ExtendedDomainMatcher::isMyDomain() when mDomainSuffixList is empty, preventing unnecessary domain case conversions
+* Apply fixes from static code analysis (Coverity)
+  * fix some potential resource/memory leaks
+  * fix some potential unintialized access issues
+  * fix some large object copies
+* Fix NameAddr parsing bug when angle brackets are included in quoted parameters
+* If SSL_read fails after SSL_pending returns > 0, then keep bytes from original read if error code is retryable
+* Optimize lock scopes for improved efficiency
+* Improve logging in DialogUsageManager::sendUsingOutboundIfAppropriate
+
+
 ## 1.13.1 Changes
 * various build system and compilation fixes
 * add Windows CI script for GitHub actions
@@ -99,7 +134,7 @@
 * fix best response code to be 500 (vs 480) if 503 is received, following RFC 3261
 
 ### reTurn
-* updated to version 1.18.1
+* asio updated to version 1.18.1
 * fix static initialization issue that can cause a startup deadlock
 * TurnAsyncSocket - allow software attribute to be customized
 * fix the async client to choose the DNS result corresponding to local endpoint protocol type
