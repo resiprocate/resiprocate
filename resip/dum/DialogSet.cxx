@@ -520,9 +520,24 @@ DialogSet::dispatch(const SipMessage& msg)
       switch (request.header(h_CSeq).method())
       {
          case INVITE:
-         case CANCEL:  //cancel needs work
          case SUBSCRIBE:
+            // If this is an external request without an existing Dialog, and it is in a UAC DialogSet of the same method,
+            // then something strange is going on (ie: We started with a UAC INVITE, now we have an unmatched inbound INVITE 
+            // in the same DialogSet).  Reject the new request.
+            if (request.isExternal() &&  // External request (UAS)
+                !dialog &&               // No existing dialog for this request
+                getCreator() &&          // DialogSet was created as UAC DialogSet
+                getCreator()->getLastRequest()->method() == request.method()) // Initial creation SIP method matches new request
+            {
+               auto response = std::make_shared<SipMessage>();
+               mDum.makeResponse(*response, msg, 400, "New dialog UAS request received in UAC DialogSet");
+               mDum.send(response);
+               return;
+            }
             break; //dialog creating/handled by dialog
+
+         case CANCEL:  //cancel needs work
+            break;
 
          case BYE:
          case INFO:

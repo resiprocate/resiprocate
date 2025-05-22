@@ -345,10 +345,11 @@ Dialog::getRouteSet() const noexcept
 void
 Dialog::cancel()
 {
-   resip_assert(mType == Invitation);
    ClientInviteSession* uac = dynamic_cast<ClientInviteSession*>(mInviteSession);
-   resip_assert (uac);
-   uac->cancel();
+   if (uac)
+   {
+      uac->cancel();
+   }
 }
 
 void
