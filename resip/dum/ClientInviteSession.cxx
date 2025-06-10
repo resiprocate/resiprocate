@@ -771,8 +771,8 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case On2xx:
       {
          sendAck();
-         sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
+         sendBye();
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
