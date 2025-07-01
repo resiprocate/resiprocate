@@ -144,6 +144,33 @@ ServerRegistration::accept(int statusCode)
 }
 
 void
+ServerRegistration::reject(SipMessage& failure)
+{
+   failure.remove(h_Contacts);
+
+   InfoLog( << "rejected a registration " << mAor << " with statusCode=" << failure.header(h_StatusLine).statusCode() );
+
+   // First, we roll back the contact database to
+   // the state it was before the registration request.
+
+   // Async processing hasn't actually updated the database yet, so no need to roll back.
+   if (mDum.mServerRegistrationHandler && !mDum.mServerRegistrationHandler->asyncProcessing())
+   {
+      // Rollback changes, since rejected
+      RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+      database->removeAor(mAor);
+      if (mOriginalContacts.get())
+      {
+         database->addAor(mAor, *mOriginalContacts);
+      }
+      database->unlockRecord(mAor);
+   }
+
+   mDum.send(std::shared_ptr<SipMessage>(static_cast<SipMessage*>(failure.clone())));
+   delete(this);
+}
+
+void
 ServerRegistration::reject(int statusCode)
 {
    InfoLog( << "rejected a registration " << mAor << " with statusCode=" << statusCode );
