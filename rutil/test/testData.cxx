@@ -1700,6 +1700,14 @@ class TestData
          }
 #endif
 
+         {
+            assert(Data::npos == std::string::npos);
+
+#if RESIP_HAVE_STRING_VIEW
+            assert(Data::npos == std::string_view::npos);
+#endif
+         }
+
          std::cerr << "All OK" << endl;
          return 0;
       }
