@@ -45,6 +45,9 @@ static Token outbound(Symbols::Outbound);
 void
 ServerRegistration::accept(SipMessage& ok)
 {
+   resip_assert(failure.isResponse());
+   resip_assert(failure.header(h_StatusLine).statusCode() >= 200 && failure.header(h_StatusLine).statusCode() < 300);
+
    ok.remove(h_Contacts);
 
    InfoLog( << "accepted a registration " << mAor );
@@ -146,6 +149,9 @@ ServerRegistration::accept(int statusCode)
 void
 ServerRegistration::reject(SipMessage& failure)
 {
+   resip_assert(failure.isResponse());
+   resip_assert(failure.header(h_StatusLine).statusCode() >= 300 && failure.header(h_StatusLine).statusCode() < 700);
+
    failure.remove(h_Contacts);
 
    InfoLog( << "rejected a registration " << mAor << " with statusCode=" << failure.header(h_StatusLine).statusCode() );
@@ -173,29 +179,9 @@ ServerRegistration::reject(SipMessage& failure)
 void
 ServerRegistration::reject(int statusCode)
 {
-   InfoLog( << "rejected a registration " << mAor << " with statusCode=" << statusCode );
-
-   // First, we roll back the contact database to
-   // the state it was before the registration request.
-
-   // Async processing hasn't actually updated the database yet, so no need to roll back.
-   if (mDum.mServerRegistrationHandler && !mDum.mServerRegistrationHandler->asyncProcessing())
-   {
-      // Rollback changes, since rejected
-      RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-      database->removeAor(mAor);
-      if (mOriginalContacts.get())
-      {
-         database->addAor(mAor, *mOriginalContacts);
-      }
-      database->unlockRecord(mAor);
-   }
-
-   auto failure = std::make_shared<SipMessage>();
-   mDum.makeResponse(*failure, mRequest, statusCode);
-   failure->remove(h_Contacts);
-   mDum.send(failure);
-   delete(this);
+   SipMessage failure;
+   mDum.makeResponse(failure, mRequest, statusCode);
+   reject(failure);
 }
 
 void 
