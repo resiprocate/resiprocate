@@ -45,6 +45,9 @@ static Token outbound(Symbols::Outbound);
 void
 ServerRegistration::accept(SipMessage& ok)
 {
+   resip_assert(ok.isResponse());
+   resip_assert(ok.header(h_StatusLine).statusCode() >= 200 && ok.header(h_StatusLine).statusCode() < 300);
+
    ok.remove(h_Contacts);
 
    InfoLog( << "accepted a registration " << mAor );
@@ -144,9 +147,14 @@ ServerRegistration::accept(int statusCode)
 }
 
 void
-ServerRegistration::reject(int statusCode)
+ServerRegistration::reject(SipMessage& failure)
 {
-   InfoLog( << "rejected a registration " << mAor << " with statusCode=" << statusCode );
+   resip_assert(failure.isResponse());
+   resip_assert(failure.header(h_StatusLine).statusCode() >= 300 && failure.header(h_StatusLine).statusCode() < 700);
+
+   failure.remove(h_Contacts);
+
+   InfoLog( << "rejected a registration " << mAor << " with statusCode=" << failure.header(h_StatusLine).statusCode() );
 
    // First, we roll back the contact database to
    // the state it was before the registration request.
@@ -164,11 +172,16 @@ ServerRegistration::reject(int statusCode)
       database->unlockRecord(mAor);
    }
 
-   auto failure = std::make_shared<SipMessage>();
-   mDum.makeResponse(*failure, mRequest, statusCode);
-   failure->remove(h_Contacts);
-   mDum.send(failure);
+   mDum.send(std::shared_ptr<SipMessage>(static_cast<SipMessage*>(failure.clone())));
    delete(this);
+}
+
+void
+ServerRegistration::reject(int statusCode)
+{
+   SipMessage failure;
+   mDum.makeResponse(failure, mRequest, statusCode);
+   reject(failure);
 }
 
 void 
