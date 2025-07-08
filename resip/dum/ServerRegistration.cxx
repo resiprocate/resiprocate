@@ -45,8 +45,8 @@ static Token outbound(Symbols::Outbound);
 void
 ServerRegistration::accept(SipMessage& ok)
 {
-   resip_assert(failure.isResponse());
-   resip_assert(failure.header(h_StatusLine).statusCode() >= 200 && failure.header(h_StatusLine).statusCode() < 300);
+   resip_assert(ok.isResponse());
+   resip_assert(ok.header(h_StatusLine).statusCode() >= 200 && ok.header(h_StatusLine).statusCode() < 300);
 
    ok.remove(h_Contacts);
 
