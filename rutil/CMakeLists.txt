@@ -225,8 +225,10 @@ target_add_conditional_sources(rutil WIN32
 
 # %HOME...%\source\repos\resiprocate\builds\packages\zeroc.openssl.v142\build\native\bin\x64\Debug
 
-# Enable MONOTONIC clock for rutil
-add_definitions(-D_RESIP_MONOTONIC_CLOCK)
+option(USE_MONOTONIC_CLOCK "Enable monotonic clock" ON)
+if(USE_MONOTONIC_CLOCK)
+    add_definitions(-D_RESIP_MONOTONIC_CLOCK)
+endif()
 
 target_compile_features(rutil PUBLIC cxx_std_11)
 
