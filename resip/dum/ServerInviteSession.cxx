@@ -635,6 +635,14 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          // we should send 200PRACK
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, mFirstRequest, code);
+         if (mProposedLocalOfferAnswer)
+         {
+            setOfferAnswer(*response, mProposedLocalOfferAnswer.get());
+         }
+         else if (mCurrentLocalOfferAnswer)
+         {
+            setOfferAnswer(*response, mCurrentLocalOfferAnswer.get());
+         }
          if(warning)
          {
             response->header(h_Warnings).push_back(*warning);
