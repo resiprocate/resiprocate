@@ -32,9 +32,6 @@ jobs:
       - name: Install Dependencies
         run: |
           apt-get update -qq
-          apt-get install -qq wget
-          wget -O - http://apt.debify.org/add-apt-debify | bash
-          apt-get update -qq
           apt-get install -qq \
             clang-13 \
             clang-tidy-13 \
