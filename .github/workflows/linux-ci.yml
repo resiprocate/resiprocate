@@ -75,11 +75,11 @@ jobs:
             sox \
             xxd
 
-      - name: Upgrade CMake
-        run: ./build/travis/upgradecmake
-
       - name: Checkout source
         uses: actions/checkout@v3
+
+      - name: Upgrade CMake
+        run: ./build/travis/upgradecmake
 
       - name: Bootstrap
         run: ./build/travis/bootstrap
