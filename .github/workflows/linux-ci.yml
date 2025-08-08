@@ -31,6 +31,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          echo "deb http://deb.debian.org/debian bookworm-backports main" > /etc/apt/sources.list.d/backports.list
           apt-get update -qq
           apt-get install -qq wget
           wget -O - http://apt.debify.org/add-apt-debify | bash
@@ -74,6 +75,9 @@ jobs:
             python3-dev \
             sox \
             xxd
+
+      - name: Upgrade CMake
+        run: apt-get install -y cmake/bookworm-backports
 
       - name: Checkout source
         uses: actions/checkout@v3
