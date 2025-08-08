@@ -8,9 +8,9 @@ concurrency:
 jobs:
   build:
     name: Build with ${{ matrix.c-compiler }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     container:
-      image: debian:bookworm-slim
+      image: debian:bullseye-slim
       options: --ulimit memlock=-1
     strategy:
       fail-fast: false
@@ -31,6 +31,9 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          apt-get update -qq
+          apt-get install -qq wget
+          wget -O - http://apt.debify.org/add-apt-debify | bash
           apt-get update -qq
           apt-get install -qq \
             clang-13 \
@@ -74,6 +77,9 @@ jobs:
 
       - name: Checkout source
         uses: actions/checkout@v3
+
+      - name: Upgrade CMake
+        run: ./build/travis/upgradecmake
 
       - name: Bootstrap
         run: ./build/travis/bootstrap
