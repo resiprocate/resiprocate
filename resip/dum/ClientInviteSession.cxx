@@ -771,8 +771,8 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case On2xx:
       {
          sendAck();
+         InfoLog(<< "Failure:  2xx with no answer: " << msg.brief());
          sendBye();
-         InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -870,8 +870,8 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case On2xx:
       {
          sendAck();
-         sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
+         sendBye();
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -963,8 +963,8 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          break;
 #if 0 // !jf! don't think this is right
       {
-         sendBye();
          InfoLog (<< "Failure:  error response: " << msg.brief());
+         sendBye();
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -1001,8 +1001,8 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       case On2xx:
       case On2xxAnswer:
          sendAck();
-         sendBye();
          InfoLog (<< "Failure:  no answer sent: " << msg.brief());
+         sendBye();
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -1083,8 +1083,8 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case On2xxAnswer:
       case On1xxAnswer:
          sendAck();
-         sendBye();
          WarningLog(<< "Failure:  illegal offer/answer: " << msg.brief());
+         sendBye();
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -1170,8 +1170,8 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On2xxAnswer:
       case On1xxAnswer:
          sendAck();
-         sendBye();
          WarningLog(<< "Failure:  illegal offer/answer: " << msg.brief());
+         sendBye();
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -1248,8 +1248,8 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case On2xxAnswer:
          sendAck();
-         sendBye();
          WarningLog(<< "Failure:  illegal offer/answer: " << msg.brief());
+         sendBye();
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);

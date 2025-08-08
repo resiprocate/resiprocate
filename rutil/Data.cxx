@@ -26,7 +26,7 @@ using namespace resip;
 using namespace std;
 
 const Data Data::Empty("", 0);
-const Data::size_type Data::npos = UINT_MAX;
+const Data::size_type Data::npos = std::string::npos;
 
 Data::PreallocateType::PreallocateType(int)
 {}
