@@ -60,6 +60,7 @@ class ServerInviteSession: public InviteSession
       /** Rejects an offer at the SIP level. So this can send a 488 to a
           reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);
+      virtual void reject(int statusCode, const Contents& rejectBody, WarningCategory *warning = 0);
 
       /** accept an initial invite (2xx) - this is only applicable to the UAS */
       void accept(int statusCode=200);

@@ -635,6 +635,11 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          // we should send 200PRACK
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, mFirstRequest, code);
+         // In case we wanted to reject the request by including content
+         if (mProposedLocalReject)
+         {
+            response->setContents(mProposedLocalReject.get());
+         }
          if(warning)
          {
             response->header(h_Warnings).push_back(*warning);
@@ -664,6 +669,13 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          InviteSession::reject(code);
          break;
    }
+}
+
+void 
+ServerInviteSession::reject(int code, const Contents& rejectBody, WarningCategory *warning)
+{
+   mProposedLocalReject = std::unique_ptr<Contents>(rejectBody.clone());
+   reject(code, warning);
 }
 
 void 
