@@ -311,7 +311,7 @@ ClientInviteSession::reject (int statusCode, const Contents* contents, WarningCa
          break;
 
       default:
-         InviteSession::reject(statusCode, warning);
+         InviteSession::reject(statusCode, contents, warning);
          break;
    }
 }

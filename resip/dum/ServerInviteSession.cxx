@@ -672,7 +672,7 @@ ServerInviteSession::reject(int code, const Contents* contents, WarningCategory 
          break;
 
       default:
-         InviteSession::reject(code);
+         InviteSession::reject(code, contents, warning);
          break;
    }
 }
