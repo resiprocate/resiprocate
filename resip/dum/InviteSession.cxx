@@ -811,6 +811,12 @@ InviteSession::endCommand(const ParserContainer<Token>& endReasons)
 void
 InviteSession::reject(int statusCode, WarningCategory *warning)
 {
+   reject(statusCode, nullptr, warning);
+}
+
+void 
+InviteSession::reject(int statusCode, const Contents* contents, WarningCategory *warning)
+{
    mProposedRemoteOfferAnswer.reset();  // Clear out any potential ProposedRemoteOfferAnswer since we are rejecting
    switch (mState)
    {
@@ -823,9 +829,9 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, statusCode);
          // In case we wanted to reject the request by including content
-         if (mProposedLocalReject)
+         if (contents)
          {
-            response->setContents(mProposedLocalReject.get());
+            response->setContents(contents);
          }
          if(warning)
          {
@@ -850,13 +856,6 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
          break;
    }
 }
-
-void 
-InviteSession::reject(int code, const Contents& rejectBody, WarningCategory *warning)
-{
-   mProposedLocalReject = std::unique_ptr<Contents>(rejectBody.clone());
-   reject(code, warning);
-}
 class InviteSessionRejectCommand : public DumCommandAdapter
 {
 public:
@@ -867,11 +866,19 @@ public:
    {
    }
 
+   InviteSessionRejectCommand(const InviteSessionHandle& inviteSessionHandle, int code, const Contents* contents, WarningCategory* warning)
+      : mInviteSessionHandle(inviteSessionHandle),
+        mCode(code),
+        mContents(contents?contents->clone():nullptr),
+        mWarning(warning?new WarningCategory(*warning):0)
+   {
+   }
+
    void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
-         mInviteSessionHandle->reject(mCode, mWarning.get());
+         mInviteSessionHandle->reject(mCode, mContents.get(), mWarning.get());
       }
    }
 
@@ -882,6 +889,7 @@ public:
 private:
    InviteSessionHandle mInviteSessionHandle;
    int mCode;
+   std::unique_ptr<Contents> mContents;
    std::unique_ptr<WarningCategory> mWarning;
 };
 
@@ -889,6 +897,12 @@ void
 InviteSession::rejectCommand(int code, WarningCategory *warning)
 {
    mDum.post(new InviteSessionRejectCommand(getSessionHandle(), code, warning));
+}
+
+void
+InviteSession::rejectCommand(int code, const Contents* contents, WarningCategory *warning)
+{
+   mDum.post(new InviteSessionRejectCommand(getSessionHandle(), code, contents, warning));
 }
 
 void

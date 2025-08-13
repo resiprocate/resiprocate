@@ -600,6 +600,12 @@ ServerInviteSession::end(EndReason reason)
 void 
 ServerInviteSession::reject(int code, WarningCategory *warning)
 {
+   reject(code, nullptr, warning);
+}
+
+void 
+ServerInviteSession::reject(int code, const Contents* contents, WarningCategory *warning)
+{
    InfoLog (<< toData(mState) << ": reject(" << code << ")");
 
    switch (mState)
@@ -636,9 +642,9 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, mFirstRequest, code);
          // In case we wanted to reject the request by including content
-         if (mProposedLocalReject)
+         if (contents)
          {
-            response->setContents(mProposedLocalReject.get());
+            response->setContents(contents);
          }
          if(warning)
          {
@@ -669,13 +675,6 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          InviteSession::reject(code);
          break;
    }
-}
-
-void 
-ServerInviteSession::reject(int code, const Contents& rejectBody, WarningCategory *warning)
-{
-   mProposedLocalReject = std::unique_ptr<Contents>(rejectBody.clone());
-   reject(code, warning);
 }
 
 void 

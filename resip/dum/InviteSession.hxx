@@ -77,7 +77,7 @@ class InviteSession : public DialogUsage
       /** Rejects an offer at the SIP level.  Can also be used to 
           send a 488 to a reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);
-      virtual void reject(int statusCode, const Contents& rejectBody, WarningCategory *warning = 0);
+      virtual void reject(int statusCode, const Contents* contents, WarningCategory *warning = 0);
 
       /** will send a reINVITE (current offerAnswer) or UPDATE with new Contact header */
       /** currently only supported when in the Connected state, UAC_Early states are allowed by RFC but not yet supported */
@@ -137,6 +137,7 @@ class InviteSession : public DialogUsage
       /** Asynchronously rejects an offer at the SIP level.  Can also be used to
           send a 488 to a reINVITE or UPDATE */
       virtual void rejectCommand(int statusCode, WarningCategory *warning = 0);
+      virtual void rejectCommand(int statusCode, const Contents* contents, WarningCategory *warning = 0);
       virtual void referCommand(const NameAddr& referTo, bool referSub = true);
       virtual void referCommand(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub = true);
       virtual void infoCommand(const Contents& contents);
@@ -372,8 +373,6 @@ class InviteSession : public DialogUsage
       State mState;
       NitState mNitState;
       NitState mServerNitState;
-
-      std::unique_ptr<Contents> mProposedLocalReject;        // This get set when we send a reject to the remote end
 
       std::unique_ptr<Contents> mCurrentLocalOfferAnswer;    // This gets set with mProposedLocalOfferAnswer after we receive an SDP answer from the remote end or when we send and SDP answer to the remote end
       std::unique_ptr<Contents> mProposedLocalOfferAnswer;   // This get set when we send an offer to the remote end

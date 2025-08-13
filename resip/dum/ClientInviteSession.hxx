@@ -48,7 +48,7 @@ class ClientInviteSession : public InviteSession
           this typically only makes sense, when rejecting an UPDATE request
           that contains an offer in an early dialog. */
       void reject (int statusCode, WarningCategory *warning = nullptr) override;
-      void reject (int statusCode, const Contents& rejectBody, WarningCategory *warning = 0) override;
+      void reject (int statusCode, const Contents* contents, WarningCategory *warning = 0) override;
 
       const Contents& getEarlyMedia() const;
       
