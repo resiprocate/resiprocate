@@ -856,6 +856,7 @@ InviteSession::reject(int statusCode, const Contents* contents, WarningCategory 
          break;
    }
 }
+
 class InviteSessionRejectCommand : public DumCommandAdapter
 {
 public:
