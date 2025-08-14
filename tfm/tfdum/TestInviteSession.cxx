@@ -53,7 +53,7 @@ CommonAction*
 TestInviteSession::reject(int statusCode, resip::WarningCategory* warning)
 {
    return new CommonAction(mUa, "InviteSession::reject",
-                           std::bind(&InviteSession::reject, std::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), std::ref(mSessionHandle)),
+                           std::bind(static_cast<void (resip::InviteSession::*)(int, resip::WarningCategory*)>(&InviteSession::reject), std::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), std::ref(mSessionHandle)),
                                        statusCode, warning));
 }
  
@@ -302,7 +302,7 @@ CommonAction*
 TestClientInviteSession::reject(int statusCode, resip::WarningCategory* warning)
 {
    return new CommonAction(mUa, "ClientInviteSession::reject",
-                           std::bind(&ClientInviteSession::reject, std::bind<ClientInviteSession*>(static_cast<ClientInviteSession*(ClientInviteSessionHandle::*)()>(&ClientInviteSessionHandle::get), std::ref(mHandle)),
+                           std::bind(static_cast<void (resip::ClientInviteSession::*)(int, resip::WarningCategory*)>(&ClientInviteSession::reject), std::bind<ClientInviteSession*>(static_cast<ClientInviteSession*(ClientInviteSessionHandle::*)()>(&ClientInviteSessionHandle::get), std::ref(mHandle)),
                                        statusCode, warning));
 }
 
@@ -384,7 +384,7 @@ CommonAction*
 TestServerInviteSession::reject(int statusCode, resip::WarningCategory* warning)
 {
    return new CommonAction(mUa, "ServerInviteSession::reject",
-                           std::bind(&ServerInviteSession::reject, std::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), std::ref(mHandle)),
+                           std::bind(static_cast<void (resip::ServerInviteSession::*)(int, resip::WarningCategory*)>(&ServerInviteSession::reject), std::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), std::ref(mHandle)),
                                        statusCode, warning));
 }
  

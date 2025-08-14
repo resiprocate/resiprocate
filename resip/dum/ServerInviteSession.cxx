@@ -600,6 +600,12 @@ ServerInviteSession::end(EndReason reason)
 void 
 ServerInviteSession::reject(int code, WarningCategory *warning)
 {
+   reject(code, nullptr, warning);
+}
+
+void 
+ServerInviteSession::reject(int code, const Contents* contents, WarningCategory *warning)
+{
    InfoLog (<< toData(mState) << ": reject(" << code << ")");
 
    switch (mState)
@@ -635,6 +641,11 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          // we should send 200PRACK
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, mFirstRequest, code);
+         // In case we wanted to reject the request by including content
+         if (contents)
+         {
+            response->setContents(contents);
+         }
          if(warning)
          {
             response->header(h_Warnings).push_back(*warning);
@@ -661,7 +672,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          break;
 
       default:
-         InviteSession::reject(code);
+         InviteSession::reject(code, contents, warning);
          break;
    }
 }

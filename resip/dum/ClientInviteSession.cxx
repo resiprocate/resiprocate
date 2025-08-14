@@ -258,6 +258,12 @@ ClientInviteSession::end(EndReason reason)
 void
 ClientInviteSession::reject (int statusCode, WarningCategory *warning)
 {
+   reject(statusCode, nullptr, warning);
+}
+
+void
+ClientInviteSession::reject (int statusCode, const Contents* contents, WarningCategory *warning)
+{
    InfoLog (<< toData(mState) << ": reject(" << statusCode << ")");
 
    switch(mState)
@@ -266,6 +272,11 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
       {
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, statusCode);
+         // In case we wanted to reject the request by including content
+         if (contents)
+         {
+            response->setContents(contents);
+         }
          if(warning)
          {
             response->header(h_Warnings).push_back(*warning);
@@ -300,7 +311,7 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
          break;
 
       default:
-         InviteSession::reject(statusCode, warning);
+         InviteSession::reject(statusCode, contents, warning);
          break;
    }
 }
