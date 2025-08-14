@@ -604,16 +604,8 @@ if(USE_BDB)
 endif()
 
 # Cajun
-# Debian: libcajun-dev
 if(USE_CAJUN)
-   #if(USE_CONTRIB)
-      # FIXME: convert Cajun to CMake build system
-      # FIXME: include Cajun as a Git submodule or NuGet
-      #add_subdirectory(contrib/cajun)
-      set(CAJUN_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun/include")
-   #else()
-   #   find_package(cajun REQUIRED)
-   #endif()
+   set(CAJUN_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun/include")
 endif()
 
 # ASIO

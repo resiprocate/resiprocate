@@ -46,7 +46,6 @@ jobs:
             libasio-dev \
             libboost-all-dev \
             libc-ares-dev \
-            libcajun-dev \
             libcppunit-dev \
             libdb++-dev \
             libfmt-dev \
