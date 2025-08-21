@@ -8,6 +8,10 @@
 #include <sys/sockio.h>
 #endif
 
+#if defined(WIN32)
+#define SOCK_CLOEXEC 0
+#endif
+
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/InternalTransport.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -76,17 +80,17 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
    {
       case UDP:
 #ifdef USE_IPV6
-         fd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+         fd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
 #else
-         fd = ::socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+         fd = ::socket(PF_INET, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
 #endif
          break;
       case TCP:
       case TLS:
 #ifdef USE_IPV6
-         fd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_STREAM, 0);
+         fd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_STREAM | SOCK_CLOEXEC, 0);
 #else
-         fd = ::socket(PF_INET, SOCK_STREAM, 0);
+         fd = ::socket(PF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
 #endif
          break;
       default:
@@ -101,6 +105,14 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
       ErrLog (<< "Failed to create socket: " << strerror(e));
       throw Transport::Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
    }
+#if defined(WIN32)
+   if (!SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0)) 
+   {
+      int e = getErrno();
+      ErrLog(<< "Failed to set handle information: " << strerror(e));
+      throw Transport::Exception("Failed SetHandleInformation", __FILE__, __LINE__);
+   }
+#endif
 
 #ifdef USE_IPV6
 #ifdef __linux__
