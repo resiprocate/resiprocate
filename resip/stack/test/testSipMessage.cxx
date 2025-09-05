@@ -2048,7 +2048,8 @@ main(int argc, char** argv)
 
       unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
-      assert(message->header(h_MaxForwards).value() == 8);
+      H_MaxForwards::Type& max_forwards = message->header(h_MaxForwards); // creates ParserContainer, must be outside assert()
+      assert(max_forwards.value() == 8);
       message->getRawHeader(Headers::MaxForwards)->getParserContainer()->encode(Headers::getHeaderName(Headers::MaxForwards), resipCerr) << endl;
    }
 

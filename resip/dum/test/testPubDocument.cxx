@@ -96,7 +96,8 @@ int main(int argc, const char* argv[])
     XMLCursor xml(pb);
 
     PublicationPersistenceManager::PubDocument reconstituted;
-    assert(reconstituted.deserialize(xml));
+    bool deserialize_res = reconstituted.deserialize(xml);
+    assert(deserialize_res);
 
     assert(reconstituted.mETag == eTag);
     assert(reconstituted.mEventType == eventType);
