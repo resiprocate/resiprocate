@@ -15,7 +15,7 @@ using namespace resip;
 
 namespace reTurn {
 
-TurnAsyncUdpSocket::TurnAsyncUdpSocket(asio::io_service& ioService,
+TurnAsyncUdpSocket::TurnAsyncUdpSocket(asio::io_context& ioService,
                                        TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                        const asio::ip::address& address, 
                                        unsigned short port) : 

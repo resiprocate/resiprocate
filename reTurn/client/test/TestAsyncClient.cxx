@@ -53,7 +53,7 @@ public:
    virtual void thread()
    {
       asio::error_code rc;
-      TurnUdpSocket turnSocket(asio::ip::address::from_string(address.c_str()), 2000);
+      TurnUdpSocket turnSocket(asio::ip::make_address(address.c_str()), 2000);
 
       char buffer[1024];
       unsigned int size = sizeof(buffer);
@@ -142,11 +142,11 @@ public:
        // Test Data sending and receiving over allocation
        resip::Data turnData("This test is for wrapped Turn Data!");
        InfoLog( << "CLIENT: Sending: " << turnData);
-       mTurnAsyncSocket->sendTo(asio::ip::address::from_string(address.c_str()), 2000, turnData.c_str(), turnData.size()+1);
+       mTurnAsyncSocket->sendTo(asio::ip::make_address(address.c_str()), 2000, turnData.c_str(), turnData.size()+1);
 
        turnData = "This test should be in ChannelData message in TCP/TLS but not in UDP - since ChannelBindResponse is not yet received.";
        InfoLog( << "CLIENT: Sending: " << turnData);
-       mTurnAsyncSocket->setActiveDestination(asio::ip::address::from_string(address.c_str()), 2000);
+       mTurnAsyncSocket->setActiveDestination(asio::ip::make_address(address.c_str()), 2000);
        mTurnAsyncSocket->send(turnData.c_str(), turnData.size()+1);       
    }
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e)
@@ -281,7 +281,7 @@ int main(int argc, char* argv[])
     char password[256] = "1234";
     TurnPeer turnPeer;
     turnPeer.run();
-    asio::io_service ioService;
+    asio::io_context ioService;
     MyTurnAsyncSocketHandler handler;
 
 #ifdef USE_SSL
@@ -293,10 +293,10 @@ int main(int argc, char* argv[])
     sslContext.load_verify_file("ca.pem");
 #endif
 
-    const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
-    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
+    const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, &handler, asio::ip::make_address(address.c_str()), 0);
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, &handler, asio::ip::make_address(address.c_str()), 0);
 #ifdef USE_SSL
-    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, false /* validateServerCertificateHostname */, &handler, asio::ip::address::from_string(address.c_str()), 0);
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, false /* validateServerCertificateHostname */, &handler, asio::ip::make_address(address.c_str()), 0);
 #endif
     //port=5349;
 

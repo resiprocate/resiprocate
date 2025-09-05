@@ -30,7 +30,7 @@ resip::Data* g_Payload = NULL;
 
 TurnLoadGenAsyncSocketHandler::TurnLoadGenAsyncSocketHandler(
    int clientNum, 
-   asio::io_service& ioService, 
+   asio::io_context& ioService, 
    const Data& localAddress, 
    const Data& turnServerAddress, 
    unsigned short turnServerPort, 
@@ -38,7 +38,7 @@ TurnLoadGenAsyncSocketHandler::TurnLoadGenAsyncSocketHandler(
    const ConfigParse& config) :
       mClientNum(clientNum),
       mTimer(ioService),
-      mLocalAddress(asio::ip::address::from_string(localAddress.c_str())),
+      mLocalAddress(asio::ip::make_address(localAddress.c_str())),
       mTurnServerAddress(turnServerAddress),
       mTurnServerPort(turnServerPort),
       mRelayPort(relayPort),
@@ -71,7 +71,7 @@ void TurnLoadGenAsyncSocketHandler::setTurnAsyncSocket(std::shared_ptr<TurnAsync
    // Connect to TurnServer based on delay setting
    if (mDelayBetweenClientStartsMs > 0)
    {
-      mTimer.expires_from_now(milliseconds(mDelayBetweenClientStartsMs * (mClientNum-1)));
+      mTimer.expires_after(milliseconds(mDelayBetweenClientStartsMs * (mClientNum-1)));
       mTimer.async_wait(std::bind(&TurnLoadGenAsyncSocketHandler::connect, this));
    }
    else
@@ -118,7 +118,7 @@ void TurnLoadGenAsyncSocketHandler::sendPayload()
    time_t secondsElapsed = time(0) - mStartTime;
    if (secondsElapsed < mAllocationTimeSecs)
    {
-      mTimer.expires_from_now(milliseconds(mPayloadIntervalMs));
+      mTimer.expires_after(milliseconds(mPayloadIntervalMs));
       mTimer.async_wait(std::bind(&TurnLoadGenAsyncSocketHandler::sendPayload, this));
       mTurnAsyncSocket->send(g_Payload->data(), g_Payload->size());
       ++mNumSends;
@@ -188,7 +188,7 @@ void TurnLoadGenAsyncSocketHandler::onAllocationFailure(unsigned int socketDesc,
    ErrLog(LOG_PREFIX << "MyTurnAsyncSocketHandler::onAllocationFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
 
    // Retry allocation after timer expires
-   mTimer.expires_from_now(seconds(mTimeBetweenAllocationsSecs));
+   mTimer.expires_after(seconds(mTimeBetweenAllocationsSecs));
    mTimer.async_wait(std::bind(&TurnLoadGenAsyncSocketHandler::sendAllocationRequest, this));
 }
 
@@ -203,7 +203,7 @@ void TurnLoadGenAsyncSocketHandler::onRefreshSuccess(unsigned int socketDesc, un
          ", numReceiveFailures=" << mNumReceiveFailures <<
          ", creating new allocation in " << mTimeBetweenAllocationsSecs << " secs.");
 
-      mTimer.expires_from_now(seconds(mTimeBetweenAllocationsSecs));
+      mTimer.expires_after(seconds(mTimeBetweenAllocationsSecs));
       mTimer.async_wait(std::bind(&TurnLoadGenAsyncSocketHandler::sendAllocationRequest, this));
    }
 }
@@ -213,7 +213,7 @@ void TurnLoadGenAsyncSocketHandler::onRefreshFailure(unsigned int socketDesc, co
    ErrLog(LOG_PREFIX << "MyTurnAsyncSocketHandler::onRefreshFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
 
    // Retry allocation after timer expires
-   mTimer.expires_from_now(seconds(mTimeBetweenAllocationsSecs));
+   mTimer.expires_after(seconds(mTimeBetweenAllocationsSecs));
    mTimer.async_wait(std::bind(&TurnLoadGenAsyncSocketHandler::sendAllocationRequest, this));
 }
 

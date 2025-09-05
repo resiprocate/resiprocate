@@ -34,9 +34,9 @@ TurnTcpSocket::connect(const std::string& address, unsigned short port)
    // Get a list of endpoints corresponding to the server name.
    asio::ip::tcp::resolver resolver(mIOService);
    resip::Data service(port);
-   asio::ip::tcp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
-   asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   const asio::ip::tcp::resolver::iterator end;
+   asio::ip::tcp::resolver::results_type results = resolver.resolve(mSocket.local_endpoint().protocol(), address, service.c_str());
+   asio::ip::tcp::resolver::results_type::const_iterator endpoint_iterator = results.begin();
+   asio::ip::tcp::resolver::results_type::const_iterator end = results.end();
 
    // Try each endpoint until we successfully establish a connection.
    asio::error_code errorCode = asio::error::host_not_found;
@@ -52,7 +52,7 @@ TurnTcpSocket::connect(const std::string& address, unsigned short port)
          mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
          mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
       }
-      endpoint_iterator++;
+      ++endpoint_iterator;
    }
 
    return errorCode;
@@ -82,7 +82,7 @@ TurnTcpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::
 
    // Wait for timer and read to end
    mIOService.run();
-   mIOService.reset();
+   mIOService.restart();
 
    *bytesRead = (unsigned int)mBytesRead+4;
    if(!mReadErrorCode)

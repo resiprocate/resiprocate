@@ -18,7 +18,7 @@ class UdpRelayServer
 {
 public:
    /// Create the server to listen on the specified UDP address and port
-   explicit UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation);
+   explicit UdpRelayServer(asio::io_context& ioService, TurnAllocation& turnAllocation);
    UdpRelayServer(const UdpRelayServer&) = delete;
    UdpRelayServer(UdpRelayServer&&) = delete;
    ~UdpRelayServer();

@@ -18,7 +18,7 @@ namespace reTurn {
 class TurnAsyncTlsSocket : public TurnAsyncSocket, public AsyncTlsSocketBase
 {
 public:
-   explicit TurnAsyncTlsSocket(asio::io_service& ioService, 
+   explicit TurnAsyncTlsSocket(asio::io_context& ioService, 
                                asio::ssl::context& sslContext,
                                bool validateServerCertificateHostname,
                                TurnAsyncSocketHandler* turnAsyncSocketHandler,

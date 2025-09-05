@@ -13,7 +13,7 @@ namespace reTurn {
 class AsyncTcpSocketBase : public AsyncSocketBase
 {
 public:
-   explicit AsyncTcpSocketBase(asio::io_service& ioService);
+   explicit AsyncTcpSocketBase(asio::io_context& ioService);
 
    unsigned int getSocketDescriptor() override;
 
@@ -31,8 +31,8 @@ public:
 
 protected:
    void handleReadHeader(const asio::error_code& e) override;
-   void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
-   void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
+   void handleTcpResolve(const asio::error_code& ec, const asio::ip::tcp::resolver::results_type& endpoints) override;
+   void handleConnect(const asio::error_code& ec, const asio::ip::tcp::endpoint& endpoint) override;
 
    asio::ip::tcp::socket mSocket;
    asio::ip::tcp::resolver mResolver;

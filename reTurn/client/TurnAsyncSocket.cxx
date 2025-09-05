@@ -31,7 +31,7 @@ unsigned int TurnAsyncSocket::UnspecifiedBandwidth = 0xFFFFFFFF;
 unsigned short TurnAsyncSocket::UnspecifiedToken = 0;
 asio::ip::address TurnAsyncSocket::UnspecifiedIpAddress;
 
-TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService, 
+TurnAsyncSocket::TurnAsyncSocket(asio::io_context& ioService,
                                  AsyncSocketBase& asyncSocketBase,
                                  TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                  const asio::ip::address& address, 
@@ -67,7 +67,7 @@ TurnAsyncSocket::disableTurnAsyncHandler()
 void
 TurnAsyncSocket::requestSharedSecret()
 {
-    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doRequestSharedSecret(); }));
+    asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doRequestSharedSecret(); }));
 }
 
 void
@@ -94,7 +94,7 @@ TurnAsyncSocket::doRequestSharedSecret()
 void
 TurnAsyncSocket::setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetUsernameAndPassword(new Data(username), new Data(password), shortTermAuth); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetUsernameAndPassword(new Data(username), new Data(password), shortTermAuth); }));
 }
 
 void 
@@ -114,7 +114,7 @@ TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password, bool s
 void 
 TurnAsyncSocket::setLocalPassword(const char* password)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetLocalPassword(new Data(password)); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetLocalPassword(new Data(password)); }));
 }
 
 void 
@@ -127,7 +127,7 @@ TurnAsyncSocket::doSetLocalPassword(Data* password)
 void 
 TurnAsyncSocket::bindRequest()
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doBindRequest(); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doBindRequest(); }));
 }
 
 void 
@@ -151,7 +151,7 @@ void
 TurnAsyncSocket::connectivityCheck(const StunTuple& targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
 {
    resip_assert(setIceControlling || setIceControlled);
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doConnectivityCheck(new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doConnectivityCheck(new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms); }));
 }
 
 void
@@ -182,7 +182,7 @@ TurnAsyncSocket::createAllocation(unsigned int lifetimeSecs,
                                   uint64_t reservationToken,
                                   StunTuple::TransportType requestedTransportType)
 {
-    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doCreateAllocation(lifetimeSecs, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
+    asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doCreateAllocation(lifetimeSecs, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
 }
 
 void
@@ -273,7 +273,7 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetimeSecs,
 void 
 TurnAsyncSocket::refreshAllocation(unsigned int lifetimeSecs)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doRefreshAllocation(lifetimeSecs); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doRefreshAllocation(lifetimeSecs); }));
 }
 
 void 
@@ -311,7 +311,7 @@ TurnAsyncSocket::doRefreshAllocation(unsigned int lifetimeSecs)
 void 
 TurnAsyncSocket::destroyAllocation()
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doDestroyAllocation(); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doDestroyAllocation(); }));
 }
 
 void 
@@ -323,7 +323,7 @@ TurnAsyncSocket::doDestroyAllocation()
 void
 TurnAsyncSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetActiveDestination(address, port); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetActiveDestination(address, port); }));
 }
 
 void
@@ -375,7 +375,7 @@ void TurnAsyncSocket::doChannelBinding(RemotePeer& remotePeer)
 void
 TurnAsyncSocket::clearActiveDestination()
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doClearActiveDestination(); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doClearActiveDestination(); }));
 }
 
 void
@@ -1085,13 +1085,13 @@ TurnAsyncSocket::sendTo(const asio::ip::address& address, unsigned short port, c
 void 
 TurnAsyncSocket::sendFramed(const std::shared_ptr<DataBuffer>& data)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSendFramed(data); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSendFramed(data); }));
 }
 
 void 
 TurnAsyncSocket::sendToFramed(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSendToFramed(address, port, data); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSendToFramed(address, port, data); }));
 }
 
 void 
@@ -1171,7 +1171,7 @@ TurnAsyncSocket::sendToRemotePeer(RemotePeer& remotePeer, const std::shared_ptr<
 void
 TurnAsyncSocket::setSoftware(const char* software)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetSoftware(new Data(software)); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetSoftware(new Data(software)); }));
 }
 
 void
@@ -1201,7 +1201,7 @@ TurnAsyncSocket::connect(const std::string& address, unsigned short port)
 void
 TurnAsyncSocket::close()
 {
-   mIOService.post(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doClose(); }));
+   asio::post(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doClose(); }));
 }
 
 void
@@ -1251,7 +1251,7 @@ TurnAsyncSocket::sendOverChannel(unsigned short channel, const std::shared_ptr<D
    mAsyncSocketBase.send(destination, channel, data);
 }
 
-TurnAsyncSocket::RequestEntry::RequestEntry(asio::io_service& ioService, 
+TurnAsyncSocket::RequestEntry::RequestEntry(asio::io_context& ioService, 
                                             TurnAsyncSocket* turnAsyncSocket, 
                                             StunMessage* requestMessage,
                                             unsigned int rc,
@@ -1277,7 +1277,7 @@ TurnAsyncSocket::RequestEntry::startTimer()
 {
    //std::cout << "RequestEntry::startTimer() " << mTimeout << " " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
    // start the request timer
-   mRequestTimer.expires_from_now(milliseconds(mTimeout));  
+   mRequestTimer.expires_after(milliseconds(mTimeout));
    mRequestTimer.async_wait(weak_bind<RequestEntry, void(const asio::error_code&)>(shared_from_this(), std::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, this, std::placeholders::_1)));
 }
 
@@ -1403,7 +1403,7 @@ TurnAsyncSocket::clearActiveRequestMap()
 void
 TurnAsyncSocket::startAllocationTimer()
 {
-   mAllocationTimer.expires_from_now(seconds((mLifetime*5)/8));  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime 
+   mAllocationTimer.expires_after(seconds((mLifetime*5)/8));  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime 
    mAllocationTimer.async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>(mAsyncSocketBase.shared_from_this(), std::bind(&TurnAsyncSocket::allocationTimerExpired, this, std::placeholders::_1)));
 }
 
@@ -1431,7 +1431,7 @@ TurnAsyncSocket::startChannelBindingTimer(unsigned short channel)
       resip_assert(ret.second);
       it = ret.first;
    }
-   it->second->expires_from_now(seconds(TURN_CHANNEL_BINDING_REFRESH_SECONDS));  
+   it->second->expires_after(seconds(TURN_CHANNEL_BINDING_REFRESH_SECONDS));
    it->second->async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>( mAsyncSocketBase.shared_from_this(), std::bind(&TurnAsyncSocket::channelBindingTimerExpired, this, std::placeholders::_1, channel)));
 }
 

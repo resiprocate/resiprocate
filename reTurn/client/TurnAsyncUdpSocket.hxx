@@ -14,7 +14,7 @@ namespace reTurn {
    class TurnAsyncUdpSocket : public TurnAsyncSocket, public AsyncUdpSocketBase
 {
 public:
-   explicit TurnAsyncUdpSocket(asio::io_service& ioService,
+   explicit TurnAsyncUdpSocket(asio::io_context& ioService,
                                TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                const asio::ip::address& address, 
                                unsigned short port); 

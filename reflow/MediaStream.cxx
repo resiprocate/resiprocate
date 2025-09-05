@@ -20,7 +20,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
-MediaStream::MediaStream(asio::io_service& ioService,
+MediaStream::MediaStream(asio::io_context& ioService,
 #ifdef USE_SSL
                          asio::ssl::context& sslContext,
 #endif

@@ -343,7 +343,7 @@ StunMessage::setStunAtrAddressFromTuple(StunAtrAddress& address, const StunTuple
    {
       // Note:  addr.ipv4 is stored in host byte order
       address.family = StunMessage::IPv4Family;
-      address.addr.ipv4 = tuple.getAddress().to_v4().to_ulong();
+      address.addr.ipv4 = tuple.getAddress().to_v4().to_uint();
    }
 }
 

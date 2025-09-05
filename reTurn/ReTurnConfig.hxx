@@ -99,7 +99,7 @@ private:
 class ReTurnUserFileScanner
 {
    public:
-      ReTurnUserFileScanner(asio::io_service& ioService, ReTurnConfig& reTurnConfig);
+      ReTurnUserFileScanner(asio::io_context& ioService, ReTurnConfig& reTurnConfig);
       void start();
 
    private:

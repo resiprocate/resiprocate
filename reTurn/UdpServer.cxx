@@ -19,7 +19,7 @@ using namespace std::chrono;
 
 namespace reTurn {
 
-UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
+UdpServer::UdpServer(asio::io_context& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : AsyncUdpSocketBase(ioService),
   mRequestHandler(requestHandler),
   mAlternatePortUdpServer(0),
@@ -216,7 +216,7 @@ UdpServer::ResponseEntry::ResponseEntry(UdpServer* requestUdpServer, UdpServer* 
    mCleanupTimer(requestUdpServer->mIOService)
 {
    // start timer
-   mCleanupTimer.expires_from_now(seconds(10));  // Transaction Responses are cached for 10 seconds
+   mCleanupTimer.expires_after(seconds(10));  // Transaction Responses are cached for 10 seconds
    mCleanupTimer.async_wait(std::bind(&UdpServer::cleanupResponseMap, requestUdpServer, std::placeholders::_1, responseMessage->mHeader.magicCookieAndTid));
 }
 

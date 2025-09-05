@@ -14,7 +14,7 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncSocketBase::AsyncSocketBase(asio::io_service& ioService) : 
+AsyncSocketBase::AsyncSocketBase(asio::io_context& ioService) : 
   mIOService(ioService),
   mReceiving(false),
   mConnected(false),
@@ -31,7 +31,7 @@ void
 AsyncSocketBase::send(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data)
 {
    shared_ptr<AsyncSocketBase> _this = shared_from_this();
-   mIOService.dispatch(std::bind([_this, destination, data](){
+   asio::dispatch(mIOService, std::bind([_this, destination, data](){
 	   _this->doSend(destination, data, 0);
    }));
 }
@@ -40,7 +40,7 @@ void
 AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data)
 {
    shared_ptr<AsyncSocketBase> _this = shared_from_this();
-   mIOService.dispatch(std::bind([_this, destination, channel, data](){
+   asio::dispatch(mIOService, std::bind([_this, destination, channel, data](){
       _this->doSend(destination, channel, data, 0);
    }));
 }
@@ -113,7 +113,7 @@ AsyncSocketBase::sendFirstQueuedData()
 void 
 AsyncSocketBase::receive()
 {
-   mIOService.post(std::bind(&AsyncSocketBase::doReceive, shared_from_this()));
+   asio::post(mIOService, std::bind(&AsyncSocketBase::doReceive, shared_from_this()));
 }
 
 void
@@ -130,7 +130,7 @@ AsyncSocketBase::doReceive()
 void 
 AsyncSocketBase::framedReceive()
 {
-   mIOService.post(std::bind(&AsyncSocketBase::doFramedReceive, shared_from_this()));
+   asio::post(mIOService, std::bind(&AsyncSocketBase::doFramedReceive, shared_from_this()));
 }
 
 void
@@ -165,7 +165,7 @@ AsyncSocketBase::handleReceive(const asio::error_code& e, const size_t bytesTran
 void 
 AsyncSocketBase::close()
 {
-   mIOService.post(std::bind(&AsyncSocketBase::transportClose, shared_from_this()));
+   asio::post(mIOService, std::bind(&AsyncSocketBase::transportClose, shared_from_this()));
 }
 
 std::shared_ptr<DataBuffer>  
