@@ -177,7 +177,7 @@ class Data
       Data(const Data& data);
 
 #ifdef RESIP_HAS_RVALUE_REFS
-      Data(Data &&data);
+      Data(Data &&data) noexcept;
 #endif
       /**
         Creates a data with the contents of the string.
@@ -353,7 +353,7 @@ class Data
         are legal. When done, {other} will be empty (it will ref its
         internal buffer).
       **/
-      Data& takeBuf(Data& other);
+      Data& takeBuf(Data& other) noexcept;
 
       /**
         Functional equivalent of: *this = Data(buf, length)
@@ -432,7 +432,7 @@ class Data
       }
 
 #ifdef RESIP_HAS_RVALUE_REFS
-      Data& operator=(Data &&data);
+      Data& operator=(Data &&data) noexcept;
 #endif
 
       operator std::string() const 
