@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
       UdpEchoServer udpEchoServer(localAddress, echoServerPort);
       udpEchoServer.run();
 
-      asio::io_service ioService;
+      asio::io_context ioService;
 
       int numClientsToSimulate = config.getConfigInt("NumClientsToSimulate", 1);
       std::list<TurnLoadGenAsyncSocketHandler*> mClients;
@@ -135,17 +135,17 @@ int main(int argc, char* argv[])
 
          if (isEqualNoCase(turnProtocol, "TLS"))
          {
-            turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, false, client, asio::ip::address::from_string(localAddress.c_str()), 0);
+            turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, false, client, asio::ip::make_address(localAddress.c_str()), 0);
          }
          else
 #endif
          if (isEqualNoCase(turnProtocol, "TCP"))
          {
-           turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, client, asio::ip::address::from_string(localAddress.c_str()), 0);
+           turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, client, asio::ip::make_address(localAddress.c_str()), 0);
          }
          else
          {
-           turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, client, asio::ip::address::from_string(localAddress.c_str()), 0);
+           turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, client, asio::ip::make_address(localAddress.c_str()), 0);
          }
 
          // Set the username and password

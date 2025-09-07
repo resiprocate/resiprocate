@@ -11,7 +11,7 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_service& ioService) 
+AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_context& ioService) 
    : AsyncSocketBase(ioService),
      mSocket(ioService),
      mResolver(ioService)
@@ -54,8 +54,7 @@ AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-   asio::ip::udp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
-   mResolver.async_resolve(query,
+   mResolver.async_resolve(mSocket.local_endpoint().protocol(), address, service.c_str(),
         std::bind(&AsyncSocketBase::handleUdpResolve, shared_from_this(),
                     std::placeholders::_1,
                     std::placeholders::_2));
@@ -63,12 +62,13 @@ AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
 
 void 
 AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
-                                     asio::ip::udp::resolver::iterator endpoint_iterator)
+                                     const asio::ip::udp::resolver::results_type& endpoints)
 {
-   if (!ec)
+   if (!ec && !endpoints.empty())
    {
       // Use the first endpoint in the list.
       // Nothing to do for UDP except store the connected address/port
+      asio::ip::udp::resolver::results_type::const_iterator endpoint_iterator = endpoints.begin();
       mConnected = true;
       mConnectedAddress = endpoint_iterator->endpoint().address();
       mConnectedPort = endpoint_iterator->endpoint().port();

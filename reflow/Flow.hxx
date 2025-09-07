@@ -59,7 +59,7 @@ public:
       Ready
    };
 
-   Flow(asio::io_service& ioService,
+   Flow(asio::io_context& ioService,
         asio::ssl::context& sslContext,
         unsigned int componentId,
         const StunTuple& localBinding, 
@@ -119,7 +119,7 @@ public:
    unsigned int getComponentId() { return mComponentId; }
 
 private:
-   asio::io_service& mIOService;
+   asio::io_context& mIOService;
    asio::ssl::context& mSslContext;
 
    // Note: these member variables are set at creation time and never changed, thus

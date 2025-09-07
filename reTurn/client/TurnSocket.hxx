@@ -120,7 +120,7 @@ protected:
    ChannelBindingRefreshTimeMap mChannelBindingRefreshTimes;
    RemotePeer* mActiveDestination;
 
-   asio::io_service mIOService;
+   asio::io_context mIOService;
 
    // handlers and timers required to do a timed out read
    asio::steady_timer mReadTimer;

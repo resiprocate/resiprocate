@@ -123,7 +123,7 @@ TurnAllocation::refresh(unsigned int lifetime)  // update expiration time
    mExpires = time(0) + lifetime;
 
    // start timer
-   mAllocationTimer.expires_from_now(seconds(lifetime));
+   mAllocationTimer.expires_after(seconds(lifetime));
    mAllocationTimer.async_wait(std::bind(&TurnAllocationManager::allocationExpired, &mTurnAllocationManager, std::placeholders::_1, mKey));
 }
 

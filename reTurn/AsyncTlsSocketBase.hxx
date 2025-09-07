@@ -17,7 +17,7 @@ namespace reTurn {
 class AsyncTlsSocketBase : public AsyncSocketBase
 {
 public:
-   AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::context& context, bool validateServerCertificateHostname);
+   AsyncTlsSocketBase(asio::io_context& ioService, asio::ssl::context& context, bool validateServerCertificateHostname);
 
    unsigned int getSocketDescriptor() override;
 
@@ -37,9 +37,9 @@ public:
 protected:
    void handleReadHeader(const asio::error_code& e) override;
    void handleServerHandshake(const asio::error_code& e) override;
-   void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
-   void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
-   void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
+   void handleTcpResolve(const asio::error_code& ec, const asio::ip::tcp::resolver::results_type& endpoints) override;
+   void handleConnect(const asio::error_code& ec, const asio::ip::tcp::endpoint& endpoint) override;
+   void handleClientHandshake(const asio::error_code& ec, const asio::ip::tcp::endpoint& endpoint) override;
    virtual bool validateServerCertificateHostname();
 
    virtual void onServerHandshakeSuccess() { resip_assert(false); }

@@ -21,7 +21,7 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncTlsSocketBase::AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::context& context, bool validateServerCertificateHostname) 
+AsyncTlsSocketBase::AsyncTlsSocketBase(asio::io_context& ioService, asio::ssl::context& context, bool validateServerCertificateHostname) 
    : AsyncSocketBase(ioService),
    mSocket(ioService, context),
    mResolver(ioService),
@@ -57,8 +57,7 @@ AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-   asio::ip::tcp::resolver::query query(mSocket.lowest_layer().local_endpoint().protocol(), address, service.c_str());
-   mResolver.async_resolve(query,
+   mResolver.async_resolve(mSocket.lowest_layer().local_endpoint().protocol(), address, service.c_str(),
         std::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
                     std::placeholders::_1,
                     std::placeholders::_2));
@@ -66,16 +65,16 @@ AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
 
 void 
 AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
-                                     asio::ip::tcp::resolver::iterator endpoint_iterator)
+                                     const asio::ip::tcp::resolver::results_type& endpoints)
 {
    if (!ec)
    {
       // Attempt a connection to the first endpoint in the list. Each endpoint
       // will be tried until we successfully establish a connection.
       //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
-      mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
+      asio::async_connect(mSocket.lowest_layer(), endpoints,
                             std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            std::placeholders::_1, endpoint_iterator));
+                            std::placeholders::_1, std::placeholders::_2));
    }
    else
    {
@@ -85,23 +84,14 @@ AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
 
 void 
 AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
-                                  asio::ip::tcp::resolver::iterator endpoint_iterator)
+                                  const asio::ip::tcp::endpoint& endpoint)
 {
    if (!ec)
    {
       // The connection was successful - now do handshake.
       mSocket.async_handshake(asio::ssl::stream_base::client, 
                               std::bind(&AsyncSocketBase::handleClientHandshake, shared_from_this(), 
-                                          std::placeholders::_1, endpoint_iterator));
-   }
-   else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
-   {
-      // The connection failed. Try the next endpoint in the list.
-      asio::error_code ec;
-      mSocket.lowest_layer().close(ec);
-      mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            std::placeholders::_1, endpoint_iterator));
+                                          std::placeholders::_1, endpoint));
    }
    else
    {
@@ -111,14 +101,14 @@ AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
 
 void 
 AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
-                                          asio::ip::tcp::resolver::iterator endpoint_iterator)
+                                          const asio::ip::tcp::endpoint& endpoint)
 {
    if (!ec)
    {
       // The handshake was successful.
       mConnected = true;
-      mConnectedAddress = endpoint_iterator->endpoint().address();
-      mConnectedPort = endpoint_iterator->endpoint().port();
+      mConnectedAddress = endpoint.address();
+      mConnectedPort = endpoint.port();
 
       // Validate that hostname in cert matches connection hostname
       if(!mValidateServerCertificateHostname || validateServerCertificateHostname())
@@ -130,15 +120,6 @@ AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
          WarningLog(<< "Hostname in certificate does not match connection hostname!");
          onConnectFailure(asio::error::operation_aborted);
       }
-   }
-   else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
-   {
-      // The handshake failed. Try the next endpoint in the list.
-      asio::error_code ec;
-      mSocket.lowest_layer().close(ec);
-      mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            std::placeholders::_1, endpoint_iterator));
    }
    else
    {

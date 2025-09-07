@@ -13,7 +13,7 @@ namespace reTurn {
 class AsyncUdpSocketBase : public AsyncSocketBase
 {
 public:
-   explicit AsyncUdpSocketBase(asio::io_service& ioService);
+   explicit AsyncUdpSocketBase(asio::io_context& ioService);
 
    unsigned int getSocketDescriptor() override;
 
@@ -36,7 +36,7 @@ protected:
    asio::ip::udp::endpoint mSenderEndpoint;
 
    void handleUdpResolve(const asio::error_code& ec,
-                         asio::ip::udp::resolver::iterator endpoint_iterator) override;
+                         const asio::ip::udp::resolver::results_type& endpoints) override;
 
 private:
 

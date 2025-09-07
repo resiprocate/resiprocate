@@ -93,7 +93,7 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
       resip::Log::initialize(reTurnConfig, argv[0]);
 
       // Initialize server.
-      asio::io_service ioService;                                // The one and only ioService for the stunServer
+      asio::io_context ioService;                                // The one and only ioService for the stunServer
       reTurn::TurnManager turnManager(ioService, reTurnConfig);  // The one and only Turn Manager
 
       std::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
@@ -193,7 +193,7 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 #endif
 
       // Run the ioService until stopped.
-      // Create a pool of threads to run all of the io_services.
+      // Create a pool of threads to run all of the io_contexts.
       asio::thread thread([&ioService] { ioService.run(); });
 
 #ifndef _WIN32

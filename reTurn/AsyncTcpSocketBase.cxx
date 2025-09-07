@@ -15,7 +15,7 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncTcpSocketBase::AsyncTcpSocketBase(asio::io_service& ioService) 
+AsyncTcpSocketBase::AsyncTcpSocketBase(asio::io_context& ioService) 
  : AsyncSocketBase(ioService),
    mSocket(ioService), 
    mResolver(ioService)
@@ -48,8 +48,7 @@ AsyncTcpSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-   asio::ip::tcp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
-   mResolver.async_resolve(query,
+   mResolver.async_resolve(mSocket.local_endpoint().protocol(), address, service.c_str(),
         std::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
                     std::placeholders::_1,
                     std::placeholders::_2));
@@ -57,16 +56,16 @@ AsyncTcpSocketBase::connect(const std::string& address, unsigned short port)
 
 void 
 AsyncTcpSocketBase::handleTcpResolve(const asio::error_code& ec,
-                                     asio::ip::tcp::resolver::iterator endpoint_iterator)
+                                     const asio::ip::tcp::resolver::results_type& endpoints)
 {
    if (!ec)
    {
       // Attempt a connection to the first endpoint in the list. Each endpoint
       // will be tried until we successfully establish a connection.
       //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
-      mSocket.async_connect(endpoint_iterator->endpoint(),
+      asio::async_connect(mSocket, endpoints,
                             std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            std::placeholders::_1, endpoint_iterator));
+                            std::placeholders::_1, std::placeholders::_2));
    }
    else
    {
@@ -76,25 +75,16 @@ AsyncTcpSocketBase::handleTcpResolve(const asio::error_code& ec,
 
 void 
 AsyncTcpSocketBase::handleConnect(const asio::error_code& ec,
-                                  asio::ip::tcp::resolver::iterator endpoint_iterator)
+                                  const asio::ip::tcp::endpoint& endpoint)
 {
    if (!ec)
    {
       // The connection was successful.
       mConnected = true;
-      mConnectedAddress = endpoint_iterator->endpoint().address();
-      mConnectedPort = endpoint_iterator->endpoint().port();
+      mConnectedAddress = endpoint.address();
+      mConnectedPort = endpoint.port();
 
       onConnectSuccess();
-   }
-   else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
-   {
-      // The connection failed. Try the next endpoint in the list.
-      asio::error_code ec;
-      mSocket.close(ec);
-      mSocket.async_connect(endpoint_iterator->endpoint(),
-                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            std::placeholders::_1, endpoint_iterator));
    }
    else
    {

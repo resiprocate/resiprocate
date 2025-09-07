@@ -35,7 +35,7 @@ namespace reTurn {
 unsigned int TurnSocket::UnspecifiedLifetime = 0xFFFFFFFF;
 unsigned int TurnSocket::UnspecifiedBandwidth = 0xFFFFFFFF; 
 unsigned short TurnSocket::UnspecifiedToken = 0;
-asio::ip::address TurnSocket::UnspecifiedIpAddress = asio::ip::address::from_string("0.0.0.0");
+asio::ip::address TurnSocket::UnspecifiedIpAddress = asio::ip::make_address("0.0.0.0");
 
 TurnSocket::TurnSocket(const asio::ip::address& address, unsigned short port) : 
    mLocalBinding(StunTuple::None /* Set properly by sub class */, address, port),
@@ -595,7 +595,7 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       else
       {
          ind.mTurnXorPeerAddress[0].family = StunMessage::IPv4Family;
-         ind.mTurnXorPeerAddress[0].addr.ipv4 = remotePeer.getPeerTuple().getAddress().to_v4().to_ulong();
+         ind.mTurnXorPeerAddress[0].addr.ipv4 = remotePeer.getPeerTuple().getAddress().to_v4().to_uint();
       }
       if(size > 0)
       {
@@ -868,7 +868,7 @@ TurnSocket::startReadTimer(unsigned int timeout)
 {
    if(timeout != 0)
    {
-      mReadTimer.expires_from_now(milliseconds(timeout));
+      mReadTimer.expires_after(milliseconds(timeout));
       mReadTimer.async_wait(std::bind(&TurnSocket::handleRawReadTimeout, this, std::placeholders::_1));
    }
 }

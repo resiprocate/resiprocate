@@ -13,7 +13,7 @@ using namespace std;
 
 namespace reTurn {
 
-UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation)
+UdpRelayServer::UdpRelayServer(asio::io_context& ioService, TurnAllocation& turnAllocation)
 : AsyncUdpSocketBase(ioService),
   mTurnAllocation(turnAllocation),
   mStopping(false),

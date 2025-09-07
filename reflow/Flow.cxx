@@ -120,7 +120,7 @@ const char* srtp_error_string(srtp_err_status_t error)
    }
 }
 
-Flow::Flow(asio::io_service& ioService,
+Flow::Flow(asio::io_context& ioService,
 #ifdef USE_SSL
            asio::ssl::context& sslContext,
 #endif
@@ -506,7 +506,7 @@ Flow::setActiveDestination(const char* address, unsigned short port)
 {
    if (mTurnSocket)
    {
-      asio::ip::address peerAddress = asio::ip::address::from_string(address);
+      asio::ip::address peerAddress = asio::ip::make_address(address);
 
       {
          Lock lock(mMutex);
@@ -552,7 +552,7 @@ void
 Flow::startDtlsClient(const char* address, unsigned short port)
 {
    Lock lock(mMutex);
-   createDtlsSocketClient(StunTuple(mLocalBinding.getTransportType(), asio::ip::address::from_string(address), port));
+   createDtlsSocketClient(StunTuple(mLocalBinding.getTransportType(), asio::ip::make_address(address), port));
 }
 #endif 
 

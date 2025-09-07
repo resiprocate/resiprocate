@@ -23,8 +23,8 @@ class TlsConnection
   : public AsyncTlsSocketBase
 {
 public:
-  /// Construct a connection with the given io_service.
-   explicit TlsConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler, asio::ssl::context& context);
+  /// Construct a connection with the given io_context.
+   explicit TlsConnection(asio::io_context& ioService, ConnectionManager& manager, RequestHandler& handler, asio::ssl::context& context);
    TlsConnection(const TlsConnection&) = delete;
    TlsConnection(TlsConnection&&) = delete;
    ~TlsConnection();

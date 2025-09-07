@@ -14,7 +14,7 @@ namespace reTurn {
 class TurnAsyncTcpSocket : public TurnAsyncSocket, public AsyncTcpSocketBase
 {
 public:
-   explicit TurnAsyncTcpSocket(asio::io_service& ioService, 
+   explicit TurnAsyncTcpSocket(asio::io_context& ioService, 
                                TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                const asio::ip::address& address = UnspecifiedIpAddress, 
                                unsigned short port = 0);

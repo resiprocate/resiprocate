@@ -46,7 +46,7 @@ public:
    static unsigned short UnspecifiedToken;
    static asio::ip::address UnspecifiedIpAddress;
 
-   explicit TurnAsyncSocket(asio::io_service& ioService,
+   explicit TurnAsyncSocket(asio::io_context& ioService,
                             AsyncSocketBase& asyncSocketBase,
                             TurnAsyncSocketHandler* turnAsyncSocketHandler,
                             const asio::ip::address& address = UnspecifiedIpAddress, 
@@ -115,7 +115,7 @@ protected:
 
    void handleReceivedData(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
 
-   asio::io_service& mIOService;
+   asio::io_context& mIOService;
    TurnAsyncSocketHandler* mTurnAsyncSocketHandler;
    resip::RecursiveMutex mHandlerMutex;
 
@@ -154,14 +154,14 @@ private:
    class RequestEntry : public std::enable_shared_from_this<RequestEntry>
    {
    public:
-      RequestEntry(asio::io_service& ioService, TurnAsyncSocket* turnAsyncSocket, StunMessage* requestMessage, unsigned int rc, unsigned int retrans_iterval_ms, const StunTuple* dest=NULL);
+      RequestEntry(asio::io_context& ioService, TurnAsyncSocket* turnAsyncSocket, StunMessage* requestMessage, unsigned int rc, unsigned int retrans_iterval_ms, const StunTuple* dest=NULL);
       ~RequestEntry();
 
       void startTimer();
       void stopTimer();
       void requestTimerExpired(const asio::error_code& e);
 
-      asio::io_service& mIOService;
+      asio::io_context& mIOService;
       TurnAsyncSocket* mTurnAsyncSocket;
       StunMessage* mRequestMessage;
       asio::steady_timer mRequestTimer;

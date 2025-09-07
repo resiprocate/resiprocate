@@ -29,7 +29,7 @@ UdpEchoServer::UdpEchoServer(const Data& localAddress, unsigned int port) :
    mSocket(mIOContext),
    mIntervalReadCount(0)
 {
-   asio::ip::address address = asio::ip::address::from_string(localAddress.c_str());
+   asio::ip::address address = asio::ip::make_address(localAddress.c_str());
    asio::error_code errorCode;
    mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
    if (!errorCode)

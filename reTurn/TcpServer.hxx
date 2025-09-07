@@ -20,7 +20,7 @@ public:
   TcpServer& operator=(const TcpServer&) = delete;
 
   /// Create the server to listen on the specified TCP address and port
-  explicit TcpServer(asio::io_service& ioService, RequestHandler& rqeuestHandler, const asio::ip::address& address, unsigned short port);
+  explicit TcpServer(asio::io_context& ioService, RequestHandler& rqeuestHandler, const asio::ip::address& address, unsigned short port);
 
   void start();
 
@@ -28,8 +28,8 @@ private:
   /// Handle completion of an asynchronous accept operation.
   void handleAccept(const asio::error_code& e);
 
-  /// The io_service used to perform asynchronous operations.
-  asio::io_service& mIOService;
+  /// The io_context used to perform asynchronous operations.
+  asio::io_context& mIOService;
 
   /// Acceptor used to listen for incoming connections.
   asio::ip::tcp::acceptor mAcceptor;

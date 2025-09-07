@@ -48,7 +48,7 @@ namespace flowmanager
 class IOServiceThread : public ThreadIf
 {
 public:
-   IOServiceThread(asio::io_service& ioService) : mIOService(ioService) {}
+   IOServiceThread(asio::io_context& ioService) : mIOService(ioService) {}
 
    virtual ~IOServiceThread() {}
 
@@ -57,7 +57,7 @@ public:
       mIOService.run();
    }
 private:
-   asio::io_service& mIOService;
+   asio::io_context& mIOService;
 };
 }
 
@@ -70,7 +70,7 @@ FlowManager::FlowManager()
    mDtlsFactory(0)
 #endif  
 {
-   mIOServiceWork = new asio::io_service::work(mIOService);
+   mIOServiceWork = new asio::executor_work_guard<asio::io_context::executor_type>(mIOService.get_executor());
    mIOServiceThread = new IOServiceThread(mIOService);
    mIOServiceThread->run();
 

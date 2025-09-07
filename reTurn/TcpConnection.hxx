@@ -19,8 +19,8 @@ class TcpConnection
   : public AsyncTcpSocketBase
 {
 public:
-   /// Construct a connection with the given io_service.
-   explicit TcpConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler);
+   /// Construct a connection with the given io_context.
+   explicit TcpConnection(asio::io_context& ioService, ConnectionManager& manager, RequestHandler& handler);
    TcpConnection(const TcpConnection&) = delete;
    TcpConnection(TcpConnection&&) = delete;
    ~TcpConnection();

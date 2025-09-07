@@ -49,7 +49,7 @@ public:
    virtual void thread()
    {
       asio::error_code rc;
-      TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 2000);
+      TurnUdpSocket turnSocket(asio::ip::make_address("127.0.0.1"), 2000);
 
       char buffer[1024];
       unsigned int size = sizeof(buffer);
@@ -107,8 +107,8 @@ int main(int argc, char* argv[])
 #ifndef NO_AUTHENTICATION
 #ifdef USE_SSL
       {  // Connect via TLS, get SharedSecret, and disconnect
-         TurnTlsSocket tlsSocket(asio::ip::address::from_string("127.0.0.1"), 40001);
-         rc = tlsSocket.requestSharedSecret(asio::ip::address::from_string(argv[1]), 
+         TurnTlsSocket tlsSocket(asio::ip::make_address("127.0.0.1"), 40001);
+         rc = tlsSocket.requestSharedSecret(asio::ip::make_address(argv[1]), 
             port.convertUnsignedLong()+1,
             username, sizeof(username),
             password, sizeof(password));
@@ -184,11 +184,11 @@ int main(int argc, char* argv[])
          // Test Data sending and receiving over allocation
          resip::Data turnData("This test is for wrapped Turn Data!");
          InfoLog(<< "CLIENT: Sending: " << turnData);
-         turnSocket.sendTo(asio::ip::address::from_string("127.0.0.1"), 2000, turnData.c_str(), turnData.size());
+         turnSocket.sendTo(asio::ip::make_address("127.0.0.1"), 2000, turnData.c_str(), turnData.size());
 
          turnData = "This test should be a Channel Data message in TCP/TLS but not in UDP - since ChannelBindResponse is not yet received.";
          InfoLog( << "CLIENT: Sending: " << turnData);
-         turnSocket.setActiveDestination(asio::ip::address::from_string("127.0.0.1"), 2000);
+         turnSocket.setActiveDestination(asio::ip::make_address("127.0.0.1"), 2000);
          turnSocket.send(turnData.c_str(), turnData.size());
 
          // Receive Data

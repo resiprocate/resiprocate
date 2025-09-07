@@ -18,7 +18,7 @@ class UdpServer
 {
 public:
    /// Create the server to listen on the specified UDP address and port
-   explicit UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port);
+   explicit UdpServer(asio::io_context& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port);
    UdpServer(const UdpServer&) = delete;
    UdpServer(UdpServer&&) = delete;
    ~UdpServer();

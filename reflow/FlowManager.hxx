@@ -14,6 +14,9 @@
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 
+#include <asio.hpp>
+#include <asio/ssl.hpp>
+
 #include <map>
 #include <memory>
 #include <utility>
@@ -68,9 +71,9 @@ private:
    std::shared_ptr<RTCPEventLoggingHandler> mRtcpEventLoggingHandler;
 
    // Member variables used to manager asio io service thread
-   asio::io_service mIOService;
+   asio::io_context mIOService;
    IOServiceThread* mIOServiceThread;
-   asio::io_service::work* mIOServiceWork;
+   asio::executor_work_guard<asio::io_context::executor_type>* mIOServiceWork;
    static int createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey );
    asio::ssl::context mSslContext;
    

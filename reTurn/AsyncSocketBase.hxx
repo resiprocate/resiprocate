@@ -29,7 +29,7 @@ class AsyncSocketBase :
 public:
    using BeforeClosedHandler = std::function<void(unsigned int)>;
 
-   explicit AsyncSocketBase(asio::io_service& ioService);
+   explicit AsyncSocketBase(asio::io_context& ioService);
    virtual ~AsyncSocketBase();
 
    virtual unsigned int getSocketDescriptor() = 0;
@@ -76,18 +76,18 @@ public:
    virtual void stop() { resip_assert(false); }
    virtual void handleReadHeader(const asio::error_code& e) { resip_assert(false); }
    virtual void handleServerHandshake(const asio::error_code& e) { resip_assert(false); }
-   virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { resip_assert(false); }
-   virtual void handleUdpResolve(const asio::error_code& ec, asio::ip::udp::resolver::iterator endpoint_iterator) { resip_assert(false); }
-   virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { resip_assert(false); }
-   virtual void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { resip_assert(false); }
+   virtual void handleTcpResolve(const asio::error_code& ec, const asio::ip::tcp::resolver::results_type& endpoints) { resip_assert(false); }
+   virtual void handleUdpResolve(const asio::error_code& ec, const asio::ip::udp::resolver::results_type& endpoints) { resip_assert(false); }
+   virtual void handleConnect(const asio::error_code& ec, const asio::ip::tcp::endpoint& endpoint) { resip_assert(false); }
+   virtual void handleClientHandshake(const asio::error_code& ec, const asio::ip::tcp::endpoint& endpoint) { resip_assert(false); }
 
 protected:
    /// Handle completion of a sendData operation.
    virtual void handleSend(const asio::error_code& e);
    virtual void handleReceive(const asio::error_code& e, size_t bytesTransferred);
 
-   /// The io_service used to perform asynchronous operations.
-   asio::io_service& mIOService;
+   /// The io_context used to perform asynchronous operations.
+   asio::io_context& mIOService;
 
    /// Receive Buffer and state
    std::shared_ptr<DataBuffer> mReceiveBuffer;

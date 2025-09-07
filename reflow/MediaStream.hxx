@@ -64,7 +64,7 @@ public:
       TurnAllocation
    };
 
-   MediaStream(asio::io_service& ioService,
+   MediaStream(asio::io_context& ioService,
                asio::ssl::context& sslContext,
                MediaStreamHandler& mediaStreamHandler,
                const StunTuple& localRtpBinding, 

@@ -31,9 +31,9 @@ TurnUdpSocket::connect(const std::string& address, unsigned short port)
    // Get a list of endpoints corresponding to the server name.
    asio::ip::udp::resolver resolver(mIOService);
    resip::Data service(port);
-   asio::ip::udp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
-   asio::ip::udp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   const asio::ip::udp::resolver::iterator end;
+   asio::ip::udp::resolver::results_type results = resolver.resolve(mSocket.local_endpoint().protocol(), address, service.c_str());
+   asio::ip::udp::resolver::results_type::const_iterator endpoint_iterator = results.begin();
+   asio::ip::udp::resolver::results_type::const_iterator end = results.end();
 
    // Use first endpoint in list
    if(endpoint_iterator == end)
@@ -77,7 +77,7 @@ TurnUdpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::
 
    // Wait for timer and read to end
    mIOService.run();
-   mIOService.reset();
+   mIOService.restart();
 
    *bytesRead = (unsigned int)mBytesRead;
 
