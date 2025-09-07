@@ -96,7 +96,7 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
       Data connectionAddr = profile->sessionCaps().session().connection().getAddress();
       DebugLog(<< "getLocalRTPPort: Using local connection address: " << connectionAddr);
       // Create localBinding Tuple - note:  transport may be changed depending on NAT traversal mode
-      StunTuple localBinding(StunTuple::UDP, asio::ip::address::from_string(connectionAddr.c_str()), mLocalRTPPort);
+      StunTuple localBinding(StunTuple::UDP, asio::ip::make_address(connectionAddr.c_str()), mLocalRTPPort);
 
       switch(profile->natTraversalMode())
       {

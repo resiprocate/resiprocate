@@ -2,7 +2,7 @@
 // execution/context_as.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2020 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -19,8 +19,6 @@
 #include "asio/detail/type_traits.hpp"
 #include "asio/execution/context.hpp"
 #include "asio/execution/executor.hpp"
-#include "asio/execution/scheduler.hpp"
-#include "asio/execution/sender.hpp"
 #include "asio/is_applicable_property.hpp"
 #include "asio/query.hpp"
 #include "asio/traits/query_static_constexpr_member.hpp"
@@ -39,10 +37,9 @@ namespace execution {
 template <typename U>
 struct context_as_t
 {
-  /// The context_as_t property applies to executors, senders, and schedulers.
+  /// The context_as_t property applies to executors.
   template <typename T>
-  static constexpr bool is_applicable_property_v =
-    is_executor_v<T> || is_sender_v<T> || is_scheduler_v<T>;
+  static constexpr bool is_applicable_property_v = is_executor_v<T>;
 
   /// The context_t property cannot be required.
   static constexpr bool is_requirable = false;
@@ -69,56 +66,53 @@ struct context_as_t
 {
 #if defined(ASIO_HAS_VARIABLE_TEMPLATES)
   template <typename U>
-  ASIO_STATIC_CONSTEXPR(bool,
-    is_applicable_property_v = is_executor<U>::value
-      || is_sender<U>::value || is_scheduler<U>::value);
+  static constexpr bool is_applicable_property_v = is_executor<U>::value;
 #endif // defined(ASIO_HAS_VARIABLE_TEMPLATES)
 
-  ASIO_STATIC_CONSTEXPR(bool, is_requirable = false);
-  ASIO_STATIC_CONSTEXPR(bool, is_preferable = false);
+  static constexpr bool is_requirable = false;
+  static constexpr bool is_preferable = false;
 
   typedef T polymorphic_query_result_type;
 
-  ASIO_CONSTEXPR context_as_t()
+  constexpr context_as_t()
   {
   }
 
-  ASIO_CONSTEXPR context_as_t(context_t)
+  constexpr context_as_t(context_t)
   {
   }
 
 #if defined(ASIO_HAS_DEDUCED_STATIC_QUERY_TRAIT) \
   && defined(ASIO_HAS_SFINAE_VARIABLE_TEMPLATES)
   template <typename E>
-  static ASIO_CONSTEXPR
-  typename traits::query_static_constexpr_member<E, context_t>::result_type
+  static constexpr
+  typename context_t::query_static_constexpr_member<E>::result_type
   static_query()
-    ASIO_NOEXCEPT_IF((
-      traits::query_static_constexpr_member<E, context_t>::is_noexcept))
+    noexcept(context_t::query_static_constexpr_member<E>::is_noexcept)
   {
-    return traits::query_static_constexpr_member<E, context_t>::value();
+    return context_t::query_static_constexpr_member<E>::value();
   }
 
   template <typename E, typename U = decltype(context_as_t::static_query<E>())>
-  static ASIO_CONSTEXPR const U static_query_v
+  static constexpr const U static_query_v
     = context_as_t::static_query<E>();
 #endif // defined(ASIO_HAS_DEDUCED_STATIC_QUERY_TRAIT)
        //   && defined(ASIO_HAS_SFINAE_VARIABLE_TEMPLATES)
 
   template <typename Executor, typename U>
-  friend ASIO_CONSTEXPR U query(
+  friend constexpr U query(
       const Executor& ex, const context_as_t<U>&,
-      typename enable_if<
+      enable_if_t<
         is_same<T, U>::value
-          && can_query<const Executor&, const context_t&>::value
-      >::type* = 0)
+      >* = 0,
+      enable_if_t<
+        can_query<const Executor&, const context_t&>::value
+      >* = 0)
 #if !defined(__clang__) // Clang crashes if noexcept is used here.
 #if defined(ASIO_MSVC) // Visual C++ wants the type to be qualified.
-    ASIO_NOEXCEPT_IF((
-      is_nothrow_query<const Executor&, const context_t&>::value))
+    noexcept(is_nothrow_query<const Executor&, const context_t&>::value)
 #else // defined(ASIO_MSVC)
-    ASIO_NOEXCEPT_IF((
-      is_nothrow_query<const Executor&, const context_t&>::value))
+    noexcept(is_nothrow_query<const Executor&, const context_t&>::value)
 #endif // defined(ASIO_MSVC)
 #endif // !defined(__clang__)
   {
@@ -133,13 +127,11 @@ const U context_as_t<T>::static_query_v;
 #endif // defined(ASIO_HAS_DEDUCED_STATIC_QUERY_TRAIT)
        //   && defined(ASIO_HAS_SFINAE_VARIABLE_TEMPLATES)
 
-#if (defined(ASIO_HAS_VARIABLE_TEMPLATES) \
-    && defined(ASIO_HAS_CONSTEXPR)) \
+#if defined(ASIO_HAS_VARIABLE_TEMPLATES) \
   || defined(GENERATING_DOCUMENTATION)
 template <typename T>
 constexpr context_as_t<T> context_as{};
-#endif // (defined(ASIO_HAS_VARIABLE_TEMPLATES)
-       //     && defined(ASIO_HAS_CONSTEXPR))
+#endif // defined(ASIO_HAS_VARIABLE_TEMPLATES)
        //   || defined(GENERATING_DOCUMENTATION)
 
 } // namespace execution
@@ -147,11 +139,8 @@ constexpr context_as_t<T> context_as{};
 #if !defined(ASIO_HAS_VARIABLE_TEMPLATES)
 
 template <typename T, typename U>
-struct is_applicable_property<T, execution::context_as_t<U> >
-  : integral_constant<bool,
-      execution::is_executor<T>::value
-        || execution::is_sender<T>::value
-        || execution::is_scheduler<T>::value>
+struct is_applicable_property<T, execution::context_as_t<U>>
+  : integral_constant<bool, execution::is_executor<T>::value>
 {
 };
 
@@ -164,9 +153,9 @@ namespace traits {
 
 template <typename T, typename U>
 struct static_query<T, execution::context_as_t<U>,
-  typename enable_if<
+  enable_if_t<
     static_query<T, execution::context_t>::is_valid
-  >::type> : static_query<T, execution::context_t>
+  >> : static_query<T, execution::context_t>
 {
 };
 
@@ -177,13 +166,13 @@ struct static_query<T, execution::context_as_t<U>,
 
 template <typename T, typename U>
 struct query_free<T, execution::context_as_t<U>,
-    typename enable_if<
-      can_query<const T&, const execution::context_t&>::value
-    >::type>
+  enable_if_t<
+    can_query<const T&, const execution::context_t&>::value
+  >>
 {
-  ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
-  ASIO_STATIC_CONSTEXPR(bool, is_noexcept =
-    (is_nothrow_query<const T&, const execution::context_t&>::value));
+  static constexpr bool is_valid = true;
+  static constexpr bool is_noexcept =
+    is_nothrow_query<const T&, const execution::context_t&>::value;
 
   typedef U result_type;
 };

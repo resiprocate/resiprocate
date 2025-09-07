@@ -144,7 +144,7 @@ int FlowManagerSipXSocket::write(const char* buffer,
 {
    //cout << "write: bufferlen=" << bufferLength << ", address=" << ipAddress << ", port=" << port << endl;
    resip_assert(mFlow);
-   mFlow->sendTo(asio::ip::address::from_string(ipAddress), port, (char*)buffer, bufferLength);
+   mFlow->sendTo(asio::ip::make_address(ipAddress), port, (char*)buffer, bufferLength);
    return bufferLength;
 }
 
