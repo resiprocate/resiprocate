@@ -15,6 +15,8 @@ endfunction()
 function(test_base target)
    add_executable(${target} ${ARGN})
    add_test(NAME ${target} COMMAND $<TARGET_FILE:${target}>)
+   # Don't strip asserts in release builds
+   target_compile_options(${target} PRIVATE -UNDEBUG)
    set_tests_properties(${target} PROPERTIES TIMEOUT 300)
 endfunction()
 
