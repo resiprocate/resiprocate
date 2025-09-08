@@ -368,7 +368,7 @@ Data::Data(const Data& data)
 }
 
 #ifdef RESIP_HAS_RVALUE_REFS
-Data::Data(Data &&data)
+Data::Data(Data &&data) noexcept
    : mBuf(mPreBuffer),mSize(0),mCapacity(LocalAlloc),mShareEnum(Borrow)
 {
    *this = std::move(data);
@@ -638,7 +638,7 @@ Data::setBuf(ShareEnum se, const char* buffer, size_type length)
 }
 
 Data&
-Data::takeBuf(Data& other)
+Data::takeBuf(Data& other) noexcept
 {
    if ( &other == this )
       return *this;
@@ -916,7 +916,7 @@ Data::operator=(const Data& data)
 #endif
 
 #ifdef RESIP_HAS_RVALUE_REFS
-Data& Data::operator=(Data &&data)
+Data& Data::operator=(Data &&data) noexcept
 {
    if (&data != this)
    {
