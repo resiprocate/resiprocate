@@ -197,6 +197,8 @@ class InviteSession : public DialogUsage
          SentReinviteNoOffer,       // Sent a reINVITE with no offer (requestOffer)
          SentReinviteAnswered,      // Sent a reINVITE no offer and received a 200-offer
          SentReinviteNoOfferGlare,  // Got a 491
+         SentOptions,               // Sent an OPTIONS
+         SentOptionsGlare,          // Got a 491
          ReceivedUpdate,            // Received an UPDATE
          ReceivedReinvite,          // Received a reINVITE
          ReceivedReinviteNoOffer,   // Received a reINVITE with no offer
@@ -288,6 +290,9 @@ class InviteSession : public DialogUsage
          On200Update,
          OnPrack, // UAS
          On200Prack, // UAC
+         OnOptions,
+         On200Options,
+         On491Options,
          Unknown
       } Event;
 
@@ -312,6 +317,7 @@ class InviteSession : public DialogUsage
       void dispatchSentReinviteNoOffer(const SipMessage& msg);
       void dispatchSentReinviteAnswered(const SipMessage& msg);
       void dispatchGlare(const SipMessage& msg);
+      void dispatchSentOptions(const SipMessage& msg);
       void dispatchReinviteNoOfferGlare(const SipMessage& msg);
       void dispatchReceivedUpdateOrReinvite(const SipMessage& msg);
       void dispatchReceivedReinviteSentOffer(const SipMessage& msg);
@@ -324,6 +330,7 @@ class InviteSession : public DialogUsage
       void dispatchBye(const SipMessage& msg);
       void dispatchInfo(const SipMessage& msg);
       void dispatchMessage(const SipMessage& msg);
+      void dispatchOptions(const SipMessage& msg);
 
       void startRetransmit200Timer();
       void start491Timer();
@@ -349,6 +356,7 @@ class InviteSession : public DialogUsage
 
       void storePeerCapabilities(const SipMessage& msg);
       bool updateMethodSupported() const;
+      bool timerOptionSupported() const;
 
       std::shared_ptr<SipMessage> sendAck(const Contents *answer=0);
       std::shared_ptr<SipMessage> sendBye();

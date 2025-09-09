@@ -3,6 +3,7 @@
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "resip/dum/BaseCreator.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogEventStateManager.hxx"
@@ -274,6 +275,14 @@ InviteSession::updateMethodSupported() const
 }
 
 bool
+InviteSession::timerOptionSupported() const
+{
+   // Check if timer extension (RFC4028) is supported locally and by peer
+   Token timer(Symbols::Timer);
+   return mDum.getMasterProfile()->getSupportedOptionTags().find(timer) && mPeerSupportedOptionTags.find(timer);
+}
+
+bool
 InviteSession::isConnected() const
 {
    switch (mState)
@@ -286,6 +295,8 @@ InviteSession::isConnected() const
       case SentReinviteNoOffer:
       case SentReinviteAnswered:
       case SentReinviteNoOfferGlare:
+      case SentOptions:
+      case SentOptionsGlare:
       case ReceivedUpdate:
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
@@ -682,6 +693,8 @@ InviteSession::end(EndReason reason)
       case SentReinviteGlare:
       case SentReinviteNoOfferGlare:
       case SentReinviteAnswered:
+      case SentOptions:
+      case SentOptionsGlare:
       {
          // !jf! do we need to store the BYE somewhere?
          // .dw. BYE message handled
@@ -1278,11 +1291,15 @@ InviteSession::dispatch(const SipMessage& msg)
          break;
       case SentUpdateGlare:
       case SentReinviteGlare:
+      case SentOptionsGlare:
          // The behavior is the same except for timer which is handled in dispatch(Timer)
          dispatchGlare(msg);
          break;
       case SentReinviteNoOfferGlare:
          dispatchReinviteNoOfferGlare(msg);
+         break;
+      case SentOptions:
+         dispatchSentOptions(msg);
          break;
       case ReceivedUpdate:
       case ReceivedReinvite:
@@ -1399,6 +1416,14 @@ InviteSession::dispatch(const DumTimeout& timeout)
 
          InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
          mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);  // increments CSeq
+         send(mLastLocalSessionModification);
+      }
+      else if (mState == SentOptionsGlare)
+      {
+         transition(SentOptions);
+
+         InfoLog (<< "Retransmitting the OPTIONS (glare condition timer)");
+         mDialog.makeRequest(*mLastLocalSessionModification, OPTIONS);  // increments CSeq
          send(mLastLocalSessionModification);
       }
       else if (mState == SentReinviteGlare)
@@ -1869,6 +1894,50 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
    }
 }
 
+void
+InviteSession::dispatchSentOptions(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+
+   switch (toEvent(msg, offerAnswer.get()))
+   {
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      case OnUpdate:
+      case OnUpdateOffer:
+      {
+         // glare
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 491);
+         send(response);
+         break;
+      }
+
+      case On200Options:
+         transition(Connected);
+         handleSessionTimerResponse(msg);
+         break;
+
+      case On491Options:
+         transition(SentOptionsGlare);
+         start491Timer();
+         break;
+
+      case OnGeneralFailure:
+         sendBye();
+         transition(Terminated);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
+         break;
+
+      default:
+         dispatchOthers(msg);
+         break;
+   }
+}
+
 void 
 InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
 {
@@ -2214,6 +2283,9 @@ InviteSession::dispatchOthers(const SipMessage& msg)
             handler->onAckReceived(getSessionHandle(), msg);
          }
          break;
+      case OPTIONS:
+         dispatchOptions(msg);
+         break;
       default:
          // handled in Dialog
          WarningLog (<< "DUM delivered a "
@@ -2223,6 +2295,18 @@ InviteSession::dispatchOthers(const SipMessage& msg)
                      << msg);
          resip_assert(0);
          break;
+   }
+}
+
+void
+InviteSession::dispatchOptions(const SipMessage& msg)
+{
+   if(msg.isRequest())
+   {
+      auto response = std::make_shared<SipMessage>();
+      mDialog.makeResponse(*response, msg, 200);
+      handleSessionTimerRequest(*response, msg);
+      send(response);
    }
 }
 
@@ -2608,6 +2692,17 @@ InviteSession::sessionRefresh()
       mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
       mLastLocalSessionModification->setContents(0);  // Don't send SDP
    }
+   else if (mPeerSupportedMethods.find(Token("OPTIONS")) && !timerOptionSupported())
+   {
+      transition(SentOptions);
+      auto options = std::make_shared<SipMessage>();
+      mDialog.makeRequest(*options, OPTIONS);
+      options->header(h_Accepts) = mDum.getMasterProfile()->getSupportedMimeTypes(OPTIONS);
+      InfoLog (<< "sessionRefresh: Sending " << options->brief());
+      DumHelper::setOutgoingEncryptionLevel(*options, mCurrentEncryptionLevel);
+      send(options);
+      return;
+   }
    else
    {
       transition(SentReinvite);
@@ -2686,7 +2781,7 @@ InviteSession::startSessionTimer()
 void
 InviteSession::handleSessionTimerResponse(const SipMessage& msg)
 {
-   resip_assert(msg.header(h_CSeq).method() == INVITE || msg.header(h_CSeq).method() == UPDATE);
+   resip_assert(msg.header(h_CSeq).method() == INVITE || msg.header(h_CSeq).method() == UPDATE || msg.header(h_CSeq).method() == OPTIONS);
 
    // Allow Re-Invites and Updates to update the Peer P-Asserted-Identity
    if (msg.exists(h_PAssertedIdentities))
@@ -2736,7 +2831,7 @@ InviteSession::handleSessionTimerResponse(const SipMessage& msg)
 void
 InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage& request)
 {
-   resip_assert(request.header(h_CSeq).method() == INVITE || request.header(h_CSeq).method() == UPDATE);
+   resip_assert(request.header(h_CSeq).method() == INVITE || request.header(h_CSeq).method() == UPDATE || request.header(h_CSeq).method() == OPTIONS);
 
    // Allow Re-Invites and Updates to update the Peer P-Asserted-Identity
    if (request.exists(h_PAssertedIdentities))
@@ -2786,7 +2881,8 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
                 response.header(h_Requires).push_back(Token(Symbols::Timer));
             }
          }
-         setSessionTimerHeaders(response);
+         if (timerOptionSupported())
+            setSessionTimerHeaders(response);
       }
 
       startSessionTimer();
@@ -2816,6 +2912,10 @@ InviteSession::toData(State state)
          return "InviteSession::SentReinviteAnswered";
       case SentReinviteNoOfferGlare:
          return "InviteSession::SentReinviteNoOfferGlare";
+      case SentOptions:
+         return "InviteSession::SentOptions";
+      case SentOptionsGlare:
+         return "InviteSession::SentOptionsGlare";
       case ReceivedUpdate:
          return "InviteSession::ReceivedUpdate";
       case ReceivedReinvite:
@@ -3216,6 +3316,18 @@ InviteSession::toEvent(const SipMessage& msg, const Contents* offerAnswer)
    else if (method == UPDATE && code >= 400)
    {
       return OnUpdateRejected;
+   }
+   else if (method == OPTIONS && code == 0)
+   {
+       return OnOptions;
+   }
+   else if (method == OPTIONS && code / 100 == 2)
+   {
+       return On200Options;
+   }
+   else if (method == OPTIONS && code == 491)
+   {
+       return On491Options;
    }
    else
    {
