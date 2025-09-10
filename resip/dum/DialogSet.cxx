@@ -635,6 +635,14 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             break;
 
+         case OPTIONS:
+            if (dialog)
+            {
+               DebugLog(<< "in dialog options request");
+               break;
+            }
+            // fallthrough
+
          default:
             // !jf! move this to DialogUsageManager
             DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );
@@ -788,6 +796,7 @@ DialogSet::dispatch(const SipMessage& msg)
                break;
             }
          case NOTIFY:
+         case OPTIONS:
             if (dialog)
             {
                break;

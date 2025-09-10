@@ -538,6 +538,17 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(request);
             }
             break;
+         case OPTIONS:
+            if (mInviteSession == 0)
+            {
+               InfoLog ( << "Spurious OPTIONS" );
+               return;
+            }
+            else
+            {
+               mInviteSession->dispatch(request);
+            }
+            break;
          case PRACK:
             if (mInviteSession == 0)
             {
@@ -777,6 +788,7 @@ Dialog::dispatch(const SipMessage& msg)
          case MESSAGE:
          case UPDATE:
          case PRACK:
+         case OPTIONS:
             if (mInviteSession)
             {
                mInviteSession->dispatch(response);
