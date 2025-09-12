@@ -165,7 +165,7 @@ BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT
  * resip::Security) then using SSLv23_method() will allow a dynamic
  * choice of SSL v3.0 or any of the TLS versions on each connection.
  */
-long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
+long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
 long BaseSecurity::OpenSSLCTXClearOptions = 0;
 
 
