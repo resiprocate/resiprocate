@@ -24,7 +24,7 @@ using namespace resip;
 SERNonceHelper::SERNonceHelper(int serOffset) : serOffset(serOffset)
 {
    //privateKey = Data("asdfklsadflkj");
-   privateKey = Random::getRandomHex(24);
+   privateKey = Random::getCryptoRandomHex(24);
 }
 
 SERNonceHelper::~SERNonceHelper() 

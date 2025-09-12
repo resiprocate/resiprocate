@@ -95,7 +95,7 @@ int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type 
 
   //  RAND_bytes((char *) serial , 4);
   //serial = 1;
-  serial = Random::getRandom();  // get an int worth of randomness
+  serial = Random::getCryptoRandom();  // get an int worth of randomness
   ASN1_INTEGER_set(X509_get_serialNumber(selfcert),serial);
 
   X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, (unsigned char *) domain.data(), domain.size(), -1, 0);

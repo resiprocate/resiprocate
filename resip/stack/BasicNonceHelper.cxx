@@ -25,7 +25,7 @@ using namespace resip;
 BasicNonceHelper::BasicNonceHelper() 
 {
   //privateKey = Data("asdfklsadflkj");
-  privateKey = Random::getRandomHex(24);
+  privateKey = Random::getCryptoRandomHex(24);
 }
 
 BasicNonceHelper::~BasicNonceHelper() 
