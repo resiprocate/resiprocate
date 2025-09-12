@@ -74,7 +74,7 @@ TlsConnection::TlsConnection(Transport* transport, const Tuple& tuple,
    if (mServer)
    {
       // clear SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE set in SSL_CTX if we are a server
-      int verify_mode;
+      int verify_mode = SSL_VERIFY_PEER;
       switch (t->getClientVerificationMode())
       {
          case SecurityTypes::None:

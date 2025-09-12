@@ -64,7 +64,7 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
          mDomainCtx = mSecurity->createDomainCtx(SSLv23_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
          break;
       case SecurityTypes::TLSv1:
-         DebugLog(<<"Using TLSv1_method");
+         DebugLog(<<"Using TLS_method");
          mDomainCtx = mSecurity->createDomainCtx(TLS_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
          if (mDomainCtx) {
             SSL_CTX_set_min_proto_version(mDomainCtx, TLS1_VERSION);
