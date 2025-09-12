@@ -936,7 +936,7 @@ TransactionState::processStateless(TransactionMessage* message)
    // for ACK messages from the TU, there is no transaction, send it directly
    // to the wire // rfc3261 17.1 Client Transaction
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
-   StackLog (<< "TransactionState::processStateless: " << message->brief());
+   StackLog (<< "TransactionState::processStateless: " << message->brief() << " -> " << *this);
 
    // !jf! There is a leak for Stateless transactions associated with ACK to 200
    if (isFromTU(message))
@@ -1025,7 +1025,7 @@ void TransactionState::restoreOriginalContactAndVia()
 void
 TransactionState::processClientNonInvite(TransactionMessage* msg)
 { 
-   StackLog (<< "TransactionState::processClientNonInvite: " << msg->brief());
+   StackLog (<< "TransactionState::processClientNonInvite: " << msg->brief() << " -> " << *this);
 
    if (isRequest(msg) && isFromTU(msg))
    {
@@ -1218,7 +1218,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
 void
 TransactionState::processClientInvite(TransactionMessage* msg)
 {
-   StackLog(<< "TransactionState::processClientInvite: " << msg->brief() << " " << *this);
+   StackLog(<< "TransactionState::processClientInvite: " << msg->brief() << " -> " << *this);
    if (isRequest(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
@@ -1551,7 +1551,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
 void
 TransactionState::processServerNonInvite(TransactionMessage* msg)
 {
-   StackLog (<< "TransactionState::processServerNonInvite: " << msg->brief());
+   StackLog (<< "TransactionState::processServerNonInvite: " << msg->brief() << " -> " << *this);
 
    if (isRequest(msg) && !isInvite(msg) && isFromWire(msg)) // retransmission from the wire
    {
@@ -1742,7 +1742,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
 void
 TransactionState::processServerInvite(TransactionMessage* msg)
 {
-   StackLog (<< "TransactionState::processServerInvite: " << msg->brief());
+   StackLog (<< "TransactionState::processServerInvite: " << msg->brief() << " -> " << *this);
    if (isRequest(msg) && isFromWire(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
@@ -2063,7 +2063,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
 void
 TransactionState::processClientStale(TransactionMessage* msg)
 {
-   StackLog (<< "TransactionState::processClientStale: " << msg->brief());
+   StackLog (<< "TransactionState::processClientStale: " << msg->brief() << " -> " << *this);
 
    if (isTimer(msg))
    {
@@ -2119,7 +2119,7 @@ TransactionState::processClientStale(TransactionMessage* msg)
 void
 TransactionState::processServerStale(TransactionMessage* msg)
 {
-   StackLog (<< "TransactionState::processServerStale: " << msg->brief());
+   StackLog (<< "TransactionState::processServerStale: " << msg->brief() << " -> " << *this);
 
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (isTimer(msg))
