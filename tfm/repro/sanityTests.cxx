@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <ctype.h>
+
 #include <cppunit/TextTestRunner.h>
 #include <cppunit/TextTestResult.h>
 #include <cppunit/TextOutputter.h>
@@ -347,13 +349,13 @@ class TestHolder : public ReproFixture
          Data& branch = *const_cast<Data*>(&(msg->header(h_Vias).front().param(p_branch).getTransactionId()));
          for(Data::size_type i=0;i<branch.size();++i)
          {
-            if(isupper(branch[i]))
+            if(isupper(static_cast< unsigned char >(branch[i])))
             {
-               branch[i] = tolower(branch[i]);
+               branch[i] = tolower(static_cast< unsigned char >(branch[i]));
             }
-            else if(islower(branch[i]))
+            else if(islower(static_cast< unsigned char >(branch[i])))
             {
-               branch[i] = toupper(branch[i]);
+               branch[i] = toupper(static_cast< unsigned char >(branch[i]));
             }
          }
          return msg;
@@ -367,7 +369,7 @@ class TestHolder : public ReproFixture
          Data& branch = *const_cast<Data*>(&(msg->header(h_Vias).front().param(p_branch).getTransactionId()));
          for(Data::size_type i=0;i<branch.size();++i)
          {
-            branch[i] = toupper(branch[i]);
+            branch[i] = toupper(static_cast< unsigned char >(branch[i]));
          }
          return msg;
       }

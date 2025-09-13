@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 
+//#include <ctype.h>
 #include <cstring>
 #include <iomanip>
 #include <algorithm>
@@ -839,7 +840,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                continue;
             }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
-            if (!pb.eof() && !isdigit(*pb.position()))
+            if (!pb.eof() && !isdigit(static_cast< unsigned char >(*pb.position())))
             {
                DebugLog(<< "Invalid nonce; expected timestamp.");
                return make_pair(BadlyFormed,username);
@@ -1000,7 +1001,7 @@ Helper::authenticateRequest(const SipMessage& request,
          }
          /*
          ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
-         if (!pb.eof() && !isdigit(*pb.position()))
+         if (!pb.eof() && !isdigit(static_cast< unsigned char >(*pb.position())))
          {
             DebugLog(<< "Invalid nonce; expected timestamp.");
             return BadlyFormed;
@@ -1156,7 +1157,7 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
          }
          /*
          ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
-         if (!pb.eof() && !isdigit(*pb.position()))
+         if (!pb.eof() && !isdigit(static_cast< unsigned char >(*pb.position())))
          {
             DebugLog(<< "Invalid nonce; expected timestamp.");
             return BadlyFormed;

@@ -1,3 +1,5 @@
+#include <ctype.h>
+
 #include "rutil/ResipAssert.h"
 
 #include "rutil/Logger.hxx"
@@ -676,7 +678,7 @@ ParseBuffer::integer()
       assertNotEof();
    }
 
-   if (!isdigit(*mPosition))
+   if (!isdigit(static_cast< unsigned char >(*mPosition)))
    {
       Data msg("Expected a digit, got: ");
       msg += Data(mPosition, (Data::size_type)(mEnd - mPosition));
@@ -695,7 +697,7 @@ ParseBuffer::integer()
    const unsigned int digitLimit = absoluteLimit % 10;
 
    unsigned int num = 0;
-   while (!eof() && isdigit(*mPosition))
+   while (!eof() && isdigit(static_cast< unsigned char >(*mPosition)))
    {
       const unsigned int c = *mPosition++ - '0';
       if (num > border || (num == border && c > digitLimit)) {
@@ -720,7 +722,7 @@ ParseBuffer::uInt8()
    const char* begin=mPosition;
    uint8_t num = 0;
    uint8_t last = 0;
-   while (!eof() && isdigit(*mPosition))
+   while (!eof() && isdigit(static_cast< unsigned char >(*mPosition)))
    {
       last = num;
       num = num*10 + (*mPosition-'0');
@@ -745,7 +747,7 @@ ParseBuffer::uInt32()
 {
    const char* begin=mPosition;
    uint32_t num = 0;
-   while (!eof() && isdigit(*mPosition))
+   while (!eof() && isdigit(static_cast< unsigned char >(*mPosition)))
    {
       num = num*10 + (*mPosition-'0');
       ++mPosition;
@@ -786,7 +788,7 @@ ParseBuffer::uInt64()
 {
    const char* begin=mPosition;
    uint64_t num = 0;
-   while (!eof() && isdigit(*mPosition))
+   while (!eof() && isdigit(static_cast< unsigned char >(*mPosition)))
    {
       num = num*10 + (*mPosition-'0');
       ++mPosition;
@@ -884,7 +886,7 @@ ParseBuffer::qVal()
          skipChar();
          
          int i = 100;
-         while(!eof() && isdigit(*mPosition) && i)
+         while(!eof() && isdigit(static_cast< unsigned char >(*mPosition)) && i)
          {
             num += (*mPosition-'0') * i;
             i /= 10;
@@ -954,8 +956,8 @@ escapeAndAnnotate(const char* buffer,
             continue;
          }
       }
-      
-      if (iscntrl(c) || (c >= 0x7F))
+
+      if (iscntrl(static_cast< unsigned char >(c)) || (c >= 0x7F))
       {
          ret +='*'; // indicates unprintable character
          continue;

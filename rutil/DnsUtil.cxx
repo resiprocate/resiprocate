@@ -17,6 +17,7 @@
 #endif
 
 #include <stdio.h>
+#include <ctype.h>
 #include <memory>
 
 #include "rutil/compat.hxx"
@@ -390,7 +391,7 @@ DnsUtil::isIpV6Address(const Data& ipAddress)
    }
 
    // first character must be a hex digit or colon
-   if (!isxdigit(*ipAddress.data()) &&
+   if (!isxdigit(static_cast< unsigned char >(*ipAddress.data())) &&
        *ipAddress.data() != ':')
    {
       return false;

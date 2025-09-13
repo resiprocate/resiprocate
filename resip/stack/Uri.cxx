@@ -2,11 +2,12 @@
 #include "config.h"
 #endif
 
+#include <ctype.h>
 #include <set>
 
 #include "resip/stack/Embedded.hxx"
 #include "resip/stack/Helper.hxx"
-#include "resip/stack/NameAddr.hxx" 
+#include "resip/stack/NameAddr.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "resip/stack/UnknownParameter.hxx"
@@ -282,7 +283,7 @@ Uri::isEnumSearchable() const
    // count the digits (skip the leading `+')
    for(const char* i=user().begin() + 1; i!= user().end(); i++)
    {
-      if (isdigit(*i))
+      if (isdigit(static_cast< unsigned char >(*i)))
       {
          digits++;
       }
@@ -316,7 +317,7 @@ Uri::getEnumLookups(const std::vector<Data>& suffixes) const
       // skip the leading +
       for (const char* i=user().end()-1 ; i!= user().begin(); --i)
       {
-         if (isdigit(*i))
+         if (isdigit(static_cast< unsigned char >(*i)))
          {
             prefix += *i;
             prefix += Symbols::DOT;

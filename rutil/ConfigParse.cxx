@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -213,10 +214,10 @@ ConfigParse::getConfigIndexKeys(const resip::Data& indexName, std::set<Data>& ke
    {
       const Data& keyName = it->first;
       if(keyName.prefix(indexNameLower) && keyName.size() > numPos
-         && isdigit(keyName[numPos]))
+         && isdigit(static_cast< unsigned char >(keyName[numPos])))
       {
          Data::size_type i = numPos + 1;
-         while(i < keyName.size() && isdigit(keyName[i]))
+         while(i < keyName.size() && isdigit(static_cast< unsigned char >(keyName[i])))
          {
             i++;
          }
@@ -445,10 +446,10 @@ ConfigParse::getConfigNested(const resip::Data& mapsPrefix) const
    {
       const Data& keyName = it->first;
       if(keyName.prefix(mapsPrefixLower) && keyName.size() > numPos
-         && isdigit(keyName[numPos]))
+         && isdigit(static_cast< unsigned char >(keyName[numPos])))
       {
          Data::size_type i = numPos + 1;
-         while(i < keyName.size() && isdigit(keyName[i]))
+         while(i < keyName.size() && isdigit(static_cast< unsigned char >(keyName[i])))
          {
             i++;
          }

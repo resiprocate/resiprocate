@@ -501,7 +501,7 @@ cleanName(const char * name)
       unsigned int l = strlen(leaders[i]);
       if (strstr(name,leaders[i]) == name &&
           strlen(name) > l && 
-          isupper(name[l]))
+          isupper(static_cast< unsigned char >(name[l])))
       {
          offset = l;
          break;

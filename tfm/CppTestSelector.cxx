@@ -1,4 +1,5 @@
 #include "CppTestSelector.hxx"
+#include <ctype.h>
 #include <cstring>
 #include <iostream>
 #include <regex>
@@ -15,7 +16,7 @@ CommandLineSelector::CommandLineSelector(int argc, char** argv) : mArgNumTimes(0
 	{
 		std::string userInput = argv[i];
 
-		if(isdigit(*userInput.c_str()))
+		if(isdigit(static_cast< unsigned char >(*userInput.c_str())))
 		{
 		   int res = atoi(userInput.c_str());
 
@@ -110,7 +111,7 @@ void CommandLineSelector::ReadLineInput(std::vector<int> &result, int maxSelecti
       std::cout << "Enter a test number (or pattern) followed by number of repetitions: ";
       std::cin >> userInput;
       std::cin >> repeatStr;
-      if(isdigit(*userInput.c_str()))
+      if(isdigit(static_cast< unsigned char >(*userInput.c_str())))
       {
          res = atoi(userInput.c_str());
          if(res == maxSelection)  

@@ -1,4 +1,5 @@
 #include "RequestHandler.hxx"
+#include <ctype.h>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -190,7 +191,7 @@ RequestHandler::CheckNonceResult
 RequestHandler::checkNonce(const Data& nonce)
 {
    ParseBuffer pb(nonce.data(), nonce.size());
-   if (!pb.eof() && !isdigit(*pb.position()))
+   if (!pb.eof() && !isdigit(static_cast< unsigned char >(*pb.position())))
    {
       DebugLog(<< "Invalid nonce.  Expected timestamp.");
       return NotValid;
