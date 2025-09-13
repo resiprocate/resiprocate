@@ -63,20 +63,6 @@ resip::getMethodType(const char* name, int len)
    return m ? m->type : UNKNOWN;
 }
 
-// ?dlb? why aren't we using the lib strncasecmp?
-int strncasecmp(const char* a, const char* b, int len)
-{
-    //!ah! whoever implemented this should be shot.
-    //!ah! should use library based strncasecmp() !
-    //!ah! have fixed it up a bit.
-   for (int i = 0; i < len; i++)
-   {
-      int c = tolower(a[i]) - tolower(b[i]);
-      if (c) return c;
-   }
-   return 0;
-}
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

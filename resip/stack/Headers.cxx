@@ -11,11 +11,8 @@
 #include "resip/stack/HeaderHash.hxx"
 
 #include <iostream>
+
 using namespace std;
-
-//int strcasecmp(const char*, const char*);
-//int strncasecmp(const char*, const char*, int len);
-
 using namespace resip;
 
 Data Headers::HeaderNames[MAX_HEADERS+1];

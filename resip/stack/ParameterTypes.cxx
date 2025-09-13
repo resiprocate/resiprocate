@@ -41,8 +41,6 @@ _enum##_Param::_enum##_Param()                                                  
 }                                                                               \
 _enum##_Param resip::p_##_enum
 
-int strncasecmp(char*,char*,int);
-
 using namespace std;
 
 using namespace resip;
