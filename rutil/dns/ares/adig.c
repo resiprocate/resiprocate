@@ -169,7 +169,7 @@ int getopt(int argc,
  p = argv[carg];
    //register int al = strlen(argv[carg]);
 
-   if (*p  == '-' && isalnum(*(p+1)))
+   if (*p  == '-' && isalnum((unsigned char)*(p+1)))
    {
       char o = *(p+1);
 	 int i,l;

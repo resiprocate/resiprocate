@@ -543,7 +543,7 @@ static int readLine( FILE *file, char *buffer )
 		/* Check for an illegal char in the data.  Note that we don't just
 		   check for chars with high bits set because these are legal in
 		   non-ASCII strings */
-		if( !isprint( ch ) )
+		if( !isprint( (unsigned char)ch ) )
 			{
 			printf( "Bad character '%c' in config file line %d.\n",
 					ch, lineNo );
@@ -1274,12 +1274,12 @@ static void displayString( FILE *inFile, long length, int level,
 					warnIA5 = TRUE;
 				if( strOption == STR_LATIN1 )
 					{
-					if( !isprint( ch & 0x7F ) )
+					if( !isprint( (unsigned char)ch & 0x7F ) )
 						ch = '.';	/* Convert non-ASCII to placeholders */
 					}
 				else
 					{
-					if( !isprint( ch ) )
+					if( !isprint( (unsigned char)ch ) )
 						ch = '.';	/* Convert non-ASCII to placeholders */
 					}
 #ifdef __OS390__
@@ -1289,10 +1289,10 @@ static void displayString( FILE *inFile, long length, int level,
 
 			case STR_UTCTIME:
 			case STR_GENERALIZED:
-				if( !isdigit( ch ) && ch != 'Z' )
+				if( !isdigit( (unsigned char)ch ) && ch != 'Z' )
 					{
 					warnTime = TRUE;
-					if( !isprint( ch ) )
+					if( !isprint( (unsigned char)ch ) )
 						ch = '.';	/* Convert non-ASCII to placeholders */
 					}
 #ifdef __OS390__
@@ -1320,7 +1320,7 @@ static void displayString( FILE *inFile, long length, int level,
 				/* Drop through */
 
 			default:
-				if( !isprint( ch ) )
+				if( !isprint( (unsigned char)ch ) )
 					ch = '.';	/* Convert control chars to placeholders */
 #ifdef __OS390__
 				ch = asciiToEbcdic( ch );
@@ -1581,8 +1581,8 @@ static STR_OPTION checkForText( FILE *inFile, const int length )
 		fseek( inFile, -sampleLength, SEEK_CUR );
 		for( i = 0; i < sampleLength; i++ )
 			{
-			if( !( isalpha( buffer[ i ] ) || isdigit( buffer[ i ] ) || \
-				   isspace( buffer[ i ] ) ) )
+			if( !( isalpha( (unsigned char)buffer[ i ] ) || isdigit( (unsigned char)buffer[ i ] ) || \
+				   isspace( (unsigned char)buffer[ i ] ) ) )
 				return( STR_NONE );
 			}
 		return( STR_IA5 );
@@ -1591,13 +1591,13 @@ static STR_OPTION checkForText( FILE *inFile, const int length )
 	/* Check for ASCII-looking text */
 	sampleLength = fread( buffer, 1, sampleLength, inFile );
 	fseek( inFile, -sampleLength, SEEK_CUR );
-	if( isdigit( buffer[ 0 ] ) && ( length == 13 || length == 15 ) && \
+	if( isdigit( (unsigned char)buffer[ 0 ] ) && ( length == 13 || length == 15 ) && \
 		buffer[ length - 1 ] == 'Z' )
 		{
 		/* It looks like a time string, make sure that it really is one */
 		for( i = 0; i < length - 1; i++ )
 			{
-			if( !isdigit( buffer[ i ] ) )
+			if( !isdigit( (unsigned char)buffer[ i ] ) )
 				break;
 			}
 		if( i == length - 1 )
@@ -2247,12 +2247,12 @@ int main( int argc, char *argv[] )
 			useStdin = TRUE;
 		while( *argPtr )
 			{
-			if( isdigit( *argPtr ) )
+			if( isdigit( (unsigned char)*argPtr ) )
 				{
 				offset = atol( argPtr );
 				break;
 				}
-			switch( toupper( *argPtr ) )
+			switch( toupper( (unsigned char)*argPtr ) )
 				{
 				case '-':
 					moreArgs = FALSE;	/* GNU-style end-of-args flag */

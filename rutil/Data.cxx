@@ -1313,8 +1313,8 @@ Data::charUnencoded() const
       {
          if ( i+2 < size())
          {
-            const char* high = strchr(hexmap, tolower(*p++));
-            const char* low = strchr(hexmap, tolower(*p++));
+            const char* high = strchr(hexmap, tolower(static_cast< unsigned char >(*p++)));
+            const char* low = strchr(hexmap, tolower(static_cast< unsigned char >(*p++)));
 
             // !rwm! changed from high==0 || low==0
             if (high == 0 && low == 0)
@@ -1323,7 +1323,7 @@ Data::charUnencoded() const
                // ugh
                return ret;
             }
-            
+
             int highInt = int(high - hexmap);
             int lowInt = int(low - hexmap);
             ret += char(highInt<<4 | lowInt);
@@ -1653,7 +1653,7 @@ Data::lowercase()
    char* p = mBuf;
    for (size_type i=0; i < mSize; ++i)
    {
-      *p = tolower(*p);
+      *p = tolower(static_cast< unsigned char >(*p));
       ++p;
    }
    return *this;
@@ -1666,7 +1666,7 @@ Data::uppercase()
    char* p = mBuf;
    for (size_type i=0; i < mSize; ++i)
    {
-      *p = toupper(*p);
+      *p = toupper(static_cast< unsigned char >(*p));
       ++p;
    }
    return *this;
@@ -1705,7 +1705,7 @@ Data::convertInt() const
 
    for (; p != end; ++p)
    {
-      if (!isspace(*p))
+      if (!isspace(static_cast< unsigned char >(*p)))
       {
          goto sign_char;
       }
@@ -1725,7 +1725,7 @@ sign_char:
 
    for(; p != end; ++p)
    {
-      if (!isdigit(*p))
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          break;
       }
@@ -1744,7 +1744,7 @@ Data::convertUnsignedLong() const
 
    for (; p != end; ++p)
    {
-      if (!isspace(*p))
+      if (!isspace(static_cast< unsigned char >(*p)))
       {
          goto sign_char;
       }
@@ -1759,7 +1759,7 @@ sign_char:
 
    for(; p != end; ++p)
    {
-      if (!isdigit(*p))
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          break;
       }
@@ -1778,7 +1778,7 @@ Data::convertUInt64() const
 
    for (; p != end; ++p)
    {
-      if (!isspace(*p))
+      if (!isspace(static_cast< unsigned char >(*p)))
       {
          goto sign_char;
       }
@@ -1793,7 +1793,7 @@ sign_char:
 
    for(; p != end; ++p)
    {
-      if (!isdigit(*p))
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          break;
       }
@@ -1812,7 +1812,7 @@ Data::convertSize() const
 
    for (; p != end; ++p)
    {
-      if (!isspace(*p))
+      if (!isspace(static_cast< unsigned char >(*p)))
       {
          goto sign_char;
       }
@@ -1827,7 +1827,7 @@ sign_char:
 
    for(; p != end; ++p)
    {
-      if (!isdigit(*p))
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          break;
       }
@@ -1848,7 +1848,7 @@ Data::convertDouble() const
 
    for (; p != end; ++p)
    {
-      if (!isspace(*p))
+      if (!isspace(static_cast< unsigned char >(*p)))
       {
          goto sign_char;
       }
@@ -1872,7 +1872,7 @@ sign_char:
       {
          goto decimals;
       }
-      if (!isdigit(*p))
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          return s*val;
       }
@@ -1887,7 +1887,7 @@ decimals:
    double div = 1.0;
    for(; p != end; ++p)
    {
-      if (!isdigit(*p)) 
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          break;
       }

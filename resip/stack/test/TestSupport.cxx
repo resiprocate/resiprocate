@@ -67,7 +67,7 @@ namespace resip
             if (o >= len) break;
             char ch = p[o];
 
-            if (isalnum(ch) || ispunct(ch) || ch == ' ')
+            if (isalnum(static_cast< unsigned char >(ch)) || ispunct(static_cast< unsigned char >(ch)) || ch == ' ')
             {
                cout << ' ' << (char)ch;
                fb(3);

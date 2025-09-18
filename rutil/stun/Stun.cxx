@@ -5,8 +5,9 @@
 #include "rutil/ResipAssert.h"
 #include <cstring>
 #include <iostream>
-#include <cstdlib>   
+#include <cstdlib>
 #include <errno.h>
+#include <ctype.h>
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -21,7 +22,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -1235,7 +1236,7 @@ stunParseHostName(char* peerName,
 
 #ifdef WIN32
    resip_assert(strlen(host) >= 1);
-   if (isdigit(host[0]))
+   if (isdigit(static_cast< unsigned char >(host[0])))
    {
       // assume it is a ip address 
 #if defined(_MSC_VER) && _MSC_VER >= 1800  /* removing compilation warning in VS2013+ */
