@@ -51,17 +51,27 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/resip/)
 
-option(ENABLE_LOG_REPOSITORY_DETAILS "Log repository revision and branch" TRUE)
+# check for .git existence
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
+    set(ENABLE_LOG_REPOSITORY_DETAILS_DEFAULT ON)
+else ()
+    set(ENABLE_LOG_REPOSITORY_DETAILS_DEFAULT OFF)
+endif ()
+option(ENABLE_LOG_REPOSITORY_DETAILS "Log repository revision and branch" ${ENABLE_LOG_REPOSITORY_DETAILS_DEFAULT})
 if(ENABLE_LOG_REPOSITORY_DETAILS)
    find_package(Git REQUIRED)
    execute_process(
       COMMAND ${GIT_EXECUTABLE} describe --match="" --always --abbrev=40 --dirty
       OUTPUT_VARIABLE RESIPROCATE_GIT_ID
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+   )
    execute_process(
       COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
       OUTPUT_VARIABLE RESIPROCATE_BRANCH_NAME
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+   )
 endif()
 
 # https://cmake.org/cmake/help/latest/module/FindThreads.html
