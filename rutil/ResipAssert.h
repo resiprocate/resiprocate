@@ -112,7 +112,7 @@
 /* Need to use resip_assert_not_null() due to the compiler warning
  *
  *        warning: the compiler can assume that the
- *        address of ‘rhs’ will never be NULL [-Waddress]
+ *        address of 'rhs' will never be NULL [-Waddress]
  *
  * Tried to suppress the warning with _Pragma("GCC diagnostic ignored...")
  * but that didn't make the warning go away.
