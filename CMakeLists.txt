@@ -914,6 +914,8 @@ endif()
 add_definitions(-DHAVE_CONFIG_H)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/)
 
 # Used to group targets together when CMake generates projects for IDEs
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
