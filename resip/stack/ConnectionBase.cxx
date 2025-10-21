@@ -71,16 +71,16 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
 #ifdef USE_SIGCOMP
    if (mCompression.isEnabled())
    {
-      DebugLog (<< "Compression enabled for connection: " << this);
+      DebugLog (<< "Compression enabled for connection, who: " << mWho << " " << this);
       mSigcompStack = new osc::Stack(mCompression.getStateHandler());
       mCompression.addCompressorsToStack(mSigcompStack);
    }
    else
    {
-      DebugLog (<< "Compression disabled for connection: " << this);
+      DebugLog (<< "Compression disabled for connection, who: " << mWho << " " << this);
    }
 #else
-   DebugLog (<< "No compression library available: " << this);
+   DebugLog (<< "No compression library available, who: " << mWho << " " << this);
 #endif
 
    if(mTransport) 
@@ -114,7 +114,7 @@ ConnectionBase::~ConnectionBase()
    delete mSigcompStack;
 #endif
 
-   DebugLog (<< "ConnectionBase::~ConnectionBase " << this);
+   DebugLog (<< "ConnectionBase::~ConnectionBase, who: " << mWho << " " << this);
 }
 
 void
@@ -143,7 +143,7 @@ ConnectionBase::getFlowKey() const
 bool
 ConnectionBase::preparseNewBytes(int bytesRead)
 {
-   DebugLog(<< "In State: " << connectionStates[mConnState]);
+   DebugLog(<< "In State: " << connectionStates[mConnState] << ", who: " << mWho << " " << this); 
    
   start:   // If there is an overhang come back here, effectively recursing
    
@@ -153,7 +153,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
       {
          if (bytesRead >= 4 && strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
          {
-            DebugLog(<< "Got incoming double-CRLF keepalive (aka ping).");
+            DebugLog(<< "Got incoming double-CRLF keepalive (aka ping), who: " << mWho << " " << this);
             mBufferPos += 4;
             bytesRead -= 4;
             onDoubleCRLF();
@@ -170,7 +170,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          }
          else if (bytesRead >= 2 && strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
          {
-            //DebugLog(<< "Got incoming CRLF keepalive response (aka pong).");
+            //DebugLog(<< "Got incoming CRLF keepalive response (aka pong), who: " << mWho << " " << this);
             mBufferPos += 2;
             bytesRead -= 2;
             onSingleCRLF();
@@ -189,7 +189,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          resip_assert(mTransport);
          mMessage = new SipMessage(&mTransport->getTuple());
          
-         DebugLog(<< "ConnectionBase::process setting source " << mWho);
+         DebugLog(<< "ConnectionBase::process setting source, who: " << mWho << " " << this);
          mMessage->setSource(mWho);
          mMessage->setTlsDomain(mTransport->tlsDomain());
 
@@ -217,7 +217,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          if (scanChunkResult == MsgHeaderScanner::scrError)
          {
             //.jacob. Not a terribly informative warning.
-            WarningLog(<< "Discarding preparse!");
+            WarningLog(<< "Discarding preparse, who: " << mWho << " " << this);
             delete [] mBuffer;
             mBuffer = 0;
             delete mMessage;
@@ -228,7 +228,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
 
          if (mMsgHeaderScanner.getHeaderCount() > 1024)
          {
-            WarningLog(<< "Discarding preparse; too many headers");
+            WarningLog(<< "Discarding preparse; too many headers, who: " << mWho << " " << this);
             delete [] mBuffer;
             mBuffer = 0;
             delete mMessage;
@@ -244,7 +244,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             scanChunkResult == MsgHeaderScanner::scrNextChunk)
          {
             WarningLog(<< "Discarding preparse; header-field-value (or "
-                        "header name) too long");
+                        "header name) too long, who: " << mWho << " " << this);
             delete [] mBuffer;
             mBuffer = 0;
             delete mMessage;
@@ -269,7 +269,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             }
             catch(std::bad_alloc&)
             {
-               ErrLog(<<"Failed to alloc a buffer during preparse!");
+               ErrLog(<<"Failed to alloc a buffer during preparse, who: " << mWho << " " << this);
                return false;
             }
             memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
@@ -298,7 +298,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                }
                catch(std::bad_alloc&)
                {
-                  ErrLog(<<"Failed to alloc a buffer during preparse!");
+                  ErrLog(<<"Failed to alloc a buffer during preparse, who: " << mWho << " " << this);
                   return false;
                }
                mBufferPos = 0;
@@ -319,7 +319,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                }
                catch(std::bad_alloc&)
                {
-                  ErrLog(<<"Failed to alloc a buffer during preparse!");
+                  ErrLog(<<"Failed to alloc a buffer during preparse, who: " << mWho << " " << this);
                   return false;
                }
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
@@ -341,7 +341,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             catch(resip::BaseException& e)  // Could be SipMessage::Exception or ParseException
             {
                WarningLog(<<"Malformed Content-Length in connection-based transport"
-                           ". Not much we can do to fix this.  " << e);
+                           ". Not much we can do to fix this, who: " << mWho << " " << this << ": " << e);
                // .bwc. Bad Content-Length. We are hosed.
                delete mMessage;
                mMessage = 0;
@@ -355,7 +355,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             if(contentLength > messageSizeMax || contentLength < 0)
             {
                WarningLog(<<"Content-Length in connection-based "
-                           "transport exceeds maximum " << messageSizeMax);
+                           "transport exceeds maximum " << messageSizeMax << ", who: " << mWho << " " << this); 
                delete mMessage;
                mMessage = 0;
                mBuffer = 0;
@@ -368,7 +368,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             if (numUnprocessedChars < contentLength)
             {
                // The message body is incomplete.
-               DebugLog(<< "partial body received");
+               DebugLog(<< "partial body received, who: " << mWho << " " << this);
                size_t newSize=resipMin(resipMax((size_t)numUnprocessedChars*3/2,
                                              (size_t)ConnectionBase::ChunkSize),
                                     contentLength);
@@ -405,7 +405,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   mBufferPos = 0;
                   mBufferSize = size;
                   
-                  DebugLog (<< "Extra bytes after message: " << overHang);
+                  DebugLog (<< "Extra bytes after message: " << overHang << ", who: " << mWho << " " << this);
                   //DebugLog (<< Data(mBuffer, overHang));
                   
                   bytesRead = overHang;
@@ -445,7 +445,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                else
                {
                   Transport::stampReceived(mMessage);
-                  DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+                  DebugLog(<< "##Connection, who: " << mWho << " " << this << " received: " << *mMessage);
                   resip_assert( mTransport );
                   mTransport->pushRxMsgUp(mMessage);
                   mMessage = 0;
@@ -470,7 +470,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          catch(resip::BaseException& e)  // Could be SipMessage::Exception or ParseException
          {
             WarningLog(<<"Malformed Content-Length in connection-based transport"
-                        ". Not much we can do to fix this. " << e);
+                        ". Not much we can do to fix this, who: " << mWho << " " << this << ": " << e);
             // .bwc. Bad Content-Length. We are hosed.
             delete [] mBuffer;
             mBuffer = 0;
@@ -505,7 +505,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                 mBufferPos = 0;
                 mBufferSize = size;
 
-                DebugLog(<< "Extra bytes after message: " << overHang);
+                DebugLog(<< "Extra bytes after message: " << overHang << ", who: " << mWho << " " << this);
                 //DebugLog(<< Data(mBuffer, overHang));
 
                 bytesRead = (int)overHang;
@@ -543,7 +543,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             }
             else
             {
-               DebugLog(<< "##ConnectionBase: " << *this << " received: " << *mMessage);
+               DebugLog(<< "##ConnectionBase, who: " << mWho << " " << this << " received: " << *mMessage);
 
                Transport::stampReceived(mMessage);
                resip_assert( mTransport );
@@ -568,7 +568,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             }
             catch(std::bad_alloc&)
             {
-               ErrLog(<<"Failed to alloc a buffer while receiving body!");
+               ErrLog(<<"Failed to alloc a buffer while receiving body, who: " << mWho << " " << this);
                return false;
             }
             memcpy(newBuffer, mBuffer, mBufferSize);
@@ -616,7 +616,7 @@ ConnectionBase::wsParseCookies(CookieList& cookieList, const SipMessage* message
 
          Cookie cookie(name, value);
          cookieList.push_back(cookie);
-         DebugLog(<< "Cookie: " << cookie);
+         DebugLog(<< "Cookie: " << cookie << ", who: " << mWho << " " << this);
 
          if(!pb.eof() && *(pb.position()) == Symbols::SEMI_COLON[0])
          {
@@ -640,7 +640,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
 
    if(mBufferPos + bytesRead > messageSizeMax)
    {
-      WarningLog(<<"Too many bytes received during WS handshake, dropping connection.  Max message size = " << messageSizeMax);
+      WarningLog(<<"Too many bytes received during WS handshake, dropping connection.  Max message size = " << messageSizeMax << ", who: " << mWho << " " << this);
       dropConnection = true;
       return false;
    }
@@ -683,14 +683,14 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
             }
             catch(ParseException& ex)
             {
-               WarningLog(<<"Failed to parse cookies into WsCookieContext: " << ex);
+               WarningLog(<<"Failed to parse cookies into WsCookieContext, who: " << mWho << " " << this << ": " << ex);
             }
          }
          std::shared_ptr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
          if(wsConnectionValidator &&
             (!wsCookieContext || !wsConnectionValidator->validateConnection(*wsCookieContext)))
          {
-            ErrLog(<<"WebSocket cookie validation failed, dropping connection");
+            ErrLog(<<"WebSocket cookie validation failed, dropping connection, who: " << mWho << " " << this);
             // FIXME: should send back a HTTP error code:
             //   400 if the cookie was not in the right syntax
             //   403 if the cookie was well formed but rejected
@@ -707,7 +707,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
 
       if (wsResponsePtr.get())
       {
-         DebugLog (<< "WebSocket upgrade accepted, cookie count = " << cookieList.size());
+         DebugLog (<< "WebSocket upgrade accepted, cookie count = " << cookieList.size() << ", who: " << mWho << " " << this);
 
          mOutstandingSends.push_back(new SendData(
                   who(),
@@ -718,7 +718,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
       }
       else
       {
-         ErrLog(<<"Failed to parse WebSocket initialization request");
+         ErrLog(<<"Failed to parse WebSocket initialization request, who: " << mWho << " " << this);
          delete mMessage;
          mMessage = 0;
          mBufferPos = 0;
@@ -728,7 +728,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
    }
    catch(resip::ParseException& e)
    {
-      ErrLog(<<"Cannot auth request is missing " << e);
+      ErrLog(<<"Cannot auth request is missing, who: " << mWho << " " << this << ": " << e);
       delete mMessage;
       mMessage = 0;
       mBufferPos = 0;
@@ -753,7 +753,7 @@ ConnectionBase::scanMsgHeader(int bytesRead)
    {
       if(scanResult != MsgHeaderScanner::scrNextChunk)
       {
-         StackLog(<<"Failed to parse message, more bytes needed");
+         StackLog(<<"Failed to parse message, more bytes needed, who: " << mWho << " " << this);
          StackLog(<< Data(mBuffer, bytesRead));
       }
       delete mMessage;
@@ -790,11 +790,11 @@ ConnectionBase::makeWsHandshakeResponse()
    }
    else if(isUsingDeprecatedSecWebSocketKeys())
    {
-      ErrLog(<<"WS client wants to use depracated protocol version, unsupported");
+      ErrLog(<<"WS client wants to use depracated protocol version, unsupported, who: " << mWho << " " << this);
    }
    else
    {
-      ErrLog(<<"No SecWebSocketKey header");
+      ErrLog(<<"No SecWebSocketKey header, who: " << mWho << " " << this);
    }
    return responsePtr;
 }
@@ -827,7 +827,7 @@ ConnectionBase::wsProcessData(int bytesRead)
       if(msg->size() == 4 && memcmp(msg->data(), "\r\n\r\n", 4) == 0)
       {
          // sending a keep alive reply now
-         StackLog(<<"got a SIP ping embedded in WebSocket frame, replying");
+         StackLog(<<"got a SIP ping embedded in WebSocket frame, replying, who: " << mWho << " " << this);
          onDoubleCRLF();
          msg = mWsFrameExtractor.processBytes(0, 0, dropConnection);
          continue;
@@ -868,7 +868,7 @@ ConnectionBase::wsProcessData(int bytesRead)
                                  &unprocessedCharPtr) !=
                     MsgHeaderScanner::scrEnd)
       {
-         StackLog(<<"Scanner rejecting WebSocket SIP message as unparsable, length = " << msg_len);
+         StackLog(<<"Scanner rejecting WebSocket SIP message as unparsable, length=" << msg_len << ", who: " << mWho << " " << this);
          StackLog(<< Data(sipBuffer, msg_len));
          delete mMessage;
          mMessage=0;
@@ -896,7 +896,7 @@ ConnectionBase::wsProcessData(int bytesRead)
       else
       {
          // Something wrong...
-         ErrLog(<< "We don't have a valid SIP message, maybe drop the connection?");
+         ErrLog(<< "We don't have a valid SIP message, maybe drop the connection? who: " << mWho << " " << this);
       }
       msg = mWsFrameExtractor.processBytes(0, 0, dropConnection);
    }
@@ -927,7 +927,7 @@ ConnectionBase::decompressNewBytes(int bytesRead)
   while ((bytesUncompressed = mSigcompStack->uncompressMessage(
                 *mSigcompFramer, uncompressed, 65536, sc)) > 0)
   {
-    DebugLog (<< "Uncompressed Connection-oriented message");
+    DebugLog (<< "Uncompressed Connection-oriented message, who: " << mWho << " " << this);
     mMessage = new SipMessage(&mTransport->getTuple());
 
     mMessage->setSource(mWho);
@@ -954,7 +954,7 @@ ConnectionBase::decompressNewBytes(int bytesRead)
                                     &unprocessedCharPtr) !=
         MsgHeaderScanner::scrEnd)
     {
-       StackLog(<<"Scanner rejecting compressed message as unparsable");
+       StackLog(<<"Scanner rejecting compressed message as unparsable, who: " << mWho << " " << this);
        StackLog(<< Data(sipBuffer, bytesUncompressed));
        delete mMessage;
        mMessage=0;
@@ -1054,7 +1054,7 @@ ConnectionBase::getWriteBuffer()
    {
       if (!mBuffer)
       {
-         DebugLog (<< "Creating buffer for " << *this);
+         DebugLog (<< "Creating buffer for, who: " << mWho << " " << this);
 
          mBuffer = MsgHeaderScanner::allocateBuffer(ConnectionBase::ChunkSize);
          mBufferSize = ConnectionBase::ChunkSize;
