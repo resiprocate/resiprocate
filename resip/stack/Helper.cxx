@@ -2275,12 +2275,12 @@ unique_ptr<SdpContents> Helper::getSdp(Contents* tree)
 
       if (sdp)
       {
-         DebugLog(<< "Got sdp" << endl);
+         //DebugLog(<< "Got sdp");
          return unique_ptr<SdpContents>(static_cast<SdpContents*>(sdp->clone()));
       }
    }
 
-   //DebugLog(<< "No sdp" << endl);
+   //DebugLog(<< "No sdp");
    return nullptr;
 }
 

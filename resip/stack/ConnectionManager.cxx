@@ -244,7 +244,8 @@ unsigned int
 ConnectionManager::gc(uint64_t relThreshold, unsigned int maxToRemove)
 {
    uint64_t curTimeMs = Timer::getTimeMs();
-   uint64_t threshold = curTimeMs - relThreshold;
+   uint64_t threshold = curTimeMs > relThreshold ? curTimeMs - relThreshold : 0;  // Ensure we don't underflow
+
    DebugLog(<< "recycling connections not used in last " << relThreshold/1000.0 << " seconds");
 
    // Look through non-flow-timer connections and close those using the passed in relThreshold
