@@ -20,7 +20,10 @@
 // The ssrc_t typedef from MprEncode.h collides with one from libSrtp - we don't use it in this file, so just undefine it to avoid the compilation error
 #undef ssrc_t  
 #include <mp/MprEncode.h>
-#include <mp/MpStreamPlayer.h>
+#define DISABLE_STREAM_PLAYER
+#ifndef DISABLE_STREAM_PLAYER
+  #include <mp/MpStreamPlayer.h>
+#endif
 #ifndef SIPX_NO_RECORD
 #include <utl/CircularBufferPtr.h>
 #endif
@@ -71,8 +74,10 @@ SipXMediaResourceParticipant::~SipXMediaResourceParticipant()
    // Destroy stream player (if created)
    if(mStreamPlayer)
    {
+#ifndef DISABLE_STREAM_PLAYER
       mStreamPlayer->removeListener(this);
       mStreamPlayer->destroy();
+#endif
    }
 
    // Note:  Ideally this call would exist in the Participant Base class - but this call requires 
@@ -309,6 +314,7 @@ SipXMediaResourceParticipant::startResourceImpl()
    {
       int flags = STREAM_SOUND_LOCAL | STREAM_SOUND_REMOTE;
 
+#ifndef DISABLE_STREAM_PLAYER
       OsStatus status = getMediaInterface()->getInterface()->createPlayer(&mStreamPlayer, Data::from(getMediaUrl()).c_str(), flags);
       if(status == OS_SUCCESS)
       {
@@ -327,6 +333,7 @@ SipXMediaResourceParticipant::startResourceImpl()
       {
          WarningLog(<< "SipXMediaResourceParticipant::startResource error calling createPlayer: " << status);
       }
+#endif
    }
    break;
 
@@ -539,6 +546,8 @@ SipXMediaResourceParticipant::stopResource()
       case Https:
       {
          setRepeat(false);  // Required so that player will not just repeat on stopped event
+
+#ifndef DISABLE_STREAM_PLAYER
          OsStatus status = mStreamPlayer->stop();
          if (status != OS_SUCCESS)
          {
@@ -548,6 +557,7 @@ SipXMediaResourceParticipant::stopResource()
          {
             okToDeleteNow = false;  // Wait for play finished event to come in
          }
+#endif
       }
       break;
       case Record:
@@ -611,6 +621,8 @@ void
 SipXMediaResourceParticipant::playerRealized(MpPlayerEvent& event)
 {
    InfoLog(<< "SipXMediaResourceParticipant::playerRealized: handle=" << mHandle);
+
+#ifndef DISABLE_STREAM_PLAYER
    if(isPrefetch())
    {
       OsStatus status = mStreamPlayer->prefetch(FALSE);
@@ -631,12 +643,15 @@ SipXMediaResourceParticipant::playerRealized(MpPlayerEvent& event)
          getConversationManager().post(cmd);
       }
    }
+#endif
 }
 
 void 
 SipXMediaResourceParticipant::playerPrefetched(MpPlayerEvent& event)
 {
    InfoLog(<< "SipXMediaResourceParticipant::playerPrefetched: handle=" << mHandle);
+
+#ifndef DISABLE_STREAM_PLAYER
    OsStatus status = mStreamPlayer->play(FALSE/*block?*/);
    if(status != OS_SUCCESS)
    {
@@ -644,6 +659,7 @@ SipXMediaResourceParticipant::playerPrefetched(MpPlayerEvent& event)
        MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(getConversationManager(), mHandle);
        getConversationManager().post(cmd);
    }
+#endif
 }
 
 void 
@@ -665,6 +681,8 @@ SipXMediaResourceParticipant::playerStopped(MpPlayerEvent& event)
    // We get this event when playing is completed
    if(isRepeat())
    {
+
+#ifndef DISABLE_STREAM_PLAYER
       OsStatus status = mStreamPlayer->rewind(FALSE/*block?*/);   // Generate playerPrefetched event
       if(status != OS_SUCCESS)
       {
@@ -672,6 +690,7 @@ SipXMediaResourceParticipant::playerStopped(MpPlayerEvent& event)
          MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(getConversationManager(), mHandle);
          getConversationManager().post(cmd);
       }
+#endif
    }
    else
    {
