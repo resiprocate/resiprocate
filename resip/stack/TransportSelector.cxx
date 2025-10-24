@@ -983,10 +983,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 {
    resip_assert(msg);
 
-   if(msg->mIsDecorated)
-   {
-      msg->rollbackOutboundDecorators();
-   }
+   // Rollback outbound decorators if needed
+   msg->rollbackOutboundDecorators();
 
    try
    {
@@ -1362,7 +1360,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          resip_assert(target.mTransportKey == transport->getKey());
 
          // Call back anyone who wants to perform outbound decoration
-         msg->callOutboundDecorators(source, target,remoteSigcompId);
+         msg->callOutboundDecorators(source, target, remoteSigcompId);
 
          for(auto& handler : transport->getSipMessageLoggingHandlers())
          {
@@ -1370,9 +1368,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          }
 
          std::unique_ptr<SendData> send(new SendData(target,
-                                                   resip::Data::Empty,
-                                                   msg->getTransactionId(),
-                                                   remoteSigcompId));
+                                                     resip::Data::Empty,
+                                                     msg->getTransactionId(),
+                                                     remoteSigcompId));
 
          send->data.reserve(mAvgBufferSize + mAvgBufferSize/4);
 

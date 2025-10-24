@@ -30,7 +30,7 @@ bool SipMessage::checkContentLength=true;
 
 SipMessage::SipMessage(const Tuple *receivedTransportTuple)
    : mIsDecorated(false),
-     mIsBadAck200(false),     
+     mIsBadAck200(false),
      mIsExternal(receivedTransportTuple != 0),  // may be modified later by setFromTU or setFromExternal
      mHeaders(StlPoolAllocator<HeaderFieldValueList*, PoolBase >(&mPool)),
 #ifndef __SUNPRO_CC
@@ -1740,27 +1740,25 @@ SipMessage::setSecurityAttributes(std::unique_ptr<SecurityAttributes> sec) noexc
 }
 
 void
-SipMessage::callOutboundDecorators(const Tuple &src, 
-                                    const Tuple &dest,
-                                    const Data& sigcompId)
+SipMessage::callOutboundDecorators(const Tuple& src,
+                                   const Tuple& dest,
+                                   const Data& sigcompId)
 {
-   if(mIsDecorated)
-   {
-      rollbackOutboundDecorators();
-   }
+   rollbackOutboundDecorators();
 
-  std::vector<MessageDecorator*>::iterator i;
-  for (i = mOutboundDecorators.begin();
-       i != mOutboundDecorators.end(); i++)
-  {
-    (*i)->decorateMessage(*this, src, dest, sigcompId);
-  }
-  mIsDecorated = true;
+   std::vector<MessageDecorator*>::iterator i;
+   for (i = mOutboundDecorators.begin(); i != mOutboundDecorators.end(); i++)
+   {
+      (*i)->decorateMessage(*this, src, dest, sigcompId);
+   }
+   mIsDecorated = true;
 }
 
 void 
 SipMessage::clearOutboundDecorators()
 {
+   rollbackOutboundDecorators();
+
    while(!mOutboundDecorators.empty())
    {
       delete mOutboundDecorators.back();
@@ -1771,12 +1769,15 @@ SipMessage::clearOutboundDecorators()
 void 
 SipMessage::rollbackOutboundDecorators()
 {
-   std::vector<MessageDecorator*>::reverse_iterator r;
-   for(r=mOutboundDecorators.rbegin(); r!=mOutboundDecorators.rend(); ++r)
+   if (mIsDecorated)
    {
-      (*r)->rollbackMessage(*this);
+      std::vector<MessageDecorator*>::reverse_iterator r;
+      for (r = mOutboundDecorators.rbegin(); r != mOutboundDecorators.rend(); ++r)
+      {
+         (*r)->rollbackMessage(*this);
+      }
+      mIsDecorated = false;
    }
-   mIsDecorated = false;
 }
 
 void 
