@@ -61,8 +61,6 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-int BaseSecurity::resip_connection_ssl_ex_data_idx = 0;  // Override as needed
-
 static const Data PEM(".pem");
 
 static const Data rootCert("root_cert_");
@@ -98,6 +96,13 @@ getAor(const Data& filename, const  Security::PEMType &pemType )
    return filename.substr(prefix.size(), filename.size() - prefix.size() - PEM.size());
 }
 
+// Use static method and idx so it initializes on first call and after OpenSSL has performed it's initialization
+int BaseSecurity::getResipConnectionExDataIdx()
+{
+   static int idx = SSL_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
+   return idx;
+}
+
 extern "C"
 {
 
@@ -106,32 +111,45 @@ verifyCallback(int preverifyOk, X509_STORE_CTX* storeCtx)
 {
    if (!preverifyOk)
    {
-      char subjectNameBuf[257];
-      X509* cert = X509_STORE_CTX_get_current_cert(storeCtx);  // Doesn't appear to require X509_free call
+      char subjectNameBuf[256] = {0};
+      X509* cert = X509_STORE_CTX_get_current_cert(storeCtx);  // Doesn't require X509_free call
       int errorCode = X509_STORE_CTX_get_error(storeCtx);
       // This is a nonnegative integer representing where in the certificate chain the error occurred. 
       // If it is zero it occurred in the end entity certificate, one if it is the certificate which 
       // signed the end entity certificate and so on.
       int errorDepth = X509_STORE_CTX_get_error_depth(storeCtx);
 
-      if (NULL != cert)
+      if (cert)
       {
-         X509_NAME_oneline(X509_get_subject_name(cert), subjectNameBuf, 256);
-      }
-      else
-      {
-         subjectNameBuf[0] = '\0';
+         // Use modern, safe subject name formatting
+         BIO* bio = BIO_new(BIO_s_mem());
+         if (bio)
+         {
+            X509_NAME* subjectName = X509_get_subject_name(cert);
+            if (subjectName)
+            {
+               // RFC 2253 is the preferred format (readable and reversible)
+               X509_NAME_print_ex(bio, subjectName, 0, XN_FLAG_RFC2253);
+               BIO_gets(bio, subjectNameBuf, sizeof(subjectNameBuf));
+            }
+            BIO_free(bio);
+         }
       }
 
       // Retrieve the associated resip transport connection object (if available)
       SSL* ssl = (SSL*)X509_STORE_CTX_get_ex_data(storeCtx, SSL_get_ex_data_X509_STORE_CTX_idx());
-      ConnectionBase* connection = (ConnectionBase*)SSL_get_ex_data(ssl, BaseSecurity::resip_connection_ssl_ex_data_idx);
+      ConnectionBase* connection = nullptr;
+      if (ssl)
+      {
+         connection = (ConnectionBase*)SSL_get_ex_data(ssl, BaseSecurity::getResipConnectionExDataIdx());
+      }
 
       Data errorString;
       {
          DataStream ds(errorString);
          ds << "'" << X509_verify_cert_error_string(errorCode) << "', errorDepth=" << errorDepth << ", subjectName=[" << subjectNameBuf << "]";
       }
+
       if (connection)
       {
          connection->addAdditionalFailureString(errorString);
@@ -139,7 +157,7 @@ verifyCallback(int preverifyOk, X509_STORE_CTX* storeCtx)
       }
       else
       {
-         ErrLog(<< errorString << "Error when verifying peer's chain of certificates: error=" << errorString);
+         ErrLog(<< "Error when verifying peer's chain of certificates: error=" << errorString);
       }
    }
 
@@ -167,7 +185,6 @@ BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT
  */
 long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
 long BaseSecurity::OpenSSLCTXClearOptions = 0;
-
 
 Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase, const Data& dHParamsFilename) :
    BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase, dHParamsFilename)

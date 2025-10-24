@@ -104,7 +104,7 @@ TlsConnection::TlsConnection(Transport* transport, const Tuple& tuple,
 
    SSL_set_bio(mSsl, mBio, mBio);
    // Set application/ex data on context so that this Connection can be queried in certificate validation callback
-   SSL_set_ex_data(mSsl, BaseSecurity::resip_connection_ssl_ex_data_idx, this);
+   SSL_set_ex_data(mSsl, BaseSecurity::getResipConnectionExDataIdx(), this);
 
    mTlsState = Initial;
    mHandShakeWantsRead = false;

@@ -43,7 +43,7 @@ class SipMessage;
 class BaseSecurity
 {
    public:
-      static int resip_connection_ssl_ex_data_idx;
+      static int getResipConnectionExDataIdx();
 
       class Exception final : public BaseException
       {
