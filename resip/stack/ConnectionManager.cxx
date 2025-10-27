@@ -273,7 +273,8 @@ ConnectionManager::gc(uint64_t relThreshold, unsigned int maxToRemove)
    // value + the configured grace period as a threshold
    if(mFlowTimerLRUHead->begin() != mFlowTimerLRUHead->end())
    {
-      threshold = curTimeMs - ((InteropHelper::getFlowTimerSeconds() + InteropHelper::getFlowTimerGracePeriodSeconds()) * 1000);
+      uint64_t flowTimerPeriodMs = (InteropHelper::getFlowTimerSeconds() + InteropHelper::getFlowTimerGracePeriodSeconds()) * 1000;
+      threshold = curTimeMs > flowTimerPeriodMs ? curTimeMs - flowTimerPeriodMs : 0;
       for (FlowTimerLruList::iterator i2 = mFlowTimerLRUHead->begin();
          i2 != mFlowTimerLRUHead->end() &&
          (maxToRemove == 0 || numRemoved != maxToRemove);)
@@ -347,16 +348,16 @@ ConnectionManager::gcWithTarget(unsigned int target)
       }
       else
       {
-         if(i2 == mFlowTimerLRUHead->end() ||
+         if (i2 == mFlowTimerLRUHead->end() ||
             (*i)->whenLastUsed() < (*i2)->whenLastUsed())
          {
-                  discard = *i;
-                  ++i;
+            discard = *i;
+            ++i;
          }
          else
          {
-                  discard = *i2;
-                  ++i2;
+            discard = *i2;
+            ++i2;
          }
       }
       resip_assert(discard);
