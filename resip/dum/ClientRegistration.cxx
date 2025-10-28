@@ -680,7 +680,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
             }
          }
-         
+
          mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
          mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
 
@@ -689,6 +689,12 @@ ClientRegistration::dispatch(const SipMessage& msg)
          if(retryInterval > 0)
          {
             InfoLog( << "Registration error " << code << " for " << msg.header(h_To) << ", retrying in " << retryInterval << " seconds.");
+            return;
+         }
+
+         if (mState == Removing && !mEndWhenDone && (code == 401 || code == 407))
+         {
+            // In this case; we attempted to remove the bindings and met an authentication challenge - the bindings should still exist.
             return;
          }
 
