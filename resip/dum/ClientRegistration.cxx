@@ -695,6 +695,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          if (mState == Removing && !mEndWhenDone && (code == 401 || code == 407))
          {
             // In this case; we attempted to remove the bindings and met an authentication challenge - the bindings should still exist.
+            mState = Registered;
             return;
          }
 
