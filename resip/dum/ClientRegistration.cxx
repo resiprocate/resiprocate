@@ -156,6 +156,7 @@ ClientRegistration::removeBinding(const NameAddr& contact)
             send(next);
          }
 
+         mLastMyContacts = mMyContacts;
          mMyContacts.erase(i);
          return;
       }
@@ -176,8 +177,10 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 
    auto next = tryModification(Removing);
 
-   mAllContacts.clear();
-   mMyContacts.clear();
+   mLastAllContacts = std::move(mAllContacts);
+   mLastMyContacts = std::move(mMyContacts);
+   mAllContacts = {};
+   mMyContacts = {};
 
    NameAddr all;
    all.setAllContacts();
@@ -213,7 +216,8 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
    auto next = tryModification(Removing);
 
    next->header(h_Contacts) = mMyContacts;
-   mMyContacts.clear();
+   mLastMyContacts = std::move(mMyContacts);
+   mMyContacts = {};
 
    NameAddrs& myContacts = next->header(h_Contacts);
 
@@ -695,6 +699,17 @@ ClientRegistration::dispatch(const SipMessage& msg)
          if (mState == Removing && !mEndWhenDone && (code == 401 || code == 407))
          {
             // In this case; we attempted to remove the bindings and met an authentication challenge - the bindings should still exist.
+            if (!std::empty(mLastAllContacts))
+            {
+               mAllContacts = std::move(mLastAllContacts);
+               mLastAllContacts = {};
+            }
+            if (!std::empty(mLastMyContacts))
+            {
+               mMyContacts = std::move(mLastMyContacts);
+               mLastMyContacts = {};
+            }
+
             mState = Registered;
             return;
          }
