@@ -187,7 +187,7 @@ private:
       // argument for this constructor BE CAREFUL that you are passing 'this' and
       // not 'shared_from_this()' to the bind(..) -- otherwise you will defeat the
       // purpose of this class holding a weak_ptr
-      weak_bind<P,F>(std::weak_ptr<P> parent, std::function<F> func)
+      weak_bind(std::weak_ptr<P> parent, std::function<F> func)
          : mParent(std::move(parent)), mFunction(std::move(func))
       {
       }
