@@ -29,17 +29,17 @@ class Barrier {
    protected:
       Condition mCond;
       Mutex mMutex;
-      volatile int mCurId;
-      volatile int mHaveCnt;
+      int mCurId;
+      int mHaveCnt;
       int mWantCnt;
 
    public:
-      static volatile int sPreWaitCnt;
-      static volatile int sPostWaitCnt;
+      static int sPreWaitCnt;
+      static int sPostWaitCnt;
 };
 
-volatile int Barrier::sPreWaitCnt = 0;
-volatile int Barrier::sPostWaitCnt = 0;
+int Barrier::sPreWaitCnt = 0;
+int Barrier::sPostWaitCnt = 0;
 
 void
 Barrier::sync(int id, bool isMaster)
