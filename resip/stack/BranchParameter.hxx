@@ -67,7 +67,7 @@ class BranchParameter : public Parameter
 
       BranchParameter(const BranchParameter& other);
       BranchParameter& operator=(const BranchParameter& other);
-      bool operator==(const BranchParameter& other);
+      bool operator==(const BranchParameter& other) const;
 
       Type& value() {return *this;}
 
