@@ -1067,13 +1067,13 @@ void DialogUsageManager::outgoingProcess(std::unique_ptr<Message> message)
       
       DumFeatureChain::ProcessingResult res = it->second->process(message.get());
       
-      if (res & DumFeatureChain::ChainDoneBit)
+      if (static_cast<unsigned int>(res) & DumFeatureChain::ChainDoneBit)
       {
          delete it->second;
          mOutgoingFeatureChainMap.erase(it);
       }
 
-      if (res & DumFeatureChain::EventTakenBit)
+      if (static_cast<unsigned int>(res) & DumFeatureChain::EventTakenBit)
       {
          message.release();
          return;
@@ -1608,14 +1608,14 @@ DialogUsageManager::incomingProcess(std::unique_ptr<Message> msg)
       
       DumFeatureChain::ProcessingResult res = it->second->process(msg.get());
       
-      if (res & DumFeatureChain::ChainDoneBit)
+      if (static_cast<unsigned int>(res) & DumFeatureChain::ChainDoneBit)
       {
          delete it->second;
          mIncomingFeatureChainMap.erase(it);
          //DebugLog(<< "feature chain deleted" << endl);
       }
  
-      if (res & DumFeatureChain::EventTakenBit)
+      if (static_cast<unsigned int>(res) & DumFeatureChain::EventTakenBit)
       {
          msg.release();
          //DebugLog(<< "event taken");

@@ -19,7 +19,7 @@ class HeaderFieldValue;
 class Mime : public ParserCategory
 {
    public:
-      enum {commaHandling = CommasAllowedOutputCommas};
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputCommas;
 
       Mime();
       Mime(const Data& type, const Data& subType);

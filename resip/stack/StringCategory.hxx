@@ -17,7 +17,7 @@ namespace resip
 class StringCategory : public ParserCategory
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      static constexpr CommaHandlingMode commaHandling = NoCommaTokenizing;
 
       StringCategory();
       explicit StringCategory(const Data& value);

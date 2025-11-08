@@ -17,7 +17,7 @@ namespace resip
 class Auth : public ParserCategory
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      static constexpr CommaHandlingMode commaHandling = NoCommaTokenizing;
 
       Auth();
       Auth(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool=0);

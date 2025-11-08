@@ -92,7 +92,7 @@ class ParserCategory : public LazyParser
       // CommasAllowedOutputCommas: multi headers can be received with commas
       //                            and will always output with commas when
       //                            parsed.  
-      enum {NoCommaTokenizing = 0, CommasAllowedOutputMulti = 1, CommasAllowedOutputCommas = 3};
+      enum CommaHandlingMode {NoCommaTokenizing = 0, CommasAllowedOutputMulti = 1, CommasAllowedOutputCommas = 3};
 
       /**
          @internal
