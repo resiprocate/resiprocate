@@ -17,7 +17,7 @@ namespace resip
 class WarningCategory : public ParserCategory
 {
    public:
-      enum {commaHandling = CommasAllowedOutputCommas};
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputCommas;
 
       WarningCategory();
       WarningCategory(const HeaderFieldValue& hfv, 

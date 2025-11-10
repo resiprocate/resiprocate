@@ -16,7 +16,7 @@ namespace resip
 class GenericUri : public ParserCategory
 {
    public:
-      enum {commaHandling = CommasAllowedOutputMulti};
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputMulti;
 
       GenericUri() : ParserCategory() {}
       GenericUri(const HeaderFieldValue& hfv, 

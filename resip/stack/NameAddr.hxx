@@ -18,7 +18,7 @@ namespace resip
 class NameAddr : public ParserCategory
 {
    public:
-      enum {commaHandling = CommasAllowedOutputMulti};
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputMulti;
 
       NameAddr();
       NameAddr(const HeaderFieldValue& hfv, 

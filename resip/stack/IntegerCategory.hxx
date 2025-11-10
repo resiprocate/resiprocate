@@ -15,7 +15,7 @@ namespace resip
 class IntegerCategory : public ParserCategory
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      static constexpr CommaHandlingMode commaHandling = NoCommaTokenizing;
 
       IntegerCategory();
       IntegerCategory(const HeaderFieldValue& hfv, 
