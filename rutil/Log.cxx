@@ -1,6 +1,7 @@
 #include "rutil/Socket.hxx"
 
 #include "rutil/ResipAssert.h"
+#include <atomic>
 #include <chrono>
 #include <iomanip>
 #include <iostream>
@@ -54,7 +55,7 @@ unsigned int Log::MaxLineCount = RESIP_LOG_MAX_LINE_COUNT_DEFAULT; // no limit b
 unsigned int Log::MaxByteCount = RESIP_LOG_MAX_BYTE_COUNT_DEFAULT; // no limit by default
 bool Log::KeepAllLogFiles = false;  // do not keep all log files by default
 
-volatile short Log::touchCount = 0;
+std::atomic<unsigned int> Log::touchCount{0};
 
 
 /// DEPRECATED! Left for backward compatibility - use localLoggers instead
@@ -823,7 +824,7 @@ Log::getThreadSetting()
    {
       return 0;
    }
-   if (Log::touchCount > 0)
+   if (Log::touchCount.load(std::memory_order_relaxed) > 0)
    {
       Lock lock(_mutex);
       ThreadIf::Id thread = ThreadIf::selfId();
@@ -833,8 +834,8 @@ Log::getThreadSetting()
       {
          setting->mLevel = res->second.first.mLevel;
          res->second.second = false;
-         touchCount--;
-//         cerr << "**Log::getThreadSetting:touchCount: " << Log::touchCount << "**" << endl;
+         touchCount.fetch_sub(1, std::memory_order_relaxed);
+//         cerr << "**Log::getThreadSetting:touchCount: " << Log::touchCount.load(std::memory_order_relaxed) << "**" << endl;
 
          //cerr << "touchcount decremented" << endl;
       }
@@ -870,7 +871,7 @@ Log::setThreadSetting(ThreadSetting info)
    {
       if (Log::mThreadToLevel[thread].second == true)
       {
-         touchCount--;
+         touchCount.fetch_sub(1, std::memory_order_relaxed);
       }
    }
    Log::mThreadToLevel[thread].first = info;
@@ -893,9 +894,9 @@ Log::setServiceLevel(int service, Level l)
       Log::mThreadToLevel[*i].first.mLevel = l;
       Log::mThreadToLevel[*i].second = true;
    }
-   Log::touchCount += (short)threads.size();
+   Log::touchCount.fetch_add((unsigned int)threads.size(), std::memory_order_relaxed);
 #endif
-//   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount << "**" << endl;
+//   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount.load(std::memory_order_relaxed) << "**" << endl;
 }
 
 Log::LocalLoggerId Log::localLoggerCreate(Log::Type type,
