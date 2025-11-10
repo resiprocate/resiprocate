@@ -159,7 +159,7 @@ BranchParameter::operator=(const BranchParameter& other)
 }
 
 bool
-BranchParameter::operator==(const BranchParameter& other)
+BranchParameter::operator==(const BranchParameter& other) const
 {
    if (mIsMyBranch != other.mIsMyBranch ||
        mHasMagicCookie != other.mHasMagicCookie ||
