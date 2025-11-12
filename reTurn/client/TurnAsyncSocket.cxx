@@ -5,6 +5,7 @@
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
 
+#include <utility>
 #include <functional>
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
@@ -94,34 +95,33 @@ TurnAsyncSocket::doRequestSharedSecret()
 void
 TurnAsyncSocket::setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetUsernameAndPassword(new Data(username), new Data(password), shortTermAuth); }));
+   Data username_copy{username}, password_copy{password};
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this]() mutable { doSetUsernameAndPassword(std::move(username_copy), std::move(password_copy), shortTermAuth); }));
 }
 
 void 
-TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password, bool shortTermAuth)
+TurnAsyncSocket::doSetUsernameAndPassword(Data&& username, Data&& password, bool shortTermAuth)
 {
-   mUsername = *username;
-   mPassword = *password;
+   mUsername = std::move(username);
    if(shortTermAuth)
    {
       // If we are using short term auth, then use short term password as HMAC key
-      mHmacKey = *password;
+      mHmacKey = password;
    }
-   delete username;
-   delete password;
+   mPassword = std::move(password);
 }
 
 void 
 TurnAsyncSocket::setLocalPassword(const char* password)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetLocalPassword(new Data(password)); }));
+   Data password_copy{password};
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this]() mutable { doSetLocalPassword(std::move(password_copy)); }));
 }
 
 void 
-TurnAsyncSocket::doSetLocalPassword(Data* password)
+TurnAsyncSocket::doSetLocalPassword(Data&& password)
 {
-   mLocalHmacKey = *password;
-   delete password;
+   mLocalHmacKey = std::move(password);
 }
 
 void 
@@ -151,7 +151,7 @@ void
 TurnAsyncSocket::connectivityCheck(const StunTuple& targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
 {
    resip_assert(setIceControlling || setIceControlled);
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doConnectivityCheck(new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doConnectivityCheck(new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms); }));
 }
 
 void
@@ -182,7 +182,7 @@ TurnAsyncSocket::createAllocation(unsigned int lifetimeSecs,
                                   uint64_t reservationToken,
                                   StunTuple::TransportType requestedTransportType)
 {
-    asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doCreateAllocation(lifetimeSecs, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
+    asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doCreateAllocation(lifetimeSecs, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
 }
 
 void
@@ -273,7 +273,7 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetimeSecs,
 void 
 TurnAsyncSocket::refreshAllocation(unsigned int lifetimeSecs)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doRefreshAllocation(lifetimeSecs); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doRefreshAllocation(lifetimeSecs); }));
 }
 
 void 
@@ -323,7 +323,7 @@ TurnAsyncSocket::doDestroyAllocation()
 void
 TurnAsyncSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetActiveDestination(address, port); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doSetActiveDestination(address, port); }));
 }
 
 void
@@ -1085,13 +1085,13 @@ TurnAsyncSocket::sendTo(const asio::ip::address& address, unsigned short port, c
 void 
 TurnAsyncSocket::sendFramed(const std::shared_ptr<DataBuffer>& data)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSendFramed(data); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doSendFramed(data); }));
 }
 
 void 
 TurnAsyncSocket::sendToFramed(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSendToFramed(address, port, data); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doSendToFramed(address, port, data); }));
 }
 
 void 
@@ -1171,14 +1171,14 @@ TurnAsyncSocket::sendToRemotePeer(RemotePeer& remotePeer, const std::shared_ptr<
 void
 TurnAsyncSocket::setSoftware(const char* software)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetSoftware(new Data(software)); }));
+   Data software_copy{software};
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this]() mutable { doSetSoftware(std::move(software_copy)); }));
 }
 
 void
-TurnAsyncSocket::doSetSoftware(Data* software)
+TurnAsyncSocket::doSetSoftware(Data&& software)
 {
-   mSoftware = *software;
-   delete software;
+   mSoftware = std::move(software);
 
    const uint32_t unpaddedSize = (unsigned int)mSoftware.size();
    if(unpaddedSize > 0)

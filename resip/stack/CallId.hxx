@@ -17,7 +17,7 @@ namespace resip
 class CallID : public ParserCategory
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      static constexpr CommaHandlingMode commaHandling = NoCommaTokenizing;
 
       CallID();
       CallID(const HeaderFieldValue& hfv, 

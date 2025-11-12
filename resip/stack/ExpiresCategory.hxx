@@ -19,7 +19,7 @@ namespace resip
 class ExpiresCategory : public ParserCategory
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      static constexpr CommaHandlingMode commaHandling = NoCommaTokenizing;
 
       ExpiresCategory();
       ExpiresCategory(const HeaderFieldValue& hfv, 
