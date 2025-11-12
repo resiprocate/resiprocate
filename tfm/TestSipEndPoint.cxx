@@ -9,7 +9,7 @@
 #include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/CpimContents.hxx" // vk
-#include "resip/stack/Pidf.hxx" // vk
+#include "resip/stack/GenericPidfContents.hxx" // vk
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipFrag.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -1767,7 +1767,7 @@ TestSipEndPoint::publish(const Uri& url, const Token& eventPackage,
    Data* text = new Data(publishBody);
    HeaderFieldValue hfv(text->data(), text->size());
    Mime type("application", "pidf+xml");
-   auto pc = std::make_shared<Pidf>(hfv, type);
+   auto pc = std::make_shared<GenericPidfContents>(hfv, type);
    /*
    */
 
@@ -1787,7 +1787,7 @@ TestSipEndPoint::publish(const resip::NameAddr& target, const resip::Data& text)
 {
    HeaderFieldValue hfv(text.data(), text.size());
    Mime type("application", "pidf+xml");
-   auto pc = std::make_shared<Pidf>(hfv, type);
+   auto pc = std::make_shared<GenericPidfContents>(hfv, type);
 
    return new Publish(this, target.uri(), resip::PUBLISH, pc);
 }

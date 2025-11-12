@@ -18,7 +18,7 @@
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/OctetContents.hxx"
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "resip/stack/Pkcs7Contents.hxx"
 #include "resip/stack/Pkcs8Contents.hxx"
 #include "resip/stack/PlainContents.hxx"
@@ -251,19 +251,6 @@ static void fuzzOctetContents(const resip::HeaderFieldValue& hfv)
     }
 }
 
-static void fuzzPidf(const resip::HeaderFieldValue& hfv)
-{
-    static const resip::Mime type("application", "pidf+xml");
-    resip::Pidf payload(hfv, type);
-    try
-    {
-        payload.checkParsed();
-    }
-    catch (const resip::ParseException&)
-    {
-    }
-}
-
 static void fuzzPkcs7Contents(const resip::HeaderFieldValue& hfv)
 {
     static const resip::Mime type("application", "pkcs7-mime");
@@ -446,7 +433,6 @@ extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data,
   // leaks or hogs memory
   //fuzzDialogInfoContents(hfv);
   //fuzzGenericPidfContents(hfv);
-  //fuzzPidf(hfv); return 0;
 
   return 0;
 }

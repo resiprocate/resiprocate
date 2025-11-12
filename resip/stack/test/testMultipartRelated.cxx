@@ -5,7 +5,7 @@
 #include "resip/stack/MultipartRelatedContents.hxx"
 #include "resip/stack/GenericContents.hxx"
 #include "resip/stack/Rlmi.hxx"
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "resip/stack/Pkcs7Contents.hxx"
 #include "resip/stack/MultipartSignedContents.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -31,13 +31,13 @@ traverseMulti(const MultipartMixedContents* mp,
            i != mp->parts().end(); ++i)
       {
          GenericContents* generic;
-         Pidf* pidf;
+         GenericPidfContents* pidf;
          Rlmi* rlmi;
          MultipartSignedContents* mps;
          MultipartMixedContents* mpm;
          Pkcs7Contents* pkcs7;
 
-         if ((pidf = dynamic_cast<Pidf*>(*i)))
+         if ((pidf = dynamic_cast<GenericPidfContents*>(*i)))
          {
             indent(level);
             cerr << "discovered a Pidf" << endl;

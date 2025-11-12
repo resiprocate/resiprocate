@@ -2,7 +2,7 @@
 #define TFM_NotifyContents_hxx
 
 #include <vector>
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 
 #include <memory>
 
@@ -17,13 +17,13 @@ class NotifyContents
 {
    public:
       explicit NotifyContents(int count);
-      explicit NotifyContents(const std::vector<resip::Pidf::Tuple>& tuples);
-      explicit NotifyContents(resip::Pidf::Tuple tuples[]);
+      explicit NotifyContents(const std::vector<resip::GenericPidfContents::SimplePresenceInfo>& tuples);
+      explicit NotifyContents(resip::GenericPidfContents::SimplePresenceInfo tuples[]);
       bool operator()(std::shared_ptr<Event> event);
       bool operator()(std::shared_ptr<resip::SipMessage> msg);
 
    private:
-      std::vector<resip::Pidf::Tuple> mTuples;
+      std::list<resip::GenericPidfContents::SimplePresenceInfo> mTuples;
       int mCount;
 };
 

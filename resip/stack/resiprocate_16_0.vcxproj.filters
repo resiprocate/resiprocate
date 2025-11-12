@@ -76,7 +76,6 @@
     <ClCompile Include="ParserCategories.cxx" />
     <ClCompile Include="ParserCategory.cxx" />
     <ClCompile Include="ParserContainerBase.cxx" />
-    <ClCompile Include="Pidf.cxx" />
     <ClCompile Include="Pkcs7Contents.cxx" />
     <ClCompile Include="Pkcs8Contents.cxx" />
     <ClCompile Include="PlainContents.cxx" />
@@ -244,7 +243,6 @@
     <ClInclude Include="ParserCategory.hxx" />
     <ClInclude Include="ParserContainer.hxx" />
     <ClInclude Include="ParserContainerBase.hxx" />
-    <ClInclude Include="Pidf.hxx" />
     <ClInclude Include="Pkcs7Contents.hxx" />
     <ClInclude Include="Pkcs8Contents.hxx" />
     <ClInclude Include="PlainContents.hxx" />

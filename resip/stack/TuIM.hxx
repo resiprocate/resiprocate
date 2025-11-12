@@ -12,7 +12,7 @@
 namespace resip
 {
 
-class Pidf;
+class GenericPidfContents;
 
 class TuIM
 {
@@ -168,7 +168,7 @@ public:
       typedef std::list<Page>::iterator PageIterator;
 
       // Current pres info
-      Pidf* mPidf;
+      GenericPidfContents* mPidf;
 
       // registration information
       DeprecatedDialog mRegistrationDialog;

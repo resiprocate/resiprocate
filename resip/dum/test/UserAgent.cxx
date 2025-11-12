@@ -4,7 +4,7 @@
 
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "resip/stack/EventStackThread.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
@@ -68,7 +68,7 @@ UserAgent::UserAgent(int argc, char** argv) :
    mProfile->addSupportedMethod(NOTIFY);
    mProfile->validateAcceptEnabled() = false;
    mProfile->validateContentEnabled() = false;
-   mProfile->addSupportedMimeType(NOTIFY, Pidf::getStaticType());
+   mProfile->addSupportedMimeType(NOTIFY, GenericPidfContents::getStaticType());
    mProfile->setDefaultFrom(NameAddr(mAor));
    mProfile->setDigestCredential(mAor.host(), mAor.user(), mPassword);
    

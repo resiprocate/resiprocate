@@ -29,7 +29,6 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
-#include "resip/stack/Pidf.hxx"
 #include "resip/stack/KeepAliveMessage.hxx"
 #include "resip/stack/ConnectionTerminated.hxx"
 

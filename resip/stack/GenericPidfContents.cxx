@@ -850,9 +850,21 @@ GenericPidfContents::generateTimestampData(time_t datetime)
    return timestamp;
 }
 
+EncodeStream&
+resip::operator<<(EncodeStream& strm, const GenericPidfContents::SimplePresenceInfo& tuple)
+{
+   strm << "Tuple ["
+      << " id=" << tuple.mTupleId
+      << " status=" << tuple.mOnline
+      << " note=" << tuple.mNote
+      << " contact=" << tuple.mContact
+      << " contactPriority=" << tuple.mContactPriority << "]";
+   return strm;
+}
+
 /* ====================================================================
 *
-* Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
+* Copyright (c) 2015-2025 SIP Spectrum, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions
