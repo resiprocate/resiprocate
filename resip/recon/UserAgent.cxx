@@ -20,7 +20,6 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <resip/stack/ConnectionTerminated.hxx>
-#include <resip/stack/Pidf.hxx>
 #include <resip/stack/GenericPidfContents.hxx>
 #include <resip/dum/ClientAuthManager.hxx>
 #include <resip/dum/ClientSubscription.hxx>

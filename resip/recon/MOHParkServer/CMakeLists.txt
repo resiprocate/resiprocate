@@ -31,6 +31,7 @@ add_executable(MOHParkServer
 set(CONFIG_FILES
    ${CMAKE_SOURCE_DIR}/resip/recon/MOHParkServer/MOHParkServer.config
 )
+target_sources(MOHParkServer PRIVATE ${CONFIG_FILES})
 
 add_custom_command ( TARGET MOHParkServer POST_BUILD
    COMMAND ${CMAKE_COMMAND} -E copy_if_different
