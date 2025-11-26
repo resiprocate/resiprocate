@@ -383,7 +383,7 @@ if(WITH_SSL)
       set_target_properties(OPENSSL PROPERTIES
          IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libssl.lib"
          IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libssl.lib"
-         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libssl-1_1-${WIN_ARCH}.dll;{OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libcrypto-1_1-${WIN_ARCH}.dll"
+         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libssl-1_1-${WIN_ARCH}.dll;${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libcrypto-1_1-${WIN_ARCH}.dll"
          IMPORTED_LOCATION_DEBUG "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libssl-1_1-${WIN_ARCH}.dll;${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libcrypto-1_1-${WIN_ARCH}.dll"
          IMPORTED_LINK_INTERFACE_LIBRARIES "OPENSSL_CRYPTO"
          INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_ROOT_DIR}/include"
