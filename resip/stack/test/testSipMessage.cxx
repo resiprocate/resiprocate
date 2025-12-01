@@ -2152,12 +2152,12 @@ main(int argc, char** argv)
                    "Max-Forwards: 8\r\n"
                    "Contact: sip:user@host.company.com\r\n"
                    "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
-                   "Security-Client: ipsec-ike;d-alg=md5;q=0.1\r\n"
-                   "Security-Server: tls;q=0.2;d-qop=verify\r\n"
-                   "Security-Verify: tls;q=0.2;d-ver=\"0000000000000000000000000000abcd\"\r\n"
                    "CSeq: 8 REGISTER\r\n"
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
-                   "Expires: 353245\r\n\r\n");
+                   "Expires: 353245\r\n"
+                   "Security-Client: ipsec-ike;d-alg=md5;q=0.1\r\n"
+                   "Security-Server: tls;q=0.2;d-qop=verify\r\n"
+                   "Security-Verify: tls;q=0.2;d-ver=\"0000000000000000000000000000abcd\"\r\n\r\n");
 
       unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       

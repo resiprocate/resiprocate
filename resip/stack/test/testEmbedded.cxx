@@ -126,7 +126,7 @@ main(int argc, char** argv)
 
       cerr << buf << endl;
 
-      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP%2F2.0%2FTLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "1---fobbieBletch%3Brport&Via=SIP%2F2.0%2FTCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "1---bletchieFoo%3Brport&Route=%3Csip:flibble%40gronk.example.com%3E&CSeq=4178%20ACK");
+      assert(buf == "sip:speedy@cathaynetworks.com?CSeq=4178%20ACK&Via=SIP%2F2.0%2FTLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "1---fobbieBletch%3Brport&Via=SIP%2F2.0%2FTCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "1---bletchieFoo%3Brport&Route=%3Csip:flibble%40gronk.example.com%3E");
    }
 
    {
