@@ -321,28 +321,32 @@ Log::initialize(Type type, Level level, const Data& appName,
          mHostname = buffer;
       }
 
+#ifdef USE_FQDN_FOR_JSON_CEE_HOSTNAME
       // Note: for Windows users, you must call initNetwork to initialize WinSock before calling 
       //       Log::initialize in order for getaddrinfo to be successful
       {
          struct addrinfo hints;
          struct addrinfo* info = nullptr;
-         int gai_result;
 
          memset (&hints, 0, sizeof (hints));
          hints.ai_family = AF_UNSPEC;    /*either IPV4 or IPV6 */
          hints.ai_socktype = SOCK_STREAM;
          hints.ai_flags = AI_CANONNAME;
 
-         if ((gai_result = getaddrinfo (buffer, 0, &hints, &info)) != 0) {
-            mFqdn = mHostname;
-         } else if (info == NULL) {
-            mFqdn = mHostname;
-         } else {
+         if (getaddrinfo(buffer, 0, &hints, &info) == 0
+             && info != nullptr) 
+         {
             mFqdn = info->ai_canonname;
+            freeaddrinfo(info);
          }
-
-         freeaddrinfo (info);
+         else
+         {
+            mFqdn = mHostname;
+         }
       }
+#else
+      mFqdn = mHostname;
+#endif
 
    }
 
