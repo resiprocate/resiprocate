@@ -36,8 +36,15 @@ class WinSecurity : public Security
       //http://msdn.microsoft.com/en-us/library/windows/desktop/aa376539(v=vs.85).aspx
       //http://msdn.microsoft.com/en-us/library/windows/desktop/aa386971(v=vs.85).aspx
       
-      WinSecurity(const CipherList& cipherList = ExportableSuite) : Security(cipherList){}
-      WinSecurity(const Data& pathToCerts, const CipherList& cipherList = ExportableSuite) : Security(pathToCerts, cipherList){}
+      WinSecurity(const CipherList& cipherList = ExportableSuite, 
+                  const Data& defaultPrivateKeyPassPhrase = Data::Empty, 
+                  const Data& dHParamsFilename = Data::Empty) : 
+         Security(cipherList, defaultPrivateKeyPassPhrase, dHParamsFilename) {}
+      WinSecurity(const Data& pathToCerts, 
+                  const CipherList& cipherList = ExportableSuite,
+                  const Data & defaultPrivateKeyPassPhrase = Data::Empty,
+                  const Data & dHParamsFilename = Data::Empty) :
+         Security(pathToCerts, cipherList, defaultPrivateKeyPassPhrase, dHParamsFilename) {}
 
       virtual void preload();
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
