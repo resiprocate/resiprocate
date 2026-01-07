@@ -22,7 +22,8 @@ class ExternalDns
       enum Features
       {
          None = 0,
-         TryServersOfNextNetworkUponRcode3 = 1 << 0   // 'No such name'
+         TryServersOfNextNetworkUponRcode3 = 1 << 0,   // 'No such name'
+         ReturnAllResults = 1 << 1 //Don't discard errors
       };
 
       //returns Success, BuildMismatch, otherwise ExternalDns specific 

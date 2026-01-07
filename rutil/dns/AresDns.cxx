@@ -305,6 +305,12 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       optmask |= ARES_OPT_FLAGS;
       opt.flags |= ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3;
    }
+   if ((features & ExternalDns::ReturnAllResults))
+   {
+      optmask |= ARES_OPT_FLAGS;
+      opt.flags |= ARES_FLAG_NOCHECKRESP;
+   }
+
 #endif
 
 #if defined(USE_CARES)
