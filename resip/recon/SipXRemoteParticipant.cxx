@@ -4,8 +4,8 @@
 
 #include "SipXMediaStackAdapter.hxx"
 
-#include "sdp/SdpHelperResip.hxx"
-#include "sdp/Sdp.hxx"
+#include <media/sdpcontainer/SdpHelper.hxx>
+#include <media/sdpcontainer/Sdp.hxx>
 
 #include <sdp/SdpCodec.h>  // sipX SdpCodec
 

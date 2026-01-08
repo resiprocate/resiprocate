@@ -15,11 +15,13 @@ public:
    RTPPortManager(int portRangeMin = 17000, int portRangeMax = 18000);
    unsigned int allocateRTPPort();
    void freeRTPPort(unsigned int port);
+   unsigned int getNumAllocatedPortPairs() { return mTotalPortPairs - mRTPPortFreeList.size(); }
 
 private:
    unsigned int mPortRangeMin;
    unsigned int mPortRangeMax;
    std::deque<unsigned int> mRTPPortFreeList;
+   unsigned int mTotalPortPairs;
 };
 
 }
@@ -28,8 +30,8 @@ private:
 
 /* ====================================================================
 
- Copyright 2014 Daniel Pocock http://danielpocock.com
-
+ Copyright (c) 2010-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
+ Copyright (c) 2014 Daniel Pocock http://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

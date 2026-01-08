@@ -9,14 +9,19 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::MEDIA
 
+// We are only handing out even RTP ports; the next higher odd port is used for RTCP
 RTPPortManager::RTPPortManager(int portRangeMin, int portRangeMax)
  : mPortRangeMin(portRangeMin),
-   mPortRangeMax(portRangeMax)
+   mPortRangeMax(portRangeMax),
+   mTotalPortPairs(0) // set below
 {
+   // Ensure we start on an even port
    if(mPortRangeMin & 0x1)
    {
       mPortRangeMin++;
    }
+   // Ensure we end on an even port, even though mPortMax+1 
+   // is considered valid for RTCP stream of mPortMax port
    if(mPortRangeMax & 0x1)
    {
       mPortRangeMax--;
@@ -27,7 +32,8 @@ RTPPortManager::RTPPortManager(int portRangeMin, int portRangeMax)
       mRTPPortFreeList.push_back(i);
       i=i+2;  // only add even ports
    }
-   InfoLog(<<"RTPPortManager: min == " << mPortRangeMin << " max == " << mPortRangeMax);
+   mTotalPortPairs = mRTPPortFreeList.size();
+   StackLog(<< "RTPPortManager: min even port=" << mPortRangeMin << ", max even port=" << mPortRangeMax);
 }
 
 unsigned int
@@ -55,8 +61,8 @@ RTPPortManager::freeRTPPort(unsigned int port)
 
 /* ====================================================================
 
- Copyright 2014 Daniel Pocock http://danielpocock.com
-
+ Copyright (c) 2010-2025, SIP Spectrum, Inc. http://www.sipspectrum.com
+ Copyright (c) 2014 Daniel Pocock http://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

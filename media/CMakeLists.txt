@@ -9,10 +9,22 @@ add_subdirectory(samples)
 
 set(INCLUDES
    RTPPortManager.hxx
+   sdpcontainer/Sdp.hxx
+   sdpcontainer/SdpCandidate.hxx
+   sdpcontainer/SdpCandidatePair.hxx
+   sdpcontainer/SdpCodec.hxx
+   sdpcontainer/SdpHelper.hxx
+   sdpcontainer/SdpMediaLine.hxx
 )
 
 add_library(resipmedia
    RTPPortManager.cxx
+   sdpcontainer/Sdp.cxx
+   sdpcontainer/SdpCandidate.cxx
+   sdpcontainer/SdpCandidatePair.cxx
+   sdpcontainer/SdpCodec.cxx
+   sdpcontainer/SdpHelper.cxx
+   sdpcontainer/SdpMediaLine.cxx
    ${INCLUDES}
 )
 

@@ -1,7 +1,7 @@
 #include <map> 
 #include <utility>
 
-#include "SdpHelperResip.hxx"
+#include "SdpHelper.hxx"
 #include "Sdp.hxx"
 #include "SdpMediaLine.hxx"
 #include "SdpCodec.hxx"
