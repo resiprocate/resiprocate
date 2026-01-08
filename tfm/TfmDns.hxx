@@ -53,6 +53,7 @@ class TfmDns : public ExternalDns
       virtual void setPollGrp(resip::FdPollGrp *) {}
       virtual void processTimers(void) {}
       virtual bool hostFileLookupLookupOnlyMode(void) { return false; }
+      virtual bool changeNameServers(const std::vector<GenericIPAddress>& additional) { return false; }
       virtual bool checkDnsChange() { return false; }
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
