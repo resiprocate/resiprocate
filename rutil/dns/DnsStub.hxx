@@ -182,6 +182,7 @@ class DnsStub : public ExternalDnsHandler
       void setDnsCacheTTL(int ttl);
       void setDnsCacheSize(int size);
       void reloadDnsServers();
+      bool changeNameServers(const NameserverList& additional);
       bool checkDnsChange();
       bool supportedType(int);
 

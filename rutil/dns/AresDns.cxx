@@ -450,6 +450,12 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
    }
 }
 
+void
+AresDns::changeNameServers(const std::vector<GenericIPAddress>& additional)
+{
+   mAdditionalNameservers = additional;
+}
+
 bool AresDns::checkDnsChange()
 {
    // We must return 'true' if there are changes in the list of DNS servers

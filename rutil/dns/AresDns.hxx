@@ -37,6 +37,7 @@ class AresDns : public ExternalDns, public FdSetIOObserver
       int internalInit(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr socketfunc, unsigned int features=0, ares_channeldata** channel = 0, int timeout=0, int tries=0);
 
+      virtual void changeNameServers(const std::vector<GenericIPAddress>& additional);
       virtual bool checkDnsChange();
 
       virtual unsigned int getTimeTillNextProcessMS();
