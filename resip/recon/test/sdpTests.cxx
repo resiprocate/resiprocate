@@ -2,10 +2,10 @@
 
 #include <iostream>
 
-#include "resip/recon/sdp/SdpCodec.hxx"
-#include "resip/recon/sdp/Sdp.hxx"
-#include "resip/recon/sdp/SdpMediaLine.hxx"
-#include "resip/recon/sdp/SdpHelperResip.hxx"
+#include "media/sdpcontainer/SdpCodec.hxx"
+#include "media/sdpcontainer/Sdp.hxx"
+#include "media/sdpcontainer/SdpMediaLine.hxx"
+#include "media/sdpcontainer/SdpHelper.hxx"
 
 #include <rutil/ParseBuffer.hxx>
 #include <resip/stack/Symbols.hxx>
@@ -457,7 +457,7 @@ int main(int argc, char* argv[])
          Mime type("application", "sdp");
          SdpContents resipSdp(hfv, type);
 
-         convSdp = SdpHelperResip::createSdpFromResipSdp(resipSdp);
+         convSdp = SdpHelper::createSdpFromResipSdp(resipSdp);
          if(convSdp)
          {
             // Ensure string builder does not crash            
