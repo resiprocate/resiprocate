@@ -48,22 +48,27 @@ OutboundTargetHandler::process(RequestContext & rc)
          int flowDeadCode;
          if(resip::InteropHelper::getOutboundVersion() >= 5)
          {
-            flowDeadCode=430;
+            flowDeadCode = 430;
          }
          else
          {
-            flowDeadCode=410;
+            flowDeadCode = 410;
          }
-         if(sip->header(resip::h_StatusLine).responseCode()==flowDeadCode ||  // Remote or locally(stack) generate 430
-            (!sip->isFromWire() &&
-             (sip->header(resip::h_StatusLine).responseCode()==408 ||         // Locally (stack) generated 408 or 503
-              sip->header(resip::h_StatusLine).responseCode()==503)))
+
+         // Note: Locally generated 408 timeouts are ignored here to prevent premature registration teardown.
+         // We only remove contacts on hard transport failures (503 or flowDeadCode), ensuring that 
+         // transient network or app-layer lag doesn't wipe our registration database
+         // while the RFC 5626 Flow is still physically established.
+         int responseCode = sip->header(resip::h_StatusLine).responseCode();
+         if(responseCode ==flowDeadCode ||  // Remote or locally(stack) generate 430
+            (!sip->isFromWire() && responseCode == 503))  // Locally (stack) generated 503
          {
             // Flow is dead remove contact from Location Database
             resip::Uri inputUri(ot->getAor());
 
             //!RjS! This doesn't look exception safe - need guards
             mRegStore.lockRecord(inputUri);
+            DebugLog(<< "Removing contact registration due to flow dead response code=" << responseCode <<", aor=" << inputUri << ", contact=" << ot->rec().mContact);
             mRegStore.removeContact(inputUri,ot->rec());
             mRegStore.unlockRecord(inputUri);
 
