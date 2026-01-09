@@ -304,6 +304,17 @@ DnsStub::skipDNSQuestion(const unsigned char *aptr,
 }
 
 bool
+DnsStub::changeNameServers(const NameserverList& additional)
+{
+    if(mDnsProvider)
+    {
+        mDnsProvider->changeNameServers(additional);
+        return mDnsProvider->checkDnsChange();
+    }
+    return false;
+}
+
+bool
 DnsStub::checkDnsChange()
 {
 	return mDnsProvider ? mDnsProvider->checkDnsChange() : false;

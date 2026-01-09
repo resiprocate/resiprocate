@@ -7,7 +7,7 @@
 #include <ares.h>
 #include <ares_dns.h>
 
-#if !defined WIN32 && !defined __CYGWIN__
+#if !defined WIN32 && !defined __CYGWIN__ && !defined USE_ARES
 #include <resolv.h>
 #endif
 
