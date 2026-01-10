@@ -23,7 +23,9 @@ class ExternalDns
       {
          None = 0,
          TryServersOfNextNetworkUponRcode3 = 1 << 0,   // 'No such name'
-         ReturnAllResults = 1 << 1 //Don't discard errors
+         ReturnAllResults = 1 << 1 //Don't discard errors, the precise error values are used to
+                                   //decide whether the hosts file should be consulted, see
+                                   //DnsStub.cxx DnsStub::Query::process()
       };
 
       //returns Success, BuildMismatch, otherwise ExternalDns specific 
