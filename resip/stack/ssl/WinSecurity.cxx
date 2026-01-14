@@ -36,7 +36,10 @@ WinSecurity::preload()
    getCerts(WinSecurity::ROOT_CA_STORE);
    //getCerts(WinSecurity::CA_STORE);
    //getCredentials(WinSecurity::PRIVATE_STORE);
-   //getCerts(WinSecurity::USERS_STORE);   
+   //getCerts(WinSecurity::USERS_STORE);
+
+   // Preload any domain certs
+   Security::preload();
 }
 
 void
