@@ -1135,7 +1135,7 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, std
    //a little inefficient, branch parameter might be better
    DialogId id(*msg);
    if (userProfile.hasOutboundProxy() && 
-      (!findDialog(id) || userProfile.getForceOutboundProxyOnAllRequestsEnabled()))
+      (userProfile.getForceOutboundProxyOnAllRequestsEnabled() || !findDialog(id)))
    {
       if (userProfile.getExpressOutboundAsRouteSetEnabled())
       {
