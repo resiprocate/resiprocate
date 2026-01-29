@@ -22,7 +22,7 @@
 #include "rutil/Timer.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "digcalc.hxx"
 
 using namespace std;
@@ -71,33 +71,33 @@ main(int arc, char** argv)
    
    {
       {
-         MD5Stream s;
+         DigestStream s;
          assert(s.getHex() == Data("").md5());
       }
       {
-         MD5Stream s;
+         DigestStream s;
          s << "a";
          assert(s.getHex() == Data("a").md5());
       }
       {
-         MD5Stream s;
+         DigestStream s;
          s << "abc";
          assert(s.getHex() == Data("abc").md5());
       }
       {
-         MD5Stream s;
+         DigestStream s;
          s << "message digest";
          assert(s.getHex() == Data("message digest").md5());
       }
       {
-         MD5Stream s;
+         DigestStream s;
          s << "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
          assert(s.getHex() == Data("12345678901234567890123456789012345678901234567890123456789012345678901234567890").md5());
       }
       {
          Data d;
          DataStream ds(d);
-         MD5Stream s;
+         DigestStream s;
 
          s << "this involves" << 7.8 << "foo" << 34653453 << -6 << "hike";
          ds << "this involves" << 7.8 << "foo" << 34653453 << -6 << "hike";
@@ -514,6 +514,7 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

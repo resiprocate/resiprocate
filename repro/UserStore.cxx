@@ -3,7 +3,7 @@
 #include "rutil/ResipAssert.h"
 
 #include "rutil/Data.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/DataStream.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"
@@ -61,7 +61,7 @@ UserStore::addUser( const Data& username,
    rec.realm = realm;
    if(applyA1HashToPassword)
    {
-      MD5Stream a1;
+      DigestStream a1;
       a1 << username
          << Symbols::COLON
          << realm
@@ -73,7 +73,7 @@ UserStore::addUser( const Data& username,
       // Some UAs might calculate A1
       // using user@domain:realm:password
       // so we store the hash of that permutation too
-      MD5Stream a1b;
+      DigestStream a1b;
       a1b << username << Symbols::AT_SIGN << domain
          << Symbols::COLON
          << realm
@@ -156,6 +156,7 @@ UserStore::getUserAndDomainFromKey(const Key& key, Data& user, Data& domain)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

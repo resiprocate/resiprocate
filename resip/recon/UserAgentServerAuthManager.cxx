@@ -7,7 +7,7 @@
 #include <resip/dum/ServerAuthManager.hxx>
 #include <resip/dum/UserAuthInfo.hxx>
 #include <resip/dum/UserProfile.hxx>
-#include <rutil/MD5Stream.hxx>
+#include <rutil/DigestStream.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::RECON
@@ -102,7 +102,7 @@ UserAgentServerAuthManager::requestCredential(const Data& user,
    const UserProfile::DigestCredential& digestCredential = 
          mUserAgent.getIncomingConversationProfile(msg)->getDigestCredential(realm);
 
-   MD5Stream a1;
+   DigestStream a1;
    a1 << digestCredential.user
       << Symbols::COLON     
       << digestCredential.realm
@@ -116,6 +116,7 @@ UserAgentServerAuthManager::requestCredential(const Data& user,
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

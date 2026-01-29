@@ -131,7 +131,7 @@ resip::operator<<(std::ostream &s, const LazyParser& lp)
 	lp.encode(s);
 #else
 	//this should only be called for things like cout,cerr, or other streams not supporting
-	//other stream encoders, aka MD5Stream
+	//other stream encoders, aka DigestStream
 	Data data;
 	DataStream stream(data);
 

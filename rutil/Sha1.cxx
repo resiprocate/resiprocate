@@ -24,20 +24,20 @@
 
 using namespace resip;
 
-SHA1::SHA1()
+Sha1::Sha1()
 {
     reset();
 }
 
 
-void SHA1::update(const std::string &s)
+void Sha1::update(const std::string &s)
 {
     std::istringstream is(s);
     update(is);
 }
 
 
-void SHA1::update(std::istream &is)
+void Sha1::update(std::istream &is)
 {
     std::string rest_of_buffer;
     read(is, rest_of_buffer, BLOCK_BYTES - (int)buffer.size());
@@ -57,7 +57,7 @@ void SHA1::update(std::istream &is)
  * Add padding and return the message digest.
  */
 
-std::string SHA1::final()
+std::string Sha1::final()
 {
     /* Use input and create digest */
     createDigest();
@@ -76,7 +76,7 @@ std::string SHA1::final()
     return result.str();
 }
 
-resip::Data SHA1::finalBin()
+resip::Data Sha1::finalBin()
 {
     /* Use input and create digest */
     createDigest();
@@ -94,7 +94,7 @@ resip::Data SHA1::finalBin()
     return result;
 }
 
-void SHA1::createDigest()
+void Sha1::createDigest()
 {
     /* Total number of hashed bits */
     uint64_t total_bits = (transforms*BLOCK_BYTES + buffer.size()) * 8;
@@ -125,16 +125,16 @@ void SHA1::createDigest()
     transform(block);
 }
 
-std::string SHA1::from_file(const std::string &filename)
+std::string Sha1::from_file(const std::string &filename)
 {
     std::ifstream stream(filename.c_str(), std::ios::binary);
-    SHA1 checksum;
+    Sha1 checksum;
     checksum.update(stream);
     return checksum.final();
 }
 
 
-void SHA1::reset()
+void Sha1::reset()
 {
     /* SHA1 initialization constants */
     digest[0] = 0x67452301;
@@ -153,7 +153,7 @@ void SHA1::reset()
  * Hash a single 512-bit block. This is the core of the algorithm.
  */
 
-void SHA1::transform(uint32_t block[BLOCK_BYTES])
+void Sha1::transform(uint32_t block[BLOCK_BYTES])
 {
     /* Copy digest[] to working vars */
     uint32_t a = digest[0];
@@ -267,7 +267,7 @@ void SHA1::transform(uint32_t block[BLOCK_BYTES])
 }
 
 
-void SHA1::buffer_to_block(const std::string &buffer, uint32_t block[BLOCK_BYTES])
+void Sha1::buffer_to_block(const std::string &buffer, uint32_t block[BLOCK_BYTES])
 {
     /* Convert the std::string (byte buffer) to a uint32_t array (MSB) */
     for (unsigned int i = 0; i < BLOCK_INTS; i++)
@@ -280,7 +280,7 @@ void SHA1::buffer_to_block(const std::string &buffer, uint32_t block[BLOCK_BYTES
 }
 
 
-void SHA1::read(std::istream &is, std::string &s, int maxBuffer)
+void Sha1::read(std::istream &is, std::string &s, int maxBuffer)
 {
     char* sbuf = new char[maxBuffer];
     is.read(sbuf, maxBuffer);

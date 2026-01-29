@@ -1,3 +1,6 @@
+// For testing - also uncomment this in testDigestStream.cxx to test non-SSL MD5 and SHA1
+//#undef USE_SSL
+
 #include "rutil/DigestStream.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
@@ -5,29 +8,127 @@
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
 
+#ifdef USE_SSL
+   #include <openssl/evp.h> 
+   #if OPENSSL_VERSION_NUMBER < 0x10100000L // openssl 1.1.0 api changes
+   static EVP_MD_CTX* EVP_MD_CTX_new()
+   {
+      return new EVP_MD_CTX;
+   }
+   static void EVP_MD_CTX_free(EVP_MD_CTX* pCtx)
+   {
+      EVP_MD_CTX_cleanup(pCtx);
+      delete pCtx;
+   }
+   #endif
+#else
+   #include "rutil/vmd5.hxx"
+   #include "rutil/Sha1.hxx"
+#endif
+
 using namespace resip;
 
-DigestBuffer::DigestBuffer(const EVP_MD* digest)
+DigestBuffer::DigestBuffer(DigestType digestType) :
+   mContext(nullptr),
+#ifdef USE_SSL
+   mFinalBin(EVP_MAX_MD_SIZE, Data::Preallocate),
+#else
+   mFinalBin(16, Data::Preallocate),
+#endif
+   mLen(0),
+   mDigestType(digestType)
 {
-   EVP_MD_CTX_init(&mContext);
-   EVP_DigestInit_ex(&mContext, digest, 0);
+   int ret = 0;
+   switch (digestType)
+   {
+      case MD5:
+#ifdef USE_SSL
+         mContext = EVP_MD_CTX_new();
+         EVP_MD_CTX_init((EVP_MD_CTX*)mContext);
+         ret = EVP_DigestInit_ex((EVP_MD_CTX*)mContext, EVP_md5(), nullptr);
+#else
+         mContext = new MD5Context;
+         MD5Init((MD5Context*)mContext);
+         ret = 1; 
+#endif
+         break;
+      case SHA1:
+#ifdef USE_SSL
+         mContext = EVP_MD_CTX_new();
+         EVP_MD_CTX_init((EVP_MD_CTX*)mContext);
+         ret = EVP_DigestInit_ex((EVP_MD_CTX*)mContext, EVP_sha1(), nullptr);
+#else
+         mContext = new Sha1();
+         ret = 1;
+#endif
+         break;
+#ifdef USE_SSL
+      case SHA256:
+         mContext = EVP_MD_CTX_new();
+         EVP_MD_CTX_init((EVP_MD_CTX*)mContext);
+         ret = EVP_DigestInit_ex((EVP_MD_CTX*)mContext, EVP_sha256(), nullptr);
+         break;
+      case SHA512:
+         mContext = EVP_MD_CTX_new();
+         EVP_MD_CTX_init((EVP_MD_CTX*)mContext);
+         ret = EVP_DigestInit_ex((EVP_MD_CTX*)mContext, EVP_sha512(), nullptr);
+         break;
+      case SHA512_256:
+         mContext = EVP_MD_CTX_new();
+         EVP_MD_CTX_init((EVP_MD_CTX*)mContext);
+         ret = EVP_DigestInit_ex((EVP_MD_CTX*)mContext, EVP_sha512_256(), nullptr);
+         break;
+#endif
+      default:
+         resip_assert(false);
+         break;
+   }
+   if (!ret)
+   {
+      throw std::runtime_error("Failed to initialize digest context");
+   }
    setp(mBuf, mBuf + sizeof(mBuf));
 }
 
 DigestBuffer::~DigestBuffer()
 {
-   EVP_MD_CTX_cleanup(&mContext);
+#ifdef USE_SSL
+   EVP_MD_CTX_free((EVP_MD_CTX*)mContext);
+#else
+   if (mDigestType == MD5)
+   {
+      delete (MD5Context*)mContext;
+   }
+   else if (mDigestType == SHA1)
+   {
+      delete (resip::Sha1*)mContext;
+   }
+#endif
 }
 
 int
 DigestBuffer::sync()
 {
+   if (!mContext) return -1;
+
    size_t len = pptr() - pbase();
    if (len > 0) 
    {
-      EVP_DigestUpdate(&mContext, reinterpret_cast <unsigned const char*>(pbase()), len);
+#ifdef USE_SSL
+      EVP_DigestUpdate((EVP_MD_CTX*)mContext, reinterpret_cast <unsigned const char*>(pbase()), len);
+#else
+      if (mDigestType == MD5)
+      {
+         MD5Update((MD5Context*)mContext, reinterpret_cast <unsigned const char*>(pbase()), (unsigned int)len);
+      }
+      else if (mDigestType == SHA1)
+      {
+         ((Sha1*)mContext)->update(std::string(pbase(), len));
+      }
+#endif
       // reset the put buffer
       setp(mBuf, mBuf + sizeof(mBuf));
+      mLen += len;
    }
    return 0;
 }
@@ -45,45 +146,53 @@ DigestBuffer::overflow(int c)
    return 0;
 }
 
-Data 
+Data
 DigestBuffer::getHex()
 {
-   unsigned char buf[EVP_MD_CTX_size(&mContext)];
-   unsigned int len;
-   EVP_DigestFinal_ex(&mContext, buf, &len);
-
-   Data digest(Data::Share, (const char*)buf, len);
-   return digest.hex();
+   return getBin().hex();
 }
 
-Data
+const Data&
 DigestBuffer::getBin()
 {
-   unsigned char buf[EVP_MD_CTX_size(&mContext)];
-   unsigned int len;
-   EVP_DigestFinal_ex(&mContext, buf, &len);
-
-   Data digest(Data::Share, (const char*)buf, len);
-   return digest;
+   // If not already calculated, then calcuate it
+   if (mFinalBin.size() == 0)
+   {
+#ifdef USE_SSL
+      unsigned int len = EVP_MAX_MD_SIZE;
+      EVP_DigestFinal_ex((EVP_MD_CTX*)mContext, (unsigned char*)mFinalBin.getBuf(len), &len);
+      mFinalBin.truncate(len);
+#else
+      if (mDigestType == MD5)
+      {
+         MD5Final((unsigned char*)mFinalBin.getBuf(16), (MD5Context*)mContext);
+      }
+      else if (mDigestType == SHA1)
+      {
+         mFinalBin = ((Sha1*)mContext)->finalBin();
+      }
+#endif
+   }
+   return mFinalBin;
 }
 
-DigestStream::DigestStream(const EVP_MD* digest)
-   : DigestBuffer(digest), std::ostream(this)
+DigestStream::DigestStream(DigestType digestType)
+   : DigestBuffer(digestType), std::ostream(this)
 {
 }
 
 DigestStream::~DigestStream()
-{}
+{
+}
 
-Data 
+Data
 DigestStream::getHex()
 {
    flush();
    return DigestBuffer::getHex();
-   //return mStreambuf.getHex();
 }
 
-Data
+const Data&
 DigestStream::getBin()
 {
    flush();
@@ -93,6 +202,7 @@ DigestStream::getBin()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

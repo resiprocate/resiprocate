@@ -21,7 +21,7 @@
 #include "rutil/Random.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/DataStream.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -704,7 +704,7 @@ Helper::makeNonce(const SipMessage& request, const Data& timestamp)
    return getNonceHelper()->makeNonce(request, timestamp);
 }
 
-static Data noBody = MD5Stream().getHex();
+static Data noBody = DigestStream().getHex();
 Data 
 Helper::makeResponseMD5WithA1(const Data& a1,
                               const Data& method, const Data& digestUri, const Data& nonce,
@@ -715,7 +715,7 @@ Helper::makeResponseMD5WithA1(const Data& a1,
    Data _a2;
    DataStream a2(_a2);
 #else
-   MD5Stream a2;
+   DigestStream a2;
 #endif
    a2 << method
       << Symbols::COLON
@@ -725,7 +725,7 @@ Helper::makeResponseMD5WithA1(const Data& a1,
    {
       if (entityBody)
       {
-         MD5Stream eStream;
+         DigestStream eStream;
          eStream << *entityBody;
          a2 << Symbols::COLON << eStream.getHex();
 #ifdef RESIP_DIGEST_LOGGING
@@ -745,7 +745,7 @@ Helper::makeResponseMD5WithA1(const Data& a1,
    Data _r;
    DataStream r(_r);
 #else
-   MD5Stream r;
+   DigestStream r;
 #endif
    r << a1
      << Symbols::COLON
@@ -764,12 +764,12 @@ Helper::makeResponseMD5WithA1(const Data& a1,
 #ifdef RESIP_DIGEST_LOGGING
    a2.flush();
    StackLog(<<"A2 = " << _a2);
-   MD5Stream a2md5;
+   DigestStream a2md5;
    a2md5 << _a2;
    r << a2md5.getHex();
    r.flush();
    StackLog(<<"response to be hashed (HA1:nonce:HA2) = " << _r);
-   MD5Stream rmd5;
+   DigestStream rmd5;
    rmd5 << _r;
    return rmd5.getHex();
 #else
@@ -786,7 +786,7 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
                         const Data& qop, const Data& cnonce, const Data& cnonceCount,
                         const Contents *entity)
 {
-   MD5Stream a1;
+   DigestStream a1;
    a1 << username
       << Symbols::COLON
       << realm
@@ -2376,6 +2376,7 @@ Helper::getClientPublicAddress(const SipMessage& request)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

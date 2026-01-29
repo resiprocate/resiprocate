@@ -11,10 +11,9 @@
 #include "rutil/Coders.hxx"
 #include "rutil/CountStream.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/vmd5.hxx"
-#include "rutil/Coders.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
@@ -505,7 +504,7 @@ SipMessage::compute2543TransactionHash() const
 
    if (isRequest())
    {
-      MD5Stream strm;
+      DigestStream strm;
       // See section 17.2.3 Matching Requests to Server Transactions in rfc 3261
 
 //#define VONAGE_FIX
@@ -1853,6 +1852,7 @@ SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

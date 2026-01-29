@@ -38,10 +38,6 @@
 #endif
 
 #ifdef WIN32
-// !cj! TODO would be nice to remove this 
-#  ifndef __GNUC__
-#    pragma warning(disable : 4996)
-#  endif
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif

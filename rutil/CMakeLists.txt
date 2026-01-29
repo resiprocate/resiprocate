@@ -83,6 +83,7 @@ set(INCLUDES
    SysLogBuf.hxx
    Inserter.hxx
    DataStream.hxx
+   DigestStream.hxx
    GenericIPAddress.hxx
    AbstractFifo.hxx
    AndroidLogger.hxx
@@ -113,6 +114,7 @@ add_library(rutil
    ServerProcess.cxx
    Data.cxx
    DataStream.cxx
+   DigestStream.cxx
    DnsUtil.cxx
    FileSystem.cxx
    GeneralCongestionManager.cxx

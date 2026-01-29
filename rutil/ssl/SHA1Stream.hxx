@@ -7,8 +7,36 @@
 
 #include <iostream>
 #include <memory>
+#include "rutil/compat.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/ssl/OpenSSLDeleter.hxx"
+
+#pragma warning(1: 4996) // Move deprecated warnings back to level 1
+
+/**
+ * @file  SHA1Stream.hxx
+ * @brief DEPRECATED - Use DigestStream.hxx instead.
+ *
+ * @deprecated This class is deprecated. Transition to
+ * DigestStream for unified hashing support.
+ *
+ * ### Transition Guide
+ * * #### Old Usage:
+ * @code
+ * resip::SHA1Stream sha1;
+ * sha1 << "data";
+ * resip::Data hash = sha1.getHex();
+ * @endcode
+ *
+ * #### New Usage:
+ * @code
+ * #include "rutil/DigestStream.hxx"
+ * // You must explicitly pass the SHA1 type
+ * resip::DigestStream ds(resip::DigestBuffer::SHA1);
+ * ds << "data";
+ * resip::Data hash = ds.getHex();
+ * @endcode
+ */
 
 // This will not be compiled or installed if USE_SSL isn't set. If you are 
 // including this file from a source tree, and you are getting link errors, you 
@@ -53,7 +81,7 @@ class SHA1Buffer : public std::streambuf
 class SHA1Stream : private SHA1Buffer, public std::ostream
 {
    public:
-      SHA1Stream();
+      RESIP_DEPRECATED(SHA1Stream());
       ~SHA1Stream();
       /** Calls flush() on itself and returns the SHA1 data in hex format.
           @returns the SHA1 hexadecimal representation of the data written to the stream

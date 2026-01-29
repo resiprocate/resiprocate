@@ -13,7 +13,6 @@
 #include "resip/stack/ExtensionHeader.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/MD5Stream.hxx"
 
 #ifdef USE_RADIUS_CLIENT
 

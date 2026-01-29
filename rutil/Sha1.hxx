@@ -35,10 +35,10 @@
 namespace resip
 {
 
-class SHA1  // Produces a 160bit hash (20 hexidecimal digits, 40 characters when converted to a hex string)
+class Sha1  // Produces a 160bit hash (20 hexidecimal digits, 40 characters when converted to a hex string)
 {
 public:
-    SHA1();
+    Sha1();
     void update(const std::string &s);
     void update(std::istream &is);
     std::string final();
@@ -65,6 +65,7 @@ private:
 }
 
 #endif /* SHA1_HPP */
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

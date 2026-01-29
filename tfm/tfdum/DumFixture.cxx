@@ -15,7 +15,6 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/MD5Stream.hxx"
 #include "tfm/repro/CommandLineParser.hxx"
 #include "tfm/DnsUtils.hxx"
 #include "tfm/PortAllocator.hxx"

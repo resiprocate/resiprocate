@@ -156,7 +156,7 @@ EncodeStream&
 operator<<(EncodeStream&, const LazyParser& lp);
 #endif
 
-//need this for MD5Stream
+//need this for DigestStream
 std::ostream&
 operator<<(std::ostream&, const LazyParser& lp);
 

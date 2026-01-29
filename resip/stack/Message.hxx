@@ -50,7 +50,7 @@ class Message
       TransactionUser* mTu;      
 };
 
-//always need std streams where things are encoded to cout, cerr, MD5Stream, etc...
+//always need std streams where things are encoded to cout, cerr, DigestStream, etc...
 #ifndef  RESIP_USE_STL_STREAMS
 EncodeStream& 
 operator<<(EncodeStream& strm, const Message& msg);

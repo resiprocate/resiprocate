@@ -5,7 +5,7 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
-#include <rutil/MD5Stream.hxx>
+#include <rutil/DigestStream.hxx>
 #include <rutil/FdPoll.hxx>
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/PlainContents.hxx>
@@ -250,7 +250,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    // UserProfile Settings
    mProfile->setDefaultFrom(NameAddr(mAor));
 #ifdef TEST_PASSING_A1_HASH_FOR_PASSWORD
-   MD5Stream a1;
+   DigestStream a1;
    a1 << mAor.user()
       << Symbols::COLON
       << mAor.host()
@@ -1091,7 +1091,7 @@ BasicClientUserAgent::onTryingNextTarget(AppDialogSetHandle, const SipMessage& m
 
 /* ====================================================================
 
- Copyright (c) 2011, SIP Spectrum, Inc.
+ Copyright (c) 2011-2026, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

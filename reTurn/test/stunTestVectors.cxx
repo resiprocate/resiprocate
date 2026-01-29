@@ -4,7 +4,7 @@
 #include <string>
 #include <asio.hpp>
 
-#include <rutil/MD5Stream.hxx>
+#include <rutil/DigestStream.hxx>
 
 #include "../StunTuple.hxx"
 #include "../StunMessage.hxx"
@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
    reqltcMessage.calculateHmacKey(hmacKey, password);
    assert(reqltcMessage.checkMessageIntegrity(hmacKey));
 
-   resip::MD5Stream r;
+   resip::DigestStream r;
    r << username << ":example.org:" << password;
    resip::Data password_ha1 = r.getBin();
    reqltcMessage.calculateHmacKeyForHa1(hmacKey, password_ha1);
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, SIP Spectrum, Inc.
+ Copyright (c) 2007-2026, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
