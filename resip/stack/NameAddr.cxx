@@ -88,7 +88,7 @@ NameAddr::operator=(const NameAddr& rhs)
       
       ParserCategory::operator=(rhs);
       mAllContacts = rhs.mAllContacts;
-      mDisplayName = rhs.mDisplayName;
+      mDisplayName = rhs.displayName();
       mUri = rhs.mUri;
    }
    return *this;
