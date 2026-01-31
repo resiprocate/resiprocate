@@ -40,8 +40,8 @@ NameAddr::NameAddr(const NameAddr& rhs,
                    PoolBase* pool)
    : ParserCategory(rhs, pool),
      mAllContacts(rhs.mAllContacts),
-     mUri(rhs.mUri, pool),
-     mDisplayName(rhs.mDisplayName),
+     mUri(rhs.uri(), pool),
+     mDisplayName(rhs.displayName()),
      mUnknownUriParametersBuffer(0)
 {}
 
