@@ -145,6 +145,7 @@ TcpBaseTransport::buildFdSet( FdSet& fdset)
 
 /**
     Returns 1 if created new connection, -1 if "bad" error,
+    -2 if error which requires cleanup
     and 0 if nothing to do (EWOULDBLOCK)
 **/
 int
@@ -168,6 +169,9 @@ TcpBaseTransport::processListen()
                // !jf! this can not be ready in some cases
                // !kw! this will happen every epoll cycle
                return 0;
+            case ENOTCONN:
+               Transport::error(e);
+               return -2; //require cleanup
             default:
                Transport::error(e);
          }
@@ -421,7 +425,21 @@ TcpBaseTransport::processPollEvent(FdPollEventMask mask)
 {
    if (mask & FPEM_Read)
    {
-      while(processListen() > 0);
+      int res = 1;
+
+      while (res > 0)
+      {
+         res = processListen();
+      }
+
+      if (res == -2) //bad error that requires cleanup
+      {
+         if (mPollGrp && mPollItemHandle)//INVALIDATE
+         {
+            mPollGrp->delPollItem(mPollItemHandle);
+            mPollItemHandle = 0;
+         }
+      }
    }
 }
 
