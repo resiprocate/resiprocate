@@ -1032,12 +1032,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             if ((transport = findTransportByDest(target)) != NULL)
             {
                source = transport->getTuple();
-               DebugLog(<< "Found transport: " << source);
+               DebugLog(<< "Found transport: " << source << ", for target=" << target);
             }
          }
          else
          {
-            DebugLog(<< "Found transport: " << source);
+            DebugLog(<< "Found transport: " << source << ", for target=" << target);
          }
          
          if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
@@ -1080,7 +1080,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             // .bwc. determineSourceInterface might give us a port
             if(transport)
             {
-               DebugLog(<< "Found transport: " << source);
+               DebugLog(<< "Found transport: " << source << ", for target=" << target);
                if (source.getPort()==0)
                {
                   source.setPort(transport->port());
@@ -1172,7 +1172,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          if(transport)
          {
             source = transport->getTuple();
-            DebugLog(<< "Found transport: " << source);
+            DebugLog(<< "Found transport: " << source << ", for target=" << target);
 
             // .bwc. If the transport has an ambiguous interface, we need to
             //look a little closer.
@@ -1781,6 +1781,7 @@ resip::operator<<(EncodeStream& ostrm, const TransportSelector::TlsTransportKey&
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

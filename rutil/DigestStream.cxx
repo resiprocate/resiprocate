@@ -29,14 +29,14 @@
 using namespace resip;
 
 DigestBuffer::DigestBuffer(DigestType digestType) :
+   mDigestType(digestType),
    mContext(nullptr),
+   mBytesTaken(0),
 #ifdef USE_SSL
-   mFinalBin(EVP_MAX_MD_SIZE, Data::Preallocate),
+   mFinalBin(EVP_MAX_MD_SIZE, Data::Preallocate)
 #else
-   mFinalBin(16, Data::Preallocate),
+   mFinalBin(16, Data::Preallocate)
 #endif
-   mLen(0),
-   mDigestType(digestType)
 {
    int ret = 0;
    switch (digestType)
@@ -128,7 +128,7 @@ DigestBuffer::sync()
 #endif
       // reset the put buffer
       setp(mBuf, mBuf + sizeof(mBuf));
-      mLen += len;
+      mBytesTaken += len;
    }
    return 0;
 }
@@ -198,6 +198,45 @@ DigestStream::getBin()
    flush();
    return DigestBuffer::getBin();
 }
+
+size_t
+DigestStream::bytesTaken()
+{
+   return DigestBuffer::bytesTaken();
+}
+
+static Data md5Name("MD5");
+static Data sha1Name("SHA1");
+#ifdef USE_SSL
+static Data sha256Name("SHA-256");
+static Data sha512Name("SHA-512");
+static Data sha512_256Name("SHA-512-256");
+#endif
+const Data&
+DigestStream::getDigestName(DigestType digestType)
+{
+   // Note:  This name formatting aligns with what is needed in the SIP
+   //        Digest authentication header 'algorithm' parameter (where it makes sense).
+   switch (digestType)
+   {
+      case MD5:
+         return md5Name;
+      case SHA1:
+         return sha1Name;
+#ifdef USE_SSL
+      case SHA256:
+         return sha256Name;
+      case SHA512:
+         return sha512Name;
+      case SHA512_256:
+         return sha512_256Name;
+#endif
+      default:
+         resip_assert(false);
+         return Data::Empty;
+   }
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

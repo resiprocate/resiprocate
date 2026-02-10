@@ -6,6 +6,7 @@
 #include "rutil/DigestStream.hxx"
 #include "rutil/DataStream.hxx"
 #include "resip/stack/Symbols.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/dum/UserAuthInfo.hxx"
@@ -61,26 +62,13 @@ UserStore::addUser( const Data& username,
    rec.realm = realm;
    if(applyA1HashToPassword)
    {
-      DigestStream a1;
-      a1 << username
-         << Symbols::COLON
-         << realm
-         << Symbols::COLON
-         << password;
-      a1.flush();
-      rec.passwordHash = a1.getHex();
+      rec.passwordHash = Helper::createResipA1HashString(username, realm, password);
 
       // Some UAs might calculate A1
       // using user@domain:realm:password
       // so we store the hash of that permutation too
-      DigestStream a1b;
-      a1b << username << Symbols::AT_SIGN << domain
-         << Symbols::COLON
-         << realm
-         << Symbols::COLON
-         << password;
-      a1b.flush();
-      rec.passwordHashAlt = a1b.getHex();
+      Data userAtDomain = username + Symbols::AT_SIGN + domain;
+      rec.passwordHashAlt = Helper::createResipA1HashString(userAtDomain, realm, password);
    }
    else
    {

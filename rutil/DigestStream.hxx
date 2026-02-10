@@ -7,23 +7,23 @@
 namespace resip
 {
 
+enum DigestType
+{
+   MD5,
+   SHA1
+#ifdef USE_SSL
+   , SHA256
+   , SHA512
+   , SHA512_256
+#endif
+};
+
 /** 
     @brief Implementation of std::streambuf used to back the DigestStream.
 */
 class DigestBuffer : public std::streambuf
 {
 public:
-   enum DigestType
-   {
-      MD5,
-      SHA1
-#ifdef USE_SSL
-      , SHA256
-      , SHA512
-      , SHA512_256
-#endif
-   };
-
    DigestBuffer(DigestType digestType = MD5);
    virtual ~DigestBuffer();
 
@@ -33,18 +33,18 @@ public:
    /** @returns the Digest binary representation of the data from the buffer */
    const Data& getBin();
 
-   size_t bytesTaken();
+   size_t bytesTaken() { return mBytesTaken; }
 
 protected:
    virtual int sync();
    virtual int overflow(int c = -1);
 
 private:
+   DigestType mDigestType;
    char mBuf[64];
    void* mContext;
+   size_t mBytesTaken;
    Data mFinalBin;
-   size_t mLen;
-   DigestType mDigestType;
 };
 
 /** 
@@ -62,7 +62,10 @@ public:
    */
    Data getHex();
    const Data& getBin();
-private:
+
+   size_t bytesTaken();
+
+   static const Data& getDigestName(DigestType digestType);
 };
 
 }

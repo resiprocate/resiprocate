@@ -28,8 +28,11 @@ using namespace std;
 
 #ifdef USE_RADIUS_CLIENT
 
-RADIUSAuthenticator::RADIUSAuthenticator(ProxyConfig& config, const resip::Data& configurationFile, const Data& staticRealm) :
-   DigestAuthenticator(config, 0, staticRealm)
+RADIUSAuthenticator::RADIUSAuthenticator(ProxyConfig& config, 
+                                         const resip::Data& configurationFile,
+                                         const Data& staticRealm,
+                                         const std::vector<resip::DigestType>& challengeDigestTypes) :
+   DigestAuthenticator(config, 0, staticRealm, challengeDigestTypes)
 {
    RADIUSDigestAuthenticator::init(
       configurationFile.empty() ? 0 : configurationFile.c_str());
@@ -157,6 +160,7 @@ ReproRADIUSDigestAuthListener::onError()
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock http://danielpocock.com
  * All rights reserved.
  *

@@ -27,8 +27,8 @@
  * * #### New Usage:
  * @code
  * #include "rutil/DigestStream.hxx"
- * // Defaults to MD5, or specify DigestBuffer::MD5 explicitly
- * resip::DigestStream ds(resip::DigestBuffer::MD5);
+ * // Defaults to MD5, or specify DigestType explicitly
+ * resip::DigestStream ds(resip::MD5);
  * ds << "data";
  * resip::Data hash = ds.getHex();
  * @endcode

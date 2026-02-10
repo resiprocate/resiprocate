@@ -3,8 +3,10 @@
 
 #include <memory>
 #include <set>
+#include <vector>
 
 #include "rutil/Data.hxx"
+#include "rutil/DigestStream.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
@@ -54,6 +56,8 @@ private:
    // Maintains existing behavior for non-TLS cert auth users
    bool mDigestChallengeThirdParties;
 
+   std::vector<resip::DigestType> mChallengeDigestTypes;
+
    resip::CommonNameMappings mCommonNameMappings;
 
    std::unique_ptr<resip::Dispatcher> mAuthRequestDispatcher;
@@ -69,6 +73,7 @@ private:
 /* ====================================================================
  * BSD License
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2013 Daniel Pocock http://danielpocock.com All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

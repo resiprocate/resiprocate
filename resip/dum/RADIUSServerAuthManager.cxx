@@ -26,8 +26,9 @@ RADIUSServerAuthManager::RADIUSServerAuthManager(
                             TargetCommand::Target& target,
                             const Data& configurationFile,
                             bool challengeThirdParties,
-                            const Data& staticRealm) :
-   ServerAuthManager(dum, target, challengeThirdParties, staticRealm),
+                            const Data& staticRealm,
+                            const std::vector<DigestType>& challengeDigestTypes) :
+   ServerAuthManager(dum, target, challengeThirdParties, staticRealm, challengeDigestTypes),
    dum(dum)
 {
    RADIUSDigestAuthenticator::init(
@@ -190,6 +191,7 @@ MyRADIUSDigestAuthListener::onError()
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2008-2013 Daniel Pocock http://danielpocock.com
  * All rights reserved.
  *

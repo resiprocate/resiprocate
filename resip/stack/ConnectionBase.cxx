@@ -774,7 +774,7 @@ ConnectionBase::makeWsHandshakeResponse()
          "Connection: Upgrade\r\n"
          "Sec-WebSocket-Protocol: sip\r\n"));
 
-      DigestStream wsSha1Stream(DigestBuffer::SHA1);
+      DigestStream wsSha1Stream(SHA1);
       wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Symbols::WebsocketMagicGUID);
       Data wsAcceptKey = wsSha1Stream.getBin().base64encode();
       *responsePtr += "Sec-WebSocket-Accept: " + wsAcceptKey + "\r\n\r\n";

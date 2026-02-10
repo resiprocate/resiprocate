@@ -29,7 +29,8 @@ using namespace std;
 
 DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
                                          Dispatcher* authRequestDispatcher,
-                                         const Data& staticRealm) :
+                                         const Data& staticRealm,
+                                         const std::vector<resip::DigestType>& challengeDigestTypes) :
    Processor("DigestAuthenticator"),
    mAuthRequestDispatcher(authRequestDispatcher),
    mStaticRealm(staticRealm),
@@ -38,7 +39,8 @@ DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
    mHttpPort(config.getConfigInt("HttpPort", 5080)),
    mUseAuthInt(!config.getConfigBool("DisableAuthInt", false)),
    mRejectBadNonces(config.getConfigBool("RejectBadNonces", false)),
-   mAllowInDialogImpersonationWithinRealm(config.getConfigBool("AllowInDialogImpersonationWithinRealm", false))
+   mAllowInDialogImpersonationWithinRealm(config.getConfigBool("AllowInDialogImpersonationWithinRealm", false)),
+   mChallengeDigestTypes(challengeDigestTypes)
 {
 }
 
@@ -371,7 +373,8 @@ DigestAuthenticator::challengeRequest(repro::RequestContext &rc, bool stale)
    Data realm = getRealm(rc);
 
    SipMessage *challenge = Helper::makeProxyChallenge(sipMessage, realm, 
-                                                      mUseAuthInt /*auth-int*/, stale);
+                                                      mUseAuthInt /*auth-int*/, stale,
+                                                      mChallengeDigestTypes);
    rc.sendResponse(*challenge);
    delete challenge;
 }

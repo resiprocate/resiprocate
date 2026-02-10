@@ -41,6 +41,19 @@ ReproAuthenticatorFactory::ReproAuthenticatorFactory(ProxyConfig& proxyConfig, S
       mCertificateAuthManager((DumFeature*)0),
       mServerAuthManager((ServerAuthManager*)0)
 {
+   std::vector<resip::Data> digestTypeStrings;
+   if (mProxyConfig.getConfigValue("DigestChallengeAlgorithms", digestTypeStrings))
+   {
+      DigestType digestType;
+      for (auto it = digestTypeStrings.begin(); it != digestTypeStrings.end(); ++it)
+      {
+         if (Helper::isDigestAlgorithmSupported(*it, digestType))
+         {
+            InfoLog(<< "Adding algorithm=" << *it << " for digest challenges");
+            mChallengeDigestTypes.push_back(digestType);
+         }
+      }
+   }
 }
 
 ReproAuthenticatorFactory::~ReproAuthenticatorFactory()
@@ -170,7 +183,8 @@ ReproAuthenticatorFactory::getServerAuthManager()
                                   mProxyConfig.getConfigBool("RejectBadNonces", false),
                                   mRADIUSConfiguration,
                                   mDigestChallengeThirdParties,
-                                  mStaticRealm));
+                                  mStaticRealm,
+                                  mChallengeDigestTypes));
 #else
          ErrLog(<<"can't create ReproRADIUSServerAuthManager, not compiled with RADIUS support");
 #endif
@@ -183,7 +197,8 @@ ReproAuthenticatorFactory::getServerAuthManager()
                                   !mProxyConfig.getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
                                   mProxyConfig.getConfigBool("RejectBadNonces", false),
                                   mDigestChallengeThirdParties,
-                                  mStaticRealm));
+                                  mStaticRealm,
+                                  mChallengeDigestTypes));
       }
    }
    return mServerAuthManager;
@@ -204,7 +219,7 @@ ReproAuthenticatorFactory::getDigestAuthenticator()
    }
    else
    {
-      return std::unique_ptr<Processor>(new DigestAuthenticator(mProxyConfig, getDispatcher(), mStaticRealm));
+      return std::unique_ptr<Processor>(new DigestAuthenticator(mProxyConfig, getDispatcher(), mStaticRealm, mChallengeDigestTypes));
    }
 }
 
@@ -218,6 +233,7 @@ ReproAuthenticatorFactory::getDispatcher()
 /* ====================================================================
  * BSD License
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2013 Daniel Pocock http://danielpocock.com All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

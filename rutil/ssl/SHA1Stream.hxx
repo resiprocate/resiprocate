@@ -32,7 +32,7 @@
  * @code
  * #include "rutil/DigestStream.hxx"
  * // You must explicitly pass the SHA1 type
- * resip::DigestStream ds(resip::DigestBuffer::SHA1);
+ * resip::DigestStream ds(resip::SHA1);
  * ds << "data";
  * resip::Data hash = ds.getHex();
  * @endcode

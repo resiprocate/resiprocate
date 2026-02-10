@@ -20,8 +20,9 @@ ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
                                                bool useAuthInt,
                                                bool rejectBadNonces,
                                                bool challengeThirdParties,
-                                               const Data& staticRealm):
-   ServerAuthManager(dum, dum.dumIncomingTarget(), challengeThirdParties, staticRealm),
+                                               const Data& staticRealm,
+                                               const std::vector<DigestType>& challengeDigestTypes):
+   ServerAuthManager(dum, dum.dumIncomingTarget(), challengeThirdParties, staticRealm, challengeDigestTypes),
    mDum(dum),
    mAuthRequestDispatcher(authRequestDispatcher),
    mAclDb(aclDb),
@@ -77,6 +78,7 @@ ReproServerAuthManager::requestCredential(const Data& user,
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

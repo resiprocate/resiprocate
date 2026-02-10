@@ -27,7 +27,20 @@ StaticRoute::StaticRoute(ProxyConfig& config) :
    mParallelForkStaticRoutes(config.getConfigBool("ParallelForkStaticRoutes", false)),
    mContinueProcessingAfterRoutesFound(config.getConfigBool("ContinueProcessingAfterRoutesFound", false)),
    mUseAuthInt(!config.getConfigBool("DisableAuthInt", false))
-{}
+{
+   std::vector<resip::Data> digestTypeStrings;
+   if (config.getConfigValue("DigestChallengeAlgorithms", digestTypeStrings))
+   {
+      DigestType digestType;
+      for (auto it = digestTypeStrings.begin(); it != digestTypeStrings.end(); ++it)
+      {
+         if (Helper::isDigestAlgorithmSupported(*it, digestType))
+         {
+            mChallengeDigestTypes.push_back(digestType);
+         }
+      }
+   }
+}
 
 StaticRoute::~StaticRoute()
 {}
@@ -129,7 +142,7 @@ StaticRoute::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
 {
    SipMessage& sipMessage = rc.getOriginalRequest();
 
-   SipMessage *challenge = Helper::makeProxyChallenge(sipMessage, realm, mUseAuthInt /*auth-int*/, false /*stale*/);
+   SipMessage *challenge = Helper::makeProxyChallenge(sipMessage, realm, mUseAuthInt /*auth-int*/, false /*stale*/, mChallengeDigestTypes);
    rc.sendResponse(*challenge);
 
    delete challenge;
@@ -139,6 +152,7 @@ StaticRoute::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

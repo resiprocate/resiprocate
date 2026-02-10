@@ -26,8 +26,9 @@ ReproRADIUSServerAuthManager::ReproRADIUSServerAuthManager(DialogUsageManager& d
                                                bool rejectBadNonces,
                                                const resip::Data& configurationFile,
                                                bool challengeThirdParties,
-                                               const Data& staticRealm):
-   RADIUSServerAuthManager(dum, dum.dumIncomingTarget(), configurationFile, challengeThirdParties, staticRealm),
+                                               const Data& staticRealm,
+                                               const std::vector<DigestType>& challengeDigestTypes):
+   RADIUSServerAuthManager(dum, dum.dumIncomingTarget(), configurationFile, challengeThirdParties, staticRealm, challengeDigestTypes),
    mAclDb(aclDb),
    mUseAuthInt(useAuthInt),
    mRejectBadNonces(rejectBadNonces)
@@ -68,6 +69,7 @@ ReproRADIUSServerAuthManager::requiresChallenge(const SipMessage& msg)
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock http://danielpocock.com
  * All rights reserved.
  *
