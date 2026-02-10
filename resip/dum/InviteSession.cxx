@@ -1546,11 +1546,13 @@ InviteSession::dispatchConnected(const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately (likely session timer) - do we need a callback?
+         // ?slg? no offerAnswer in update - just respond immediately (likely session timer)
+         DebugLog(<< "There is no offerAnswer in update");
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 200);
          handleSessionTimerRequest(*response, msg);
          send(response);
+         handler->onSessionTimerRequest(getSessionHandle(), msg);
          break;
       }
 
