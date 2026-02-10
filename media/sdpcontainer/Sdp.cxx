@@ -294,8 +294,7 @@ Sdp::getLocalFoundationId(SdpCandidate::SdpCandidateType candidateType,
    }
 
    // Not found - insert
-   char foundationId[15];
-   sprintf(foundationId, "%ld", (long)mFoundationIds.size() + 1);
+   std::string foundationId = std::to_string(mFoundationIds.size() + 1);
    mFoundationIds[foundationId] = sdpFoundation;
 
    return foundationId;

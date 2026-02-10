@@ -66,19 +66,19 @@ public:
    virtual ~SipXRemoteParticipant();
 
    virtual unsigned int getLocalRTPPort();
-   virtual void buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp = false);
+   virtual void buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp = false) override;
 
-   virtual int getConnectionPortOnBridge();
-   virtual bool hasInput() { return true; }
-   virtual bool hasOutput() { return true; }
+   virtual int getConnectionPortOnBridge() override;
+   virtual bool hasInput() override { return true; }
+   virtual bool hasOutput() override { return true; }
    virtual int getMediaConnectionId();
 
-   virtual void adjustRTPStreams(bool sendingOffer=false);
+   virtual void adjustRTPStreams(bool sendingOffer=false) override;
 
    virtual void requestKeyframe() override;
 
 protected:
-   virtual bool mediaStackPortAvailable();
+   virtual bool mediaStackPortAvailable() override;
 
    // Note:  Returns non-null the majority of the time, can return null on object destruction
    virtual SipXRemoteParticipantDialogSet* getSipXDialogSet() { return dynamic_cast<SipXRemoteParticipantDialogSet*>(&getDialogSet()); }

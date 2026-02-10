@@ -37,7 +37,7 @@ class ReproRADIUSServerAuthManager: public resip::RADIUSServerAuthManager
                              const resip::Data& configurationFile,
                              bool challengeThirdParties,
                              const resip::Data& staticRealm,
-                             const std::vector<DigestType>& challengeDigestTypes = std::vector<DigestType>());
+                             const std::vector<resip::DigestType>& challengeDigestTypes = std::vector<resip::DigestType>());
       
       ~ReproRADIUSServerAuthManager();
       
