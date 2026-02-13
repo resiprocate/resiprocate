@@ -11,10 +11,9 @@
 #include "rutil/Coders.hxx"
 #include "rutil/CountStream.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/vmd5.hxx"
-#include "rutil/Coders.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
@@ -26,15 +25,110 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+/// Clears the container. Does not free `HeaderFieldValueList` objects but clears them and marks as "unused".
+void
+SipMessage::KnownHeaders::clear() noexcept
+{
+   for (iterator it = begin(), e = end(); it != e;)
+   {
+      erase(it++);
+   }
+}
+
+/// Clears the container and invokes the dispose function on every element.
+template<typename Disposer>
+inline void
+SipMessage::KnownHeaders::clearAndDispose(Disposer&& disposer) noexcept
+{
+   for (reference elem : mHeaders)
+   {
+      disposer(elem);
+   }
+
+   mHeaders.clear();
+   mSize = 0;
+   resetIndices();
+}
+
+/// Erases an element. Does not free the `HeaderFieldValueList` object but clears it and marks as "unused".
+void
+SipMessage::KnownHeaders::erase(iterator it) noexcept
+{
+   resip_assert(it->getType() != Headers::UNKNOWN);
+   resip_assert(it->getValues() != nullptr);
+   resip_assert(mSize > 0);
+
+   it->getValues()->clear();
+   it->setType(Headers::UNKNOWN);
+   --mSize;
+}
+
+/// Constructs or reuses a previously erased element for a given header type.
+template<typename ValuesFactory>
+inline SipMessage::KnownHeaders::iterator
+SipMessage::KnownHeaders::insert(Headers::Type type, ValuesFactory&& valuesFactory)
+{
+   resip_assert(static_cast<size_type>(type) < (sizeof(mHeaderIndices) / sizeof(*mHeaderIndices)));
+   size_type pos = mHeaderIndices[type];
+   if (pos >= mHeaders.size())
+   {
+      pos = mHeaders.size();
+      mHeaders.emplace_back(type);
+      try
+      {
+         mHeaders[pos].setValues(valuesFactory());
+      }
+      catch (...)
+      {
+         mHeaders.pop_back();
+         throw;
+      }
+      mHeaderIndices[type] = static_cast<HeaderIndex>(pos);
+      ++mSize;
+   }
+   else if (mHeaders[pos].getType() == Headers::UNKNOWN)
+   {
+      // Reuse the previously erased element
+      mHeaders[pos].setType(type);
+      ++mSize;
+   }
+
+   return iterator(mHeaders.begin() + pos, mHeaders.end());
+}
+
+/// Resets all header indices to `InvalidHeaderIndex`
+void
+SipMessage::KnownHeaders::resetIndices() noexcept
+{
+   for (HeaderIndex& index : mHeaderIndices)
+      index = InvalidHeaderIndex;
+}
+
+/// Finds header information, if present in the list. Returns `end()` if not found. Does not produce "unused" entries.
+SipMessage::KnownHeaders::iterator
+SipMessage::KnownHeaders::find(Headers::Type type) noexcept
+{
+   resip_assert(static_cast<size_type>(type) < (sizeof(mHeaderIndices) / sizeof(*mHeaderIndices)));
+   if (mHeaderIndices[type] < mHeaders.size())
+   {
+      TypedHeaders::iterator it = mHeaders.begin() + mHeaderIndices[type];
+      if (it->getType() != Headers::UNKNOWN)
+         return iterator(it, mHeaders.end());
+   }
+
+   return end();
+}
+
+
 bool SipMessage::checkContentLength=true;
 
 SipMessage::SipMessage(const Tuple *receivedTransportTuple)
    : mIsDecorated(false),
      mIsBadAck200(false),
      mIsExternal(receivedTransportTuple != 0),  // may be modified later by setFromTU or setFromExternal
-     mHeaders(StlPoolAllocator<HeaderFieldValueList*, PoolBase >(&mPool)),
+     mKnownHeaders(StlPoolAllocator<HeaderFieldValueList*, PoolBase>(&mPool)),
 #ifndef __SUNPRO_CC
-     mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList*>, PoolBase >(&mPool)),
+     mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList*>, PoolBase>(&mPool)),
 #else
      mUnknownHeaders(),
 #endif
@@ -49,14 +143,14 @@ SipMessage::SipMessage(const Tuple *receivedTransportTuple)
        mReceivedTransportTuple = *receivedTransportTuple;
    }
    // !bwc! TODO make this tunable
-   mHeaders.reserve(16);
+   mKnownHeaders.reserve(16);
    clear();
 }
 
 SipMessage::SipMessage(const SipMessage& from)
-   : mHeaders(StlPoolAllocator<HeaderFieldValueList*, PoolBase >(&mPool)),
+   : mKnownHeaders(StlPoolAllocator<HeaderFieldValueList*, PoolBase>(&mPool)),
 #ifndef __SUNPRO_CC
-     mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList*>, PoolBase >(&mPool)),
+     mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList*>, PoolBase>(&mPool)),
 #else
      mUnknownHeaders(),
 #endif
@@ -105,11 +199,8 @@ SipMessage::clear(bool leaveResponseStuff)
 {
    if(!leaveResponseStuff)
    {
-      memset(mHeaderIndices,0,sizeof(mHeaderIndices));
       clearHeaders();
-      
-      // !bwc! The "invalid" 0 index.
-      mHeaders.push_back(getEmptyHfvl());
+
       mBufferList.clear();
    }
 
@@ -127,6 +218,7 @@ void
 SipMessage::init(const SipMessage& rhs)
 {
    clear();
+
    mIsDecorated = rhs.mIsDecorated;
    mIsBadAck200 = rhs.mIsBadAck200;
    mIsExternal = rhs.mIsExternal;
@@ -147,15 +239,12 @@ SipMessage::init(const SipMessage& rhs)
    }
    mTlsDomain = rhs.mTlsDomain;
 
-   memcpy(&mHeaderIndices,&rhs.mHeaderIndices,sizeof(mHeaderIndices));
-
-   // .bwc. Clear out the pesky invalid 0 index.
-   clearHeaders();
-   mHeaders.reserve(rhs.mHeaders.size());
-   for (TypedHeaders::const_iterator i = rhs.mHeaders.begin();
-        i != rhs.mHeaders.end(); i++)
+   mKnownHeaders.reserve(rhs.mKnownHeaders.size());
+   for (KnownHeaders::const_reference info : rhs.mKnownHeaders)
    {
-      mHeaders.push_back(getCopyHfvl(**i));
+      // At this point the list must have no "unused" elements,
+      // so the factory function will always be invoked
+      mKnownHeaders.insert(info.getType(), [&] { return getCopyHfvl(*info.getValues()); });
    }
 
    for (UnknownHeaders::const_iterator i = rhs.mUnknownHeaders.begin();
@@ -260,11 +349,7 @@ SipMessage::freeMem(bool leaveResponseStuff)
 void
 SipMessage::clearHeaders()
 {
-    for (TypedHeaders::iterator i = mHeaders.begin(); i != mHeaders.end(); i++)
-    {
-        freeHfvl(*i);
-    }
-    mHeaders.clear();
+   mKnownHeaders.clearAndDispose([this](KnownHeaders::reference elem) noexcept { freeHfvl(elem.getValues()); });
 }
 
 SipMessage*
@@ -314,32 +399,30 @@ SipMessage::make(const Data& data, bool isExternal)
 void
 SipMessage::parseAllHeaders()
 {
-   for (int i = 0; i < Headers::MAX_HEADERS; i++)
+   for (KnownHeaders::reference info : mKnownHeaders)
    {
-      ParserContainerBase* pc=0;
-      if(mHeaderIndices[i]>0)
+      HeaderFieldValueList* hfvl = info.getValues();
+      resip_assert(hfvl != nullptr);
+      if (!Headers::isMulti(info.getType()) && hfvl->parsedEmpty())
       {
-         HeaderFieldValueList* hfvl = ensureHeaders((Headers::Type)i);
-         if(!Headers::isMulti((Headers::Type)i) && hfvl->parsedEmpty())
-         {
-            hfvl->push_back(0,0,false);
-         }
-
-         if(!(pc=hfvl->getParserContainer()))
-         {
-            pc = HeaderBase::getInstance((Headers::Type)i)->makeContainer(hfvl);
-            hfvl->setParserContainer(pc);
-         }
-      
-         pc->parseAll();
+         hfvl->push_back(nullptr, 0, false);
       }
+
+      ParserContainerBase* pc = hfvl->getParserContainer();
+      if (!pc)
+      {
+         pc = HeaderBase::getInstance(info.getType())->makeContainer(hfvl);
+         hfvl->setParserContainer(pc);
+      }
+
+      pc->parseAll();
    }
 
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
-      ParserContainerBase* scs=0;
-      if(!(scs=i->second->getParserContainer()))
+      ParserContainerBase* scs = i->second->getParserContainer();
+      if (!scs)
       {
          scs=makeParserContainer<StringCategory>(i->second,Headers::RESIP_DO_NOT_USE);
          i->second->setParserContainer(scs);
@@ -421,7 +504,7 @@ SipMessage::compute2543TransactionHash() const
 
    if (isRequest())
    {
-      MD5Stream strm;
+      DigestStream strm;
       // See section 17.2.3 Matching Requests to Server Transactions in rfc 3261
 
 //#define VONAGE_FIX
@@ -749,14 +832,11 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
 #endif
    }
 
-   for (uint8_t i = 0; i < Headers::MAX_HEADERS; i++)
+   for (KnownHeaders::const_reference info : mKnownHeaders)
    {
-      if (i != Headers::ContentLength) // !dlb! hack...
+      if (info.getType() != Headers::ContentLength) // !dlb! hack...
       {
-         if (mHeaderIndices[i] > 0)
-         {
-            mHeaders[mHeaderIndices[i]]->encode(i, str);
-         }
+         info.getValues()->encode(info.getType(), str);
       }
    }
 
@@ -780,9 +860,10 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
 EncodeStream&
 SipMessage::encodeSingleHeader(Headers::Type type, EncodeStream& str) const
 {
-   if (mHeaderIndices[type] > 0)
+   auto it = mKnownHeaders.find(type);
+   if (it != mKnownHeaders.end())
    {
-      mHeaders[mHeaderIndices[type]]->encode(type, str);
+      it->getValues()->encode(type, str);
    }
    return str;
 }
@@ -791,23 +872,20 @@ EncodeStream&
 SipMessage::encodeEmbedded(EncodeStream& str) const
 {
    bool first = true;
-   for (uint8_t i = 0; i < Headers::MAX_HEADERS; i++)
+   for (KnownHeaders::const_reference info : mKnownHeaders)
    {
-      if (i != Headers::ContentLength)
+      if (info.getType() != Headers::ContentLength)
       {
-         if (mHeaderIndices[i] > 0)
+         if (first)
          {
-            if (first)
-            {
-               str << Symbols::QUESTION;
-               first = false;
-            }
-            else
-            {
-               str << Symbols::AMPERSAND;
-            }
-            mHeaders[mHeaderIndices[i]]->encodeEmbedded(Headers::getHeaderName(i), str);
+            str << Symbols::QUESTION;
+            first = false;
          }
+         else
+         {
+            str << Symbols::AMPERSAND;
+         }
+         info.getValues()->encodeEmbedded(Headers::getHeaderName(info.getType()), str);
       }
    }
 
@@ -1203,25 +1281,8 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
 {
    if (header != Headers::UNKNOWN)
    {
-      resip_assert(header >= Headers::UNKNOWN && header < Headers::MAX_HEADERS);
-      HeaderFieldValueList* hfvl=0;
-      if (mHeaderIndices[header] == 0)
-      {
-         mHeaderIndices[header] = (short)mHeaders.size();
-         mHeaders.push_back(getEmptyHfvl());
-         hfvl=mHeaders.back();
-      }
-      else
-      {
-         if(mHeaderIndices[header]<0)
-         {
-            // Adding to a previously removed header type; there is already an 
-            // empty HeaderFieldValueList in mHeaders for this type, all we 
-            // need to do is flip the sign to re-enable it.
-            mHeaderIndices[header] *= -1;
-         }
-         hfvl=mHeaders[mHeaderIndices[header]];
-      }
+      resip_assert(header > Headers::UNKNOWN && header < Headers::MAX_HEADERS);
+      HeaderFieldValueList* hfvl = ensureHeaders(header);
 
       if(Headers::isMulti(header))
       {
@@ -1337,54 +1398,36 @@ SipMessage::header(const StatusLineType& l) const
 HeaderFieldValueList* 
 SipMessage::ensureHeaders(Headers::Type type)
 {
-   HeaderFieldValueList* hfvl=0;
-   if(mHeaderIndices[type]!=0)
-   {
-      if(mHeaderIndices[type]<0)
-      {
-         // Accessing a previously removed header type; there is already an 
-         // empty HeaderFieldValueList in mHeaders for this type, all we 
-         // need to do is flip the sign to re-enable it.
-         mHeaderIndices[type] *= -1;
-      }
-      hfvl = mHeaders[mHeaderIndices[type]];
-   }
-   else
-   {
-      // create the list with a new component
-      mHeaders.push_back(getEmptyHfvl());
-      hfvl=mHeaders.back();
-      mHeaderIndices[type]= (short)mHeaders.size()-1;
-   }
+   return mKnownHeaders.insert(type, [this] { return getEmptyHfvl(); })->getValues();
+}
 
-   return hfvl;
+HeaderFieldValueList*
+SipMessage::ensureHeaders(Headers::Type type) const
+{
+   auto it = mKnownHeaders.find(type);
+   if (it == mKnownHeaders.end())
+   {
+      throwHeaderMissing(type);
+   }
+   return it->getValues();
 }
 
 HeaderFieldValueList* 
 SipMessage::ensureHeader(Headers::Type type)
 {
-   HeaderFieldValueList* hfvl=0;
-   if(mHeaderIndices[type]!=0)
-   {
-      if(mHeaderIndices[type]<0)
-      {
-         // Accessing a previously removed header type; there is already an 
-         // empty HeaderFieldValueList in mHeaders for this type, all we 
-         // need to do is flip the sign to re-enable it.
-         mHeaderIndices[type] *= -1;
-         hfvl = mHeaders[mHeaderIndices[type]];
-         hfvl->push_back(0,0,false);
-      }
-      hfvl = mHeaders[mHeaderIndices[type]];
-   }
-   else
-   {
-      // create the list with a new component
-      mHeaders.push_back(getEmptyHfvl());
-      hfvl=mHeaders.back();
-      mHeaderIndices[type]=(short)mHeaders.size()-1;
-      mHeaders.back()->push_back(0,0,false);
-   }
+   HeaderFieldValueList* hfvl = ensureHeaders(type);
+   if (hfvl->empty())
+      hfvl->push_back(nullptr, 0, false);
+
+   return hfvl;
+}
+
+HeaderFieldValueList*
+SipMessage::ensureHeader(Headers::Type type) const
+{
+   HeaderFieldValueList* hfvl = ensureHeaders(type);
+   if (hfvl->empty())
+      hfvl->push_back(nullptr, 0, false);
 
    return hfvl;
 }
@@ -1403,26 +1446,22 @@ SipMessage::throwHeaderMissing(Headers::Type type) const
 bool    
 SipMessage::exists(const HeaderBase& headerType) const 
 {
-   return mHeaderIndices[headerType.getTypeNum()] > 0;
+   return mKnownHeaders.find(headerType.getTypeNum()) != mKnownHeaders.end();
 };
 
 bool
 SipMessage::empty(const HeaderBase& headerType) const
 {
-   return (mHeaderIndices[headerType.getTypeNum()] <= 0) || mHeaders[mHeaderIndices[headerType.getTypeNum()]]->parsedEmpty();
+   auto it = mKnownHeaders.find(headerType.getTypeNum());
+   return it == mKnownHeaders.end() || it->getValues()->parsedEmpty();
 }
 
 void
 SipMessage::remove(Headers::Type type)
 {
-   if(mHeaderIndices[type] > 0)
-   {
-      // .bwc. The entry in mHeaders still remains after we do this; we retain 
-      // our index (as a negative number, indicating that this header should 
-      // not be encoded), in case this header type needs to be used later.
-      mHeaders[mHeaderIndices[type]]->clear();
-      mHeaderIndices[type] *= -1;
-   }
+   auto it = mKnownHeaders.find(type);
+   if (it != mKnownHeaders.end())
+      mKnownHeaders.erase(it);
 };
 
 #ifndef PARTIAL_TEMPLATE_SPECIALIZATION
@@ -1591,39 +1630,41 @@ defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draf
 const HeaderFieldValueList*
 SipMessage::getRawHeader(Headers::Type headerType) const
 {
-   if(mHeaderIndices[headerType]>0)
+   auto it = mKnownHeaders.find(headerType);
+   if (it != mKnownHeaders.end())
    {
-      return mHeaders[mHeaderIndices[headerType]];
+      return it->getValues();
    }
-   
-   return 0;
+
+   return nullptr;
 }
 
 void
 SipMessage::setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerType)
 {
-   HeaderFieldValueList* copy=0;
-   if (mHeaderIndices[headerType] == 0)
+   auto it = mKnownHeaders.find(headerType);
+   if (it != mKnownHeaders.end())
    {
-      mHeaderIndices[headerType]=(short)mHeaders.size();
-      copy=getCopyHfvl(*hfvs);
-      mHeaders.push_back(copy);
+      *it->getValues() = *hfvs;
    }
    else
    {
-      if(mHeaderIndices[headerType]<0)
+      bool constructed = false;
+      it = mKnownHeaders.insert(headerType, [&]
       {
-         // Setting a previously removed header type; there is already an 
-         // empty HeaderFieldValueList in mHeaders for this type, all we 
-         // need to do is flip the sign to re-enable it.
-         mHeaderIndices[headerType]=-mHeaderIndices[headerType];
+         constructed = true;
+         return getCopyHfvl(*hfvs);
+      });
+      if (!constructed)
+      {
+         // A previously erased element was reused
+         *it->getValues() = *hfvs;
       }
-      copy = mHeaders[mHeaderIndices[headerType]];
-      *copy=*hfvs;
    }
-   if(!Headers::isMulti(headerType) && copy->parsedEmpty())
+
+   if(!Headers::isMulti(headerType) && it->getValues()->parsedEmpty())
    {
-      copy->push_back(0,0,false);
+      it->getValues()->push_back(nullptr, 0, false);
    }
 }
 
@@ -1811,6 +1852,7 @@ SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

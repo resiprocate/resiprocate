@@ -17,7 +17,7 @@ namespace resip
 class UInt32Category : public ParserCategory
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      static constexpr CommaHandlingMode commaHandling = NoCommaTokenizing;
 
       UInt32Category();
       UInt32Category(const HeaderFieldValue& hfv, 

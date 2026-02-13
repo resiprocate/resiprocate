@@ -11,15 +11,20 @@ NotifyContents::NotifyContents(int count)
      mCount(count)
 {}
 
-NotifyContents::NotifyContents(const std::vector<Pidf::Tuple>& tuples)
-   : mTuples(tuples),
-     mCount(-1)
-{}
+NotifyContents::NotifyContents(const std::vector<GenericPidfContents::SimplePresenceInfo>& tuples)
+   : mCount(-1)
+{
+   for (std::vector<GenericPidfContents::SimplePresenceInfo>::const_iterator i = tuples.begin();
+        i != tuples.end(); ++i)
+   {
+      mTuples.push_back(*i);
+   }
+}
 
-NotifyContents::NotifyContents(Pidf::Tuple tuples[])
+NotifyContents::NotifyContents(GenericPidfContents::SimplePresenceInfo tuples[])
    : mTuples()
 {
-   while (!(*tuples).id.empty())
+   while (!(*tuples).mTupleId.empty())
    {
       mTuples.push_back(*tuples);
       ++tuples;
@@ -45,7 +50,7 @@ NotifyContents::operator()(std::shared_ptr<resip::SipMessage> msg)
       return false;
    }
 
-   Pidf* pidf = dynamic_cast<Pidf*>(msg->getContents());
+   GenericPidfContents* pidf = dynamic_cast<GenericPidfContents*>(msg->getContents());
    if (!pidf)
    {
       InfoLog(<< "NotifyContents failed: Pidf");
@@ -54,52 +59,60 @@ NotifyContents::operator()(std::shared_ptr<resip::SipMessage> msg)
 
    if (mCount != -1)
    {
-      if ((unsigned int)mCount != pidf->getTuples().size())
+      if ((unsigned int)mCount != pidf->getSimplePresenceList().size())
       {
-         InfoLog(<< "NotifyContents failed: tuple size " << pidf->getTuples().size() << " needed " << mCount);
+         InfoLog(<< "NotifyContents failed: tuple size " << pidf->getSimplePresenceList().size() << " needed " << mCount);
          return false;
       }
       return true;
    }
 
-   if (pidf->getTuples().size() != mTuples.size())
+   if (pidf->getSimplePresenceList().size() != mTuples.size())
    {
       InfoLog(<< "NotifyContents failed: tuple size");
       return false;
    }
 
-   for (std::vector<Pidf::Tuple>::const_iterator i = mTuples.begin();
+   for (std::list<resip::GenericPidfContents::SimplePresenceInfo>::const_iterator i = mTuples.begin();
         i != mTuples.end(); ++i)
    {
       bool found = false;
-      for (std::vector<Pidf::Tuple>::const_iterator j = pidf->getTuples().begin();
-           j != pidf->getTuples().end(); ++j)
+      for (GenericPidfContents::SimplePresenceInfoList::const_iterator j = pidf->getSimplePresenceList().begin();
+           j != pidf->getSimplePresenceList().end(); ++j)
       {
-         if (i->id == j->id)
+         if (i->mTupleId == (*j)->mTupleId)
          {
             found = true;
-            if (i->contact != "*" &&
-                i->contact != j->contact)
+
+            if (i->mOnline != (*j)->mOnline)
             {
-               InfoLog(<< "NotifyContents failed tuple contact: " << *j);
+               InfoLog(<< "NotifyContents failed tuple online status: " << *(*j));
                return false;
             }
 
-            if (i->contactPriority != -1.0 &&
-                i->contactPriority != j->contactPriority)
+            if (i->mContact != "*" &&
+                i->mContact != (*j)->mContact)
             {
-               InfoLog(<< "NotifyContents failed tuple contact priority: " << *j);
+               InfoLog(<< "NotifyContents failed tuple contact: " << *(*j));
                return false;
             }
 
-            if (i->note != "*" &&
-                i->note != j->note)
+            if (i->mContactPriority != Data(-1.0) &&
+                i->mContactPriority != (*j)->mContactPriority)
             {
-               InfoLog(<< "NotifyContents failed tuple contact note: " << *j);
+               InfoLog(<< "NotifyContents failed tuple contact priority: " << *(*j));
+               return false;
+            }
+
+            if (i->mNote != "*" &&
+                i->mNote != (*j)->mNote)
+            {
+               InfoLog(<< "NotifyContents failed tuple contact note: " << *(*j));
                return false;
             }
 
             // every attribute in i must be in j
+            /*
             for (HashMap<Data, Data>::const_iterator a = i->attributes.begin();
                  a != i->attributes.end(); ++a)
             {
@@ -116,7 +129,7 @@ NotifyContents::operator()(std::shared_ptr<resip::SipMessage> msg)
                   //InfoLog(<< "NotifyContents failed tuple attribute: " << *i << "[" << a->first << "] = " << a->second);
                   return false;
                }
-            }
+            }*/
          }
       }
 

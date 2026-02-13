@@ -10,7 +10,7 @@
 #include <rutil/Timer.hxx>
 #include <rutil/Random.hxx>
 #include <rutil/DataStream.hxx>
-#include <rutil/MD5Stream.hxx>
+#include <rutil/DigestStream.hxx>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
@@ -1681,7 +1681,7 @@ StunMessage::stunEncodeFramedMessage(char* buf, unsigned int bufLen)
 void
 StunMessage::computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
 {
-   // !slg! TODO - use newly added rutil/SHA1.hxx class  - will need to add new method to it to support this
+   // !slg! TODO - use newly added rutil/Sha1.hxx class  - will need to add new method to it to support this
    strncpy(hmac, "hmac-not-implemented", 20);
 }
 #else
@@ -1828,7 +1828,7 @@ StunMessage::calculateHmacKeyForHa1(Data& hmacKey, const Data& ha1)
 void
 StunMessage::calculateHmacKey(Data& hmacKey, const Data& username, const Data& realm, const Data& longtermAuthenticationPassword)
 {
-   MD5Stream r;
+   DigestStream r;
    r << username << ":" << realm << ":" << longtermAuthenticationPassword;
    hmacKey = r.getBin();
 
@@ -1903,6 +1903,7 @@ StunMessage::checkFingerprint()
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

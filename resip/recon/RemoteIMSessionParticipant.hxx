@@ -66,16 +66,16 @@ public:
    virtual void buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp = false) override;
    virtual void adjustRTPStreams(bool sendingOffer = false) override {} // nothing to do, we don't manage RTP streams
 
-   virtual int getConnectionPortOnBridge() { return -1; } // doesn't interact with mixing bridge
-   virtual bool hasInput() { return false; }
-   virtual bool hasOutput() { return false; }
+   virtual int getConnectionPortOnBridge() override { return -1; } // doesn't interact with mixing bridge
+   virtual bool hasInput() override { return false; }
+   virtual bool hasOutput() override { return false; }
 
    virtual void requestKeyframe() override;
 
 protected:
 
    virtual RemoteIMSessionParticipantDialogSet& getIMSessionDialogSet() { return dynamic_cast<RemoteIMSessionParticipantDialogSet&>(getDialogSet()); }
-   virtual bool mediaStackPortAvailable() { return true; } // doesn't use media stack, just return availabiltiy as true
+   virtual bool mediaStackPortAvailable() override { return true; } // doesn't use media stack, just return availabiltiy as true
 
 private:
    virtual void buildSdpAnswer(const resip::SdpContents& offer, CallbackSdpReady sdpReady) override;

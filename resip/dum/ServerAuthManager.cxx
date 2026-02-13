@@ -18,10 +18,15 @@
 using namespace resip;
 using namespace std;
 
-ServerAuthManager::ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, bool challengeThirdParties, const Data& staticRealm) :
+ServerAuthManager::ServerAuthManager(DialogUsageManager& dum, 
+   TargetCommand::Target& target, 
+   bool challengeThirdParties, 
+   const Data& staticRealm,
+   const std::vector<DigestType>& challengeDigestTypes) :
    DumFeature(dum, target),
    mChallengeThirdParties(challengeThirdParties),
-   mStaticRealm(staticRealm)
+   mStaticRealm(staticRealm),
+   mChallengeDigestTypes(challengeDigestTypes)
 {
 }
 
@@ -464,17 +469,18 @@ ServerAuthManager::issueChallengeIfRequired(SipMessage *sipMsg)
 }
 
 void
-ServerAuthManager::issueChallenge(SipMessage *sipMsg, bool stale)
+ServerAuthManager::issueChallenge(SipMessage* sipMsg, bool stale)
 {
-  //assume TransactionUser has matched/repaired a realm
-  std::shared_ptr<SipMessage> challenge(Helper::makeChallenge(*sipMsg,
-                                                        getChallengeRealm(*sipMsg), 
-                                                        useAuthInt(), 
-                                                        stale,
-                                                        proxyAuthenticationMode()));
+   //assume TransactionUser has matched/repaired a realm
+   std::shared_ptr<SipMessage> challenge(Helper::makeChallenge(*sipMsg,
+      getChallengeRealm(*sipMsg),
+      useAuthInt(),
+      stale,
+      proxyAuthenticationMode(),
+      mChallengeDigestTypes));
 
-  InfoLog (<< "Sending challenge to " << sipMsg->brief());
-  mDum.send(challenge);
+   InfoLog(<< "Sending challenge to " << sipMsg->brief());
+   mDum.send(challenge);
 }
 
 void 
@@ -493,6 +499,7 @@ ServerAuthManager::onAuthFailure(AuthFailureReason reason, const SipMessage& msg
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

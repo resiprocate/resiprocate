@@ -78,7 +78,11 @@ const char* SdpMediaLine::SdpCryptoSuiteTypeString[] =
    "NONE",
    "AES_CM_128_HMAC_SHA1_80",
    "AES_CM_128_HMAC_SHA1_32",
-   "F8_128_HMAC_SHA1_80"
+   "F8_128_HMAC_SHA1_80",
+   "AES_CM_192_HMAC_SHA1_80",
+   "AES_CM_192_HMAC_SHA1_32",
+   "AES_CM_256_HMAC_SHA1_80",
+   "AES_CM_256_HMAC_SHA1_32"
 };
 
 const char* SdpMediaLine::SdpCryptoKeyMethodString[] =
@@ -478,6 +482,30 @@ SdpMediaLine::getCryptoSuiteTypeFromString(const char * type)
    {
       return CRYPTO_SUITE_TYPE_F8_128_HMAC_SHA1_80;
    }
+   // RFC6188 places the _CM after the Master Key length for some reason - accept both
+   else if (resip::isEqualNoCase("AES_CM_192_HMAC_SHA1_80", dataType) ||
+      resip::isEqualNoCase("AES_192_CM_HMAC_SHA1_80", dataType))
+   {
+      return CRYPTO_SUITE_TYPE_AES_CM_192_HMAC_SHA1_80;
+   }
+   // RFC6188 places the _CM after the Master Key length for some reason - accept both
+   else if (resip::isEqualNoCase("AES_CM_192_HMAC_SHA1_32", dataType) ||
+      resip::isEqualNoCase("AES_192_CM_HMAC_SHA1_32", dataType))
+   {
+      return CRYPTO_SUITE_TYPE_AES_CM_192_HMAC_SHA1_32;
+   }
+   // RFC6188 places the _CM after the Master Key length for some reason - accept both
+   else if (resip::isEqualNoCase("AES_CM_256_HMAC_SHA1_80", dataType) ||
+      resip::isEqualNoCase("AES_256_CM_HMAC_SHA1_80", dataType))
+   {
+      return CRYPTO_SUITE_TYPE_AES_CM_256_HMAC_SHA1_80;
+   }
+   // RFC6188 places the _CM after the Master Key length for some reason - accept both
+   else if (resip::isEqualNoCase("AES_CM_256_HMAC_SHA1_32", dataType) ||
+      resip::isEqualNoCase("AES_256_CM_HMAC_SHA1_32", dataType))
+   {
+      return CRYPTO_SUITE_TYPE_AES_CM_256_HMAC_SHA1_32;
+   }
    else
    {
       return CRYPTO_SUITE_TYPE_NONE;
@@ -830,6 +858,7 @@ sdpcontainer::operator<<( EncodeStream& strm, const SdpMediaLine& sdpMediaLine)
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

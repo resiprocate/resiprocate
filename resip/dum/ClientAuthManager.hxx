@@ -43,7 +43,7 @@ class ClientAuthManager
          
       class RealmState
       {
-         public:     
+         public:
             RealmState();
             
             void clear();
@@ -51,16 +51,18 @@ class ClientAuthManager
             bool handleAuth(UserProfile& userProfile, const Auth& auth, bool isProxyCredential);
             void authSucceeded();
 
-            void addAuthentication(SipMessage& origRequest);            
+            void addAuthentication(SipMessage& origRequest);
+            void transitionToFailedIfInitial();
+
          private:
             typedef enum
             {
-               Invalid,
+               Initial,
                Cached,
                Current,
-               TryOnce, 
+               TryOnce,
                Failed
-            } State;      
+            } State;
 
             void transition(State s);
             static const Data& getStateString(State s);
@@ -68,12 +70,12 @@ class ClientAuthManager
             UserProfile::DigestCredential mCredential;
             bool mIsProxyCredential;
             
-            State mState;            
+            State mState;
             unsigned int mNonceCount;
-            Auth mAuth;            
+            Auth mAuth;
 
             // .dcm. only one credential per realm per challenge supported
-            // typedef std::map<Auth, UserProfile::DigestCredential, CompareAuth > CredentialMap;            
+            // typedef std::map<Auth, UserProfile::DigestCredential, CompareAuth > CredentialMap;
             // CredentialMap proxyCredentials;
             // CredentialMap wwwCredentials;  
       };      
@@ -83,6 +85,7 @@ class ClientAuthManager
          public:
             AuthState();
             bool handleChallenge(UserProfile& userProfile, const SipMessage& challenge);
+            bool handleChallenge(UserProfile& userProfile, const Auths& auths, bool isProxyCredential);
             void addAuthentication(SipMessage& origRequest);
             void authSucceeded();
             
@@ -95,7 +98,7 @@ class ClientAuthManager
       };
 
       typedef std::map<DialogSetId, AuthState> AttemptedAuthMap;
-      AttemptedAuthMap mAttemptedAuths;      
+      AttemptedAuthMap mAttemptedAuths;
 };
  
 }
@@ -105,6 +108,7 @@ class ClientAuthManager
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

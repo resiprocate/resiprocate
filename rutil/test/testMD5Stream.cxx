@@ -3,6 +3,9 @@
 #include "rutil/Log.hxx"
 #include "assert.h"
 
+// Disable warnings about using deprecated MD5Stream in these tests
+#pragma warning(disable : 4996)
+
 using namespace resip;
 using namespace std;
 

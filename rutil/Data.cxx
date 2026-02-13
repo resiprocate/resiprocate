@@ -2403,8 +2403,7 @@ Data::fromFile(const Data& filename)
    is.open(filename.c_str(), ios::binary );
    if ( !is.is_open() )
    {
-      throw DataException("Could not read file ",
-                                    __FILE__,__LINE__);
+      throw DataException("Could not read file " + filename, __FILE__,__LINE__);
    }
 
    resip_assert(is.is_open());

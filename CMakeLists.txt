@@ -114,6 +114,7 @@ option(WITH_SSL "Link against SSL libraries" TRUE)
 option(USE_POPT "Link against POPT libraries" TRUE)
 option(USE_SIGCOMP "Use OpenSigComp" FALSE)
 option(USE_FMT "Link against fmt library" FALSE)
+option(USE_FQDN_FOR_JSON_CEE_HOSTNAME "Use canonical hostnames in JSON CEE log output" FALSE)
 option(VERSIONED_SONAME "Include Major.Minor version in SONAME" TRUE)
 option(ENABLE_ANDROID "Enable Android build" FALSE)
 option(USE_IPV6 "Enable IPv6" TRUE)
@@ -133,6 +134,7 @@ option(USE_NETSNMP "Link against NetSNMP client libraries" FALSE)
 option(BUILD_REPRO "Build repro SIP proxy" TRUE)
 option(BUILD_RETURN "Build reTurn server" TRUE)
 option(BUILD_REFLOW "Build reflow library" TRUE)
+option(BUILD_MEDIA "Build resipmedia library" TRUE)
 option(BUILD_REND "Build rend" TRUE)
 option(BUILD_TFM "Build TFM, requires Netxx and cppunit" TRUE)
 option(BUILD_CLICKTOCALL "Build Click to call application" FALSE)
@@ -279,6 +281,7 @@ endif()
 if(BUILD_RECON)
    set(USE_SRTP TRUE)
    set(BUILD_RELOW TRUE)
+   set(BUILD_MEDIA TRUE)
    set(BUILD_RETURN TRUE)
 endif()
 
@@ -383,7 +386,7 @@ if(WITH_SSL)
       set_target_properties(OPENSSL PROPERTIES
          IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libssl.lib"
          IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libssl.lib"
-         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libssl-1_1-${WIN_ARCH}.dll;{OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libcrypto-1_1-${WIN_ARCH}.dll"
+         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libssl-1_1-${WIN_ARCH}.dll;${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libcrypto-1_1-${WIN_ARCH}.dll"
          IMPORTED_LOCATION_DEBUG "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libssl-1_1-${WIN_ARCH}.dll;${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libcrypto-1_1-${WIN_ARCH}.dll"
          IMPORTED_LINK_INTERFACE_LIBRARIES "OPENSSL_CRYPTO"
          INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_ROOT_DIR}/include"
@@ -932,7 +935,7 @@ if(BUILD_TFM)
    add_subdirectory(tfm)
 endif()
 
-if(BUILD_RECON)
+if(BUILD_MEDIA)
    add_subdirectory(media)
 endif()
 

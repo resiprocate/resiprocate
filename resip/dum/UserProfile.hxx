@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include <set>
+#include "rutil/DigestStream.hxx"
 #include "resip/stack/Headers.hxx"
 #include "resip/stack/MethodTypes.hxx"
 #include "resip/stack/Tuple.hxx"
@@ -67,10 +68,10 @@ class UserProfile : public Profile
                              const Data& pwd,
                              bool isPasswordA1Hash);
             DigestCredential(const Data& realm);
-                             
+
             Data realm;
             Data user;
-            Data password;            
+            Data password;
             bool isPasswordA1Hash;
 
             bool operator<(const DigestCredential& rhs) const;
@@ -79,14 +80,21 @@ class UserProfile : public Profile
       /// The following functions deal with clearing, setting and getting of digest credentals 
       virtual void clearDigestCredentials() noexcept;
       /// For the password you may either provide the plain text password (isPasswordA1Hash = false)
-      /// or the Digest A1 MD5 Hash (isPasswordA1Hash = true).  Note:  If the A1 hash is provided
-      /// then the realm MUST match the realm in the challenge or authentication will fail.  If the
-      /// plain text password is provided, then we will form the A1 hash using the realm from
-      /// the challenge.
-      virtual void setDigestCredential( const Data& realm, 
-                                        const Data& user, 
-                                        const Data& password,
-                                        bool isPasswordA1Hash=false);
+      /// or the Digest A1 MD5 Hash (isPasswordA1Hash = true).  
+      ///
+      /// For isPasswordA1Hash=true and non-MD5 support you should supply the A1 hash in the resip custom 
+      /// format that accepts hashes for different digest algorithm types.
+      /// Format: [<algorithm_name>]<hex_encoded_A1_hash>[<algorithm2_name>]<hex_encoded_A1_hash2>....
+      /// Example: [MD5]5f4dcc3b5aa765d61d8327deb882cf99[SHA-256]6bb4837eb74329105ee4568dda7dc67ed2ca2ad9e59fcbfbcde5e7f8c1b6d9d1
+      /// You can use Helper::createResipA1HashString to help you create this format.
+      ///
+      /// Note:  If the A1 hash is provided then the realm MUST match the realm in the challenge or 
+      ///        authentication will fail.  If the plain text password is provided, then we will form the 
+      ///        A1 hash using the realm from the challenge.
+      virtual void setDigestCredential(const Data& realm, 
+                                       const Data& user, 
+                                       const Data& password,
+                                       bool isPasswordA1Hash=false);
       virtual const DigestCredential& getDigestCredential( const Data& realm  );
       // DigestCacheUseLimit is used to indicate the maximum number of times a particular Proxy or WWW Authorization
       // header will be used in requests within a dialogset.  When this limit is reached then the
@@ -165,6 +173,7 @@ operator<<(EncodeStream&, const UserProfile::DigestCredential& cred);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

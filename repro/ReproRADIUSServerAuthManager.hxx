@@ -2,6 +2,7 @@
 #define REPRO_RADIUSSERVERAUTHMANAGER_HXX
 
 #include <map>
+#include <vector>
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
@@ -35,7 +36,8 @@ class ReproRADIUSServerAuthManager: public resip::RADIUSServerAuthManager
                              bool rejectBadNonces,
                              const resip::Data& configurationFile,
                              bool challengeThirdParties,
-                             const resip::Data& staticRealm);
+                             const resip::Data& staticRealm,
+                             const std::vector<resip::DigestType>& challengeDigestTypes = std::vector<resip::DigestType>());
       
       ~ReproRADIUSServerAuthManager();
       
@@ -59,6 +61,7 @@ class ReproRADIUSServerAuthManager: public resip::RADIUSServerAuthManager
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock http://danielpocock.com
  * All rights reserved.
  *

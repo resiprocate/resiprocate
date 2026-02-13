@@ -16,6 +16,8 @@ set(CONFIG_FILES
    ${CMAKE_SOURCE_DIR}/repro/repro.config 
 )
 
+target_sources(repro PRIVATE ${CONFIG_FILES})
+
 add_custom_command ( TARGET repro POST_BUILD
    COMMAND ${CMAKE_COMMAND} -E copy_if_different
    ${CONFIG_FILES} ${CMAKE_BINARY_DIR}/repro

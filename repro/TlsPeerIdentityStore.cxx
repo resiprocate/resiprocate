@@ -3,7 +3,6 @@
 #include "rutil/ResipAssert.h"
 
 #include "rutil/Data.hxx"
-#include "rutil/MD5Stream.hxx"
 #include "rutil/DataStream.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"

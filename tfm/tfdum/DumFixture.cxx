@@ -15,7 +15,6 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/MD5Stream.hxx"
 #include "tfm/repro/CommandLineParser.hxx"
 #include "tfm/DnsUtils.hxx"
 #include "tfm/PortAllocator.hxx"
@@ -370,15 +369,20 @@ DumFixture::destroyStatic()
    }
 }
 
-std::unique_ptr<Pidf>
-DumFixture::makePidf(const DumUserAgent* dua)
+std::unique_ptr<GenericPidfContents>
+DumFixture::makePidf(const DumUserAgent* dua, bool online)
 {
-   std::unique_ptr<Pidf> pidf(new Pidf);
+   std::unique_ptr<GenericPidfContents> pidf(new GenericPidfContents);
    
-   pidf->setSimpleStatus(true, "online", Data::from(dua->getAor().uri()));
-   pidf->getTuples().front().id = dua->getProfile()->getDefaultFrom().uri().getAor();
-   pidf->getTuples().front().attributes["displayName"] = "displayName";
    pidf->setEntity(dua->getAor().uri());
+   if (online)
+   {
+      pidf->setSimplePresenceTupleNode(dua->getProfile()->getDefaultFrom().uri().getAor() /* Use AOR as id */, true, Data::Empty, "online", Data::from(dua->getAor().uri()), Data(1.0));
+   }
+   else
+   {
+      pidf->setSimplePresenceTupleNode(dua->getProfile()->getDefaultFrom().uri().getAor() /* Use AOR as id */, false, Data::Empty, "offline", Data::from(dua->getAor().uri()), Data(1.0));
+   }
 
    return pidf;
 }

@@ -4,7 +4,6 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "rutil/MD5Stream.hxx"
 
 #include <utility>
 

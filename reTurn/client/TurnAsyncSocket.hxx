@@ -187,7 +187,7 @@ private:
       // argument for this constructor BE CAREFUL that you are passing 'this' and
       // not 'shared_from_this()' to the bind(..) -- otherwise you will defeat the
       // purpose of this class holding a weak_ptr
-      weak_bind<P,F>(std::weak_ptr<P> parent, std::function<F> func)
+      weak_bind(std::weak_ptr<P> parent, std::function<F> func)
          : mParent(std::move(parent)), mFunction(std::move(func))
       {
       }
@@ -227,9 +227,9 @@ private:
    void channelBindingTimerExpired(const asio::error_code& e, unsigned short channel);
 
    void doRequestSharedSecret();
-   void doSetUsernameAndPassword(resip::Data* username, resip::Data* password, bool shortTermAuth);
-   void doSetLocalPassword(resip::Data* password);
-   void doSetSoftware(resip::Data* software);
+   void doSetUsernameAndPassword(resip::Data&& username, resip::Data&& password, bool shortTermAuth);
+   void doSetLocalPassword(resip::Data&& password);
+   void doSetSoftware(resip::Data&& software);
    void doBindRequest();
    void doConnectivityCheck(StunTuple* targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
    void doCreateAllocation(unsigned int lifetime = UnspecifiedLifetime,

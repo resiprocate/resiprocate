@@ -194,9 +194,6 @@
     <ClCompile Include="NameAddr.cxx">
       <Filter>ParserCategories</Filter>
     </ClCompile>
-    <ClCompile Include="Pidf.cxx">
-      <Filter>Contents</Filter>
-    </ClCompile>
     <ClCompile Include="QuotedDataParameter.cxx">
       <Filter>SIPParameters</Filter>
     </ClCompile>
@@ -606,9 +603,6 @@
     </ClInclude>
     <ClInclude Include="NameAddr.hxx">
       <Filter>ParserCategories</Filter>
-    </ClInclude>
-    <ClInclude Include="Pidf.hxx">
-      <Filter>Contents</Filter>
     </ClInclude>
     <ClInclude Include="QuotedDataParameter.hxx">
       <Filter>SIPParameters</Filter>

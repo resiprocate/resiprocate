@@ -4,8 +4,8 @@
 
 #include "SipXMediaStackAdapter.hxx"
 
-#include "sdp/SdpHelperResip.hxx"
-#include "sdp/Sdp.hxx"
+#include <media/sdpcontainer/SdpHelper.hxx>
+#include <media/sdpcontainer/Sdp.hxx>
 
 #include <sdp/SdpCodec.h>  // sipX SdpCodec
 
@@ -583,7 +583,7 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady
    //       for responding "best-effort" / optional SRTP (Dtls-SRTP) offers
 
    bool valid = false;
-   std::shared_ptr<sdpcontainer::Sdp> remoteSdp(SdpHelperResip::createSdpFromResipSdp(offer));
+   std::shared_ptr<sdpcontainer::Sdp> remoteSdp(SdpHelper::createSdpFromResipSdp(offer));
    std::unique_ptr<SdpContents> _answer(new SdpContents);
    SdpContents& answer = *_answer;
 
@@ -845,8 +845,8 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
    Data remoteIPAddress;
    unsigned int remoteRtpPort=0;
    unsigned int remoteRtcpPort=0;
-   std::shared_ptr<sdpcontainer::Sdp> localSdp(SdpHelperResip::createSdpFromResipSdp(sendingOffer ? *getDialogSet().getProposedSdp() : *getLocalSdp()));
-   std::shared_ptr<sdpcontainer::Sdp> remoteSdp(sendingOffer ? 0 : SdpHelperResip::createSdpFromResipSdp(*getRemoteSdp()));
+   std::shared_ptr<sdpcontainer::Sdp> localSdp(SdpHelper::createSdpFromResipSdp(sendingOffer ? *getDialogSet().getProposedSdp() : *getLocalSdp()));
+   std::shared_ptr<sdpcontainer::Sdp> remoteSdp(sendingOffer ? 0 : SdpHelper::createSdpFromResipSdp(*getRemoteSdp()));
    const sdpcontainer::SdpMediaLine::CodecList* localCodecs = 0;
    const sdpcontainer::SdpMediaLine::CodecList* remoteCodecs = 0;
    bool supportedCryptoSuite = false;

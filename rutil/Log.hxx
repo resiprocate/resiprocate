@@ -8,6 +8,7 @@
 #include <unistd.h>
 #endif
 
+#include <atomic>
 #include <set>
 
 #include "rutil/ConfigParse.hxx"
@@ -286,7 +287,7 @@ class Log
 
    protected:
       static Mutex _mutex;
-      static volatile short touchCount;
+      static std::atomic<unsigned int> touchCount;
       static const Data delim;
 
       static unsigned int MaxLineCount;

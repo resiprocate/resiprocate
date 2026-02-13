@@ -603,7 +603,6 @@ Proxy::isMyUri(const Uri& uri) const
    if(!ret)
    {
       ret = isMyDomain(uri.host());
-
       if(ret) 
       {
          // check if we are listening on the specified port
@@ -617,6 +616,10 @@ Proxy::isMyUri(const Uri& uri) const
          {
             ret = mStack.isMyPort(uri.port());
          }
+      }
+      if (!ret)
+      {
+         ret = isUriTransportRecordRoute(uri);
       }
    }
    DebugLog( << "Proxy::isMyUri " << uri << " " << ret);
@@ -634,6 +637,27 @@ void Proxy::removeTransportRecordRoute(unsigned int transportKey)
 {
    Lock lock(mTransportRecordRouteMutex);
    mTransportRecordRoutes.erase(transportKey);
+}
+
+bool
+Proxy::isUriTransportRecordRoute(const Uri& uri) const
+{
+   Lock lock(mTransportRecordRouteMutex);
+   for (const auto& pair : mTransportRecordRoutes)
+   {
+      if (pair.second.uri().host() == uri.host() &&
+          pair.second.uri().port() == uri.port())
+      {
+         if (pair.second.uri().exists(p_transport) && uri.exists(p_transport))
+         {
+            //InfoLog(<< "Proxy::isUriTransportRecordRoute: recordRoute(with transport)=" << pair.second.uri() << ", uri=" << uri);
+            return pair.second.uri().param(p_transport) == uri.param(p_transport);
+         }
+         //InfoLog(<< "Proxy::isUriTransportRecordRoute: recordRoute=" << pair.second.uri() << ", uri=" << uri);
+         return true;
+      }
+   }
+   return false;
 }
 
 const resip::NameAddr& 

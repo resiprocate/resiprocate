@@ -10,7 +10,7 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/SipFrag.hxx"
 #include "resip/stack/MultipartMixedContents.hxx"
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "TestSupport.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/test/tassert.h"
@@ -465,7 +465,7 @@ main(int argc, char* argv[])
             frag->encode(resipCout);
          }
          
-         Pidf* pidf=dynamic_cast<Pidf*>(parts.back());
+         GenericPidfContents* pidf=dynamic_cast<GenericPidfContents*>(parts.back());
          tassert(pidf);
          if(pidf)
          {
@@ -498,7 +498,7 @@ main(int argc, char* argv[])
             frag->encode(resipCout);
          }
          
-         Pidf* pidf=dynamic_cast<Pidf*>(parts.back());
+         GenericPidfContents* pidf=dynamic_cast<GenericPidfContents*>(parts.back());
          tassert(pidf);
          if(pidf)
          {

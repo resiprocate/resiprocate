@@ -1,6 +1,8 @@
 #if !defined(RESIP_STATICROUTE_HXX)
 #define RESIP_STATICROUTE_HXX 
 
+#include <vector>
+#include "rutil/DigestStream.hxx"
 #include "repro/Processor.hxx"
 #include "repro/ProxyConfig.hxx"
 
@@ -22,6 +24,7 @@ class StaticRoute: public Processor
       bool mParallelForkStaticRoutes;
       bool mContinueProcessingAfterRoutesFound;
       bool mUseAuthInt;
+      std::vector<resip::DigestType> mChallengeDigestTypes;
       void challengeRequest(repro::RequestContext &rc, resip::Data &realm);
 };
 
@@ -31,6 +34,7 @@ class StaticRoute: public Processor
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -294,6 +294,7 @@ public:
    double getMaximumPacketRate() const { return mMaximumPacketRate; }
 
    const MediaLineList& getMediaLines() const;
+   SdpMediaLine* getMediaLineAtIndex(int indexNumber); // 0 based
 
    resip::Data getLocalFoundationId(SdpCandidate::SdpCandidateType candidateType, const char * baseAddress, const char * stunAddress=0);
 
@@ -369,6 +370,7 @@ EncodeStream& operator<<(EncodeStream& strm, const Sdp& );
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

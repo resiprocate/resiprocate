@@ -5,7 +5,7 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
-#include <rutil/MD5Stream.hxx>
+#include <rutil/DigestStream.hxx>
 #include <rutil/FdPoll.hxx>
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/PlainContents.hxx>
@@ -48,6 +48,7 @@ static unsigned int NotifySendTime = 30;  // If someone subscribes to our test e
 static unsigned int FailedSubscriptionRetryTime = 60; 
 
 //#define TEST_PASSING_A1_HASH_FOR_PASSWORD
+//#define TEST_PASSING_RESIP_A1_HASH_FOR_PASSWORD
 
 namespace resip
 {
@@ -250,16 +251,21 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    // UserProfile Settings
    mProfile->setDefaultFrom(NameAddr(mAor));
 #ifdef TEST_PASSING_A1_HASH_FOR_PASSWORD
-   MD5Stream a1;
+   DigestStream a1;
    a1 << mAor.user()
       << Symbols::COLON
       << mAor.host()
       << Symbols::COLON
       << mPassword;
-   mProfile->setDigestCredential(mAor.host(), mAor.user(), a1.getHex(), true);   
+   mProfile->setDigestCredential(mAor.host(), mAor.user(), a1.getHex(), true);
 #else
-   mProfile->setDigestCredential(mAor.host(), mAor.user(), mPassword);   
+   #ifdef TEST_PASSING_RESIP_A1_HASH_FOR_PASSWORD
+      mProfile->setDigestCredential(mAor.host(), mAor.user(), Helper::createResipA1HashString(mAor.user(), mAor.host(), mPassword), true);
+   #else
+      mProfile->setDigestCredential(mAor.host(), mAor.user(), mPassword);
+  #endif
 #endif
+
    // Generate InstanceId appropriate for testing only.  Should be UUID that persists 
    // across machine re-starts and is unique to this application instance.  The one used 
    // here is only as unique as the hostname of this machine.  If someone runs two 
@@ -1091,7 +1097,7 @@ BasicClientUserAgent::onTryingNextTarget(AppDialogSetHandle, const SipMessage& m
 
 /* ====================================================================
 
- Copyright (c) 2011, SIP Spectrum, Inc.
+ Copyright (c) 2011-2026, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

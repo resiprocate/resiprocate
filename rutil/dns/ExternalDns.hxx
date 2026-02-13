@@ -22,7 +22,10 @@ class ExternalDns
       enum Features
       {
          None = 0,
-         TryServersOfNextNetworkUponRcode3 = 1 << 0   // 'No such name'
+         TryServersOfNextNetworkUponRcode3 = 1 << 0,   // 'No such name'
+         ReturnAllResults = 1 << 1 //Don't discard errors, the precise error values are used to
+                                   //decide whether the hosts file should be consulted, see
+                                   //DnsStub.cxx DnsStub::Query::process()
       };
 
       //returns Success, BuildMismatch, otherwise ExternalDns specific 
@@ -44,6 +47,7 @@ class ExternalDns
       // reinitializes with the same additionalNameservers and AfterSocketCreationFuncPtr as last call to init
       virtual int init(int dnsTimeout = 0, int dnsTries = 0, unsigned int features = 0) = 0;  
 
+      virtual void changeNameServers(const std::vector<GenericIPAddress>& additional) = 0;
       //returns 'true' only is there are changes in the DNS server list
       virtual bool checkDnsChange() = 0;
 

@@ -35,7 +35,7 @@ class Participant
       virtual ParticipantHandle getParticipantHandle() { return mHandle; }
       virtual ConversationManager::ParticipantType getParticipantType() { return mType; }
 
-      virtual void setRecordChannelNum(unsigned int channelNum) { mRecordChannelNum = channelNum; }
+      virtual void setRecordChannelNum(unsigned int channelNum) { mRecordChannelNum = channelNum; applyBridgeMixWeights(); }
       virtual unsigned int getRecordChannelNum() { return mRecordChannelNum; }
 
       virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);

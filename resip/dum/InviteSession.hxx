@@ -174,6 +174,7 @@ class InviteSession : public DialogUsage
 
       Tokens& getPeerSupportedMethods() { return mPeerSupportedMethods; }
       Tokens& getPeerSupportedOptionTags() { return mPeerSupportedOptionTags; }
+      Tokens& getPeerRequiresOptionsTags() { return mPeerRequiresOptionTags; }
       Mimes&  getPeerSupportedMimeTypes() { return mPeerSupportedMimeTypes; }
       Tokens& getPeerSupportedEncodings() { return mPeerSupportedEncodings; }
       Tokens& getPeerSupportedLanguages() { return mPeerSupportedLanguages; }
@@ -356,7 +357,7 @@ class InviteSession : public DialogUsage
 
       void storePeerCapabilities(const SipMessage& msg);
       bool updateMethodSupported() const;
-      bool timerOptionSupported() const;
+      bool sessionTimerSupportedLocalAndPeer() const;
 
       std::shared_ptr<SipMessage> sendAck(const Contents *answer=0);
       std::shared_ptr<SipMessage> sendBye();
@@ -369,6 +370,7 @@ class InviteSession : public DialogUsage
 
       Tokens mPeerSupportedMethods;
       Tokens mPeerSupportedOptionTags;
+      Tokens mPeerRequiresOptionTags;
       Mimes  mPeerSupportedMimeTypes;
       Tokens mPeerSupportedEncodings;
       Tokens mPeerSupportedLanguages;

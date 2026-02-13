@@ -17,6 +17,7 @@
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 #include "rutil/GeneralCongestionManager.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "tfm/repro/TestRepro.hxx"
@@ -238,7 +239,13 @@ TestRepro::TestRepro(const resip::Data& name,
                                                            mConfig.getDataStore()->mAclStore,
                                                            true,
                                                            false,
-                                                           true);
+                                                           true,
+                                                           Data::Empty,
+#ifdef USE_SSL
+                                                           std::vector<resip::DigestType>{ resip::SHA512_256, resip::SHA256, resip::MD5 });
+#else
+                                                           std::vector<DigestType>());
+#endif
    mDum->setServerAuthManager(authMgr);
 
    mStack->registerTransactionUser(mProxy);

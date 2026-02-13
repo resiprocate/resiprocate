@@ -17,7 +17,7 @@ class PoolBase;
 class Via : public ParserCategory
 {
    public:
-      enum {commaHandling = CommasAllowedOutputMulti};
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputMulti;
 
       Via();
       Via(const HeaderFieldValue& hfv, 

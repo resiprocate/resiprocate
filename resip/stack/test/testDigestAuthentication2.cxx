@@ -21,7 +21,7 @@
 #include "resip/stack/test/TestSupport.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/DataStream.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "digcalc.hxx"
 #include "rutil/Logger.hxx"
 
@@ -44,7 +44,7 @@ main(int arc, char** argv)
       char* nonce = "92347fea23";
 
 
-      MD5Stream a1;
+      DigestStream a1;
       a1 << username
          << Symbols::COLON
          << realm
@@ -125,7 +125,7 @@ main(int arc, char** argv)
       Data password = "secret";
       Data cnonce;// = "366fead6";
       unsigned int nc = 0;
-      MD5Stream a1;
+      DigestStream a1;
       a1 << username
          << Symbols::COLON
          << realm
@@ -180,6 +180,7 @@ main(int arc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

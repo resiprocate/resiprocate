@@ -260,7 +260,7 @@ TlsConnection::checkState()
             }
             else if (err == SSL_ERROR_SSL)
             {
-               ds << "SSL cipher or certificate failure(SSL_ERROR_SSL): ";
+               ds << "SSL cipher or certificate failure(SSL_ERROR_SSL), note: ";
                int verifyErrorCode = SSL_get_verify_result(mSsl);
                switch (verifyErrorCode)
                {
@@ -276,7 +276,7 @@ TlsConnection::checkState()
                      }
                      else
                      {
-                        ds << "no peer supplied certificate";
+                        ds << "peer did not supply a certificate";
                      }
                      break;
                   }

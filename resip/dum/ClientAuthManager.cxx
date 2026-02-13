@@ -30,7 +30,7 @@ public:
 
       Auths & target = mIsProxyCredential ? msg.header(h_ProxyAuthorizations) : msg.header(h_Authorizations);
    
-      DebugLog( << " Add auth, " << this << " in response to: " << mAuth);
+      DebugLog( << " Add auth in response to: " << mAuth);
       Auth auth;
       if (ClientAuthExtension::instance().algorithmAndQopSupported(mAuth))
       {
@@ -45,7 +45,7 @@ public:
                                                             cnonce,
                                                             mAuthQop, 
                                                             mNonceCountString,
-                                                            auth);      
+                                                            auth);
          }
          else
          {
@@ -56,7 +56,7 @@ public:
                                                             cnonce,
                                                             mAuthQop, 
                                                             mNonceCountString,
-                                                            auth);      
+                                                            auth);
          }
       }
       else
@@ -112,9 +112,9 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
 {
    try
    {
-      resip_assert( response.isResponse() );
-      resip_assert( origRequest.isRequest() );
-      
+      resip_assert(response.isResponse());
+      resip_assert(origRequest.isRequest());
+
       DialogSetId id(origRequest);
 
       const int& code = response.header(h_StatusLine).statusCode();
@@ -122,26 +122,26 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       {
          return false;
       }
-      else if (! (  code == 401 || code == 407 )) // challenge success
+      else if (!(code == 401 || code == 407)) // challenge success
       {
-         AttemptedAuthMap::iterator it = mAttemptedAuths.find(id);     
+         AttemptedAuthMap::iterator it = mAttemptedAuths.find(id);
          if (it != mAttemptedAuths.end())
          {
-            DebugLog (<< "ClientAuthManager::handle: transitioning " << id << "to cached");         
+            DebugLog(<< "ClientAuthManager::handle: transitioning " << id << "to cached");
 
             // cache the result
             it->second.authSucceeded();
-         }      
+         }
          return false;
-      }   
+      }
 
       // 401 or 407...
       if (!(response.exists(h_WWWAuthenticates) || response.exists(h_ProxyAuthenticates)))
       {
-         DebugLog (<< "Invalid challenge for " << id  << ", nothing to respond to; fail");         
+         DebugLog(<< "Invalid challenge for " << id << ", nothing to respond to; fail");
          return false;
       }
-   
+
       AuthState& authState = mAttemptedAuths[id];
 
       // based on the UserProfile and the challenge, store credentials in the
@@ -150,7 +150,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       {
          resip_assert(origRequest.header(h_Vias).size() == 1);
          origRequest.header(h_CSeq).sequence()++;
-         DebugLog (<< "Produced response to digest challenge for " << userProfile );
+         DebugLog(<< "Produced response to digest challenge for " << userProfile);
          return true;
       }
       else
@@ -158,12 +158,12 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
          return false;
       }
    }
-   catch(BaseException& e)
+   catch (BaseException& e)
    {
       resip_assert(0);
       ErrLog(<< "Unexpected exception in ClientAuthManager::handle " << e);
       return false;
-   }      
+   }
 }
 
 void
@@ -205,55 +205,59 @@ ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Si
    if (mFailed)
    {
       return false;
-   }   
-   bool handled = true;
+   }
+
+   // As long we handled at least one WWW or Proxy Authenticate - we are good
+   bool handled = false;
    if (challenge.exists(h_WWWAuthenticates))
    {
-      for (Auths::const_iterator i = challenge.header(h_WWWAuthenticates).begin();  
-         i != challenge.header(h_WWWAuthenticates).end(); ++i)                    
-      {    
-         if (i->exists(p_realm))
-         {
-            if (!mRealms[i->param(p_realm)].handleAuth(userProfile, *i, false))
-            {
-               handled = false;
-               break;
-            }
-         }
-         else
-         {
-            return false;
-         }
-      }
+      handled = handleChallenge(userProfile, challenge.header(h_WWWAuthenticates), false /* isProxyCredential */);
    }
-   if (challenge.exists(h_ProxyAuthenticates))
+   if (!handled && challenge.exists(h_ProxyAuthenticates))
    {
-      for(Auths::const_iterator i = challenge.header(h_ProxyAuthenticates).begin();  
-          i != challenge.header(h_ProxyAuthenticates).end(); ++i)                    
-      {    
-         if (i->exists(p_realm))
-         {
-            if (!mRealms[i->param(p_realm)].handleAuth(userProfile, *i, true))
-            {
-               handled = false;
-               break;
-            }
-         }
-         else
-         {
-            return false;
-         }
-      }
+      handled = handleChallenge(userProfile, challenge.header(h_ProxyAuthenticates), true /* isProxyCredential */);
    }
-   if(!handled)
+
+   if (!handled)
    {
-      InfoLog( << "ClientAuthManager::AuthState::handleChallenge failed for: " << challenge);
+      InfoLog(<< "ClientAuthManager::AuthState::handleChallenge failed for: " << challenge);
    }
    else
    {
       mCacheUseLimit = userProfile.getDigestCacheUseLimit();
    }
    return handled;
+}
+
+bool 
+ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Auths& auths, bool isProxyCredential)
+{
+   bool ret = false;
+   for (Auths::const_iterator i = auths.begin(); i != auths.end(); ++i)
+   {
+      if (i->exists(p_realm))
+      {
+         if (mRealms[i->param(p_realm)].handleAuth(userProfile, *i, isProxyCredential))
+         {
+            // We have credentials for the realm and we support the algorithm and qop
+            // We should only be responding to one authenticates header
+            ret = true;
+            break;
+         }
+      }
+   }
+
+   // Now that we have tried all auth headers, make sure we mark any realm states still 
+   // Initial as Failed.  If any were successful, they have already transitioned to Current.
+   for (Auths::const_iterator i = auths.begin(); i != auths.end(); ++i)
+   {
+      if (i->exists(p_realm))
+      {
+         mRealms[i->param(p_realm)].transitionToFailedIfInitial();
+      }
+   }
+
+   return ret;
 }
 
 void 
@@ -276,7 +280,7 @@ void
 ClientAuthManager::AuthState::addAuthentication(SipMessage& request)
 {
    request.remove(h_ProxyAuthorizations);
-   request.remove(h_Authorizations);  
+   request.remove(h_Authorizations);
 
    if (mFailed) return;
 
@@ -285,18 +289,17 @@ ClientAuthManager::AuthState::addAuthentication(SipMessage& request)
       i->second.addAuthentication(request);
    }
 }
-   
 
 ClientAuthManager::RealmState::RealmState() :
    mIsProxyCredential(false),
-   mState(Invalid),
+   mState(Initial),
    mNonceCount(0)
 {
 }
 
 Data RealmStates[] = 
 {
-   "invalid",
+   "initial",
    "cached",
    "current",
    "tryonce",
@@ -321,7 +324,7 @@ ClientAuthManager::RealmState::authSucceeded()
 {
    switch(mState)
    {
-      case Invalid:
+      case Initial:
          resip_assert(0);
          break;
       case Current:
@@ -337,58 +340,67 @@ ClientAuthManager::RealmState::authSucceeded()
 
 bool 
 ClientAuthManager::RealmState::handleAuth(UserProfile& userProfile, const Auth& auth, bool isProxyCredential)
-{   
-   DebugLog( << "ClientAuthManager::RealmState::handleAuth: " << this << " " << auth << " is proxy: " << isProxyCredential);
-   mIsProxyCredential = isProxyCredential;   //this changing dynamically would
-                                             //be very bizarre..should trap w/ enum
-   switch(mState)
+{
+   DebugLog(<< "ClientAuthManager::RealmState::handleAuth: " << this << " " << auth << " is proxy: " << isProxyCredential);
+   mIsProxyCredential = isProxyCredential;   //this changing dynamically would be very bizarre..should trap w/ enum
+   switch (mState)
    {
-      case Invalid:
+      case Initial:
          mAuth = auth;
-         transition(Current);
-         break;         
+         break;
       case Current:
          if (auth.exists(p_stale) && auth.param(p_stale) == "true")
          {
-            DebugLog (<< "Stale nonce:" <<  auth);
+            DebugLog(<< "Stale nonce:" << auth);
             mAuth = auth;
             clear();
          }
-         else if(auth.exists(p_nonce) && auth.param(p_nonce) != mAuth.param(p_nonce))
+         else if (auth.exists(p_nonce) && auth.param(p_nonce) != mAuth.param(p_nonce))
          {
-            DebugLog (<< "Different nonce, was: " << mAuth.param(p_nonce) << " now " << auth.param(p_nonce));
+            DebugLog(<< "Different nonce, was: " << mAuth.param(p_nonce) << " now " << auth.param(p_nonce));
             mAuth = auth;
             clear();
-            transition(TryOnce);            
+            transition(TryOnce);
          }
          else
          {
-            DebugLog( << "Challenge response already failed for: " << auth);
-            transition(Failed);            
+            DebugLog(<< "Challenge response already failed for: " << auth);
+            transition(Failed);
             return false;
          }
-         break;         
+         break;
       case TryOnce:
-         DebugLog( << "Extra chance still failed: " << auth);
+         DebugLog(<< "Extra chance still failed: " << auth);
          transition(Failed);
          return false;
       case Cached: //basically 1 free chance, here for interop, may not be
-                   //required w/ nonce check in current
+         //required w/ nonce check in current
          mAuth = auth;
          clear();
          transition(Current);
-         break;         
+         break;
       case Failed:
          return false;
    }
 
    if (findCredential(userProfile, auth))
    {
+      // If we are in the Initial state, we are still looking for an Auth header 
+      // we can respond to.  Since we have found one now, transition to Current state.
+      if (mState == Initial)
+      {
+         transition(Current);
+      }
       return true;
    }
    else
    {
-      transition(Failed);
+      // Allow a failure to find credentials when we are in the Initial state and 
+      // looking we are for an Auth header we can respond to.
+      if (mState != Initial)
+      {
+         transition(Failed);
+      }
       return false;
    }
 }
@@ -398,28 +410,40 @@ ClientAuthManager::RealmState::clear()
 {
    mNonceCount = 0;
 }
-                     
+
 bool 
 ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Auth& auth)
 {
-   if (!(Helper::algorithmAndQopSupported(auth) 
-         || (ClientAuthExtension::instance().algorithmAndQopSupported(auth))))
+   DigestType digestType;
+   if (!(Helper::algorithmAndQopSupported(auth, digestType) || 
+         ClientAuthExtension::instance().algorithmAndQopSupported(auth)))
    {
       DebugLog(<<"Unsupported algorithm or qop: " << auth);
       return false;
    }
 
-   const Data& realm = auth.param(p_realm);                   
+   const Data& realm = auth.param(p_realm);
    //!dcm! -- icky, expose static empty soon...ptr instead of reference?
    mCredential = userProfile.getDigestCredential(realm);
-   if (mCredential.realm.empty())                       
-   {                                        
-      DebugLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
+
+   if (mCredential.realm.empty())
+   {
+      DebugLog(<< "Got a 401 or 407 but could not find credentials for realm: " << realm);
       // DebugLog (<< auth);
       // DebugLog (<< response);
       return false;
-   }                     
-   return true;   
+   }
+
+   // If credential is provided in hash form, check if credential supports Auth algorithm
+   if (mCredential.isPasswordA1Hash)
+   {
+      if (!Helper::isDigestTypeSupportedInResipA1HashString(mCredential.password, digestType))
+      {
+         DebugLog(<< "Password hash for " << mCredential.user << "@" << mCredential.realm << " doesn't contain " << DigestStream::getDigestName(digestType) << " hash.");
+         return false;
+      }
+   }
+   return true;
 }
 
 void 
@@ -439,6 +463,15 @@ ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
    // may be modifying the message body
    std::unique_ptr<MessageDecorator> clientAuthDecorator(new ClientAuthDecorator(mIsProxyCredential, mAuth, mCredential, authQop, nonceCountString));
    request.addOutboundDecorator(std::move(clientAuthDecorator));
+}
+
+void
+ClientAuthManager::RealmState::transitionToFailedIfInitial()
+{
+   if (mState == Initial)
+   {
+      transition(Failed);
+   }
 }
 
 // bool

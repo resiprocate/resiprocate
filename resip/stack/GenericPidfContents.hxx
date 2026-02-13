@@ -135,6 +135,8 @@ private:
    void clearSimplePresenceInfo();
 };
 
+EncodeStream& operator<<(EncodeStream& strm, const GenericPidfContents::SimplePresenceInfo& tuple);
+
 static bool invokeGenericPidfContentsInit = GenericPidfContents::init();
 
 }
@@ -143,7 +145,7 @@ static bool invokeGenericPidfContentsInit = GenericPidfContents::init();
 
 /* ====================================================================
 *
-* Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
+* Copyright (c) 2015-2025 SIP Spectrum, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions

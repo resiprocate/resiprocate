@@ -262,6 +262,21 @@ Sdp::getMediaLines() const
    return mMediaLines; 
 }
 
+SdpMediaLine*
+Sdp::getMediaLineAtIndex(int indexNumber)
+{
+   MediaLineList::iterator it = mMediaLines.begin();
+   int mediaLineIndex = 0;
+   for (; it != mMediaLines.end(); it++, mediaLineIndex++)
+   {
+      if (mediaLineIndex == indexNumber)
+      {
+         return *it;
+      }
+   }
+   return nullptr;
+}
+
 resip::Data 
 Sdp::getLocalFoundationId(SdpCandidate::SdpCandidateType candidateType, 
                           const char * baseAddress, 
@@ -279,8 +294,7 @@ Sdp::getLocalFoundationId(SdpCandidate::SdpCandidateType candidateType,
    }
 
    // Not found - insert
-   char foundationId[15];
-   sprintf(foundationId, "%ld", (long)mFoundationIds.size() + 1);
+   std::string foundationId = std::to_string(mFoundationIds.size() + 1);
    mFoundationIds[foundationId] = sdpFoundation;
 
    return foundationId;
@@ -383,6 +397,7 @@ sdpcontainer::operator<<( EncodeStream& strm, const Sdp& sdp)
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

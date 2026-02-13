@@ -469,6 +469,7 @@
     <ClCompile Include="Lock.cxx" />
     <ClCompile Include="Log.cxx" />
     <ClCompile Include="MD5Stream.cxx" />
+    <ClCompile Include="DigestStream.cxx" />
     <ClCompile Include="Plugin.cxx" />
     <ClCompile Include="PoolBase.cxx" />
     <ClCompile Include="SelectInterruptor.cxx" />
@@ -568,6 +569,7 @@
     <ClInclude Include="Logger.hxx" />
     <ClInclude Include="MediaConstants.hxx" />
     <ClInclude Include="MD5Stream.hxx" />
+    <ClInclude Include="DigestStream.hxx" />
     <ClInclude Include="Mutex.hxx" />
     <ClInclude Include="Plugin.hxx" />
     <ClInclude Include="PoolBase.hxx" />

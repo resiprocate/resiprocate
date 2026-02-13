@@ -20,10 +20,9 @@
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/ssl/TlsConnection.hxx"
-#include "rutil/ssl/SHA1Stream.hxx"
 #endif
 
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 
 #ifdef USE_SIGCOMP
 #include <osc/Stack.h>
@@ -775,17 +774,9 @@ ConnectionBase::makeWsHandshakeResponse()
          "Connection: Upgrade\r\n"
          "Sec-WebSocket-Protocol: sip\r\n"));
 
-      // Assuming that OpenSSL implementation of SHA1 is more effient than our internal one
-#ifdef USE_SSL
-      SHA1Stream wsSha1Stream;
+      DigestStream wsSha1Stream(SHA1);
       wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Symbols::WebsocketMagicGUID);
-      Data wsAcceptKey = wsSha1Stream.getBin(160).base64encode();
-#else
-      SHA1 sha1;
-      sha1.update(mMessage->const_header(h_SecWebSocketKey).value().c_str());
-      sha1.update(Symbols::WebsocketMagicGUID);
-      Data wsAcceptKey = sha1.finalBin().base64encode();
-#endif
+      Data wsAcceptKey = wsSha1Stream.getBin().base64encode();
       *responsePtr += "Sec-WebSocket-Accept: " + wsAcceptKey + "\r\n\r\n";
    }
    else if(isUsingDeprecatedSecWebSocketKeys())
@@ -1120,6 +1111,7 @@ resip::operator<<(EncodeStream& strm,
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without

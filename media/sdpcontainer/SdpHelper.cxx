@@ -1,7 +1,7 @@
 #include <map> 
 #include <utility>
 
-#include "SdpHelperResip.hxx"
+#include "SdpHelper.hxx"
 #include "Sdp.hxx"
 #include "SdpMediaLine.hxx"
 #include "SdpCodec.hxx"
@@ -12,12 +12,12 @@
 using namespace resip;
 using namespace sdpcontainer;
 
-Sdp::SdpAddressType SdpHelperResip::convertResipAddressType(resip::SdpContents::AddrType resipAddrType)
+Sdp::SdpAddressType SdpHelper::convertResipAddressType(resip::SdpContents::AddrType resipAddrType)
 {
    return resipAddrType == SdpContents::IP4 ? Sdp::ADDRESS_TYPE_IP4 : Sdp::ADDRESS_TYPE_IP6;
 }
 
-SdpMediaLine::SdpEncryptionMethod SdpHelperResip::convertResipEncryptionMethod(resip::SdpContents::Session::Encryption::KeyType resipMethod)
+SdpMediaLine::SdpEncryptionMethod SdpHelper::convertResipEncryptionMethod(resip::SdpContents::Session::Encryption::KeyType resipMethod)
 {
    switch(resipMethod)
    {
@@ -34,7 +34,7 @@ SdpMediaLine::SdpEncryptionMethod SdpHelperResip::convertResipEncryptionMethod(r
    }
 }
 
-Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
+Sdp* SdpHelper::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
 {
    bool rtcpEnabled = true;
    Sdp* sdp = new Sdp();
@@ -250,7 +250,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
             std::list<Data>::const_iterator it2;
             for(it2 = tcaps.begin(); it2 != tcaps.end(); it2++)
             {
-               SdpHelperResip::parseTransportCapabilitiesLine(*it2, tcapList);
+               SdpHelper::parseTransportCapabilitiesLine(*it2, tcapList);
             }
          }
          std::map<unsigned int, std::pair<Data, Data> > acapList;
@@ -282,7 +282,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
          }
 
          std::list<SdpMediaLine::SdpPotentialConfiguration> pcfgList;
-         SdpHelperResip::parsePotentialConfigurationLine(resipMedia.getValues("pcfg").front(), pcfgList);
+         SdpHelper::parsePotentialConfigurationLine(resipMedia.getValues("pcfg").front(), pcfgList);
          std::list<SdpMediaLine::SdpPotentialConfiguration>::iterator pcfgIt = pcfgList.begin();
          for(;pcfgIt != pcfgList.end(); pcfgIt++)
          {
@@ -394,7 +394,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
 }
 
 SdpMediaLine* 
-SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, const SdpContents::Session& resipSession, bool sessionRtcpEnabled)
+SdpHelper::parseMediaLine(const SdpContents::Session::Medium& resipMedia, const SdpContents::Session& resipSession, bool sessionRtcpEnabled)
 {
    bool rtcpEnabledForMedia = sessionRtcpEnabled;  // Default to Session setting
    SdpMediaLine* mediaLine = new SdpMediaLine();
@@ -980,7 +980,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
    return mediaLine;
 }
 
-SdpMediaLine::SdpCrypto* SdpHelperResip::parseCryptoLine(const Data& cryptoLine)
+SdpMediaLine::SdpCrypto* SdpHelper::parseCryptoLine(const Data& cryptoLine)
 {
    SdpMediaLine::SdpCrypto *crypto = 0;
 
@@ -1076,7 +1076,7 @@ SdpMediaLine::SdpCrypto* SdpHelperResip::parseCryptoLine(const Data& cryptoLine)
    return crypto;
 }
 
-bool SdpHelperResip::parseFingerPrintLine(const resip::Data& fingerprintLine, SdpMediaLine::SdpFingerPrintHashFuncType& hashType, resip::Data& fingerPrint)
+bool SdpHelper::parseFingerPrintLine(const resip::Data& fingerprintLine, SdpMediaLine::SdpFingerPrintHashFuncType& hashType, resip::Data& fingerPrint)
 {
    ParseBuffer pb(fingerprintLine);
    const char * anchor = pb.position();
@@ -1093,7 +1093,7 @@ bool SdpHelperResip::parseFingerPrintLine(const resip::Data& fingerprintLine, Sd
    return false;
 }
 
-bool SdpHelperResip::parseTransportCapabilitiesLine(const resip::Data& tcapLine, std::list<SdpMediaLine::SdpTransportProtocolCapabilities>& tcapList)
+bool SdpHelper::parseTransportCapabilitiesLine(const resip::Data& tcapLine, std::list<SdpMediaLine::SdpTransportProtocolCapabilities>& tcapList)
 {
    ParseBuffer pb(tcapLine);
    unsigned int baseTcapId = pb.uInt32();
@@ -1113,7 +1113,7 @@ bool SdpHelperResip::parseTransportCapabilitiesLine(const resip::Data& tcapLine,
    return ok;
 }
 
-bool SdpHelperResip::parsePotentialConfigurationLine(const resip::Data& pcfgLine, std::list<SdpMediaLine::SdpPotentialConfiguration>& pcfgList)
+bool SdpHelper::parsePotentialConfigurationLine(const resip::Data& pcfgLine, std::list<SdpMediaLine::SdpPotentialConfiguration>& pcfgList)
 {
    std::list<std::list<SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem> > attributeLists;
    std::list<unsigned int> transportList;
@@ -1289,8 +1289,8 @@ void testSDPCapabilityNegotiationParsing(void)
    std::list<SdpMediaLine::SdpPotentialConfiguration> pcfgList;
    Data tcap("1 UDP/TLS/RTP/AVP RTP/AVP");
    Data pcfg("1 a=-m:1,2,3,[4,5]|[6,7] x=blah t=1|2 y=foo");
-   SdpHelperResip::parseTransportCapabilitiesLine(tcap, tcapList);
-   SdpHelperResip::parsePotentialConfigurationLine(pcfg, pcfgList);
+   SdpHelper::parseTransportCapabilitiesLine(tcap, tcapList);
+   SdpHelper::parsePotentialConfigurationLine(pcfg, pcfgList);
 
    cout << "Transport List: " << tcap << endl;
    std::list<SdpMediaLine::SdpTransportProtocolCapabilities>::iterator it = tcapList.begin();
@@ -1314,7 +1314,7 @@ void testSDPCapabilityNegotiationParsing(void)
    return;
 }
 
-void SdpHelperResip::parseCryptoParams(ParseBuffer& pb, 
+void SdpHelper::parseCryptoParams(ParseBuffer& pb, 
                                        SdpMediaLine::SdpCryptoKeyMethod& keyMethod, 
                                        Data& keyValue, 
                                        unsigned int& srtpLifetime, 

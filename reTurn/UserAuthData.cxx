@@ -1,7 +1,7 @@
 #include "UserAuthData.hxx"
 
 #include <rutil/ConfigParse.hxx>
-#include <rutil/MD5Stream.hxx>
+#include <rutil/DigestStream.hxx>
 
 #include "ReTurnSubsystem.hxx"
 
@@ -26,7 +26,7 @@ UserAuthData::~UserAuthData()
 UserAuthData
 UserAuthData::createFromPassword(const resip::Data& userName, const resip::Data& realm, const resip::Data& password)
 {
-   MD5Stream r;
+   DigestStream r;
    r << userName << ":" << realm << ":" << password; 
    Data ha1(r.getBin());
    return UserAuthData(userName, realm, ha1);
@@ -47,6 +47,7 @@ UserAuthData::createFromHex(const resip::Data& userName, const resip::Data& real
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2012, Ready Technology (UK) Limited
  All rights reserved.
 

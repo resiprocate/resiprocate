@@ -6,7 +6,9 @@
 #include <list>
 #include <vector>
 #include <utility>
-#include <memory> 
+#include <memory>
+#include <iterator>
+#include <type_traits>
 
 #include "resip/stack/Contents.hxx"
 #include "resip/stack/Headers.hxx"
@@ -159,6 +161,228 @@ class SipMessage : public TransactionMessage
 #else
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
 #endif
+
+      /**
+       * @brief List of known SIP headers, searchable by header type.
+       *
+       * This container provides access to headers of the SIP message that are known to libresiprocate.
+       * The headers can be searched by `Headers::Type` enum values and iterated over. The list of headers
+       * is unordered, and any modifications of the container may invalidate iterators, pointers and references
+       * into the container. The container does not own the `HeaderFieldValueList` objects, which must be
+       * explicitly freed on removal (which is handled by `SipMessage`).
+       *
+       * Elements of the container can be in an "unused" state, which is when the element was removed but
+       * not disposed of. "Unused" elements do not participate in the publicly visible set of elements observed
+       * by users (e.g. they are not found by searching or exposed during iteration). "Unused" elements can be
+       * reused if the user attempts to insert an element with the matching header type. After that, the reused
+       * element becomes publicly accessible again.
+       */
+      class KnownHeaders
+      {
+         private:
+            /// Small index type that is used to map header type ids onto vector elements
+            using HeaderIndex = unsigned char;
+            /// Header index value that indicates invalid index
+            static constexpr HeaderIndex InvalidHeaderIndex = static_cast<HeaderIndex>(-1);
+            static_assert(Headers::MAX_HEADERS <= InvalidHeaderIndex, "HeaderIndex type is too small to cover all SIP header types");
+
+         public:
+            /// Publicly accessible information about a header
+            class HeaderInfo
+            {
+                  friend class KnownHeaders;
+
+               private:
+                  /// Pointer to header values
+                  HeaderFieldValueList* mValues;
+                  /// Header type. If `Headers::UNKNOWN`, indicates that this entry is in the "unused" state.
+                  Headers::Type mType;
+
+               public:
+                  constexpr HeaderInfo() noexcept : mValues(nullptr), mType(Headers::UNKNOWN) {}
+                  explicit constexpr HeaderInfo(Headers::Type type, HeaderFieldValueList* values = nullptr) noexcept : mValues(values), mType(type) {}
+
+                  /// Returns header type
+                  Headers::Type getType() const noexcept { return mType; }
+
+                  /// Returns header values
+                  HeaderFieldValueList* getValues() const noexcept { return mValues; }
+                  /// Sets header values
+                  void setValues(HeaderFieldValueList* values) noexcept { mValues = values; }
+
+               private:
+                  /// Sets header type. Only supposed to be used by `KnownHeaders` implementation.
+                  void setType(Headers::Type type) noexcept { mType = type; }
+            };
+
+         private:
+            /// Internal list of header info entries
+            using TypedHeaders = std::vector<HeaderInfo, StlPoolAllocator<HeaderInfo, PoolBase> >;
+
+            /// Iterator over used entries in the list
+            template<typename AdoptedIterator>
+            class UsedIterator
+            {
+                  friend class KnownHeaders;
+
+               public:
+                  using iterator_category = std::forward_iterator_tag;
+                  using difference_type = typename std::iterator_traits<AdoptedIterator>::difference_type;
+                  using value_type = typename std::iterator_traits<AdoptedIterator>::value_type;
+                  using reference = typename std::iterator_traits<AdoptedIterator>::reference;
+                  using pointer = typename std::iterator_traits<AdoptedIterator>::pointer;
+
+               private:
+                  /// Adopted iterator into the list of headers
+                  AdoptedIterator mIterator;
+                  /// Iterator to the end of the list of headers
+                  AdoptedIterator mEnd;
+
+               public:
+                  constexpr UsedIterator() noexcept : mIterator(), mEnd(mIterator) {}
+                  UsedIterator(UsedIterator const&) = default;
+
+                  /// Initializing constructor
+                  template<
+                     typename OtherAdoptedIterator1,
+                     typename OtherAdoptedIterator2,
+                     typename = typename std::enable_if<
+                        std::is_constructible<AdoptedIterator, OtherAdoptedIterator1&&>::value && std::is_constructible<AdoptedIterator, OtherAdoptedIterator2&&>::value
+                     >::type
+                  >
+                  explicit constexpr UsedIterator(OtherAdoptedIterator1&& iter, OtherAdoptedIterator2&& end)
+                     noexcept(std::is_nothrow_constructible<AdoptedIterator, OtherAdoptedIterator1&&>::value &&
+                        std::is_nothrow_constructible<AdoptedIterator, OtherAdoptedIterator2&&>::value) :
+                     mIterator(std::forward<OtherAdoptedIterator1>(iter)),
+                     mEnd(std::forward<OtherAdoptedIterator2>(end))
+                  {
+                  }
+
+                  /// Convering constructor for mutable -> const iterator conversion
+                  template<
+                     typename OtherAdoptedIterator,
+                     typename = typename std::enable_if<
+                        !std::is_same<OtherAdoptedIterator, AdoptedIterator>::value && std::is_constructible<AdoptedIterator, OtherAdoptedIterator const&>::value
+                     >::type
+                  >
+                  constexpr UsedIterator(UsedIterator<OtherAdoptedIterator> const& that)
+                     noexcept(std::is_nothrow_constructible<AdoptedIterator, OtherAdoptedIterator const&>::value) :
+                     mIterator(that.mIterator),
+                     mEnd(that.mEnd)
+                  {
+                  }
+
+                  reference operator*() const noexcept { return *mIterator; }
+                  pointer operator->() const noexcept { return mIterator.operator->(); }
+                  UsedIterator operator++() { increment(); return *this; }
+                  UsedIterator operator++(int) { UsedIterator copy(*this); increment(); return copy; }
+
+                  friend bool operator==(UsedIterator const& left, UsedIterator const& right) noexcept { return left.mIterator == right.mIterator; }
+                  friend bool operator!=(UsedIterator const& left, UsedIterator const& right) noexcept { return !(left == right); }
+
+               private:
+                  /// Increments the iterator to the next used entry or end of the list
+                  void increment() noexcept
+                  {
+                     ++mIterator;
+                     advanceToNextUsedEntry();
+                  }
+
+                  /// Advances to the next used entry in the list
+                  void advanceToNextUsedEntry() noexcept
+                  {
+                     while (mIterator != mEnd && mIterator->getType() == Headers::UNKNOWN)
+                        ++mIterator;
+                  }
+            };
+
+         public:
+            using iterator = UsedIterator<TypedHeaders::iterator>;
+            using const_iterator = UsedIterator<TypedHeaders::const_iterator>;
+            using value_type = TypedHeaders::value_type;
+            using reference = TypedHeaders::reference;
+            using const_reference = TypedHeaders::const_reference;
+            using pointer = TypedHeaders::pointer;
+            using const_pointer = TypedHeaders::const_pointer;
+            using size_type = TypedHeaders::size_type;
+            using difference_type = TypedHeaders::difference_type;
+            using allocator_type = TypedHeaders::allocator_type;
+
+         private:
+            /// Information about headers
+            TypedHeaders mHeaders;
+            /// Number of non-"unused" elements in the container
+            HeaderIndex mSize;
+            /// Indices into `mHeaders`. If an element is `InvalidHeaderIndex` it means the corresponding header has no entry in the list.
+            HeaderIndex mHeaderIndices[Headers::MAX_HEADERS];
+
+         public:
+            KnownHeaders() noexcept : mSize(0) { resetIndices(); }
+            explicit KnownHeaders(const allocator_type& alloc)
+               noexcept(std::is_nothrow_constructible<TypedHeaders, const allocator_type&>::value) :
+               mHeaders(alloc),
+               mSize(0)
+            {
+               resetIndices();
+            }
+
+            // Not copyable or moveable since the container elements may be associated with a memory pool
+            KnownHeaders(const KnownHeaders&) = delete;
+            KnownHeaders& operator=(const KnownHeaders&) = delete;
+
+            /// Returns `true` if the container is empty. Does not consider "unused" elements.
+            bool empty() const noexcept { return mSize == 0; }
+            /// Returns the number of elements in the container. Does not consider "unused" elements.
+            size_type size() const noexcept { return static_cast<size_type>(mSize); }
+            /// Clears the container. Does not free `HeaderFieldValueList` objects but clears them and marks as "unused".
+            void clear() noexcept;
+            /**
+             * @brief Clears the container and invokes the dispose function on every element.
+             *
+             * The `disposer` function will be called on all entries, including "unused" ones. It is expected to free any resources
+             * associated with the entry and must not throw.
+             */
+            template<typename Disposer>
+            void clearAndDispose(Disposer&& disposer) noexcept;
+
+            /// Iterator access
+            const_iterator cbegin() const noexcept { return begin(); }
+            const_iterator cend() const noexcept { return end(); }
+
+            const_iterator begin() const noexcept { const_iterator it(mHeaders.begin(), mHeaders.end()); it.advanceToNextUsedEntry(); return it; }
+            const_iterator end() const noexcept { return const_iterator(mHeaders.end(), mHeaders.end()); }
+
+            iterator begin() noexcept { iterator it(mHeaders.begin(), mHeaders.end()); it.advanceToNextUsedEntry(); return it; }
+            iterator end() noexcept { return iterator(mHeaders.end(), mHeaders.end()); }
+
+            /// Reserves internal storage for the given number of entries
+            void reserve(size_type capacity) { mHeaders.reserve(capacity); }
+            /// Returns capacity of the internal storage
+            size_type capacity() const noexcept { return mHeaders.capacity(); }
+
+            /// Finds header information, if present in the list. Returns `end()` if not found. Does not produce "unused" entries.
+            iterator find(Headers::Type type) noexcept;
+            const_iterator find(Headers::Type type) const noexcept { return const_cast<KnownHeaders*>(this)->find(type); }
+
+            /// Erases an element. Does not free the `HeaderFieldValueList` object but clears it and marks as "unused".
+            void erase(iterator it) noexcept;
+
+            /**
+             * @brief Constructs or reuses a previously erased element for a given header type.
+             *
+             * If the header with the given type was previously erased and is in the "unused" state, this call reuses this element.
+             * Otherwise, the call constructs a new element with the given header type and a pointer to the `HeaderFieldValueList` object
+             * returned by the `valuesFactory()` function call.
+             *
+             * @returns An iterator to the inserted element.
+             */
+            template<typename ValuesFactory>
+            iterator insert(Headers::Type type, ValuesFactory&& valuesFactory);
+
+         private:
+            /// Resets all header indices to `InvalidHeaderIndex`
+            void resetIndices() noexcept;
+      };
 
       explicit SipMessage(const Tuple *receivedTransport = 0);
       /// @todo .dlb. public, allows pass by value to compile.
@@ -464,7 +688,8 @@ class SipMessage : public TransactionMessage
       /// typeless header interface
       const HeaderFieldValueList* getRawHeader(Headers::Type headerType) const;
       void setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerType);
-      const UnknownHeaders& getRawUnknownHeaders() const {return mUnknownHeaders;}
+      const KnownHeaders& getRawHeaders() const noexcept { return mKnownHeaders; }
+      const UnknownHeaders& getRawUnknownHeaders() const noexcept { return mUnknownHeaders; }
       /**
          Return the raw body string (if it exists). The returned HFV
          and its underlying memory is owned by the SipMessage, and may
@@ -472,7 +697,7 @@ class SipMessage : public TransactionMessage
 
          This is a low-level interface; see getContents() for higher level.
       **/
-      const HeaderFieldValue& getRawBody() const {return mContentsHfv;}
+      const HeaderFieldValue& getRawBody() const noexcept { return mContentsHfv; }
 
       /**
          Remove any existing body/contents, and (if non-empty)
@@ -598,26 +823,10 @@ class SipMessage : public TransactionMessage
       void copyFrom(const SipMessage& message);
 
       HeaderFieldValueList* ensureHeaders(Headers::Type type);
-      inline HeaderFieldValueList* ensureHeaders(Headers::Type type) const // throws if not present
-      {
-         if(mHeaderIndices[type]>0)
-         {
-            return mHeaders[mHeaderIndices[type]];
-         }
-         throwHeaderMissing(type);
-         return 0;
-      }
+      HeaderFieldValueList* ensureHeaders(Headers::Type type) const; // throws if not present
 
       HeaderFieldValueList* ensureHeader(Headers::Type type);
-      inline HeaderFieldValueList* ensureHeader(Headers::Type type) const // throws if not present
-      {
-         if(mHeaderIndices[type]>0)
-         {
-            return mHeaders[mHeaderIndices[type]];
-         }
-         throwHeaderMissing(type);
-         return 0;
-      }
+      HeaderFieldValueList* ensureHeader(Headers::Type type) const; // throws if not present
 
       void throwHeaderMissing(Headers::Type type) const;
 
@@ -668,15 +877,9 @@ class SipMessage : public TransactionMessage
       // allocations are occuring and how much of the pool is used.
       DinkyPool<3732> mPool;
 
-      typedef std::vector<HeaderFieldValueList*, 
-                           StlPoolAllocator<HeaderFieldValueList*, 
-                                          PoolBase > > TypedHeaders;
       // raw text corresponding to each typed header (not yet parsed)
-      TypedHeaders mHeaders;
+      KnownHeaders mKnownHeaders;
       
-      // !bwc! Indices into mHeaders
-      short mHeaderIndices[Headers::MAX_HEADERS];
-
       // raw text corresponding to each unknown header
       UnknownHeaders mUnknownHeaders;
 

@@ -2,8 +2,10 @@
 #define REPRO_SERVERAUTHMANAGER_HXX
 
 #include <map>
+#include <vector>
 
 #include "rutil/AsyncBool.hxx"
+#include "rutil/DigestStream.hxx"
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/dum/UserProfile.hxx"
@@ -29,7 +31,8 @@ class ReproServerAuthManager: public resip::ServerAuthManager
                              bool useAuthInt,
                              bool rejectBadNonces,
                              bool challengeThirdParties,
-                             const resip::Data& staticRealm = resip::Data::Empty);
+                             const resip::Data& staticRealm = resip::Data::Empty,
+                             const std::vector<resip::DigestType>& challengeDigestTypes = std::vector<resip::DigestType>());
       
       ~ReproServerAuthManager();
       
@@ -61,6 +64,7 @@ class ReproServerAuthManager: public resip::ServerAuthManager
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

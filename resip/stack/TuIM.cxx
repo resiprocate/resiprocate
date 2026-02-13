@@ -30,7 +30,7 @@
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/OctetContents.hxx"
 #include "resip/stack/Helper.hxx"
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "resip/stack/SipFrag.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
@@ -69,7 +69,7 @@ TuIM::TuIM(SipStack* stack,
      mStack(stack),
      mAor(aor),
      mContact(contact),
-     mPidf( new Pidf ),
+     mPidf( new GenericPidfContents ),
      mRegistrationDialog(NameAddr(contact)),
      mNextTimeToRegister(0),
      mRegistrationPassword( Data::Empty ),
@@ -82,9 +82,8 @@ TuIM::TuIM(SipStack* stack,
    resip_assert(mCallback);
    resip_assert(mPidf);
    
-   mPidf->setSimpleId( Random::getRandomHex(4) );  
-   mPidf->setEntity(mAor);  
-   mPidf->setSimpleStatus( true, Data::Empty, mContact.getAor() );
+   mPidf->setEntity(mAor);
+   mPidf->setSimplePresenceTupleNode(Random::getRandomHex(4), true, Data::Empty, Data::Empty, mContact.getAor());
 }
 
 
@@ -522,7 +521,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    Mime mime = contents->getType();
    DebugLog ( << "got  NOTIFY event with body of type  " << mime.type() << "/" << mime.subType() );
   
-   Pidf* body = dynamic_cast<Pidf*>(contents);
+   GenericPidfContents* body = dynamic_cast<GenericPidfContents*>(contents);
    if ( !body )
    {
       InfoLog(<< "Received NOTIFY message event with no PIDF contents" );
@@ -530,8 +529,8 @@ TuIM::processNotifyRequest(SipMessage* msg)
       return;
    }
  
-   Data note;
-   bool open = body->getSimpleStatus( &note );
+   bool open = body->getSimplePresenceOnline();
+   Data note = body->getSimplePresenceNote();
 
    bool changed = true;
 
@@ -1311,7 +1310,7 @@ TuIM::sendNotify(DeprecatedDialog* dialog)
    
    unique_ptr<SipMessage> msg( dialog->makeNotify() );
 
-   Pidf* pidf = new Pidf( *mPidf );
+   GenericPidfContents* pidf = new GenericPidfContents( *mPidf );
 
    msg->header(h_Event).value() = "presence";
 
@@ -1335,7 +1334,7 @@ TuIM::sendPublish(StateAgent& sa)
    
    unique_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
 
-   Pidf* pidf = new Pidf( *mPidf );
+   GenericPidfContents* pidf = new GenericPidfContents( *mPidf );
 
    msg->header(h_Event).value() = "presence";
 
@@ -1359,7 +1358,7 @@ TuIM::setMyPresence( const bool open, const Data& status, const Data& user  )
 {
    // TODO implement the pser user status (when user is not empty)
    resip_assert( mPidf );
-   mPidf->setSimpleStatus( open, status, mContact.getAor() );
+   mPidf->setSimplePresenceTupleNode(mPidf->getSimplePresenceTupleId(), open, Data::Empty, status, mContact.getAor());
    
    for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {

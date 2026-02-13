@@ -32,6 +32,7 @@ void
 StatisticsManager::setInterval(unsigned long intervalSecs)
 {
    mInterval = intervalSecs * 1000;
+   mNextPoll = Timer::getTimeMs() + mInterval;
 }
 
 void 

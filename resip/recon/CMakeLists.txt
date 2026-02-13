@@ -33,12 +33,6 @@ set(INCLUDES
    ConversationProfile.hxx
    ConversationManager.hxx
    DtmfEvent.hxx
-   sdp/SdpMediaLine.hxx
-   sdp/SdpCodec.hxx
-   sdp/SdpHelperResip.hxx
-   sdp/SdpCandidatePair.hxx
-   sdp/SdpCandidate.hxx
-   sdp/Sdp.hxx
    SipXMediaStackAdapter.hxx
    SipXMediaInterface.hxx
    SipXConversation.hxx
@@ -114,12 +108,6 @@ target_add_conditional_sources(recon USE_SIPXTAPI
    SipXRemoteParticipant.cxx
    SipXRemoteParticipantDialogSet.cxx
    SipXHelper.cxx
-   sdp/Sdp.cxx
-   sdp/SdpCandidate.cxx
-   sdp/SdpCandidatePair.cxx
-   sdp/SdpCodec.cxx
-   sdp/SdpHelperResip.cxx
-   sdp/SdpMediaLine.cxx
 )
 
 target_add_conditional_sources(recon USE_KURENTO

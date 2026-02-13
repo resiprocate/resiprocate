@@ -8,7 +8,7 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/OctetContents.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
@@ -666,9 +666,9 @@ Contents::addBuffer(char* buf)
 bool
 resip::operator==(const Contents& lhs, const Contents& rhs)
 {
-   MD5Stream lhsStream;
+   DigestStream lhsStream;
    lhsStream << lhs;
-   MD5Stream rhsStream;
+   DigestStream rhsStream;
    rhsStream << rhs;
    return lhsStream.getHex() == rhsStream.getHex();
 }
@@ -682,6 +682,7 @@ resip::operator!=(const Contents& lhs, const Contents& rhs)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without

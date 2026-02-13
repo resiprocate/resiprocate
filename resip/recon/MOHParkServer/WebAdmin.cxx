@@ -8,7 +8,6 @@
 #include <rutil/Data.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Logger.hxx>
-#include <rutil/MD5Stream.hxx>
 #include <rutil/ParseBuffer.hxx>
 #include <rutil/Socket.hxx>
 #include <rutil/Timer.hxx>

@@ -22,7 +22,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/HashMap.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/Logger.hxx"
 #ifdef USE_NETNS
 #   include "rutil/NetNs.hxx"
@@ -316,8 +316,8 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const
 
    if(!salt.empty())
    {
-      // TODO - potentially use SHA1 HMAC if USE_SSL is defined for stronger encryption
-      MD5Stream ms;
+      // TODO - potentially use SHA1 HMAC for stronger encryption
+      DigestStream ms;
       ms << container << salt;
       container += ms.getHex();
    }
@@ -373,7 +373,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
       unsigned int tokenSizeLessHMAC = version == V4 ? (TOKEN_SIZE-3)*4 : TOKEN_SIZE*4;
       Data flowTokenLessHMAC(Data::Share, binaryFlowToken.data(), tokenSizeLessHMAC);
       Data flowTokenHMAC(Data::Share, binaryFlowToken.data()+tokenSizeLessHMAC, 32);
-      MD5Stream ms;
+      DigestStream ms;
       ms << flowTokenLessHMAC << salt;
       if(ms.getHex() != flowTokenHMAC)
       {
@@ -1105,6 +1105,7 @@ Tuple::AnyPortAnyInterfaceCompare::operator()(const Tuple& lhs,
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -165,6 +165,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\media\RTPPortManager.cxx" />
+    <ClCompile Include="..\..\media\sdpcontainer\Sdp.cxx" />
+    <ClCompile Include="..\..\media\sdpcontainer\SdpCandidate.cxx" />
+    <ClCompile Include="..\..\media\sdpcontainer\SdpCandidatePair.cxx" />
+    <ClCompile Include="..\..\media\sdpcontainer\SdpCodec.cxx" />
+    <ClCompile Include="..\..\media\sdpcontainer\SdpHelper.cxx" />
+    <ClCompile Include="..\..\media\sdpcontainer\SdpMediaLine.cxx" />
     <ClCompile Include="BridgeMixer.cxx" />
     <ClCompile Include="Conversation.cxx" />
     <ClCompile Include="ConversationManager.cxx" />
@@ -306,12 +312,6 @@
     <ClCompile Include="SipXLocalParticipant.cxx" />
     <ClCompile Include="SipXRemoteParticipant.cxx" />
     <ClCompile Include="SipXRemoteParticipantDialogSet.cxx" />
-    <ClCompile Include="sdp\Sdp.cxx" />
-    <ClCompile Include="sdp\SdpCandidate.cxx" />
-    <ClCompile Include="sdp\SdpCandidatePair.cxx" />
-    <ClCompile Include="sdp\SdpCodec.cxx" />
-    <ClCompile Include="sdp\SdpHelperResip.cxx" />
-    <ClCompile Include="sdp\SdpMediaLine.cxx" />
     <ClCompile Include="UserAgent.cxx" />
     <ClCompile Include="UserAgentClientPublication.cxx" />
     <ClCompile Include="UserAgentClientSubscription.cxx" />
@@ -322,6 +322,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\media\RTPPortManager.hxx" />
+    <ClInclude Include="..\..\media\sdpcontainer\Sdp.hxx" />
+    <ClInclude Include="..\..\media\sdpcontainer\SdpCandidate.hxx" />
+    <ClInclude Include="..\..\media\sdpcontainer\SdpCandidatePair.hxx" />
+    <ClInclude Include="..\..\media\sdpcontainer\SdpCodec.hxx" />
+    <ClInclude Include="..\..\media\sdpcontainer\SdpHelper.hxx" />
+    <ClInclude Include="..\..\media\sdpcontainer\SdpMediaLine.hxx" />
     <ClInclude Include="BridgeMixer.hxx" />
     <ClInclude Include="Conversation.hxx" />
     <ClInclude Include="ConversationManager.hxx" />
@@ -464,12 +470,6 @@
     <ClInclude Include="SipXLocalParticipant.hxx" />
     <ClInclude Include="SipXRemoteParticipant.hxx" />
     <ClInclude Include="SipXRemoteParticipantDialogSet.hxx" />
-    <ClInclude Include="sdp\Sdp.hxx" />
-    <ClInclude Include="sdp\SdpCandidate.hxx" />
-    <ClInclude Include="sdp\SdpCandidatePair.hxx" />
-    <ClInclude Include="sdp\SdpCodec.hxx" />
-    <ClInclude Include="sdp\SdpHelperResip.hxx" />
-    <ClInclude Include="sdp\SdpMediaLine.hxx" />
     <ClInclude Include="UserAgent.hxx" />
     <ClInclude Include="UserAgentClientPublication.hxx" />
     <ClInclude Include="UserAgentClientSubscription.hxx" />
@@ -485,12 +485,12 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-      <Import Project="$(SolutionDir)\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets" Condition="Exists('$(SolutionDir)\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" />
+    <Import Project="$(SolutionDir)\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets" Condition="Exists('$(SolutionDir)\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-      <PropertyGroup>
-          <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-      </PropertyGroup>
-      <Error Condition="!Exists('$(SolutionDir)\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets'))" />
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\packages\zeroc.openssl.v143.1.1.1.2\build\native\zeroc.openssl.v143.targets'))" />
   </Target>
 </Project>

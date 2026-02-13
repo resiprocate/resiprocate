@@ -91,7 +91,6 @@ set(INCLUDES
    ParserCategory.hxx
    ParserContainerBase.hxx
    ParserContainer.hxx
-   Pidf.hxx
    Pkcs7Contents.hxx
    Pkcs8Contents.hxx
    PlainContents.hxx
@@ -270,7 +269,6 @@ add_library(resip
    ParameterTypes.cxx
    ParserCategory.cxx
    ParserContainerBase.cxx
-   Pidf.cxx
    Pkcs7Contents.cxx
    Pkcs8Contents.cxx
    PlainContents.cxx

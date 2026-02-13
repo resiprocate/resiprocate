@@ -1,5 +1,5 @@
-#if !defined(SdpHelperResip_hxx)
-#define SdpHelperResip_hxx
+#if !defined(SdpHelper_hxx)
+#define SdpHelper_hxx
 
 #include "Sdp.hxx"
 #include "SdpMediaLine.hxx"
@@ -20,7 +20,7 @@ namespace resip
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class SdpHelperResip
+class SdpHelper
 {
 public:
    static sdpcontainer::Sdp::SdpAddressType convertResipAddressType(resip::SdpContents::AddrType resipAddrType);
@@ -43,7 +43,7 @@ private:
 
 };
 
-#endif  // _SdpHelperResip_hxx_
+#endif  // _SdpHelper_hxx_
 
 
 /* ====================================================================

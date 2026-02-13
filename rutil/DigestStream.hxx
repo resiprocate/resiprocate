@@ -3,10 +3,20 @@
 
 #include <iostream>
 #include "rutil/Data.hxx"
-#include <openssl/evp.h> 
 
 namespace resip
 {
+
+enum DigestType
+{
+   MD5,
+   SHA1
+#ifdef USE_SSL
+   , SHA256
+   , SHA512
+   , SHA512_256
+#endif
+};
 
 /** 
     @brief Implementation of std::streambuf used to back the DigestStream.
@@ -14,18 +24,27 @@ namespace resip
 class DigestBuffer : public std::streambuf
 {
 public:
-   DigestBuffer(const EVP_MD* digest);
+   DigestBuffer(DigestType digestType = MD5);
    virtual ~DigestBuffer();
-   /** @returns the Digest hexadecimal representation of the data from the buffer
-    */
+
+   /** @returns the Digest hexadecimal representation of the data from the buffer */
    Data getHex();
-   Data getBin();
+
+   /** @returns the Digest binary representation of the data from the buffer */
+   const Data& getBin();
+
+   size_t bytesTaken() { return mBytesTaken; }
+
 protected:
    virtual int sync();
    virtual int overflow(int c = -1);
+
 private:
+   DigestType mDigestType;
    char mBuf[64];
-   EVP_MD_CTX mContext;
+   void* mContext;
+   size_t mBytesTaken;
+   Data mFinalBin;
 };
 
 /** 
@@ -35,15 +54,18 @@ private:
 class DigestStream : private DigestBuffer, public std::ostream
 {
 public:
-   DigestStream(const EVP_MD* digest);
+   DigestStream(DigestType digestType = MD5);
    ~DigestStream();
    /** Calls flush() on itself and returns the Digest data in hex format.
        @returns the Digest hexadecimal representation of the data written to the
        stream and convert the data to Digest.
    */
    Data getHex();
-   Data getBin();
-private:
+   const Data& getBin();
+
+   size_t bytesTaken();
+
+   static const Data& getDigestName(DigestType digestType);
 };
 
 }
@@ -52,6 +74,7 @@ private:
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

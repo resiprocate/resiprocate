@@ -23,8 +23,8 @@
 #include "reflow/Flow.hxx"
 #include "reflow/MediaStream.hxx"
 
-#include "sdp/SdpHelperResip.hxx"
-#include "sdp/Sdp.hxx"
+#include <media/sdpcontainer/SdpHelper.hxx>
+#include <media/sdpcontainer/Sdp.hxx>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>

@@ -30,11 +30,10 @@
 
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/HeaderFieldValue.hxx"
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "resip/stack/MessageWaitingContents.hxx"
 #include "resip/stack/PlainContents.hxx"
 
-#include "resip/stack/Pidf.hxx"
 
 #include "resip/dum/DialogEventStateManager.hxx"
 
@@ -2168,12 +2167,8 @@ class DumTestCase : public DumFixture
       void testPublishBasic()
       {
          WarningLog(<< "testPublishBasic");
-         Pidf* pidf = new Pidf;
-         std::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getAor().uri());
+
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);
 
          Uri contact = derek->getAor().uri();
          contact.host() = derek->getIp();
@@ -2205,12 +2200,7 @@ class DumTestCase : public DumFixture
          contact.host() = derek->getIp();
          contact.port() = derek->getPort();
 
-         Pidf* pidf = new Pidf;
-         std::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getAor().uri()));
-         pidf->getTuples().front().id = derek->getAor().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getAor().uri());
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);
          
          Seq(derek->publish(NameAddr(david->getContact()), *body, Data("presence"), 100),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send401()),
@@ -2242,22 +2232,8 @@ class DumTestCase : public DumFixture
          contact.host() = derek->getIp();
          contact.port() = derek->getPort();
 
-         //!dcm! -- should be auto_ptr, move generation to utility function;
-         //wheere content doesn't matter, should have static bodies in fixture
-         Pidf* pidf = new Pidf;
-         std::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getProfile()->getDefaultFrom().uri());
-         
-         Pidf* pidf2 = new Pidf;
-         std::shared_ptr<resip::Contents> body2(pidf2);
-         pidf2->setSimpleStatus(false, "offline", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf2->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf2->getTuples().front().attributes["displayName"] = "displayName";
-         pidf2->setEntity(derek->getProfile()->getDefaultFrom().uri());
-
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);  // online
+         std::unique_ptr<GenericPidfContents> body2 = DumFixture::makePidf(derek, false); // offline
 
          Seq(derek->publish(NameAddr(david->getContact()), *body, Data("presence"), 100),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send401()),
@@ -2316,12 +2292,7 @@ class DumTestCase : public DumFixture
 
          TestClientPublication clientPubDerek(derek);
 
-         Pidf* pidf = new Pidf;
-         std::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getProfile()->getDefaultFrom().uri());
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);  // online
 
          std::shared_ptr<resip::SipMessage> nonceSource;
          
@@ -2332,13 +2303,8 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         Pidf* pidf2 = new Pidf;
-         std::shared_ptr<resip::Contents> body2(pidf2);
-         pidf2->setSimpleStatus(false, "offline", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf2->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf2->getTuples().front().attributes["displayName"] = "displayName";
-         pidf2->setEntity(derek->getProfile()->getDefaultFrom().uri());
-         
+         std::unique_ptr<GenericPidfContents> body2 = DumFixture::makePidf(derek, false);  // offline
+
          WarningLog(<< "testStaleNonceHandling, second phase");
          Seq(clientPubDerek.update(body2.get()),
              david->expect(PUBLISH, matchNonceCount(2), WaitForResponse, 
@@ -2351,7 +2317,7 @@ class DumTestCase : public DumFixture
              clientPubDerek.expect(ClientPublication_Remove, *TestEndPoint::AlwaysTruePred, 
                                    WaitForResponse, clientPubDerek.noAction()),
              WaitForEndOfTest);
-         ExecuteSequences();         
+         ExecuteSequences();
       }
 
       void testLucentAuthIssue()
@@ -2360,13 +2326,8 @@ class DumTestCase : public DumFixture
 
          TestClientPublication clientPubDerek(derek);
 
-         Pidf* pidf = new Pidf;
-         std::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getProfile()->getDefaultFrom().uri());
-         
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);  // online
+
          Seq(derek->publish(NameAddr(david->getContact()), *body, Data("presence"), 100),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send401()),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send200ToPublish()),
@@ -2374,13 +2335,8 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         Pidf* pidf2 = new Pidf;
-         std::shared_ptr<resip::Contents> body2(pidf2);
-         pidf2->setSimpleStatus(false, "offline", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf2->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf2->getTuples().front().attributes["displayName"] = "displayName";
-         pidf2->setEntity(derek->getProfile()->getDefaultFrom().uri());
-         
+         std::unique_ptr<GenericPidfContents> body2 = DumFixture::makePidf(derek, false);  // offline
+
          std::shared_ptr<resip::SipMessage> nonceSource;
          
          //re-use nonce
@@ -2419,13 +2375,8 @@ class DumTestCase : public DumFixture
          contact.host() = derek->getIp();
          contact.port() = derek->getPort();
 
-         Pidf* pidf = new Pidf;
-         std::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getProfile()->getDefaultFrom().uri());
-         
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);  // online
+
          Seq(derek->publish(NameAddr(david->getContact()), *body, Data("presence"), 100),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send401()),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send423Or200ToPublish(200)),
@@ -2434,12 +2385,8 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         Pidf* pidf2 = new Pidf;
-         std::shared_ptr<resip::Contents> body2(pidf2);
-         pidf2->setSimpleStatus(false, "offline", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf2->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf2->getTuples().front().attributes["displayName"] = "displayName";
-         pidf2->setEntity(derek->getProfile()->getDefaultFrom().uri());
+         std::unique_ptr<GenericPidfContents> body2 = DumFixture::makePidf(derek, false);  // offline
+
          Seq(clientPubDerek.update(body2.get()),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send401()),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send200ToPublish()),
@@ -3129,7 +3076,7 @@ class DumTestCase : public DumFixture
          
          TestClientPublication clientPub(duane);
          
-         std::unique_ptr<Pidf> pidf = makePidf(duane);
+         std::unique_ptr<GenericPidfContents> pidf = makePidf(duane);
          
          Seq(duane->publish(NameAddr(sipEndPoint->getContact()), *pidf, Data("presence"), 100),
              serviceEndPoint->expect(PUBLISH, from(duane->getInstanceId()), WaitForResponse, serviceEndPoint->send401()),
@@ -3365,12 +3312,7 @@ class DumTestCase : public DumFixture
       {
          WarningLog(<< "test401WithoutBranchId");
 
-         Pidf* pidf = new Pidf;
-         std::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getAor().uri());
+         std::unique_ptr<GenericPidfContents> body = makePidf(derek);
 
          Uri contact = derek->getAor().uri();
          contact.host() = derek->getIp();

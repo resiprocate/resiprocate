@@ -49,6 +49,8 @@ Data EndReasons[] =
    "Stale re-Invite"
 };
 
+const Token SessionTimerToken(Symbols::Timer);
+
 const Data& InviteSession::getEndReasonString(InviteSession::EndReason reason)
 {
    if(reason != InviteSession::UserSpecified)
@@ -240,6 +242,10 @@ void InviteSession::storePeerCapabilities(const SipMessage& msg)
    {
       mPeerSupportedOptionTags = msg.header(h_Supporteds);
    }
+   if (msg.exists(h_Requires))
+   {
+      mPeerRequiresOptionTags = msg.header(h_Requires);
+   }
    if (msg.exists(h_AcceptEncodings))
    {
       mPeerSupportedEncodings = msg.header(h_AcceptEncodings);
@@ -275,11 +281,12 @@ InviteSession::updateMethodSupported() const
 }
 
 bool
-InviteSession::timerOptionSupported() const
+InviteSession::sessionTimerSupportedLocalAndPeer() const
 {
-   // Check if timer extension (RFC4028) is supported locally and by peer
-   Token timer(Symbols::Timer);
-   return mDum.getMasterProfile()->getSupportedOptionTags().find(timer) && mPeerSupportedOptionTags.find(timer);
+   // Check if session timer extension (RFC4028) is supported locally 
+   // and by peer (either supported or requires headers)
+   return mDum.getMasterProfile()->getSupportedOptionTags().find(SessionTimerToken) &&
+      (mPeerSupportedOptionTags.find(SessionTimerToken) || mPeerRequiresOptionTags.find(SessionTimerToken));
 }
 
 bool
@@ -2692,7 +2699,7 @@ InviteSession::sessionRefresh()
       mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
       mLastLocalSessionModification->setContents(0);  // Don't send SDP
    }
-   else if (mPeerSupportedMethods.find(Token("OPTIONS")) && !timerOptionSupported())
+   else if (mPeerSupportedMethods.find(Token("OPTIONS")) && !sessionTimerSupportedLocalAndPeer())
    {
       transition(SentOptions);
       auto options = std::make_shared<SipMessage>();
@@ -2790,11 +2797,11 @@ InviteSession::handleSessionTimerResponse(const SipMessage& msg)
    }
 
    // If session timers are locally supported then handle response
-   if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
+   if(mDum.getMasterProfile()->getSupportedOptionTags().find(SessionTimerToken))
    {
       setSessionTimerPreferences();
 
-      if(msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::Timer))
+      if(msg.exists(h_Requires) && msg.header(h_Requires).find(SessionTimerToken)
          && !msg.exists(h_SessionExpires))
       {
          // If no Session Expires in response and Requires header is present then session timer is to be 'turned off'
@@ -2840,7 +2847,7 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
    }
 
    // If session timers are locally supported then add necessary headers to response
-   if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
+   if(mDum.getMasterProfile()->getSupportedOptionTags().find(SessionTimerToken))
    {
       // Update MinSE if specified and longer than current value
       if(request.exists(h_MinSE))
@@ -2851,7 +2858,8 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
 
       // Check if far-end supports
       bool farEndSupportsTimer = false;
-      if(request.exists(h_Supporteds) && request.header(h_Supporteds).find(Token(Symbols::Timer)))
+      if((request.exists(h_Supporteds) && request.header(h_Supporteds).find(SessionTimerToken)) ||
+         (request.exists(h_Requires) && request.header(h_Requires).find(SessionTimerToken)))
       {
          farEndSupportsTimer = true;
          if(request.exists(h_SessionExpires))
@@ -2870,19 +2878,21 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
          mSessionRefresher = true;
       }
 
-      // Add Session-Expires to response if required
+      // Add Session-Expires to response if needed
       if(mSessionInterval >= 90)
       {
          if(farEndSupportsTimer)
          {
             // If far end supports session-timer then require it, if not already present
-            if(!response.header(h_Requires).find(Token(Symbols::Timer)))
+            if(!response.header(h_Requires).find(SessionTimerToken))
             {
-                response.header(h_Requires).push_back(Token(Symbols::Timer));
+                response.header(h_Requires).push_back(SessionTimerToken);
             }
          }
-         if (timerOptionSupported())
+         if (request.header(h_CSeq).method() != OPTIONS)
+         {
             setSessionTimerHeaders(response);
+         }
       }
 
       startSessionTimer();
