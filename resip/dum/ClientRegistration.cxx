@@ -699,12 +699,12 @@ ClientRegistration::dispatch(const SipMessage& msg)
          if (mState == Removing && !mEndWhenDone && (code == 401 || code == 407))
          {
             // In this case; we attempted to remove the bindings and met an authentication challenge - the bindings should still exist.
-            if (!std::empty(mLastAllContacts))
+            if (!mLastAllContacts.empty())
             {
                mAllContacts = std::move(mLastAllContacts);
                mLastAllContacts = {};
             }
-            if (!std::empty(mLastMyContacts))
+            if (!mLastMyContacts.empty())
             {
                mMyContacts = std::move(mLastMyContacts);
                mLastMyContacts = {};
