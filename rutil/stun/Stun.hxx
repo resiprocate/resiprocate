@@ -6,13 +6,16 @@
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
 
-// !jr! Bumped version to 0.97 with changes to make this stun implementation more compliant with RFC5389/8489
-//      Updated code to send (and receive) XOR_MAPPED_ADDRESS as 0x0020 (instead of 0x8020)
-// Note: Magic cookie from RFC5389 is not used by default, but can be added by users of this implementation
-// Also, While the latest version here is *more* compliant, there are still areas of improvement for complete 
-// compliance.  In particular, some STUN attributes are not handled exactly as they should be, including missing
-// support for IPV6, correct handling of the MESSAGE-INTEGRITY(-SHA256) header, correct processing of other 
-// credential handling headers such as USERNAME, PASSWORD, REALM and NONCE
+namespace resip
+{
+
+   // !jr! Bumped version to 0.97 with changes to make this stun implementation more compliant with RFC5389/8489
+   //      Updated code to send (and receive) XOR_MAPPED_ADDRESS as 0x0020 (instead of 0x8020)
+   // Note: Magic cookie from RFC5389 is not used by default, but can be added by users of this implementation
+   // Also, While the latest version here is *more* compliant, there are still areas of improvement for complete 
+   // compliance.  In particular, some STUN attributes are not handled exactly as they should be, including missing
+   // support for IPV6, correct handling of the MESSAGE-INTEGRITY(-SHA256) header, correct processing of other 
+   // credential handling headers such as USERNAME, PASSWORD, REALM and NONCE
 #define STUN_VERSION "0.97"
 
 #define STUN_MAX_STRING 256
@@ -23,309 +26,309 @@
 
 #ifndef RESIP_COMPAT_HXX
 // define some basic types
-typedef unsigned char  uint8_t;
-typedef unsigned short uint16_t;
+   typedef unsigned char  uint8_t;
+   typedef unsigned short uint16_t;
 #ifdef __APPLE__
-typedef unsigned long   uint32_t;
+   typedef unsigned long   uint32_t;
 #else
-typedef unsigned int   uint32_t;
+   typedef unsigned int   uint32_t;
 #endif
 #if defined( WIN32 )
-typedef unsigned __int64 uint64_t;
+   typedef unsigned __int64 uint64_t;
 #else
-typedef unsigned long long uint64_t;
+   typedef unsigned long long uint64_t;
 #endif
 #endif
 
-typedef struct { unsigned char octet[16]; }  UInt128;
+   typedef struct { unsigned char octet[16]; }  UInt128;
 
 #ifdef __cplusplus
-bool operator<(const UInt128&, const UInt128&);
-bool operator==(const UInt128&, const UInt128&);
+   bool operator<(const UInt128&, const UInt128&);
+   bool operator==(const UInt128&, const UInt128&);
 #endif
 
-/// define a structure to hold a stun address 
-const uint8_t  IPv4Family = 0x01;
-const uint8_t  IPv6Family = 0x02;
+   /// define a structure to hold a stun address 
+   const uint8_t  IPv4Family = 0x01;
+   const uint8_t  IPv6Family = 0x02;
 
-// define  flags  
-const uint32_t ChangeIpFlag   = 0x04;
-const uint32_t ChangePortFlag = 0x02;
+   // define  flags  
+   const uint32_t ChangeIpFlag = 0x04;
+   const uint32_t ChangePortFlag = 0x02;
 
 #define MAX_REALM_BYTES             763
 #define MAX_NONCE_BYTES             763
 
-// define  stun attributes - RFC5389
-// Comprehension required attributes
-const static uint16_t MappedAddress = 0x0001;
-const static uint16_t ResponseAddress = 0x0002;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
-const static uint16_t ChangeRequest = 0x0003;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
-const static uint16_t SourceAddress = 0x0004;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
-const static uint16_t ChangedAddress = 0x0005;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
-const static uint16_t Username = 0x0006;
-const static uint16_t Password = 0x0007;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
-const static uint16_t MessageIntegrity = 0x0008;
-const static uint16_t ErrorCode = 0x0009;
-const static uint16_t UnknownAttribute = 0x000A;
-const static uint16_t ReflectedFrom = 0x000B;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
-const static uint16_t Realm = 0x0014;
-const static uint16_t Nonce = 0x0015;
-const static uint16_t XorMappedAddress = 0x0020;
-const static uint16_t XorOnly = 0x0021; // Non standard extention
-const static uint16_t XorMappedAddress_old = 0x8020; // deprecated
+   // define  stun attributes - RFC5389
+   // Comprehension required attributes
+   const static uint16_t MappedAddress = 0x0001;
+   const static uint16_t ResponseAddress = 0x0002;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+   const static uint16_t ChangeRequest = 0x0003;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+   const static uint16_t SourceAddress = 0x0004;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+   const static uint16_t ChangedAddress = 0x0005;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+   const static uint16_t Username = 0x0006;
+   const static uint16_t Password = 0x0007;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+   const static uint16_t MessageIntegrity = 0x0008;
+   const static uint16_t ErrorCode = 0x0009;
+   const static uint16_t UnknownAttribute = 0x000A;
+   const static uint16_t ReflectedFrom = 0x000B;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+   const static uint16_t Realm = 0x0014;
+   const static uint16_t Nonce = 0x0015;
+   const static uint16_t XorMappedAddress = 0x0020;
+   const static uint16_t XorOnly = 0x0021; // Non standard extention
+   const static uint16_t XorMappedAddress_old = 0x8020; // deprecated
 
-// Comprehension Optional Attributes
-const static uint16_t Software = 0x8022;
-const static uint16_t AlternateServer = 0x8023;
-const static uint16_t Fingerprint = 0x8028;
-const static uint16_t SecondaryAddress = 0x8050;  // Non standard extension
+   // Comprehension Optional Attributes
+   const static uint16_t Software = 0x8022;
+   const static uint16_t AlternateServer = 0x8023;
+   const static uint16_t Fingerprint = 0x8028;
+   const static uint16_t SecondaryAddress = 0x8050;  // Non standard extension
 
-// !jf! TURN specific message attributes - from turn-08
-const uint16_t TurnLifetime     = 0x000d;
-const uint16_t TurnAlternateServer = 0x000e;
-const uint16_t TurnMagicCookie = 0x000f;
-const uint16_t TurnBandwidth = 0x0010;
-const uint16_t TurnDestinationAddress = 0x0011;
-const uint16_t TurnRemoteAddress = 0x0012;
-const uint16_t TurnData = 0x0013;
-const uint16_t TurnNonce = 0x0014;
-const uint16_t TurnRealm = 0x0015;
+   // !jf! TURN specific message attributes - from turn-08
+   const uint16_t TurnLifetime = 0x000d;
+   const uint16_t TurnAlternateServer = 0x000e;
+   const uint16_t TurnMagicCookie = 0x000f;
+   const uint16_t TurnBandwidth = 0x0010;
+   const uint16_t TurnDestinationAddress = 0x0011;
+   const uint16_t TurnRemoteAddress = 0x0012;
+   const uint16_t TurnData = 0x0013;
+   const uint16_t TurnNonce = 0x0014;
+   const uint16_t TurnRealm = 0x0015;
 
 
-// define types for a stun message 
-const uint16_t BindRequestMsg               = 0x0001;
-const uint16_t BindResponseMsg              = 0x0101;
-const uint16_t BindErrorResponseMsg         = 0x0111;
-const uint16_t SharedSecretRequestMsg       = 0x0002;
-const uint16_t SharedSecretResponseMsg      = 0x0102;
-const uint16_t SharedSecretErrorResponseMsg = 0x0112;
+   // define types for a stun message 
+   const uint16_t BindRequestMsg = 0x0001;
+   const uint16_t BindResponseMsg = 0x0101;
+   const uint16_t BindErrorResponseMsg = 0x0111;
+   const uint16_t SharedSecretRequestMsg = 0x0002;
+   const uint16_t SharedSecretResponseMsg = 0x0102;
+   const uint16_t SharedSecretErrorResponseMsg = 0x0112;
 
-// define types for a turn message - per turn-08
-const uint16_t TurnAllocateRequest = 0x0003;
-const uint16_t TurnAllocateResponse = 0x0103;
-const uint16_t TurnAllocateErrorResponse = 0x0113;
-const uint16_t TurnSendRequest = 0x0004;
-const uint16_t TurnSendResponse = 0x0104;
-const uint16_t TurnSendErrorResponse = 0x0114;
-const uint16_t TurnDataIndication = 0x0115;
-const uint16_t TurnSetActiveDestinationRequest = 0x0006;
-const uint16_t TurnSetActiveDestinationResponse = 0x0106;
-const uint16_t TurnSetActiveDestinationErrorResponse = 0x0116;
+   // define types for a turn message - per turn-08
+   const uint16_t TurnAllocateRequest = 0x0003;
+   const uint16_t TurnAllocateResponse = 0x0103;
+   const uint16_t TurnAllocateErrorResponse = 0x0113;
+   const uint16_t TurnSendRequest = 0x0004;
+   const uint16_t TurnSendResponse = 0x0104;
+   const uint16_t TurnSendErrorResponse = 0x0114;
+   const uint16_t TurnDataIndication = 0x0115;
+   const uint16_t TurnSetActiveDestinationRequest = 0x0006;
+   const uint16_t TurnSetActiveDestinationResponse = 0x0106;
+   const uint16_t TurnSetActiveDestinationErrorResponse = 0x0116;
 
-const static uint32_t StunMagicCookie = 0x2112A442;
+   const static uint32_t StunMagicCookie = 0x2112A442;
 
-typedef struct 
-{
+   typedef struct
+   {
       uint16_t msgType;
       uint16_t msgLength;
       UInt128 id;
-} StunMsgHdr;
+   } StunMsgHdr;
 
 #ifdef __cplusplus
-bool operator<(const StunMsgHdr&, const StunMsgHdr&);
+   bool operator<(const StunMsgHdr&, const StunMsgHdr&);
 #endif
 
-typedef struct
-{
+   typedef struct
+   {
       uint16_t type;
       uint16_t length;
-} StunAtrHdr;
+   } StunAtrHdr;
 
-typedef struct
-{
+   typedef struct
+   {
       uint16_t port;
       uint32_t addr;
-} StunAddress4;
+   } StunAddress4;
 
-typedef struct
-{
+   typedef struct
+   {
       uint8_t pad;
       uint8_t family;
       StunAddress4 ipv4;
-} StunAtrAddress4;
+   } StunAtrAddress4;
 
-typedef struct
-{
+   typedef struct
+   {
       uint32_t value;
-} StunAtrChangeRequest;
+   } StunAtrChangeRequest;
 
-typedef struct
-{
+   typedef struct
+   {
       uint16_t pad; // all 0
       uint8_t errorClass;
       uint8_t number;
       char reason[STUN_MAX_STRING];
       uint16_t sizeReason;
-} StunAtrError;
+   } StunAtrError;
 
-typedef struct
-{
+   typedef struct
+   {
       uint16_t attrType[STUN_MAX_UNKNOWN_ATTRIBUTES];
       uint16_t numAttributes;
-} StunAtrUnknown;
+   } StunAtrUnknown;
 
-typedef struct
-{
-      char value[STUN_MAX_STRING];      
+   typedef struct
+   {
+      char value[STUN_MAX_STRING];
       uint16_t sizeValue;
-} StunAtrString;
+   } StunAtrString;
 
-typedef struct
-{
+   typedef struct
+   {
       char hash[20];
-} StunAtrIntegrity;
+   } StunAtrIntegrity;
 
 
-enum StunHmacStatus
-{
-   HmacUnknown=0,
-   HmacOK,
-   HmacBadUserName,
-   HmacUnknownUserName,
-   HmacFailed
-};
+   enum StunHmacStatus
+   {
+      HmacUnknown = 0,
+      HmacOK,
+      HmacBadUserName,
+      HmacUnknownUserName,
+      HmacFailed
+   };
 
 
-struct StunMessage
-{
-    StunMessage() 
-    {
-       // !jr! Zeroing the entire structure which is a bit dangerous.
-       // If you add any complex types to this structure, be careful of
-       // the results.
-       memset(this, 0, sizeof(*this));
-    }
-    
-    ~StunMessage() 
-    {
-       if (hasRealm) delete realm;
-       if (hasNonce) delete nonce;
-       if (hasTurnData) delete turnData;
-    }
+   struct StunMessage
+   {
+      StunMessage()
+      {
+         // !jr! Zeroing the entire structure which is a bit dangerous.
+         // If you add any complex types to this structure, be careful of
+         // the results.
+         memset(this, 0, sizeof(*this));
+      }
 
-   StunMsgHdr msgHdr;
-	
-   bool hasMappedAddress;
-   StunAtrAddress4  mappedAddress;
-	
-   bool hasResponseAddress;
-   StunAtrAddress4  responseAddress;
-	
-   bool hasChangeRequest;
-   StunAtrChangeRequest changeRequest;
-	
-   bool hasSourceAddress;
-   StunAtrAddress4 sourceAddress;
-	
-   bool hasChangedAddress;
-   StunAtrAddress4 changedAddress;
-	
-   bool hasUsername;
-   StunAtrString username;
-	
-   bool hasPassword;
-   StunAtrString password;
-	
-   bool hasMessageIntegrity;
-   StunAtrIntegrity messageIntegrity;
-	
-   bool hasErrorCode;
-   StunAtrError errorCode;
-	
-   bool hasUnknownAttributes;
-   StunAtrUnknown unknownAttributes;
-	
-   bool hasReflectedFrom;
-   StunAtrAddress4 reflectedFrom;
+      ~StunMessage()
+      {
+         if (hasRealm) delete realm;
+         if (hasNonce) delete nonce;
+         if (hasTurnData) delete turnData;
+      }
 
-   bool hasRealm;
-   resip::Data* realm;
+      StunMsgHdr msgHdr;
 
-   bool hasNonce;
-   resip::Data* nonce;
+      bool hasMappedAddress;
+      StunAtrAddress4  mappedAddress;
 
-   bool hasXorMappedAddress;
-   StunAtrAddress4  xorMappedAddress;
-	
-   bool xorOnly;
+      bool hasResponseAddress;
+      StunAtrAddress4  responseAddress;
 
-   bool hasSoftware;
-   StunAtrString software;
-      
-   bool hasSecondaryAddress;
-   StunAtrAddress4 secondaryAddress;
+      bool hasChangeRequest;
+      StunAtrChangeRequest changeRequest;
 
-   bool hasAlternateServer;
-   StunAtrAddress4 alternateServer;
+      bool hasSourceAddress;
+      StunAtrAddress4 sourceAddress;
 
-   bool hasFingerprint;
-   uint32_t fingerprint;
+      bool hasChangedAddress;
+      StunAtrAddress4 changedAddress;
 
-   bool hasTurnLifetime;
-   uint32_t turnLifetime;
-      
-   bool hasTurnAlternateServer;
-   StunAtrAddress4 turnAlternateServer;
-      
-   bool hasTurnMagicCookie;
-   uint32_t turnMagicCookie;
-      
-   bool hasTurnBandwidth;
-   uint32_t turnBandwidth;
-      
-   bool hasTurnDestinationAddress;
-   StunAtrAddress4 turnDestinationAddress;
-      
-   bool hasTurnRemoteAddress;
-   StunAtrAddress4 turnRemoteAddress;
-      
-   bool hasTurnData;
-   resip::Data* turnData;
-      
-   //bool hasTurnNonce;
-   // turnNonce;
-      
-   //bool hasTurnRealm;
-   // turnRealm;
-}; 
+      bool hasUsername;
+      StunAtrString username;
+
+      bool hasPassword;
+      StunAtrString password;
+
+      bool hasMessageIntegrity;
+      StunAtrIntegrity messageIntegrity;
+
+      bool hasErrorCode;
+      StunAtrError errorCode;
+
+      bool hasUnknownAttributes;
+      StunAtrUnknown unknownAttributes;
+
+      bool hasReflectedFrom;
+      StunAtrAddress4 reflectedFrom;
+
+      bool hasRealm;
+      resip::Data* realm;
+
+      bool hasNonce;
+      resip::Data* nonce;
+
+      bool hasXorMappedAddress;
+      StunAtrAddress4  xorMappedAddress;
+
+      bool xorOnly;
+
+      bool hasSoftware;
+      StunAtrString software;
+
+      bool hasSecondaryAddress;
+      StunAtrAddress4 secondaryAddress;
+
+      bool hasAlternateServer;
+      StunAtrAddress4 alternateServer;
+
+      bool hasFingerprint;
+      uint32_t fingerprint;
+
+      bool hasTurnLifetime;
+      uint32_t turnLifetime;
+
+      bool hasTurnAlternateServer;
+      StunAtrAddress4 turnAlternateServer;
+
+      bool hasTurnMagicCookie;
+      uint32_t turnMagicCookie;
+
+      bool hasTurnBandwidth;
+      uint32_t turnBandwidth;
+
+      bool hasTurnDestinationAddress;
+      StunAtrAddress4 turnDestinationAddress;
+
+      bool hasTurnRemoteAddress;
+      StunAtrAddress4 turnRemoteAddress;
+
+      bool hasTurnData;
+      resip::Data* turnData;
+
+      //bool hasTurnNonce;
+      // turnNonce;
+
+      //bool hasTurnRealm;
+      // turnRealm;
+   };
 
 
-// Define enum with different types of NAT 
-enum NatType
-{
-   StunTypeUnknown=0,
-   StunTypeFailure,
-   StunTypeOpen,
-   StunTypeBlocked,
+   // Define enum with different types of NAT 
+   enum NatType
+   {
+      StunTypeUnknown = 0,
+      StunTypeFailure,
+      StunTypeOpen,
+      StunTypeBlocked,
 
-   StunTypeIndependentFilter,
-   StunTypeDependentFilter,
-   StunTypePortDependedFilter,
-   StunTypeDependentMapping,
+      StunTypeIndependentFilter,
+      StunTypeDependentFilter,
+      StunTypePortDependedFilter,
+      StunTypeDependentMapping,
 
-   //StunTypeConeNat,
-   //StunTypeRestrictedNat,
-   //StunTypePortRestrictedNat,
-   //StunTypeSymNat,
-   
-   StunTypeFirewall
-};
+      //StunTypeConeNat,
+      //StunTypeRestrictedNat,
+      //StunTypePortRestrictedNat,
+      //StunTypeSymNat,
+
+      StunTypeFirewall
+   };
 
 
 #define MAX_MEDIA_RELAYS 500
 #define MAX_RTP_MSG_SIZE 1500
 #define MEDIA_RELAY_TIMEOUT 3*60
 
-typedef struct 
-{
+   typedef struct
+   {
       int relayPort;       // media relay port
       int fd;              // media relay file descriptor
       StunAddress4 destination; // NAT IP:port
       time_t expireTime;      // if no activity after time, close the socket 
-} StunMediaRelay;
+   } StunMediaRelay;
 
-typedef struct
-{
+   typedef struct
+   {
       StunAddress4 myAddr;
       StunAddress4 altAddr;
       resip::Socket myFd;
@@ -334,144 +337,145 @@ typedef struct
       resip::Socket altIpPortFd;
       bool relay; // true if media relaying is to be done
       StunMediaRelay relays[MAX_MEDIA_RELAYS];
-} StunServerInfo;
+   } StunServerInfo;
 
-bool
-stunParseMessage( char* buf, 
-                  unsigned int bufLen, 
-                  StunMessage& message, 
-                  bool verbose );
+   bool
+      stunParseMessage(char* buf,
+         unsigned int bufLen,
+         StunMessage& message,
+         bool verbose);
 
-void
-stunBuildReqSimple( StunMessage* msg,
-                    const StunAtrString& username,
-                    bool changePort, bool changeIp, unsigned int id=0 );
+   void
+      stunBuildReqSimple(StunMessage* msg,
+         const StunAtrString& username,
+         bool changePort, bool changeIp, unsigned int id = 0);
 
-unsigned int
-stunEncodeMessage( const StunMessage& message, 
-                   char* buf, 
-                   unsigned int bufLen, 
-                   const StunAtrString& password,
-                   bool verbose);
+   unsigned int
+      stunEncodeMessage(const StunMessage& message,
+         char* buf,
+         unsigned int bufLen,
+         const StunAtrString& password,
+         bool verbose);
 
-void
-stunCreateUserName(const StunAddress4& addr, StunAtrString* username);
+   void
+      stunCreateUserName(const StunAddress4& addr, StunAtrString* username);
 
-void 
-stunGetUserNameAndPassword(  const StunAddress4& dest, 
-                             StunAtrString* username,
-                             StunAtrString* password);
+   void
+      stunGetUserNameAndPassword(const StunAddress4& dest,
+         StunAtrString* username,
+         StunAtrString* password);
 
-void
-stunCreatePassword(const StunAtrString& username, StunAtrString* password);
+   void
+      stunCreatePassword(const StunAtrString& username, StunAtrString* password);
 
-int 
-stunRand();
+   int
+      stunRand();
 
-uint64_t
-stunGetSystemTimeSecs();
+   uint64_t
+      stunGetSystemTimeSecs();
 
-/// find the IP address of a the specified stun server - return false is fails parse 
-bool  
-stunParseServerName( char* software, StunAddress4& stunServerAddr);
+   /// find the IP address of a the specified stun server - return false is fails parse 
+   bool
+      stunParseServerName(char* software, StunAddress4& stunServerAddr);
 
-bool 
-stunParseHostName( char* peerName,
-                   uint32_t& ip,
-                   uint16_t& portVal,
-                   uint16_t defaultPort );
+   bool
+      stunParseHostName(char* peerName,
+         uint32_t& ip,
+         uint16_t& portVal,
+         uint16_t defaultPort);
 
-/// return true if all is OK
-/// Create a media relay and do the STERN thing if startMediaPort is non-zero
-bool
-stunInitServer(StunServerInfo& info, 
-               const StunAddress4& myAddr, 
-               const StunAddress4& altAddr,
-               int startMediaPort,
-               bool verbose);
+   /// return true if all is OK
+   /// Create a media relay and do the STERN thing if startMediaPort is non-zero
+   bool
+      stunInitServer(StunServerInfo& info,
+         const StunAddress4& myAddr,
+         const StunAddress4& altAddr,
+         int startMediaPort,
+         bool verbose);
 
-void
-stunStopServer(StunServerInfo& info);
+   void
+      stunStopServer(StunServerInfo& info);
 
-/// return true if all is OK 
-bool
-stunServerProcess(StunServerInfo& info, bool verbose);
+   /// return true if all is OK 
+   bool
+      stunServerProcess(StunServerInfo& info, bool verbose);
 
-/// returns number of address found - take array or addres 
-int 
-stunFindLocalInterfaces(uint32_t* addresses, int maxSize );
+   /// returns number of address found - take array or addres 
+   int
+      stunFindLocalInterfaces(uint32_t* addresses, int maxSize);
 
-bool 
-stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* srcAddr=0, unsigned long timeoutMs=5000 );
+   bool
+      stunTest(StunAddress4& dest, int testNum, bool verbose, StunAddress4* srcAddr = 0, unsigned long timeoutMs = 5000);
 
-NatType
-stunNatType( StunAddress4& dest, bool verbose, 
-             bool* preservePort=0, // if set, is return for if NAT preservers ports or not
-             bool* hairpin=0 ,  // if set, is the return for if NAT will hairpin packets
-             int port=0, // port to use for the test, 0 to choose random port
-             StunAddress4* sAddr=0 // NIC to use 
-   );
+   NatType
+      stunNatType(StunAddress4& dest, bool verbose,
+         bool* preservePort = 0, // if set, is return for if NAT preservers ports or not
+         bool* hairpin = 0,  // if set, is the return for if NAT will hairpin packets
+         int port = 0, // port to use for the test, 0 to choose random port
+         StunAddress4* sAddr = 0 // NIC to use 
+      );
 
-/// prints a StunAddress
-std::ostream& 
-operator<<( std::ostream& strm, const StunAddress4& addr);
+   /// prints a StunAddress
+   std::ostream&
+      operator<<(std::ostream& strm, const StunAddress4& addr);
 
-std::ostream& 
-operator<< ( std::ostream& strm, const UInt128& );
+   std::ostream&
+      operator<< (std::ostream& strm, const UInt128&);
 
-std::ostream& 
-operator<< ( std::ostream& strm, const StunMsgHdr& );
+   std::ostream&
+      operator<< (std::ostream& strm, const StunMsgHdr&);
 
-bool
-stunServerProcessMsg( char* buf,
-                      unsigned int bufLen,
-                      StunAddress4& from, 
-                      StunAddress4& secondary,
-                      StunAddress4& myAddr,
-                      StunAddress4& altAddr, 
-                      StunMessage* resp,
-                      StunAddress4* destination,
-                      StunAtrString* hmacPassword,
-                      bool* changePort,
-                      bool* changeIp,
-                      bool verbose);
+   bool
+      stunServerProcessMsg(char* buf,
+         unsigned int bufLen,
+         StunAddress4& from,
+         StunAddress4& secondary,
+         StunAddress4& myAddr,
+         StunAddress4& altAddr,
+         StunMessage* resp,
+         StunAddress4* destination,
+         StunAtrString* hmacPassword,
+         bool* changePort,
+         bool* changeIp,
+         bool verbose);
 
-int
-stunOpenSocket( StunAddress4& dest, 
-                StunAddress4* mappedAddr, 
-                int port=0, 
-                StunAddress4* srcAddr=0, 
-                bool verbose=false );
+   int
+      stunOpenSocket(StunAddress4& dest,
+         StunAddress4* mappedAddr,
+         int port = 0,
+         StunAddress4* srcAddr = 0,
+         bool verbose = false);
 
-bool
-stunOpenSocketPair( StunAddress4& dest, StunAddress4* mappedAddr, 
-                    int* fd1, int* fd2, 
-                    int srcPort=0,  StunAddress4* srcAddr=0,
-                    bool verbose=false);
+   bool
+      stunOpenSocketPair(StunAddress4& dest, StunAddress4* mappedAddr,
+         int* fd1, int* fd2,
+         int srcPort = 0, StunAddress4* srcAddr = 0,
+         bool verbose = false);
 
-int
-stunRandomPort();
+   int
+      stunRandomPort();
 
-void computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey);
+   void computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey);
 
+}
 #endif
 
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -481,7 +485,7 @@ void computeHmac(char* hmac, const char* input, int length, const char* key, int
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -498,10 +502,10 @@ void computeHmac(char* hmac, const char* input, int length, const char* key, int
  *
  */
 
-// Local Variables:
-// mode:c++
-// c-file-style:"ellemtel"
-// c-file-offsets:((case-label . +))
-// indent-tabs-mode:nil
-// End:
+ // Local Variables:
+ // mode:c++
+ // c-file-style:"ellemtel"
+ // c-file-offsets:((case-label . +))
+ // indent-tabs-mode:nil
+ // End:
 
