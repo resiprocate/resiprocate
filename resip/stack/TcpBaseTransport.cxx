@@ -295,7 +295,6 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
          error(err);
          failReason = TransportFailure::TransportNoSocket;
          failSubCode = err;
-         closeSocket(sock);
          return NULL;
       }
    }
