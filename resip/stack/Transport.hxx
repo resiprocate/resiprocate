@@ -51,12 +51,21 @@ class FdPollGrp;
  *    Specifies whether this Transport object has its own thread (ie; if
  *    set, the TransportSelector should not run the select/poll loop for
  *    this transport, since that is another thread's job)
+ * SYMMETRIC_CONNECTIONS:
+ *    On connection-oriented transports (TCP/TLS), bind outbound client
+ *    connections to the same port as the listening socket. This ensures
+ *    the TCP source port matches the advertised SIP port in Via/Contact
+ *    headers, enabling proper connection reuse by SIP servers. Note: This
+ *    prevents multiple simultaneous connections to different destinations
+ *    from the same transport. Suitable for client applications but may not
+ *    be appropriate for server applications like repro.
  */
-#define RESIP_TRANSPORT_FLAG_NOBIND      (1<<0)
-#define RESIP_TRANSPORT_FLAG_RXALL       (1<<1)
-#define RESIP_TRANSPORT_FLAG_TXALL       (1<<2)
-#define RESIP_TRANSPORT_FLAG_TXNOW       (1<<4)
-#define RESIP_TRANSPORT_FLAG_OWNTHREAD   (1<<5)
+#define RESIP_TRANSPORT_FLAG_NOBIND                (1<<0)
+#define RESIP_TRANSPORT_FLAG_RXALL                 (1<<1)
+#define RESIP_TRANSPORT_FLAG_TXALL                 (1<<2)
+#define RESIP_TRANSPORT_FLAG_TXNOW                 (1<<4)
+#define RESIP_TRANSPORT_FLAG_OWNTHREAD             (1<<5)
+#define RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS (1<<6)
 
 /**
    @brief The base class for Transport classes.
