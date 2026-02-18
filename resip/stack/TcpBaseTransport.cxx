@@ -245,7 +245,7 @@ TcpBaseTransport::bindClientSocket(Socket sock,
       // Default behavior: use ephemeral port (port = 0)
       mTuple.copySockaddrAnyPort(sa);
       
-      DebugLog(<< "Default mode: binding client socket with ephemeral port");
+      DebugLog(<< "Default mode: binding client socket with ephemeral port: " << mTuple);
    }
    
 #ifdef USE_NETNS
@@ -257,7 +257,6 @@ TcpBaseTransport::bindClientSocket(Socket sock,
       WarningLog( << "Error in binding to source interface address: " << strerror(err));
       failReason = TransportFailure::Failure;
       failSubCode = err;
-      closeSocket(sock);
       return false;
    }
    
@@ -296,6 +295,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
          error(err);
          failReason = TransportFailure::TransportNoSocket;
          failSubCode = err;
+         closeSocket(sock);
          return NULL;
       }
    }
@@ -308,10 +308,12 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    // or ephemeral port (default behavior)
    if (!bindClientSocket(sock, failReason, failSubCode))
    {
+      closeSocket(sock);
       return NULL;
    }
    if(!configureConnectedSocket(sock))
    {
+      closeSocket(sock);
       throw Exception("Failed to configure connected socket", __FILE__,__LINE__);
    }
    makeSocketNonBlocking(sock);
