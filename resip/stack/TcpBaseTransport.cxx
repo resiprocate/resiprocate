@@ -208,6 +208,61 @@ TcpBaseTransport::processListen()
    return 1;
 }
 
+bool
+TcpBaseTransport::bindClientSocket(Socket sock,
+      TransportFailure::FailureReason &failReason, int &failSubCode)
+{
+   char _sa[RESIP_MAX_SOCKADDR_SIZE];
+   sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
+   resip_assert(RESIP_MAX_SOCKADDR_SIZE >= mTuple.length());
+   
+   // Check if SYMMETRIC_CONNECTIONS flag is set
+   if (mTransportFlags & RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS)
+   {
+      // Symmetric connections mode: bind to the same port as the listening transport
+      // This ensures TCP source port matches the advertised SIP port in Via/Contact headers
+      
+      // Enable SO_REUSEADDR to allow binding to the same port as the listening socket
+      int on = 1;
+#if !defined(WIN32)
+      if (::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)))
+#else
+      if (::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)))
+#endif
+      {
+         int err = getErrno();
+         WarningLog(<< "Failed to set SO_REUSEADDR on client socket: " << strerror(err));
+         // Continue anyway - this is not fatal
+      }
+      
+      // Bind to the same port as the listening transport (not ephemeral port)
+      memcpy(sa, &mTuple.getSockaddr(), mTuple.length());
+      
+      DebugLog(<< "Symmetric connections mode: binding client socket to " << mTuple);
+   }
+   else
+   {
+      // Default behavior: use ephemeral port (port = 0)
+      mTuple.copySockaddrAnyPort(sa);
+      
+      DebugLog(<< "Default mode: binding client socket with ephemeral port: " << mTuple);
+   }
+   
+#ifdef USE_NETNS
+      NetNs::setNs(netNs());
+#endif
+   if(::bind(sock, sa, mTuple.length()) != 0)
+   {
+      int err = getErrno();
+      WarningLog( << "Error in binding to source interface address: " << strerror(err));
+      failReason = TransportFailure::Failure;
+      failSubCode = err;
+      return false;
+   }
+   
+   return true;
+}
+
 Connection*
 TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       TransportFailure::FailureReason &failReason, int &failSubCode)
@@ -247,22 +302,17 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    resip_assert(sock != INVALID_SOCKET);
 
    DebugLog (<<"Opening new connection to " << dest);
-   char _sa[RESIP_MAX_SOCKADDR_SIZE];
-   sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
-   resip_assert(RESIP_MAX_SOCKADDR_SIZE >= mTuple.length());
-   mTuple.copySockaddrAnyPort(sa);
-#ifdef USE_NETNS
-      NetNs::setNs(netNs());
-#endif
-   if(::bind(sock, sa, mTuple.length()) != 0)
+   
+   // Bind client socket: symmetric port (if RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS set) 
+   // or ephemeral port (default behavior)
+   if (!bindClientSocket(sock, failReason, failSubCode))
    {
-      WarningLog( << "Error in binding to source interface address. " << strerror(errno));
-      failReason = TransportFailure::Failure;
-      failSubCode = errno;
+      closeSocket(sock);
       return NULL;
    }
    if(!configureConnectedSocket(sock))
    {
+      closeSocket(sock);
       throw Exception("Failed to configure connected socket", __FILE__,__LINE__);
    }
    makeSocketNonBlocking(sock);
