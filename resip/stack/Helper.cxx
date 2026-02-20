@@ -2230,7 +2230,8 @@ Helper::determineFailureMessageEffect(const SipMessage& response,
    }
 }
 
-SdpContents* getSdpRecurse(Contents* tree)
+SdpContents* 
+Helper::getSdpRecurse(Contents* tree)
 {
    if (dynamic_cast<SdpContents*>(tree))
    {

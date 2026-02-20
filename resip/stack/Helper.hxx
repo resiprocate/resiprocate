@@ -616,7 +616,9 @@ class Helper
       static FailureMessageEffect determineFailureMessageEffect(const SipMessage& response,
           const std::set<int>* additionalTransactionTerminatingResponses = NULL);
 
-      // Just simply walk the contents tree and return the first SdpContents in
+      static SdpContents* getSdpRecurse(Contents* tree);
+
+      // Just simply walk the contents tree and return acopy of the first SdpContents in
       // the tree.
       static std::unique_ptr<SdpContents> getSdp(Contents* tree);
 
