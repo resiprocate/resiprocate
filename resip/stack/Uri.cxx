@@ -429,10 +429,17 @@ bool Uri::compareUriParametersEqual(Parameter* param1, Parameter* param2)
       case ParameterTypes::method:
       case ParameterTypes::maddr:
       case ParameterTypes::transport:
+      case ParameterTypes::rinstance:
+      case ParameterTypes::comp:
+      case ParameterTypes::extension:
+      case ParameterTypes::wsSrcIp:
+      case ParameterTypes::sigcompId:
          return isEqualNoCase(dynamic_cast<DataParameter*>(param1)->value(),
                               dynamic_cast<DataParameter*>(param2)->value());
 
       case ParameterTypes::ttl:
+      case ParameterTypes::duration:
+      case ParameterTypes::wsSrcPort:
          return dynamic_cast<UInt32Parameter*>(param1)->value() ==
                 dynamic_cast<UInt32Parameter*>(param2)->value();
 
@@ -441,6 +448,7 @@ bool Uri::compareUriParametersEqual(Parameter* param1, Parameter* param2)
                               dynamic_cast<ExistsOrDataParameter*>(param2)->value());
 
       case ParameterTypes::lr:
+      case ParameterTypes::ob:
          // Exists parameters are equal.
          return true;
 
@@ -463,10 +471,17 @@ bool Uri::compareUriParametersLessThan(Parameter* param1, Parameter* param2)
       case ParameterTypes::method:
       case ParameterTypes::maddr:
       case ParameterTypes::transport:
+      case ParameterTypes::rinstance:
+      case ParameterTypes::comp:
+      case ParameterTypes::extension:
+      case ParameterTypes::wsSrcIp:
+      case ParameterTypes::sigcompId:
          return isLessThanNoCase(dynamic_cast<DataParameter*>(param1)->value(),
                                  dynamic_cast<DataParameter*>(param2)->value());
 
       case ParameterTypes::ttl:
+      case ParameterTypes::duration:
+      case ParameterTypes::wsSrcPort:
          return dynamic_cast<UInt32Parameter*>(param1)->value() <
                 dynamic_cast<UInt32Parameter*>(param2)->value();
 
@@ -475,6 +490,7 @@ bool Uri::compareUriParametersLessThan(Parameter* param1, Parameter* param2)
                                  dynamic_cast<ExistsOrDataParameter*>(param2)->value());
 
       case ParameterTypes::lr:
+      case ParameterTypes::ob:
          // Exists parameters are equal.
          return false;
 
