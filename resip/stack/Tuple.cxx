@@ -596,36 +596,41 @@ Tuple::length() const
 }
 
 
-bool Tuple::operator==(const Tuple& rhs) const
+bool
+Tuple::operator==(const Tuple& rhs) const
 {
-   if (mSockaddr.sa_family == rhs.mSockaddr.sa_family)
+   return isEqual(rhs);
+}
+
+bool
+Tuple::isEqual(const Tuple& compare, bool ignorePort, bool ignoreTransport) const
+{
+   if (ignoreTransport || getType() == compare.getType())  // check if transport type matches
    {
-      if (mSockaddr.sa_family == AF_INET) // v4
+      if (mSockaddr.sa_family == compare.mSockaddr.sa_family)
       {
-         return (m_anonv4.sin_port == rhs.m_anonv4.sin_port &&
-                 mTransportType == rhs.mTransportType &&
-                 memcmp(&m_anonv4.sin_addr, &rhs.m_anonv4.sin_addr, sizeof(in_addr)) == 0 &&
-                 rhs.mNetNs == mNetNs);
-      }
-      else // v6
-      {
+         if (mSockaddr.sa_family == AF_INET) // v4
+         {
+            return ((ignorePort || m_anonv4.sin_port == compare.m_anonv4.sin_port) &&
+               memcmp(&m_anonv4.sin_addr, &compare.m_anonv4.sin_addr, sizeof(in_addr)) == 0 &&
+               compare.mNetNs == mNetNs);
+         }
+         else // v6
+         {
 #ifdef USE_IPV6
-         return (m_anonv6.sin6_port == rhs.m_anonv6.sin6_port &&
-                 mTransportType == rhs.mTransportType &&
-                 memcmp(&m_anonv6.sin6_addr, &rhs.m_anonv6.sin6_addr, sizeof(in6_addr)) == 0 &&
-                 rhs.mNetNs == mNetNs);
+            return ((ignorePort || m_anonv6.sin6_port == compare.m_anonv6.sin6_port) &&
+               memcmp(&m_anonv6.sin6_addr, &compare.m_anonv6.sin6_addr, sizeof(in6_addr)) == 0 &&
+               compare.mNetNs == mNetNs);
 #else
-         resip_assert(0);
-         return false;
+            resip_assert(0);
 #endif
+         }
       }
-   }
-   else
-   {
-      return false;
    }
 
    // !dlb! don't include connection 
+
+   return false;
 }
 
 bool
@@ -837,7 +842,6 @@ Tuple::inet_ntop(const Tuple& tuple)
    }
 }
 
-
 bool
 Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool ignoreTransport) const
 {
@@ -911,7 +915,6 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
    }
    return false;
 }
-
 
 // special comparitors
 bool

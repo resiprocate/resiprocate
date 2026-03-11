@@ -638,7 +638,7 @@ SipMessage::getCanonicalIdentityString() const
 
    strm.flush();
 
-   DebugLog( << "Indentity Canonical String is: " << result );
+   DebugLog( << "Identity Canonical String is: " << result );
    
    return result;
 }
