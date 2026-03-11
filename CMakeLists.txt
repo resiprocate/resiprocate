@@ -361,33 +361,34 @@ endfunction()
 # OpenSSL
 if(WITH_SSL)
    if(USE_NUGET)
-      nuget_inst(OPENSSL "zeroc.openssl.v142" "1.1.1.3")  # VS2019 compatible version, also compatible with VS2022
-      message("Using ${OPENSSL_ROOT_DIR} and ${OPENSSL_LIBRARIES_DIR}")
+      nuget_inst(OPENSSL "openssl-native" "3.5.5")
       # this is an argument to FindOpenSSL
       # https://cmake.org/cmake/help/latest/module/FindOpenSSL.html
-      set(OPENSSL_ROOT_DIR ${OPENSSL_PKG_DIR}/build/native)
+      set(OPENSSL_ROOT_DIR ${OPENSSL_PKG_DIR})
       set(OPENSSL_USE_STATIC_LIBS True)
       set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT_DIR}/include)
       set(OPENSSL_LIBRARIES OPENSSL OPENSSL_CRYPTO)
       set(OPENSSL_FOUND TRUE)
 
+      message("Using ${OPENSSL_ROOT_DIR} and ${OPENSSL_LIBRARIES_DIR} ${WIN_ARCH}")
+
       add_library(OPENSSL SHARED IMPORTED GLOBAL)
       add_library(OPENSSL_CRYPTO SHARED IMPORTED GLOBAL)
 
       set_target_properties(OPENSSL_CRYPTO PROPERTIES
-         IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libcrypto.lib"
-         IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libcrypto.lib"
-         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libcrypto-1_1-${WIN_ARCH}.dll"
-         IMPORTED_LOCATION_DEBUG "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libcrypto-1_1-${WIN_ARCH}.dll"
+         IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/win-${WIN_ARCH}/native/libcrypto.lib"
+         IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/win-${WIN_ARCH}/native/libcrypto.lib"
+         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libcrypto-3-${WIN_ARCH}.dll"
+         IMPORTED_LOCATION_DEBUG "${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libcrypto-3-${WIN_ARCH}.dll"
          INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_ROOT_DIR}/include"
       )
 
       # Note: We are adding the crypto library to the OPENSSL IMPORTED_LOCATION so that custom PostBuild copy steps only need to specify OPENSSL targets
       set_target_properties(OPENSSL PROPERTIES
-         IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Release/libssl.lib"
-         IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libssl.lib"
-         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libssl-1_1-${WIN_ARCH}.dll;${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Release/libcrypto-1_1-${WIN_ARCH}.dll"
-         IMPORTED_LOCATION_DEBUG "${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libssl-1_1-${WIN_ARCH}.dll;${OPENSSL_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libcrypto-1_1-${WIN_ARCH}.dll"
+         IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/win-${WIN_ARCH}/native/libssl.lib"
+         IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/win-${WIN_ARCH}/native/libssl.lib"
+         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libssl-3-${WIN_ARCH}.dll;${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libcrypto-3-${WIN_ARCH}.dll"
+         IMPORTED_LOCATION_DEBUG "${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libssl-3-${WIN_ARCH}.dll;${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libcrypto-3-${WIN_ARCH}.dll"
          IMPORTED_LINK_INTERFACE_LIBRARIES "OPENSSL_CRYPTO"
          INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_ROOT_DIR}/include"
       )
@@ -918,7 +919,7 @@ add_definitions(-DHAVE_CONFIG_H)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/)
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/resip/)
 
 # Used to group targets together when CMake generates projects for IDEs
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
