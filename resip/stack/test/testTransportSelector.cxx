@@ -44,7 +44,8 @@ class TestTcpTransport : public TcpTransport
                        int portNum,
                        IpVersion version,
                        const Data& interfaceObj) :
-         TcpTransport(rxFifo, portNum, version, version == V6 ? "::1" : "127.0.0.1")
+         TcpTransport(rxFifo, portNum, version, version == V6 ? "::1" : "127.0.0.1",
+            nullptr, Compression::Disabled, RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS)  // set transport flag to allow binding multiple transports to the same port on loopback
       {
          // The transport is bound to localhost to avoid socket conflicts.
          // However, the real host is used in comparisons.
@@ -67,7 +68,8 @@ class TestTlsTransport : public TlsTransport
                        const Data& interfaceObj,
                        const Data& sipDomain) :
          TlsTransport(rxFifo, portNum, version, version == V6 ? "::1" : "127.0.0.1",
-                      mSecurity, sipDomain, SecurityTypes::SSLType::TLSv1)
+                      mSecurity, sipDomain, SecurityTypes::SSLType::TLSv1,
+                      nullptr, Compression::Disabled, RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS)   // set transport flag to allow binding multiple transports to the same port on loopback
       {
          // The transport is bound to localhost to avoid socket conflicts.
          // However, the real host is used in comparisons.

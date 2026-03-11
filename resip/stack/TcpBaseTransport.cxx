@@ -76,13 +76,23 @@ TcpBaseTransport::init()
 
    int on = 1;
 #if !defined(WIN32)
+   if (mTransportFlags & RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS)
+   {
+      if (::setsockopt(mFd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)))
+      {
+         int e = getErrno();
+         InfoLog(<< "Couldn't set sockoptions SO_REUSEPORT: " << strerror(e));
+         error(e);
+         throw Exception("Failed setsockopt", __FILE__, __LINE__);
+      }
+   }
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) )
 #else
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)) )
 #endif
    {
        int e = getErrno();
-       InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+       InfoLog (<< "Couldn't set sockoptions SO_REUSEADDR: " << strerror(e));
        error(e);
        throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
@@ -225,6 +235,11 @@ TcpBaseTransport::bindClientSocket(Socket sock,
       // Enable SO_REUSEADDR to allow binding to the same port as the listening socket
       int on = 1;
 #if !defined(WIN32)
+      if (::setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)))
+      {
+         int err = getErrno();
+         WarningLog(<< "Failed to set SO_REUSEPORT on client socket: " << strerror(err));
+      }
       if (::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)))
 #else
       if (::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)))
