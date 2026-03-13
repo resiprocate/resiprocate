@@ -1,5 +1,5 @@
-#if !defined(RESIP_GENERIC_URI_HXX)
-#define RESIP_GENERIC_URI_HXX
+#if !defined(RESIP_IDENTITY_CATEGORY_HXX)
+#define RESIP_IDENTITY_CATEGORY_HXX 
 
 #include <iosfwd>
 #include "rutil/Data.hxx"
@@ -11,30 +11,34 @@ namespace resip
 
 /**
    @ingroup sip_grammar
-   @brief Represents the "absoluteURI" element in the RFC 3261 grammar.
+   @brief Represents an Identity header from RFC8824.
 */
-class GenericUri : public ParserCategory
+class IdentityCategory : public ParserCategory
 {
    public:
-      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputMulti;
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputCommas;
 
-      GenericUri() : ParserCategory() {}
-      GenericUri(const Data& uri);
-      GenericUri(const HeaderFieldValue& hfv, 
-                  Headers::Type type,
-                  PoolBase* pool=0);
-      GenericUri(const GenericUri& orig,
-                  PoolBase* pool=0);
-      GenericUri& operator=(const GenericUri&);
+      IdentityCategory();
+      explicit IdentityCategory(const Data& d);
+      IdentityCategory(const HeaderFieldValue& hfv,
+            Headers::Type type,
+            PoolBase* pool=0);
+      IdentityCategory(const IdentityCategory& orig,
+            PoolBase* pool=0);
+      IdentityCategory& operator=(const IdentityCategory&);
 
-      virtual void parse(ParseBuffer& pb);
+      /**
+         Gets the value (ie; no parameters) of this IdentityCategory as a Data&.
+      */
+      const Data& value() const;
+      Data& value();
+
+      virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
       virtual ParserCategory* clone(void* location) const;
       virtual ParserCategory* clone(PoolBase* pool) const;
-      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
-      Data& uri();
-      const Data& uri() const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
       // Inform the compiler that overloads of these may be found in
       // ParserCategory, too.
@@ -43,37 +47,32 @@ class GenericUri : public ParserCategory
       using ParserCategory::param;
 
       virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
-      // .bwc, This is an awful lot for one lousy param type.
-      bool exists(const Param<GenericUri>& paramType) const;
-      void remove(const Param<GenericUri>& paramType);
+      bool exists(const Param<IdentityCategory>& paramType) const;
+      void remove(const Param<IdentityCategory>& paramType);
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
       _enum##_Param::DType& param(const _enum##_Param& paramType); \
       friend class _enum##_Param
 
-defineParam(purpose, "purpose", DataParameter, "RFC 3261");
-defineParam(alg, "alg", DataParameter, "RFC 8224");
-defineParam(ppt, "ppt", DataParameter, "RFC 8224");
-
+      defineParam(info, "info", UriParameter, "RFC 8224");
 #undef defineParam
 
-   private:
-      Data mUri;
+private:
+      Data mValue;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
-typedef ParserContainer<GenericUri> GenericUris;
-typedef GenericUri GenericURI; //.dcm. deprecated, should be removed soon
+typedef ParserContainer<IdentityCategory> IdentityCategories;
+ 
 }
 
-
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

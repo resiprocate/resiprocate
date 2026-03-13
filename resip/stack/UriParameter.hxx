@@ -1,30 +1,57 @@
-#if !defined(RESIP_PARSERCATEGORIES_HXX)
-#define RESIP_PARSERCATEGORIES_HXX 
+#if !defined(RESIP_URIPARAMETER_HXX)
+#define RESIP_URIPARAMETER_HXX
 
-//#warning "DO NOT USE ParserCategories.hxx"
+#include "resip/stack/Parameter.hxx"
+#include "resip/stack/ParameterTypeEnums.hxx"
+#include "rutil/PoolBase.hxx"
+#include <iosfwd>
 
-#include "resip/stack/Auth.hxx"
-#include "resip/stack/CSeqCategory.hxx"
-#include "resip/stack/CallId.hxx"
-#include "resip/stack/DateCategory.hxx"
-#include "resip/stack/ExpiresCategory.hxx"
-#include "resip/stack/GenericUri.hxx"
-#include "resip/stack/IdentityCategory.hxx"
-#include "resip/stack/IntegerCategory.hxx"
-#include "resip/stack/UInt32Category.hxx"
-#include "resip/stack/Mime.hxx"
-#include "resip/stack/NameAddr.hxx"
-#include "resip/stack/PrivacyCategory.hxx"
-#include "resip/stack/RAckCategory.hxx"
-#include "resip/stack/RequestLine.hxx"
-#include "resip/stack/StatusLine.hxx"
-#include "resip/stack/StringCategory.hxx"
-#include "resip/stack/Token.hxx"
-#include "resip/stack/Via.hxx"
-#include "resip/stack/WarningCategory.hxx"
-#include "resip/stack/TokenOrQuotedStringCategory.hxx"
+namespace resip
+{
+
+class ParseBuffer;
+class GenericUri;
+
+/**
+   @ingroup sip_grammar
+   @brief Represents a URI enclosed in angle brackets, used in Identity headers for RFC8224.
+*/
+class UriParameter : public Parameter
+{
+   public:
+      typedef GenericUri Type;
+
+      UriParameter(ParameterTypes::Type, ParseBuffer& pb, 
+         const std::bitset<256>& terminators);
+      explicit UriParameter(ParameterTypes::Type);
+      virtual ~UriParameter();
+
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
+      {
+         return new (pool) UriParameter(type, pb, terminators);
+      }
+      
+      virtual Parameter* clone() const;
+      virtual EncodeStream& encode(EncodeStream& stream) const;
+      
+      // does not return an angle quoted string
+      Type& value();
+
+   protected:
+      UriParameter(const UriParameter& other);
+
+      // Need avoid including GenericUri.hxx in this header (due to ciruclar includes), 
+      // so we use a pointer here and allocate the GenericUri on the heap.
+      Type* mUri;
+};
+ 
+}
 
 #endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

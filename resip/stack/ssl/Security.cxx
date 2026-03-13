@@ -1072,8 +1072,6 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
       }
    }
 
-   resip_assert(0); // TODO - following code has no hope of working 
-    
    // !kh!
    // creates a read/write BIO buffer.
    BIO *out = BIO_new(BIO_s_mem());
@@ -1092,7 +1090,7 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
    (void)BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
-   Data retVal(Data::Borrow, buf, len);
+   Data retVal(buf, len);
 
    BIO_free(out);
 
@@ -1123,8 +1121,6 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
          p = const_cast<char*>(iter->second.c_str());
       }
    }
-
-   resip_assert(0); // TODO - following code has no hope of working 
     
    // !kh!
    // creates a read/write BIO buffer.
@@ -1143,7 +1139,7 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
    (void)BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
-   Data retVal(Data::Borrow, buf, len);
+   Data retVal(buf, len);
 
    BIO_free(out);
    

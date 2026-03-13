@@ -1,30 +1,71 @@
-#if !defined(RESIP_PARSERCATEGORIES_HXX)
-#define RESIP_PARSERCATEGORIES_HXX 
-
-//#warning "DO NOT USE ParserCategories.hxx"
-
-#include "resip/stack/Auth.hxx"
-#include "resip/stack/CSeqCategory.hxx"
-#include "resip/stack/CallId.hxx"
-#include "resip/stack/DateCategory.hxx"
-#include "resip/stack/ExpiresCategory.hxx"
-#include "resip/stack/GenericUri.hxx"
-#include "resip/stack/IdentityCategory.hxx"
-#include "resip/stack/IntegerCategory.hxx"
-#include "resip/stack/UInt32Category.hxx"
-#include "resip/stack/Mime.hxx"
-#include "resip/stack/NameAddr.hxx"
-#include "resip/stack/PrivacyCategory.hxx"
-#include "resip/stack/RAckCategory.hxx"
-#include "resip/stack/RequestLine.hxx"
-#include "resip/stack/StatusLine.hxx"
-#include "resip/stack/StringCategory.hxx"
-#include "resip/stack/Token.hxx"
-#include "resip/stack/Via.hxx"
-#include "resip/stack/WarningCategory.hxx"
-#include "resip/stack/TokenOrQuotedStringCategory.hxx"
-
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
 #endif
+
+#include "rutil/ResipAssert.h"
+#include "resip/stack/UriParameter.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "resip/stack/GenericUri.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/ParseException.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
+
+using namespace resip;
+using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
+UriParameter::UriParameter(ParameterTypes::Type type,
+                             ParseBuffer& pb,
+                             const std::bitset<256>& terminators)
+   : Parameter(type),
+     mUri(new GenericUri)
+{
+   pb.skipWhitespace();
+   pb.skipChar(Symbols::EQUALS[0]);
+   pb.skipWhitespace();
+   if(terminators[(unsigned char)(*pb.position())]) // handle cases such as ;info=
+   {
+      throw ParseException("Empty value in uri parameter.",
+                           "UriParameter",
+                           __FILE__,__LINE__);
+   }
+   mUri->parse(pb);
+}
+
+UriParameter::UriParameter(ParameterTypes::Type type)
+   : Parameter(type),
+     mUri(new GenericUri)
+{
+}
+
+UriParameter::UriParameter(const UriParameter& other)
+   : Parameter(other),
+     mUri(new GenericUri(*other.mUri))
+{
+}
+
+UriParameter::~UriParameter()
+{
+   delete mUri;
+}
+
+Parameter* 
+UriParameter::clone() const
+{
+   return new UriParameter(*this);
+}
+
+EncodeStream& 
+UriParameter::encode(EncodeStream& stream) const
+{
+   return stream << getName() << Symbols::EQUALS << *mUri;
+}
+
+UriParameter::Type&
+UriParameter::value() { return *mUri; }
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
