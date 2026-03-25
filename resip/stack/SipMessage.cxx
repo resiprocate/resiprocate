@@ -277,23 +277,11 @@ SipMessage::init(const SipMessage& rhs)
 
    if (rhs.mSecurityAttributes.get())
    {
-
       if (!mSecurityAttributes.get())
       {
-         SecurityAttributes* attr = new SecurityAttributes();
+         SecurityAttributes* attr = new SecurityAttributes(*rhs.mSecurityAttributes);
          mSecurityAttributes.reset(attr);
       }
-
-      if (rhs.mSecurityAttributes->isEncrypted())
-      {
-         mSecurityAttributes->setEncrypted();
-      }
-      mSecurityAttributes->setSignatureStatus(rhs.mSecurityAttributes->getSignatureStatus());
-      mSecurityAttributes->setIdentity(rhs.mSecurityAttributes->getIdentity());
-      mSecurityAttributes->setIdentityStrength(rhs.mSecurityAttributes->getIdentityStrength());
-      mSecurityAttributes->setSigner(rhs.mSecurityAttributes->getSigner());
-      mSecurityAttributes->setOutgoingEncryptionLevel(rhs.mSecurityAttributes->getOutgoingEncryptionLevel());
-      mSecurityAttributes->setEncryptionPerformed(rhs.mSecurityAttributes->encryptionPerformed());
    }
    else
    {
@@ -638,7 +626,7 @@ SipMessage::getCanonicalIdentityString() const
 
    strm.flush();
 
-   DebugLog( << "Indentity Canonical String is: " << result );
+   DebugLog( << "Identity Canonical String is: " << result );
    
    return result;
 }
@@ -1526,7 +1514,7 @@ defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903");
 defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
 defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
-defineMultiHeader(Identity, "Identity", StringCategory, "RFC 8224");   // Originally defined in RFC 4474 as a single header, but later modified by RFC8224 to be a multiheader
+defineMultiHeader(Identity, "Identity", IdentityCategory, "RFC 8224");   // Originally defined in RFC 4474 as a single header, but later modified by RFC8224 to be a multiheader
 defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC 3261");
 defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC 3261");
 defineMultiHeader(Allow, "Allow", Token, "RFC 3261");

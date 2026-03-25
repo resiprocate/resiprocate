@@ -10,8 +10,8 @@
 #include <iostream>
 #include <memory>
 
-std::ostream& operator<<(std::ostream& strm, const StunMessage& msg);
-std::ostream& operator<<(std::ostream& strm, const StunAtrAddress4& adr);
+std::ostream& operator<<(std::ostream& strm, const resip::StunMessage& msg);
+std::ostream& operator<<(std::ostream& strm, const resip::StunAtrAddress4& adr);
 
 #define STUN_SUCCESS   0
 #define STUN_ERROR    -1
@@ -30,8 +30,8 @@ struct StunRequestContext
    }
 
    resip::Data data;
-   StunMessage msg;
-   StunAddress4 from;
+   resip::StunMessage msg;
+   resip::StunAddress4 from;
    bool recvAltIp;
    bool recvAltPort;
 };
@@ -50,10 +50,10 @@ struct StunResponseContext
       secondary.addr = 0;
    }
 
-   StunMessage msg;
-   StunAddress4 dest;
-   StunAtrString hmacPassword;
-   StunAddress4 secondary;
+   resip::StunMessage msg;
+   resip::StunAddress4 dest;
+   resip::StunAtrString hmacPassword;
+   resip::StunAddress4 secondary;
    bool changePort;
    bool changeIp;
 };
@@ -133,9 +133,9 @@ class StunServer
 
    private:
       resip::Mutex mMutexLock;
-      StunAddress4 mPrimary;
-      StunAddress4 mSecondary;
-      StunServerInfo mInfo;
+      resip::StunAddress4 mPrimary;
+      resip::StunAddress4 mSecondary;
+      resip::StunServerInfo mInfo;
 
       StunSink* mEventSink;
 };

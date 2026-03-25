@@ -169,14 +169,8 @@ class TransportSelector
             TlsTransportKey& operator=(TlsTransportKey&&) = default;
             ~TlsTransportKey() = default;
 
-            // Comparison operators which follow strict rules.
+            // Comparison operator which follow strict rules.
             bool operator<(const TlsTransportKey& rhs) const;
-            bool strictEq(const TlsTransportKey& rhs) const;
-            bool strictEqWithoutDomain(const resip::Tuple& tuple) const;
-
-            // Comparison operators which follow relaxed rules.
-            bool relaxEq(const TlsTransportKey& rhs) const;
-            bool relaxEqWithoutDomain(const resip::Tuple& tuple) const;
 
             resip::Tuple mTuple;
       };
@@ -261,6 +255,7 @@ operator<<(EncodeStream& ostrm, const TransportSelector::TlsTransportKey& tlsTra
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

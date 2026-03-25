@@ -1,81 +1,63 @@
-#ifndef RESIP_SecurityAttributes_hxx
-#define RESIP_SecurityAttributes_hxx
+#if !defined(RESIP_URIPARAMETER_HXX)
+#define RESIP_URIPARAMETER_HXX
 
-#include <iostream>
-
-#include "rutil/Data.hxx"
+#include "resip/stack/Parameter.hxx"
+#include "resip/stack/ParameterTypeEnums.hxx"
+#include "rutil/PoolBase.hxx"
+#include <iosfwd>
 
 namespace resip
 {
 
-enum SignatureStatus
+class ParseBuffer;
+class GenericUri;
+
+/**
+   @ingroup sip_grammar
+   @brief Represents a URI enclosed in angle brackets, used in Identity headers for RFC8224.
+*/
+class UriParameter : public Parameter
 {
-   SignatureNone, // there is no signature
-   SignatureIsBad,
-   SignatureTrusted, // It is signed with trusted signature
-   SignatureCATrusted, // signature is new and is signed by a root we trust
-   SignatureNotTrusted, // signature is new and is not signed by a CA we
-   SignatureSelfSigned
+   public:
+      typedef GenericUri Type;
+
+      UriParameter(ParameterTypes::Type, ParseBuffer& pb, 
+         const std::bitset<256>& terminators);
+      explicit UriParameter(ParameterTypes::Type);
+      virtual ~UriParameter();
+
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
+      {
+         return new (pool) UriParameter(type, pb, terminators);
+      }
+      
+      virtual Parameter* clone() const;
+      virtual EncodeStream& encode(EncodeStream& stream) const;
+      
+      // does not return an angle quoted string
+      Type& value();
+
+   protected:
+      UriParameter(const UriParameter& other);
+
+      // Need avoid including GenericUri.hxx in this header (due to ciruclar includes), 
+      // so we use a pointer here and allocate the GenericUri on the heap.
+      Type* mUri;
 };
-
-class SecurityAttributes
-{
-public:
-   SecurityAttributes();
-   SecurityAttributes(const SecurityAttributes& rhs);
-   ~SecurityAttributes();
-
-   typedef enum {None, Sign, Encrypt, SignAndEncrypt} OutgoingEncryptionLevel;
-
-   typedef enum {From, FailedIdentity, Identity} IdentityStrength;
-
-   void setIdentity(const Data& identity) { mIdentity = identity; }
-   const Data& getIdentity() const { return mIdentity; }
-
-   void setIdentityStrength(IdentityStrength strength) { mStrength = strength; }
-   IdentityStrength getIdentityStrength() const { return mStrength; }
-
-   void setEncrypted() { mIsEncrypted = true; }
-   bool isEncrypted() const { return mIsEncrypted; }
-
-   void setSignatureStatus(SignatureStatus status) { mSigStatus = status; }
-   SignatureStatus getSignatureStatus() const { return mSigStatus; }
-
-   void setSigner(const Data& signer) { mSigner = signer; }
-   const Data& getSigner() const { return mSigner; }
-
-   void setOutgoingEncryptionLevel(OutgoingEncryptionLevel level) { mLevel = level; }
-   OutgoingEncryptionLevel getOutgoingEncryptionLevel() const { return mLevel; }
-
-   void setEncryptionPerformed(bool performed) { mEncryptionPerformed = performed; }
-   bool encryptionPerformed() const { return mEncryptionPerformed; }
-
-   friend EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
-
-private:
-   // Indentity Header Info
-   Data mIdentity;
-   IdentityStrength mStrength;
-
-   // Body Encryption Info
-   bool mIsEncrypted;
-   SignatureStatus mSigStatus;
-   Data mSigner;
-   // for outgoing messages.
-   OutgoingEncryptionLevel mLevel;
-   bool mEncryptionPerformed;
-};
-
-EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
+ 
 }
 
 #endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
- * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

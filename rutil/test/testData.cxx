@@ -915,6 +915,21 @@ class TestData
          }
 
          {
+            Data v("Some Text");
+            assert(v.prefixNoCase("some"));
+            assert(v.prefixNoCase("SOME"));
+            assert(v.prefixNoCase("some "));
+            assert(v.prefixNoCase("SoMe "));
+            assert(!v.prefixNoCase("ome "));
+            assert(!v.prefixNoCase("some more text"));
+
+            assert(v.prefixNoCase(Data::Empty));
+            assert(v.prefixNoCase("some text"));
+            assert(v.prefixNoCase(v));
+            assert(!v.prefixNoCase("some text "));
+         }
+
+         {
             Data v("some text");
             assert(v.postfix("text"));
             assert(v.postfix(" text"));
@@ -925,6 +940,21 @@ class TestData
             assert(v.postfix("some text"));
             assert(v.postfix(v));
             assert(!v.postfix(" some text"));
+         }
+
+         {
+            Data v("Some Text");
+            assert(v.postfixNoCase("text"));
+            assert(v.postfixNoCase("TEXT"));
+            assert(v.postfixNoCase(" text"));
+            assert(v.postfixNoCase(" tExT"));
+            assert(!v.postfixNoCase("tex"));
+            assert(!v.postfixNoCase("more some text"));
+
+            assert(v.postfixNoCase(Data::Empty));
+            assert(v.postfixNoCase("some text"));
+            assert(v.postfixNoCase(v));
+            assert(!v.postfixNoCase(" some text"));
          }
 
          {
@@ -1723,6 +1753,7 @@ main()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

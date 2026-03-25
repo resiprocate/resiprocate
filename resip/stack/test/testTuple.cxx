@@ -118,6 +118,14 @@ main()
       Tuple t6("192.168.1.2", 2061, UDP);
       Tuple loopback("127.0.0.1",2062,TCP);
 
+      assert(t1.isEqual(t2, false /* ignorePort? */, false /* ignoreTransport? */));
+      assert(t1.isEqual(t2, true /* ignorePort? */, true /* ignoreTransport? */));
+      assert(t1.isEqual(t5, false /* ignorePort? */, true /* ignoreTransport? */));
+      assert(t1.isEqual(t5, true /* ignorePort? */, true /* ignoreTransport? */));
+      assert(t1.isEqual(t6, true /* ignorePort? */, false /* ignoreTransport? */));
+      assert(t1.isEqual(t6, true /* ignorePort? */, true /* ignoreTransport? */));
+      assert(!t1.isEqual(t3, true /* ignorePort? */, true /* ignoreTransport? */));
+
       assert(t1.isEqualWithMask(t2, 32, false /* ignorePort? */));
       assert(!t1.isEqualWithMask(t3, 32, false));  // address is different
       assert(t1.isEqualWithMask(t3, 24, false));
@@ -182,8 +190,15 @@ main()
       Tuple t4("2000:1::0000:1111:2222:3333", 2061, UDP);
       Tuple t5("2000:1::204:1111:2222:3333", 2061, TCP);
       Tuple t6("2000:1::203:baff:fe30:1177", 2060, UDP);
+      Tuple t7("2000:1::203:baff:fe30:1176", 2061, TCP);
+      Tuple t8("2000:1::203:baff:fe30:1176", 2061, UDP);
       Tuple loopback("::1",2062,TCP);
       
+      assert(t1.isEqual(t2, false /* ignorePort? */, false /* ignoreTransport? */));
+      assert(t1.isEqual(t2, true /* ignorePort? */, true /* ignoreTransport? */));
+      assert(t1.isEqual(t7, true /* ignorePort? */, true /* ignoreTransport? */));
+      assert(t1.isEqual(t8, true /* ignorePort? */, false /* ignoreTransport? */));
+
       assert(t1.isEqualWithMask(t2, 128, false /* ignorePort? */));
       assert(t1.isEqualWithMask(t3, 80, false));
       assert(t1.isEqualWithMask(t4, 64, true));

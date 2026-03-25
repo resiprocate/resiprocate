@@ -56,6 +56,7 @@ set(INCLUDES
    Headers.hxx
    HeaderTypes.hxx
    Helper.hxx
+   IdentityCategory.hxx
    IntegerCategory.hxx
    IntegerParameter.hxx
    InternalTransport.hxx
@@ -168,6 +169,7 @@ set(INCLUDES
    UnknownParameter.hxx
    UnknownParameterType.hxx
    Uri.hxx
+   UriParameter.hxx
    ValueFifo.hxx
    Via.hxx
    WarningCategory.hxx
@@ -196,6 +198,7 @@ add_library(resip
    DtmfPayloadContents.cxx
    ExpiresCategory.cxx
    GenericUri.cxx
+   IdentityCategory.cxx
    IntegerCategory.cxx
    InteropHelper.cxx
    UInt32Category.cxx
@@ -318,6 +321,7 @@ add_library(resip
    UdpTransport.cxx
    UnknownParameter.cxx
    Uri.cxx
+   UriParameter.cxx
    X509Contents.cxx
    KeepAliveMessage.cxx
    StatelessHandler.cxx

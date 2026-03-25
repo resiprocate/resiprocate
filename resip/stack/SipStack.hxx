@@ -357,6 +357,23 @@ class SipStack : public FdSetIOObserver
 
          @param sslType               Version of the TLS specification to use:  SSLv23 or TLSv1
 
+         @param transportFlags        Bit-mask of TransportFlags to control transport behavior.
+                                      All flags default to "off" (0) to preserve traditional behavior.
+                                      Available flags (see Transport.hxx for details):
+                                      - RESIP_TRANSPORT_FLAG_NOBIND: No inbound connections (TCP/TLS)
+                                      - RESIP_TRANSPORT_FLAG_RXALL: Read all messages before returning to event loop
+                                      - RESIP_TRANSPORT_FLAG_TXALL: Write all messages before returning to event loop
+                                      - RESIP_TRANSPORT_FLAG_TXNOW: Immediately try sending when message posted
+                                      - RESIP_TRANSPORT_FLAG_OWNTHREAD: Transport has its own thread
+                                      - RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS: Bind client connections to
+                                        same port as listening socket (TCP/TLS) for connection reuse
+
+         @param certificateFilename   Path to the host domain TLS certificate file (PEM format). Used for TLS/DTLS
+                                      transports. If empty, uses certificates from Security object.
+
+         @param privateKeyFilename    Path to the host domain TLS private key file (PEM format). Used for TLS/DTLS
+                                      transports. If empty, uses private key from Security object.
+
          @param cvm                   SSL verify mode for the peer (whether we accept and/or
                                       insist on a client certificate from the peer)
 
@@ -379,7 +396,8 @@ class SipStack : public FdSetIOObserver
                               const Data& privateKeyPassPhrase = Data::Empty,
                               SecurityTypes::SSLType sslType = SecurityTypes::SSLv23,
                               unsigned transportFlags = 0,
-                              const Data& certificateFilename = "", const Data& privateKeyFilename = "",
+                              const Data& certificateFilename = "", 
+                              const Data& privateKeyFilename = "",
                               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                               bool useEmailAsSIP = false,
                               std::shared_ptr<WsConnectionValidator> = nullptr,

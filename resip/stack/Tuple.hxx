@@ -145,7 +145,11 @@ class Tuple
       ///  @brief Compares TransportType, the binary address, port, and
       /// address family of the Tuple.
       bool operator==(const Tuple& rhs) const;
-      
+
+      ///  @brief compares this tuple with the one passed in for family, port
+      /// and address equality.  Potentially ignoring the port number and/or transport type.
+      bool isEqual(const Tuple& tuple, bool ignorePort = false, bool ignoreTransport = false) const;
+
       /// Wrapper around the inet_top() method.
       Data presentationFormat() const;
       
@@ -294,6 +298,7 @@ HashValue(resip::Tuple);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

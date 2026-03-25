@@ -191,7 +191,7 @@ ParameterHash::in_word_set (const char *str, size_t len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 106,
+      TOTAL_KEYWORDS = 109,
       MIN_WORD_LENGTH = 1,
       MAX_WORD_LENGTH = 18,
       MIN_HASH_VALUE = 2,
@@ -212,6 +212,8 @@ ParameterHash::in_word_set (const char *str, size_t len)
       {"rport", ParameterTypes::rport},
 #line 102 "ParameterHash.gperf"
       {"np", ParameterTypes::np},
+#line 115 "ParameterHash.gperf"
+      {"ppt", ParameterTypes::ppt},
 #line 81 "ParameterHash.gperf"
       {"size", ParameterTypes::size},
 #line 71 "ParameterHash.gperf"
@@ -278,11 +280,11 @@ ParameterHash::in_word_set (const char *str, size_t len)
       {"control", ParameterTypes::control},
 #line 77 "ParameterHash.gperf"
       {"protocol", ParameterTypes::protocol},
-#line 114 "ParameterHash.gperf"
+#line 117 "ParameterHash.gperf"
       {"ws-src-ip", ParameterTypes::wsSrcIp},
-#line 115 "ParameterHash.gperf"
+#line 118 "ParameterHash.gperf"
       {"ws-src-port", ParameterTypes::wsSrcPort},
-#line 113 "ParameterHash.gperf"
+#line 116 "ParameterHash.gperf"
       {"addtransport", ParameterTypes::addTransport},
 #line 45 "ParameterHash.gperf"
       {"duration", ParameterTypes::duration},
@@ -310,6 +312,8 @@ ParameterHash::in_word_set (const char *str, size_t len)
       {"encoding", ParameterTypes::encoding},
 #line 88 "ParameterHash.gperf"
       {"access-type", ParameterTypes::accessType},
+#line 114 "ParameterHash.gperf"
+      {"alg", ParameterTypes::alg},
 #line 94 "ParameterHash.gperf"
       {"document", ParameterTypes::document},
 #line 84 "ParameterHash.gperf"
@@ -336,6 +340,8 @@ ParameterHash::in_word_set (const char *str, size_t len)
       {"events", ParameterTypes::events},
 #line 106 "ParameterHash.gperf"
       {"ecf", ParameterTypes::ecf},
+#line 113 "ParameterHash.gperf"
+      {"info", ParameterTypes::info},
 #line 78 "ParameterHash.gperf"
       {"micalg", ParameterTypes::micalg},
 #line 68 "ParameterHash.gperf"
@@ -417,34 +423,32 @@ ParameterHash::in_word_set (const char *str, size_t len)
   static const signed char lookup[] =
     {
        -1,  -1,   0,  -1,  -1,   1,  -1,   2,  -1,   3,
-        4,  -1,   5,  -1,   6,  -1,   7,  -1,  -1,   8,
-        9,  10,  11,  -1,  12,  -1,  -1,  13,  14,  15,
-       -1,  -1,  16,  17,  18,  -1,  -1,  -1,  19,  20,
-       -1,  -1,  -1,  21,  22,  23,  24,  25,  26,  -1,
-       27,  28,  29,  30,  -1,  -1,  31,  32,  33,  34,
-       35,  36,  37,  38,  39,  -1,  40,  -1,  -1,  -1,
-       -1,  -1,  41,  42,  -1,  -1,  43,  -1,  44,  45,
-       46,  -1,  47,  48,  -1,  49,  50,  51,  52,  -1,
-       -1,  -1,  -1,  53,  -1,  -1,  54,  -1,  -1,  -1,
-       -1,  -1,  -1,  55,  56,  -1,  -1,  57,  -1,  -1,
-       58,  -1,  59,  60,  -1,  61,  62,  63,  64,  -1,
-       65,  66,  -1,  67,  -1,  -1,  68,  69,  -1,  -1,
-       70,  71,  72,  73,  74,  75,  -1,  -1,  -1,  -1,
-       76,  77,  78,  -1,  -1,  79,  -1,  80,  81,  -1,
-       82,  -1,  -1,  -1,  -1,  83,  -1,  84,  -1,  85,
-       -1,  -1,  -1,  -1,  86,  87,  88,  -1,  -1,  -1,
-       89,  90,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+        4,  -1,   5,   6,   7,  -1,   8,  -1,  -1,   9,
+       10,  11,  12,  -1,  13,  -1,  -1,  14,  15,  16,
+       -1,  -1,  17,  18,  19,  -1,  -1,  -1,  20,  21,
+       -1,  -1,  -1,  22,  23,  24,  25,  26,  27,  -1,
+       28,  29,  30,  31,  -1,  -1,  32,  33,  34,  35,
+       36,  37,  38,  39,  40,  -1,  41,  -1,  -1,  -1,
+       -1,  -1,  42,  43,  -1,  -1,  44,  -1,  45,  46,
+       47,  -1,  48,  49,  -1,  50,  51,  52,  53,  -1,
+       -1,  -1,  -1,  54,  -1,  -1,  55,  -1,  56,  -1,
+       -1,  -1,  -1,  57,  58,  -1,  -1,  59,  -1,  -1,
+       60,  -1,  61,  62,  -1,  63,  64,  65,  66,  -1,
+       67,  68,  -1,  69,  70,  -1,  71,  72,  -1,  -1,
+       73,  74,  75,  76,  77,  78,  -1,  -1,  -1,  -1,
+       79,  80,  81,  -1,  -1,  82,  -1,  83,  84,  -1,
+       85,  -1,  -1,  -1,  -1,  86,  -1,  87,  -1,  88,
+       -1,  -1,  -1,  -1,  89,  90,  91,  -1,  -1,  -1,
+       92,  93,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
        -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-       -1,  -1,  -1,  91,  -1,  -1,  -1,  -1,  92,  93,
-       -1,  -1,  -1,  -1,  -1,  -1,  94,  -1,  95,  96,
-       -1,  -1,  -1,  97,  -1,  -1,  -1,  -1,  -1,  -1,
-       -1,  -1,  -1,  98,  -1,  -1,  -1,  -1,  -1,  -1,
-       99,  -1,  -1, 100,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1,  94,  -1,  -1,  -1,  -1,  95,  96,
+       -1,  -1,  -1,  -1,  -1,  -1,  97,  -1,  98,  99,
+       -1,  -1,  -1, 100,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1, 101,  -1,  -1,  -1,  -1,  -1,  -1,
+      102,  -1,  -1, 103,  -1,  -1,  -1,  -1,  -1,  -1,
        -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-       -1,  -1,  -1, 101,  -1, 102,  -1,  -1, 103,  -1,
-       -1,  -1,  -1,  -1,  -1,  -1,  -1, 104,  -1,  -1,
-       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1, 104,  -1, 105,  -1,  -1, 106,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1, 107,  -1,  -1,
        -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
        -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
        -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
@@ -467,7 +471,9 @@ ParameterHash::in_word_set (const char *str, size_t len)
        -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
        -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
        -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-       -1,  -1, 105
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1, 108
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -489,6 +495,6 @@ ParameterHash::in_word_set (const char *str, size_t len)
     }
   return 0;
 }
-#line 116 "ParameterHash.gperf"
+#line 119 "ParameterHash.gperf"
 
 }

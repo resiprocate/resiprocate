@@ -19,6 +19,7 @@ class GenericUri : public ParserCategory
       static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputMulti;
 
       GenericUri() : ParserCategory() {}
+      GenericUri(const Data& uri);
       GenericUri(const HeaderFieldValue& hfv, 
                   Headers::Type type,
                   PoolBase* pool=0);
@@ -52,6 +53,8 @@ class GenericUri : public ParserCategory
       friend class _enum##_Param
 
 defineParam(purpose, "purpose", DataParameter, "RFC 3261");
+defineParam(alg, "alg", DataParameter, "RFC 8224");
+defineParam(ppt, "ppt", DataParameter, "RFC 8224");
 
 #undef defineParam
 
@@ -69,6 +72,7 @@ typedef GenericUri GenericURI; //.dcm. deprecated, should be removed soon
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

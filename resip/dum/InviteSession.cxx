@@ -78,7 +78,8 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mSessionInterval(0),
      mMinSE(90), 
      mSessionRefresher(false),
-     mSessionTimerSeq(0),
+     mSessionRefreshTimerSeq(0),
+     mSessionExpirationTimerSeq(0),
      mSessionRefreshReInvite(false),
      mReferSub(true),
      mCurrentEncryptionLevel(DialogUsageManager::None),
@@ -1348,30 +1349,30 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if (mCurrentRetransmit200)
       {
-         InfoLog (<< "Retransmitting: " << endl << mInvite200->brief());
+         InfoLog(<< "Retransmitting: " << endl << mInvite200->brief());
          //DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
          send(mInvite200);
          mCurrentRetransmit200 *= 2;
-         mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(),  timeout.seq());
+         mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(), timeout.seq());
       }
    }
    else if (timeout.type() == DumTimeout::WaitForAck)
    {
-      if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet
+      if (mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet
       {
          if (timeout.seq() == mLastRemoteSessionModification->header(h_CSeq).sequence())
          {
             mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
             // If we are waiting for an Ack and it times out, then end with a BYE
-            if(mState == UAS_WaitingToHangup || 
+            if (mState == UAS_WaitingToHangup ||
                mState == WaitingToHangup)
             {
                const auto msg = sendBye();
                transition(Terminated);
-               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
+               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
             }
-            else if(mState == ReceivedReinviteSentOffer)
+            else if (mState == ReceivedReinviteSentOffer)
             {
                transition(Connected);
                mProposedLocalOfferAnswer.reset();
@@ -1379,23 +1380,23 @@ InviteSession::dispatch(const DumTimeout& timeout)
                //!dcm! -- should this be onIllegalNegotiation?
                mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
             }
-            else if(mState == WaitingToOffer || 
-                    mState == UAS_WaitingToOffer)
+            else if (mState == WaitingToOffer ||
+               mState == UAS_WaitingToOffer)
             {
                resip_assert(mProposedLocalOfferAnswer.get());
                mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
-               if(!isTerminated())  
+               if (!isTerminated())
                {
-                  provideProposedOffer(); 
+                  provideProposedOffer();
                }
             }
-            else if(mState == WaitingToRequestOffer ||
-                    mState == UAS_WaitingToRequestOffer)
+            else if (mState == WaitingToRequestOffer ||
+               mState == UAS_WaitingToRequestOffer)
             {
                mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
-               if(!isTerminated())  
+               if (!isTerminated())
                {
-                  requestOffer(); 
+                  requestOffer();
                }
             }
             else
@@ -1421,7 +1422,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
          transition(SentUpdate);
 
-         InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
+         InfoLog(<< "Retransmitting the UPDATE (glare condition timer)");
          mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);  // increments CSeq
          send(mLastLocalSessionModification);
       }
@@ -1429,7 +1430,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
          transition(SentOptions);
 
-         InfoLog (<< "Retransmitting the OPTIONS (glare condition timer)");
+         InfoLog(<< "Retransmitting the OPTIONS (glare condition timer)");
          mDialog.makeRequest(*mLastLocalSessionModification, OPTIONS);  // increments CSeq
          send(mLastLocalSessionModification);
       }
@@ -1437,7 +1438,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
          transition(SentReinvite);
 
-         InfoLog (<< "Retransmitting the reINVITE (glare condition timer)");
+         InfoLog(<< "Retransmitting the reINVITE (glare condition timer)");
          mDialog.makeRequest(*mLastLocalSessionModification, INVITE); // increments CSeq
          startStaleReInviteTimer();
          send(mLastLocalSessionModification);
@@ -1446,7 +1447,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
          transition(SentReinviteNoOffer);
 
-         InfoLog (<< "Retransmitting the reINVITE-nooffer (glare condition timer)");
+         InfoLog(<< "Retransmitting the reINVITE-nooffer (glare condition timer)");
          mDialog.makeRequest(*mLastLocalSessionModification, INVITE);  // increments CSeq
          startStaleReInviteTimer();
          send(mLastLocalSessionModification);
@@ -1454,16 +1455,15 @@ InviteSession::dispatch(const DumTimeout& timeout)
    }
    else if (timeout.type() == DumTimeout::StaleReInvite)
    {
-      if(timeout.seq() == mStaleReInviteTimerSeq)
+      if (timeout.seq() == mStaleReInviteTimerSeq)
       {
-         if(mState == WaitingToTerminate)
+         if (mState == WaitingToTerminate)
          {
             const auto msg = sendBye();
             transition(Terminated);
-            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
+            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
          }
-         else if(mState == SentReinvite ||
-                 mState == SentReinviteNoOffer)
+         else if (mState == SentReinvite || mState == SentReinviteNoOffer)
          {
             transition(Connected);
             mProposedLocalOfferAnswer.reset();
@@ -1477,7 +1477,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
    }
    else if (timeout.type() == DumTimeout::SessionExpiration)
    {
-      if(timeout.seq() == mSessionTimerSeq)
+      if (timeout.seq() == mSessionExpirationTimerSeq)
       {
          // this is so the app can decide to ignore this. default implementation
          // will call end next - which will send a BYE
@@ -1486,16 +1486,24 @@ InviteSession::dispatch(const DumTimeout& timeout)
    }
    else if (timeout.type() == DumTimeout::SessionRefresh)
    {
-     if(timeout.seq() == mSessionTimerSeq)
-     {
-        // Note: If not connected then we must be issueing a reinvite/update or
-        // receiving one - in either case the session timer stuff will get
-        // reset/renegotiated - thus just ignore this referesh
-        if(mState == Connected)  
-        {
-           sessionRefresh();
-        }
-     }
+      if (timeout.seq() == mSessionRefreshTimerSeq)
+      {
+         // Note: If not connected then we must be issueing a reinvite/update or
+         // receiving one - in either case the session timer stuff will get
+         // reset/renegotiated - thus just ignore this referesh
+         if (mState == Connected)
+         {
+            sessionRefresh();
+            // Set a timer for another refresh attempt that will get used if we don't get a success response to this refresh attempt
+            // Retry at half the previous refresh interval, but no less than 32 seconds
+            unsigned long refreshRetryDuration = timeout.duration() / 2;
+            if (refreshRetryDuration > 32)
+            {
+               mDum.addTimer(DumTimeout::SessionRefresh, refreshRetryDuration, getBaseHandle(), ++mSessionRefreshTimerSeq);
+               InfoLog(<< "Started Session Refresh Retry Timer for " << refreshRetryDuration << " seconds");
+            }
+         }
+      }
    }
 }
 
@@ -2767,21 +2775,35 @@ InviteSession::startSessionTimer()
 {
    if(mSessionInterval >= 90)  // 90 is the absolute minimum - RFC4028
    {
+      // For session expiration -  BYE should be sent a minimum of 32 and one third of the SessionInterval, seconds 
+      // before the session expires (recommended by RFC4028 - section 10):
+      // Firewalls and NAT ALGs may be very unforgiving about allowing SIP traffic to pass after the expiration
+      // time of the session. This is why the BYE should be sent before the expiration.
+      unsigned long aBitBeforeExpiration = mSessionInterval - resipMin((uint32_t)32, mSessionInterval / 3);
+
       // Check if we are the refresher
       if(mSessionRefresher)
       {
          // Start Session-Refresh Timer to mSessionInterval / 2 (recommended by RFC4028)
-         mDum.addTimer(DumTimeout::SessionRefresh, mSessionInterval / 2, getBaseHandle(), ++mSessionTimerSeq);
+         mDum.addTimer(DumTimeout::SessionRefresh, mSessionInterval / 2, getBaseHandle(), ++mSessionRefreshTimerSeq);
+         // Start Session-Expiration Timer to a bit before mSessionInterval
+         mDum.addTimer(DumTimeout::SessionExpiration, aBitBeforeExpiration, getBaseHandle(), ++mSessionExpirationTimerSeq);
+         InfoLog(<< "Started Session Refresh Timer for " << mSessionInterval / 2 << " seconds and Session Expiration Timer for " << aBitBeforeExpiration << " seconds (Session Interval is " << mSessionInterval << " seconds)");
       }
       else
       {
-         // Start Session-Expiration Timer to mSessionInterval - BYE should be sent a minimum of 32 and one third of the SessionInterval, seconds before the session expires (recommended by RFC4028)
-         mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin((uint32_t)32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq);
+         // Start Session-Expiration Timer to a bit before mSessionInterval
+         mDum.addTimer(DumTimeout::SessionExpiration, aBitBeforeExpiration, getBaseHandle(), ++mSessionExpirationTimerSeq);
+         // increment refresh seq, incase old timers are running and we've switched roles to non refresher
+         ++mSessionRefreshTimerSeq;
+         InfoLog(<< "Started Session Expiration Timer for " << aBitBeforeExpiration << " seconds (Session Interval is " << mSessionInterval << " seconds)");
       }
    }
    else  // Session Interval less than 90 - consider timers disabled
    {
-       ++mSessionTimerSeq;  // increment seq, incase old timers are running and now session timers are disabled
+      // increment seq, incase old timers are running and now session timers are disabled
+      ++mSessionRefreshTimerSeq;
+      ++mSessionExpirationTimerSeq;
    }
 }
 
@@ -3517,6 +3539,7 @@ InviteSession::rejectReferNoSub(int responseCode)
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

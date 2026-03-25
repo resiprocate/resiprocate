@@ -844,6 +844,7 @@ class Data
         would be false.
       */
       bool prefix(const Data& pre) const noexcept;
+      bool prefixNoCase(const Data& pre) const noexcept;
 
       /**
         Returns true if this Data ends with the bytes indicated by
@@ -852,6 +853,7 @@ class Data
         would be false.
       */
       bool postfix(const Data& post) const noexcept;
+      bool postfixNoCase(const Data& post) const noexcept;
 
       /**
         Copies a portion of this Data into a new Data.
@@ -1227,6 +1229,7 @@ HashValue(resip::Data);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

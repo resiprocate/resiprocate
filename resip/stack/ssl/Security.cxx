@@ -755,8 +755,6 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       resip_assert(0);
    }
 
-   //assert(0); // the code following this has no hope of working 
-   
    X509* x = where->second;
    unsigned char* buffer=0;
    int len = i2d_X509(x, &buffer);
@@ -1072,8 +1070,6 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
       }
    }
 
-   resip_assert(0); // TODO - following code has no hope of working 
-    
    // !kh!
    // creates a read/write BIO buffer.
    BIO *out = BIO_new(BIO_s_mem());
@@ -1092,7 +1088,7 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
    (void)BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
-   Data retVal(Data::Borrow, buf, len);
+   Data retVal(buf, len);
 
    BIO_free(out);
 
@@ -1123,8 +1119,6 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
          p = const_cast<char*>(iter->second.c_str());
       }
    }
-
-   resip_assert(0); // TODO - following code has no hope of working 
     
    // !kh!
    // creates a read/write BIO buffer.
@@ -1143,7 +1137,7 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
    (void)BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
-   Data retVal(Data::Borrow, buf, len);
+   Data retVal(buf, len);
 
    BIO_free(out);
    
@@ -2010,6 +2004,7 @@ BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
       sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
    }
    msg.setSecurityAttributes(std::move(sec));
+   X509_free(cert);
 }
 
 
@@ -3122,6 +3117,7 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
 /* ====================================================================
 * The Vovida Software License, Version 1.0
 *
+* Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
 * Copyright (c) 2002-2005 Vovida Networks, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without

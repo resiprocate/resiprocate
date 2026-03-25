@@ -272,7 +272,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                   // .bwc. Leave pre-existing Identity headers alone.
                   if(!sipMessage->exists(h_Identities))
                   {
-                     sipMessage->header(h_Identities).push_back(StringCategory(Data::Empty));  // This is a signal to have the TransportSelector fill in the identity header
+                     sipMessage->header(h_Identities).push_back(IdentityCategory(Data::Empty));  // This is a signal to have the TransportSelector fill in the identity header
                      if(sipMessage->exists(h_IdentityInfo))
                      {
                         InfoLog(<<"Somebody sent us a"
@@ -461,6 +461,7 @@ DigestAuthenticator::isMyRealm(RequestContext &rc, const resip::Data& realm)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

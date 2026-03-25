@@ -16,7 +16,7 @@ class MasterProfile : public UserProfile
 {
    public:  
       
-      /// Creates an Indentity/Profile with no BaseProfile - this is the root of all profiles
+      /// Creates an Identity/Profile with no BaseProfile - this is the root of all profiles
       MasterProfile();  
       
       /// Default is "sip"

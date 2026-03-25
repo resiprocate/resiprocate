@@ -507,7 +507,26 @@ main(int argc, char** argv)
       PlainContents pc("here is some plain ol' contents");
       message3.setContents(&pc);
 
+      SecurityAttributes* attr = new SecurityAttributes();
+      attr->setIdentity("identity");
+      attr->setIdentityStrength(SecurityAttributes::From);
+      attr->setEncrypted();
+      attr->setEncryptionPerformed(true);
+      attr->setOutgoingEncryptionLevel(SecurityAttributes::SignAndEncrypt);
+      attr->setSignatureStatus(SignatureSelfSigned);
+      attr->setSigner("signer");
+      message2->setSecurityAttributes(unique_ptr<SecurityAttributes>(attr));
+
       message3 = *message2;
+
+      // Assert SecurityAttributes copied
+      assert(message3.getSecurityAttributes()->getIdentity() == message2->getSecurityAttributes()->getIdentity());
+      assert(message3.getSecurityAttributes()->getIdentityStrength() == message2->getSecurityAttributes()->getIdentityStrength());
+      assert(message3.getSecurityAttributes()->isEncrypted() == message2->getSecurityAttributes()->isEncrypted());
+      assert(message3.getSecurityAttributes()->encryptionPerformed() == message2->getSecurityAttributes()->encryptionPerformed());
+      assert(message3.getSecurityAttributes()->getOutgoingEncryptionLevel() == message2->getSecurityAttributes()->getOutgoingEncryptionLevel());
+      assert(message3.getSecurityAttributes()->getSignatureStatus() == message2->getSecurityAttributes()->getSignatureStatus());
+      assert(message3.getSecurityAttributes()->getSigner() == message2->getSecurityAttributes()->getSigner());
 
       // cause some parsing
       assert(!message2->header(h_To).exists(p_tag));

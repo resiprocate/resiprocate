@@ -2,36 +2,48 @@
 
 using namespace resip;
 
-SecurityAttributes::SecurityAttributes()  :
-   
+static const char* strengthText[] =
+{
+   "From", "IdentityFailed", "Identity"
+};
+
+static const char* sigstatusText[] =
+{
+   "None", "Bad", "Trusted", "CA Trusted", "Untrusted", "Self-signed"
+};
+
+static const char* encryptionLevelText[] =
+{
+   "None", "Sign", "Encrypt", "SignAndEncrypt"
+};
+
+SecurityAttributes::SecurityAttributes() :
+   mStrength(From),
    mIsEncrypted(false),
    mSigStatus(SignatureNone),
-   mStrength(From),
    mLevel(None),
    mEncryptionPerformed(false)
-{}
+{
+}
+
+SecurityAttributes::SecurityAttributes(const SecurityAttributes& rhs) :
+   mIdentity(rhs.mIdentity),
+   mStrength(rhs.mStrength),
+   mIsEncrypted(rhs.mIsEncrypted),
+   mSigStatus(rhs.mSigStatus),
+   mSigner(rhs.mSigner),
+   mLevel(rhs.mLevel),
+   mEncryptionPerformed(rhs.mEncryptionPerformed)
+{
+}
 
 SecurityAttributes::~SecurityAttributes() 
-{};
+{
+}
 
 EncodeStream& 
 resip::operator<<(EncodeStream& strm, const SecurityAttributes& sa)
 {
-   const char* strengthText[] = 
-      {
-         "From", "IdentityFailed", "Identity" 
-      };
-
-   const char* sigstatusText[] = 
-      {
-         "None", "Bad", "Trusted", "CA Trusted", "Untrusted", "Self-signed"
-      };
-
-   const char* encryptionLevelText[] = 
-      {
-         "None", "Sign", "Encrypt", "SignAndEncrypt"
-      };
-
    strm << "SecurityAttributes: identity=" << sa.mIdentity
         << " strength=" << strengthText[sa.mStrength]
         << " encrypted=" << Data(sa.mIsEncrypted)
@@ -47,6 +59,7 @@ resip::operator<<(EncodeStream& strm, const SecurityAttributes& sa)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

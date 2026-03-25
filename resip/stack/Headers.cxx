@@ -138,10 +138,6 @@ defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903");
 defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
 defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
 
-defineMultiHeader(Identity, "Identity", StringCategory, "RFC 8224");  // Originally defined in RFC 4474 as a single header, but later modified by RFC8224 to be a multiheader
-// explicitly declare to avoid h_Identitys
-H_Identitys resip::h_Identities;
-
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 // explicitly declare to avoid h_AllowEventss, ugh
 H_AllowEventss resip::h_AllowEvents;
@@ -310,6 +306,14 @@ defineMultiHeader(Via, "Via", Via, "RFC 3261");
 defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", TokenOrQuotedStringCategory, "RFC 3455");
 defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
 
+//============================
+// IdentityCategory
+//============================
+defineMultiHeader(Identity, "Identity", IdentityCategory, "RFC 8224");  // Originally defined in RFC 4474 as a single header, but later modified by RFC8224 to be a multiheader
+// explicitly declare to avoid h_Identitys
+H_Identitys resip::h_Identities;
+
+
 //Enforces string encoding of extension headers
 Headers::Type                                                          
 H_RESIP_DO_NOT_USEs::getTypeNum() const {return Headers::RESIP_DO_NOT_USE;}                                                                               
@@ -353,6 +357,7 @@ Headers::getType(const char* name, size_t len)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

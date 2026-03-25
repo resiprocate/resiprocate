@@ -567,6 +567,220 @@ main(int argc, char* argv[])
       assert(sip1 != sip2);
    }
 
+   // Test known `rinstance` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;rinstance=a3f7b2c1");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;rinstance=a3f7b2c1");
+      Uri sip2("sip:alice@example.com;rinstance=a3f7b2c1");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;rinstance=a3f7b2c1");
+      Uri sip2("sip:alice@example.com;rinstance=d4e8f9a0");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test known `ob` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;ob");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ob");
+      Uri sip2("sip:alice@example.com;ob");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   // Test known `comp` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;comp=sigcomp");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;comp=sigcomp");
+      Uri sip2("sip:alice@example.com;comp=sigcomp");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;comp=other");
+      Uri sip2("sip:alice@example.com;comp=sigcomp");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test known `ext` URI parameter. 
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;ext=123");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ext=123");
+      Uri sip2("sip:alice@example.com;ext=123");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ext=123");
+      Uri sip2("sip:alice@example.com;ext=456");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test known `duration` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;duration=30");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;duration=30");
+      Uri sip2("sip:alice@example.com;duration=30");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;duration=30");
+      Uri sip2("sip:alice@example.com;duration=60");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test `ws-src-ip` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;ws-src-ip=192.168.1.1");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ws-src-ip=192.168.1.1");
+      Uri sip2("sip:alice@example.com;ws-src-ip=192.168.1.1");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ws-src-ip=192.168.1.1");
+      Uri sip2("sip:alice@example.com;ws-src-ip=192.168.1.2");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test `ws-src-port` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;ws-src-port=8080");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ws-src-port=8080");
+      Uri sip2("sip:alice@example.com;ws-src-port=8080");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ws-src-port=8080");
+      Uri sip2("sip:alice@example.com;ws-src-port=9090");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test `sigcomp-id` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;sigcomp-id=urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E128");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;sigcomp-id=urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E128");
+      Uri sip2("sip:alice@example.com;sigcomp-id=urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E128");
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;sigcomp-id=urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E128");
+      Uri sip2("sip:alice@example.com;sigcomp-id=urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E129");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
    // Test parameters ordering.
    {
       // Known significant parameter single URI.

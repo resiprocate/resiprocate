@@ -159,6 +159,10 @@ defineParam(termIoi, "term-ioi", DataParameter, Token, "RFC 3455"); // P-Chargin
 defineParam(content, "content", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"); // User-to-User
 defineParam(encoding, "encoding", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"); // User-to-User
 
+defineParam(info, "info", UriParameter, IdentityCategory, "RFC 8224");
+defineParam(alg, "alg", DataParameter, GenericUri, "RFC 8224");
+defineParam(ppt, "ppt", DataParameter, GenericUri, "RFC 8224");
+
 // Internal use only
 defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");
 defineParam(addTransport, "addTransport", ExistsParameter, Uri, "RESIP INTERNAL");
@@ -179,6 +183,7 @@ ParameterTypes::getType(const char* pname, size_t len)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

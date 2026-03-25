@@ -119,7 +119,7 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
                  "<html><head>"
                  "<title>404 Not Found</title>"
                  "</head><body>"
-                 "<h1>Unauthorized</h1>"
+                 "<h1>Not Found</h1>"
                  "</body></html>" );
       }
       break;

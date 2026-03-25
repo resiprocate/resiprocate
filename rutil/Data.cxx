@@ -1910,6 +1910,16 @@ Data::prefix(const Data& pre) const noexcept
    return memcmp(data(), pre.data(), pre.size()) == 0;
 }
 
+bool
+Data::prefixNoCase(const Data& pre) const noexcept
+{
+   if (pre.size() > size())
+   {
+      return false;
+   }
+
+   return strncasecmp(data(), pre.data(), pre.size()) == 0;
+}
 
 bool
 Data::postfix(const Data& post) const noexcept
@@ -1920,6 +1930,17 @@ Data::postfix(const Data& post) const noexcept
    }
 
    return memcmp(data() + (size()-post.size()), post.data(), post.size()) == 0;
+}
+
+bool
+Data::postfixNoCase(const Data& post) const noexcept
+{
+   if (post.size() > size())
+   {
+      return false;
+   }
+
+   return strncasecmp(data() + (size() - post.size()), post.data(), post.size()) == 0;
 }
 
 Data 
@@ -2612,6 +2633,7 @@ Data::base64encode(bool useSafeSet) const
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

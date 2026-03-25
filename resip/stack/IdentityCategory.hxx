@@ -1,72 +1,70 @@
-#ifndef RESIP_SecurityAttributes_hxx
-#define RESIP_SecurityAttributes_hxx
+#if !defined(RESIP_IDENTITY_CATEGORY_HXX)
+#define RESIP_IDENTITY_CATEGORY_HXX 
 
-#include <iostream>
-
+#include <iosfwd>
 #include "rutil/Data.hxx"
+#include "resip/stack/ParserCategory.hxx"
+#include "resip/stack/ParserContainer.hxx"
 
 namespace resip
 {
 
-enum SignatureStatus
+/**
+   @ingroup sip_grammar
+   @brief Represents an Identity header from RFC8824.
+*/
+class IdentityCategory : public ParserCategory
 {
-   SignatureNone, // there is no signature
-   SignatureIsBad,
-   SignatureTrusted, // It is signed with trusted signature
-   SignatureCATrusted, // signature is new and is signed by a root we trust
-   SignatureNotTrusted, // signature is new and is not signed by a CA we
-   SignatureSelfSigned
-};
+   public:
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputCommas;
 
-class SecurityAttributes
-{
-public:
-   SecurityAttributes();
-   SecurityAttributes(const SecurityAttributes& rhs);
-   ~SecurityAttributes();
+      IdentityCategory();
+      explicit IdentityCategory(const Data& d);
+      IdentityCategory(const HeaderFieldValue& hfv,
+            Headers::Type type,
+            PoolBase* pool=0);
+      IdentityCategory(const IdentityCategory& orig,
+            PoolBase* pool=0);
+      IdentityCategory& operator=(const IdentityCategory&);
 
-   typedef enum {None, Sign, Encrypt, SignAndEncrypt} OutgoingEncryptionLevel;
+      /**
+         Gets the value (ie; no parameters) of this IdentityCategory as a Data&.
+      */
+      const Data& value() const;
+      Data& value();
 
-   typedef enum {From, FailedIdentity, Identity} IdentityStrength;
+      virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
+      virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
 
-   void setIdentity(const Data& identity) { mIdentity = identity; }
-   const Data& getIdentity() const { return mIdentity; }
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
-   void setIdentityStrength(IdentityStrength strength) { mStrength = strength; }
-   IdentityStrength getIdentityStrength() const { return mStrength; }
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
 
-   void setEncrypted() { mIsEncrypted = true; }
-   bool isEncrypted() const { return mIsEncrypted; }
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
+      bool exists(const Param<IdentityCategory>& paramType) const;
+      void remove(const Param<IdentityCategory>& paramType);
 
-   void setSignatureStatus(SignatureStatus status) { mSigStatus = status; }
-   SignatureStatus getSignatureStatus() const { return mSigStatus; }
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
 
-   void setSigner(const Data& signer) { mSigner = signer; }
-   const Data& getSigner() const { return mSigner; }
-
-   void setOutgoingEncryptionLevel(OutgoingEncryptionLevel level) { mLevel = level; }
-   OutgoingEncryptionLevel getOutgoingEncryptionLevel() const { return mLevel; }
-
-   void setEncryptionPerformed(bool performed) { mEncryptionPerformed = performed; }
-   bool encryptionPerformed() const { return mEncryptionPerformed; }
-
-   friend EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
+      defineParam(info, "info", UriParameter, "RFC 8224");
+#undef defineParam
 
 private:
-   // Indentity Header Info
-   Data mIdentity;
-   IdentityStrength mStrength;
+      Data mValue;
 
-   // Body Encryption Info
-   bool mIsEncrypted;
-   SignatureStatus mSigStatus;
-   Data mSigner;
-   // for outgoing messages.
-   OutgoingEncryptionLevel mLevel;
-   bool mEncryptionPerformed;
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
-
-EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
+typedef ParserContainer<IdentityCategory> IdentityCategories;
+ 
 }
 
 #endif
@@ -74,7 +72,6 @@ EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

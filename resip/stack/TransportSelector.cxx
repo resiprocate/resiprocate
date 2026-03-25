@@ -89,27 +89,6 @@ TransportSelector::TlsTransportKey::operator<(const TlsTransportKey& rhs) const
    return false;
 }
 
-bool
-TransportSelector::TlsTransportKey::strictEqWithoutDomain(const resip::Tuple& tuple) const
-{
-   return mTuple == tuple;    // Tuple does not compare domain names by default.
-}
-
-bool
-TransportSelector::TlsTransportKey::relaxEq(const TlsTransportKey &rhs) const
-{
-   return mTuple.getTargetDomain() == rhs.mTuple.getTargetDomain() &&
-          mTuple.getType() == rhs.mTuple.getType() &&
-          mTuple.ipVersion() == rhs.mTuple.ipVersion();
-}
-
-bool
-TransportSelector::TlsTransportKey::relaxEqWithoutDomain(const resip::Tuple& tuple) const
-{
-   return mTuple.getType() == tuple.getType() &&
-          mTuple.ipVersion() == tuple.ipVersion();
-}
-
 TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression, bool useDnsVip) :
    mDns(dnsStub, useDnsVip),
    mStateMacFifo(fifo),
@@ -761,19 +740,19 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target, Tupl
    }
 
    // XXX: Is there better way to do below (without the copy)?
-   source = Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), 
+   source = Tuple(via.sentHost(), via.sentPort(), target.ipVersion(),
       via.transport().empty() ? target.getType() : toTransportType(via.transport()), // Transport type is pre-populated in via, lock to it
       Data::Empty, target.getNetNs());
    DebugLog(<< "TransportSelector::findTransportByVia: source: " << source);
 
-   if ( target.mFlowKey!=0 && (source.getPort()==0 || source.isAnyInterface()) )
+   if (target.mFlowKey != 0 && (source.getPort() == 0 || source.isAnyInterface()))
    {
       WarningLog(<< "Sending request with incomplete Via header and FlowKey."
-        <<" This code no smart enough to pick the correct Transport."
-        <<" Via=" << via);
+         << " This code no smart enough to pick the correct Transport."
+         << " Via=" << via);
       resip_assert(0);
    }
-   if ( source.isAnyInterface() )
+   if (source.isAnyInterface())
    {
       // INADDR_ANY cannot go out on the wire, so remove it from
       // via header now.
@@ -784,12 +763,12 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target, Tupl
       msg->header(h_Vias).front().sentHost().clear();
    }
 
-   Transport *trans;
-   if ( (trans = findTransportBySource(source, msg)) == NULL )
+   Transport* trans;
+   if ((trans = findTransportBySource(source, msg)) == NULL)
    {
       return NULL;
    }
-   if(source.getPort()==0)
+   if (source.getPort() == 0)
    {
       source.setPort(trans->port());
    }
@@ -975,9 +954,6 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 //   findTransportByDest
 //     If key set then select matching transport
 //     If target matches(AnyPortAnyInterfaceCompare) exactly one transport type
-// 
-// !jf! there may be an extra copy of a tuple here. can probably get rid of it
-// but there are some const issues.
 TransportSelector::TransmitState
 TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 {
@@ -1026,18 +1002,19 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 
       if (msg->isRequest())
       {
+         // TODO SLG - If target has mTransportKey set, can't we skip findTransportByVia and go right to findTransportByDest?
          transport = findTransportByVia(msg, target, source);
          if (!transport)
          {
             if ((transport = findTransportByDest(target)) != NULL)
             {
                source = transport->getTuple();
-               DebugLog(<< "Found transport: " << source << ", for target=" << target);
+               DebugLog(<< "Found (request) " << *transport << " by target=" << target);
             }
          }
          else
          {
-            DebugLog(<< "Found transport: " << source << ", for target=" << target);
+            DebugLog(<< "Found (request) " << *transport << " by via, source=" << source << " for target=" << target);
          }
          
          if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
@@ -1080,7 +1057,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             // .bwc. determineSourceInterface might give us a port
             if(transport)
             {
-               DebugLog(<< "Found transport: " << source << ", for target=" << target);
+               DebugLog(<< "Found (request) " << *transport << " by source=" << source << " for target=" << target);
                if (source.getPort()==0)
                {
                   source.setPort(transport->port());
@@ -1172,7 +1149,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          if(transport)
          {
             source = transport->getTuple();
-            DebugLog(<< "Found transport: " << source << ", for target=" << target);
+            DebugLog(<< "Found (response) " << *transport << " by target=" << target);
 
             // .bwc. If the transport has an ambiguous interface, we need to
             //look a little closer.
@@ -1224,6 +1201,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 
       if (transport)
       {
+         Data sourceAddress = Tuple::inet_ntop(source);
          // !bwc! TODO This filling in of stuff really should be handled with
          // the callOutboundDecorators() callback. (Or, at the very least,
          // we should allow this code to be turned off through configuration.
@@ -1241,7 +1219,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
                {
                   contact.uri().host() = (transport->hasSpecificContact() ? 
                                           transport->interfaceName() : 
-                                          Tuple::inet_ntop(source) );
+                                          sourceAddress);
                   contact.uri().port() = transport->port();
 
                   if (transport->transport() != UDP && !contact.uri().exists(p_gr))
@@ -1287,7 +1265,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          {
             if (msg->const_header(h_ReferredBy).uri().host().empty())
             {
-               msg->header(h_ReferredBy).uri().host() = Tuple::inet_ntop(source);
+               msg->header(h_ReferredBy).uri().host() = sourceAddress;
                msg->header(h_ReferredBy).uri().port() = transport->port();
             }
          }
@@ -1307,7 +1285,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             NameAddr& rr = msg->header(h_RecordRoutes).front();
             if (c_rr.uri().host().empty())
             {
-               rr.uri().host() = Tuple::inet_ntop(source);
+               rr.uri().host() = sourceAddress;
                rr.uri().port() = transport->port();
                if (target.getType() != UDP && !rr.uri().exists(p_transport))
                {
@@ -1688,68 +1666,60 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
 }
 
 Transport*
-TransportSelector::findTlsTransport(const Data& domainname,
-                                    const Tuple& search) const
+TransportSelector::findTlsTransport(const Data& domainname, const Tuple& search) const
 {
    resip_assert(isSecure(search.getType()));
 
    // Basically, the 'search' Tuple has a member called mTargetDomain.
    // However, it is not used due to the current TransportSelector implementation logic.
+   // So we build a new tuple here with the domain and use it as the search key.
+   // First search for exact match
+   TlsTransportKey searchKey(domainname, search);
+   const auto& i = mTlsTransports.find(searchKey);
 
-   if (domainname == Data::Empty)
+   if (i != mTlsTransports.end())
    {
-      DebugLog(<< "Searching for " << toData(search.getType()) << " transport without domain."
-               << " Secure transports list size = " << mTlsTransports.size());
-
-      for(const auto& tlsTransport : mTlsTransports)
-      {
-         const TlsTransportKey &key = tlsTransport.first;
-
-         if (key.strictEqWithoutDomain(search))
-         {
-            DebugLog(<< "findTlsTransport (strict match) => " << *(tlsTransport.second));
-            return tlsTransport.second;
-         }
-      }
-
-      for(const auto& tlsTransport : mTlsTransports)
-      {
-         const TlsTransportKey &key = tlsTransport.first;
-
-         if (key.relaxEqWithoutDomain(search))
-         {
-            DebugLog(<< "findTlsTransport (relaxed match) => " << *(tlsTransport.second));
-            return tlsTransport.second;
-         }
-      }
-   }
-   else
-   {
-      DebugLog(<< "Searching for " << toData(search.getType()) << " transport for domain='"
-               << domainname << "'. Secure transports list size = " << mTlsTransports.size());
-
-      TlsTransportKey searchKey(domainname, search);
-      const auto& i = mTlsTransports.find(searchKey);
-
-      if(i != mTlsTransports.end())
-      {
-         DebugLog(<< "findTlsTransport (domain strict match) => " << *(i->second));
-         return i->second;
-      }
-
-      for(const auto& tlsTransport : mTlsTransports)
-      {
-         const TlsTransportKey &key = tlsTransport.first;
-
-         if (key.relaxEq(searchKey))
-         {
-            DebugLog(<< "findTlsTransport (domain relaxed match) => " << *(tlsTransport.second));
-            return tlsTransport.second;
-         }
-      }
+      DebugLog(<< "findTlsTransport: numSecureTransports=" << mTlsTransports.size() <<", search=" << searchKey << " (exact match) => " << *(i->second));
+      return i->second;
    }
 
-   DebugLog(<< "No TLS transport found");
+   // Perform relaxed search
+   for (const auto& tlsTransport : mTlsTransports)
+   {
+      const TlsTransportKey& key = tlsTransport.first;
+
+      // Transport type and ipVersion must match
+      if (key.mTuple.getType() != search.getType() || key.mTuple.ipVersion() != search.ipVersion())
+      {
+         continue;
+      }
+
+      // If port is specified, it must match.
+      if ((search.getPort() != 0) && (key.mTuple.getPort() != search.getPort()))
+      {
+         continue;
+      }
+
+      // If address isn't INADDR_ANY on both, it must match
+      if (!search.isAnyInterface() && !key.mTuple.isAnyInterface() &&
+          !search.isEqual(key.mTuple, true /* ignorePort? */))
+      {
+         continue;
+      }
+
+      // If TLS domain is set on both, it must match
+      if (!domainname.empty() && !key.mTuple.getTargetDomain().empty() &&
+          domainname != key.mTuple.getTargetDomain())
+      {
+         continue;
+      }
+
+      DebugLog(<< "findTlsTransport: numSecureTransports=" << mTlsTransports.size() << ", search=" << searchKey << " (relaxed match) => " << *tlsTransport.second);
+
+      return tlsTransport.second;
+   }
+
+   DebugLog(<< "findTlsTransport: No TLS transport found, numSecureTransports=" << mTlsTransports.size() << ", search=" << searchKey);
    return nullptr;
 }
 

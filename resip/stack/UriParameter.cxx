@@ -1,81 +1,77 @@
-#ifndef RESIP_SecurityAttributes_hxx
-#define RESIP_SecurityAttributes_hxx
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
 
-#include <iostream>
+#include "rutil/ResipAssert.h"
+#include "resip/stack/UriParameter.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "resip/stack/GenericUri.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/ParseException.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
-#include "rutil/Data.hxx"
+using namespace resip;
+using namespace std;
 
-namespace resip
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
+UriParameter::UriParameter(ParameterTypes::Type type,
+                             ParseBuffer& pb,
+                             const std::bitset<256>& terminators)
+   : Parameter(type),
+     mUri(new GenericUri)
 {
-
-enum SignatureStatus
-{
-   SignatureNone, // there is no signature
-   SignatureIsBad,
-   SignatureTrusted, // It is signed with trusted signature
-   SignatureCATrusted, // signature is new and is signed by a root we trust
-   SignatureNotTrusted, // signature is new and is not signed by a CA we
-   SignatureSelfSigned
-};
-
-class SecurityAttributes
-{
-public:
-   SecurityAttributes();
-   SecurityAttributes(const SecurityAttributes& rhs);
-   ~SecurityAttributes();
-
-   typedef enum {None, Sign, Encrypt, SignAndEncrypt} OutgoingEncryptionLevel;
-
-   typedef enum {From, FailedIdentity, Identity} IdentityStrength;
-
-   void setIdentity(const Data& identity) { mIdentity = identity; }
-   const Data& getIdentity() const { return mIdentity; }
-
-   void setIdentityStrength(IdentityStrength strength) { mStrength = strength; }
-   IdentityStrength getIdentityStrength() const { return mStrength; }
-
-   void setEncrypted() { mIsEncrypted = true; }
-   bool isEncrypted() const { return mIsEncrypted; }
-
-   void setSignatureStatus(SignatureStatus status) { mSigStatus = status; }
-   SignatureStatus getSignatureStatus() const { return mSigStatus; }
-
-   void setSigner(const Data& signer) { mSigner = signer; }
-   const Data& getSigner() const { return mSigner; }
-
-   void setOutgoingEncryptionLevel(OutgoingEncryptionLevel level) { mLevel = level; }
-   OutgoingEncryptionLevel getOutgoingEncryptionLevel() const { return mLevel; }
-
-   void setEncryptionPerformed(bool performed) { mEncryptionPerformed = performed; }
-   bool encryptionPerformed() const { return mEncryptionPerformed; }
-
-   friend EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
-
-private:
-   // Indentity Header Info
-   Data mIdentity;
-   IdentityStrength mStrength;
-
-   // Body Encryption Info
-   bool mIsEncrypted;
-   SignatureStatus mSigStatus;
-   Data mSigner;
-   // for outgoing messages.
-   OutgoingEncryptionLevel mLevel;
-   bool mEncryptionPerformed;
-};
-
-EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
+   pb.skipWhitespace();
+   pb.skipChar(Symbols::EQUALS[0]);
+   pb.skipWhitespace();
+   if(terminators[(unsigned char)(*pb.position())]) // handle cases such as ;info=
+   {
+      throw ParseException("Empty value in uri parameter.",
+                           "UriParameter",
+                           __FILE__,__LINE__);
+   }
+   mUri->parse(pb);
 }
 
-#endif
+UriParameter::UriParameter(ParameterTypes::Type type)
+   : Parameter(type),
+     mUri(new GenericUri)
+{
+}
+
+UriParameter::UriParameter(const UriParameter& other)
+   : Parameter(other),
+     mUri(new GenericUri(*other.mUri))
+{
+}
+
+UriParameter::~UriParameter()
+{
+   delete mUri;
+}
+
+Parameter* 
+UriParameter::clone() const
+{
+   return new UriParameter(*this);
+}
+
+EncodeStream& 
+UriParameter::encode(EncodeStream& stream) const
+{
+   return stream << getName() << Symbols::EQUALS << *mUri;
+}
+
+UriParameter::Type&
+UriParameter::value() { return *mUri; }
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
- * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

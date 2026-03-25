@@ -216,7 +216,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
       //Data res = sec->computeIdentity( token );
 
       // TODO !SLG!  RFC4474 has been deprecated by RFC8224 (Authenticated Identity Management).  We should remove/adjust this code.
-      msg->header(h_Identities).push_back(StringCategory(Data::Empty));
+      msg->header(h_Identities).push_back(IdentityCategory(Data::Empty));
    }
    
    setOutbound( *msg );

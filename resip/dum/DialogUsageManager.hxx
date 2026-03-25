@@ -483,9 +483,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       bool checkEventPackage(const SipMessage& request);
 
-      bool queueForIdentityCheck(SipMessage* msg);
-      void processIdentityCheckResponse(const HttpGetMessage& msg);
-
       void incomingProcess(std::unique_ptr<Message> msg);
       void outgoingProcess(std::unique_ptr<Message> msg);
       void processExternalMessage(ExternalMessageBase* externalMessage);
@@ -558,8 +555,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // from ETag -> ServerPublication
       typedef std::map<Data, ServerPublication*> ServerPublications;
       ServerPublications mServerPublications;
-      typedef std::map<Data, SipMessage*> RequiresCerts;
-      RequiresCerts mRequiresCerts;      
       // from Event-Type+document-aor -> ServerSubscription
       // Managed by ServerSubscription
       typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
@@ -580,6 +575,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

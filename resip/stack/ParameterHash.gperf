@@ -110,6 +110,9 @@ orig-ioi, ParameterTypes::origIoi
 term-ioi, ParameterTypes::termIoi
 content, ParameterTypes::content
 encoding, ParameterTypes::encoding
+info, ParameterTypes::info
+alg, ParameterTypes::alg
+ppt, ParameterTypes::ppt
 addtransport, ParameterTypes::addTransport
 ws-src-ip, ParameterTypes::wsSrcIp
 ws-src-port, ParameterTypes::wsSrcPort
