@@ -85,6 +85,11 @@ InviteSessionHandler::onOffer(InviteSessionHandle h, const SipMessage& msg, cons
    }
 }
 
+void
+InviteSessionHandler::onSessionTimerRequest(InviteSessionHandle, const SipMessage&)
+{
+}
+
 void 
 InviteSessionHandler::onRemoteSdpChanged(InviteSessionHandle, const SipMessage& msg, const SdpContents&)
 {
