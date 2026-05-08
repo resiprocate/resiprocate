@@ -135,6 +135,7 @@ class Headers
          defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "RFC 5373"),
          defineMultiHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"), // ?bwc? Not in 3323, should we keep?
          defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244"),
+         defineMultiHeader(Diversion, "Diversion", NameAddr, "RFC 5806"),
 
          defineMultiHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 7315"), // section 5.4.
          defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455"),
@@ -174,6 +175,7 @@ class Headers
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

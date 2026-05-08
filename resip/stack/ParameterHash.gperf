@@ -113,6 +113,10 @@ encoding, ParameterTypes::encoding
 info, ParameterTypes::info
 alg, ParameterTypes::alg
 ppt, ParameterTypes::ppt
+counter, ParameterTypes::counter
+limit, ParameterTypes::limit
+privacy, ParameterTypes::privacy
+screen, ParameterTypes::screen
 addtransport, ParameterTypes::addTransport
 ws-src-ip, ParameterTypes::wsSrcIp
 ws-src-port, ParameterTypes::wsSrcPort
