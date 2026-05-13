@@ -82,7 +82,9 @@ const char* SdpMediaLine::SdpCryptoSuiteTypeString[] =
    "AES_CM_192_HMAC_SHA1_80",
    "AES_CM_192_HMAC_SHA1_32",
    "AES_CM_256_HMAC_SHA1_80",
-   "AES_CM_256_HMAC_SHA1_32"
+   "AES_CM_256_HMAC_SHA1_32",
+   "AEAD_AES_128_GCM",
+   "AEAD_AES_256_GCM"
 };
 
 const char* SdpMediaLine::SdpCryptoKeyMethodString[] =
