@@ -28,10 +28,13 @@ add_library(resipmedia
    ${INCLUDES}
 )
 
-target_link_libraries(resipmedia PUBLIC rutil)
+target_link_libraries(resipmedia PUBLIC resip)
 version_libname(resipmedia)
 
 install(TARGETS resipmedia DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/media ${INCLUDES})
+set_target_properties(resipmedia PROPERTIES FOLDER resipmedia)
 
-set_target_properties(resipmedia PROPERTIES FOLDER recon)
+if(BUILD_TESTING)
+    add_subdirectory(sdpcontainer/test)
+endif()

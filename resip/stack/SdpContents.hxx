@@ -805,13 +805,23 @@ class SdpContents : public Contents
                     * @return true if key exists, false otherwise  
                     **/
                   bool exists(const Data& key) const;
-                  /** @brief get the attribute values corresponding to the key
+                  /** @brief get the attribute values corresponding to the key - returns the attributes set on this 
+                    *        medium, with fallback to the session
                     * 
                     * @param key key to check
                     *
                     * @return list of values for given key
                     **/
                   const std::list<Data>& getValues(const Data& key) const;
+                  /** @brief get the attribute values corresponding to the key - returns both the attributes set on 
+                    *        this medium, and those set on the session.  Attributes from this medium will be returned
+                    *        first in the list, followed by those from the session.
+                    *
+                    * @param key key to check
+                    *
+                    * @return list of values for given key
+                    **/
+                  std::list<Data> getMergedValues(const Data& key) const;
                   /** @brief erase all attributes for a given key
                     * 
                     * @param key key to clear
@@ -1196,6 +1206,7 @@ void skipEol(ParseBuffer& pb);
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

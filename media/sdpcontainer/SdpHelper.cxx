@@ -242,11 +242,10 @@ Sdp* SdpHelper::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
       // Parse out the SDP Capabilities Negotiation Potential Configurations
       if(resipMedia.exists("pcfg"))
       {
-         Data acceptedConfigurationLine;
          std::list<SdpMediaLine::SdpTransportProtocolCapabilities> tcapList;
          if(resipMedia.exists("tcap"))
          {
-            const std::list<Data>& tcaps = resipMedia.getValues("tcap");
+            const std::list<Data>& tcaps = resipMedia.getMergedValues("tcap");
             std::list<Data>::const_iterator it2;
             for(it2 = tcaps.begin(); it2 != tcaps.end(); it2++)
             {
@@ -256,7 +255,7 @@ Sdp* SdpHelper::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
          std::map<unsigned int, std::pair<Data, Data> > acapList;
          if(resipMedia.exists("acap"))
          {
-            const std::list<Data>& acaps = resipMedia.getValues("acap");
+            const std::list<Data>& acaps = resipMedia.getMergedValues("acap");
             std::list<Data>::const_iterator it2;
             for(it2 = acaps.begin(); it2 != acaps.end(); it2++)
             {
@@ -281,108 +280,114 @@ Sdp* SdpHelper::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
             }
          }
 
-         std::list<SdpMediaLine::SdpPotentialConfiguration> pcfgList;
-         SdpHelper::parsePotentialConfigurationLine(resipMedia.getValues("pcfg").front(), pcfgList);
-         std::list<SdpMediaLine::SdpPotentialConfiguration>::iterator pcfgIt = pcfgList.begin();
-         for(;pcfgIt != pcfgList.end(); pcfgIt++)
+         const std::list<Data>& pcfgs = resipMedia.getValues("pcfg");
+         std::list<Data>::const_iterator it2;
+         for (it2 = pcfgs.begin(); it2 != pcfgs.end(); it2++)
          {
-            SdpMediaLine::SdpTransportProtocolType potentialTransportType = SdpMediaLine::PROTOCOL_TYPE_NONE;
-            if(pcfgIt->getTransportId() != 0)
+            Data acceptedConfigurationLine;
+            std::list<SdpMediaLine::SdpPotentialConfiguration> pcfgList;
+            SdpHelper::parsePotentialConfigurationLine(*it2, pcfgList);
+            std::list<SdpMediaLine::SdpPotentialConfiguration>::iterator pcfgIt = pcfgList.begin();
+            for (; pcfgIt != pcfgList.end(); pcfgIt++)
             {
-               // Find corresponding transport capability
-               std::list<SdpMediaLine::SdpTransportProtocolCapabilities>::iterator tcapIt = tcapList.begin();
-               for(;tcapIt != tcapList.end(); tcapIt++)
+               SdpMediaLine::SdpTransportProtocolType potentialTransportType = SdpMediaLine::PROTOCOL_TYPE_NONE;
+               if (pcfgIt->getTransportId() != 0)
                {
-                  if(tcapIt->getId() == pcfgIt->getTransportId())
+                  // Find corresponding transport capability
+                  std::list<SdpMediaLine::SdpTransportProtocolCapabilities>::iterator tcapIt = tcapList.begin();
+                  for (; tcapIt != tcapList.end(); tcapIt++)
                   {
-                     potentialTransportType = tcapIt->getType();
-                     acceptedConfigurationLine = Data(pcfgIt->getId()) + " t=" + Data(pcfgIt->getTransportId());
+                     if (tcapIt->getId() == pcfgIt->getTransportId())
+                     {
+                        potentialTransportType = tcapIt->getType();
+                        acceptedConfigurationLine = Data(pcfgIt->getId()) + " t=" + Data(pcfgIt->getTransportId());
+                        break;
+                     }
+                  }
+               }
+               else
+               {
+                  potentialTransportType = SdpMediaLine::getTransportProtocolTypeFromString(resipMedia.protocol().c_str());
+                  acceptedConfigurationLine = Data(pcfgIt->getId());
+               }
+               if (potentialTransportType == SdpMediaLine::PROTOCOL_TYPE_NONE) continue;
+
+               SdpContents::Session potentialSession(*resipSession);  // create a session copy that we can modify
+
+               // Find the corresponding medium entry in the copy
+               SdpContents::Session::Medium* potentialMedium = 0;
+               std::list<SdpContents::Session::Medium>& potentialMedias = potentialSession.media();
+               std::list<SdpContents::Session::Medium>::iterator potMedIt;
+               for (potMedIt = potentialMedias.begin(); potMedIt != potentialMedias.end(); potMedIt++)
+               {
+                  if (potMedIt->protocol() == resipMedia.protocol() &&
+                     potMedIt->port() == (unsigned int)resipMedia.port() &&
+                     potMedIt->name() == resipMedia.name())
+                  {
+                     potentialMedium = &(*potMedIt);
                      break;
                   }
                }
-            }
-            else
-            {
-               potentialTransportType = SdpMediaLine::getTransportProtocolTypeFromString(resipMedia.protocol().c_str());
-               acceptedConfigurationLine = Data(pcfgIt->getId());
-            }
-            if(potentialTransportType == SdpMediaLine::PROTOCOL_TYPE_NONE) continue;
+               resip_assert(potentialMedium);
 
-            SdpContents::Session potentialSession(*resipSession);  // create a session copy that we can modify
-            
-            // Find the corresponding medium entry in the copy
-            SdpContents::Session::Medium* potentialMedium = 0;
-            std::list<SdpContents::Session::Medium>& potentialMedias = potentialSession.media();
-            std::list<SdpContents::Session::Medium>::iterator potMedIt;
-            for(potMedIt = potentialMedias.begin(); potMedIt != potentialMedias.end(); potMedIt++)
-            {
-               if(potMedIt->protocol() == resipMedia.protocol() &&
-                  potMedIt->port() == (unsigned int)resipMedia.port() &&
-                  potMedIt->name() == resipMedia.name())
-               {
-                  potentialMedium = &(*potMedIt);
-                  break;
-               }
-            }
-            resip_assert(potentialMedium);
+               potentialMedium->protocol() = SdpMediaLine::SdpTransportProtocolTypeString[potentialTransportType];
 
-            potentialMedium->protocol() = SdpMediaLine::SdpTransportProtocolTypeString[potentialTransportType];
-
-            if(!pcfgIt->getAttributeIds().empty() || pcfgIt->getDeleteSessionAttributes() || pcfgIt->getDeleteMediaAttributes())
-            {
-               acceptedConfigurationLine += " a=";
-               if(pcfgIt->getDeleteSessionAttributes() && pcfgIt->getDeleteMediaAttributes())
+               if (!pcfgIt->getAttributeIds().empty() || pcfgIt->getDeleteSessionAttributes() || pcfgIt->getDeleteMediaAttributes())
                {
-                  acceptedConfigurationLine += "-ms:";
-                  // TODO - need way to clear all session and media level attributes
-               }
-               else if(pcfgIt->getDeleteSessionAttributes())
-               {
-                  acceptedConfigurationLine += "-s:";
-                  // TODO - need way to clear all session attributes
-               }
-               else if(pcfgIt->getDeleteMediaAttributes())
-               {
-                 acceptedConfigurationLine += "-m:";
-                  // TODO - need way to clear all media attributes
-               }
-            }
-            bool optional=false;
-            bool first=true;
-            SdpMediaLine::SdpPotentialConfiguration::ConfigIdList::const_iterator attribIt = pcfgIt->getAttributeIds().begin();
-            for(;attribIt != pcfgIt->getAttributeIds().end(); attribIt++)
-            {
-               const SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem* configIdItem = &(*attribIt);
-
-               // Find attribute in map
-               std::map<unsigned int, std::pair<Data, Data> >::iterator acapListIt = acapList.find(configIdItem->getId());
-               if(acapListIt == acapList.end()) continue;
-               potentialMedium->addAttribute(acapListIt->second.first, acapListIt->second.second);
-
-               if(!first)
-               {
-                  acceptedConfigurationLine += ",";
-               }
-               // Note: this code assumes all optional attributes are last (as specified by draft)
-               if(configIdItem->getOptional())
-               {
-                  if(!optional)
+                  acceptedConfigurationLine += " a=";
+                  if (pcfgIt->getDeleteSessionAttributes() && pcfgIt->getDeleteMediaAttributes())
                   {
-                     acceptedConfigurationLine += "[";
-                     optional = true;
+                     acceptedConfigurationLine += "-ms:";
+                     // TODO - need way to clear all session and media level attributes
+                  }
+                  else if (pcfgIt->getDeleteSessionAttributes())
+                  {
+                     acceptedConfigurationLine += "-s:";
+                     // TODO - need way to clear all session attributes
+                  }
+                  else if (pcfgIt->getDeleteMediaAttributes())
+                  {
+                     acceptedConfigurationLine += "-m:";
+                     // TODO - need way to clear all media attributes
                   }
                }
-               acceptedConfigurationLine += Data(configIdItem->getId());
-               first = false;
+               bool optional = false;
+               bool first = true;
+               SdpMediaLine::SdpPotentialConfiguration::ConfigIdList::const_iterator attribIt = pcfgIt->getAttributeIds().begin();
+               for (; attribIt != pcfgIt->getAttributeIds().end(); attribIt++)
+               {
+                  const SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem* configIdItem = &(*attribIt);
+
+                  // Find attribute in map
+                  std::map<unsigned int, std::pair<Data, Data> >::iterator acapListIt = acapList.find(configIdItem->getId());
+                  if (acapListIt == acapList.end()) continue;
+                  potentialMedium->addAttribute(acapListIt->second.first, acapListIt->second.second);
+
+                  if (!first)
+                  {
+                     acceptedConfigurationLine += ",";
+                  }
+                  // Note: this code assumes all optional attributes are last (as specified by draft)
+                  if (configIdItem->getOptional())
+                  {
+                     if (!optional)
+                     {
+                        acceptedConfigurationLine += "[";
+                        optional = true;
+                     }
+                  }
+                  acceptedConfigurationLine += Data(configIdItem->getId());
+                  first = false;
+               }
+               if (optional)
+               {
+                  acceptedConfigurationLine += "]";
+               }
+               SdpMediaLine* potentialSdpMediaLine = parseMediaLine(*potentialMedium, potentialSession, rtcpEnabled);
+               potentialSdpMediaLine->setPotentialMediaViewString(acceptedConfigurationLine.c_str());
+               mediaLine->addPotentialMediaView(*potentialSdpMediaLine);
+               delete potentialSdpMediaLine;
             }
-            if(optional)
-            {
-               acceptedConfigurationLine += "]";
-            }
-            SdpMediaLine* potentialSdpMediaLine = parseMediaLine(*potentialMedium, potentialSession, rtcpEnabled);
-            potentialSdpMediaLine->setPotentialMediaViewString(acceptedConfigurationLine.c_str());
-            mediaLine->addPotentialMediaView(*potentialSdpMediaLine);
-            delete potentialSdpMediaLine;
          }
       }
 
@@ -1079,7 +1084,8 @@ SdpMediaLine::SdpCrypto* SdpHelper::parseCryptoLine(const Data& cryptoLine)
 bool SdpHelper::parseFingerPrintLine(const resip::Data& fingerprintLine, SdpMediaLine::SdpFingerPrintHashFuncType& hashType, resip::Data& fingerPrint)
 {
    ParseBuffer pb(fingerprintLine);
-   const char * anchor = pb.position();
+   pb.skipWhitespace(); // not technically allowed in the grammar but some implementations add whitespace before the hash function
+   const char* anchor = pb.position();
    pb.skipToChar(Symbols::SPACE[0]);
    pb.data(fingerPrint, anchor);  // just used fingerprint data temporarily
    hashType = SdpMediaLine::getFingerPrintHashFuncTypeFromString(fingerPrint.c_str());
@@ -1177,6 +1183,8 @@ bool SdpHelper::parsePotentialConfigurationLine(const resip::Data& pcfgLine, std
                }
                else if(*pb.position() == '|')
                {
+                  pb.data(token, anchor);
+                  attributeList.push_back(SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem(token.convertUnsignedLong(), optionalOn));
                   attributeLists.push_back(attributeList);
                   attributeList.clear();  // Start a new list
                   pb.skipChar();
@@ -1387,6 +1395,7 @@ void SdpHelper::parseCryptoParams(ParseBuffer& pb,
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

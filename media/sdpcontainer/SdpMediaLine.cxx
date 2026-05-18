@@ -19,6 +19,7 @@ const char* SdpMediaLine::SdpTransportProtocolTypeString[] =
    "UNKNOWN",
    "UDP",
    "RTP/AVP",
+   "RTP/AVPF",
    "RTP/SAVP",
    "RTP/SAVPF",
    "TCP",
@@ -258,6 +259,8 @@ SdpMediaLine::operator=(const SdpMediaLine& rhs)
    mRtpCandidatePresent = rhs.mRtpCandidatePresent;
    mRtcpCandidatePresent = rhs.mRtcpCandidatePresent;
    mCandidatePairs = rhs.mCandidatePairs;
+   mPotentialMediaViews = rhs.mPotentialMediaViews;
+   mPotentialMediaViewString = rhs.mPotentialMediaViewString;
 
    return *this;
 }
@@ -351,6 +354,10 @@ SdpMediaLine::getTransportProtocolTypeFromString(const char * type)
    else if(resip::isEqualNoCase("RTP/AVP", dataType))
    {
       return PROTOCOL_TYPE_RTP_AVP;
+   }
+   else if (resip::isEqualNoCase("RTP/AVPF", dataType))
+   {
+      return PROTOCOL_TYPE_RTP_AVPF;
    }
    else if(resip::isEqualNoCase("RTP/SAVP", dataType))
    {
@@ -849,7 +856,7 @@ sdpcontainer::operator<<( EncodeStream& strm, const SdpMediaLine& sdpMediaLine)
    SdpMediaLine::SdpMediaLineList::const_iterator itPotentialMediaLine = sdpMediaLine.mPotentialMediaViews.begin();
    for(;itPotentialMediaLine!=sdpMediaLine.mPotentialMediaViews.end();itPotentialMediaLine++)
    {
-      strm << "PotentialMediaView:" << std::endl << *itPotentialMediaLine;
+      strm << std::endl << "PotentialMediaView:" << std::endl << *itPotentialMediaLine;
    }
 
    strm << "PotentialMediaViewString: '" << sdpMediaLine.mPotentialMediaViewString << "'" << std::endl;
