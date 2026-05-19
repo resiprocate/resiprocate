@@ -92,6 +92,66 @@ main(int argc, char* argv[])
       assert(mediaLine.getDirection() == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV);
    }
 
+   // Simple DTLS-SRTP SDP - fingerprints at session level
+   {
+      Data txt("v=0\r\n"
+         "o=DTLS 1251901012 1 IN IP4 10.1.83.143\r\n"
+         "s=sess\r\n"
+         "c=IN IP4 10.1.83.143\r\n"
+         "t=0 0\r\n"
+         "a=fingerprint:SHA-1 4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
+         "a=fingerprint:SHA-256 6D:DA:AB:D0:35:60:98:D6:6C:F4:B0:EF:A0:0B:BF:06:CE:D7:A7:0B:89:2C:6D:17:E8:77:C9:69:1A:04:F1:DF\r\n"
+         "m=audio 45894 UDP/TLS/RTP/SAVP 0\r\n"
+         "a=sendrecv\r\n");
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "sdp");
+      SdpContents stackSdp(hfv, type);
+      std::auto_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
+
+      cout << *sdp << endl;
+
+      assert(sdp->getSdpVersion() == 0);
+
+      assert(sdp->getOriginatorUserName() == "DTLS");
+      assert(sdp->getOriginatorSessionId() == 1251901012);
+      assert(sdp->getOriginatorSessionVersion() == 1);
+      assert(sdp->getOriginatorNetType() == sdpcontainer::Sdp::NET_TYPE_IN);
+      assert(sdp->getOriginatorAddressType() == sdpcontainer::Sdp::ADDRESS_TYPE_IP4);
+      assert(sdp->getOriginatorUnicastAddress() == "10.1.83.143");
+
+      assert(sdp->getSessionName() == "sess");
+
+      assert(sdp->getTimes().size() == 1);
+      assert(sdp->getTimes().front().getStartTime() == 0);
+      assert(sdp->getTimes().front().getStopTime() == 0);
+
+      assert(sdp->getMediaLines().size() == 1);
+      sdpcontainer::SdpMediaLine& mediaLine = *sdp->getMediaLines().front();
+      assert(mediaLine.getMediaType() == sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO);
+      assert(mediaLine.getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP);
+      assert(mediaLine.getConnections().size() == 1);
+      assert(mediaLine.getConnections().front().getNetType() == sdpcontainer::Sdp::NET_TYPE_IN);
+      assert(mediaLine.getConnections().front().getAddressType() == sdpcontainer::Sdp::ADDRESS_TYPE_IP4);
+      assert(mediaLine.getConnections().front().getAddress() == "10.1.83.143");
+      assert(mediaLine.getConnections().front().getPort() == 45894);
+      assert(mediaLine.getRtcpConnections().size() == 1);
+      assert(mediaLine.getRtcpConnections().front().getNetType() == sdpcontainer::Sdp::NET_TYPE_IN);
+      assert(mediaLine.getRtcpConnections().front().getAddressType() == sdpcontainer::Sdp::ADDRESS_TYPE_IP4);
+      assert(mediaLine.getRtcpConnections().front().getAddress() == "10.1.83.143");
+      assert(mediaLine.getRtcpConnections().front().getPort() == 45895);
+
+      // SdpHelper will prefer SHA-256 over SHA-1 if both are present
+      assert(mediaLine.getFingerPrintHashFunction() == sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_256);
+      assert(mediaLine.getFingerPrint() == "6D:DA:AB:D0:35:60:98:D6:6C:F4:B0:EF:A0:0B:BF:06:CE:D7:A7:0B:89:2C:6D:17:E8:77:C9:69:1A:04:F1:DF");
+
+      assert(mediaLine.getCodecs().size() == 1);
+      assert(mediaLine.getCodecs().front().getPayloadType() == 0);
+      assert(mediaLine.getCodecs().front().getMimeSubtype() == "PCMU");
+      assert(mediaLine.getCodecs().front().getRate() == 8000);
+      assert(mediaLine.getCodecs().front().getNumChannels() == 1);
+      assert(mediaLine.getDirection() == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV);
+   }
+
    // RFC5939 (Capability Negotiation) Example 4.1
    // Note: The Sdp class doesn't currently support the rtcp-db attribute, so it will ignored
    {

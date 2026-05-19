@@ -12,5 +12,6 @@ function(test)
    endif()
 endfunction()
 
+test(testSdpContainer testSdpContainer.cxx)
 test(testSdpHelper testSdpHelper.cxx)
 

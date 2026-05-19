@@ -679,15 +679,41 @@ SdpHelper::parseMediaLine(const SdpContents::Session::Medium& resipMedia, const 
 
    if(resipMedia.exists("fingerprint"))
    {
-      Data fingerprintLine = resipMedia.getValues("fingerprint").front();
-      if(!fingerprintLine.empty())
+      const std::list<Data>& fingerprints = resipMedia.getValues("fingerprint");
+      std::list<Data>::const_iterator it2;
+      SdpMediaLine::SdpFingerPrintHashFuncType bestHashType = SdpMediaLine::FINGERPRINT_HASH_FUNC_NONE;
+      resip::Data bestFingerprint;
+      for (it2 = fingerprints.begin(); it2 != fingerprints.end(); it2++)
       {
-         SdpMediaLine::SdpFingerPrintHashFuncType hashType;
-         resip::Data fingerPrint;
-         if(parseFingerPrintLine(fingerprintLine, hashType, fingerPrint))
+         if (!it2->empty())
          {
-            mediaLine->setFingerPrint(hashType, fingerPrint.c_str());
+            SdpMediaLine::SdpFingerPrintHashFuncType hashType;
+            resip::Data fingerprint;
+            if (parseFingerPrintLine(*it2, hashType, fingerprint))
+            {
+               // SHA-256 is the most implemented hash type currently used for fingerprints, 
+               // prefer this over all others.  In the future we should support multiple fingerprints 
+               // better and store a list of hash algorithms and fingerprints instead of just picking
+               // one to use.
+               if(hashType == SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_256)
+               {
+                  bestHashType = hashType;
+                  bestFingerprint = fingerprint;
+                  break; 
+               } 
+               else if (bestHashType == SdpMediaLine::FINGERPRINT_HASH_FUNC_NONE)
+               {
+                  // If there is no SHA-256 fingerprint, then just use the first one we
+                  // successfully parse
+                  bestHashType = hashType;
+                  bestFingerprint = fingerprint;
+               }
+            }
          }
+      }
+      if (bestHashType != SdpMediaLine::FINGERPRINT_HASH_FUNC_NONE)
+      {
+         mediaLine->setFingerPrint(bestHashType, bestFingerprint.c_str());
       }
    }
 

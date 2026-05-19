@@ -208,7 +208,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="sdpTests.cxx" />
     <ClCompile Include="unitTests.cxx" />
   </ItemGroup>
   <ItemGroup>

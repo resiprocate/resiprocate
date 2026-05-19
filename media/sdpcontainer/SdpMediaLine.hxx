@@ -610,6 +610,7 @@ public:
    SdpCandidatePairList& getCandidatePairs() { return mCandidatePairs; }  // non-const version for manipulation
 
    const SdpMediaLineList& getPotentialMediaViews() const { return mPotentialMediaViews; }
+   SdpMediaLineList& getPotentialMediaViews() { return mPotentialMediaViews; }
    const resip::Data& getPotentialMediaViewString() const { return mPotentialMediaViewString; }
 
 private:
