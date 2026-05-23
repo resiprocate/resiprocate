@@ -26,24 +26,54 @@ public:
    } SdpMediaType;
    static const char* SdpMediaTypeString[];
 
-   typedef enum 
+   /**
+    * Transport protocol identifiers for the SDP "m=" line (proto field).
+    * SDP transport protocol strings are compositional — once you understand
+    * the building blocks, the combinations are self-explanatory:
+    *
+    *   RTP   - Real-time Transport Protocol; carries the media payload.
+    *   AVP   - Audio/Video Profile (RFC 3551). The default RTP profile
+    *           defining how audio/video payloads map onto RTP. RTCP reports
+    *           are sent at standard, bandwidth-governed intervals.
+    *   AVPF  - Audio/Video Profile with Feedback (RFC 4585). Extends AVP
+    *           with rapid RTCP feedback messages (NACK for packet loss,
+    *           PLI/FIR for video keyframe requests, etc.). Essential for
+    *           modern interactive video where fast loss recovery matters.
+    *   SAVP  - Secure Audio/Video Profile, i.e. SRTP (RFC 3711). Media
+    *           payload (and optionally RTCP) is encrypted and authenticated.
+    *           Keys are negotiated out-of-band, classically via SDES
+    *           ("a=crypto:" lines in SDP, RFC 4568).
+    *   SAVPF - Secure profile + Feedback (RFC 5124). Combines SRTP
+    *           encryption with AVPF's rapid feedback messages.
+    *   TLS / DTLS - When (D)TLS appears in the protocol string, the SRTP
+    *           keys are derived from a (D)TLS handshake rather than
+    *           signaled in SDP. "UDP/TLS/RTP/SAVP" is the DTLS-SRTP
+    *           transport used by WebRTC (RFC 5764, RFC 7345).
+    *   DCCP  - Datagram Congestion Control Protocol (RFC 4340). UDP-like
+    *           unreliability with TCP-like congestion control. Rarely
+    *           encountered in practice.
+    *   TCP framing - RTP can also be framed over TCP (RFC 4571) as a
+    *           fallback when UDP is blocked by firewalls/NATs.
+    */
+   typedef enum
    {
       PROTOCOL_TYPE_NONE,
       PROTOCOL_TYPE_UNKNOWN,
-      PROTOCOL_TYPE_UDP,         // "udp" - RFC4566
-      PROTOCOL_TYPE_RTP_AVP,     // "RTP/AVP" - RFC4566
+      PROTOCOL_TYPE_UDP,         // "udp" - RFC 4566
+      PROTOCOL_TYPE_RTP_AVP,     // "RTP/AVP" - RFC 3551, RFC 4566
       PROTOCOL_TYPE_RTP_AVPF,    // "RTP/AVPF" - RFC4585
-      PROTOCOL_TYPE_RTP_SAVP,    // "RTP/SAVP" - RFC4566
-      PROTOCOL_TYPE_RTP_SAVPF,   // "RTP/SAVPF" - RFC3711
-      PROTOCOL_TYPE_TCP,         // "TCP" - RFC4145
-      PROTOCOL_TYPE_TCP_RTP_AVP, // "TCP/RTP/AVP" - RFC4571
-      PROTOCOL_TYPE_TCP_TLS,     // "TCP/TLS" - RFC4572
-      PROTOCOL_TYPE_UDP_TLS,     // "UDP/TLS" - draft-fischl-mmusic-sdp-dtls-04
-      PROTOCOL_TYPE_DCCP_TLS,    // "DCCP/TLS" - draft-fischl-mmusic-sdp-dtls-04
-      PROTOCOL_TYPE_DCCP_TLS_RTP_SAVP, // "DCCP/TLS/RTP/SAVP" - draft-fischl-mmusic-sdp-dtls-04
-      PROTOCOL_TYPE_UDP_TLS_RTP_SAVP,  // "UDP/TLS/RTP/SAVP" - draft-fischl-mmusic-sdp-dtls-04
-      PROTOCOL_TYPE_TCP_TLS_RTP_SAVP   // "TCP/TLS/RTP/SAVP" - draft-fischl-mmusic-sdp-dtls-04
-   } SdpTransportProtocolType;     
+      PROTOCOL_TYPE_RTP_SAVP,    // "RTP/SAVP" - RFC 3711
+      PROTOCOL_TYPE_RTP_SAVPF,   // "RTP/SAVPF" - RFC 5124
+      PROTOCOL_TYPE_TCP,         // "TCP" - RFC 4145
+      PROTOCOL_TYPE_TCP_RTP_AVP, // "TCP/RTP/AVP" - RFC 4571
+      PROTOCOL_TYPE_TCP_TLS,     // "TCP/TLS" - RFC 4572
+      PROTOCOL_TYPE_UDP_TLS,     // "UDP/TLS" - RFC 5764
+      PROTOCOL_TYPE_DCCP_TLS,    // "DCCP/TLS" - RFC 5764
+      PROTOCOL_TYPE_DCCP_TLS_RTP_SAVP, // "DCCP/TLS/RTP/SAVP" - RFC 5764
+      PROTOCOL_TYPE_UDP_TLS_RTP_SAVP,  // "UDP/TLS/RTP/SAVP" - RFC 5764, RFC 7345
+      PROTOCOL_TYPE_UDP_TLS_RTP_SAVPF,  // "UDP/TLS/RTP/SAVPF" - RFC 5764, RFC 7345
+      PROTOCOL_TYPE_TCP_TLS_RTP_SAVP   // "TCP/TLS/RTP/SAVP" - RFC 5764
+   } SdpTransportProtocolType;
    static const char* SdpTransportProtocolTypeString[];
 
    class SdpConnection 
@@ -486,7 +516,7 @@ public:
    void setTcpSetupAttribute(SdpTcpSetupAttribute tcpSetupAttribute) { mTcpSetupAttribute = tcpSetupAttribute; }
    void setTcpConnectionAttribute(SdpTcpConnectionAttribute tcpConnectionAttribute) { mTcpConnectionAttribute = tcpConnectionAttribute; }
 
-//   void addCryptoSettings(unsigned int tag, SdpCryptoSuiteType suite, SdpCryptoKeyMethod keyMethod, const char * keyValue) { addCryptoSettings(new SdpCrypto(tag, suite, keyMethod, keyValue)); }
+   // void addCryptoSettings(unsigned int tag, SdpCryptoSuiteType suite, SdpCryptoKeyMethod keyMethod, const char * keyValue) { addCryptoSettings(new SdpCrypto(tag, suite, keyMethod, keyValue)); }
    void addCryptoSettings(const SdpCrypto& crypto) { mCryptos.push_back(crypto); }
    void clearCryptoSettings() { mCryptos.clear(); }
 
@@ -514,6 +544,7 @@ public:
 
    void setIceUserFrag(const char * iceUserFrag) { mIceUserFrag = iceUserFrag; }
    void setIcePassword(const char * icePassword) { mIcePassword = icePassword; }
+   void setRtcpMuxEnabled(bool enabled) { mRtcpMuxEnabled = enabled; }
 
    void addRemoteCandidate(unsigned int componentId, const char * connectionAddress, unsigned int port) { addRemoteCandidate(SdpRemoteCandidate(componentId, connectionAddress, port)); }
    void addRemoteCandidate(const SdpRemoteCandidate& remoteCandidate) { mRemoteCandidates.push_back(remoteCandidate); }
@@ -604,6 +635,7 @@ public:
    const bool isRtpCandidatePresent() const { return mRtpCandidatePresent; }
    const bool isRtcpCandidatePresent() const { return mRtcpCandidatePresent; }
    const bool isIceSupported() const { return  mRtpCandidatePresent && (!isRtcpEnabled() || mRtcpCandidatePresent); }
+   const bool isRtcpMuxEnabled() const { return mRtcpMuxEnabled; }
 
    // TODO:  In g++ std::set members are const and cannot be modified, need to update to a new STL type
    const SdpCandidatePairList& getCandidatePairs() const { return mCandidatePairs; }
@@ -673,7 +705,8 @@ private:
                                           //             [<ext attrib name> <ext attrib value>] - draft-ietf-mmusic-ice-12
    bool           mRtpCandidatePresent;  
    bool           mRtcpCandidatePresent;
-   SdpCandidatePairList mCandidatePairs;       
+   SdpCandidatePairList mCandidatePairs;
+   bool           mRtcpMuxEnabled;
 
    // SDP Capabilities Negotiation
    SdpMediaLineList mPotentialMediaViews; // List of Potential Media Configurations

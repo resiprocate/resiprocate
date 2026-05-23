@@ -1008,6 +1008,8 @@ SdpHelper::parseMediaLine(const SdpContents::Session::Medium& resipMedia, const 
       }
    }
 
+   mediaLine->setRtcpMuxEnabled(resipMedia.exists("rtcp-mux"));
+
    return mediaLine;
 }
 

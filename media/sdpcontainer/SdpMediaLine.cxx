@@ -29,6 +29,7 @@ const char* SdpMediaLine::SdpTransportProtocolTypeString[] =
    "DCCP/TLS",
    "DCCP/TLS/RTP/SAVP",
    "UDP/TLS/RTP/SAVP",
+   "UDP/TLS/RTP/SAVPF",
    "TCP/TLS/RTP/SAVP"
 };
 
@@ -394,6 +395,10 @@ SdpMediaLine::getTransportProtocolTypeFromString(const char * type)
    else if(resip::isEqualNoCase("UDP/TLS/RTP/SAVP", dataType))
    {
       return PROTOCOL_TYPE_UDP_TLS_RTP_SAVP;
+   }
+   else if (resip::isEqualNoCase("UDP/TLS/RTP/SAVPF", dataType))
+   {
+      return PROTOCOL_TYPE_UDP_TLS_RTP_SAVPF;
    }
    else if(resip::isEqualNoCase("TCP/TLS/RTP/SAVP", dataType))
    {
