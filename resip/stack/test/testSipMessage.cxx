@@ -2464,6 +2464,50 @@ main(int argc, char** argv)
        assert( msg->header(resip::h_PAccessNetworkInfos).size() == 2);
    }
 
+
+   // Test ParserContainer<T>::getByIndex
+   {
+      // Build a message with three Identity headers to exercise getByIndex
+      // on the ParserContainer<IdentityCategory> backing h_Identities.
+      Data txt =
+         "INVITE sip:alice@example.com SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP host.example.com;branch=z9hG4bK-idx\r\n"
+         "From: <sip:+15551112222@example.com>;tag=t1\r\n"
+         "To: <sip:alice@example.com>\r\n"
+         "Call-ID: getbyindex@host.example.com\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Max-Forwards: 70\r\n"
+         "Identity: tokenA;info=<https://cert.example.org/a.pem>;alg=ES256;ppt=shaken\r\n"
+         "Identity: tokenB;info=<https://cert.example.org/b.pem>;alg=ES256;ppt=div\r\n"
+         "Identity: tokenC;info=<https://cert.example.org/c.pem>;alg=ES256\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n";
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      assert(msg->exists(h_Identities));
+      auto& ids = msg->header(h_Identities);
+      assert(ids.size() == 3);
+
+      // In-range non-const: correct element returned
+      assert(ids.getByIndex(0) != nullptr);
+      assert(ids.getByIndex(0)->value() == "tokenA");
+      assert(ids.getByIndex(1) != nullptr);
+      assert(ids.getByIndex(1)->value() == "tokenB");
+      assert(ids.getByIndex(2) != nullptr);
+      assert(ids.getByIndex(2)->value() == "tokenC");
+
+      // Out-of-range: nullptr
+      assert(ids.getByIndex(3) == nullptr);
+      assert(ids.getByIndex(999) == nullptr);
+
+      // Const overload: same results
+      const auto& constIds = ids;
+      assert(constIds.getByIndex(0) != nullptr);
+      assert(constIds.getByIndex(0)->value() == "tokenA");
+      assert(constIds.getByIndex(2) != nullptr);
+      assert(constIds.getByIndex(2)->value() == "tokenC");
+      assert(constIds.getByIndex(3) == nullptr);
+   }
+
    resipCerr << "\nTEST OK" << endl;
    return 0;
 }

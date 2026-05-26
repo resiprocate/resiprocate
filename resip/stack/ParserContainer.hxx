@@ -131,6 +131,22 @@ class ParserContainer : public ParserContainerBase
       }
       
       /**
+         @brief Returns a pointer to the header field value at the given 0-based index,
+            or nullptr if the index is out of range.  O(1) — backed by a vector.
+      */
+      T* getByIndex(size_t index)
+      {
+         if (index >= mParsers.size()) return nullptr;
+         return &ensureInitialized(mParsers[index], this);
+      }
+
+      const T* getByIndex(size_t index) const
+      {
+         if (index >= mParsers.size()) return nullptr;
+         return &ensureInitialized(mParsers[index], this);
+      }
+
+      /**
          @brief Inserts a header field value at the front of this container.
       */
       void push_front(const T & t) 
@@ -391,7 +407,8 @@ insert(EncodeStream& s, const resip::ParserContainer<T>& c)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
