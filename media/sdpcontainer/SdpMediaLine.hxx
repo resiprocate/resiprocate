@@ -28,7 +28,7 @@ public:
 
    /**
     * Transport protocol identifiers for the SDP "m=" line (proto field).
-    * SDP transport protocol strings are compositional — once you understand
+    * SDP transport protocol strings are compositional - once you understand
     * the building blocks, the combinations are self-explanatory:
     *
     *   RTP   - Real-time Transport Protocol; carries the media payload.

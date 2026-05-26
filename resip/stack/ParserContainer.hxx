@@ -132,7 +132,7 @@ class ParserContainer : public ParserContainerBase
       
       /**
          @brief Returns a pointer to the header field value at the given 0-based index,
-            or nullptr if the index is out of range.  O(1) — backed by a vector.
+            or nullptr if the index is out of range.  O(1) - backed by a vector.
       */
       T* getByIndex(size_t index)
       {
