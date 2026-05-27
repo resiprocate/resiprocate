@@ -16,7 +16,7 @@ namespace resip
 class IdentityCategory : public ParserCategory
 {
    public:
-      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputCommas;
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputMulti;
 
       IdentityCategory();
       explicit IdentityCategory(const Data& d);
@@ -72,6 +72,7 @@ typedef ParserContainer<IdentityCategory> IdentityCategories;
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
