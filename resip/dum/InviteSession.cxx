@@ -3484,6 +3484,8 @@ InviteSession::sendBye()
          Token reason("SIP");
          txt = getEndReasonString(mEndReason);
          reason.param(p_text) = txt;
+         // RFC 3326 reason-text is a quoted-string
+         reason.getParameterByEnum(ParameterTypes::text)->setQuoted(true);
          bye->header(h_Reasons).push_back(reason);
       }
    }

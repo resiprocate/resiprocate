@@ -1006,6 +1006,8 @@ DialogSet::addEndReasonToMessage(SipMessage& msg)
    {
       Token reason("SIP");
       reason.param(p_text) = mEndReason;
+      // RFC 3326 reason-text is a quoted-string
+      reason.getParameterByEnum(ParameterTypes::text)->setQuoted(true);
       msg.header(h_Reasons).push_back(reason);
    }
 }
