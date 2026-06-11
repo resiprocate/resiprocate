@@ -31,6 +31,9 @@ set(BASICCLIENT_SRC
    basicClientCall.cxx
    basicClientCmdLineParser.cxx
    basicClientUserAgent.cxx
+   basicClientCall.hxx
+   basicClientCmdLineParser.hxx
+   basicClientUserAgent.hxx
 )
 
 sample_app(basicClient ${BASICCLIENT_SRC})
