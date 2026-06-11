@@ -17,6 +17,16 @@ class TargetCommand;
 //created. Null will be returned by default.
 class HttpProviderFactory;
 
+struct HttpRequestOptions
+{
+   // Per-endpoint-attempt connection establishment timeout (TCP connect + TLS handshake).
+   // On expiry the next resolved endpoint is tried.  Must be > 0.
+   unsigned int mConnectTimeoutSeconds = 5;
+   // Overall wall-clock budget for the entire request: DNS resolution, all endpoint
+   // connection attempts, TLS handshake and response.  0 = no overall timeout.
+   unsigned int mRequestTimeoutSeconds = 0;
+};
+
 class HttpProvider
 {
    public:
@@ -27,7 +37,7 @@ class HttpProvider
       
       //.dcm. tu param will become a postable
       virtual void get(const GenericUri& target, const Data& tid, TransactionUser& tu, TargetCommand::Target& commandTarget)=0;
-      virtual void get(const GenericUri& target, const Data& tid, const Data& userData, TransactionUser& tu, TargetCommand::Target& commandTarget) {}  // Not =0 for back compat
+      virtual void get(const GenericUri& target, const Data& tid, const Data& userData, const HttpRequestOptions& options, TransactionUser& tu, TargetCommand::Target& commandTarget) {}  // Not =0 for back compat
       virtual ~HttpProvider(){} //impl. singleton destructor pattern later
    private:
       static HttpProvider* mInstance;
