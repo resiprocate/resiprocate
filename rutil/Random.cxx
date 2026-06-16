@@ -64,6 +64,13 @@ struct random_data* Random::sRandomState = 0;
 
 #ifdef RESIP_RANDOM_THREAD_LOCAL
 ThreadIf::TlsKey Random::sRandomStateKey = 0;
+namespace
+{
+   // Process-wide entropy read from /dev/urandom in initialize(), XORed into
+   // each thread's PRNG seed so per-thread state is not derived solely from
+   // time+pid (CWE-338).
+   unsigned int sThreadSeedBase = 0;
+}
 #endif
 
 #define RANDOM_STATE_SIZE 128
@@ -182,7 +189,33 @@ Random::initialize()
 
          unsigned seed = getSimpleSeed();
 
+         int fd = open("/dev/urandom", O_RDONLY);
+         // !ah! blocks on embedded devices -- not enough entropy.
+         if ( fd != -1 )
+         {
+            // Mix kernel entropy into the PRNG seed before seeding so that
+            // random()/rand() are not seeded solely from time+pid, which an
+            // attacker can approximate (CWE-338). XOR preserves the per-thread
+            // and per-process distinction that getSimpleSeed() provides.
+            unsigned urandomSeed = 0;
+            int s = read( fd,&urandomSeed,sizeof(urandomSeed) ); //!ah! blocks if /dev/random on embedded sys
+
+            if ( s == sizeof(urandomSeed) )
+            {
+               seed ^= urandomSeed;
+            }
+            else
+            {
+               ErrLog( << "System is short of randomness" ); // !ah! never prints
+            }
+         }
+         else
+         {
+            ErrLog( << "Could not open /dev/urandom" );
+         }
+
 #if defined(RESIP_RANDOM_THREAD_LOCAL)
+         sThreadSeedBase = seed;
          ThreadIf::tlsKeyCreate(sRandomStateKey, ::free);
 #elif defined(RESIP_RANDOM_THREAD_MUTEX)
          struct random_data *buf;
@@ -194,23 +227,6 @@ Random::initialize()
 #else
          srandom(seed);
 #endif
-
-
-         int fd = open("/dev/urandom", O_RDONLY);
-         // !ah! blocks on embedded devices -- not enough entropy.
-         if ( fd != -1 )
-         {
-            int s = read( fd,&seed,sizeof(seed) ); //!ah! blocks if /dev/random on embedded sys
-
-            if ( s != sizeof(seed) )
-            {
-               ErrLog( << "System is short of randomness" ); // !ah! never prints
-            }
-         }
-         else
-         {
-            ErrLog( << "Could not open /dev/urandom" );
-         }
 
 #if defined(USE_SSL)
          if (fd == -1 )
@@ -287,7 +303,9 @@ Random::getRandom()
       size_t sz = sizeof(*buf)+RANDOM_STATE_SIZE;
       buf = (struct random_data*) ::malloc(sz);
       memset( buf, 0, sz);      // .kw. strange segfaults without this
-      unsigned seed = getSimpleSeed();
+      // Mix in the /dev/urandom-derived base captured at initialize() time so
+      // per-thread seeds are not derived solely from time+pid (CWE-338).
+      unsigned seed = getSimpleSeed() ^ sThreadSeedBase;
       initstate_r(seed, ((char*)buf)+sizeof(*buf), RANDOM_STATE_SIZE, buf);
       ThreadIf::tlsSetValue(sRandomStateKey, buf);
    }

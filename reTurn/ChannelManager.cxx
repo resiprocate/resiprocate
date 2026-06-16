@@ -14,8 +14,10 @@ namespace reTurn {
 
 ChannelManager::ChannelManager()
 {
-   // make starting channel number random
-   int randInt = resip::Random::getRandom();
+   // make starting channel number random; use the CSPRNG so the channel
+   // number is not predictable (CWE-338) - predictable channels aid TURN
+   // data injection.
+   int randInt = resip::Random::getCryptoRandom();
    mNextChannelNumber = MIN_CHANNEL_NUM + (unsigned short)(randInt % (MAX_CHANNEL_NUM-MIN_CHANNEL_NUM+1));
 }
 
@@ -119,7 +121,7 @@ ChannelManager::findRemotePeerByPeerAddress(const StunTuple& peerAddress)
 
 /* ====================================================================
 
- Copyright (c) 2024 SIP Spectrum, Inc http://www.sipspectrum.com
+ Copyright (c) 2024-2026 SIP Spectrum, Inc http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

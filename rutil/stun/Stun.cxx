@@ -44,6 +44,7 @@
 #include "Udp.hxx"
 #include "Stun.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/Random.hxx"
 #ifndef USE_SSL
 #include "rutil/Sha1.hxx"
 #endif
@@ -1132,7 +1133,7 @@ namespace resip
          bufferSize,
          "%08x:%08x:%08x:",
          uint32_t(source.addr),
-         uint32_t(stunRand()),
+         uint32_t(Random::getCryptoRandom()),  // CSPRNG nonce (CWE-338)
          uint32_t(lotime));
       resip_assert(expectedSize > 0 && static_cast<size_t>(expectedSize) < bufferSize);
 
@@ -2089,7 +2090,10 @@ namespace resip
       for (int i = 0; i < 16; i = i + 4)
       {
          resip_assert(i + 3 < 16);
-         int r = stunRand();
+         // STUN transaction IDs must be unpredictable (CWE-338/CWE-345): a
+         // predictable ID lets an attacker forge STUN responses. Use the CSPRNG
+         // rather than the weak stunRand() generator.
+         int r = Random::getCryptoRandom();
          msg->msgHdr.id.octet[i + 0] = r >> 0;
          msg->msgHdr.id.octet[i + 1] = r >> 8;
          msg->msgHdr.id.octet[i + 2] = r >> 16;

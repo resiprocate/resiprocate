@@ -8,10 +8,14 @@
 struct random_data;
 
 /**
- * Define below to enable "RtlGenRandom" (aka SystemFunction036) on
- * Windows platform. See Random.cxx for details.
+ * Enable "RtlGenRandom" (aka SystemFunction036) on the Windows platform.
+ * RtlGenRandom is a cryptographically secure RNG present on all Windows
+ * versions since XP, and is the Microsoft-recommended replacement for the
+ * weak srand()/rand() pair (CWE-338). It is enabled by default; the code in
+ * Random.cxx falls back to rand() automatically if the entry point cannot be
+ * resolved. Comment this out to force the legacy rand() behaviour.
  */
-// #define RESIP_RANDOM_WIN32_RTL 1
+#define RESIP_RANDOM_WIN32_RTL 1
 
 /**
  * Define below to use common random number generator sate for all resip
