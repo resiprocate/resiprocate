@@ -45,6 +45,8 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
    mPollEventCnt = 0;
    mTxTryCnt = mTxMsgCnt = mTxFailCnt = 0;
    mRxTryCnt = mRxMsgCnt = mRxKeepaliveCnt = mRxTransactionCnt = 0;
+   mStunTxIdValid = false;
+   mStunTxId.fill(0);
    mTuple.setType(UDP);
    mFd = InternalTransport::socket(transport(), version);
    mTuple.mFlowKey=(FlowKey)mFd;
@@ -395,43 +397,77 @@ UdpTransport::processRxParse(int len, const Tuple& sender)
 
       resip::Lock lock(myMutex);
 
-      // Change the stored stun result to parse failed since we now have response
-      // Once parsing is successful below, the return code will be updated
-      mStunResult = StunResultResponseParseFailed;
-
-      if (stunParseMessage(mRxBuffer.data(), len, resp, false))
+      // Drop unsolicited responses - we must have an outstanding request. This
+      // also stops an attacker from priming mStunMappedAddress before any test
+      // is started.
+      if (!mStunTxIdValid)
       {
-         in_addr sin_addr;
-         // Use XorMappedAddress if present - if not use MappedAddress
-         if(resp.hasXorMappedAddress)
-         {
-            uint16_t id16 = resp.msgHdr.id.octet[0]<<8
-                          | resp.msgHdr.id.octet[1];
-            uint32_t id32 = resp.msgHdr.id.octet[0]<<24
-                          | resp.msgHdr.id.octet[1]<<16
-                          | resp.msgHdr.id.octet[2]<<8
-                          | resp.msgHdr.id.octet[3];
-            resp.xorMappedAddress.ipv4.port = resp.xorMappedAddress.ipv4.port^id16;
-            resp.xorMappedAddress.ipv4.addr = resp.xorMappedAddress.ipv4.addr^id32;
+         StackLog(<< "Dropping unsolicited STUN response from " << sender);
+         return;
+      }
+
+      // Validate the response source address against the STUN server we queried.
+      // Ignore transport type (the response always arrives on this UDP socket)
+      // but require the address and port to match (RFC 5389).
+      if (!mStunServerTuple.isEqual(sender, false /*ignorePort*/, true /*ignoreTransport*/))
+      {
+         WarningLog(<< "Dropping STUN response from unexpected source " << sender
+                    << " (expected " << mStunServerTuple << ")");
+         return;
+      }
+
+      if (!stunParseMessage(mRxBuffer.data(), len, resp, false))
+      {
+         // Malformed response from the expected server.
+         mStunResult = StunResultResponseParseFailed;
+         return;
+      }
+
+      // The transaction id (including the magic cookie) MUST match the request
+      // we sent (RFC 5389 section 10.1). Reject blind/off-path spoofed responses
+      // while leaving mStunResult unchanged so the genuine response can still be
+      // accepted.
+      if (memcmp(resp.msgHdr.id.octet, mStunTxId.data(), mStunTxId.size()) != 0)
+      {
+         WarningLog(<< "Dropping STUN response with mismatched transaction id from " << sender);
+         return;
+      }
+
+      // Response authenticated by source address and transaction id - extract
+      // the mapped address.
+      mStunResult = StunResultResponseParseFailed;
+      in_addr sin_addr;
+      // Use XorMappedAddress if present - if not use MappedAddress
+      if(resp.hasXorMappedAddress)
+      {
+         uint16_t id16 = resp.msgHdr.id.octet[0]<<8
+                       | resp.msgHdr.id.octet[1];
+         uint32_t id32 = resp.msgHdr.id.octet[0]<<24
+                       | resp.msgHdr.id.octet[1]<<16
+                       | resp.msgHdr.id.octet[2]<<8
+                       | resp.msgHdr.id.octet[3];
+         resp.xorMappedAddress.ipv4.port = resp.xorMappedAddress.ipv4.port^id16;
+         resp.xorMappedAddress.ipv4.addr = resp.xorMappedAddress.ipv4.addr^id32;
 
 #if defined(WIN32)
-            sin_addr.S_un.S_addr = htonl(resp.xorMappedAddress.ipv4.addr);
+         sin_addr.S_un.S_addr = htonl(resp.xorMappedAddress.ipv4.addr);
 #else
-            sin_addr.s_addr = htonl(resp.xorMappedAddress.ipv4.addr);
+         sin_addr.s_addr = htonl(resp.xorMappedAddress.ipv4.addr);
 #endif
-            mStunMappedAddress = Tuple(sin_addr,resp.xorMappedAddress.ipv4.port, UDP);
-            mStunResult = StunResultSuccess;
-         }
-         else if(resp.hasMappedAddress)
-         {
+         mStunMappedAddress = Tuple(sin_addr,resp.xorMappedAddress.ipv4.port, UDP);
+         mStunResult = StunResultSuccess;
+         mStunTxIdValid = false;  // consume the request; ignore replayed responses
+      }
+      else if(resp.hasMappedAddress)
+      {
 #if defined(WIN32)
-            sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
+         sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
 #else
-            sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
+         sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
 #endif
-            mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
-            mStunResult = StunResultSuccess;
-         }
+         mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
+         mStunResult = StunResultSuccess;
+         mStunTxIdValid = false;  // consume the request; ignore replayed responses
       }
       return;
    }
@@ -674,7 +710,7 @@ UdpTransport::processRxParseSip(char* buffer, int len, const Tuple& sender)
 }
 
 bool
-UdpTransport::stunSendTest(const Tuple&  dest)
+UdpTransport::stunSendTest(const Tuple& dest)
 {
    bool changePort=false;
    bool changeIP=false;
@@ -697,10 +733,20 @@ UdpTransport::stunSendTest(const Tuple&  dest)
 
    int rlen = stunEncodeMessage(req, buf, len, password, false);
 
+   {
+      // Record the request state so processRxParse() can authenticate the
+      // response by source address and transaction id. Only a single STUN test
+      // is tracked at a time - this overwrites any in-flight request (see
+      // stunSendTest() docs).
+      resip::Lock lock(myMutex);
+      memcpy(mStunTxId.data(), req.msgHdr.id.octet, mStunTxId.size());
+      mStunServerTuple = dest;
+      mStunTxIdValid = true;
+      mStunResult = StunResultNoResponse;
+   }
+
    SendData* stunRequest = new SendData(dest, buf, rlen);
    mTxFifo.add(stunRequest);
-
-   mStunResult = StunResultNoResponse;
 
    return true;
 }
@@ -732,6 +778,7 @@ UdpTransport::setRcvBufLen(int buflen)
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

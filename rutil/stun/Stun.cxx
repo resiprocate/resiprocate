@@ -44,6 +44,9 @@
 #include "Udp.hxx"
 #include "Stun.hxx"
 #include "rutil/Socket.hxx"
+#ifndef USE_SSL
+#include "rutil/Sha1.hxx"
+#endif
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace std;
@@ -374,6 +377,10 @@ namespace resip
 
             case MessageIntegrity:
                msg.hasMessageIntegrity = true;
+               // Record where the MESSAGE-INTEGRITY attribute header begins so the
+               // HMAC can be verified later (body currently points just past the
+               // 4-byte attribute header). See stunVerifyMessageIntegrity().
+               msg.messageIntegrityOffset = static_cast<unsigned int>((body - 4) - buf);
                if (stunParseAtrIntegrity(body, attrLen, msg.messageIntegrity) == false)
                {
                   if (verbose) clog << "problem parsing MessageIntegrity" << endl;
@@ -383,11 +390,6 @@ namespace resip
                {
                   if (verbose) clog << "MessageIntegrity = " << msg.messageIntegrity.hash << endl;
                }
-
-               // read the current HMAC
-               // look up the password given the user of given the transaction id 
-               // compute the HMAC on the buffer
-               // decide if they match or not
                break;
 
             case ErrorCode:
@@ -886,15 +888,13 @@ namespace resip
          encode16(lengthp, uint16_t(ptr - buf - sizeof(StunMsgHdr)));
 
          StunAtrIntegrity integrity;
-         // pad with zeros prior to calculating message integrity attribute	   
-         int padding = 0;
+         // RFC 5389 section 15.4: the HMAC-SHA1 is computed over the STUN message
+         // up to (but not including) the MESSAGE-INTEGRITY attribute, with the
+         // message-length field in the header already set to include the
+         // MESSAGE-INTEGRITY attribute (done above). No additional block padding
+         // is applied to the input.
          int len = int(ptrMessageIntegrity - buf);
-         if (len % 64)
-         {
-            padding = 64 - (len % 64);
-            memset(ptrMessageIntegrity, 0, padding);
-         }
-         computeHmac(integrity.hash, buf, len + padding, password.value, password.sizeValue);
+         computeHmac(integrity.hash, buf, len, password.value, password.sizeValue);
          encodeAtrIntegrity(ptrMessageIntegrity, integrity);
       }
 
@@ -982,14 +982,7 @@ namespace resip
    }
 
 
-#ifndef USE_SSL
-   void
-      computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
-   {
-      // !slg! TODO - use newly added rutil/Sha1.hxx class - will need to add new method to it to support this
-      strncpy(hmac, "hmac-not-implemented", 20);
-   }
-#else
+#ifdef USE_SSL
 #ifdef WIN32
    //hack for name collision of OCSP_RESPONSE and wincrypt.h in latest openssl release 0.9.8h
    //http://www.google.com/search?q=OCSP%5fRESPONSE+wincrypt%2eh
@@ -1008,7 +1001,101 @@ namespace resip
          reinterpret_cast<unsigned char*>(hmac), &resultSize);
       resip_assert(resultSize == 20);
    }
+#else
+   void
+      computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
+   {
+      // HMAC-SHA1 (RFC 2104) using the bundled Sha1 implementation, for builds
+      // without OpenSSL.
+      const int blockSize = 64;  // SHA1 block size in bytes
+
+      unsigned char paddedKey[blockSize];
+      memset(paddedKey, 0, sizeof(paddedKey));
+      if (sizeKey > blockSize)
+      {
+         // Keys longer than the block size are first hashed down.
+         Sha1 keyHash;
+         keyHash.update(std::string(key, sizeKey));
+         const Data hashedKey = keyHash.finalBin();
+         memcpy(paddedKey, hashedKey.data(),
+                hashedKey.size() < static_cast<size_t>(blockSize) ? hashedKey.size() : blockSize);
+      }
+      else if (sizeKey > 0)
+      {
+         memcpy(paddedKey, key, sizeKey);
+      }
+
+      unsigned char ipad[blockSize];
+      unsigned char opad[blockSize];
+      for (int i = 0; i < blockSize; ++i)
+      {
+         ipad[i] = paddedKey[i] ^ 0x36;
+         opad[i] = paddedKey[i] ^ 0x5c;
+      }
+
+      // inner = SHA1( (key XOR ipad) || message )
+      Sha1 inner;
+      inner.update(std::string(reinterpret_cast<const char*>(ipad), blockSize));
+      inner.update(std::string(input, length));
+      const Data innerDigest = inner.finalBin();
+
+      // hmac = SHA1( (key XOR opad) || inner )
+      Sha1 outer;
+      outer.update(std::string(reinterpret_cast<const char*>(opad), blockSize));
+      outer.update(std::string(innerDigest.data(), innerDigest.size()));
+      const Data outerDigest = outer.finalBin();
+
+      resip_assert(outerDigest.size() == 20);
+      memcpy(hmac, outerDigest.data(), 20);
+   }
 #endif
+
+
+   bool
+      stunVerifyMessageIntegrity(const char* buf,
+         unsigned int bufLen,
+         const StunMessage& message,
+         const StunAtrString& password)
+   {
+      if (!message.hasMessageIntegrity || password.sizeValue == 0)
+      {
+         return false;
+      }
+
+      const unsigned int miOffset = message.messageIntegrityOffset;
+      // The MESSAGE-INTEGRITY attribute is a 4-byte header followed by a 20-byte
+      // HMAC-SHA1 value. Reject anything that does not fit inside the buffer.
+      if (miOffset < sizeof(StunMsgHdr) ||
+          miOffset + 4 + 20 > bufLen ||
+          miOffset > STUN_MAX_MESSAGE_SIZE)
+      {
+         return false;
+      }
+
+      // RFC 5389 section 15.4: the HMAC is computed over the STUN message up to
+      // (but not including) the MESSAGE-INTEGRITY attribute, with the message
+      // length field in the header set to point at the end of the
+      // MESSAGE-INTEGRITY attribute. We copy the prefix so we can adjust the
+      // length field without mutating the caller's buffer (and so any trailing
+      // attributes, e.g. FINGERPRINT, are excluded).
+      char hashInput[STUN_MAX_MESSAGE_SIZE];
+      memcpy(hashInput, buf, miOffset);
+      const uint16_t adjustedLength = htons(static_cast<uint16_t>(miOffset + 4));
+      memcpy(hashInput + 2, &adjustedLength, sizeof(adjustedLength));
+
+      char computed[20];
+      computeHmac(computed, hashInput, static_cast<int>(miOffset),
+                  password.value, password.sizeValue);
+
+      // Constant-time comparison to avoid leaking HMAC bytes via timing.
+      unsigned char diff = 0;
+      for (int i = 0; i < 20; ++i)
+      {
+         diff |= static_cast<unsigned char>(computed[i]) ^
+                 static_cast<unsigned char>(message.messageIntegrity.hash[i]);
+      }
+      return diff == 0;
+   }
 
 
    static void
@@ -1392,49 +1479,37 @@ namespace resip
                else
                {
                   if (verbose) clog << "Validating username: " << req.username.value << endl;
-                  // !jf! could retrieve associated password from provisioning here
-                  if (strcmp(req.username.value, "test") == 0)
+
+                  // Derive the password for this username with the same
+                  // shared-secret scheme stunCreateSharedSecretResponse() used
+                  // to hand the credential out (stunCreatePassword), then verify
+                  // the request's MESSAGE-INTEGRITY against it.
+                  //
+                  // This replaces a check that (a) compared the wrong bytes
+                  // (the message header instead of the received HMAC), (b) read
+                  // an uninitialized buffer when built without OpenSSL, and
+                  // (c) only ever recognized a single hard-coded "test"/"1234"
+                  // credential while silently accepting any other username
+                  // without verification.
+                  StunAtrString password;
+                  stunCreatePassword(req.username, &password);
+
+                  if (!stunVerifyMessageIntegrity(buf, bufLen, req, password))
                   {
-                     if (0)
-                     {
-                        // !jf! if the credentials are stale 
-                        stunCreateErrorResponse(*resp, 4, 30, "Stale credentials on BindRequest");
-                        return true;
-                     }
-                     else
-                     {
-                        if (verbose) clog << "Validating MessageIntegrity" << endl;
-                        // need access to shared secret
-
-                        unsigned char hmac[20];
-#ifdef USE_SSL
-                        unsigned int hmacSize = 20;
-
-                        HMAC(EVP_sha1(),
-                           "1234", 4,
-                           reinterpret_cast<const unsigned char*>(buf), bufLen - 20 - 4,
-                           hmac, &hmacSize);
-                        resip_assert(hmacSize == 20);
-#endif
-
-                        if (memcmp(buf, hmac, 20) != 0)
-                        {
-                           if (verbose) clog << "MessageIntegrity is bad. Sending " << endl;
-                           stunCreateErrorResponse(*resp, 4, 3, "Unknown username. Try test with password 1234");
-                           return true;
-                        }
-
-                        // need to compute this later after message is filled in
-                        resp->hasMessageIntegrity = true;
-                        resip_assert(req.hasUsername);
-                        resp->hasUsername = true;
-                        resp->username = req.username; // copy username in
-                     }
+                     if (verbose) clog << "MessageIntegrity is bad. Sending 431." << endl;
+                     stunCreateErrorResponse(*resp, 4, 31, "Integrity Check Failure");
+                     return true;
                   }
-                  else
-                  {
-                     if (verbose) clog << "Invalid username: " << req.username.value << "Send 430." << endl;
-                  }
+
+                  if (verbose) clog << "MessageIntegrity validated" << endl;
+
+                  // Authenticated: echo USERNAME and request MESSAGE-INTEGRITY on
+                  // the response. The response HMAC is computed by
+                  // stunEncodeMessage() using hmacPassword, which is set below.
+                  resip_assert(req.hasUsername);
+                  resp->hasMessageIntegrity = true;
+                  resp->hasUsername = true;
+                  resp->username = req.username; // copy username in
                }
             }
 
@@ -2774,6 +2849,7 @@ namespace resip
 }
 
 /* ====================================================================
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * The Vovida Software License, Version 1.0
  *
  * Redistribution and use in source and binary forms, with or without
