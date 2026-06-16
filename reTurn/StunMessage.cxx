@@ -19,6 +19,8 @@
 
 #ifdef USE_SSL
 #include <openssl/hmac.h>
+#else
+#include <rutil/Sha1.hxx>
 #endif
 
 using namespace std;
@@ -128,6 +130,7 @@ StunMessage::init()
    mHasRealm = false;
    mHasPassword = false;
    mHasMessageIntegrity = false;
+   mHasMessageIntegritySha256 = false;
    mHasErrorCode = false;
    mHasUnknownAttributes = false;
    mHasReflectedFrom = false;
@@ -163,6 +166,7 @@ StunMessage::init()
    mSoftware = 0;
    mTurnData = 0;
    mMessageIntegrityMsgLength = 0;
+   mMessageIntegritySha256MsgLength = 0;
    mUnknownRequiredAttributes.numAttributes = 0;
 }
 
@@ -511,6 +515,23 @@ StunMessage::stunParseAtrIntegrity(char* body, unsigned int hdrLen, StunAtrInteg
    }
 }
 
+bool
+StunMessage::stunParseAtrIntegritySha256(char* body, unsigned int hdrLen, StunAtrIntegritySha256& result)
+{
+   // RFC 8489 permits truncation to a multiple of 4 bytes (>= 16), but for the
+   // short-term credential use case we only accept the full 32-byte HMAC-SHA256.
+   if (hdrLen != 32)
+   {
+      WarningLog(<< "hdrLen wrong for message integrity sha256 (only full 32-byte value supported)");
+      return false;
+   }
+   else
+   {
+      memcpy(&result.hash, body, hdrLen);
+      return true;
+   }
+}
+
 
 
 bool
@@ -710,6 +731,23 @@ StunMessage::stunParseMessage(char* buf, unsigned int bufLen)
          else
          {
             WarningLog(<< "Duplicate MessageIntegrity in message - ignoring.");
+         }
+         break;
+
+      case MessageIntegritySha256:
+         if (!mHasMessageIntegritySha256)
+         {
+            mHasMessageIntegritySha256 = true;
+            if (stunParseAtrIntegritySha256(body, attrLen, mMessageIntegritySha256) == false)
+            {
+               WarningLog(<< "problem parsing MessageIntegritySha256");
+               return false;
+            }
+            mMessageIntegritySha256MsgLength = (uint16_t)(body + attrLen - buf - sizeof(StunMsgHdr));
+         }
+         else
+         {
+            WarningLog(<< "Duplicate MessageIntegritySha256 in message - ignoring.");
          }
          break;
 
@@ -1432,6 +1470,15 @@ StunMessage::encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr)
 }
 
 char*
+StunMessage::encodeAtrIntegritySha256(char* ptr, const StunAtrIntegritySha256& atr)
+{
+   ptr = encode16(ptr, MessageIntegritySha256);
+   ptr = encode16(ptr, 32);
+   ptr = encode(ptr, atr.hash, sizeof(atr.hash));
+   return ptr;
+}
+
+char*
 StunMessage::encodeAtrEvenPort(char* ptr, const TurnAtrEvenPort& atr)
 {
    ptr = encode16(ptr, TurnEvenPort);
@@ -1635,13 +1682,17 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       ptr = encodeAtrUInt64(ptr, IceControlling, mIceControllingTieBreaker);
    }
 
-   // Update Length in header now - needed in message integrity calculations
-   uint16_t msgSize = (uint16_t)(ptr - buf - sizeof(StunMsgHdr));
-   if (mHasMessageIntegrity) msgSize += 24;  // 4 (attribute header) + 20 (attribute value)
-   encode16(lengthp, msgSize);
+   // MESSAGE-INTEGRITY, MESSAGE-INTEGRITY-SHA256 and FINGERPRINT must be the
+   // last attributes, in that order. Each integrity HMAC is computed with the
+   // header length field set to cover the message up to and including that
+   // attribute (but not the ones that follow it), per RFC 8489 sections 14.5-14.7.
+   // We therefore rewrite the length field immediately before each HMAC/CRC.
 
    if (mHasMessageIntegrity)
    {
+      // Length covers up to and including MESSAGE-INTEGRITY (excludes
+      // MESSAGE-INTEGRITY-SHA256 and FINGERPRINT).
+      encode16(lengthp, (uint16_t)(ptr - buf - sizeof(StunMsgHdr)) + 24);  // 4 (hdr) + 20 (value)
       int len = (int)(ptr - buf);
       StackLog(<< "Adding message integrity: buffer size=" << len << ", hmacKey=" << mHmacKey.hex());
       StunAtrIntegrity integrity;
@@ -1649,9 +1700,26 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       ptr = encodeAtrIntegrity(ptr, integrity);
    }
 
-   // Update Length in header now - may be needed in fingerprint calculations
-   if (mHasFingerprint) msgSize += 8;        // 4 (attribute header) + 4 (attribute value)
-   encode16(lengthp, msgSize);
+#ifdef USE_SSL
+   if (mHasMessageIntegritySha256)
+   {
+      // Length covers up to and including MESSAGE-INTEGRITY-SHA256 (which itself
+      // covers any preceding MESSAGE-INTEGRITY), but excludes FINGERPRINT.
+      encode16(lengthp, (uint16_t)(ptr - buf - sizeof(StunMsgHdr)) + 36);  // 4 (hdr) + 32 (value)
+      int len = (int)(ptr - buf);
+      StackLog(<< "Adding message integrity (SHA256): buffer size=" << len << ", hmacKey=" << mHmacKey.hex());
+      StunAtrIntegritySha256 integrity;
+      computeHmacSha256(integrity.hash, buf, len, mHmacKey.c_str(), (int)mHmacKey.size());
+      ptr = encodeAtrIntegritySha256(ptr, integrity);
+   }
+#endif
+
+   // Update length to cover the full message, including FINGERPRINT if present.
+   {
+      uint16_t msgSize = (uint16_t)(ptr - buf - sizeof(StunMsgHdr));
+      if (mHasFingerprint) msgSize += 8;     // 4 (attribute header) + 4 (attribute value)
+      encode16(lengthp, msgSize);
+   }
 
    // add finger print if required
    if (mHasFingerprint)
@@ -1681,8 +1749,48 @@ StunMessage::stunEncodeFramedMessage(char* buf, unsigned int bufLen)
 void
 StunMessage::computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
 {
-   // !slg! TODO - use newly added rutil/Sha1.hxx class  - will need to add new method to it to support this
-   strncpy(hmac, "hmac-not-implemented", 20);
+   // HMAC-SHA1 (RFC 2104) using the bundled Sha1 implementation, for builds
+   // without OpenSSL.
+   const int blockSize = 64;  // SHA1 block size in bytes
+
+   unsigned char paddedKey[blockSize];
+   memset(paddedKey, 0, sizeof(paddedKey));
+   if (sizeKey > blockSize)
+   {
+      // Keys longer than the block size are first hashed down.
+      Sha1 keyHash;
+      keyHash.update(std::string(key, sizeKey));
+      const Data hashedKey = keyHash.finalBin();
+      memcpy(paddedKey, hashedKey.data(),
+             hashedKey.size() < static_cast<size_t>(blockSize) ? hashedKey.size() : blockSize);
+   }
+   else if (sizeKey > 0)
+   {
+      memcpy(paddedKey, key, sizeKey);
+   }
+
+   unsigned char ipad[blockSize];
+   unsigned char opad[blockSize];
+   for (int i = 0; i < blockSize; ++i)
+   {
+      ipad[i] = paddedKey[i] ^ 0x36;
+      opad[i] = paddedKey[i] ^ 0x5c;
+   }
+
+   // inner = SHA1( (key XOR ipad) || message )
+   Sha1 inner;
+   inner.update(std::string(reinterpret_cast<const char*>(ipad), blockSize));
+   inner.update(std::string(input, length));
+   const Data innerDigest = inner.finalBin();
+
+   // hmac = SHA1( (key XOR opad) || inner )
+   Sha1 outer;
+   outer.update(std::string(reinterpret_cast<const char*>(opad), blockSize));
+   outer.update(std::string(innerDigest.data(), innerDigest.size()));
+   const Data outerDigest = outer.finalBin();
+
+   resip_assert(outerDigest.size() == 20);
+   memcpy(hmac, outerDigest.data(), 20);
 }
 #else
 void
@@ -1696,6 +1804,19 @@ StunMessage::computeHmac(char* hmac, const char* input, int length, const char* 
       reinterpret_cast<const unsigned char*>(input), length,
       reinterpret_cast<unsigned char*>(hmac), &resultSize);
    resip_assert(resultSize == 20);
+}
+#endif
+
+#ifdef USE_SSL
+void
+StunMessage::computeHmacSha256(char* hmac, const char* input, int length, const char* key, int sizeKey)
+{
+   unsigned int resultSize = 32;
+   HMAC(EVP_sha256(),
+      key, sizeKey,
+      reinterpret_cast<const unsigned char*>(input), length,
+      reinterpret_cast<unsigned char*>(hmac), &resultSize);
+   resip_assert(resultSize == 32);
 }
 #endif
 
@@ -1859,14 +1980,13 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
       // Restore original stun message length in mBuffer
       memcpy(lengthposition, &originalLength, 2);
 
-      if (memcmp(mMessageIntegrity.hash, hmac, 20) == 0)
+      // Constant-time comparison to avoid leaking the expected HMAC via timing.
+      unsigned char diff = 0;
+      for (int i = 0; i < 20; ++i)
       {
-         return true;
+         diff |= static_cast<unsigned char>(mMessageIntegrity.hash[i]) ^ hmac[i];
       }
-      else
-      {
-         return false;
-      }
+      return diff == 0;
    }
    else
    {
@@ -1874,6 +1994,55 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
       return true;
    }
 }
+
+#ifdef USE_SSL
+bool
+StunMessage::checkMessageIntegritySha256(const Data& hmacKey)
+{
+   if (mHasMessageIntegritySha256)
+   {
+      unsigned char hmac[32];
+
+      // Store original stun message length from mBuffer
+      char* lengthposition = (char*)mBuffer.data() + 2;
+      uint16_t originalLength;
+      memcpy(&originalLength, lengthposition, 2);
+
+      // Update stun message length in mBuffer for calculation
+      uint16_t tempLength = htons(mMessageIntegritySha256MsgLength);
+      memcpy(lengthposition, &tempLength, 2);
+
+      // Calculate HMAC over the entire message preceding the MESSAGE-INTEGRITY-SHA256 attribute
+      int iHMACBufferSize = mMessageIntegritySha256MsgLength - 36 /* MessageIntegritySha256 size */ + sizeof(StunMsgHdr);
+      StackLog(<< "Checking message integrity (SHA256): length=" << mMessageIntegritySha256MsgLength << ", size=" << iHMACBufferSize << ", hmacKey=" << hmacKey.hex());
+      computeHmacSha256((char*)hmac, mBuffer.data(), iHMACBufferSize, hmacKey.c_str(), (int)hmacKey.size());
+
+      // Restore original stun message length in mBuffer
+      memcpy(lengthposition, &originalLength, 2);
+
+      // Constant-time comparison to avoid leaking the expected HMAC via timing.
+      unsigned char diff = 0;
+      for (int i = 0; i < 32; ++i)
+      {
+         diff |= static_cast<unsigned char>(mMessageIntegritySha256.hash[i]) ^ hmac[i];
+      }
+      return diff == 0;
+   }
+   else
+   {
+      // No message integrity sha256 attribute present - return true
+      return true;
+   }
+}
+#else
+bool
+StunMessage::checkMessageIntegritySha256(const Data& /*hmacKey*/)
+{
+   // No SHA-256 implementation is available without OpenSSL; fail rather
+   // than accept an unverified MESSAGE-INTEGRITY-SHA256 attribute.
+   return !mHasMessageIntegritySha256;
+}
+#endif
 
 bool
 StunMessage::checkFingerprint()

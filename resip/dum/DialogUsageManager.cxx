@@ -1941,7 +1941,7 @@ DialogUsageManager::validateContent(const SipMessage& request)
 
      if (request.exists(h_ContentEncoding) && !getMasterProfile()->isContentEncodingSupported(request.header(h_ContentEncoding)))
       {
-         InfoLog (<< "Received an unsupported mime type: " << request.header(h_ContentEncoding) << " for " << request.brief());
+         InfoLog (<< "Received an unsupported content encoding: " << request.header(h_ContentEncoding) << " for " << request.brief());
          SipMessage failure;
          makeResponse(failure, request, 415);
          failure.header(h_AcceptEncodings) = getMasterProfile()->getSupportedEncodings();
