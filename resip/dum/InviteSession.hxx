@@ -333,6 +333,13 @@ class InviteSession : public DialogUsage
       void dispatchMessage(const SipMessage& msg);
       void dispatchOptions(const SipMessage& msg);
 
+      // True iff the supplied message is an ACK, a 2xx (INVITE) retransmission
+      // is currently outstanding (mInvite200 / mCurrentRetransmit200), and the
+      // ACK acknowledges that 2xx.  Correlates on the CSeq sequence number
+      // (RFC 3261 13.2.2.4); robust under re-INVITE glare and a peer that
+      // re-uses the in-dialog CSeq.
+      [[nodiscard]] bool isAckForCurrent200(const SipMessage& ack) const;
+
       void startRetransmit200Timer();
       void start491Timer();
       void startStaleReInviteTimer();
