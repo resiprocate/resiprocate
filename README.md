@@ -13,6 +13,7 @@ The reSIProcate repository contains the following C++ libraries and applications
 
 Please see the following wiki for more information: www.resiprocate.org
 
+Note:  The minimum required C++ version is currently C++11.
 
 # CMake Instructions
 
