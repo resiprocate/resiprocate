@@ -338,7 +338,7 @@ class InviteSession : public DialogUsage
       // ACK acknowledges that 2xx.  Correlates on the CSeq sequence number
       // (RFC 3261 13.2.2.4); robust under re-INVITE glare and a peer that
       // re-uses the in-dialog CSeq.
-      [[nodiscard]] bool isAckForCurrent200(const SipMessage& ack) const;
+      bool isAckForCurrent200(const SipMessage& ack) const;
 
       void startRetransmit200Timer();
       void start491Timer();
