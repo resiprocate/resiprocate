@@ -157,21 +157,19 @@ Random::initialize()
          // a random number. This code allows that functionality to be accessed even from VC 7.1.
          // However, SystemFunction036 only exists in Windows XP and later, so we may need to fallback
          // to the old method using rand().
-         HMODULE hLib = LoadLibrary("ADVAPI32.DLL");
+         HMODULE hLib = GetModuleHandle("ADVAPI32.DLL");
          if (hLib)
          {
             Random::RtlGenRandom =
-               (BOOLEAN (APIENTRY *)(void*,ULONG))GetProcAddress(hLib,"SystemFunction036");
-
+               (BOOLEAN(APIENTRY*)(void*, ULONG))GetProcAddress(hLib, "SystemFunction036");
             if (!Random::RtlGenRandom)
             {
-               WarningLog(<< "Using srand(..) and rand() for random numbers");
+               WarningLog(<< "Not linked with ADVAPI32.DLL, using srand(..) and rand() for random numbers");
             }
          }
 #endif   // RESIP_RANDOM_WIN32_RTL
 
          mIsInitialized = true;
-
       }
    }
 #endif  // not dead code

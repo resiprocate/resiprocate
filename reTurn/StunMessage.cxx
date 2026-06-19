@@ -1847,7 +1847,7 @@ StunMessage::createUsernameAndPassword()
    *mUsername += Data((char*)&port, sizeof(unsigned int)).base64encode() + ":";
    *mUsername += resip::Random::getCryptoRandomHex(8) + ":";   // 8 bytes, 64 bits of randomness
    *mUsername += Data((char*)&time, sizeof(time)).hex() + ":";
-   char hmac[20];
+   char hmac[20] = { 0 };
    computeHmac(hmac, mUsername->data(), (int)mUsername->size(), USERNAME_KEY.data(), (int)USERNAME_KEY.size());
    *mUsername += Data(hmac, sizeof(hmac)).hex();
 
@@ -1871,7 +1871,7 @@ StunMessage::createUsernameAndPassword()
 void
 StunMessage::generateShortTermPasswordForUsername(Data& password)
 {
-   char hmac[20];
+   char hmac[20] = { 0 };
    resip_assert(mHasUsername && mUsername);
    computeHmac(hmac, mUsername->data(), (int)mUsername->size(), PASSWORD_KEY.data(), (int)PASSWORD_KEY.size());
    password = Data(hmac, sizeof(hmac)).hex();
@@ -1961,7 +1961,7 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
 {
    if (mHasMessageIntegrity)
    {
-      unsigned char hmac[20];
+      unsigned char hmac[20] = { 0 };
 
       // Store original stun message length from mBuffer 
       char* lengthposition = (char*)mBuffer.data() + 2;
@@ -2001,7 +2001,7 @@ StunMessage::checkMessageIntegritySha256(const Data& hmacKey)
 {
    if (mHasMessageIntegritySha256)
    {
-      unsigned char hmac[32];
+      unsigned char hmac[32] = { 0 };
 
       // Store original stun message length from mBuffer
       char* lengthposition = (char*)mBuffer.data() + 2;

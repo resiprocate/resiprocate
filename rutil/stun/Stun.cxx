@@ -1084,7 +1084,7 @@ namespace resip
       const uint16_t adjustedLength = htons(static_cast<uint16_t>(miOffset + 4));
       memcpy(hashInput + 2, &adjustedLength, sizeof(adjustedLength));
 
-      char computed[20];
+      char computed[20] = { 0 };
       computeHmac(computed, hashInput, static_cast<int>(miOffset),
                   password.value, password.sizeValue);
 
@@ -1139,10 +1139,10 @@ namespace resip
 
       resip_assert(strlen(buffer) + 41 < STUN_MAX_STRING);
 
-      char hmac[20];
+      char hmac[20] = { 0 };
       char key[] = "Jason";
       computeHmac(hmac, buffer, (int)strlen(buffer), key, (int)strlen(key));
-      char hmacHex[41];
+      char hmacHex[41] = { 0 };
       toHex(hmac, 20, hmacHex);
       hmacHex[40] = 0;
 
@@ -1162,7 +1162,7 @@ namespace resip
    void
       stunCreatePassword(const StunAtrString& username, StunAtrString* password)
    {
-      char hmac[20];
+      char hmac[20] = { 0 };
       char key[] = "Fluffy";
       //char buffer[STUN_MAX_STRING];
       computeHmac(hmac, username.value, (int)strlen(username.value), key, (int)strlen(key));
