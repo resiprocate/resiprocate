@@ -847,6 +847,42 @@ resip::operator<<(EncodeStream& ostrm, const Tuple& tuple)
    return ostrm;
 }
 
+EncodeStream&
+resip::operator<<(EncodeStream& ostrm, const AddressMask& addressMask)
+{
+   ostrm << addressMask.mAddress << "/" << addressMask.mMaskBits;
+   return ostrm;
+}
+
+bool
+Tuple::isAddressAllowed(const std::vector<AddressMask>& allowed,
+                        const std::vector<AddressMask>& denied) const
+{
+   // Deny wins.
+   for (const AddressMask& entry : denied)
+   {
+      if (entry.mAddress.isEqualWithMask(*this, entry.mMaskBits, true /*ignorePort*/, true /*ignoreTransport*/))
+      {
+         return false;
+      }
+   }
+
+   // If an allow list is configured, this address must match one of its entries.
+   if (!allowed.empty())
+   {
+      for (const AddressMask& entry : allowed)
+      {
+         if (entry.mAddress.isEqualWithMask(*this, entry.mMaskBits, true /*ignorePort*/, true /*ignoreTransport*/))
+         {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   return true;
+}
+
 size_t 
 Tuple::hash() const
 {

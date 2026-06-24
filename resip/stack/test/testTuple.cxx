@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <vector>
 #include "rutil/resipfaststreams.hxx"
 #include "rutil/Inserter.hxx"
 #include "resip/stack/Connection.hxx"
@@ -13,6 +14,16 @@
 
 using namespace resip;
 using namespace std;
+
+// Builds an AddressMask for the isAddressAllowed tests.
+static AddressMask
+makeAddressMask(const char* addr, IpVersion ver, short maskBits)
+{
+   AddressMask m;
+   m.mAddress = Tuple(addr, 0 /*port*/, ver, TCP);
+   m.mMaskBits = maskBits;
+   return m;
+}
 
 int
 main()
@@ -247,6 +258,50 @@ main()
       assert(t6.mFlowKey == t6prime.mFlowKey);
       assert(loopback.mFlowKey == loopbackprime.mFlowKey);
    }
+
+   // Test isAddressAllowed - address ACL matching (deny wins; a non-empty allow list requires a
+   // match; port and transport are ignored; address family must match for an entry to apply).
+   {
+      std::vector<AddressMask> none;
+
+      // No ACL -> allowed
+      assert(Tuple("203.0.113.7", 0, V4, TCP).isAddressAllowed(none, none));
+
+      // Deny wins (CIDR)
+      std::vector<AddressMask> denyOnly;
+      denyOnly.push_back(makeAddressMask("192.0.2.0", V4, 24));
+      assert(!Tuple("192.0.2.55", 0, V4, TCP).isAddressAllowed(none, denyOnly));
+      assert(Tuple("203.0.113.7", 0, V4, TCP).isAddressAllowed(none, denyOnly));
+
+      // Allow list restricts: must match
+      std::vector<AddressMask> allowOnly;
+      allowOnly.push_back(makeAddressMask("198.51.100.0", V4, 24));
+      assert(Tuple("198.51.100.9", 0, V4, TCP).isAddressAllowed(allowOnly, none));
+      assert(!Tuple("203.0.113.7", 0, V4, TCP).isAddressAllowed(allowOnly, none));
+
+      // Deny takes precedence over allow (allow a /24, deny a /32 inside it)
+      std::vector<AddressMask> allowBroad;
+      allowBroad.push_back(makeAddressMask("198.51.100.0", V4, 24));
+      std::vector<AddressMask> denyNarrow;
+      denyNarrow.push_back(makeAddressMask("198.51.100.9", V4, 32));
+      assert(!Tuple("198.51.100.9", 0, V4, TCP).isAddressAllowed(allowBroad, denyNarrow));
+      assert(Tuple("198.51.100.10", 0, V4, TCP).isAddressAllowed(allowBroad, denyNarrow));
+   }
+
+#ifdef USE_IPV6
+   {
+      std::vector<AddressMask> none;
+
+      // IPv6 matching
+      std::vector<AddressMask> allowV6;
+      allowV6.push_back(makeAddressMask("2001:db8::", V6, 32));
+      assert(Tuple("2001:db8::1234", 0, V6, TCP).isAddressAllowed(allowV6, none));
+      assert(!Tuple("2001:dead::1", 0, V6, TCP).isAddressAllowed(allowV6, none));
+
+      // Family isolation: a v4 address is not matched by a v6 allow entry -> not allowed
+      assert(!Tuple("203.0.113.7", 0, V4, TCP).isAddressAllowed(allowV6, none));
+   }
+#endif
 
 #ifdef USE_IPV6
    {
