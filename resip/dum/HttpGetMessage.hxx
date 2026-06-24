@@ -19,6 +19,13 @@ class HttpGetMessage : public DumFeatureMessage
       // currently need cookies; callers that do should access the raw response elsewhere.
       typedef std::map<Data, Data> HeaderMap;
 
+      // Synthetic (non-IETF) status codes used to convey internal outcomes that do not
+      // correspond to an HTTP response.  The IETF does not assign status codes >= 600, so we
+      // use the 900 range for our own purposes; add new values counting up from here.
+      //   900  StatusBlockedByPolicy: the request was not performed because local policy
+      //        (e.g. the x5u address ACL) forbade the destination.
+      static const unsigned int StatusBlockedByPolicy = 900;
+
       HttpGetMessage(const Data& tid, bool success, const Data& body, const Mime& type);
       HttpGetMessage(const Data& tid, const Data& userData, unsigned int statusCode, HeaderMap headers, const Data& body, const Mime& type);
 

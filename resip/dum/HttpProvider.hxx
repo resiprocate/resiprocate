@@ -3,7 +3,9 @@
 
 #include "rutil/Mutex.hxx"
 #include "resip/dum/TargetCommand.hxx"
+#include "resip/stack/Tuple.hxx"
 #include <memory>
+#include <vector>
 
 namespace resip
 {
@@ -25,6 +27,14 @@ struct HttpRequestOptions
    // Overall wall-clock budget for the entire request: DNS resolution, all endpoint
    // connection attempts, TLS handshake and response.  0 = no overall timeout.
    unsigned int mRequestTimeoutSeconds = 0;
+
+   // Optional address access control list applied by the HTTP client to each IP address the
+   // target host resolves to (after DNS resolution).  Deny wins; if mAllowedAddresses is
+   // non-empty a resolved address must match one of its entries.  When all resolved addresses
+   // are filtered out, the request fails as if blocked by policy (see HttpGetMessage's
+   // blockedByPolicy flag).  Both lists empty (the default) means no address filtering.
+   std::vector<AddressMask> mAllowedAddresses;
+   std::vector<AddressMask> mDeniedAddresses;
 };
 
 class HttpProvider
