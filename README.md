@@ -51,6 +51,10 @@ delete the CMakeCache.txt file.
 ```
 $ cmake -DBUILD_QPID_PROTON=OFF .
 ```
+libnetxx can also be hard to find, you can disable the TFM test framework to avoid needing it.
+```
+$ cmake -DBUILD_TFM=OFF .
+```
 
 ### Required Packages For Default Enabled CMake Settings
 * git
