@@ -899,6 +899,9 @@ endif()
 include(CheckIncludeFiles)
 check_include_files(sys/epoll.h HAVE_EPOLL)
 
+include(CheckSymbolExists)
+check_symbol_exists(SOCK_CLOEXEC "sys/socket.h" HAVE_SOCK_CLOEXEC)
+
 # HAVE_LIBDL from autotools obsolete,
 # now we use CMAKE_DL_LIBS to include the library
 # when necessary
