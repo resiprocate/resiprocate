@@ -820,11 +820,21 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
 #endif
    }
 
-   for (KnownHeaders::const_reference info : mKnownHeaders)
+   // Iterate by header type enum value (not insertion order) so that headers
+   // are encoded in the deterministic, enum-declared order. See the comment in
+   // HeaderTypes.hxx: "The Type enum controls the order of output". find() is
+   // O(1), so this is no slower than iterating the container directly.
+   for (int t = 0; t < Headers::MAX_HEADERS; ++t)
    {
-      if (info.getType() != Headers::ContentLength) // !dlb! hack...
+      const Headers::Type type = static_cast<Headers::Type>(t);
+      if (type == Headers::ContentLength) // !dlb! hack...
       {
-         info.getValues()->encode(info.getType(), str);
+         continue;
+      }
+      auto it = mKnownHeaders.find(type);
+      if (it != mKnownHeaders.end())
+      {
+         it->getValues()->encode(type, str);
       }
    }
 
@@ -860,21 +870,30 @@ EncodeStream&
 SipMessage::encodeEmbedded(EncodeStream& str) const
 {
    bool first = true;
-   for (KnownHeaders::const_reference info : mKnownHeaders)
+   // Iterate by header type enum value (not insertion order) so that headers
+   // are encoded in the deterministic, enum-declared order. See encode() above.
+   for (int t = 0; t < Headers::MAX_HEADERS; ++t)
    {
-      if (info.getType() != Headers::ContentLength)
+      const Headers::Type type = static_cast<Headers::Type>(t);
+      if (type == Headers::ContentLength)
       {
-         if (first)
-         {
-            str << Symbols::QUESTION;
-            first = false;
-         }
-         else
-         {
-            str << Symbols::AMPERSAND;
-         }
-         info.getValues()->encodeEmbedded(Headers::getHeaderName(info.getType()), str);
+         continue;
       }
+      auto it = mKnownHeaders.find(type);
+      if (it == mKnownHeaders.end())
+      {
+         continue;
+      }
+      if (first)
+      {
+         str << Symbols::QUESTION;
+         first = false;
+      }
+      else
+      {
+         str << Symbols::AMPERSAND;
+      }
+      it->getValues()->encodeEmbedded(Headers::getHeaderName(type), str);
    }
 
    for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin(); 
