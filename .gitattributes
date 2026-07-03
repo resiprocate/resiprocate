@@ -1,0 +1,42 @@
+# Normalize line endings across platforms.
+# Git stores text as LF in the repository and checks it out with each
+# developer's native line ending. This makes diffs consistent regardless of
+# a machine's core.autocrlf setting.
+* text=auto
+
+# ---------------------------------------------------------------------------
+# Files that must always be LF (break if given CRLF, e.g. run on Linux)
+# ---------------------------------------------------------------------------
+*.sh    text eol=lf
+
+# ---------------------------------------------------------------------------
+# Files that Windows tooling expects to be CRLF
+# ---------------------------------------------------------------------------
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+*.ps1        text eol=crlf
+*.sln        text eol=crlf
+*.vcproj     text eol=crlf
+*.vcxproj    text eol=crlf
+*.filters    text eol=crlf
+*.props      text eol=crlf
+
+# ---------------------------------------------------------------------------
+# Binary files: never convert line endings, never diff as text
+# ---------------------------------------------------------------------------
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.pdf    binary
+*.wav    binary
+*.raw    binary
+*.zip    binary
+*.gz     binary
+*.jar    binary
+*.lib    binary
+*.dll    binary
+*.exe    binary
+*.so     binary
+*.a      binary
