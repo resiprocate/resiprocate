@@ -3,7 +3,9 @@
 
 #include "rutil/Mutex.hxx"
 #include "resip/dum/TargetCommand.hxx"
+#include "resip/stack/Tuple.hxx"
 #include <memory>
+#include <vector>
 
 namespace resip
 {
@@ -17,6 +19,24 @@ class TargetCommand;
 //created. Null will be returned by default.
 class HttpProviderFactory;
 
+struct HttpRequestOptions
+{
+   // Per-endpoint-attempt connection establishment timeout (TCP connect + TLS handshake).
+   // On expiry the next resolved endpoint is tried.  Must be > 0.
+   unsigned int mConnectTimeoutSeconds = 5;
+   // Overall wall-clock budget for the entire request: DNS resolution, all endpoint
+   // connection attempts, TLS handshake and response.  0 = no overall timeout.
+   unsigned int mRequestTimeoutSeconds = 0;
+
+   // Optional address access control list applied by the HTTP client to each IP address the
+   // target host resolves to (after DNS resolution).  Deny wins; if mAllowedAddresses is
+   // non-empty a resolved address must match one of its entries.  When all resolved addresses
+   // are filtered out, the request fails as if blocked by policy (see HttpGetMessage's
+   // blockedByPolicy flag).  Both lists empty (the default) means no address filtering.
+   std::vector<AddressMask> mAllowedAddresses;
+   std::vector<AddressMask> mDeniedAddresses;
+};
+
 class HttpProvider
 {
    public:
@@ -27,6 +47,7 @@ class HttpProvider
       
       //.dcm. tu param will become a postable
       virtual void get(const GenericUri& target, const Data& tid, TransactionUser& tu, TargetCommand::Target& commandTarget)=0;
+      virtual void get(const GenericUri& target, const Data& tid, const Data& userData, const HttpRequestOptions& options, TransactionUser& tu, TargetCommand::Target& commandTarget) {}  // Not =0 for back compat
       virtual ~HttpProvider(){} //impl. singleton destructor pattern later
    private:
       static HttpProvider* mInstance;
@@ -47,6 +68,7 @@ class HttpProviderFactory
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

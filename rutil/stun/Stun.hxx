@@ -231,6 +231,10 @@ namespace resip
 
       bool hasMessageIntegrity;
       StunAtrIntegrity messageIntegrity;
+      // Byte offset of the MESSAGE-INTEGRITY attribute header from the start of
+      // the message buffer (populated by stunParseMessage). Used to verify the
+      // HMAC per RFC 5389 section 15.4.
+      unsigned int messageIntegrityOffset;
 
       bool hasErrorCode;
       StunAtrError errorCode;
@@ -350,6 +354,17 @@ namespace resip
          const StunAtrString& username,
          bool changePort, bool changeIp, unsigned int id = 0);
 
+   /// Verify the MESSAGE-INTEGRITY attribute of a parsed message against the
+   /// supplied short-term credential password, using a constant-time
+   /// comparison. Returns true only if the attribute is present and the HMAC
+   /// matches (RFC 5389 section 15.4). @p buf / @p bufLen must be the raw
+   /// message bytes that were passed to stunParseMessage to produce @p message.
+   bool
+      stunVerifyMessageIntegrity(const char* buf,
+         unsigned int bufLen,
+         const StunMessage& message,
+         const StunAtrString& password);
+
    unsigned int
       stunEncodeMessage(const StunMessage& message,
          char* buf,
@@ -462,6 +477,7 @@ namespace resip
 
 
 /* ====================================================================
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * The Vovida Software License, Version 1.0
  *
  * Redistribution and use in source and binary forms, with or without

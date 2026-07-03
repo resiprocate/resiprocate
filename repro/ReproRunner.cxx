@@ -2016,6 +2016,12 @@ ReproRunner::operator()(resip::StatisticsMessage &statsMessage)
    {
        (*it)->handleStatisticsMessage(statsMessage);
    }
+   // Dispatch to each web admin (so REST /api/v1/stats callers can receive
+   // the payload).
+   for(std::list<WebAdmin*>::iterator it = mWebAdminList.begin(); it != mWebAdminList.end(); it++)
+   {
+       (*it)->handleStatisticsMessage(statsMessage);
+   }
    return true;
 }
 

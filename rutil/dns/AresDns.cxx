@@ -27,6 +27,14 @@
 #endif
 #endif
 
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wdeprecated-declarations"
+#else
+#pragma warning(push)
+#pragma warning(3 : 4996)
+#endif
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS

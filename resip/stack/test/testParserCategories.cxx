@@ -3204,6 +3204,41 @@ main(int arc, char** argv)
       assert(tok.param(p_encoding) == Symbols::Hex);
    }
 
+   {
+      TR _tr("Test IdentityCategory");
+      Data headerString("token;info=<https://biloxi.example.org/biloxi.cert>;alg=rsa-sha1;ppt=test");
+      HeaderFieldValue hfv(headerString.data(), headerString.size());
+
+      IdentityCategory identityHeader(hfv, Headers::UNKNOWN);
+      assert(identityHeader.value() == "token");
+      assert(identityHeader.exists(p_info));
+      assert(identityHeader.param(p_info).uri() == "https://biloxi.example.org/biloxi.cert");
+      assert(identityHeader.param(p_info).exists(p_alg));
+      assert(identityHeader.param(p_info).param(p_alg) == "rsa-sha1");
+      assert(identityHeader.param(p_info).exists(p_ppt));
+      assert(identityHeader.param(p_info).param(p_ppt) == "test");
+
+      Data buff;
+      {
+         DataStream s(buff);
+         identityHeader.encode(s);
+      }
+      resipCerr << buff << endl;
+      assert(buff == headerString);
+
+      IdentityCategory copy(identityHeader);
+      assert(copy.value() == "token");
+      assert(copy.exists(p_info));
+      assert(copy.param(p_info).uri() == "https://biloxi.example.org/biloxi.cert");
+      assert(copy.param(p_info).exists(p_alg));
+      assert(copy.param(p_info).param(p_alg) == "rsa-sha1");
+      assert(copy.param(p_info).exists(p_ppt));
+      assert(copy.param(p_info).param(p_ppt) == "test");
+
+      identityHeader.value() = "foo";
+      assert(identityHeader.value() == "foo");
+   }
+
    assert(!failed);
    resipCerr << "\nTEST OK" << endl;
 
@@ -3213,6 +3248,7 @@ main(int arc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

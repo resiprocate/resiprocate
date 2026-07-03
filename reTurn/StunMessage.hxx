@@ -64,6 +64,11 @@ public:
    void calculateHmacKeyForHa1(resip::Data& hmacKey, const resip::Data& ha1);
    void calculateHmacKey(resip::Data& hmacKey, const resip::Data& username, const resip::Data& realm, const resip::Data& longtermAuthenticationPassword);
    bool checkMessageIntegrity(const resip::Data& hmacKey);
+   // Verify the MESSAGE-INTEGRITY-SHA256 attribute (RFC 8489). Always returns
+   // false in builds without OpenSSL (no SHA-256 available - fail closed).
+   // Per RFC 8489 section 9.1.4/10, when both attributes are present the caller
+   // MUST prefer this over checkMessageIntegrity().
+   bool checkMessageIntegritySha256(const resip::Data& hmacKey);
    bool checkFingerprint();
 
    /// define stun address families
@@ -129,6 +134,7 @@ public:
    const static uint16_t Password         = 0x0007;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
    const static uint16_t MessageIntegrity = 0x0008;
    const static uint16_t ErrorCode        = 0x0009;
+   const static uint16_t MessageIntegritySha256 = 0x001C;  // RFC 8489
    const static uint16_t UnknownAttribute = 0x000A;
    const static uint16_t ReflectedFrom    = 0x000B;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
    const static uint16_t Realm            = 0x0014;
@@ -217,6 +223,11 @@ public:
 
    typedef struct
    {
+      char hash[32];
+   } StunAtrIntegritySha256;
+
+   typedef struct
+   {
       uint8_t propType;
    } TurnAtrEvenPort;
 
@@ -239,6 +250,7 @@ public:
    resip::Data mHmacKey;
 
    uint16_t mMessageIntegrityMsgLength;
+   uint16_t mMessageIntegritySha256MsgLength;
 
    StunMsgHdr mHeader;
 
@@ -265,6 +277,9 @@ public:
 
    bool mHasMessageIntegrity;
    StunAtrIntegrity mMessageIntegrity;
+
+   bool mHasMessageIntegritySha256;
+   StunAtrIntegritySha256 mMessageIntegritySha256;
 
    bool mHasErrorCode;
    StunAtrError mErrorCode;
@@ -363,6 +378,7 @@ private:
    bool stunParseAtrError( char* body, unsigned int hdrLen, StunAtrError& result );
    bool stunParseAtrUnknown( char* body, unsigned int hdrLen, StunAtrUnknown& result );
    bool stunParseAtrIntegrity( char* body, unsigned int hdrLen, StunAtrIntegrity& result );
+   bool stunParseAtrIntegritySha256( char* body, unsigned int hdrLen, StunAtrIntegritySha256& result );
    bool stunParseAtrEvenPort( char* body, unsigned int hdrLen, TurnAtrEvenPort& result );
 
    bool stunParseMessage( char* buf, unsigned int bufLen);
@@ -380,8 +396,12 @@ private:
    char* encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr);
    char* encodeAtrString(char* ptr, uint16_t type, const resip::Data* atr, uint16_t maxBytes);
    char* encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr);
+   char* encodeAtrIntegritySha256(char* ptr, const StunAtrIntegritySha256& atr);
    char* encodeAtrEvenPort(char* ptr, const TurnAtrEvenPort& atr);
    void computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey);
+#ifdef USE_SSL
+   void computeHmacSha256(char* hmac, const char* input, int length, const char* key, int sizeKey);
+#endif
 
    bool mIsValid;
 };

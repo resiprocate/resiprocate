@@ -238,10 +238,10 @@ RequestHandler::checkNonce(const Data& nonce, const StunMessage& request)
 bool 
 RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response)
 {
-   // Don't authenticate shared secret requests, Binding Requests or Indications (if LongTermCredentials are used)
-   if((request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretMethod) ||
-      (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::BindMethod) ||
-      (request.mClass == StunMessage::StunClassIndication))
+   // Don't authenticate indications/responses, or, shared secret and binding requests
+   if((request.mClass != StunMessage::StunClassRequest) ||
+      (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretMethod) ||
+      (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::BindMethod))
    {
       return true;
    }

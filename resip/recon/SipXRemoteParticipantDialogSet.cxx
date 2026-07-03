@@ -254,7 +254,7 @@ void
 SipXRemoteParticipantDialogSet::onMediaStreamReady(const StunTuple& rtpTuple, const StunTuple& rtcpTuple)
 {
    // Get event into dum queue, so that callback is on dum thread
-   MediaStreamReadyEvent* event = new MediaStreamReadyEvent(*this, std::make_shared<MediaStreamReadyEvent::ReTurnParams>(rtpTuple, rtcpTuple));
+   MediaStreamReadyEvent* event = new MediaStreamReadyEvent(&mConversationManager, mActiveRemoteParticipantHandle, std::make_shared<MediaStreamReadyEvent::ReTurnParams>(rtpTuple, rtcpTuple));
    mDum.post(event);
 }
 
@@ -262,7 +262,7 @@ void
 SipXRemoteParticipantDialogSet::onMediaStreamError(unsigned int errorCode)
 {
    // Get event into dum queue, so that callback is on dum thread
-   MediaStreamErrorEvent* event = new MediaStreamErrorEvent(*this, errorCode);
+   MediaStreamErrorEvent* event = new MediaStreamErrorEvent(&mConversationManager, mActiveRemoteParticipantHandle, errorCode);
    mDum.post(event);
 }
 
@@ -448,7 +448,7 @@ SipXRemoteParticipantDialogSet::fixUpSdp(SdpContents* sdp)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

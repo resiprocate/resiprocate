@@ -427,6 +427,8 @@
     <ClCompile Include="ReceivedParameter.cxx">
       <Filter>SIPParameters</Filter>
     </ClCompile>
+    <ClCompile Include="IdentityCategory.cxx" />
+    <ClCompile Include="UriParameter.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ssl\WinSecurity.hxx" />
@@ -906,6 +908,8 @@
     <ClInclude Include="ReceivedParameter.hxx">
       <Filter>SIPParameters</Filter>
     </ClInclude>
+    <ClInclude Include="IdentityCategory.hxx" />
+    <ClInclude Include="UriParameter.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf">

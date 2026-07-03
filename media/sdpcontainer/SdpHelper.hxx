@@ -14,7 +14,7 @@ namespace resip
 }
 
 /**
-  This class is used to form a sipX representation of SDP from
+  This class is used to form a higher level representation of SDP from
   a resiprocate representation.
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
@@ -23,10 +23,15 @@ namespace resip
 class SdpHelper
 {
 public:
-   static sdpcontainer::Sdp::SdpAddressType convertResipAddressType(resip::SdpContents::AddrType resipAddrType);
-   static sdpcontainer::SdpMediaLine::SdpEncryptionMethod convertResipEncryptionMethod(resip::SdpContents::Session::Encryption::KeyType resipMethod);
+   // The main method use to create a higher level Sdp object from a SdpContents object
    static sdpcontainer::Sdp* createSdpFromResipSdp(const resip::SdpContents& resipSdp);
 
+   // Helper methods to convert from SdpContents address type to sdpcontainer address type
+   static sdpcontainer::Sdp::SdpAddressType convertResipAddressType(resip::SdpContents::AddrType resipAddrType);
+   // Helper method to convert from SdpContents encryption key type to sdpcontainer encryption method
+   static sdpcontainer::SdpMediaLine::SdpEncryptionMethod convertResipEncryptionMethod(resip::SdpContents::Session::Encryption::KeyType resipMethod);
+
+   // Helper methods to parse specific SDP attribute lines that SdpContents class doesn't provide parsing for
    static sdpcontainer::SdpMediaLine::SdpCrypto* parseCryptoLine(const resip::Data& cryptoLine);
    static bool parseFingerPrintLine(const resip::Data& fingerprintLine, sdpcontainer::SdpMediaLine::SdpFingerPrintHashFuncType& hashType, resip::Data& fingerPrint);
    static bool parseTransportCapabilitiesLine(const resip::Data& tcapLine, std::list<sdpcontainer::SdpMediaLine::SdpTransportProtocolCapabilities>& tcapList);
@@ -48,6 +53,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

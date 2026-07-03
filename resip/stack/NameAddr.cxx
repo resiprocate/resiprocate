@@ -541,13 +541,19 @@ defineParam(index, "index", DataParameter, "RFC 4244");
 defineParam(rc, "rc", DataParameter, "RFC 4244-bis");
 defineParam(mp, "mp", DataParameter, "RFC 4244-bis");
 defineParam(np, "np", DataParameter, "RFC 4244-bis");
+defineParam(reason, "reason", DataParameter, "RFC 5806");
+defineParam(counter, "counter", UInt32Parameter, "RFC 5806");
+defineParam(limit, "limit", UInt32Parameter, "RFC 5806");
+defineParam(privacy, "privacy", DataParameter, "RFC 5806");
+defineParam(screen, "screen", DataParameter, "RFC 5806");
+
 
 #undef defineParam
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2024, SIP Spectrum, Inc. http://www.sipspectrum.com
+ * Copyright (c) 2024-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

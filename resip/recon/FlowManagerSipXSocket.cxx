@@ -7,6 +7,7 @@
 #include <asio/ssl.hpp>
 #endif
 #include <rutil/Data.hxx>
+#include <rutil/DnsUtil.hxx>
 
 // SYSTEM INCLUDES
 #include "rutil/ResipAssert.h"
@@ -103,14 +104,14 @@ int FlowManagerSipXSocket::read(char* buffer, int bufferLength,
 int FlowManagerSipXSocket::read(char* buffer, int bufferLength,
        struct in_addr* ipAddress, int* port)
 {
-    int iRC ;
-    int iReceivedPort ;
-    UtlString receivedIp ;
+    int iRC;
+    int iReceivedPort;
+    UtlString receivedIp;
 
     iRC = read(buffer, bufferLength, &receivedIp, &iReceivedPort) ;
     if (ipAddress)
     {
-       if (inet_pton(AF_INET, receivedIp.data(), ipAddress) <= 0)
+       if (resip::DnsUtil::inet_pton(AF_INET, receivedIp.data(), ipAddress) <= 0)
        {
           // Handle invalid IP string by zeroing the address
           ipAddress->s_addr = INADDR_NONE;

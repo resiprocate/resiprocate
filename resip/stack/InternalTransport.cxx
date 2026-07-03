@@ -4,12 +4,14 @@
 
 #include <iostream>
 
+#include <fcntl.h>
+
 #if defined(HAVE_SYS_SOCKIO_H)
 #include <sys/sockio.h>
 #endif
 
-#if defined(WIN32)
-#define SOCK_CLOEXEC 0
+#if defined(HAVE_SOCK_CLOEXEC)
+#include <sys/socket.h>
 #endif
 
 #include "resip/stack/Helper.hxx"
@@ -75,22 +77,28 @@ InternalTransport::isFinished() const
 Socket
 InternalTransport::socket(TransportType type, IpVersion ipVer)
 {
+#if defined(HAVE_SOCK_CLOEXEC)
+   const int sockCloexec = SOCK_CLOEXEC;
+#else
+   const int sockCloexec = 0;
+#endif
+
    Socket fd;
    switch (type)
    {
       case UDP:
 #ifdef USE_IPV6
-         fd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
+         fd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_DGRAM | sockCloexec, IPPROTO_UDP);
 #else
-         fd = ::socket(PF_INET, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
+         fd = ::socket(PF_INET, SOCK_DGRAM | sockCloexec, IPPROTO_UDP);
 #endif
          break;
       case TCP:
       case TLS:
 #ifdef USE_IPV6
-         fd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_STREAM | SOCK_CLOEXEC, 0);
+         fd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_STREAM | sockCloexec, 0);
 #else
-         fd = ::socket(PF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
+         fd = ::socket(PF_INET, SOCK_STREAM | sockCloexec, 0);
 #endif
          break;
       default:
@@ -111,6 +119,20 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
       int e = getErrno();
       ErrLog(<< "Failed to set handle information: " << strError(e));
       throw Transport::Exception("Failed SetHandleInformation", __FILE__, __LINE__);
+   }
+#elif !defined(HAVE_SOCK_CLOEXEC)
+   int flags = fcntl(fd, F_GETFD);
+   if (flags == -1)
+   {
+      int e = getErrno();
+      ErrLog (<< "Failed to get socket flags: " << strError(e));
+      throw Transport::Exception("Can't get socket flags", __FILE__,__LINE__);
+   }
+   if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) == -1)
+   {
+      int e = getErrno();
+      ErrLog (<< "Failed to set socket flags: " << strError(e));
+      throw Transport::Exception("Can't set socket flags", __FILE__,__LINE__);
    }
 #endif
 

@@ -1,6 +1,7 @@
 #include "MediaStreamEvent.hxx"
 
 #include "RemoteParticipantDialogSet.hxx"
+#include "RemoteParticipant.hxx"
 
 #include <rutil/Logger.hxx>
 
@@ -24,9 +25,11 @@ MediaStreamReadyEvent::ReTurnParams::encodeBrief(EncodeStream& strm) const
    return encode(strm);
 }
 
-MediaStreamReadyEvent::MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, 
+MediaStreamReadyEvent::MediaStreamReadyEvent(ConversationManager* conversationManager, 
+                                             ParticipantHandle partHandle,
                                              std::shared_ptr<StreamParams> streamParams) :
-   mRemoteParticipantDialogSet(remoteParticipantDialogSet),
+   mConversationManager(conversationManager),
+   mPartHandle(partHandle),
    mStreamParams(streamParams)
 {
 }
@@ -34,7 +37,11 @@ MediaStreamReadyEvent::MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteP
 void 
 MediaStreamReadyEvent::executeCommand()
 {
-   mRemoteParticipantDialogSet.processMediaStreamReadyEvent(mStreamParams);
+   RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+   if (remoteParticipant)
+   {
+      remoteParticipant->getDialogSet().processMediaStreamReadyEvent(mStreamParams);
+   }
 }
 
 resip::Message* 
@@ -57,10 +64,11 @@ MediaStreamReadyEvent::encodeBrief(EncodeStream& strm) const
    return encode(strm);
 }
 
-
-MediaStreamErrorEvent::MediaStreamErrorEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, 
-                                             unsigned int errorCode) : 
-   mRemoteParticipantDialogSet(remoteParticipantDialogSet),
+MediaStreamErrorEvent::MediaStreamErrorEvent(ConversationManager* conversationManager,
+                                             ParticipantHandle partHandle,
+                                             unsigned int errorCode) :
+   mConversationManager(conversationManager),
+   mPartHandle(partHandle),
    mErrorCode(errorCode)
 {
 }
@@ -68,7 +76,11 @@ MediaStreamErrorEvent::MediaStreamErrorEvent(RemoteParticipantDialogSet& remoteP
 void 
 MediaStreamErrorEvent::executeCommand()
 {
-   mRemoteParticipantDialogSet.processMediaStreamErrorEvent(mErrorCode);
+   RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+   if (remoteParticipant)
+   {
+      remoteParticipant->getDialogSet().processMediaStreamErrorEvent(mErrorCode);
+   }
 }
 
 resip::Message* 
@@ -101,6 +113,7 @@ operator<<(EncodeStream& strm, const MediaStreamReadyEvent::StreamParams& params
 
 /* ====================================================================
 
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

@@ -642,7 +642,11 @@ Helper::getResponseCodeReason(int responseCode, Data& reason)
       case 421: reason = "Extension Required"; break;
       case 422: reason = "Session Interval Too Small"; break;
       case 423: reason = "Interval Too Brief"; break;
+      case 428: reason = "Use Identity Header"; break;
       case 430: reason = "Flow failed"; break;
+      case 436: reason = "Bad Identity Info"; break;
+      case 437: reason = "Unsupported Credential"; break;
+      case 438: reason = "Invalid Identity Header"; break;
       case 439: reason = "First Hop Lacks Outbound Support"; break;
       case 480: reason = "Temporarily Unavailable"; break;
       case 481: reason = "Call/Transaction Does Not Exist"; break;
@@ -676,16 +680,16 @@ Helper::computeUniqueBranch()
 {
    Data result(16, Data::Preallocate);
    result += cookie;
-   result += Random::getRandomHex(4);
+   result += Random::getCryptoRandomHex(4);
    result += "C1";
-   result += Random::getRandomHex(2);
+   result += Random::getCryptoRandomHex(2);
    return result;
 }
 
 Data
 Helper::computeCallId()
 {
-   Data hostAndSalt(DnsUtil::getLocalHostName() + Random::getRandomHex(16));
+   Data hostAndSalt(DnsUtil::getLocalHostName() + Random::getCryptoRandomHex(16));
 #ifndef USE_SSL // .bwc. None of this is neccessary if we're using openssl
 #if defined(__linux__) || defined(__APPLE__)
    pid_t pid = getpid();
@@ -708,7 +712,7 @@ Helper::computeCallId()
 Data
 Helper::computeTag(int numBytes)
 {
-   return Random::getRandomHex(numBytes);
+   return Random::getCryptoRandomHex(numBytes);
 }
 
 void
@@ -1874,7 +1878,7 @@ Helper::gruuUserPart(const Data& instanceId,
    ivec[6] = '\x7D';
    ivec[7] = '\x51';
 
-   const Data salt(resip::Random::getRandomHex(saltBytes));
+   const Data salt(resip::Random::getCryptoRandomHex(saltBytes));
 
    const Data token(salt + instanceId + sep + aor + '\0' +
                     pad.substr(0, (8 - ((salt.size() + 

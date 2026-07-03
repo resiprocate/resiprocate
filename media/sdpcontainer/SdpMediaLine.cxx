@@ -19,6 +19,7 @@ const char* SdpMediaLine::SdpTransportProtocolTypeString[] =
    "UNKNOWN",
    "UDP",
    "RTP/AVP",
+   "RTP/AVPF",
    "RTP/SAVP",
    "RTP/SAVPF",
    "TCP",
@@ -28,6 +29,7 @@ const char* SdpMediaLine::SdpTransportProtocolTypeString[] =
    "DCCP/TLS",
    "DCCP/TLS/RTP/SAVP",
    "UDP/TLS/RTP/SAVP",
+   "UDP/TLS/RTP/SAVPF",
    "TCP/TLS/RTP/SAVP"
 };
 
@@ -82,7 +84,9 @@ const char* SdpMediaLine::SdpCryptoSuiteTypeString[] =
    "AES_CM_192_HMAC_SHA1_80",
    "AES_CM_192_HMAC_SHA1_32",
    "AES_CM_256_HMAC_SHA1_80",
-   "AES_CM_256_HMAC_SHA1_32"
+   "AES_CM_256_HMAC_SHA1_32",
+   "AEAD_AES_128_GCM",
+   "AEAD_AES_256_GCM"
 };
 
 const char* SdpMediaLine::SdpCryptoKeyMethodString[] =
@@ -256,6 +260,8 @@ SdpMediaLine::operator=(const SdpMediaLine& rhs)
    mRtpCandidatePresent = rhs.mRtpCandidatePresent;
    mRtcpCandidatePresent = rhs.mRtcpCandidatePresent;
    mCandidatePairs = rhs.mCandidatePairs;
+   mPotentialMediaViews = rhs.mPotentialMediaViews;
+   mPotentialMediaViewString = rhs.mPotentialMediaViewString;
 
    return *this;
 }
@@ -350,6 +356,10 @@ SdpMediaLine::getTransportProtocolTypeFromString(const char * type)
    {
       return PROTOCOL_TYPE_RTP_AVP;
    }
+   else if (resip::isEqualNoCase("RTP/AVPF", dataType))
+   {
+      return PROTOCOL_TYPE_RTP_AVPF;
+   }
    else if(resip::isEqualNoCase("RTP/SAVP", dataType))
    {
       return PROTOCOL_TYPE_RTP_SAVP;
@@ -385,6 +395,10 @@ SdpMediaLine::getTransportProtocolTypeFromString(const char * type)
    else if(resip::isEqualNoCase("UDP/TLS/RTP/SAVP", dataType))
    {
       return PROTOCOL_TYPE_UDP_TLS_RTP_SAVP;
+   }
+   else if (resip::isEqualNoCase("UDP/TLS/RTP/SAVPF", dataType))
+   {
+      return PROTOCOL_TYPE_UDP_TLS_RTP_SAVPF;
    }
    else if(resip::isEqualNoCase("TCP/TLS/RTP/SAVP", dataType))
    {
@@ -847,7 +861,7 @@ sdpcontainer::operator<<( EncodeStream& strm, const SdpMediaLine& sdpMediaLine)
    SdpMediaLine::SdpMediaLineList::const_iterator itPotentialMediaLine = sdpMediaLine.mPotentialMediaViews.begin();
    for(;itPotentialMediaLine!=sdpMediaLine.mPotentialMediaViews.end();itPotentialMediaLine++)
    {
-      strm << "PotentialMediaView:" << std::endl << *itPotentialMediaLine;
+      strm << std::endl << "PotentialMediaView:" << std::endl << *itPotentialMediaLine;
    }
 
    strm << "PotentialMediaViewString: '" << sdpMediaLine.mPotentialMediaViewString << "'" << std::endl;

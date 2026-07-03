@@ -165,6 +165,11 @@ class ParameterTypes
          defineParam(alg, "alg", DataParameter, "RFC 8224"),
          defineParam(ppt, "ppt", DataParameter, "RFC 8224"),
 
+         defineParam(counter, "counter", UInt32Parameter, "RFC 5806"),
+         defineParam(limit, "limit", UInt32Parameter, "RFC 5806"),
+         defineParam(privacy, "privacy", DataParameter, "RFC 5806"),
+         defineParam(screen, "screen", DataParameter, "RFC 5806"),
+
          defineParam(qopOptions, "qop", DataParameter, "RFC 3261"),
          defineParam(addTransport, "addTransport", ExistsParameter, "Internal"),
          defineParam(wsSrcIp, "ws-src-ip", DataParameter, ""),

@@ -237,6 +237,21 @@ hton64(const uint64_t input)
 
 #endif
 
+#ifndef _MSC_VER
+// strerror_r has two incompatible signatures depending on feature-test macros
+// and the platform's libc. The GNU variant returns char* (the message, which
+// may not be 'buf'); the XSI/POSIX variant returns int (0 on success) and
+// writes the message into 'buf'. Let overload resolution pick the right one.
+inline const char* strErrorResult(char* result, char* /*buf*/)
+{
+   return result;                                   // GNU variant
+}
+inline const char* strErrorResult(int result, char* buf)
+{
+   return (result == 0) ? buf : "Unknown error";    // XSI/POSIX variant
+}
+#endif
+
 inline std::string strError(int err)
 {
    char buf[256];
@@ -244,8 +259,7 @@ inline std::string strError(int err)
    strerror_s(buf, sizeof(buf), err);
    return buf;
 #else
-   char* res = strerror_r(err, buf, sizeof(buf));
-   return std::string(res);
+   return strErrorResult(strerror_r(err, buf, sizeof(buf)), buf);
 #endif
 }
 

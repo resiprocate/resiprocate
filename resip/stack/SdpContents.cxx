@@ -1873,6 +1873,27 @@ SdpContents::Session::Medium::getValues(const Data& key) const
    return mSession->getValues(key);
 }
 
+list<Data>
+SdpContents::Session::Medium::getMergedValues(const Data& key) const
+{
+   const list<Data>& mediumValues = mAttributeHelper.getValues(key);
+   if (mSession && mSession->exists(key))
+   {
+      if (mediumValues.size() > 0)
+      {
+         // The attribute exists at both medium level and session level, merge lists for return
+         list<Data> mergedValues = mediumValues;
+         const list<Data>& sessionValues = mSession->getValues(key);
+         mergedValues.insert(mergedValues.end(), sessionValues.begin(), sessionValues.end());
+         return mergedValues;
+      }
+      // Attribute only exists at session level, return them
+      return mSession->getValues(key);
+   }
+   // Attribute only exists at medium level, return them
+   return mediumValues;
+}
+
 void
 SdpContents::Session::Medium::clearAttribute(const Data& key)
 {
@@ -2239,6 +2260,7 @@ std::unique_ptr<Codec::CodecMap> Codec::sStaticCodecs;
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

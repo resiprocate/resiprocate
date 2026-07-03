@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <vector>
 #include "rutil/resipfaststreams.hxx"
 #include "rutil/Inserter.hxx"
 #include "resip/stack/Connection.hxx"
@@ -14,11 +15,87 @@
 using namespace resip;
 using namespace std;
 
+// Builds an AddressMask for the isAddressAllowed tests.
+static AddressMask
+makeAddressMask(const char* addr, IpVersion ver, short maskBits)
+{
+   AddressMask m;
+   m.mAddress = Tuple(addr, 0 /*port*/, ver, TCP);
+   m.mMaskBits = maskBits;
+   return m;
+}
+
 int
 main()
 {
    typedef HashMap<Tuple, Connection*> AddrMap;
    //typedef std::map<Tuple, Connection*> AddrMap;
+
+   // Test isSpecialPurposeAddress function - v4
+   {
+      Tuple testTupleNotSpecial("1.1.1.1", 5069, V4, TCP);
+      assert(!testTupleNotSpecial.isSpecialPurposeAddress());
+
+      Tuple testTuple1("10.0.0.1", 5069, V4, TCP);
+      assert(testTuple1.isSpecialPurposeAddress());
+      Tuple testTuple2("172.16.5.20", 5069, V4, TCP);
+      assert(testTuple2.isSpecialPurposeAddress());
+      Tuple testTuple3("192.168.0.55", 5069, V4, TCP);
+      assert(testTuple3.isSpecialPurposeAddress());
+      Tuple testTuple4("127.0.0.1", 5069, V4, TCP);
+      assert(testTuple4.isSpecialPurposeAddress());
+      Tuple testTuple5("169.254.10.20", 5069, V4, TCP);
+      assert(testTuple5.isSpecialPurposeAddress());
+      Tuple testTuple6("100.64.10.1", 5069, V4, TCP);
+      assert(testTuple6.isSpecialPurposeAddress());
+      Tuple testTuple7("198.18.0.5", 5069, V4, TCP);
+      assert(testTuple7.isSpecialPurposeAddress());
+      Tuple testTuple8("192.0.2.10", 5069, V4, TCP);
+      assert(testTuple8.isSpecialPurposeAddress());
+      Tuple testTuple9("198.51.100.20", 5069, V4, TCP);
+      assert(testTuple9.isSpecialPurposeAddress());
+      Tuple testTuple10("203.0.113.5", 5069, V4, TCP);
+      assert(testTuple10.isSpecialPurposeAddress());
+      Tuple testTuple11("224.0.0.1", 5069, V4, TCP);
+      assert(testTuple11.isSpecialPurposeAddress());
+      Tuple testTuple12("239.255.255.250", 5069, V4, TCP);
+      assert(testTuple12.isSpecialPurposeAddress());
+      Tuple testTuple13("240.0.0.1", 5069, V4, TCP);
+      assert(testTuple13.isSpecialPurposeAddress());
+   }
+
+#ifdef USE_IPV6
+   // Test isSpecialPurposeAddress function - v6
+   {
+      Tuple testTupleV6NotSpecial("2001:4860:4860::8888", 5069, V6, TCP);
+      assert(!testTupleV6NotSpecial.isSpecialPurposeAddress());
+
+      Tuple testTupleV61("::1", 5069, V6, TCP);
+      assert(testTupleV61.isSpecialPurposeAddress());
+      Tuple testTupleV62("::", 5069, V6, TCP);
+      assert(testTupleV62.isSpecialPurposeAddress());
+      Tuple testTupleV63("fe80::1", 5069, V6, TCP);
+      assert(testTupleV63.isSpecialPurposeAddress());
+      Tuple testTupleV64("fc00::1", 5069, V6, TCP);
+      assert(testTupleV64.isSpecialPurposeAddress());
+      Tuple testTupleV65("fd12:3456:789a::1", 5069, V6, TCP);
+      assert(testTupleV65.isSpecialPurposeAddress());
+      Tuple testTupleV66("ff02::1", 5069, V6, TCP);
+      assert(testTupleV66.isSpecialPurposeAddress());
+      Tuple testTupleV67("ff05::2", 5069, V6, TCP);
+      assert(testTupleV67.isSpecialPurposeAddress());
+      Tuple testTupleV68("2001:db8::1", 5069, V6, TCP);
+      assert(testTupleV68.isSpecialPurposeAddress());
+      Tuple testTupleV69("2001:2::1", 5069, V6, TCP);
+      assert(testTupleV69.isSpecialPurposeAddress());
+      Tuple testTupleV70("64:ff9b::1", 5069, V6, TCP);
+      assert(testTupleV70.isSpecialPurposeAddress());
+      Tuple testTupleV71("100::1", 5069, V6, TCP);
+      assert(testTupleV71.isSpecialPurposeAddress());
+      Tuple testTupleV72("::ffff:192.168.1.1", 5069, V6, TCP);
+      assert(testTupleV72.isSpecialPurposeAddress());
+   }
+#endif
 
    // Test isPrivateAddress function - v4
    {
@@ -181,6 +258,50 @@ main()
       assert(t6.mFlowKey == t6prime.mFlowKey);
       assert(loopback.mFlowKey == loopbackprime.mFlowKey);
    }
+
+   // Test isAddressAllowed - address ACL matching (deny wins; a non-empty allow list requires a
+   // match; port and transport are ignored; address family must match for an entry to apply).
+   {
+      std::vector<AddressMask> none;
+
+      // No ACL -> allowed
+      assert(Tuple("203.0.113.7", 0, V4, TCP).isAddressAllowed(none, none));
+
+      // Deny wins (CIDR)
+      std::vector<AddressMask> denyOnly;
+      denyOnly.push_back(makeAddressMask("192.0.2.0", V4, 24));
+      assert(!Tuple("192.0.2.55", 0, V4, TCP).isAddressAllowed(none, denyOnly));
+      assert(Tuple("203.0.113.7", 0, V4, TCP).isAddressAllowed(none, denyOnly));
+
+      // Allow list restricts: must match
+      std::vector<AddressMask> allowOnly;
+      allowOnly.push_back(makeAddressMask("198.51.100.0", V4, 24));
+      assert(Tuple("198.51.100.9", 0, V4, TCP).isAddressAllowed(allowOnly, none));
+      assert(!Tuple("203.0.113.7", 0, V4, TCP).isAddressAllowed(allowOnly, none));
+
+      // Deny takes precedence over allow (allow a /24, deny a /32 inside it)
+      std::vector<AddressMask> allowBroad;
+      allowBroad.push_back(makeAddressMask("198.51.100.0", V4, 24));
+      std::vector<AddressMask> denyNarrow;
+      denyNarrow.push_back(makeAddressMask("198.51.100.9", V4, 32));
+      assert(!Tuple("198.51.100.9", 0, V4, TCP).isAddressAllowed(allowBroad, denyNarrow));
+      assert(Tuple("198.51.100.10", 0, V4, TCP).isAddressAllowed(allowBroad, denyNarrow));
+   }
+
+#ifdef USE_IPV6
+   {
+      std::vector<AddressMask> none;
+
+      // IPv6 matching
+      std::vector<AddressMask> allowV6;
+      allowV6.push_back(makeAddressMask("2001:db8::", V6, 32));
+      assert(Tuple("2001:db8::1234", 0, V6, TCP).isAddressAllowed(allowV6, none));
+      assert(!Tuple("2001:dead::1", 0, V6, TCP).isAddressAllowed(allowV6, none));
+
+      // Family isolation: a v4 address is not matched by a v6 allow entry -> not allowed
+      assert(!Tuple("203.0.113.7", 0, V4, TCP).isAddressAllowed(allowV6, none));
+   }
+#endif
 
 #ifdef USE_IPV6
    {

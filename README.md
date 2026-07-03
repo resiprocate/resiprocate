@@ -13,6 +13,7 @@ The reSIProcate repository contains the following C++ libraries and applications
 
 Please see the following wiki for more information: www.resiprocate.org
 
+Note:  The minimum required C++ version is currently C++11.
 
 # CMake Instructions
 
@@ -49,6 +50,10 @@ delete the CMakeCache.txt file.
 * Some linux packages can be hard to track down.  If you don't need the features that enabling these packages provides you can disable them in the build.  One such package is QPID Proton.
 ```
 $ cmake -DBUILD_QPID_PROTON=OFF .
+```
+libnetxx can also be hard to find, you can disable the TFM test framework to avoid needing it.
+```
+$ cmake -DBUILD_TFM=OFF .
 ```
 
 ### Required Packages For Default Enabled CMake Settings

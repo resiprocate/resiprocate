@@ -75,7 +75,7 @@ void
 KurentoRemoteParticipantDialogSet::onMediaStreamReady(const StunTuple& rtpTuple, const StunTuple& rtcpTuple)
 {
    // Get event into dum queue, so that callback is on dum thread
-   MediaStreamReadyEvent* event = new MediaStreamReadyEvent(*this, std::make_shared<MediaStreamReadyEvent::ReTurnParams>(rtpTuple, rtcpTuple));
+   MediaStreamReadyEvent* event = new MediaStreamReadyEvent(&mConversationManager, mActiveRemoteParticipantHandle, std::make_shared<MediaStreamReadyEvent::ReTurnParams>(rtpTuple, rtcpTuple));
    mDum.post(event);
 }
 
@@ -83,7 +83,7 @@ void
 KurentoRemoteParticipantDialogSet::onMediaStreamError(unsigned int errorCode)
 {
    // Get event into dum queue, so that callback is on dum thread
-   MediaStreamErrorEvent* event = new MediaStreamErrorEvent(*this, errorCode);
+   MediaStreamErrorEvent* event = new MediaStreamErrorEvent(&mConversationManager, mActiveRemoteParticipantHandle, errorCode);
    mDum.post(event);
 }
 
