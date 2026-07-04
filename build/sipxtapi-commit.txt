@@ -1,0 +1,19 @@
+# Pin sipXtapi to a specific upstream commit for reproducible builds and CI
+# caching.
+#
+# NOTE: This is currently only used by the Windows build, which clones and
+# builds sipXtapi from GitHub via ExternalProject. The Linux build does not use
+# this file -- it links against the system-installed libsipxtapi-dev package
+# (find_package(sipXtapi) in the top-level CMakeLists.txt).
+#
+# Replace the placeholder below with the full 40-character sipXtapi
+# commit SHA. Get the current upstream HEAD with:
+#
+#   git ls-remote https://github.com/sipXtapi/sipXtapi.git HEAD
+#
+# The build reads the first line that is nothing but hex digits and uses it as
+# the ExternalProject GIT_TAG; comment lines (like these) are ignored. While no
+# SHA is present, the build falls back to the default branch HEAD (unpinned).
+#
+# Commit Date: July 4, 2026
+2d3fc4aa3addebdad9d990e4066671c3e137d2fa

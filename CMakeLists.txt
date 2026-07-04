@@ -709,10 +709,37 @@ if(USE_SIPXTAPI)
         set(SIPXTAPI_LIBRARIES ${SIPXTAPI_LIBRARIES} ${ARGV0} PARENT_SCOPE)
       endfunction()
 
+      # Pin sipXtapi to a specific commit for reproducible builds and to give CI
+      # a stable cache key.  The commit lives in build/sipxtapi-commit.txt so the
+      # CMake pin and the CI cache key share a single source of truth; bump that
+      # file to move sipXtapi forward.  If no SHA is present there, the default
+      # branch HEAD is used (previous behaviour).
+      set(_sipxtapi_commit_file "${CMAKE_CURRENT_SOURCE_DIR}/build/sipxtapi-commit.txt")
+      set(SIPXTAPI_GIT_TAG_DEFAULT "")
+      if(EXISTS "${_sipxtapi_commit_file}")
+        file(STRINGS "${_sipxtapi_commit_file}" _sipxtapi_commit_lines REGEX "^[0-9a-fA-F]+$")
+        if(_sipxtapi_commit_lines)
+          list(GET _sipxtapi_commit_lines 0 SIPXTAPI_GIT_TAG_DEFAULT)
+        endif()
+      endif()
+      # Use the pin file as the source of truth on every configure, but still
+      # allow an explicit -DSIPXTAPI_GIT_TAG=<ref> to override it.
+      if(NOT DEFINED SIPXTAPI_GIT_TAG)
+        set(SIPXTAPI_GIT_TAG "${SIPXTAPI_GIT_TAG_DEFAULT}")
+      endif()
+      if(SIPXTAPI_GIT_TAG)
+        set(_sipxtapi_git_tag_arg GIT_TAG "${SIPXTAPI_GIT_TAG}")
+        message(STATUS "sipXtapi pinned to ${SIPXTAPI_GIT_TAG}")
+      else()
+        set(_sipxtapi_git_tag_arg "")
+        message(WARNING "sipXtapi is not pinned (building default branch HEAD). Set a commit SHA in build/sipxtapi-commit.txt for reproducible builds and CI caching.")
+      endif()
+
       if(SIPXTAPI_PROJS_IN_VS_GUI)
         # No need to build in this config - VS GUI will do it
         ExternalProject_Add(sipXtapi
           GIT_REPOSITORY https://github.com/sipXtapi/sipXtapi.git
+          ${_sipxtapi_git_tag_arg}
           CONFIGURE_COMMAND ""
           BUILD_COMMAND ""
           UPDATE_COMMAND ""
@@ -720,14 +747,26 @@ if(USE_SIPXTAPI)
         )
         set(SIPXTAPI_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
       else()
-        # When VS GUI is not used, then we build both debug and release and manually link to the output
+        # When VS GUI is not used we build the requested configurations and link
+        # to the output manually.  SIPXTAPI_CONFIGURATIONS defaults to building
+        # both Debug and Release for local/dev use; CI overrides it with
+        # -DSIPXTAPI_CONFIGURATIONS=Debug to build only the config it tests
+        # (roughly halving the sipXtapi build time).
         # TODO Detect VS version and use other .sln versions appropriately
+        set(SIPXTAPI_CONFIGURATIONS "Debug;Release" CACHE STRING "sipXtapi msbuild configurations to build")
+        set(_sipxtapi_build_step BUILD_COMMAND)
+        foreach(_cfg IN LISTS SIPXTAPI_CONFIGURATIONS)
+          list(APPEND _sipxtapi_build_step
+               msbuild sipX-msvc17.sln /p:Configuration=${_cfg} /p:Platform=x64 /m
+               COMMAND)
+        endforeach()
+        list(POP_BACK _sipxtapi_build_step)  # drop the trailing COMMAND keyword
         ExternalProject_Add(sipXtapi
           GIT_REPOSITORY https://github.com/sipXtapi/sipXtapi.git
+          ${_sipxtapi_git_tag_arg}
           CONFIGURE_COMMAND ""
           BUILD_IN_SOURCE TRUE
-          BUILD_COMMAND msbuild sipX-msvc17.sln /p:Configuration=Debug /p:Platform=x64 /m
-          COMMAND msbuild sipX-msvc17.sln /p:Configuration=Release /p:Platform=x64 /m
+          ${_sipxtapi_build_step}
           UPDATE_COMMAND ""
           INSTALL_COMMAND ""
         )
