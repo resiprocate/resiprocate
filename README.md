@@ -51,7 +51,16 @@ delete the CMakeCache.txt file.
 ```
 $ cmake -DBUILD_QPID_PROTON=OFF .
 ```
-libnetxx can also be hard to find, you can disable the TFM test framework to avoid needing it.
+The TFM test framework requires Netxx.  The old libnetxx-dev package is no
+longer available on modern distributions, so by default Netxx is built from the
+copy in the contrib folder (`USE_CONTRIB_NETXX=ON`).  If you have a system copy
+of Netxx that you would rather use, disable this and it will be located via
+find_package:
+```
+$ cmake -DUSE_CONTRIB_NETXX=OFF .
+```
+Alternatively, you can disable the TFM test framework entirely to avoid needing
+Netxx at all:
 ```
 $ cmake -DBUILD_TFM=OFF .
 ```
@@ -71,7 +80,6 @@ $ cmake -DBUILD_TFM=OFF .
 * libgeoip-dev (USE_MAXMIND_GEOIP)
 * libpopt-dev (USE_POPT)
 * libcppunit-dev (BUILD_TFM)
-* libnetxx-dev (BUILD_TFM)
 * libqpid-proton-cpp12-dev (BUILD_QPID_PROTON)
 * sox (REGENERATE_MEDIA_SAMPLES)
 * xxd (REGENERATE_MEDIA_SAMPLES)

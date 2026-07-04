@@ -221,6 +221,11 @@ option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT
 option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
 option(USE_NUGET "Use NuGet package manager" ${USE_NUGET_DEFAULT})
 
+# Netxx is not packaged for modern distributions (the old libnetxx-dev is no
+# longer available), so build it from the contrib folder by default on all
+# platforms.  Set this OFF to use a system-provided Netxx via find_package.
+option(USE_CONTRIB_NETXX "Build Netxx from the contrib folder instead of using a system copy" ON)
+
 if(BUILD_TESTING)
     enable_testing()
 endif()
@@ -297,10 +302,12 @@ endif()
 if(BUILD_TFM)
    set(USE_NETXX TRUE)
    set(USE_CPPUNIT TRUE)
+   set(USE_POPT TRUE)
 endif()
 
 if(BUILD_REND)
    set(USE_BOOST TRUE)
+   set(USE_POPT TRUE)
 endif()
 
 if(USE_KURENTO)
@@ -567,9 +574,11 @@ option_def(BUILD_TFM)
 option_def(BUILD_ICHAT_GW)
 
 # Netxx
-# Debian: libnetxx-dev
+# The old Debian libnetxx-dev package is no longer available on modern
+# distributions, so we build Netxx from contrib by default (see
+# USE_CONTRIB_NETXX above).
 if(USE_NETXX)
-   if(USE_CONTRIB)
+   if(USE_CONTRIB OR USE_CONTRIB_NETXX)
       add_subdirectory(contrib/Netxx-0.3.2)
       set(NETXX_LIBRARIES Netxx)
    else()

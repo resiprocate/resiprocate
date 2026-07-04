@@ -48,7 +48,7 @@ main(int argc, char* argv[])
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
       SdpContents stackSdp(hfv, type);
-      std::auto_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
+      std::unique_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
 
       cout << *sdp << endl;
 
@@ -106,7 +106,7 @@ main(int argc, char* argv[])
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
       SdpContents stackSdp(hfv, type);
-      std::auto_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
+      std::unique_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
 
       cout << *sdp << endl;
 
@@ -170,7 +170,7 @@ main(int argc, char* argv[])
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
       SdpContents stackSdp(hfv, type);
-      std::auto_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
+      std::unique_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
 
       cout << *sdp << endl;
 
@@ -281,7 +281,7 @@ main(int argc, char* argv[])
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
       SdpContents stackSdp(hfv, type);
-      std::auto_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
+      std::unique_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
 
       cout << *sdp << endl;
 
@@ -393,7 +393,7 @@ main(int argc, char* argv[])
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
       SdpContents stackSdp(hfv, type);
-      std::auto_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
+      std::unique_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
 
       cout << *sdp << endl;
 
@@ -595,7 +595,7 @@ main(int argc, char* argv[])
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
       SdpContents stackSdp(hfv, type);
-      std::auto_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
+      std::unique_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
 
       cout << *sdp << endl;
 

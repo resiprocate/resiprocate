@@ -46,6 +46,16 @@ add_library(Netxx STATIC
     src/StreamServer.cxx
 )
 set_target_properties(Netxx PROPERTIES FOLDER contrib)
+# Netxx is a static library, but on platforms with shared libraries (e.g. Linux
+# with BUILD_SHARED_LIBS=ON) it gets linked into shared targets such as tfm, so
+# it must be compiled as position-independent code.  This is a no-op on Windows.
+set_target_properties(Netxx PROPERTIES POSITION_INDEPENDENT_CODE ON)
+# Netxx is old third-party code that needs -fpermissive on modern GCC/Clang and
+# emits warnings the main project builds with -Werror.  Since we don't police
+# contrib code, relax those for this target only (no-op on MSVC).
+if(NOT MSVC)
+   target_compile_options(Netxx PRIVATE -w -fpermissive)
+endif()
 target_include_directories(Netxx PRIVATE include)
 target_include_directories(Netxx INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_compile_definitions(NETXX_NO_INET6)
