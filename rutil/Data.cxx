@@ -367,13 +367,11 @@ Data::Data(const Data& data)
    initFromString(data.mBuf, data.mSize);
 }
 
-#ifdef RESIP_HAS_RVALUE_REFS
 Data::Data(Data &&data) noexcept
    : mBuf(mPreBuffer),mSize(0),mCapacity(LocalAlloc),mShareEnum(Borrow)
 {
    *this = std::move(data);
 }
-#endif
 
 // -2147483646
 static const int Int32MaxSize = 11;
@@ -915,29 +913,14 @@ Data::operator=(const Data& data)
 }
 #endif
 
-#ifdef RESIP_HAS_RVALUE_REFS
 Data& Data::operator=(Data &&data) noexcept
 {
-   if (&data != this)
-   {
-      if (data.mPreBuffer != data.mBuf)
-      {
-         //data is not using the local buffer, take ownership of data.
-         mBuf = data.mBuf;
-         mCapacity = data.mCapacity;
-         mShareEnum = data.mShareEnum;
-         mSize = data.mSize;
-         data.mShareEnum = Borrow; //don't delete the transferred buffer in data's destructor.
-      }
-      else
-      {
-         *this = data; //lvalue assignment operator will be called for named rvalue.
-      }
-   }
-   
-   return *this;
+   // Delegate to takeBuf(), which releases any buffer currently owned by *this,
+   // steals data's buffer (or copies when data uses its local buffer), and
+   // leaves data in a valid empty state. The earlier hand-rolled implementation
+   // leaked *this's heap buffer and left data aliasing the stolen buffer.
+   return takeBuf(data);
 }
-#endif
 
 Data::size_type
 Data::truncate(size_type len)

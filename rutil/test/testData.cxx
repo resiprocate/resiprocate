@@ -1738,6 +1738,59 @@ class TestData
 #endif
          }
 
+         // Move semantics (Data move constructor / move assignment).  These
+         // delegate to takeBuf(): the target releases any buffer it owns, steals
+         // the source's heap buffer (or copies a local-buffer source), and the
+         // moved-from Data is left valid and empty.
+         {
+            // Move-construct from a heap-allocated Data: the buffer is stolen
+            // (same pointer, no copy) and the source is reset to its local buffer.
+            Data heap("this string is intentionally longer than the local buffer so it heap-allocates");
+            assert(heap.mBuf != heap.mPreBuffer);      // heap-allocated
+            const char* stolen = heap.mBuf;
+            Data moved(std::move(heap));
+            assert(moved.mBuf == stolen);              // buffer stolen, not copied
+            assert(moved == "this string is intentionally longer than the local buffer so it heap-allocates");
+            assert(heap.mBuf == heap.mPreBuffer);      // source reset to local buffer
+            assert(heap.size() == 0);                  // source valid and empty
+         }
+
+         {
+            // Move-assign into a Data that already owns a heap buffer.  The old
+            // hand-rolled operator= overwrote the pointer and leaked that buffer;
+            // takeBuf() releases it first.
+            Data target("target initially owns its own heap-allocated buffer with padding padding");
+            assert(target.mBuf != target.mPreBuffer);
+            Data source("brand new source value that also lives on the heap for good measure indeed");
+            assert(source.mBuf != source.mPreBuffer);
+            const char* stolen = source.mBuf;
+            target = std::move(source);
+            assert(target.mBuf == stolen);
+            assert(target == "brand new source value that also lives on the heap for good measure indeed");
+            assert(source.mBuf == source.mPreBuffer);
+            assert(source.size() == 0);
+         }
+
+         {
+            // Move from a short Data that uses its local buffer: the value is
+            // copied into the target's local buffer, and the source left empty.
+            Data shortData("short");
+            assert(shortData.mBuf == shortData.mPreBuffer);   // local buffer
+            Data moved(std::move(shortData));
+            assert(moved == "short");
+            assert(moved.mBuf == moved.mPreBuffer);
+            assert(shortData.size() == 0);
+         }
+
+         {
+            // Self move-assignment must be a safe no-op.  The reference alias
+            // keeps the compiler from diagnosing an obvious self-move.
+            Data d("some value");
+            Data& dref = d;
+            d = std::move(dref);
+            assert(d == "some value");
+         }
+
          std::cerr << "All OK" << endl;
          return 0;
       }
