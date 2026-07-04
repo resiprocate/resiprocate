@@ -91,9 +91,20 @@ std::shared_ptr<ConversationProfile> conversationProfile;
 static ReConServerConfig::MediaStack mediaStack = ReConServerConfig::sipXtapi;
 
 int main(int argc, char** argv)
+try
 {
    ReConServerProcess proc;
    return proc.main(argc, argv);
+}
+catch (const std::exception& e)
+{
+   ErrLog(<< "Unhandled exception: " << e.what());
+   return -1;
+}
+catch (...)
+{
+   ErrLog(<< "Unhandled exception");
+   return -1;
 }
 
 
@@ -763,8 +774,12 @@ void ReConServerProcess::processKeyboard(char input, MyConversationManager& myCo
    }
 }
 
-int 
-ReConServerProcess::main (int argc, char** argv)
+// ReConServerProcess::main is a virtual method, not the C++ program entry
+// point; the real main() above wraps it and catches any escaping exception.
+// bugprone-exception-escape matches on the function name "main", so suppress
+// this (false-positive) match here rather than terminate-guard a normal method.
+int
+ReConServerProcess::main (int argc, char** argv) // NOLINT(bugprone-exception-escape)
 {
    installSignalHandler();
 

@@ -138,7 +138,7 @@ target_add_conditional_sources(recon USE_LIBWEBRTC
 )
 
 target_include_directories(recon PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
-target_include_directories(recon PUBLIC ${SIPXTAPI_INCLUDE_DIRS})
+target_include_directories(recon SYSTEM PUBLIC ${SIPXTAPI_INCLUDE_DIRS})
 target_link_libraries(recon PUBLIC dum)
 target_link_libraries(recon PUBLIC resipmedia)
 target_link_libraries(recon PUBLIC reflow)

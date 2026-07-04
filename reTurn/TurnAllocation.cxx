@@ -58,25 +58,33 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
 
 TurnAllocation::~TurnAllocation()
 {
-   InfoLog(<< "TurnAllocation destroyed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-           mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple);
-
-   stopRelay();
-
-   // Deallocate Port
-   mTurnManager.deallocatePort(mRequestedTuple.getTransportType(), mRequestedTuple.getPort());
-
-   // Cleanup Permission Memory
-   TurnPermissionMap::iterator it;   
-   for(it = mTurnPermissionMap.begin(); it != mTurnPermissionMap.end(); it++)
+   // Destructors are implicitly noexcept, so any exception escaping here would
+   // call std::terminate. Swallow anything thrown by logging or cleanup.
+   try
    {
-      delete it->second;
+      InfoLog(<< "TurnAllocation destroyed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" <<
+              mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple);
+
+      stopRelay();
+
+      // Deallocate Port
+      mTurnManager.deallocatePort(mRequestedTuple.getTransportType(), mRequestedTuple.getPort());
+
+      // Cleanup Permission Memory
+      TurnPermissionMap::iterator it;
+      for(it = mTurnPermissionMap.begin(); it != mTurnPermissionMap.end(); it++)
+      {
+         delete it->second;
+      }
+
+      // Unregister for TurnTransport notifications
+      if(mLocalTurnSocket)
+      {
+         mLocalTurnSocket->registerAsyncSocketBaseHandler(0);
+      }
    }
-   
-   // Unregister for TurnTransport notifications
-   if(mLocalTurnSocket)
+   catch (...)
    {
-      mLocalTurnSocket->registerAsyncSocketBaseHandler(0);
    }
 }
 

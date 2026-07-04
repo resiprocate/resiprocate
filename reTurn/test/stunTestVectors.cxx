@@ -17,6 +17,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 int main(int argc, char* argv[])
+try
 {
    StunTuple local(StunTuple::UDP, asio::ip::make_address("10.0.0.1"), 5000);
    StunTuple remote(StunTuple::UDP, asio::ip::make_address("10.0.0.2"), 5001);
@@ -167,6 +168,16 @@ int main(int argc, char* argv[])
 
    InfoLog(<< "All tests passed!");
    return 0;
+}
+catch (const std::exception& e)
+{
+   ErrLog(<< "Unhandled exception: " << e.what());
+   return 1;
+}
+catch (...)
+{
+   ErrLog(<< "Unhandled exception");
+   return 1;
 }
 
 

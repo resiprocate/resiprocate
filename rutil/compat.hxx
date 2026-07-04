@@ -18,6 +18,25 @@
 #  undef __OPTIMIZE__ // weird intel bug with ntohs and htons macros
 #endif
 
+/**
+   Lambda capture default that also captures 'this'.
+
+   A plain '[=]' capture-default implicitly captures 'this', which is deprecated
+   in C++20, while spelling it '[=, this]' is a C++20 extension that warns under
+   earlier standards.  RESIP_LAMBDA_CAPTURE_ALL_AND_THIS expands to whichever
+   form is well-formed and warning-free for the language version in use, so the
+   same source compiles cleanly from C++11 through C++20 and later.  (_MSVC_LANG
+   is checked because MSVC reports the real standard there rather than in
+   __cplusplus unless /Zc:__cplusplus is set.)
+
+   Usage:  [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS]() { ...uses this and locals... }
+*/
+#if __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+#  define RESIP_LAMBDA_CAPTURE_ALL_AND_THIS =, this
+#else
+#  define RESIP_LAMBDA_CAPTURE_ALL_AND_THIS =
+#endif
+
 //#if defined(HAVE_SYS_INT_TYPES_H)
 //#include <sys/int_types.h>
 //#endif
