@@ -907,64 +907,11 @@ namespace resip
    int
       stunRand()
    {
-      // return 32 bits of random stuff
-      resip_assert(sizeof(int) == 4);
-      static bool init = false;
-      if (!init)
-      {
-         init = true;
-
-         uint64_t tick;
-
-#if defined(WIN32) 
-#if !defined(UNDER_CE) && !defined(__GNUC__) && !defined(_WIN64) && !defined(_M_ARM)
-         volatile unsigned int lowtick = 0, hightick = 0;
-         __asm
-         {
-            rdtsc
-            mov lowtick, eax
-            mov hightick, edx
-         }
-         tick = hightick;
-         tick <<= 32;
-         tick |= lowtick;
-#else
-         tick = GetTickCount();
-#endif
-#elif defined(__GNUC__) && ( defined(__i686__) || defined(__i386__) || defined(__x86_64__) )
-         asm("rdtsc" : "=A" (tick));
-#elif defined (__SUNPRO_CC) || (defined(__sun) && defined(__SVR4))
-         tick = gethrtime();
-#elif defined(__APPLE__) || defined(__MACH__)
-         int fd = open("/dev/random", O_RDONLY);
-         read(fd, &tick, sizeof(tick));
-         closeSocket(fd);
-#elif defined(__linux__)
-         int fd = open("/dev/urandom", O_RDONLY);
-         read(fd, &tick, sizeof(tick));
-         closeSocket(fd);
-#else
-#     error Need some way to seed the random number generator 
-#endif 
-         int seed = int(tick);
-#ifdef WIN32
-         srand(seed);
-#else
-         srandom(seed);
-#endif
-      }
-
-#ifdef WIN32
-      resip_assert(RAND_MAX == 0x7fff);
-      int r1 = rand();
-      int r2 = rand();
-
-      int ret = (r1 << 16) + r2;
-
-      return ret;
-#else
-      return random();
-#endif
+      // Delegate to the portable, self-initializing resip Random class.  This
+      // used to hand-roll a platform-specific seed (rdtsc / gethrtime /
+      // /dev/urandom + srand/srandom) and #error on unlisted platforms such as
+      // OpenBSD/arm64 (resiprocate issue #150); Random handles all of that.
+      return Random::getRandom();
    }
 
 
