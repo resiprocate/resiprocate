@@ -398,6 +398,67 @@ Sdp* SdpHelper::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
    return sdp;
 }
 
+// Resolve a direction attribute stated directly on the session.  Returns false if the
+// session states no direction at all.
+static bool
+getSessionDirection(const SdpContents::Session& resipSession, SdpMediaLine::SdpDirectionType& direction)
+{
+   if(resipSession.exists("sendrecv"))
+   {
+      direction = SdpMediaLine::DIRECTION_TYPE_SENDRECV;
+   }
+   else if(resipSession.exists("sendonly"))
+   {
+      direction = SdpMediaLine::DIRECTION_TYPE_SENDONLY;
+   }
+   else if(resipSession.exists("recvonly"))
+   {
+      direction = SdpMediaLine::DIRECTION_TYPE_RECVONLY;
+   }
+   else if(resipSession.exists("inactive"))
+   {
+      direction = SdpMediaLine::DIRECTION_TYPE_INACTIVE;
+   }
+   else
+   {
+      return false;
+   }
+   return true;
+}
+
+// Resolve a direction attribute stated directly on the medium, ignoring any inherited
+// from the session.  Returns false if the medium states no direction of its own.
+//
+// Medium::exists() deliberately falls back to the session, so it cannot by itself tell
+// a media-level attribute from an inherited one; querying the session directly does.
+// An attribute stated on both medium and session is reported here as absent, which is
+// harmless: the session-level fallback then yields the identical direction.
+static bool
+getMediumDirection(const SdpContents::Session::Medium& resipMedia, const SdpContents::Session& resipSession, SdpMediaLine::SdpDirectionType& direction)
+{
+   if(resipMedia.exists("sendrecv") && !resipSession.exists("sendrecv"))
+   {
+      direction = SdpMediaLine::DIRECTION_TYPE_SENDRECV;
+   }
+   else if(resipMedia.exists("sendonly") && !resipSession.exists("sendonly"))
+   {
+      direction = SdpMediaLine::DIRECTION_TYPE_SENDONLY;
+   }
+   else if(resipMedia.exists("recvonly") && !resipSession.exists("recvonly"))
+   {
+      direction = SdpMediaLine::DIRECTION_TYPE_RECVONLY;
+   }
+   else if(resipMedia.exists("inactive") && !resipSession.exists("inactive"))
+   {
+      direction = SdpMediaLine::DIRECTION_TYPE_INACTIVE;
+   }
+   else
+   {
+      return false;
+   }
+   return true;
+}
+
 SdpMediaLine* 
 SdpHelper::parseMediaLine(const SdpContents::Session::Medium& resipMedia, const SdpContents::Session& resipSession, bool sessionRtcpEnabled)
 {
@@ -602,22 +663,17 @@ SdpHelper::parseMediaLine(const SdpContents::Session::Medium& resipMedia, const 
    }
 
    // Set direction, a=sendrecv, a=sendonly, a=recvonly, a=inactive
-   SdpMediaLine::SdpDirectionType direction = SdpMediaLine::DIRECTION_TYPE_SENDRECV; // default
-   if(resipMedia.exists("sendrecv"))
+   //
+   // A direction stated on the medium overrides one stated at session level: RFC 4566
+   // makes a session-level attribute only a default for media sections that omit their
+   // own.  Checking the medium first matters because Medium::exists() falls back to the
+   // session, so a plain if/else chain over resipMedia.exists() lets a session-level
+   // a=sendrecv shadow a media-level a=sendonly -- a pairing Firefox emits routinely.
+   SdpMediaLine::SdpDirectionType direction;
+   if(!getMediumDirection(resipMedia, resipSession, direction) &&
+      !getSessionDirection(resipSession, direction))
    {
-      direction = SdpMediaLine::DIRECTION_TYPE_SENDRECV;
-   }
-   else if(resipMedia.exists("sendonly"))
-   {
-      direction = SdpMediaLine::DIRECTION_TYPE_SENDONLY;
-   }
-   else if(resipMedia.exists("recvonly"))
-   {
-      direction = SdpMediaLine::DIRECTION_TYPE_RECVONLY;
-   }
-   else if(resipMedia.exists("inactive"))
-   {
-      direction = SdpMediaLine::DIRECTION_TYPE_INACTIVE;
+      direction = SdpMediaLine::DIRECTION_TYPE_SENDRECV;  // neither states one: SDP default
    }
    mediaLine->setDirection(direction);
 

@@ -8,6 +8,46 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
+// Build a minimal single-m-line SDP with the requested session level and media level
+// direction attributes.  Pass 0 for either to omit it.
+static Data
+makeDirectionSdp(const char* sessionDirection, const char* mediaDirection)
+{
+   Data txt("v=0\r\n"
+            "o=test 1 1 IN IP4 10.0.0.1\r\n"
+            "s=-\r\n"
+            "c=IN IP4 10.0.0.1\r\n"
+            "t=0 0\r\n");
+   if(sessionDirection)
+   {
+      txt += Data("a=") + sessionDirection + "\r\n";
+   }
+   txt += "m=audio 45894 RTP/AVP 0\r\n";
+   if(mediaDirection)
+   {
+      txt += Data("a=") + mediaDirection + "\r\n";
+   }
+   return txt;
+}
+
+// Parse 'txt' and return the resolved direction of the media line at 'mediaLineIndex'.
+static sdpcontainer::SdpMediaLine::SdpDirectionType
+parseDirection(const Data& txt, unsigned int mediaLineIndex = 0)
+{
+   HeaderFieldValue hfv(txt.data(), txt.size());
+   Mime type("application", "sdp");
+   SdpContents stackSdp(hfv, type);
+   std::unique_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
+
+   assert(sdp->getMediaLines().size() > mediaLineIndex);
+   sdpcontainer::Sdp::MediaLineList::const_iterator it = sdp->getMediaLines().begin();
+   for(unsigned int i = 0; i < mediaLineIndex; i++)
+   {
+      it++;
+   }
+   return (*it)->getDirection();
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -692,6 +732,72 @@ main(int argc, char* argv[])
          }
       }
    }
+
+   // Direction resolution: a media level direction overrides a session level one.
+   //
+   // RFC 4566 makes a session level attribute only a default for media sections that do
+   // not state their own.  Medium::exists() falls back to the session, so resolving the
+   // direction from the medium alone let a session level a=sendrecv shadow a media level
+   // a=sendonly
+   {
+      CritLog(<< "Testing direction resolution");
+
+      // Media level direction wins over a conflicting session level one.
+      assert(parseDirection(makeDirectionSdp("sendrecv", "sendonly")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY);
+      assert(parseDirection(makeDirectionSdp("sendrecv", "recvonly")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY);
+      assert(parseDirection(makeDirectionSdp("sendrecv", "inactive")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE);
+      assert(parseDirection(makeDirectionSdp("sendonly", "sendrecv")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV);
+      assert(parseDirection(makeDirectionSdp("inactive", "recvonly")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY);
+      assert(parseDirection(makeDirectionSdp("recvonly", "inactive")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE);
+
+      // Session level direction applies when the medium states none.
+      assert(parseDirection(makeDirectionSdp("sendrecv", 0)) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV);
+      assert(parseDirection(makeDirectionSdp("sendonly", 0)) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY);
+      assert(parseDirection(makeDirectionSdp("recvonly", 0)) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY);
+      assert(parseDirection(makeDirectionSdp("inactive", 0)) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE);
+
+      // Media level direction applies when the session states none.
+      assert(parseDirection(makeDirectionSdp(0, "sendrecv")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV);
+      assert(parseDirection(makeDirectionSdp(0, "sendonly")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY);
+      assert(parseDirection(makeDirectionSdp(0, "recvonly")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY);
+      assert(parseDirection(makeDirectionSdp(0, "inactive")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE);
+
+      // Both state the same direction.
+      assert(parseDirection(makeDirectionSdp("sendonly", "sendonly")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY);
+      assert(parseDirection(makeDirectionSdp("recvonly", "recvonly")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY);
+      assert(parseDirection(makeDirectionSdp("inactive", "inactive")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE);
+      assert(parseDirection(makeDirectionSdp("sendrecv", "sendrecv")) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV);
+
+      // Neither states one: sendrecv is the SDP default.
+      assert(parseDirection(makeDirectionSdp(0, 0)) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV);
+   }
+
+   // Direction is resolved per media line, and each overrides the session independently.
+   // This is the shape of a SIPREC recorder offer: a session level a=sendrecv from the
+   // browser, with both m= lines forced to a=sendonly.
+   {
+      Data txt("v=0\r\n"
+         "o=test 1 1 IN IP4 10.0.0.1\r\n"
+         "s=-\r\n"
+         "c=IN IP4 10.0.0.1\r\n"
+         "t=0 0\r\n"
+         "a=sendrecv\r\n"
+         "m=audio 45894 RTP/AVP 0\r\n"
+         "a=label:1\r\n"
+         "a=sendonly\r\n"
+         "m=audio 45896 RTP/AVP 0\r\n"
+         "a=label:2\r\n"
+         "a=recvonly\r\n"
+         "m=audio 45898 RTP/AVP 0\r\n"
+         "a=label:3\r\n");
+
+      assert(parseDirection(txt, 0) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY);
+      assert(parseDirection(txt, 1) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY);
+      // Third line states no direction of its own, so it inherits the session default.
+      assert(parseDirection(txt, 2) == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV);
+   }
+
+   CritLog(<< "SdpHelper Test Driver Finished - all tests passed");
 
    return 0;
 }

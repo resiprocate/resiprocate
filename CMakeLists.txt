@@ -975,6 +975,35 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
 # Used to group targets together when CMake generates projects for IDEs
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# Present each target's files as a single flat list in generated IDE projects
+# (e.g. Visual Studio) instead of the default "Source Files" / "Header Files"
+# folders, with .config/.txt files collected under one "Config and Text Files"
+# folder.
+#
+# source_group() only affects the directory scope in which it is called and is
+# NOT inherited by subdirectories, so a single call here would not reach targets
+# defined under add_subdirectory().  Instead we wrap add_library()/
+# add_executable() -- which run in the caller's directory scope -- so the
+# grouping is applied wherever a target is defined.  Redefining the default
+# groups with a regex that never matches ("^$") leaves their files unmatched, so
+# they fall back to the project root.
+function(_resip_flatten_source_groups)
+   source_group("Source Files"          REGULAR_EXPRESSION "^$")
+   source_group("Header Files"          REGULAR_EXPRESSION "^$")
+   source_group("Resource Files"        REGULAR_EXPRESSION "^$")
+   source_group("Config and Text Files" REGULAR_EXPRESSION "\\.(config|txt)$")
+endfunction()
+
+function(add_library)
+   _add_library(${ARGV})
+   _resip_flatten_source_groups()
+endfunction()
+
+function(add_executable)
+   _add_executable(${ARGV})
+   _resip_flatten_source_groups()
+endfunction()
+
 if(MSVC)
     add_compile_options(/W3 /sdl)
 endif()
