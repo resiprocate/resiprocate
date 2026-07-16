@@ -81,7 +81,8 @@ Uri::Uri(const Uri& rhs,
      mCanonicalHost(rhs.mCanonicalHost),
      mIsBetweenAngleQuotes(rhs.mIsBetweenAngleQuotes),
      mEmbeddedHeadersText(rhs.mEmbeddedHeadersText.get() ? new Data(*rhs.mEmbeddedHeadersText) : 0),
-     mEmbeddedHeaders(rhs.mEmbeddedHeaders.get() ? new SipMessage(*rhs.mEmbeddedHeaders) : 0)
+     mEmbeddedHeaders(rhs.mEmbeddedHeaders.get() ? new SipMessage(*rhs.mEmbeddedHeaders) : 0),
+     mUserRaw(rhs.mUserRaw ? new Data(*rhs.mUserRaw) : nullptr)
 {}
 
 
@@ -359,6 +360,14 @@ Uri::operator=(const Uri& rhs)
       mHostCanonicalized = rhs.mHostCanonicalized;
       mCanonicalHost = rhs.mCanonicalHost;
       mUser = rhs.mUser;
+      if (rhs.mUserRaw)
+      {
+         mUserRaw.reset(new Data(*rhs.mUserRaw));
+      }
+      else
+      {
+         mUserRaw.reset();
+      }
       mUserParameters = rhs.mUserParameters;
       mPort = rhs.mPort;
       mPassword = rhs.mPassword;
@@ -866,6 +875,14 @@ Uri::aorEqual(const resip::Uri& rhs) const
 void 
 Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
 {
+   // The AOR is an identity/lookup key, so the user part is intentionally
+   // emitted in canonical (table-escaped) form and is NOT preserved verbatim
+   // the way encodeParsed()/getAorAsUri() preserve the sender's mUserRaw.
+   // Canonicalizing here keeps the key stable regardless of how a sender
+   // escaped it (e.g. "%23" vs a literal '#'), which matters because
+   // getAorNoPort() feeds auth key comparisons (DigestAuthenticator, etc.)
+   // and the registration DB is keyed on this form. Do not change this to
+   // preserve mUserRaw without auditing those key/identity paths.
    checkParsed();
    // canonicalize host
 
@@ -1017,6 +1034,7 @@ Uri::setUserAsTelephoneSubscriber(const Token& telephoneSubscriber)
    mUser.clear();
    oDataStream str(mUser);
    str << telephoneSubscriber;
+   mUserRaw.reset();
 }
 
 Data
@@ -1041,8 +1059,14 @@ Uri::getAorAsUri(TransportType transportTypeToRemoveDefaultPort) const
    //.dcm. -- tel conversion?
    checkParsed();
    Uri ret;
-   ret.scheme() = mScheme;   
+   ret.scheme() = mScheme;
    ret.user() = mUser;
+   // Carry the as-received user bytes so a derived URI that reaches the wire
+   // (e.g. a Route built from the AOR) preserves the sender's escaping too.
+   if (mUserRaw)
+   {
+      ret.mUserRaw.reset(new Data(*mUserRaw));
+   }
    ret.host() = mHost;
 
    // Remove any default ports (if required)
@@ -1075,6 +1099,9 @@ Uri::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
    const char* start = pb.position();
+
+   // Cleared up front so a path that sets no user part leaves no stale raw.
+   mUserRaw.reset();
 
    // Relative URLs (typically HTTP) start with a slash.  These
    // are seen when parsing the WebSocket handshake.
@@ -1155,7 +1182,28 @@ Uri::parse(ParseBuffer& pb)
       if(atSign)
       {
 #ifdef HANDLE_CHARACTER_ESCAPING
+         // Scan the user part -- exactly the range dataUnescaped decodes below
+         // (':' before a password, else '@') -- for an escape before decoding.
+         // (This '%' scan repeats one dataUnescaped does internally.)
+         const char* userEnd = pb.position();
+         bool userHasEscape = false;
+         for (const char* p = start; p < userEnd; ++p)
+         {
+            if (*p == Symbols::PERCENT[0])
+            {
+               userHasEscape = true;
+               break;
+            }
+         }
          pb.dataUnescaped(mUser, start);
+         // Capture the as-received bytes only after the decode succeeds -- it can
+         // throw on a malformed escape, and mUserRaw must never hold bytes that
+         // fail to decode, so the encode-path re-decode cannot throw. mUserRaw
+         // then always decodes back to the mUser just produced.
+         if (userHasEscape)
+         {
+            mUserRaw.reset(new Data(start, (Data::size_type)(userEnd - start)));
+         }
 #else
          pb.data(mUser, start);
 #endif
@@ -1277,7 +1325,33 @@ Uri::encodeParsed(EncodeStream& str) const
    if (!mUser.empty())
    {
 #ifdef HANDLE_CHARACTER_ESCAPING
-      mUser.escapeToStream(str, getUserEncodingTable()); 
+      if (mUserRaw)
+      {
+         // Emit the as-received bytes verbatim while they still decode (via the
+         // same dataUnescaped as parse) to the current mUser, so the sender's
+         // escaping (e.g. %23) survives regardless of the encoding table; a
+         // post-parse edit breaks the match and falls back to table escaping.
+         // Cost: re-decodes and compares on the encode path for every
+         // %-containing user part (inline Data buffer avoids a heap alloc for
+         // short values; unescaped users skip this branch).
+         Data decodedUserRaw;
+         ParseBuffer pb(mUserRaw->data(), mUserRaw->size());
+         const char* anchor = pb.position();
+         pb.skipToEnd();
+         pb.dataUnescaped(decodedUserRaw, anchor);
+         if (decodedUserRaw == mUser)
+         {
+            str << *mUserRaw;
+         }
+         else
+         {
+            mUser.escapeToStream(str, getUserEncodingTable());
+         }
+      }
+      else
+      {
+         mUser.escapeToStream(str, getUserEncodingTable());
+      }
 #else
       str << mUser;
 #endif
