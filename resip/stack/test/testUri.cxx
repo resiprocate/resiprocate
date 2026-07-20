@@ -1070,6 +1070,59 @@ main(int argc, char* argv[])
       Uri::setUriUserEncoding('#', true);
    }
 
+   // An already-escaped '#' (%23) in the user part must be preserved on the
+   // wire even when '#' encoding is disabled; it must not be unquoted to a bare
+   // '#' (which is invalid in the RFC 3261 user part and rejected by strict
+   // parsers downstream).
+   {
+      Uri::setUriUserEncoding('#', false);
+
+      // user() still exposes the decoded value
+      Uri uri = Uri("sip:1234%2300442031111111@lvdx.com");
+      assert(uri.user() == "1234#00442031111111");
+      assert(Data::from(uri) == "sip:1234%2300442031111111@lvdx.com");
+
+      // ... and it survives a host retarget (which re-serializes the URI)
+      uri.host() = "pn.internal";
+      assert(Data::from(uri) == "sip:1234%2300442031111111@pn.internal");
+
+      // a literal '#' input still passes through as a literal '#'
+      Uri literalUri = Uri("sip:1234#00442031111111@lvdx.com");
+      literalUri.host() = "pn.internal";
+      assert(Data::from(literalUri) == "sip:1234#00442031111111@pn.internal");
+
+      // modifying the user part after parse abandons the as-received bytes and
+      // falls back to table-based escaping ('#' disabled -> bare '#')
+      Uri modified = Uri("sip:1234%2300442031111111@lvdx.com");
+      modified.user() = "5678#99";
+      assert(Data::from(modified) == "sip:5678#99@lvdx.com");
+
+      // the preserved bytes survive a copy and an assignment
+      Uri copied = uri;
+      assert(Data::from(copied) == "sip:1234%2300442031111111@pn.internal");
+      Uri assigned;
+      assigned = uri;
+      assert(Data::from(assigned) == "sip:1234%2300442031111111@pn.internal");
+
+      // a URI derived via getAorAsUri (e.g. used to build an on-wire Route)
+      // also preserves the escaping
+      Uri aorUri = Uri("sip:1234%2300442031111111@lvdx.com").getAorAsUri();
+      assert(Data::from(aorUri) == "sip:1234%2300442031111111@lvdx.com");
+
+      // an escaped user part followed by a password: the raw capture must cover
+      // only the user part (up to the colon), not the password
+      Uri withPassword = Uri("sip:1234%2300:secret@lvdx.com");
+      withPassword.host() = "pn.internal";
+      assert(Data::from(withPassword) == "sip:1234%2300:secret@pn.internal");
+
+      Uri::setUriUserEncoding('#', true);
+
+      // the raw form is emitted byte-for-byte: a lowercase escape stays
+      // lowercase, and an escaped otherwise-safe character stays escaped
+      // rather than being canonicalised by the encoding table
+      assert(Data::from(Uri("sip:12%2a34@lvdx.com")) == "sip:12%2a34@lvdx.com");
+   }
+
    {
       Uri uri = Uri("sip:1234#00442031111111;phone-context=+89@lvdx.com");
       assert(uri.userIsTelephoneSubscriber());
