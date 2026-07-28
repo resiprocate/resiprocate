@@ -977,8 +977,8 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Present each target's files as a single flat list in generated IDE projects
 # (e.g. Visual Studio) instead of the default "Source Files" / "Header Files"
-# folders, with .config/.txt files collected under one "Config and Text Files"
-# folder.
+# folders, with .config/.txt/.pem files collected under one "Config and Text
+# Files" folder.
 #
 # source_group() only affects the directory scope in which it is called and is
 # NOT inherited by subdirectories, so a single call here would not reach targets
@@ -991,7 +991,7 @@ function(_resip_flatten_source_groups)
    source_group("Source Files"          REGULAR_EXPRESSION "^$")
    source_group("Header Files"          REGULAR_EXPRESSION "^$")
    source_group("Resource Files"        REGULAR_EXPRESSION "^$")
-   source_group("Config and Text Files" REGULAR_EXPRESSION "\\.(config|txt)$")
+   source_group("Config and Text Files" REGULAR_EXPRESSION "\\.(config|txt|pem)$")
 endfunction()
 
 function(add_library)
