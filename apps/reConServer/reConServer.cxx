@@ -808,9 +808,12 @@ ReConServerProcess::main (int argc, char** argv) // NOLINT(bugprone-exception-es
       ErrLog(<< "Ignoring KeyboardInput=true setting as we are running as a daemon");
       mKeyboardInput = false;
    }
-   setPidFile(pidFile);
+   if(!pidFile.empty() && checkPosixProcessControl("PidFile"))
+   {
+      setPidFile(pidFile);
+   }
    // Daemonize if necessary
-   if(daemonize)
+   if(daemonize && checkPosixProcessControl("Daemonize"))
    {
       ReConServerProcess::daemonize();
    }
@@ -1468,7 +1471,7 @@ ReConServerProcess::main (int argc, char** argv) // NOLINT(bugprone-exception-es
       //mUserAgent->createSubscription("message-summary", uri, 120, Mime("application", "simple-message-summary")); // thread safe
 
       // Drop privileges (can do this now that sockets are bound)
-      if(!runAsUser.empty())
+      if(!runAsUser.empty() && checkPosixProcessControl("RunAsUser/RunAsGroup"))
       {
          InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
          dropPrivileges(runAsUser, runAsGroup);

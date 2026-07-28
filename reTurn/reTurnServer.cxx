@@ -71,7 +71,10 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
       exit(-1);
    }
 
-   setPidFile(reTurnConfig.mPidFile);
+   if(!reTurnConfig.mPidFile.empty() && checkPosixProcessControl("PidFile"))
+   {
+      setPidFile(reTurnConfig.mPidFile);
+   }
    if(isAlreadyRunning())
    {
       std::cerr << "Already running, will not start two instances.  Please stop existing process and/or delete PID file.";
@@ -82,7 +85,7 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
    }
 
    // Daemonize if necessary
-   if(reTurnConfig.mDaemonize)
+   if(reTurnConfig.mDaemonize && checkPosixProcessControl("Daemonize"))
    {
       daemonize();
    }
@@ -171,7 +174,7 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 #endif
 
       // Drop privileges (can do this now that sockets are bound)
-      if(!reTurnConfig.mRunAsUser.empty())
+      if(!reTurnConfig.mRunAsUser.empty() && checkPosixProcessControl("RunAsUser/RunAsGroup"))
       {
          InfoLog( << "Trying to drop privileges, configured uid = " << reTurnConfig.mRunAsUser << " gid = " << reTurnConfig.mRunAsGroup);
          dropPrivileges(reTurnConfig.mRunAsUser, reTurnConfig.mRunAsGroup);
@@ -226,6 +229,7 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

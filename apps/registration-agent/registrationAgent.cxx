@@ -69,8 +69,12 @@ class MyClientRegistrationAgent : public ServerProcess
             exit(1);
          }
 
-         setPidFile(cfg.getConfigData("PidFile", "", true));
-         if(cfg.getConfigBool("Daemonize", false))
+         Data pidFile = cfg.getConfigData("PidFile", "", true);
+         if(!pidFile.empty() && checkPosixProcessControl("PidFile"))
+         {
+            setPidFile(pidFile);
+         }
+         if(cfg.getConfigBool("Daemonize", false) && checkPosixProcessControl("Daemonize"))
          {
             daemonize();
          }
@@ -136,7 +140,7 @@ class MyClientRegistrationAgent : public ServerProcess
          // Drop privileges (can do this now that sockets are bound)
          Data runAsUser = cfg.getConfigData("RunAsUser", Data::Empty, true);
          Data runAsGroup = cfg.getConfigData("RunAsGroup", Data::Empty, true);
-         if(!runAsUser.empty())
+         if(!runAsUser.empty() && checkPosixProcessControl("RunAsUser/RunAsGroup"))
          {
             InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
             dropPrivileges(runAsUser, runAsGroup);

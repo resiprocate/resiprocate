@@ -291,7 +291,11 @@ ReproRunner::run(int argc, char** argv)
    // Non-Windows server process stuff
    if(!mRestarting)
    {
-      setPidFile(mProxyConfig->getConfigData("PidFile", Data::Empty, true));
+      Data pidFile = mProxyConfig->getConfigData("PidFile", Data::Empty, true);
+      if(!pidFile.empty() && checkPosixProcessControl("PidFile"))
+      {
+         setPidFile(pidFile);
+      }
 
       if(isAlreadyRunning())
       {
@@ -302,7 +306,7 @@ ReproRunner::run(int argc, char** argv)
          return false;
       }
 
-      if(mProxyConfig->getConfigBool("Daemonize", false))
+      if(mProxyConfig->getConfigBool("Daemonize", false) && checkPosixProcessControl("Daemonize"))
       {
          daemonize();
       }
@@ -331,8 +335,8 @@ ReproRunner::run(int argc, char** argv)
 
    // Drop privileges (can do this now that sockets are bound)
    Data runAsUser = mProxyConfig->getConfigData("RunAsUser", Data::Empty, true);
-   Data runAsGroup = mProxyConfig->getConfigData("RunAsGroup", Data::Empty, true); 
-   if(!runAsUser.empty())
+   Data runAsGroup = mProxyConfig->getConfigData("RunAsGroup", Data::Empty, true);
+   if(!runAsUser.empty() && checkPosixProcessControl("RunAsUser/RunAsGroup"))
    {
       InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
       dropPrivileges(runAsUser, runAsGroup);
@@ -2028,6 +2032,7 @@ ReproRunner::operator()(resip::StatisticsMessage &statsMessage)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  * Copyright (c) 2022, Daniel Pocock https://danielpocock.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.

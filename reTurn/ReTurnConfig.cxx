@@ -106,14 +106,6 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
       }
    }
 
-   // fork is not possible on Windows
-#ifdef WIN32
-   if(mDaemonize)
-   {
-      throw ConfigParse::Exception("Unable to fork/daemonize on Windows, please check the config", __FILE__, __LINE__);
-   }
-#endif
-
    // TODO: For ShortTermCredentials use mAuthenticationCredentials[username] = password;
 
 
@@ -460,6 +452,7 @@ ReTurnUserFileScanner::onSignal(int signum)
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
