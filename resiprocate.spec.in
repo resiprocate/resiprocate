@@ -283,21 +283,40 @@ install -p -D -m755 reTurn/pkg/fedora/resiprocate-turn-server.init %{buildroot}%
 install -m 0755 -d %{buildroot}%{_sysconfdir}/repro
 install -p -D -m640 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
 install -p -D -m640 repro/users.txt %{buildroot}%{_sysconfdir}/repro/users.txt
+# repro.config ships every setting that is at its default commented out, so the
+# packaging values cannot be applied by rewriting existing lines - there are no
+# lines to rewrite.  Append them instead, which also means a future repro.config
+# edit cannot silently stop an override from being applied.
+#
+# TlsDHParamsFilename is the exception: it is active in repro.config, so it has
+# to be rewritten in place.  Appending it would be a second occurrence of the
+# key and ConfigParse::insertConfigValue() aborts startup on a duplicate key.
 sed -i \
- -e 's!^#CAFile = /etc/pki/tls/cert.pem$!CAFile = /etc/pki/tls/cert.pem!' \
- -e 's!^LoggingType = cout$!LoggingType = syslog!' \
- -e 's!^LogLevel = INFO$!LogLevel = DEBUG!' \
- -e 's!^LogFilename = repro.log$!LogFilename = %{_localstatedir}/log/repro/repro.log!' \
- -e 's!^LogFileMaxBytes = 5242880!LogFileMaxBytes = 0!' \
  -e 's!^TlsDHParamsFilename = dh2048.pem!TlsDHParamsFilename = %{_sysconfdir}/repro/dh2048.pem!' \
- -e 's!^HttpAdminUserFile = users.txt$!HttpAdminUserFile = %{_sysconfdir}/repro/users.txt!' \
- -e 's!^#PluginDirectory = /usr/lib/repro/plugins$!PluginDirectory = %{_libdir}/resiprocate/repro/plugins!' \
- -e 's!^#RunAsUser = repro$!RunAsUser = repro!' \
- -e 's!^#RunAsGroup = repro$!RunAsGroup = repro!' \
- -e 's!^Daemonize = false$!Daemonize = true!' \
- -e 's!^Database1Path = ./$!Database1Path = %{_sharedstatedir}/repro!' \
- -e 's!^ChallengeThirdPartiesCallingLocalDomains = true$!ChallengeThirdPartiesCallingLocalDomains = false!' \
             %{buildroot}%{_sysconfdir}/repro/repro.config
+cat >> %{buildroot}%{_sysconfdir}/repro/repro.config <<'EOF'
+
+########################################################
+# Packaging overrides
+########################################################
+# Set by the RPM build.  These override the defaults documented above; the
+# corresponding examples earlier in this file are commented out.
+# Do NOT uncomment a setting above that also appears here - repro refuses to
+# start if the same key is present twice.
+
+LoggingType = syslog
+LogLevel = DEBUG
+LogFilename = %{_localstatedir}/log/repro/repro.log
+LogFileMaxBytes = 5242880
+CAFile = /etc/pki/tls/cert.pem
+HttpAdminUserFile = %{_sysconfdir}/repro/users.txt
+PluginDirectory = %{_libdir}/resiprocate/repro/plugins
+RunAsUser = repro
+RunAsGroup = repro
+Daemonize = true
+Database1Path = %{_sharedstatedir}/repro
+ChallengeThirdPartiesCallingLocalDomains = false
+EOF
 %if %build_return
 install -p -D -m640 reTurn/reTurnServer.config %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
 install -p -D -m640 reTurn/users.txt %{buildroot}%{_sysconfdir}/reTurn/users.txt
