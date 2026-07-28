@@ -35,12 +35,15 @@ jobs:
           # of libsipxtapi-dev 3.3.0~test20-2.  Debian bullseye itself only has
           # 3.3.0~test18, whose -dev package omits headers recon needs, and the
           # fallback is silent - configure still succeeds and the build dies
-          # ~86% in.  pipefail plus a non-quiet update make a broken repo fail
-          # here, where the log says so.
-          set -o pipefail
+          # ~86% in.  Fetching the script to a file rather than piping it into
+          # a shell means a failed download fails this step (a pipeline reports
+          # only the shell's status, and an empty script exits 0); the non-quiet
+          # update then shows any repository error in the log.
           apt-get update -qq
           apt-get install -qq wget
-          wget -O - http://apt.debify.org/add-apt-debify | bash
+          wget -O /tmp/add-apt-debify http://apt.debify.org/add-apt-debify
+          bash /tmp/add-apt-debify
+          rm -f /tmp/add-apt-debify
           apt-get update
           apt-get install -qq \
             clang-13 \
