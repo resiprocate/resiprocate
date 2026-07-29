@@ -10,7 +10,7 @@
 *.sh    text eol=lf
 
 # ---------------------------------------------------------------------------
-# Line-ending-sensitive test fixtures — CRLF is significant, never normalize
+# Line-ending-sensitive test fixtures - CRLF is significant, never normalize
 # ---------------------------------------------------------------------------
 *.dat                          -text
 resip/stack/test/testTFSM-*    -text

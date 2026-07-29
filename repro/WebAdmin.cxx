@@ -194,7 +194,10 @@ WebAdmin::parseUserFile()
       }
 
       anchor = pb.position();
-      pb.skipToOneOf(" :");
+      // Tolerate tab padding, and include the EOL chars: getline only strips
+      // the LF, so a file with CRLF line endings would otherwise leave a
+      // trailing CR on this last field.
+      pb.skipToOneOf(" \t:\r\n");
 
       pb.data(ha1, anchor);
 
