@@ -236,7 +236,9 @@ ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
       }
 
       anchor = pb.position();
-      pb.skipToOneOf(" \t\n");
+      // Include the CR: getline only strips the LF, so a file with CRLF line
+      // endings would otherwise leave a trailing CR on this last field.
+      pb.skipToOneOf(" \t\r\n");
 
       pb.data(state, anchor);
       state.lowercase();
