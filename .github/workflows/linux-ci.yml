@@ -31,11 +31,21 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          # Adding the debify repository is not optional: it is the only source
+          # of libsipxtapi-dev 3.3.0~test20-2.  Debian bullseye itself only has
+          # 3.3.0~test18, whose -dev package omits headers recon needs, and the
+          # fallback is silent - configure still succeeds and the build dies
+          # ~86% in.  Fetching the script to a file rather than piping it into
+          # a shell means a failed download fails this step; a pipeline reports
+          # only the shell's exit status, and an empty script exits 0.  What
+          # actually got installed is checked in the step after this one.
           apt-get update -qq
           apt-get install -qq wget
-          wget -O - http://apt.debify.org/add-apt-debify | bash
+          wget -O /tmp/add-apt-debify http://apt.debify.org/add-apt-debify
+          bash /tmp/add-apt-debify
+          rm -f /tmp/add-apt-debify
           apt-get update -qq
-          apt-get install -qq \
+          PACKAGES=" \
             clang-13 \
             clang-tidy-13 \
             cmake \
@@ -71,7 +81,39 @@ jobs:
             python3-cxx-dev \
             python3-dev \
             sox \
-            xxd
+            xxd"
+          # deb.debian.org resets connections mid-download often enough to red
+          # a run on its own ("Error reading from server ... 104"), and one bad
+          # .deb fails the whole job.  Retry the install a few times, refreshing
+          # the lists in between; $PACKAGES is deliberately unquoted so it word
+          # splits into arguments.
+          attempt=1
+          until apt-get install -qq $PACKAGES
+          do
+            if [ "$attempt" -ge 3 ]
+            then
+              echo "::error::apt-get install failed $attempt times"
+              exit 1
+            fi
+            echo "apt-get install failed, retrying (attempt $attempt)"
+            attempt=$((attempt + 1))
+            sleep 10
+            apt-get update -qq
+          done
+
+      - name: Verify sipXtapi headers
+        run: |
+          apt-cache policy libsipxtapi-dev
+          # recon includes CpTopologyGraphFactoryImpl.h, which upstream only
+          # moved from noinst_HEADERS to nobase_include_HEADERS in Nov 2025.
+          # It is present in the debify build and absent from Debian's older
+          # one, so its absence means we got the wrong libsipxtapi-dev.
+          if [ ! -f /usr/include/sipxtapi/CpTopologyGraphFactoryImpl.h ]
+          then
+            echo "::error::libsipxtapi-dev does not provide CpTopologyGraphFactoryImpl.h - the debify repository was probably not used.  recon cannot build against this package."
+            dpkg -L libsipxtapi-dev | grep -i cptopology || true
+            exit 1
+          fi
 
       - name: Checkout source
         uses: actions/checkout@v3
