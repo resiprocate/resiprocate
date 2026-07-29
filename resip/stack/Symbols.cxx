@@ -61,6 +61,7 @@ const char* Symbols::SRVSCTP = "_sctp.";
 const char* Symbols::Sip = "sip";
 const char* Symbols::Sips = "sips";
 const char* Symbols::Tel = "tel";
+const char* Symbols::Urn = "urn";
 const char* Symbols::Pres = "pres";
 
 const char* Symbols::Phone = "phone";

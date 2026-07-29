@@ -26,6 +26,16 @@ Aor::Aor(const Data& value)
    pb.skipChar(Symbols::COLON[0]);
    mScheme.lowercase();
 
+   if (isEqualNoCase(mScheme, Symbols::Urn))
+   {
+      const char* anchor = pb.position();
+      // Unlike tel: (RFC 3966), the char ';' is a valid sub-delim inside 
+      // a urn: (RFC 8141) NSS and must not be treated as a delimiter.
+      pb.skipToOneOf(ParseBuffer::Whitespace, ">");
+      pb.data(mUser, anchor);
+      return;
+   }
+
    if (isEqualNoCase(mScheme, Symbols::Tel))
    {
       const char* anchor = pb.position();

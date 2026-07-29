@@ -29,6 +29,7 @@ static bool initAllTables()
    Uri::getPasswordEncodingTable();
    Uri::getLocalNumberTable();
    Uri::getGlobalNumberTable();
+   Uri::getUrnEncodingTable();
    return true;
 }
 
@@ -519,6 +520,26 @@ bool Uri::isSignificantUriParameter(const ParameterTypes::Type type) noexcept
           type == ParameterTypes::transport;
 }
 
+// urn: (RFC 8141): NID is case-insensitive, NSS is case-sensitive.
+// mUser stores "NID:NSS" (plus optional rq-components/fragment)
+// as one blob (see Uri::parse()), so split on the first ':' -- the NID
+// itself can't contain one (NID = alphanum *(alphanum/"-") alphanum) --
+// and compare each side with the right case rule. 
+// No ':' found (e.g. a malformed/hand-built value) falls back to a plain 
+// case-sensitive compare of the whole thing.
+static bool
+urnUserEqual(const Data& a, const Data& b)
+{
+   const Data::size_type sepA = a.find(Symbols::COLON);
+   const Data::size_type sepB = b.find(Symbols::COLON);
+   if (sepA == Data::npos || sepB == Data::npos)
+   {
+      return a == b;
+   }
+   return isEqualNoCase(a.substr(0, sepA), b.substr(0, sepB)) &&
+          a.substr(sepA) == b.substr(sepB);
+}
+
 bool 
 Uri::operator==(const Uri& other) const
 {
@@ -558,8 +579,25 @@ Uri::operator==(const Uri& other) const
       }
    }
    
+   // urn: needs its own NID/NSS-aware comparison in urnUserEqual()
+   // sip:/sips: user comparison is case-sensitive (RFC 3261 19.1.4);
+   // every other scheme defaults to case-insensitive.
+   bool userEqual;
+   if (isEqualNoCase(mScheme, Symbols::Urn))
+   {
+      userEqual = urnUserEqual(mUser, other.mUser);
+   }
+   else if (isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips))
+   {
+      userEqual = (mUser == other.mUser);
+   }
+   else
+   {
+      userEqual = isEqualNoCase(mUser, other.mUser);
+   }
+
    if (isEqualNoCase(mScheme, other.mScheme) &&
-       ((isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips)) ? mUser == other.mUser : isEqualNoCase(mUser, other.mUser)) &&
+       userEqual &&
        isEqualNoCase(mUserParameters,other.mUserParameters) &&
        mPassword == other.mPassword &&
        mPort == other.mPort &&
@@ -920,7 +958,14 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
 #ifdef HANDLE_CHARACTER_ESCAPING
       {
          oDataStream str(aor);
-         mUser.escapeToStream(str, getUserEncodingTable()); 
+         if (mScheme == Symbols::Urn)
+         {
+            mUser.escapeToStream(str, getUrnEncodingTable());
+         }
+         else
+         {
+            mUser.escapeToStream(str, getUserEncodingTable());
+         }
       }
 #else
       aor += mUser;
@@ -1125,6 +1170,54 @@ Uri::parse(ParseBuffer& pb)
    pb.skipChar(Symbols::COLON[0]);
    mScheme.schemeLowercase();
 
+   // NID:NSS plus any rq-components ("?+"/"?=") and fragment ("#") is
+   // captured as one opaque blob in mUser; no mUserParameters equivalent
+   // (RFC 8141 has none).
+   if (mScheme==Symbols::Urn)
+   {
+      const char* anchor = pb.position();
+      if (mIsBetweenAngleQuotes)
+      {
+         // Inside "<...>" the only terminator is '>' (SIP requires angle
+         // brackets exactly to avoid ';' clashing with NameAddr params).
+         static std::bitset<256> delimiter=Data::toBitset("\r\n\t >");
+         pb.skipToOneOf(delimiter);
+      }
+      else
+      {
+         // No angle brackets (e.g. Request-URI): terminator is whitespace.
+         pb.skipToOneOf(ParseBuffer::Whitespace);
+      }
+#ifdef HANDLE_CHARACTER_ESCAPING
+      // -- same mechanism used for sip:/sips: user.
+      // Decode %XX so user() returns the logical value, as for sip:/sips:.
+      // But '#'/'?' are structural when unescaped (fragment/rq-components),
+      // so a received "%23"/"%3F" (escaped data) and a literal "#"/"?"
+      // (real separator) must not collapse to the same mUser and then
+      // re-encode with the wrong form. Bytes containing '%' are kept
+      // verbatim (mUserRaw) and re-emitted as-is while still decoding to
+      // the same value 
+      const char* userEnd = pb.position();
+      bool userHasEscape = false;
+      for (const char* p = anchor; p < userEnd; ++p)
+      {
+         if (*p == Symbols::PERCENT[0])
+         {
+            userHasEscape = true;
+            break;
+         }
+      }
+      pb.dataUnescaped(mUser, anchor);
+      if (userHasEscape)
+      {
+         mUserRaw.reset(new Data(anchor, (Data::size_type)(userEnd - anchor)));
+      }
+#else
+      pb.data(mUser, anchor);
+#endif
+      return;
+   }
+
    if (mScheme==Symbols::Tel)
    {
       const char* anchor = pb.position();
@@ -1312,6 +1405,11 @@ void Uri::setUriPasswordEncoding(unsigned char c, bool encode)
    getPasswordEncodingTable()[c] = encode;
 }
 
+void Uri::setUriUrnEncoding(unsigned char c, bool encode)
+{
+   getUrnEncodingTable()[c] = encode;
+}
+
 // should not encode user parameters unless its a tel?
 EncodeStream& 
 Uri::encodeParsed(EncodeStream& str) const
@@ -1325,7 +1423,37 @@ Uri::encodeParsed(EncodeStream& str) const
    if (!mUser.empty())
    {
 #ifdef HANDLE_CHARACTER_ESCAPING
-      if (mUserRaw)
+      if (mScheme == Symbols::Urn)
+      {
+         // Same mUserRaw mechanism as sip:/sips: below: emit as-received
+         // bytes verbatim while they still decode to mUser, so '%23'
+         // (escaped data) and a literal '#' (real fragment separator)
+         // don't collapse and re-encode with the wrong character. Falls
+         // back to getUrnEncodingTable() (doesn't escape ':', '@', ';',
+         // '?', '#', sub-delims) if mUser was edited after parsing, or
+         // there's no mUserRaw (e.g. hand-built Uri).
+         if (mUserRaw)
+         {
+            Data decodedUserRaw;
+            ParseBuffer pbUrn(mUserRaw->data(), mUserRaw->size());
+            const char* anchorUrn = pbUrn.position();
+            pbUrn.skipToEnd();
+            pbUrn.dataUnescaped(decodedUserRaw, anchorUrn);
+            if (decodedUserRaw == mUser)
+            {
+               str << *mUserRaw;
+            }
+            else
+            {
+               mUser.escapeToStream(str, getUrnEncodingTable());
+            }
+         }
+         else
+         {
+            mUser.escapeToStream(str, getUrnEncodingTable());
+         }
+      }
+      else if (mUserRaw)
       {
          // Emit the as-received bytes verbatim while they still decode (via the
          // same dataUnescaped as parse) to the current mUser, so the sender's
