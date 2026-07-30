@@ -123,11 +123,25 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                      }
                      if(request.header(h_RequestLine).uri().user().empty())
                      {
-                        mLocalContact.uri().user() = request.header(h_To).uri().user(); 
+                        // Contact header will always have a sip: scheme so it's safe to copy
+                        // the user part from sip:, sips: and tel: but not from others like urn:
+                        if (isEqualNoCase(request.header(h_To).uri().scheme(), Symbols::Sip) ||
+                           isEqualNoCase(request.header(h_To).uri().scheme(), Symbols::Sips) ||
+                           isEqualNoCase(request.header(h_To).uri().scheme(), Symbols::Tel))
+                        {
+                           mLocalContact.uri().user() = request.header(h_To).uri().user();
+                        }
                      }
                      else
                      {
-                        mLocalContact.uri().user() = request.header(h_RequestLine).uri().user(); 
+                        // Contact header will always have a sip: scheme so it's safe to copy
+                        // the user part from sip:, sips: and tel: but not from others like urn:
+                        if (isEqualNoCase(request.header(h_RequestLine).uri().scheme(), Symbols::Sip) ||
+                           isEqualNoCase(request.header(h_RequestLine).uri().scheme(), Symbols::Sips) ||
+                           isEqualNoCase(request.header(h_RequestLine).uri().scheme(), Symbols::Tel))
+                        {
+                           mLocalContact.uri().user() = request.header(h_RequestLine).uri().user();
+                        }
                      }
                      const Data& instanceId = mDialogSet.mUserProfile->getInstanceId();
                      if (!contact.uri().exists(p_gr) && !instanceId.empty())

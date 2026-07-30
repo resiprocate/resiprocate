@@ -105,7 +105,14 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
       {
          contact.uri() = mUserProfile->getOverrideHostAndPort();
       }
-      contact.uri().user() = from.uri().user();
+      // Contact header will always have a sip: scheme so it's safe to copy
+      // the user part from sip:, sips: and tel: but not from others like urn:
+      if (isEqualNoCase(from.uri().scheme(), Symbols::Sip) ||
+         isEqualNoCase(from.uri().scheme(), Symbols::Sips) ||
+         isEqualNoCase(from.uri().scheme(), Symbols::Tel))
+      {
+         contact.uri().user() = from.uri().user();
+      }
 
       // .jjg. there isn't anything in the outbound [11] draft that says we 
       // aren't allowed to include p_Instance in this case...  
