@@ -38,6 +38,7 @@ MasterProfile::MasterProfile() :
    addSupportedMethod(BYE);
    addSupportedMethod(UPDATE);
    addSupportedScheme(Symbols::Sip);  
+   addSupportedScheme(Symbols::Urn);
 }
 
 void 
