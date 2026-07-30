@@ -162,6 +162,7 @@ class Uri : public ParserCategory
       /** Modifies the default URI encoding character sets */
       static void setUriUserEncoding(unsigned char c, bool encode);
       static void setUriPasswordEncoding(unsigned char c, bool encode);
+      static void setUriUrnEncoding(unsigned char c, bool encode);
       
       bool hasEmbedded() const;
       SipMessage& embedded();
@@ -235,6 +236,26 @@ class Uri : public ParserCategory
                               "0123456789"
                               "-_.!~*\\()&=+$").flip());
          return passwordEncodingTable;
+      }
+
+      /**
+         @brief Encoding table for the NID:NSS (plus optional
+                rq-components/fragment) of a urn: URI (RFC 8141:
+                namestring = "urn" ":" NID ":" NSS).
+                https://tools.ietf.org/html/rfc8141#section-2
+      */
+      static EncodingTable& getUrnEncodingTable()
+      {
+         static EncodingTable urnEncodingTable(
+               Data::toBitset("abcdefghijklmnopqrstuvwxyz"
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                              "0123456789"
+                              "-._~"           // unreserved
+                              "!$&'()*+,;="    // sub-delims
+                              ":@"             // pchar extras
+                              "/"              // NSS = pchar *(pchar / "/")
+                              "?#").flip());   // rq-components / fragment markers
+         return urnEncodingTable;
       }
 
       static EncodingTable& getLocalNumberTable()
