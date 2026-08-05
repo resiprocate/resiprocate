@@ -221,6 +221,11 @@ option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT
 option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
 option(USE_NUGET "Use NuGet package manager" ${USE_NUGET_DEFAULT})
 
+# Netxx is not packaged for modern distributions (the old libnetxx-dev is no
+# longer available), so build it from the contrib folder by default on all
+# platforms.  Set this OFF to use a system-provided Netxx via find_package.
+option(USE_CONTRIB_NETXX "Build Netxx from the contrib folder instead of using a system copy" ON)
+
 if(BUILD_TESTING)
     enable_testing()
 endif()
@@ -297,10 +302,12 @@ endif()
 if(BUILD_TFM)
    set(USE_NETXX TRUE)
    set(USE_CPPUNIT TRUE)
+   set(USE_POPT TRUE)
 endif()
 
 if(BUILD_REND)
    set(USE_BOOST TRUE)
+   set(USE_POPT TRUE)
 endif()
 
 if(USE_KURENTO)
@@ -567,9 +574,11 @@ option_def(BUILD_TFM)
 option_def(BUILD_ICHAT_GW)
 
 # Netxx
-# Debian: libnetxx-dev
+# The old Debian libnetxx-dev package is no longer available on modern
+# distributions, so we build Netxx from contrib by default (see
+# USE_CONTRIB_NETXX above).
 if(USE_NETXX)
-   if(USE_CONTRIB)
+   if(USE_CONTRIB OR USE_CONTRIB_NETXX)
       add_subdirectory(contrib/Netxx-0.3.2)
       set(NETXX_LIBRARIES Netxx)
    else()
@@ -700,10 +709,37 @@ if(USE_SIPXTAPI)
         set(SIPXTAPI_LIBRARIES ${SIPXTAPI_LIBRARIES} ${ARGV0} PARENT_SCOPE)
       endfunction()
 
+      # Pin sipXtapi to a specific commit for reproducible builds and to give CI
+      # a stable cache key.  The commit lives in build/sipxtapi-commit.txt so the
+      # CMake pin and the CI cache key share a single source of truth; bump that
+      # file to move sipXtapi forward.  If no SHA is present there, the default
+      # branch HEAD is used (previous behaviour).
+      set(_sipxtapi_commit_file "${CMAKE_CURRENT_SOURCE_DIR}/build/sipxtapi-commit.txt")
+      set(SIPXTAPI_GIT_TAG_DEFAULT "")
+      if(EXISTS "${_sipxtapi_commit_file}")
+        file(STRINGS "${_sipxtapi_commit_file}" _sipxtapi_commit_lines REGEX "^[0-9a-fA-F]+$")
+        if(_sipxtapi_commit_lines)
+          list(GET _sipxtapi_commit_lines 0 SIPXTAPI_GIT_TAG_DEFAULT)
+        endif()
+      endif()
+      # Use the pin file as the source of truth on every configure, but still
+      # allow an explicit -DSIPXTAPI_GIT_TAG=<ref> to override it.
+      if(NOT DEFINED SIPXTAPI_GIT_TAG)
+        set(SIPXTAPI_GIT_TAG "${SIPXTAPI_GIT_TAG_DEFAULT}")
+      endif()
+      if(SIPXTAPI_GIT_TAG)
+        set(_sipxtapi_git_tag_arg GIT_TAG "${SIPXTAPI_GIT_TAG}")
+        message(STATUS "sipXtapi pinned to ${SIPXTAPI_GIT_TAG}")
+      else()
+        set(_sipxtapi_git_tag_arg "")
+        message(WARNING "sipXtapi is not pinned (building default branch HEAD). Set a commit SHA in build/sipxtapi-commit.txt for reproducible builds and CI caching.")
+      endif()
+
       if(SIPXTAPI_PROJS_IN_VS_GUI)
         # No need to build in this config - VS GUI will do it
         ExternalProject_Add(sipXtapi
           GIT_REPOSITORY https://github.com/sipXtapi/sipXtapi.git
+          ${_sipxtapi_git_tag_arg}
           CONFIGURE_COMMAND ""
           BUILD_COMMAND ""
           UPDATE_COMMAND ""
@@ -711,14 +747,26 @@ if(USE_SIPXTAPI)
         )
         set(SIPXTAPI_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
       else()
-        # When VS GUI is not used, then we build both debug and release and manually link to the output
+        # When VS GUI is not used we build the requested configurations and link
+        # to the output manually.  SIPXTAPI_CONFIGURATIONS defaults to building
+        # both Debug and Release for local/dev use; CI overrides it with
+        # -DSIPXTAPI_CONFIGURATIONS=Debug to build only the config it tests
+        # (roughly halving the sipXtapi build time).
         # TODO Detect VS version and use other .sln versions appropriately
+        set(SIPXTAPI_CONFIGURATIONS "Debug;Release" CACHE STRING "sipXtapi msbuild configurations to build")
+        set(_sipxtapi_build_step BUILD_COMMAND)
+        foreach(_cfg IN LISTS SIPXTAPI_CONFIGURATIONS)
+          list(APPEND _sipxtapi_build_step
+               msbuild sipX-msvc17.sln /p:Configuration=${_cfg} /p:Platform=x64 /m
+               COMMAND)
+        endforeach()
+        list(POP_BACK _sipxtapi_build_step)  # drop the trailing COMMAND keyword
         ExternalProject_Add(sipXtapi
           GIT_REPOSITORY https://github.com/sipXtapi/sipXtapi.git
+          ${_sipxtapi_git_tag_arg}
           CONFIGURE_COMMAND ""
           BUILD_IN_SOURCE TRUE
-          BUILD_COMMAND msbuild sipX-msvc17.sln /p:Configuration=Debug /p:Platform=x64 /m
-          COMMAND msbuild sipX-msvc17.sln /p:Configuration=Release /p:Platform=x64 /m
+          ${_sipxtapi_build_step}
           UPDATE_COMMAND ""
           INSTALL_COMMAND ""
         )
@@ -899,6 +947,9 @@ endif()
 include(CheckIncludeFiles)
 check_include_files(sys/epoll.h HAVE_EPOLL)
 
+include(CheckSymbolExists)
+check_symbol_exists(SOCK_CLOEXEC "sys/socket.h" HAVE_SOCK_CLOEXEC)
+
 # HAVE_LIBDL from autotools obsolete,
 # now we use CMAKE_DL_LIBS to include the library
 # when necessary
@@ -923,6 +974,39 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
 
 # Used to group targets together when CMake generates projects for IDEs
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# Present each target's files as a single flat list in generated IDE projects
+# (e.g. Visual Studio) instead of the default "Source Files" / "Header Files"
+# folders, with .config/.txt/.pem files collected under one "Config and Text
+# Files" folder.
+#
+# source_group() only affects the directory scope in which it is called and is
+# NOT inherited by subdirectories, so a single call here would not reach targets
+# defined under add_subdirectory().  Instead we wrap add_library()/
+# add_executable() -- which run in the caller's directory scope -- so the
+# grouping is applied wherever a target is defined.  Redefining the default
+# groups with a regex that never matches ("^$") leaves their files unmatched, so
+# they fall back to the project root.
+function(_resip_flatten_source_groups)
+   source_group("Source Files"          REGULAR_EXPRESSION "^$")
+   source_group("Header Files"          REGULAR_EXPRESSION "^$")
+   source_group("Resource Files"        REGULAR_EXPRESSION "^$")
+   source_group("Config and Text Files" REGULAR_EXPRESSION "\\.(config|txt|pem)$")
+endfunction()
+
+function(add_library)
+   _add_library(${ARGV})
+   _resip_flatten_source_groups()
+endfunction()
+
+function(add_executable)
+   _add_executable(${ARGV})
+   _resip_flatten_source_groups()
+endfunction()
+
+if(MSVC)
+    add_compile_options(/W3 /sdl)
+endif()
 
 add_subdirectory(rutil)
 

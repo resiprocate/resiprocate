@@ -191,13 +191,13 @@ namespace resip
 
    struct StunMessage
    {
-      StunMessage()
-      {
-         // !jr! Zeroing the entire structure which is a bit dangerous.
-         // If you add any complex types to this structure, be careful of
-         // the results.
-         memset(this, 0, sizeof(*this));
-      }
+      // Every member is default-initialized below.  Previously the constructor
+      // zeroed the whole object with memset(this, 0, sizeof(*this)), which is
+      // undefined behavior: StunMessage is not trivially copyable because of its
+      // user-declared destructor.  Value-initializing each member is equivalent
+      // here -- pointers become nullptr, bools false, and the POD
+      // sub-structures/integers zero -- but well defined.
+      StunMessage() = default;
 
       ~StunMessage()
       {
@@ -206,84 +206,88 @@ namespace resip
          if (hasTurnData) delete turnData;
       }
 
-      StunMsgHdr msgHdr;
+      StunMsgHdr msgHdr{};
 
-      bool hasMappedAddress;
-      StunAtrAddress4  mappedAddress;
+      bool hasMappedAddress = false;
+      StunAtrAddress4  mappedAddress{};
 
-      bool hasResponseAddress;
-      StunAtrAddress4  responseAddress;
+      bool hasResponseAddress = false;
+      StunAtrAddress4  responseAddress{};
 
-      bool hasChangeRequest;
-      StunAtrChangeRequest changeRequest;
+      bool hasChangeRequest = false;
+      StunAtrChangeRequest changeRequest{};
 
-      bool hasSourceAddress;
-      StunAtrAddress4 sourceAddress;
+      bool hasSourceAddress = false;
+      StunAtrAddress4 sourceAddress{};
 
-      bool hasChangedAddress;
-      StunAtrAddress4 changedAddress;
+      bool hasChangedAddress = false;
+      StunAtrAddress4 changedAddress{};
 
-      bool hasUsername;
-      StunAtrString username;
+      bool hasUsername = false;
+      StunAtrString username{};
 
-      bool hasPassword;
-      StunAtrString password;
+      bool hasPassword = false;
+      StunAtrString password{};
 
-      bool hasMessageIntegrity;
-      StunAtrIntegrity messageIntegrity;
+      bool hasMessageIntegrity = false;
+      StunAtrIntegrity messageIntegrity{};
+      // Byte offset of the MESSAGE-INTEGRITY attribute header from the start of
+      // the message buffer (populated by stunParseMessage). Used to verify the
+      // HMAC per RFC 5389 section 15.4.
+      unsigned int messageIntegrityOffset = 0;
 
-      bool hasErrorCode;
-      StunAtrError errorCode;
+      bool hasErrorCode = false;
+      StunAtrError errorCode{};
 
-      bool hasUnknownAttributes;
-      StunAtrUnknown unknownAttributes;
+      bool hasUnknownAttributes = false;
+      StunAtrUnknown unknownAttributes{};
 
-      bool hasReflectedFrom;
-      StunAtrAddress4 reflectedFrom;
+      bool hasReflectedFrom = false;
+      StunAtrAddress4 reflectedFrom{};
 
-      bool hasRealm;
-      resip::Data* realm;
+      bool hasRealm = false;
+      resip::Data* realm = nullptr;
 
-      bool hasNonce;
-      resip::Data* nonce;
+      bool hasNonce = false;
+      resip::Data* nonce = nullptr;
 
-      bool hasXorMappedAddress;
-      StunAtrAddress4  xorMappedAddress;
+      bool hasXorMappedAddress = false;
+      StunAtrAddress4  xorMappedAddress{};
 
-      bool xorOnly;
+      bool xorOnly = false;
 
-      bool hasSoftware;
-      StunAtrString software;
+      bool hasSoftware = false;
+      StunAtrString software{};
 
-      bool hasSecondaryAddress;
-      StunAtrAddress4 secondaryAddress;
+      bool hasSecondaryAddress = false;
+      StunAtrAddress4 secondaryAddress{};
 
-      bool hasAlternateServer;
-      StunAtrAddress4 alternateServer;
+      bool hasAlternateServer = false;
+      StunAtrAddress4 alternateServer{};
 
-      bool hasFingerprint;
-      uint32_t fingerprint;
+      bool hasFingerprint = false;
+      uint32_t fingerprint = 0;
 
-      bool hasTurnLifetime;
-      uint32_t turnLifetime;
+      bool hasTurnLifetime = false;
+      uint32_t turnLifetime = 0;
 
-      bool hasTurnAlternateServer;
-      StunAtrAddress4 turnAlternateServer;
+      bool hasTurnAlternateServer = false;
+      StunAtrAddress4 turnAlternateServer{};
 
-      bool hasTurnMagicCookie;
-      uint32_t turnMagicCookie;
+      bool hasTurnMagicCookie = false;
+      uint32_t turnMagicCookie = 0;
 
-      bool hasTurnBandwidth;
-      uint32_t turnBandwidth;
+      bool hasTurnBandwidth = false;
+      uint32_t turnBandwidth = 0;
 
-      bool hasTurnDestinationAddress;
-      StunAtrAddress4 turnDestinationAddress;
+      bool hasTurnDestinationAddress = false;
+      StunAtrAddress4 turnDestinationAddress{};
 
-      bool hasTurnRemoteAddress;
-      StunAtrAddress4 turnRemoteAddress;
+      bool hasTurnRemoteAddress = false;
+      StunAtrAddress4 turnRemoteAddress{};
 
-      bool hasTurnData;
-      resip::Data* turnData;
+      bool hasTurnData = false;
+      resip::Data* turnData = nullptr;
 
       //bool hasTurnNonce;
       // turnNonce;
@@ -349,6 +353,17 @@ namespace resip
       stunBuildReqSimple(StunMessage* msg,
          const StunAtrString& username,
          bool changePort, bool changeIp, unsigned int id = 0);
+
+   /// Verify the MESSAGE-INTEGRITY attribute of a parsed message against the
+   /// supplied short-term credential password, using a constant-time
+   /// comparison. Returns true only if the attribute is present and the HMAC
+   /// matches (RFC 5389 section 15.4). @p buf / @p bufLen must be the raw
+   /// message bytes that were passed to stunParseMessage to produce @p message.
+   bool
+      stunVerifyMessageIntegrity(const char* buf,
+         unsigned int bufLen,
+         const StunMessage& message,
+         const StunAtrString& password);
 
    unsigned int
       stunEncodeMessage(const StunMessage& message,
@@ -462,6 +477,7 @@ namespace resip
 
 
 /* ====================================================================
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * The Vovida Software License, Version 1.0
  *
  * Redistribution and use in source and binary forms, with or without

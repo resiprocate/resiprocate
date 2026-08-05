@@ -7,29 +7,26 @@
 using namespace resip;
 using namespace std;
 
-int 
-main (int argc, char** argv)
+int
+main(int argc, char** argv)
 {
 #ifdef WIN32
    initNetwork();
 #endif
-
    int sd, rc;
    struct sockaddr_in localAddr, servAddr;
-   struct hostent *h;
-
    const char* host;
    short port;
    int cmdIndex;
 
    // Look for forward slash in args 1 or 3
-   if(argc >= 2 && argv[1][0] == '/')
+   if (argc >= 2 && argv[1][0] == '/')
    {
-       host = "127.0.0.1";
-       port = 5081;
-       cmdIndex=1;
+      host = "127.0.0.1";
+      port = 5081;
+      cmdIndex = 1;
    }
-   else if(argc >= 4 && argv[3][0] == '/')
+   else if (argc >= 4 && argv[3][0] == '/')
    {
       host = argv[1];
       port = (short)atoi(argv[2]);
@@ -37,7 +34,7 @@ main (int argc, char** argv)
    }
    else
    {
-      cerr << "usage: " << argv[0] <<" [<server> <port>] /<command> [<parm>=<value>]" << endl;
+      cerr << "usage: " << argv[0] << " [<server> <port>] /<command> [<parm>=<value>]" << endl;
       cerr << "  Valid Commands are:" << endl;
       cerr << "  /GetStackInfo - retrieves low level information about the stack state" << endl;
       cerr << "  /GetStackStats - retrieves a dump of the stack statistics" << endl;
@@ -52,56 +49,56 @@ main (int argc, char** argv)
       cerr << "  /Restart - signal the proxy to restart - leaving active registrations in place." << endl;
       cerr << "  /GetProxyConfig - retrieves the all of configuration file settings currently" << endl;
       cerr << "                    being used by the proxy" << endl;
-      cerr << "  /AddTransport type=<UDP|TCP|etc.> port=<value> [ipVersion=<V4|V6>]" << endl; 
+      cerr << "  /AddTransport type=<UDP|TCP|etc.> port=<value> [ipVersion=<V4|V6>]" << endl;
       cerr << "                [interface=<ipaddress>] [rruri=<AUTO|sip:host:port>]" << endl;
       cerr << "                [udprcvbuflen=<value>] [stun=<YES|NO>] [flags=<uint>]" << endl;
       cerr << "                [domain=<tlsdomainname>] [ssltype=<SSLv23|TLSv1>]" << endl;
       cerr << "                [certfile=<filename>] [keyfile=<filename>]" << endl;
       cerr << "                [tlscvm=<NONE|OPT|MAN>] [tlsuseemail=<YES|NO>]" << endl;
       cerr << "                - adds a new transport to the stack." << endl;
-      cerr << "  /RemoveTransport key=<transportKey> - removes the requested transport" << endl; 
+      cerr << "  /RemoveTransport key=<transportKey> - removes the requested transport" << endl;
       exit(1);
    }
 
-   h = gethostbyname(host);
-   if(h==0) 
+   // getaddrinfo replaces deprecated gethostbyname
+   struct addrinfo hints = {};
+   struct addrinfo* res = nullptr;
+   hints.ai_family = AF_INET;
+   hints.ai_socktype = SOCK_STREAM;
+
+   if (getaddrinfo(host, nullptr, &hints, &res) != 0 || res == nullptr)
    {
       cerr << "unknown host " << host << endl;
       exit(1);
    }
 
-   servAddr.sin_family = h->h_addrtype;
-   if((unsigned int)h->h_length > sizeof(servAddr.sin_addr.s_addr))
-   {
-      cerr << "bad h_length" << endl;
-      exit(1);
-   }
-   memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
+   memcpy(&servAddr, res->ai_addr, res->ai_addrlen);
    servAddr.sin_port = htons(port);
-  
+   freeaddrinfo(res);
+
    // Create TCP Socket
    sd = (int)socket(AF_INET, SOCK_STREAM, 0);
-   if(sd < 0) 
+   if (sd < 0)
    {
       cerr << "cannot open socket" << endl;
       exit(1);
    }
 
    // bind to any local interface/port
+   localAddr = {};
    localAddr.sin_family = AF_INET;
    localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
    localAddr.sin_port = 0;
-
-   rc = ::bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
-   if(rc < 0) 
+   rc = ::bind(sd, (struct sockaddr*)&localAddr, sizeof(localAddr));
+   if (rc < 0)
    {
-      cerr <<"error binding locally" << endl;
+      cerr << "error binding locally" << endl;
       exit(1);
    }
 
    // Connect to server
-   rc = ::connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
-   if(rc < 0) 
+   rc = ::connect(sd, (struct sockaddr*)&servAddr, sizeof(servAddr));
+   if (rc < 0)
    {
       cerr << "error connecting" << endl;
       exit(1);

@@ -1182,6 +1182,8 @@ ResponseContext::processResponse(SipMessage& response)
             Token reason("SIP");
             reason.param(p_cause) = code;
             reason.param(p_text) = "Call completed elsewhere";
+            // RFC 3326 reason-text is a quoted-string
+            reason.getParameterByEnum(ParameterTypes::text)->setQuoted(true);
             reasons.push_back(reason);
             cancelAllClientTransactions(&reasons);
             mRequestContext.mHaveSentFinalResponse = true;
@@ -1304,6 +1306,8 @@ ResponseContext::processResponse(SipMessage& response)
                   Token reason("SIP");
                   reason.param(p_cause) = code;
                   reason.param(p_text) = response.header(h_StatusLine).reason();
+                  // RFC 3326 reason-text is a quoted-string
+                  reason.getParameterByEnum(ParameterTypes::text)->setQuoted(true);
                   reasons.push_back(reason);
                   cancelAllClientTransactions(&reasons);
                }
@@ -1522,6 +1526,8 @@ ResponseContext::forwardBestResponse()
    Token reason("SIP");
    reason.param(p_cause) = mBestResponse.header(h_StatusLine).statusCode();
    reason.param(p_text) = mBestResponse.header(h_StatusLine).reason();
+   // RFC 3326 reason-text is a quoted-string
+   reason.getParameterByEnum(ParameterTypes::text)->setQuoted(true);
    reasons.push_back(reason);
 
    clearCandidateTransactions(&reasons);

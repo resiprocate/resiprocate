@@ -236,7 +236,7 @@ static int file_lookup(const char* name, struct hostent** host)
    int status;
 
 #ifdef WIN32
-   fp = fopen(w32hostspath, "r");
+   fopen_s(&fp, w32hostspath, "r");
 #else
    fp = fopen(PATH_HOSTS, "r");
 #endif

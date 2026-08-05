@@ -19,19 +19,32 @@ namespace resip
 class WinCompat
 {
    public:
-      //typedef enum Version
-      // above is not valid C++ syntax
       enum Version
       {
          NotWindows,
+         // Legacy (Win9x - no longer supported, retained for compatibility)
          Windows95,
          Windows98,
          Windows98SE,
          WindowsME,
+         // NT family
          WindowsNT,
          Windows2000,
          WindowsXP,
          Windows2003Server,
+         WindowsVista,
+         WindowsServer2008,
+         Windows7,
+         WindowsServer2008R2,
+         Windows8,
+         WindowsServer2012,
+         Windows81,
+         WindowsServer2012R2,
+         Windows10,
+         WindowsServer2016,
+         WindowsServer2019,
+         WindowsServer2022,
+         Windows11,
          WindowsUnknown
       };
 

@@ -10,12 +10,14 @@
 
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 #include "resip/dum/PublicationPersistenceManager.hxx"
+#include "resip/stack/StatisticsMessage.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/GenericPidfContents.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
+#include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DigestStream.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -28,6 +30,7 @@
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
 #include "repro/WebAdmin.hxx"
+#include "repro/RestAdmin.hxx"
 #include "repro/RouteStore.hxx"
 #include "repro/UserStore.hxx"
 #include "repro/FilterStore.hxx"
@@ -86,12 +89,24 @@ WebAdmin::WebAdmin(Proxy& proxy,
    mPageOutlinePost(
 #include "repro/webadmin/pageOutlinePost.ixx"
    ),
-   mUserFile(proxy.getConfig().getConfigData("HttpAdminUserFile", "users.txt"))
+   mUserFile(proxy.getConfig().getConfigData("HttpAdminUserFile", "users.txt")),
+   mStatsReady(false)
 {
    // Place repro version into PageOutlinePre
    mPageOutlinePre.replace("VERSION", VersionUtils::instance().releaseVersion().c_str());
 
    parseUserFile();
+
+   // Construct the REST API handler now that all members are initialized.
+   mRestAdmin.reset(new RestAdmin(*this));
+}
+
+WebAdmin::~WebAdmin()
+{
+   // mRestAdmin is destroyed here. Defined out-of-line so that RestAdmin is
+   // a complete type at the point where unique_ptr invokes its deleter,
+   // which avoids the "invalid application of 'sizeof' to incomplete type"
+   // error from GCC's unique_ptr implementation.
 }
 
 /**
@@ -179,7 +194,10 @@ WebAdmin::parseUserFile()
       }
 
       anchor = pb.position();
-      pb.skipToOneOf(" :");
+      // Tolerate tab padding, and include the EOL chars: getline only strips
+      // the LF, so a file with CRLF line endings would otherwise leave a
+      // trailing CR on this last field.
+      pb.skipToOneOf(" \t:\r\n");
 
       pb.data(ha1, anchor);
 
@@ -198,7 +216,8 @@ WebAdmin::parseUserFile()
 }
 
 void 
-WebAdmin::buildPage( const Data& uri,
+WebAdmin::buildPage( const Data& method,
+                     const Data& uri,
                      int pageNumber, 
                      const resip::Data& pUser,
                      const resip::Data& pPassword )
@@ -214,8 +233,13 @@ WebAdmin::buildPage( const Data& uri,
    
    DebugLog (<< "  got page name: " << pageName );
 
+   // Dispatch any URI starting with /api/v1 to the REST handler.
+   // Authentication still happens below; the REST handler is invoked only
+   // after the user has been authenticated (or challenges disabled).
+   bool isRestRequest = uri.prefix("/api/v1");
+
    // if this is not a valid page, redirect it
-   if (
+   if ( !isRestRequest &&
       ( pageName != Data("index.html") ) && 
       ( pageName != Data("input") ) && 
       ( pageName != Data("cert.cer") ) && 
@@ -352,6 +376,16 @@ WebAdmin::buildPage( const Data& uri,
          setPage( "User does not exist.", pageNumber,401 );
          return;         
       }
+   }
+
+   // If this is a REST API request, dispatch to the REST handler.
+   // The REST handler is responsible for parsing query parameters and
+   // generating a JSON response.
+   if ( isRestRequest )
+   {
+      resip_assert( mRestAdmin );
+      mRestAdmin->dispatch(method, uri, pageNumber, authenticatedUser);
+      return;
    }
       
    // parse any URI tags from form entry
@@ -751,7 +785,11 @@ WebAdmin::buildEditUserSubPage(DataStream& s)
       
       s << "<h2>Edit User</h2>" << endl <<
            "<p>Editing Record with key: " << key << "</p>" << endl <<
-           "<p>Note:  If the username is not modified and you leave the password field empty the users current password will not be reset.</p>" << endl;
+           "<p>Note: If you leave the password field empty, the user's current "
+           "password will not be reset. However, if you change the username or "
+           "domain, a new password is required (the stored password hash is "
+           "bound to user+realm, so renaming without a new password would "
+           "invalidate the account).</p>" << endl;
       
       s << 
          "<form id=\"editUserForm\" action=\"showUsers.html\"  method=\"get\" name=\"editUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
@@ -858,22 +896,36 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
          Data name = mHttpParams["name"];
          Data email = mHttpParams["email"];
          bool applyA1HashToPassword = true;
-         
-         // if no password was specified, then leave current password untouched
-         if(password == "" && user == rec.user && realm == rec.realm) 
+
+         // The stored password hash is MD5(user:realm:password), so if the
+         // username or domain changes, the old hash is no longer valid for
+         // the new identity and a new password is required.
+         bool identityChanged = (user != rec.user) || (realm != rec.realm);
+         if (identityChanged && password.empty())
          {
-            password = rec.passwordHash;
-            passwordHashAlt = rec.passwordHashAlt;
-            applyA1HashToPassword = false;
-         }
-         // write out the updated record to the database now
-         if(mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email, passwordHashAlt))
-         {
-            s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
+            s << "<p><em>Error</em> updating user: changing user or domain "
+                 "requires a new password (the stored password hash is bound "
+                 "to user+realm).</p>\n";
          }
          else
          {
-            s << "<p><em>Error</em> updating user: likely database error (check logs).</p>\n";
+            // if no password was specified (and identity is unchanged), leave
+            // the current password hash untouched.
+            if (password.empty() && !identityChanged)
+            {
+               password = rec.passwordHash;
+               passwordHashAlt = rec.passwordHashAlt;
+               applyA1HashToPassword = false;
+            }
+            // write out the updated record to the database now
+            if(mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email, passwordHashAlt))
+            {
+               s << "<p><em>Updated:</em> " << key << "</p>" << endl;
+            }
+            else
+            {
+               s << "<p><em>Error</em> updating user: likely database error (check logs).</p>\n";
+            }
          }
       }
    }
@@ -2067,43 +2119,42 @@ void
 WebAdmin::buildRestartSubPage(DataStream& s)
 {
    unsigned short port = mProxy.getConfig().getConfigUnsignedShort("CommandPort", 0);
-   if(port != 0)
+   if (port != 0)
    {
-      // Send restart command to command server - it is not safe to invoke a restart from here
-      // since the webadmin thread and server is destroyed on the blocking ReproRunner::restart call
       int sd = 0, rc;
-      struct sockaddr_in localAddr, servAddr;
-      struct hostent *h;
       const char* host = "127.0.0.1";
-      h = gethostbyname(host);
-      if(h!=0) 
+
+      struct addrinfo hints = {};
+      struct addrinfo* res = nullptr;
+      hints.ai_family = AF_INET;
+      hints.ai_socktype = SOCK_STREAM;
+
+      if (getaddrinfo(host, nullptr, &hints, &res) == 0 && res != nullptr)
       {
-         servAddr.sin_family = h->h_addrtype;
-         if(h->h_length <= (int)sizeof(servAddr.sin_addr.s_addr))
-         {
-            memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
-            servAddr.sin_port = htons(port);
-  
-            // Create TCP Socket
-            sd = (int)socket(AF_INET, SOCK_STREAM, 0);
-         }
-         if(sd >= 0) 
+         struct sockaddr_in servAddr = {};
+         memcpy(&servAddr, res->ai_addr, res->ai_addrlen);
+         servAddr.sin_port = htons(port);
+         freeaddrinfo(res);
+
+         // Create TCP Socket
+         sd = (int)socket(AF_INET, SOCK_STREAM, 0);
+         if (sd >= 0)
          {
             // bind to any local interface/port
+            struct sockaddr_in localAddr = {};
             localAddr.sin_family = AF_INET;
             localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
             localAddr.sin_port = 0;
-
-            rc = ::bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
-            if(rc >= 0) 
+            rc = ::bind(sd, (struct sockaddr*)&localAddr, sizeof(localAddr));
+            if (rc >= 0)
             {
                // Connect to server
-               rc = ::connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
-               if(rc >= 0) 
+               rc = ::connect(sd, (struct sockaddr*)&servAddr, sizeof(servAddr));
+               if (rc >= 0)
                {
                   Data request("<Restart>\r\n  <Request>\r\b  </Request>\r\n</Restart>\r\n");
                   rc = send(sd, request.c_str(), (int)request.size(), 0);
-                  if(rc >= 0)
+                  if (rc >= 0)
                   {
                      s << "Restarting proxy..." << endl;
                      closeSocket(sd);
@@ -2221,6 +2272,29 @@ WebAdmin::buildDefaultPage()
       s.flush();
    }
    return ret;
+}
+
+
+void
+WebAdmin::setApiResponse(int pageNumber, int statusCode, const Data& jsonBody)
+{
+   setPage(jsonBody, pageNumber, statusCode, Mime("application", "json"));
+}
+
+void
+WebAdmin::handleStatisticsMessage(StatisticsMessage& statsMessage)
+{
+   // Called on the stack thread when a StatisticsMessage is delivered.
+   // Copy the payload struct under the lock and wake any RestAdmin::handleStats
+   // caller that is blocked waiting for fresh data. Serialization to JSON is
+   // deferred to the REST handler so that the stack thread isn't doing any
+   // more work here than necessary.
+   {
+      Lock lock(mStatsMutex); (void)lock;
+      statsMessage.loadOut(mStatsPayload);
+      mStatsReady = true;
+   }
+   mStatsCondition.notify_all();
 }
 
 

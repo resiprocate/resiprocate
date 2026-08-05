@@ -84,16 +84,16 @@ protected:
    virtual void fixUpSdp(resip::SdpContents* sdp) = 0;
 
    std::map<resip::DialogId, RemoteParticipant*> mDialogs;
+   ConversationManager& mConversationManager;
+   ParticipantHandle mActiveRemoteParticipantHandle;
 
 private:
-   ConversationManager& mConversationManager;   
    RemoteParticipant* mUACOriginalRemoteParticipant;
    std::list<ConversationHandle> mUACOriginalConversationHandles;
    unsigned int mNumDialogs;
    ConversationManager::ParticipantForkSelectMode mForkSelectMode;
    std::shared_ptr<ConversationProfile> mConversationProfile;
    resip::DialogId mUACConnectedDialogId;
-   ParticipantHandle mActiveRemoteParticipantHandle;
 
    // SDP Negotiations that may need to be delayed due to media stack binding/allocation
    std::shared_ptr<resip::SipMessage> mPendingInvite;
@@ -124,8 +124,8 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
-  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

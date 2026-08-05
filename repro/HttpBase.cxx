@@ -69,7 +69,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm, const resip::D
    if ( mFd == INVALID_SOCKET )
    {
       int e = getErrno();
-      ErrLog (<< "Failed to create socket: " << strerror(e));
+      ErrLog (<< "Failed to create socket: " << strError(e));
       sane = false;
       return;
    }
@@ -85,7 +85,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm, const resip::D
 #endif
    {
       int e = getErrno();
-      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strError(e));
       sane = false;
       return;
    }
@@ -97,7 +97,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm, const resip::D
       if ( ::setsockopt(mFd, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) )
       {
           int e = getErrno();
-          ErrLog(<< "HttpBase::HttpBase: Couldn't set sockoptions IPV6_V6ONLY: " << strerror(e));
+          ErrLog(<< "HttpBase::HttpBase: Couldn't set sockoptions IPV6_V6ONLY: " << strError(e));
           sane = false;
           return;
       }
@@ -138,7 +138,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm, const resip::D
    if (e != 0 )
    {
       int e = getErrno();
-      InfoLog (<< "Failed listen " << strerror(e));
+      InfoLog (<< "Failed listen " << strError(e));
       sane = false;
       return;
    }

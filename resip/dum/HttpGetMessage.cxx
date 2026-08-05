@@ -11,31 +11,77 @@ HttpGetMessage::HttpGetMessage(const Data& tid,
    DumFeatureMessage(tid),
    mSuccess(success),
    mBody(body),
-   mType(type)
+   mType(type),
+   mStatusCode(200)
 {
 }
 
+HttpGetMessage::HttpGetMessage(const Data& tid,
+                               const Data& userData, 
+                               unsigned int statusCode,
+                               HeaderMap headers,
+                               const Data& body,
+                               const Mime& type) :
+   DumFeatureMessage(tid),
+   mSuccess(statusCode >= 200 && statusCode <= 299),
+   mBody(body),
+   mType(type),
+   mUserData(userData),
+   mStatusCode(statusCode),
+   mHeaders(std::move(headers))
+{
+}
+
+const Data&
+HttpGetMessage::getHeader(const Data& name) const
+{
+   // Keys in mHeaders are stored lower-cased - lowercase the lookup key as well
+   Data lower(name);
+   lower.lowercase();
+   HeaderMap::const_iterator it = mHeaders.find(lower);
+   return (it != mHeaders.end()) ? it->second : Data::Empty;
+}
+
 EncodeStream&
-HttpGetMessage::encodeBrief(EncodeStream& str) const
+HttpGetMessage::encodeBrief(EncodeStream& strm) const
 { 
-   return str << "HttpGetMessage: " << getTransactionId() << " " << mType;
+   // If UserData is empty and StatusCode is 0, assume 1st constructor was used
+   if (mUserData.empty() && mStatusCode == 0)
+   {
+      return strm << "HttpGetMessage: tid=" << getTransactionId() << ", success=" << Data(mSuccess) << ", bodyType=" << mType;
+   }
+   else
+   {
+      return strm << "HttpGetMessage: tid=" << getTransactionId() << ", userData=" << mUserData << ", statusCode=" << mStatusCode << ", bodyType=" << mType;
+   }
 }
 
 EncodeStream& 
 HttpGetMessage::encode(EncodeStream& strm) const
 {
-   return strm << brief() << "body: " << mBody;   
+   strm << brief() << ", headers={";
+   
+   bool first = true;
+   for (HeaderMap::const_iterator it = mHeaders.begin(); it != mHeaders.end(); ++it)
+   {
+      if (!first) strm << ", ";
+      strm << it->first << ": " << it->second;
+      first = false;
+   }
+   strm << "}, body=" << mBody;
+   return strm;
 }
 
 Message* 
 HttpGetMessage::clone() const 
 { 
-   return new HttpGetMessage(getTransactionId(), mSuccess, mBody, mType); 
+   return new HttpGetMessage(getTransactionId(), mUserData, mStatusCode, mHeaders, mBody, mType); 
 }
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

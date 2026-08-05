@@ -70,7 +70,7 @@ resip::configureConnectedSocket(Socket fd)
    if ( ::setsockopt ( fd, SOL_SOCKET, SO_NOSIGPIPE, (const char*)&on, sizeof(on)) )
    {
       int e = getErrno();
-      ErrLog (<< "Couldn't set sockoption SO_NOSIGPIPE: " << strerror(e));
+      ErrLog (<< "Couldn't set sockoption SO_NOSIGPIPE: " << strError(e));
       return false;
    }
 #endif
@@ -137,7 +137,7 @@ resip::closeSocket( Socket fd )
    int ret = ::close(fd);
    if (ret < 0)
    {
-      InfoLog (<< "Failed to shutdown socket " << fd << " : " << strerror(errno));
+      InfoLog (<< "Failed to shutdown socket " << fd << " : " << strError(errno));
    }
    return ret;
 }
@@ -168,7 +168,7 @@ resip::increaseLimitFds(unsigned int targetFds)
 
     if (getrlimit(RLIMIT_NOFILE, &lim) < 0)
 	{
-	   CritLog(<<"getrlimit(NOFILE) failed: " << strerror(errno));
+	   CritLog(<<"getrlimit(NOFILE) failed: " << strError(errno));
 	   return -1;
     }
     if (lim.rlim_cur==RLIM_INFINITY || targetFds < lim.rlim_cur)
@@ -194,7 +194,7 @@ resip::increaseLimitFds(unsigned int targetFds)
     if (setrlimit(RLIMIT_NOFILE, &lim) < 0)
 	{
 	   CritLog(<<"setrlimit(NOFILE)=(c="<<lim.rlim_cur<<",m="<<lim.rlim_max
-	      <<",uid="<<euid<<") failed: " << strerror(errno));
+	      <<",uid="<<euid<<") failed: " << strError(errno));
 	   /* There is intermediate: could raise cur to max */
 	   return -1;
     }

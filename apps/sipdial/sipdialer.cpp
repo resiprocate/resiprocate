@@ -16,18 +16,19 @@ using namespace std;
 
 Data getFullFilename()
 {
-#ifdef WIN32
-   char *home_drive = getenv("HOMEDRIVE");
-   resip_assert(home_drive); // FIXME
-   char *home_path = getenv("HOMEPATH");
-   resip_assert(home_path); // FIXME
-   Data full_filename(string(home_drive) + string(home_path) + string("/sipdial/sipdial.cfg"));
-   return full_filename;
+#ifdef _MSC_VER
+   char homeDrive[256] = { 0 };
+   char homePath[256] = { 0 };
+   size_t requiredSize = 0;
+   getenv_s(&requiredSize, homeDrive, sizeof(homeDrive), "HOMEDRIVE");
+   resip_assert(requiredSize > 0); // FIXME
+   getenv_s(&requiredSize, homePath, sizeof(homePath), "HOMEPATH");
+   resip_assert(requiredSize > 0); // FIXME
+   return Data(string(homeDrive) + string(homePath) + string("/sipdial/sipdial.cfg"));
 #else   
-   char *home_dir = getenv("HOME");
+   char* home_dir = getenv("HOME");
    resip_assert(home_dir); // FIXME
-   Data full_filename(string(home_dir) + string("/.sipdial/sipdial.cfg"));
-   return full_filename;
+   return Data(string(home_dir) + string("/.sipdial/sipdial.cfg"));
 #endif
 }
 

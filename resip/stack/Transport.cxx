@@ -141,22 +141,22 @@ Transport::errorToString(int e)
          ds << "None";
          break;
       case EAGAIN:
-         ds << "No data ready to read: " << strerror(e);
+         ds << "No data ready to read: " << strError(e);
          break;
       case EINTR:
-         ds << "The call was interrupted by a signal before any data was read: " << strerror(e);
+         ds << "The call was interrupted by a signal before any data was read: " << strError(e);
          break;
       case EIO:
-         ds << "I/O error: " << strerror(e);
+         ds << "I/O error: " << strError(e);
          break;
       case EBADF:
-         ds << "fd is not a valid file descriptor or is not open for reading: " << strerror(e);
+         ds << "fd is not a valid file descriptor or is not open for reading: " << strError(e);
          break;
       case EINVAL:
-         ds << "fd is attached to an object which is unsuitable for reading: " << strerror(e);
+         ds << "fd is attached to an object which is unsuitable for reading: " << strError(e);
          break;
       case EFAULT:
-         ds << "buf is outside your accessible address space: " << strerror(e);
+         ds << "buf is outside your accessible address space: " << strError(e);
          break;
 
 #if defined(WIN32)
@@ -251,7 +251,7 @@ Transport::errorToString(int e)
 #endif
 
       default:
-         ds << "Some other error (" << e << "): " << strerror(e);
+         ds << "Some other error (" << e << "): " << strError(e);
          break;
    }
    ds.flush();

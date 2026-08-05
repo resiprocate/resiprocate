@@ -84,9 +84,9 @@ class DumUserAgent : public EndPoint,
 
       void handleEvent(Event* eventRaw);
 
-      void buildFdSet(resip::FdSet& fdset);
+      void buildFdSet(resip::FdSet& fdset) override;
 
-      void process(resip::FdSet& fdset);
+      void process(resip::FdSet& fdset) override;
 
       const resip::Data& getInstanceId() const;
       resip::Uri getContact() const;
@@ -475,7 +475,7 @@ class DumUserAgent : public EndPoint,
       msg);
       */
 
-      virtual resip::Data getName() const;
+      virtual resip::Data getName() const override;
 
       //resip::ClientPagerMessageHandle mClientPagerMessage;
       //resip::ServerPagerMessageHandle mServerPagerMessage;
@@ -486,7 +486,7 @@ class DumUserAgent : public EndPoint,
       const resip::Data& getIp() const { return mIp; }
       int getPort() const { return mPort; }
 
-      virtual void clean();
+      virtual void clean() override;
 
       resip::ServerSubscriptionHandle& getServerSubscription() { return mServerSubscription; }
       resip::SipMessage& getReferMessage() { return mReferMessage; }

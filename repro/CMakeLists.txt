@@ -1,19 +1,37 @@
+# Headers that belong to the repro executable
+set(REPRO_INCLUDES
+   HttpBase.hxx
+   HttpConnection.hxx
+   ReproRunner.hxx
+   ReproVersion.hxx
+   RestAdmin.hxx
+   WebAdmin.hxx
+   WebAdminThread.hxx
+)
+
 add_executable(repro
    repro.cxx
    HttpBase.cxx
    HttpConnection.cxx
    ReproRunner.cxx
    ReproVersion.cxx
+   RestAdmin.cxx
    WebAdmin.cxx
    WebAdminThread.cxx
-   )
+   ${REPRO_INCLUDES}
+)
 
 set_target_properties(repro PROPERTIES FOLDER repro)
 target_link_libraries(repro PUBLIC reprolib)
 
+# dh2048.pem holds the standard MODP Group 14 parameters from RFC 3526 and lets
+# repro be run in place with the TlsDHParamsFilename default in repro.config.
+# The Linux packages do NOT ship it - they generate a file at install time (see
+# debian/repro.postinst and the %post scriptlet in resiprocate.spec.in).
 set(CONFIG_FILES
    ${CMAKE_SOURCE_DIR}/repro/users.txt
-   ${CMAKE_SOURCE_DIR}/repro/repro.config 
+   ${CMAKE_SOURCE_DIR}/repro/repro.config
+   ${CMAKE_SOURCE_DIR}/repro/dh2048.pem
 )
 
 target_sources(repro PRIVATE ${CONFIG_FILES})
@@ -41,7 +59,7 @@ if(WIN32)
      )
   endif()
   # For windows only - move config and users.txt to install location, so repro can be run in place
-  install(FILES users.txt repro.config DESTINATION ${CMAKE_INSTALL_SBINDIR})
+  install(FILES users.txt repro.config dh2048.pem DESTINATION ${CMAKE_INSTALL_SBINDIR})
 else()
   install(FILES doc/repro.8 doc/reprocmd.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
 endif()
@@ -62,8 +80,6 @@ set(INCLUDES
    ConfigStore.hxx
    FilterStore.hxx
    ForkControlMessage.hxx
-   HttpBase.hxx
-   HttpConnection.hxx
    monkeys/AmIResponsible.hxx
    monkeys/CertificateAuthenticator.hxx
    monkeys/CookieAuthenticator.hxx
@@ -102,8 +118,6 @@ set(INCLUDES
    ReproRADIUSServerAuthManager.hxx
    ReproServerAuthManager.hxx
    ReproTlsPeerAuthManager.hxx
-   ReproRunner.hxx
-   ReproVersion.hxx
    RequestContext.hxx
    ResponseContext.hxx
    RouteStore.hxx
@@ -127,8 +141,6 @@ set(INCLUDES
    UserAuthGrabber.hxx
    UserInfoMessage.hxx
    UserStore.hxx
-   WebAdmin.hxx
-   WebAdminThread.hxx
    XmlRpcConnection.hxx
    XmlRpcServerBase.hxx
 )

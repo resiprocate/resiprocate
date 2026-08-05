@@ -32,6 +32,56 @@ main(int argc, char** argv)
    initNetwork();
 
    {
+      // Test Diversion header, RFC5806
+      Data txt("INVITE sip:00911206930000@10.52.83.198:5060;user=phone;transport=udp SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP 10.60.65.26:5061;branch=z9hG4bKUcrpwaklwomdpdwau0\r\n"
+         "Max-Forwards: 69\r\n"
+         "Contact: sip:09582369046@10.60.65.26:5061\r\n"
+         "To: \"00911206930000\"<sip:00911206930000@10.52.83.198;user=phone>\r\n"
+         "From: \"09582369046\"<sip:09582369046@10.60.65.26;user=phone>;tag=ucBE764F78\r\n"
+         "Call-ID: 9090F9658A51DB0A00@ngn.ttl.in\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Session-Expires: 1350\r\n"
+         "Allow: INVITE, ACK, OPTIONS, BYE, CANCEL, UPDATE, REGISTER, INFO, PRACK, SUBSCRIBE, NOTIFY, MESSAGE\r\n"
+         "Content-Type: application/sdp\r\n"
+         "Supported: 100rel, timer\r\n"
+         "P-Asserted-Identity: <sip:09582369046@10.60.65.26;user=phone> \r\n"
+         "Diversion: <sip:WeSellPizza@p2.isp.com>;reason=time-of-day;privacy=full\r\n"
+         "Diversion: <tel:+19195551002>;reason=user-busy;screen=\"yes\";privacy=\"off\"\r\n"
+         "Content-Length: 192\r\n"
+         "\r\n"
+         "v=0\r\n"
+         "o=UTSTARCOM 812795211 4223640993 IN IP4 10.60.66.10\r\n"
+         "s=-\r\n"
+         "c=IN IP4 10.60.66.10\r\n"
+         "t=0 0\r\n"
+         "m=audio 30618 RTP/AVP 8 0 18 101\r\n"
+         "a=sendrecv\r\n"
+         "a=rtpmap:101 telephone-event/8000\r\n"
+         "a=fmtp:101 0-15\r\n"
+         "\r\n");
+
+      unique_ptr<SipMessage> msg(SipMessage::make(txt, true /* isExternal */));
+
+      NameAddr& diversion1 = msg->header(h_Diversions).front();
+      assert(diversion1.uri().user() == "WeSellPizza");
+      assert(diversion1.uri().host() == "p2.isp.com");
+      assert(diversion1.exists(p_reason));
+      assert(diversion1.param(p_reason) == "time-of-day");
+      assert(diversion1.exists(p_privacy));
+      assert(diversion1.param(p_privacy) == "full");
+      NameAddr& diversion2 = msg->header(h_Diversions).back();
+      assert(diversion2.uri().user() == "+19195551002");
+      assert(diversion2.uri().host() == "");
+      assert(diversion2.exists(p_reason));
+      assert(diversion2.param(p_reason) == "user-busy");
+      assert(diversion2.exists(p_screen));
+      assert(diversion2.param(p_screen) == "yes");
+      assert(diversion2.exists(p_privacy));
+      assert(diversion2.param(p_privacy) == "off");
+   }
+
+   {
       // Test tolerance of illegal embedded headers.  See first History-Info header where the ;'s are not legally escaped as
       // specified in RFC3261.
       Data txt("INVITE sip:00911206930000@10.52.83.198:5060;user=phone;transport=udp SIP/2.0\r\n"
@@ -2414,6 +2464,50 @@ main(int argc, char** argv)
        assert( msg->header(resip::h_PAccessNetworkInfos).size() == 2);
    }
 
+
+   // Test ParserContainer<T>::getByIndex
+   {
+      // Build a message with three Identity headers to exercise getByIndex
+      // on the ParserContainer<IdentityCategory> backing h_Identities.
+      Data txt =
+         "INVITE sip:alice@example.com SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP host.example.com;branch=z9hG4bK-idx\r\n"
+         "From: <sip:+15551112222@example.com>;tag=t1\r\n"
+         "To: <sip:alice@example.com>\r\n"
+         "Call-ID: getbyindex@host.example.com\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Max-Forwards: 70\r\n"
+         "Identity: tokenA;info=<https://cert.example.org/a.pem>;alg=ES256;ppt=shaken\r\n"
+         "Identity: tokenB;info=<https://cert.example.org/b.pem>;alg=ES256;ppt=div\r\n"
+         "Identity: tokenC;info=<https://cert.example.org/c.pem>;alg=ES256\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n";
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      assert(msg->exists(h_Identities));
+      auto& ids = msg->header(h_Identities);
+      assert(ids.size() == 3);
+
+      // In-range non-const: correct element returned
+      assert(ids.getByIndex(0) != nullptr);
+      assert(ids.getByIndex(0)->value() == "tokenA");
+      assert(ids.getByIndex(1) != nullptr);
+      assert(ids.getByIndex(1)->value() == "tokenB");
+      assert(ids.getByIndex(2) != nullptr);
+      assert(ids.getByIndex(2)->value() == "tokenC");
+
+      // Out-of-range: nullptr
+      assert(ids.getByIndex(3) == nullptr);
+      assert(ids.getByIndex(999) == nullptr);
+
+      // Const overload: same results
+      const auto& constIds = ids;
+      assert(constIds.getByIndex(0) != nullptr);
+      assert(constIds.getByIndex(0)->value() == "tokenA");
+      assert(constIds.getByIndex(2) != nullptr);
+      assert(constIds.getByIndex(2)->value() == "tokenC");
+      assert(constIds.getByIndex(3) == nullptr);
+   }
+
    resipCerr << "\nTEST OK" << endl;
    return 0;
 }
@@ -2423,6 +2517,7 @@ main(int argc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

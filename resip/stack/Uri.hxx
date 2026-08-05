@@ -306,6 +306,9 @@ class Uri : public ParserCategory
    private:
       std::unique_ptr<Data> mEmbeddedHeadersText;
       std::unique_ptr<SipMessage> mEmbeddedHeaders;
+      // As-received user-part bytes, kept only when the user part contains a
+      // percent-escape, so that escaping is preserved verbatim on re-encode.
+      std::unique_ptr<Data> mUserRaw;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 

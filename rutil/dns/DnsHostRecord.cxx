@@ -40,7 +40,7 @@ DnsHostRecord::DnsHostRecord(const RROverlay& overlay)
 
 Data DnsHostRecord::host() const
 {
-   return Data(inet_ntoa(mAddr));
+   return DnsUtil::inet_ntop(mAddr);
 }
 
 bool DnsHostRecord::isSameValue(const Data& value) const

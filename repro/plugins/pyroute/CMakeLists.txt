@@ -13,7 +13,7 @@ add_library(pyroute MODULE
    ${INCLUDES}
 )
 
-target_include_directories(pyroute PUBLIC ${Python3_INCLUDE_DIRS} ${PYCXX_INCLUDE_DIRS})
+target_include_directories(pyroute SYSTEM PUBLIC ${Python3_INCLUDE_DIRS} ${PYCXX_INCLUDE_DIRS})
 
 target_link_libraries(pyroute PUBLIC reprolib ${Python3_LIBRARIES} ${PYCXX_LIBRARIES})
 

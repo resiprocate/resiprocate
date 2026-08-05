@@ -81,7 +81,7 @@ TcpBaseTransport::init()
       if (::setsockopt(mFd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)))
       {
          int e = getErrno();
-         InfoLog(<< "Couldn't set sockoptions SO_REUSEPORT: " << strerror(e));
+         InfoLog(<< "Couldn't set sockoptions SO_REUSEPORT: " << strError(e));
          error(e);
          throw Exception("Failed setsockopt", __FILE__, __LINE__);
       }
@@ -92,7 +92,7 @@ TcpBaseTransport::init()
 #endif
    {
        int e = getErrno();
-       InfoLog (<< "Couldn't set sockoptions SO_REUSEADDR: " << strerror(e));
+       InfoLog (<< "Couldn't set sockoptions SO_REUSEADDR: " << strError(e));
        error(e);
        throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
@@ -108,7 +108,7 @@ TcpBaseTransport::init()
    if (e != 0 )
    {
       int e = getErrno();
-      InfoLog (<< "Failed listen " << strerror(e));
+      InfoLog (<< "Failed listen " << strError(e));
       error(e);
       // !cj! deal with errors
       throw Transport::Exception("Address already in use", __FILE__,__LINE__);
@@ -238,7 +238,7 @@ TcpBaseTransport::bindClientSocket(Socket sock,
       if (::setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)))
       {
          int err = getErrno();
-         WarningLog(<< "Failed to set SO_REUSEPORT on client socket: " << strerror(err));
+         WarningLog(<< "Failed to set SO_REUSEPORT on client socket: " << strError(err));
       }
       if (::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)))
 #else
@@ -246,7 +246,7 @@ TcpBaseTransport::bindClientSocket(Socket sock,
 #endif
       {
          int err = getErrno();
-         WarningLog(<< "Failed to set SO_REUSEADDR on client socket: " << strerror(err));
+         WarningLog(<< "Failed to set SO_REUSEADDR on client socket: " << strError(err));
          // Continue anyway - this is not fatal
       }
       
@@ -269,7 +269,7 @@ TcpBaseTransport::bindClientSocket(Socket sock,
    if(::bind(sock, sa, mTuple.length()) != 0)
    {
       int err = getErrno();
-      WarningLog( << "Error in binding to source interface address: " << strerror(err));
+      WarningLog( << "Error in binding to source interface address: " << strError(err));
       failReason = TransportFailure::Failure;
       failSubCode = err;
       return false;
@@ -292,7 +292,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
    {
       int err = getErrno();
-      InfoLog (<< "Failed to create a socket " << strerror(err));
+      InfoLog (<< "Failed to create a socket " << strError(err));
       error(err);
       if(mConnectionManager.gc(ConnectionManager::MinimumGcAge, 1) == 0)
       {
@@ -306,7 +306,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       if ( sock == INVALID_SOCKET )
       {
          err = getErrno();
-         WarningLog( << "Error in finding free filedescriptor to use. " << strerror(err));
+         WarningLog( << "Error in finding free filedescriptor to use. " << strError(err));
          error(err);
          failReason = TransportFailure::TransportNoSocket;
          failSubCode = err;
@@ -354,7 +354,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
          default:
          {
             // !jf! this has failed
-            InfoLog( << "Error on TCP connect to " <<  dest << ", err=" << err << ": " << strerror(err));
+            InfoLog( << "Error on TCP connect to " <<  dest << ", err=" << err << ": " << strError(err));
             error(err);
             //fdset.clear(sock);
             closeSocket(sock);

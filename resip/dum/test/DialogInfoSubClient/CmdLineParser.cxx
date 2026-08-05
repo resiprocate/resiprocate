@@ -38,7 +38,9 @@ CmdLineParser::CmdLineParser(int argc, char** argv)
    
    char* inputOutboundProxy = 0;
    char* inputContact = 0;
+#ifndef WIN32
    Data basePath(getenv("HOME"));
+#endif
 
    int outboundEnabled = false;
 
@@ -89,7 +91,11 @@ CmdLineParser::CmdLineParser(int argc, char** argv)
    mLogLevel = logLevel;
    if (tlsDomain) mTlsDomain = tlsDomain;
    if (certPath) mCertPath = certPath;
+#ifndef WIN32
    else mCertPath = basePath + "/.sipCerts";
+#else
+   else mCertPath = ".";
+#endif
 
    mUdpPort = udpPort;
    mTcpPort = tcpPort;

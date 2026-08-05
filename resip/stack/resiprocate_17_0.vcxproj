@@ -516,6 +516,7 @@
     <ClCompile Include="DnsResult.cxx" />
     <ClCompile Include="DtlsMessage.cxx" />
     <ClCompile Include="DtmfPayloadContents.cxx" />
+    <ClCompile Include="IdentityCategory.cxx" />
     <ClCompile Include="ReceivedParameter.cxx" />
     <ClCompile Include="ssl\DtlsTransport.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -661,6 +662,7 @@
     <ClCompile Include="UInt32Parameter.cxx" />
     <ClCompile Include="UnknownParameter.cxx" />
     <ClCompile Include="Uri.cxx" />
+    <ClCompile Include="UriParameter.cxx" />
     <ClCompile Include="Via.cxx" />
     <ClCompile Include="WarningCategory.cxx" />
     <ClCompile Include="ssl\WinSecurity.cxx">
@@ -716,6 +718,7 @@
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="DtmfPayloadContents.hxx" />
     <ClInclude Include="GenericPidfContents.hxx" />
+    <ClInclude Include="IdentityCategory.hxx" />
     <ClInclude Include="InvokeAfterSocketCreationFunc.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="MessageDecorator.hxx" />
@@ -844,6 +847,7 @@
     <ClInclude Include="UnknownParameter.hxx" />
     <ClInclude Include="UnknownParameterType.hxx" />
     <ClInclude Include="Uri.hxx" />
+    <ClInclude Include="UriParameter.hxx" />
     <ClInclude Include="ValueFifo.hxx" />
     <ClInclude Include="Via.hxx" />
     <ClInclude Include="WarningCategory.hxx" />

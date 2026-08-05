@@ -55,7 +55,7 @@ RendIncreaseLimitFds(unsigned int targetFds)
 
    if ( getrlimit(RLIMIT_NOFILE, &lim)<0 ) 
    {
-      CritLog(<<"getrlimit(NOFILE) failed: " << strerror(errno));
+      CritLog(<<"getrlimit(NOFILE) failed: " << strError(errno));
       return -1;
    }
    if ( lim.rlim_cur==RLIM_INFINITY || targetFds < lim.rlim_cur )
@@ -76,7 +76,7 @@ RendIncreaseLimitFds(unsigned int targetFds)
    if ( setrlimit(RLIMIT_NOFILE, &lim)<0 ) 
    {
       CritLog(<<"setrlimit(NOFILE)=("<<lim.rlim_cur<<","<<lim.rlim_max
-         <<")) failed: " << strerror(errno));
+         <<")) failed: " << strError(errno));
       /* There is intermediate: could raise cur to max */
       return -1;
    }
@@ -87,13 +87,8 @@ RendIncreaseLimitFds(unsigned int targetFds)
 char*
 RendStatAcc::fmt1(char *buf, size_t buflen, float scale, int prec) const 
 {
-#ifdef WIN32
-   _snprintf(buf, buflen, "[%d:%.*f/%.*f/%.*f]",
-      mCnt, prec, mMin*scale, prec, avg()*scale, prec, mMax*scale);
-#else
    snprintf(buf, buflen, "[%d:%.*f/%.*f/%.*f]",
       mCnt, prec, mMin*scale, prec, avg()*scale, prec, mMax*scale);
-#endif
    return buf;
 }
 

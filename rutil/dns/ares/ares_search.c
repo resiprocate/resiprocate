@@ -199,77 +199,86 @@ static int cat_domain(const char *name, const char *domain, char **s)
  * the string we should query, in an allocated buffer.  If not, set *s
  * to NULL.
  */
-static int single_domain(ares_channel channel, const char *name, char **s)
+static int single_domain(ares_channel channel, const char* name, char** s)
 {
-  size_t len = strlen(name);
-  const char *hostaliases;
-  FILE *fp;
-  char *line = NULL;
-  int linesize, status;
-  const char *p, *q;
+   size_t len = strlen(name);
+   const char* hostaliases;
+   FILE* fp;
+   char* line = NULL;
+   int linesize, status;
+   const char* p, * q;
 
-  /* If the name contains a trailing dot, then the single query is the name
-   * sans the trailing dot.
-   */
-  if (name[len - 1] == '.')
-    {
+   /* If the name contains a trailing dot, then the single query is the name
+    * sans the trailing dot.
+    */
+   if (name[len - 1] == '.')
+   {
       *s = strdup(name);
       return (*s) ? ARES_SUCCESS : ARES_ENOMEM;
-    }
+   }
 
-  if (!(channel->flags & ARES_FLAG_NOALIASES) && !strchr(name, '.'))
-    {
+   if (!(channel->flags & ARES_FLAG_NOALIASES) && !strchr(name, '.'))
+   {
       /* The name might be a host alias. */
 #ifdef UNDER_CE
-		hostaliases = NULL;
+      hostaliases = NULL;
+#elif defined(_MSC_VER)
+      char hostaliasBuf[256] = { 0 };
+      size_t requiredSize = 0;
+      getenv_s(&requiredSize, hostaliasBuf, sizeof(hostaliasBuf), "HOSTALIASES");
+      hostaliases = requiredSize > 0 ? hostaliasBuf : NULL;
 #else
       hostaliases = getenv("HOSTALIASES");
 #endif
       if (hostaliases)
-	{
-	  fp = fopen(hostaliases, "r");
-	  if (fp)
-	    {
-	      while ((status = ares__read_line(fp, &line, &linesize))
-		     == ARES_SUCCESS)
-		{
-                   if (strncasecmp(line, name, len) != 0 ||
-		      !isspace((unsigned char)line[len]))
-		    continue;
-		  p = line + len;
-		  while (isspace((unsigned char)*p))
-		    p++;
-		  if (*p)
-		    {
-		      q = p + 1;
-		      while (*q && !isspace((unsigned char)*q))
-			q++;
-		      *s = malloc(q - p + 1);
-		      if (*s)
-			{
-			  memcpy(*s, p, q - p);
-			  (*s)[q - p] = 0;
-			}
-		      free(line);
-		      fclose(fp);
-		      return (*s) ? ARES_SUCCESS : ARES_ENOMEM;
-		    }
-		}
-	      free(line);
-	      fclose(fp);
-	      if (status != ARES_SUCCESS)
-		return status;
-	    }
-	}
-    }
+      {
+#ifdef WIN32
+         fopen_s(&fp, hostaliases, "r");
+#else
+         fp = fopen(hostaliases, "r");
+#endif
+         if (fp)
+         {
+            while ((status = ares__read_line(fp, &line, &linesize))
+               == ARES_SUCCESS)
+            {
+               if (strncasecmp(line, name, len) != 0 ||
+                  !isspace((unsigned char)line[len]))
+                  continue;
+               p = line + len;
+               while (isspace((unsigned char)*p))
+                  p++;
+               if (*p)
+               {
+                  q = p + 1;
+                  while (*q && !isspace((unsigned char)*q))
+                     q++;
+                  *s = malloc(q - p + 1);
+                  if (*s)
+                  {
+                     memcpy(*s, p, q - p);
+                     (*s)[q - p] = 0;
+                  }
+                  free(line);
+                  fclose(fp);
+                  return (*s) ? ARES_SUCCESS : ARES_ENOMEM;
+               }
+            }
+            free(line);
+            fclose(fp);
+            if (status != ARES_SUCCESS)
+               return status;
+         }
+      }
+   }
 
-  if (channel->flags & ARES_FLAG_NOSEARCH || channel->ndomains == 0)
-    {
+   if (channel->flags & ARES_FLAG_NOSEARCH || channel->ndomains == 0)
+   {
       /* No domain search to do; just try the name as-is. */
       *s = strdup(name);
       return (*s) ? ARES_SUCCESS : ARES_ENOMEM;
-    }
+   }
 
-  *s = NULL;
-  return ARES_SUCCESS;
+   *s = NULL;
+   return ARES_SUCCESS;
 }

@@ -223,7 +223,7 @@ StunServer::sendTurnAllocateErrorResponse(std::shared_ptr<StunRequestContext> re
    response->msg.errorCode.number = code % 100;
    Data reason = getReason(code);
    response->msg.errorCode.sizeReason = (uint16_t)reason.size();
-   strcpy(response->msg.errorCode.reason, reason.c_str());
+   snprintf(response->msg.errorCode.reason, sizeof(response->msg.errorCode.reason), "%s", reason.c_str());
 
    response->dest = request->from;
 
@@ -248,8 +248,7 @@ StunServer::sendTurnAllocateErrorResponse300(std::shared_ptr<StunRequestContext>
    response->msg.errorCode.number = 0;
    Data reason = getReason(300);
    response->msg.errorCode.sizeReason = (uint16_t)reason.size();
-   strcpy(response->msg.errorCode.reason, reason.c_str());
-
+   snprintf(response->msg.errorCode.reason, sizeof(response->msg.errorCode.reason), "%s", reason.c_str());
 
    response->msg.hasTurnAlternateServer = true;
    response->msg.turnAlternateServer.family = IPv4Family;

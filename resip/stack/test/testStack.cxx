@@ -264,6 +264,9 @@ SipStackAndThread::SipStackAndThread(const char *tType,
 #ifndef WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+#pragma warning(push)
+#pragma warning(disable: 4996)
 #endif
    if (mSelIntr) 
    {
@@ -275,6 +278,8 @@ SipStackAndThread::SipStackAndThread(const char *tType,
    }
 #ifndef WIN32
 #pragma GCC diagnostic pop
+#else
+#pragma warning(pop)
 #endif
 }
 
@@ -318,6 +323,9 @@ waitForTwoStacks(SipStackAndThread& receiver, SipStackAndThread& sender,
 #ifndef WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+#pragma warning(push)
+#pragma warning(disable: 4996)
 #endif
    FdSet fdset;
    receiver->buildFdSet(fdset);
@@ -345,6 +353,8 @@ waitForTwoStacks(SipStackAndThread& receiver, SipStackAndThread& sender,
    sender->process(fdset);
 #ifndef WIN32
 #pragma GCC diagnostic pop
+#else
+#pragma warning(pop)
 #endif
 }
 
@@ -623,8 +633,7 @@ main(int argc, char* argv[])
 #if defined(HAVE_POPT_H)
 
    char threadTypeDesc[200];
-   strcpy(threadTypeDesc, "none|common|std|intr|multithreadedstack|");
-   strcat(threadTypeDesc, FdPollGrp::getImplList());
+   snprintf(threadTypeDesc, sizeof(threadTypeDesc), "none|common|std|intr|multithreadedstack|%s", FdPollGrp::getImplList());
 
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},

@@ -762,78 +762,75 @@ SipStack::removeAlias(const Data& domain, int port)
 Data
 SipStack::getHostname()
 {
-   // if you change this, please #def old version for windows
    char hostName[1024];
-   int err =  gethostname( hostName, sizeof(hostName) );
-   if(err != 0)
+   int err = gethostname(hostName, sizeof(hostName));
+   if (err != 0)
    {
-      ErrLog(<< "gethostname failed with return " << err << " Returning "
-            "\"localhost\"");
+      ErrLog(<< "gethostname failed with return " << err << " Returning \"localhost\"");
       resip_assert(0);
       return "localhost";
    }
-   
-   struct hostent* hostEnt = gethostbyname( hostName );
-   if ( !hostEnt )
+
+   struct addrinfo hints = {};
+   struct addrinfo* res = NULL;
+   hints.ai_family = AF_INET;
+   hints.ai_socktype = SOCK_STREAM;
+
+   err = getaddrinfo(hostName, NULL, &hints, &res);
+   if (err != 0 || res == NULL)
    {
-      // this can fail when there is no name server
-      // !cj! - need to decided what error to return
-      ErrLog( << "gethostbyname failed - name server is probably down" );
+      ErrLog(<< "getaddrinfo failed - name server is probably down: " << gai_strerror(err));
       return "localhost";
    }
-   resip_assert( hostEnt );
 
-   struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
-   resip_assert( addr );
+   // get the canonical hostname
+   Data retHost(res->ai_canonname ? res->ai_canonname : hostName);
 
-   // if you change this, please #def old version for windows
-   char* addrA = inet_ntoa( *addr );
-   Data ret(addrA);
-
-   Data retHost( hostEnt->h_name );
-
+   freeaddrinfo(res);
    return retHost;
 }
-
 
 Data
 SipStack::getHostAddress()
 {
-   // if you change this, please #def old version for windows
    char hostName[1024];
-   int err =  gethostname( hostName, sizeof(hostName) );
-   if(err != 0)
+   int err = gethostname(hostName, sizeof(hostName));
+   if (err != 0)
    {
       ErrLog(<< "gethostname failed with return " << err << " Returning "
-            "\"127.0.0.1\"");
+         "\"127.0.0.1\"");
       resip_assert(0);
       return "127.0.0.1";
    }
-   
-   struct hostent* hostEnt = gethostbyname( hostName );
-   if(!hostEnt)
-   {
-      ErrLog(<< "gethostbyname failed, returning \"127.0.0.1\"");
-      resip_assert(0);
-      return "127.0.0.1";
-   }
-   
-   struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
-   if( !addr )
-   {
-      ErrLog(<< "gethostbyname returned a hostent* with an empty h_addr_list,"
-               " returning \"127.0.0.1\"");
-      resip_assert(0);
-      return "127.0.0.1";
-   }
-   
-   // if you change this, please #def old version for windows 
-   char* addrA = inet_ntoa( *addr );
-   Data ret(addrA);
 
-   //Data retHost( hostEnt->h_name );
+   struct addrinfo hints = {};
+   struct addrinfo* res = NULL;
+   hints.ai_family = AF_INET;
+   hints.ai_socktype = SOCK_STREAM;
 
-   return ret;
+   err = getaddrinfo(hostName, NULL, &hints, &res);
+   if (err != 0 || res == NULL)
+   {
+      ErrLog(<< "getaddrinfo failed, returning \"127.0.0.1\": " << gai_strerror(err));
+      resip_assert(0);
+      return "127.0.0.1";
+   }
+
+   struct sockaddr_in* addr = (struct sockaddr_in*)res->ai_addr;
+   if (!addr)
+   {
+      ErrLog(<< "getaddrinfo returned no address, returning \"127.0.0.1\"");
+      freeaddrinfo(res);
+      resip_assert(0);
+      return "127.0.0.1";
+   }
+
+   // inet_ntop replaces deprecated inet_ntoa - thread-safe and IPv6 ready
+   char addrBuf[INET_ADDRSTRLEN];
+   inet_ntop(AF_INET, &addr->sin_addr, addrBuf, sizeof(addrBuf));
+
+   freeaddrinfo(res);
+   return Data(addrBuf);
 }
 
 bool

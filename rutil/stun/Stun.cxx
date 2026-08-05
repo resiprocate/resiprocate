@@ -44,6 +44,10 @@
 #include "Udp.hxx"
 #include "Stun.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/Random.hxx"
+#ifndef USE_SSL
+#include "rutil/Sha1.hxx"
+#endif
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace std;
@@ -374,6 +378,10 @@ namespace resip
 
             case MessageIntegrity:
                msg.hasMessageIntegrity = true;
+               // Record where the MESSAGE-INTEGRITY attribute header begins so the
+               // HMAC can be verified later (body currently points just past the
+               // 4-byte attribute header). See stunVerifyMessageIntegrity().
+               msg.messageIntegrityOffset = static_cast<unsigned int>((body - 4) - buf);
                if (stunParseAtrIntegrity(body, attrLen, msg.messageIntegrity) == false)
                {
                   if (verbose) clog << "problem parsing MessageIntegrity" << endl;
@@ -383,11 +391,6 @@ namespace resip
                {
                   if (verbose) clog << "MessageIntegrity = " << msg.messageIntegrity.hash << endl;
                }
-
-               // read the current HMAC
-               // look up the password given the user of given the transaction id 
-               // compute the HMAC on the buffer
-               // decide if they match or not
                break;
 
             case ErrorCode:
@@ -886,15 +889,13 @@ namespace resip
          encode16(lengthp, uint16_t(ptr - buf - sizeof(StunMsgHdr)));
 
          StunAtrIntegrity integrity;
-         // pad with zeros prior to calculating message integrity attribute	   
-         int padding = 0;
+         // RFC 5389 section 15.4: the HMAC-SHA1 is computed over the STUN message
+         // up to (but not including) the MESSAGE-INTEGRITY attribute, with the
+         // message-length field in the header already set to include the
+         // MESSAGE-INTEGRITY attribute (done above). No additional block padding
+         // is applied to the input.
          int len = int(ptrMessageIntegrity - buf);
-         if (len % 64)
-         {
-            padding = 64 - (len % 64);
-            memset(ptrMessageIntegrity, 0, padding);
-         }
-         computeHmac(integrity.hash, buf, len + padding, password.value, password.sizeValue);
+         computeHmac(integrity.hash, buf, len, password.value, password.sizeValue);
          encodeAtrIntegrity(ptrMessageIntegrity, integrity);
       }
 
@@ -906,64 +907,11 @@ namespace resip
    int
       stunRand()
    {
-      // return 32 bits of random stuff
-      resip_assert(sizeof(int) == 4);
-      static bool init = false;
-      if (!init)
-      {
-         init = true;
-
-         uint64_t tick;
-
-#if defined(WIN32) 
-#if !defined(UNDER_CE) && !defined(__GNUC__) && !defined(_WIN64) && !defined(_M_ARM)
-         volatile unsigned int lowtick = 0, hightick = 0;
-         __asm
-         {
-            rdtsc
-            mov lowtick, eax
-            mov hightick, edx
-         }
-         tick = hightick;
-         tick <<= 32;
-         tick |= lowtick;
-#else
-         tick = GetTickCount();
-#endif
-#elif defined(__GNUC__) && ( defined(__i686__) || defined(__i386__) || defined(__x86_64__) )
-         asm("rdtsc" : "=A" (tick));
-#elif defined (__SUNPRO_CC) || (defined(__sun) && defined(__SVR4))
-         tick = gethrtime();
-#elif defined(__APPLE__) || defined(__MACH__)
-         int fd = open("/dev/random", O_RDONLY);
-         read(fd, &tick, sizeof(tick));
-         closeSocket(fd);
-#elif defined(__linux__)
-         int fd = open("/dev/urandom", O_RDONLY);
-         read(fd, &tick, sizeof(tick));
-         closeSocket(fd);
-#else
-#     error Need some way to seed the random number generator 
-#endif 
-         int seed = int(tick);
-#ifdef WIN32
-         srand(seed);
-#else
-         srandom(seed);
-#endif
-      }
-
-#ifdef WIN32
-      resip_assert(RAND_MAX == 0x7fff);
-      int r1 = rand();
-      int r2 = rand();
-
-      int ret = (r1 << 16) + r2;
-
-      return ret;
-#else
-      return random();
-#endif
+      // Delegate to the portable, self-initializing resip Random class.  This
+      // used to hand-roll a platform-specific seed (rdtsc / gethrtime /
+      // /dev/urandom + srand/srandom) and #error on unlisted platforms such as
+      // OpenBSD/arm64 (resiprocate issue #150); Random handles all of that.
+      return Random::getRandom();
    }
 
 
@@ -982,14 +930,7 @@ namespace resip
    }
 
 
-#ifndef USE_SSL
-   void
-      computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
-   {
-      // !slg! TODO - use newly added rutil/Sha1.hxx class - will need to add new method to it to support this
-      strncpy(hmac, "hmac-not-implemented", 20);
-   }
-#else
+#ifdef USE_SSL
 #ifdef WIN32
    //hack for name collision of OCSP_RESPONSE and wincrypt.h in latest openssl release 0.9.8h
    //http://www.google.com/search?q=OCSP%5fRESPONSE+wincrypt%2eh
@@ -1008,7 +949,101 @@ namespace resip
          reinterpret_cast<unsigned char*>(hmac), &resultSize);
       resip_assert(resultSize == 20);
    }
+#else
+   void
+      computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
+   {
+      // HMAC-SHA1 (RFC 2104) using the bundled Sha1 implementation, for builds
+      // without OpenSSL.
+      const int blockSize = 64;  // SHA1 block size in bytes
+
+      unsigned char paddedKey[blockSize];
+      memset(paddedKey, 0, sizeof(paddedKey));
+      if (sizeKey > blockSize)
+      {
+         // Keys longer than the block size are first hashed down.
+         Sha1 keyHash;
+         keyHash.update(std::string(key, sizeKey));
+         const Data hashedKey = keyHash.finalBin();
+         memcpy(paddedKey, hashedKey.data(),
+                hashedKey.size() < static_cast<size_t>(blockSize) ? hashedKey.size() : blockSize);
+      }
+      else if (sizeKey > 0)
+      {
+         memcpy(paddedKey, key, sizeKey);
+      }
+
+      unsigned char ipad[blockSize];
+      unsigned char opad[blockSize];
+      for (int i = 0; i < blockSize; ++i)
+      {
+         ipad[i] = paddedKey[i] ^ 0x36;
+         opad[i] = paddedKey[i] ^ 0x5c;
+      }
+
+      // inner = SHA1( (key XOR ipad) || message )
+      Sha1 inner;
+      inner.update(std::string(reinterpret_cast<const char*>(ipad), blockSize));
+      inner.update(std::string(input, length));
+      const Data innerDigest = inner.finalBin();
+
+      // hmac = SHA1( (key XOR opad) || inner )
+      Sha1 outer;
+      outer.update(std::string(reinterpret_cast<const char*>(opad), blockSize));
+      outer.update(std::string(innerDigest.data(), innerDigest.size()));
+      const Data outerDigest = outer.finalBin();
+
+      resip_assert(outerDigest.size() == 20);
+      memcpy(hmac, outerDigest.data(), 20);
+   }
 #endif
+
+
+   bool
+      stunVerifyMessageIntegrity(const char* buf,
+         unsigned int bufLen,
+         const StunMessage& message,
+         const StunAtrString& password)
+   {
+      if (!message.hasMessageIntegrity || password.sizeValue == 0)
+      {
+         return false;
+      }
+
+      const unsigned int miOffset = message.messageIntegrityOffset;
+      // The MESSAGE-INTEGRITY attribute is a 4-byte header followed by a 20-byte
+      // HMAC-SHA1 value. Reject anything that does not fit inside the buffer.
+      if (miOffset < sizeof(StunMsgHdr) ||
+          miOffset + 4 + 20 > bufLen ||
+          miOffset > STUN_MAX_MESSAGE_SIZE)
+      {
+         return false;
+      }
+
+      // RFC 5389 section 15.4: the HMAC is computed over the STUN message up to
+      // (but not including) the MESSAGE-INTEGRITY attribute, with the message
+      // length field in the header set to point at the end of the
+      // MESSAGE-INTEGRITY attribute. We copy the prefix so we can adjust the
+      // length field without mutating the caller's buffer (and so any trailing
+      // attributes, e.g. FINGERPRINT, are excluded).
+      char hashInput[STUN_MAX_MESSAGE_SIZE];
+      memcpy(hashInput, buf, miOffset);
+      const uint16_t adjustedLength = htons(static_cast<uint16_t>(miOffset + 4));
+      memcpy(hashInput + 2, &adjustedLength, sizeof(adjustedLength));
+
+      char computed[20] = { 0 };
+      computeHmac(computed, hashInput, static_cast<int>(miOffset),
+                  password.value, password.sizeValue);
+
+      // Constant-time comparison to avoid leaking HMAC bytes via timing.
+      unsigned char diff = 0;
+      for (int i = 0; i < 20; ++i)
+      {
+         diff |= static_cast<unsigned char>(computed[i]) ^
+                 static_cast<unsigned char>(message.messageIntegrity.hash[i]);
+      }
+      return diff == 0;
+   }
 
 
    static void
@@ -1045,20 +1080,20 @@ namespace resip
          bufferSize,
          "%08x:%08x:%08x:",
          uint32_t(source.addr),
-         uint32_t(stunRand()),
+         uint32_t(Random::getCryptoRandom()),  // CSPRNG nonce (CWE-338)
          uint32_t(lotime));
       resip_assert(expectedSize > 0 && static_cast<size_t>(expectedSize) < bufferSize);
 
       resip_assert(strlen(buffer) + 41 < STUN_MAX_STRING);
 
-      char hmac[20];
+      char hmac[20] = { 0 };
       char key[] = "Jason";
       computeHmac(hmac, buffer, (int)strlen(buffer), key, (int)strlen(key));
-      char hmacHex[41];
+      char hmacHex[41] = { 0 };
       toHex(hmac, 20, hmacHex);
       hmacHex[40] = 0;
 
-      strcat(buffer, hmacHex);
+      snprintf(buffer + expectedSize, bufferSize - expectedSize, "%s", hmacHex);
 
       int l = (int)strlen(buffer);
       resip_assert(l + 1 < STUN_MAX_STRING);
@@ -1074,7 +1109,7 @@ namespace resip
    void
       stunCreatePassword(const StunAtrString& username, StunAtrString* password)
    {
-      char hmac[20];
+      char hmac[20] = { 0 };
       char key[] = "Fluffy";
       //char buffer[STUN_MAX_STRING];
       computeHmac(hmac, username.value, (int)strlen(username.value), key, (int)strlen(key));
@@ -1198,7 +1233,7 @@ namespace resip
       in_addr sin_addr;
 
       char host[512];
-      strncpy(host, peerName, 512);
+      snprintf(host, sizeof(host), "%s", peerName);
       host[512 - 1] = '\0';
       char* port = NULL;
 
@@ -1233,64 +1268,43 @@ namespace resip
       if (portNum < 1024) return false;
       if (portNum >= 0xFFFF) return false;
 
-      // figure out the host part 
-      struct hostent* h;
-
+      // figure out the host part
 #ifdef WIN32
       resip_assert(strlen(host) >= 1);
       if (isdigit(static_cast<unsigned char>(host[0])))
       {
-         // assume it is a ip address 
-#if defined(_MSC_VER) && _MSC_VER >= 1800  /* removing compilation warning in VS2013+ */
+         // assume it is an ip address
          unsigned long a = 0;
          inet_pton(AF_INET, host, &a);
-#else
-         unsigned long a = inet_addr(host);
-#endif
-         //cerr << "a=0x" << hex << a << dec << endl;
-
          ip = ntohl(a);
       }
       else
+#endif
       {
-         // assume it is a host name 
-         h = gethostbyname(host);
+         // assume it is a host name - getaddrinfo replaces deprecated gethostbyname
+         // it is thread-safe and supports both IPv4 and IPv6
+         struct addrinfo hints = {};
+         struct addrinfo* res = NULL;
+         hints.ai_family = AF_INET;        // IPv4 only for now, matching original behaviour
+         hints.ai_socktype = SOCK_STREAM;
 
-         if (h == NULL)
+         int err = getaddrinfo(host, NULL, &hints, &res);
+         if (err != 0 || res == NULL)
          {
-            int err = getErrno();
-            std::cerr << "error was " << err << std::endl;
-            resip_assert(err != WSANOTINITIALISED);
-
+            std::cerr << "getaddrinfo error: " << gai_strerror(err) << std::endl;
+#ifdef WIN32
+            resip_assert(getErrno() != WSANOTINITIALISED);
+#endif
             ip = ntohl(0x7F000001L);
-
             return false;
          }
-         else
-         {
-            sin_addr = *(struct in_addr*)h->h_addr;
-            ip = ntohl(sin_addr.s_addr);
-         }
-      }
 
-#else
-      h = gethostbyname(host);
-      if (h == NULL)
-      {
-         int err = getErrno();
-         std::cerr << "error was " << err << std::endl;
-         ip = ntohl(0x7F000001L);
-         return false;
-      }
-      else
-      {
-         sin_addr = *(struct in_addr*)h->h_addr;
+         sin_addr = ((struct sockaddr_in*)res->ai_addr)->sin_addr;
          ip = ntohl(sin_addr.s_addr);
+         freeaddrinfo(res);
       }
-#endif
 
       portVal = portNum;
-
       return true;
    }
 
@@ -1317,8 +1331,7 @@ namespace resip
       response.hasErrorCode = true;
       response.errorCode.errorClass = cl;
       response.errorCode.number = number;
-      strncpy(response.errorCode.reason, msg, sizeof(response.errorCode.reason));
-      response.errorCode.reason[sizeof(response.errorCode.reason) - 1] = '\0';
+      snprintf(response.errorCode.reason, sizeof(response.errorCode.reason), "%s", msg);
       response.errorCode.sizeReason = (uint16_t)strlen(msg);
    }
 
@@ -1414,49 +1427,37 @@ namespace resip
                else
                {
                   if (verbose) clog << "Validating username: " << req.username.value << endl;
-                  // !jf! could retrieve associated password from provisioning here
-                  if (strcmp(req.username.value, "test") == 0)
+
+                  // Derive the password for this username with the same
+                  // shared-secret scheme stunCreateSharedSecretResponse() used
+                  // to hand the credential out (stunCreatePassword), then verify
+                  // the request's MESSAGE-INTEGRITY against it.
+                  //
+                  // This replaces a check that (a) compared the wrong bytes
+                  // (the message header instead of the received HMAC), (b) read
+                  // an uninitialized buffer when built without OpenSSL, and
+                  // (c) only ever recognized a single hard-coded "test"/"1234"
+                  // credential while silently accepting any other username
+                  // without verification.
+                  StunAtrString password;
+                  stunCreatePassword(req.username, &password);
+
+                  if (!stunVerifyMessageIntegrity(buf, bufLen, req, password))
                   {
-                     if (0)
-                     {
-                        // !jf! if the credentials are stale 
-                        stunCreateErrorResponse(*resp, 4, 30, "Stale credentials on BindRequest");
-                        return true;
-                     }
-                     else
-                     {
-                        if (verbose) clog << "Validating MessageIntegrity" << endl;
-                        // need access to shared secret
-
-                        unsigned char hmac[20];
-#ifdef USE_SSL
-                        unsigned int hmacSize = 20;
-
-                        HMAC(EVP_sha1(),
-                           "1234", 4,
-                           reinterpret_cast<const unsigned char*>(buf), bufLen - 20 - 4,
-                           hmac, &hmacSize);
-                        resip_assert(hmacSize == 20);
-#endif
-
-                        if (memcmp(buf, hmac, 20) != 0)
-                        {
-                           if (verbose) clog << "MessageIntegrity is bad. Sending " << endl;
-                           stunCreateErrorResponse(*resp, 4, 3, "Unknown username. Try test with password 1234");
-                           return true;
-                        }
-
-                        // need to compute this later after message is filled in
-                        resp->hasMessageIntegrity = true;
-                        resip_assert(req.hasUsername);
-                        resp->hasUsername = true;
-                        resp->username = req.username; // copy username in
-                     }
+                     if (verbose) clog << "MessageIntegrity is bad. Sending 431." << endl;
+                     stunCreateErrorResponse(*resp, 4, 31, "Integrity Check Failure");
+                     return true;
                   }
-                  else
-                  {
-                     if (verbose) clog << "Invalid username: " << req.username.value << "Send 430." << endl;
-                  }
+
+                  if (verbose) clog << "MessageIntegrity validated" << endl;
+
+                  // Authenticated: echo USERNAME and request MESSAGE-INTEGRITY on
+                  // the response. The response HMAC is computed by
+                  // stunEncodeMessage() using hmacPassword, which is set below.
+                  resip_assert(req.hasUsername);
+                  resp->hasMessageIntegrity = true;
+                  resp->hasUsername = true;
+                  resp->username = req.username; // copy username in
                }
             }
 
@@ -1556,7 +1557,7 @@ namespace resip
                uint32_t source;
                resip_assert(sizeof(int) == sizeof(uint32_t));
 
-               sscanf(req.username.value, "%x", &source);
+               source = strtoul(req.username.value, nullptr, 16);
                resp->hasReflectedFrom = true;
                resp->reflectedFrom.ipv4.port = 0;
                resp->reflectedFrom.ipv4.addr = source;
@@ -1743,7 +1744,7 @@ namespace resip
       if (e < 0)
       {
          int err = getErrno();
-         if (verbose) clog << "Error on select: " << strerror(err) << endl;
+         if (verbose) clog << "Error on select: " << strError(err) << endl;
       }
       else if (e >= 0)
       {
@@ -2036,7 +2037,10 @@ namespace resip
       for (int i = 0; i < 16; i = i + 4)
       {
          resip_assert(i + 3 < 16);
-         int r = stunRand();
+         // STUN transaction IDs must be unpredictable (CWE-338/CWE-345): a
+         // predictable ID lets an attacker forge STUN responses. Use the CSPRNG
+         // rather than the weak stunRand() generator.
+         int r = Random::getCryptoRandom();
          msg->msgHdr.id.octet[i + 0] = r >> 0;
          msg->msgHdr.id.octet[i + 1] = r >> 8;
          msg->msgHdr.id.octet[i + 2] = r >> 16;
@@ -2302,7 +2306,7 @@ namespace resip
             // error occured
             closeSocket(myFd1);
             closeSocket(myFd2);
-            cerr << "Error " << e << " " << strerror(e) << " in select" << endl;
+            cerr << "Error " << e << " " << strError(e) << " in select" << endl;
             return StunTypeFailure;
          }
          else if (err == 0)
@@ -2796,6 +2800,7 @@ namespace resip
 }
 
 /* ====================================================================
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * The Vovida Software License, Version 1.0
  *
  * Redistribution and use in source and binary forms, with or without

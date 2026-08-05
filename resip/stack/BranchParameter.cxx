@@ -7,6 +7,8 @@
 #include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Random.hxx"
+#include "rutil/Time.hxx"
+#include "rutil/DataStream.hxx"
 #include "rutil/Coders.hxx"
 #include "rutil/ParseException.hxx"
 
@@ -17,6 +19,20 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
+namespace {
+
+inline Data generateTransactionId()
+{
+   Data d;
+   {
+      DataStream s(d);
+      s << Random::getCryptoRandomHex(8) << std::hex << ResipClock::getTimeMicroSec();
+   }
+   return d;
+}
+
+}
 
 BranchParameter::BranchParameter(ParameterTypes::Type type,
                                  ParseBuffer& pb, 
@@ -93,7 +109,7 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
    }
    catch(resip::ParseException& e)
    {
-      mTransactionId=Random::getRandomHex(8);
+      mTransactionId=generateTransactionId();
       throw e;
    }
 }
@@ -102,7 +118,7 @@ BranchParameter::BranchParameter(ParameterTypes::Type type)
    : Parameter(type),
      mHasMagicCookie(true),
      mIsMyBranch(true),
-     mTransactionId(Random::getRandomHex(8)),
+     mTransactionId(generateTransactionId()),
      mTransportSeq(1),
      mInteropMagicCookie(0),
      mSigcompCompartment()
@@ -247,7 +263,7 @@ BranchParameter::reset(const Data& transactionId)
    }
    else
    {
-      mTransactionId = Random::getRandomHex(8);
+      mTransactionId = generateTransactionId();
    }
 }
 

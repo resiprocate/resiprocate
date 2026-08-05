@@ -32,7 +32,7 @@ RTPPortManager::RTPPortManager(int portRangeMin, int portRangeMax)
       mRTPPortFreeList.push_back(i);
       i=i+2;  // only add even ports
    }
-   mTotalPortPairs = mRTPPortFreeList.size();
+   mTotalPortPairs = (unsigned int)mRTPPortFreeList.size();
    StackLog(<< "RTPPortManager: min even port=" << mPortRangeMin << ", max even port=" << mPortRangeMax);
 }
 

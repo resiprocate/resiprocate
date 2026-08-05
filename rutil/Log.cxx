@@ -656,6 +656,13 @@ Log::tags(Log::Level level,
          std::time_t now_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
          auto now_ns = now.time_since_epoch().count() % 1000000000;
 
+         std::tm now_tm = {};
+         // Note the argument order is intentionally reversed between the two
+#ifdef _MSC_VER
+         gmtime_s(&now_tm, &now_t);
+#else
+         gmtime_r(&now_t, &now_tm);
+#endif
          if(resip::Log::getLoggerData().type() == Syslog)
          {
             strm << "@cee: ";
@@ -666,7 +673,7 @@ Log::tags(Log::Level level,
          strm << "\"syslog\":{";
          strm << "\"level\":" << mSyslogPriority[level+1];
          strm << "},"; // "syslog"
-         strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
+         strm << "\"time\":\"" << std::put_time(&now_tm, "%FT%T.")
               << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\",";
          strm << "\"pname\":\"" << mAppName << "\",";
          if(!mInstanceName.empty())
@@ -745,7 +752,6 @@ Log::timestamp(Data& res)
    GetLocalTime(&systemTime);
    tv.tv_usec = systemTime.wMilliseconds * 1000; 
 #else 
-   struct tm localTimeResult;
    struct timeval tv; 
    int result = gettimeofday (&tv, NULL);
 #endif   
@@ -762,16 +768,18 @@ Log::timestamp(Data& res)
    {
       /* The tv_sec field represents the number of seconds passed since
          the Epoch, which is exactly the argument gettimeofday needs. */
+      struct tm localTimeResult = {};
       const time_t timeInSeconds = (time_t) tv.tv_sec;
+#ifdef WIN32
+      localtime_s(&localTimeResult, &timeInSeconds);  // Thread safe call on Windows
+#else
+      localtime_r(&timeInSeconds, &localTimeResult);  // Thread safe version of localtime on linux
+#endif
       strftime (datebuf,
                 datebufSize,
                 "%Y%m%d-%H%M%S", /* guaranteed to fit in 256 chars,
                                     hence don't check return code */
-#ifdef WIN32
-                localtime (&timeInSeconds));  // Thread safe call on Windows
-#else
-                localtime_r (&timeInSeconds, &localTimeResult));  // Thread safe version of localtime on linux
-#endif
+                &localTimeResult);  // Thread safe version of localtime on linux
    }
    
    char msbuf[5];
@@ -786,13 +794,7 @@ Log::timestamp(Data& res)
    }
 
    int datebufCharsRemaining = datebufSize - (int)strlen(datebuf);
-#if defined(WIN32) && defined(_M_ARM)
-   // There is a bug under ARM with strncat - we use strcat instead - buffer is plenty large accomdate our timestamp, no
-   // real need to be safe here anyway.
-   strcat(datebuf, msbuf);
-#else
-   strncat (datebuf, msbuf, datebufCharsRemaining - 1);
-#endif
+   snprintf(datebuf + strlen(datebuf), datebufCharsRemaining, "%s", msbuf);
    datebuf[datebufSize - 1] = '\0'; /* Just in case strncat truncated msbuf,
                                        thereby leaving its last character at
                                        the end, instead of a null terminator */

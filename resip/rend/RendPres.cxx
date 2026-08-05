@@ -1079,13 +1079,8 @@ RendPubDlg::makeNextReq()
       const resip::Data& tupPre = mTroop.mEventInfo.getTuplePrefix();
       const char *basicStatus = "open";
       char noteBuf[100];
-#ifdef WIN32
-      _snprintf(noteBuf, sizeof(noteBuf), "%010u.%05u.%010u", 
-         mToAcctIdx+1, mRepeatIdx+1, mPidfSn+1);
-#else
       snprintf(noteBuf, sizeof(noteBuf), "%010u.%05u.%010u", 
          mToAcctIdx+1, mRepeatIdx+1, mPidfSn+1);
-#endif
       resip_assert( strlen(noteBuf)==27 );
       resip::Data body;
       {

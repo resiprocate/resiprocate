@@ -205,6 +205,7 @@ defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
 defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
 defineMultiHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
 defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244");
+defineMultiHeader(Diversion, "Diversion", NameAddr, "RFC 5806");
 
 //====================
 // StringCategory:

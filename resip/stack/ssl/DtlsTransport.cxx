@@ -210,7 +210,7 @@ DtlsTransport::_read()
          {
             ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
             DebugLog(<< "Got DTLS read condition SSL_ERROR_SSL on"
-               << " addr = " << inet_ntoa(((struct sockaddr_in*)&peer)->sin_addr)
+               << " addr = " << DnsUtil::inet_ntop(((struct sockaddr_in*)&peer)->sin_addr)
                << " port = " << ntohs(((struct sockaddr_in*)&peer)->sin_port)
                << " error = " << errorString);
          }
@@ -223,7 +223,7 @@ DtlsTransport::_read()
          {
             ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
             DebugLog(<< "Got DTLS read condition SSL_ERROR_SYSCALL on"
-               << " addr = " << inet_ntoa(((struct sockaddr_in*)&peer)->sin_addr)
+               << " addr = " << DnsUtil::inet_ntop(((struct sockaddr_in*)&peer)->sin_addr)
                << " port = " << ntohs(((struct sockaddr_in*)&peer)->sin_port)
                << " error = " << errorString);
          }
@@ -233,7 +233,7 @@ DtlsTransport::_read()
          {
             ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
             DebugLog(<< "Got DTLS read condition SSL_ERROR_ZERO_RETURN on"
-               << " addr = " << inet_ntoa(((struct sockaddr_in*)&peer)->sin_addr)
+               << " addr = " << DnsUtil::inet_ntop(((struct sockaddr_in*)&peer)->sin_addr)
                << " port = " << ntohs(((struct sockaddr_in*)&peer)->sin_port)
                << " error = " << errorString);
 
@@ -541,7 +541,7 @@ DtlsTransport::_mapDebug(const char* where, const char* action, SSL* ssl)
 void
 DtlsTransport::_printSock(const struct sockaddr_in* sock)
 {
-   fprintf(stderr, "addr = %s\t port = %d\n", inet_ntoa(sock->sin_addr),
+   fprintf(stderr, "addr = %s\t port = %d\n", DnsUtil::inet_ntop(sock->sin_addr).c_str(),
       ntohs(sock->sin_port));
 }
 

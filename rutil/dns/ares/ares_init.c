@@ -140,7 +140,9 @@ int ares_init_options_with_socket_function(ares_channel* channelptr, struct ares
 #endif
             if (strlen(w32hostspath) < sizeof(w32hostspath) - 6)
             {
-               strcat(w32hostspath, "\\hosts");
+               snprintf(w32hostspath + strlen(w32hostspath),
+                  sizeof(w32hostspath) - strlen(w32hostspath),
+                  "\\hosts");
             }
          }
          RegCloseKey(hKey);
@@ -315,9 +317,23 @@ static int init_by_environment(ares_channel channel)
 
 #if defined(UNDER_CE)
    localdomain = NULL;
+   res_options = NULL;
+#elif defined(_MSC_VER)
+   char localdomainBuf[256] = { 0 };
+   char resoptionsBuf[256] = { 0 };
+   size_t requiredSize = 0;
+
+   getenv_s(&requiredSize, localdomainBuf, sizeof(localdomainBuf), "LOCALDOMAIN");
+   localdomain = requiredSize > 0 ? localdomainBuf : NULL;
+
+   requiredSize = 0;
+   getenv_s(&requiredSize, resoptionsBuf, sizeof(resoptionsBuf), "RES_OPTIONS");
+   res_options = requiredSize > 0 ? resoptionsBuf : NULL;
 #else
    localdomain = getenv("LOCALDOMAIN");
+   res_options = getenv("RES_OPTIONS");
 #endif
+
    if (localdomain && channel->ndomains == -1)
    {
       status = set_search(channel, localdomain);
@@ -325,18 +341,12 @@ static int init_by_environment(ares_channel channel)
          return status;
    }
 
-#if defined(UNDER_CE)
-   res_options = NULL;
-#else
-   res_options = getenv("RES_OPTIONS");
-#endif
    if (res_options)
    {
       status = set_options(channel, res_options);
       if (status != ARES_SUCCESS)
          return status;
    }
-
    return ARES_SUCCESS;
 }
 
@@ -348,7 +358,11 @@ static int init_by_resolv_conf(ares_channel channel)
    struct server_state* servers = NULL;
    struct apattern* sortlist = NULL;
 
+#ifdef WIN32
+   fopen_s(&fp, PATH_RESOLV_CONF, "r");
+#else
    fp = fopen(PATH_RESOLV_CONF, "r");
+#endif
 #if defined(UNDER_CE)
    errno = ENOENT;
 #endif

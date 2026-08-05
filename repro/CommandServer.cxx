@@ -804,7 +804,7 @@ CommandServer::handleHttpRequest(unsigned int connectionId, unsigned int request
       }
       s.flush();
       int pageNumber = -1; // FIXME - add logic for handling response
-      mWebAdmin->buildPage(uri, pageNumber, user, password);
+      mWebAdmin->buildPage("GET", uri, pageNumber, user, password);
       sendResponse(connectionId, requestId, Data::Empty, 200, "HTTP Request processed, response ignored");
    }
    catch(std::exception&)

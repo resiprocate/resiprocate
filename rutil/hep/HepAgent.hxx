@@ -224,7 +224,7 @@ class HepAgent
 #if defined(WIN32)
             ErrLog(<< "sending to HOMER " << mDestination << " failed (" << e << ")");
 #else
-            ErrLog(<< "sending to HOMER " << mDestination << " failed (" << e << "): " << strerror(e));
+            ErrLog(<< "sending to HOMER " << mDestination << " failed (" << e << "): " << strError(e));
 #endif
          }
          else

@@ -290,9 +290,13 @@ DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint)
    r=X509_digest(cert,EVP_sha256(),md,&n);  // !slg! TODO - is sha1 vs sha256 supposed to come from DTLS handshake? fixing to to SHA-256 for compatibility with current web-rtc implementations
    resip_assert(r==1);
 
+   // worst case output: EVP_MAX_MD_SIZE * 3 bytes (2 hex chars + colon/null)
+   // TODO - pass size in as an argument
+   size_t remaining = EVP_MAX_MD_SIZE * 3;
+
    for(i=0;i<n;i++)
    {
-      sprintf(fingerprint,"%02X",md[i]);
+      snprintf(fingerprint,remaining,"%02X",md[i]);
       fingerprint+=2;
 
       if(i<(n-1))

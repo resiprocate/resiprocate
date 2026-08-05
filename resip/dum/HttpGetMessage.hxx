@@ -1,6 +1,7 @@
 #ifndef RESIP_HttpGetMessage_hxx
 #define RESIP_HttpGetMessage_hxx 
 
+#include <map>
 #include "resip/dum/DumFeatureMessage.hxx"
 #include "resip/stack/Mime.hxx"
 #include "rutil/Data.hxx"
@@ -11,19 +12,46 @@ namespace resip
 class HttpGetMessage : public DumFeatureMessage
 {
    public:
-      HttpGetMessage(const Data& tid, bool success, const Data& x509, const Mime& type);
+      // Map of HTTP response header name -> value.
+      // Header names are stored lower-cased so lookups are case-insensitive.
+      // If a header appears multiple times in the response, values are comma-joined
+      // (RFC 9110 section 5.3).  Note: this loses separation for Set-Cookie, but we don't
+      // currently need cookies; callers that do should access the raw response elsewhere.
+      typedef std::map<Data, Data> HeaderMap;
+
+      // Synthetic (non-IETF) status codes used to convey internal outcomes that do not
+      // correspond to an HTTP response.  The IETF does not assign status codes >= 600, so we
+      // use the 900 range for our own purposes; add new values counting up from here.
+      //   900  StatusBlockedByPolicy: the request was not performed because local policy
+      //        (e.g. the x5u address ACL) forbade the destination.
+      static const unsigned int StatusBlockedByPolicy = 900;
+
+      HttpGetMessage(const Data& tid, bool success, const Data& body, const Mime& type);
+      HttpGetMessage(const Data& tid, const Data& userData, unsigned int statusCode, HeaderMap headers, const Data& body, const Mime& type);
 
       bool success() const { return mSuccess; }
       const Data& getBodyData() const { return mBody; }
       const Mime& getType() const {return mType;}
 
+      const Data& getUserData() const { return mUserData; }
+      unsigned int getStatusCode() const { return mStatusCode; }
+
+      // Case-insensitive header lookup.  Returns Data::Empty if the header is not present.
+      const Data& getHeader(const Data& name) const;
+      const HeaderMap& getHeaders() const { return mHeaders; }
+
       virtual Message* clone() const;
       virtual EncodeStream& encode(EncodeStream& strm) const;
       virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
+
    private:
       bool mSuccess;
       Data mBody;
       Mime mType;
+
+      Data mUserData;
+      unsigned int mStatusCode;
+      HeaderMap mHeaders;
 };
  
 }
@@ -32,6 +60,9 @@ class HttpGetMessage : public DumFeatureMessage
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

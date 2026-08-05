@@ -147,10 +147,10 @@ DnsUtil::lookupLocalHostName()
          //       current hack (see the #define in .hxx) needs
          //       to be reworked.
          case WSANOTINITIALISED:
-            CritLog( << "could not find local hostname because network not initialized:" << strerror(err) );
+            CritLog( << "could not find local hostname because network not initialized:" << strError(err) );
             break;
          default:
-            CritLog( << "could not find local hostname:" << strerror(err) );
+            CritLog( << "could not find local hostname:" << strError(err) );
             break;
       }
          throw Exception("could not find local hostname",__FILE__,__LINE__);
@@ -208,7 +208,7 @@ DnsUtil::getLocalDomainName()
          {
             int err = getErrno();
             CritLog(<< "Couldn't find domainname: " << strerror(err));
-            throw Exception(strerror(err), __FILE__,__LINE__);
+            throw Exception(strError(err), __FILE__,__LINE__);
          }
       }
       DebugLog (<< "Found local domain name " << buffer);
@@ -711,11 +711,7 @@ static const char fmt[] = "%u.%u.%u.%u";
 const char*
 inet_ntop4(const u_char *src, char *dst, size_t size)
 {
-#ifdef WIN32
-   if ( _snprintf(dst, size, fmt, src[0], src[1], src[2], src[3]) < 0)
-#else
-   if ( snprintf(dst, size, fmt, src[0], src[1], src[2], src[3]) < 0)
-#endif
+   if (snprintf(dst, size, fmt, src[0], src[1], src[2], src[3]) < 0)
    {
       errno = ENOSPC;
       dst[size-1] = 0;
@@ -802,7 +798,7 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
          tp += strlen(tp);
          break;
       }
-      tp += sprintf(tp, "%x", words[i]);
+      tp += snprintf(tp, sizeof(tmp) - (tp - tmp), "%x", words[i]);
    }
    /* Was it a trailing run of 0x00's? */
    if (best.base != -1 && (best.base + best.len) ==
@@ -817,7 +813,7 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
       errno = ENOSPC;
       return (NULL);
    }
-   strcpy(dst, tmp);
+   memcpy(dst, tmp, (size_t)(tp - tmp));
    return (dst);
 }
 

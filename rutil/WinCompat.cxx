@@ -5,6 +5,8 @@
 #include <Winsock2.h>
 #include <Iphlpapi.h>
 #include <tchar.h>
+#include <winternl.h>
+#pragma comment(lib, "ntdll.lib")
 
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/WinCompat.hxx"
@@ -49,81 +51,66 @@ WinCompat::Exception::Exception(const Data& msg, const Data& file, const int lin
 {
 }
 
-
+extern "C" NTSTATUS NTAPI RtlGetVersion(PRTL_OSVERSIONINFOW lpVersionInformation);
 WinCompat::Version
 WinCompat::getVersion()
 {
 #ifdef UNDER_CE
-#define OSVERSIONINFOEX OSVERSIONINFO
+   return WinCompat::WindowsUnknown;
 #endif
-   OSVERSIONINFOEX osvi;
-   BOOL bOsVersionInfoEx;
 
-   // Try calling GetVersionEx using the OSVERSIONINFOEX structure.
-   // If that fails, try using the OSVERSIONINFO structure.
-
-   ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
-   osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-
-   if( !(bOsVersionInfoEx = GetVersionEx ((OSVERSIONINFO *) &osvi)) )
+   // RtlGetVersion always returns the true OS version regardless of manifest,
+   // unlike GetVersionEx which lies on Windows 10+ without a compatibility manifest.
+   OSVERSIONINFOEXW osvi = { sizeof(osvi) };
+   if (RtlGetVersion((PRTL_OSVERSIONINFOW)&osvi) != 0)
    {
-      osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
-      if (! GetVersionEx ( (OSVERSIONINFO *) &osvi) )
+      return WinCompat::WindowsUnknown;
+   }
+
+   // Only Windows NT platform is relevant now (Win9x/ME are long dead)
+   if (osvi.dwPlatformId != VER_PLATFORM_WIN32_NT)
+   {
+      return WinCompat::WindowsUnknown;
+   }
+
+   const DWORD major = osvi.dwMajorVersion;
+   const DWORD minor = osvi.dwMinorVersion;
+   const WORD  type = osvi.wProductType;  // VER_NT_WORKSTATION or server
+
+   if (major == 10 && minor == 0)
+   {
+      if (osvi.dwBuildNumber >= 22000)
       {
-         return WindowsUnknown;
+         return (type == VER_NT_WORKSTATION) ? WinCompat::Windows11
+            : WinCompat::WindowsServer2022;
       }
+      return (type == VER_NT_WORKSTATION) ? WinCompat::Windows10
+         : WinCompat::WindowsServer2016;
    }
-
-   switch (osvi.dwPlatformId)
+   else if (major == 6 && minor == 3)
    {
-      // Test for the Windows NT product family.
-      case VER_PLATFORM_WIN32_NT:
-
-         // Test for the specific product family.
-         if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2 )
-         {
-            return WinCompat::Windows2003Server;
-         }
-         else if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1 )
-         {
-            return WinCompat::WindowsXP;
-         }
-         else if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0 )
-         {
-            return WinCompat::Windows2000;
-         }
-         else if ( osvi.dwMajorVersion <= 4 )
-         {
-            return WinCompat::WindowsNT;
-         }
-         break;
-         
-         // Test for the Windows 95 product family.
-      case VER_PLATFORM_WIN32_WINDOWS:
-         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 0)
-         {
-            return WinCompat::Windows95;
-         } 
-         else if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 10)
-         {
-            if ( osvi.szCSDVersion[1] == 'A' )
-            {
-               return WinCompat::Windows98SE;
-            }
-            else
-            {
-               return WinCompat::Windows98;
-            }
-         }
-         else if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 90)
-         {
-            return WinCompat::WindowsME;
-         } 
-         break;
-         
-      default:
-         return WinCompat::WindowsUnknown;
+      return (type == VER_NT_WORKSTATION) ? WinCompat::Windows81
+         : WinCompat::WindowsServer2012R2;
    }
+   else if (major == 6 && minor == 2)
+   {
+      return (type == VER_NT_WORKSTATION) ? WinCompat::Windows8
+         : WinCompat::WindowsServer2012;
+   }
+   else if (major == 6 && minor == 1)
+   {
+      return (type == VER_NT_WORKSTATION) ? WinCompat::Windows7
+         : WinCompat::WindowsServer2008R2;
+   }
+   else if (major == 6 && minor == 0)
+   {
+      return (type == VER_NT_WORKSTATION) ? WinCompat::WindowsVista
+         : WinCompat::WindowsServer2008;
+   }
+   else if (major == 5 && minor == 2) { return WinCompat::Windows2003Server; }
+   else if (major == 5 && minor == 1) { return WinCompat::WindowsXP; }
+   else if (major == 5 && minor == 0) { return WinCompat::Windows2000; }
+   else if (major <= 4) { return WinCompat::WindowsNT; }
 
    return WinCompat::WindowsUnknown;
 }

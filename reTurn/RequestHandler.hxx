@@ -70,10 +70,11 @@ private:
    void processTurnSendIndication(TurnAllocationManager& turnAllocationManager, StunMessage& request);
 
    // Utility methods
-   void buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg, const char* realm = 0);
-   void generateNonce(const resip::Data& timestamp, resip::Data& nonce);
+   void buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg);
+   void buildErrorResponseWithRealmAndNonce(StunMessage& response, unsigned short errorCode, const char* msg, const resip::Data& realm, const StunMessage& request);
+   void generateNonce(const resip::Data& timestamp, resip::Data& nonce, const StunMessage& request);
    enum CheckNonceResult { Valid, NotValid, Expired };
-   CheckNonceResult checkNonce(const resip::Data& nonce);
+   CheckNonceResult checkNonce(const resip::Data& nonce, const StunMessage& request);
 };
 
 } 
@@ -83,6 +84,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

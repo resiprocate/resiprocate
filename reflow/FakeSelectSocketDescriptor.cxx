@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #endif
 
+#include <rutil/compat.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include "rutil/ResipAssert.h"
@@ -89,7 +90,7 @@ FakeSelectSocketDescriptor::receive()
    char rdBuf[1];
    if(::read(mPipe[0], rdBuf, 1) < 0)
    {
-      WarningLog(<< "read error: " << strerror(errno));
+      WarningLog(<< "read error: " << resip::strError(errno));
    }
 #endif
 }

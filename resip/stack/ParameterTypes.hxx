@@ -148,7 +148,7 @@ defineParam(protocol, "protocol", QuotedDataParameter, Mime, "RFC 1847");
 defineParam2(purpose, "purpose", DataParameter, GenericUri, TokenOrQuotedStringCategory, "RFC 3261, draft-ietf-cuss-sip-uui-17");
 defineParam3(q, "q", QValueParameter, NameAddr, Token, Mime, "RFC 3261");
 defineParam(realm, "realm", QuotedDataParameter, Auth, "RFC 2617");
-defineParam(reason, "reason", DataParameter, Token, "RFC 3265");
+defineParam2(reason, "reason", DataParameter, Token, NameAddr, "RFC 3265, 5806");
 defineParam(received, "received", ReceivedParameter, Via, "RFC 3261");
 defineParam(require, "require", ExistsParameter, Token, "RFC 5373");
 defineParam(response, "response", QuotedDataParameter, Auth, "RFC 3261");
@@ -205,6 +205,12 @@ defineParam(encoding, "encoding", DataParameter, TokenOrQuotedStringCategory, "d
 defineParam(info, "info", UriParameter, IdentityCategory, "RFC 8224");
 defineParam(alg, "alg", DataParameter, GenericUri, "RFC 8224");
 defineParam(ppt, "ppt", DataParameter, GenericUri, "RFC 8224");
+
+// Diversion Header params
+defineParam(counter, "counter", UInt32Parameter, NameAddr, "RFC 5806");
+defineParam(limit, "limit", UInt32Parameter, NameAddr, "RFC 5806");
+defineParam(privacy, "privacy", DataParameter, NameAddr, "RFC 5806");
+defineParam(screen, "screen", DataParameter, NameAddr, "RFC 5806");
 
 // Internal use only
 defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");

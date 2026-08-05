@@ -303,7 +303,7 @@ ConnectionManager::gc(uint64_t relThreshold, unsigned int maxToRemove)
       struct rlimit rlim;
       if(getrlimit(RLIMIT_NOFILE, &rlim) != 0)
       {
-         ErrLog(<<"Call to getrlimit() for RLIMIT_NOFILE failed: " << strerror(errno));
+         ErrLog(<<"Call to getrlimit() for RLIMIT_NOFILE failed: " << strError(errno));
       }
       else
       {

@@ -814,20 +814,19 @@ Data
 GenericPidfContents::generateTimestampData(time_t datetime)
 {
    struct tm gmt;
-#if defined(WIN32) || defined(__sun)
-   struct tm *gmtp = gmtime(&datetime);
-   if (gmtp == 0)
+#if defined(WIN32)
+   if (gmtime_s(&gmt, &datetime) != 0)
    {
       int e = getErrno();
-      DebugLog(<< "Failed to convert to gmt: " << strerror(e));
+      DebugLog(<< "Failed to convert to gmt: " << strError(e));
       return Data::Empty;
    }
-   memcpy(&gmt, gmtp, sizeof(gmt));
 #else
+   // gmtime_r is available on Linux, Solaris, and other POSIX platforms
    if (gmtime_r(&datetime, &gmt) == 0)
    {
       int e = getErrno();
-      DebugLog(<< "Failed to convert to gmt: " << strerror(e));
+      DebugLog(<< "Failed to convert to gmt: " << strError(e));
       return Data::Empty;
    }
 #endif

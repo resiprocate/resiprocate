@@ -26,11 +26,7 @@ using namespace resip;
 using namespace sdpcontainer;
 using namespace std;
 
-#ifdef WIN32
-int sdpTests()
-#else
 int main(int argc, char* argv[])
-#endif
 {
    {  // Test get/set interfaces
       Sdp sdp;      
@@ -565,6 +561,7 @@ int main(int argc, char* argv[])
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

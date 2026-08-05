@@ -4,7 +4,13 @@
 #include "assert.h"
 
 // Disable warnings about using deprecated MD5Stream in these tests
-#pragma warning(disable : 4996)
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
 
 using namespace resip;
 using namespace std;
@@ -42,6 +48,13 @@ main()
 
    return 0;
 }
+
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#else
+#pragma warning(pop)
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

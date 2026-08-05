@@ -149,6 +149,8 @@ protected:
 
    virtual bool mediaStackPortAvailable() = 0;
 
+   friend class MediaStreamReadyEvent;
+   friend class MediaStreamErrorEvent;
    RemoteParticipantDialogSet& getDialogSet() { return mDialogSet; };
 
    virtual void notifyIncomingParticipant(const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile);
@@ -246,7 +248,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2023, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.

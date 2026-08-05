@@ -96,7 +96,7 @@ static void next_lookup(struct addr_query *aquery)
 	  a2 = (addr >> 16) & 0xff;
 	  a3 = (addr >> 8) & 0xff;
 	  a4 = addr & 0xff;
-	  sprintf(name, "%d.%d.%d.%d.in-addr.arpa", a4, a3, a2, a1);
+	  snprintf(name, sizeof(name), "%d.%d.%d.%d.in-addr.arpa", a4, a3, a2, a1);
 	  aquery->remaining_lookups = p + 1;
 	  ares_query(aquery->channel, name, C_IN, T_PTR, addr_callback,
 		     aquery);
@@ -140,29 +140,29 @@ static void end_aquery(struct addr_query *aquery, int status,
   free(aquery);
 }
 
-static int file_lookup(struct in_addr *addr, struct hostent **host)
+static int file_lookup(struct in_addr* addr, struct hostent** host)
 {
-  FILE *fp;
-  int status;
+   FILE* fp;
+   int status;
 
 #ifdef WIN32
-  fp = fopen(w32hostspath, "r");
+   fopen_s(&fp, w32hostspath, "r");
 #else
-  fp = fopen(PATH_HOSTS, "r");
+   fp = fopen(PATH_HOSTS, "r");
 #endif
-  if (!fp)
-    return ARES_ENOTFOUND;
+   if (!fp)
+      return ARES_ENOTFOUND;
 
-  while ((status = ares__get_hostent(fp, host)) == ARES_SUCCESS)
-    {
+   while ((status = ares__get_hostent(fp, host)) == ARES_SUCCESS)
+   {
       if (memcmp((*host)->h_addr, addr, sizeof(struct in_addr)) == 0)
-	break;
+         break;
       ares_free_hostent(*host);
-    }
-  fclose(fp);
-  if (status == ARES_EOF)
-    status = ARES_ENOTFOUND;
-  if (status != ARES_SUCCESS)
-    *host = NULL;
-  return status;
+   }
+   fclose(fp);
+   if (status == ARES_EOF)
+      status = ARES_ENOTFOUND;
+   if (status != ARES_SUCCESS)
+      *host = NULL;
+   return status;
 }

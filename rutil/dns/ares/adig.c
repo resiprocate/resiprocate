@@ -212,10 +212,8 @@ int main(int argc, char **argv)
   int c, i, optmask = ARES_OPT_FLAGS, dnsclass = C_IN, type = T_A;
   int status, nfds, count;
   struct ares_options options;
-  struct hostent *hostent;
   fd_set read_fds, write_fds;
   struct timeval *tvp, tv;
-  char *errmem;
 
 #ifdef WIN32 
    WORD wVersionRequested = MAKEWORD( 2, 2 );
@@ -269,26 +267,34 @@ int main(int argc, char **argv)
 	  options.flags |= flags[i].value;
 	  break;
 
-	case 's':
-	  /* Add a server, and specify servers in the option mask. */
-	  hostent = gethostbyname(optarg);
-	  if (!hostent || hostent->h_addrtype != AF_INET)
-	    {
-	      fprintf(stderr, "adig: server %s not found.\n", optarg);
-	      return 1;
-	    }
-	  options.servers = realloc(options.servers, (options.nservers + 1)
-				    * sizeof(struct in_addr));
-	  if (!options.servers)
-	    {
-	      fprintf(stderr, "Out of memory!\n");
-	      return 1;
-	    }
-	  memcpy(&options.servers[options.nservers], hostent->h_addr,
-		 sizeof(struct in_addr));
-	  options.nservers++;
-	  optmask |= ARES_OPT_SERVERS;
-	  break;
+   case 's':
+   /* Add a server, and specify servers in the option mask. */
+   {
+      struct addrinfo hints = { 0 };
+      struct addrinfo* res = NULL;
+      hints.ai_family = AF_INET;
+      hints.ai_socktype = SOCK_STREAM;
+      if (getaddrinfo(optarg, NULL, &hints, &res) != 0 || res == NULL)
+      {
+         fprintf(stderr, "adig: server %s not found.\n", optarg);
+         return 1;
+      }
+      options.servers = realloc(options.servers, (options.nservers + 1)
+         * sizeof(struct in_addr));
+      if (!options.servers)
+      {
+         freeaddrinfo(res);
+         fprintf(stderr, "Out of memory!\n");
+         return 1;
+      }
+      memcpy(&options.servers[options.nservers],
+         &((struct sockaddr_in*)res->ai_addr)->sin_addr,
+         sizeof(struct in_addr));
+      freeaddrinfo(res);
+      options.nservers++;
+      optmask |= ARES_OPT_SERVERS;
+   }
+   break;
 
 	case 'c':
 	  /* Set the query class. */
@@ -340,8 +346,7 @@ int main(int argc, char **argv)
   if (status != ARES_SUCCESS)
     {
       fprintf(stderr, "ares_init_options: %s\n",
-              ares_strerror(status)); //, &errmem));
-      ares_free_errmem(errmem);
+              ares_strerror(status));
       return 1;
     }
 
@@ -382,7 +387,7 @@ int main(int argc, char **argv)
 
 static void callback(void *arg, int status, unsigned char *abuf, int alen)
 {
-  char *name = (char *) arg, *errmem;
+  char *name = (char *) arg;
   int id, qr, opcode, aa, tc, rd, ra, rcode, i;
   unsigned int qdcount, ancount, nscount, arcount;
   const unsigned char *aptr;
@@ -396,8 +401,7 @@ static void callback(void *arg, int status, unsigned char *abuf, int alen)
    */
   if (status != ARES_SUCCESS)
     {
-       printf("%s\n", ares_strerror(status));//, &errmem));
-      ares_free_errmem(errmem);
+       printf("%s\n", ares_strerror(status));
       if (!abuf)
 	return;
     }
@@ -658,8 +662,10 @@ static const unsigned char *display_rr(const unsigned char *aptr,
       /* The RR data is a four-byte Internet address. */
       if (dlen != 4)
 	return NULL;
+      char addrBuf[INET_ADDRSTRLEN];
       memcpy(&addr, aptr, sizeof(struct in_addr));
-      printf("\t%s", inet_ntoa(addr));
+      inet_ntop(AF_INET, &addr, addrBuf, sizeof(addrBuf));
+      printf("\t%s", addrBuf);
       break;
 
     case T_WKS:

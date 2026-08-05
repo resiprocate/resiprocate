@@ -1089,7 +1089,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
       strm.write(lineBegin, lineEnd - lineBegin);
       strm.put('\n');
       static const char filler[] = "          ";
-      unsigned int n = failedChar - lineBegin;
+      unsigned int n = (unsigned int)(failedChar - lineBegin);
       while (n > sizeof(filler) - 1)
       {
           strm.write(filler, sizeof(filler) - 1);

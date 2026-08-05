@@ -41,7 +41,7 @@ RequestHandler::RequestHandler(TurnManager& turnManager,
    {
       mRFC3489SupportEnabled = false;
    }
-   mPrivateNonceKey = Random::getRandomHex(24);
+   mPrivateNonceKey = Random::getCryptoRandomHex(24);
 }
 
 RequestHandler::ProcessResult 
@@ -53,11 +53,11 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationMa
 
    if(handleAuthentication(request, response))  
    {
-      // Check if there were unknown require attributes
+      // Check if there were unknown required attributes
       if(request.mUnknownRequiredAttributes.numAttributes > 0)
       {
          InfoLog(<< "Received Request with unknown comprehension-required attributes. Sending 420. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 420, "Unknown attribute", getConfig().mAuthenticationRealm.c_str());  
+         buildErrorResponse(response, 420, "Unknown attribute");
          response.mHasUnknownAttributes = true;
          response.mUnknownAttributes = request.mUnknownRequiredAttributes;
       }
@@ -158,37 +158,42 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationMa
 }
 
 void
-RequestHandler::buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg, const char* realm)
+RequestHandler::buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg)
 {
    response.mClass = StunMessage::StunClassErrorResponse;
    response.setErrorCode(errorCode, msg);
-   if(realm)
-   {
-      response.setRealm(realm);
+}
 
-      // Add a random nonce value that is expirable
-      Data nonce(100, Data::Preallocate);
-      Data timestamp(Timer::getTimeMs()/1000);
-      generateNonce(timestamp, nonce);
-      response.setNonce(nonce.c_str());
-   }
+void
+RequestHandler::buildErrorResponseWithRealmAndNonce(StunMessage& response, unsigned short errorCode, const char* msg, const Data& realm, const StunMessage& request)
+{
+   response.mClass = StunMessage::StunClassErrorResponse;
+   response.setErrorCode(errorCode, msg);
+   response.setRealm(realm.c_str());
+   // Add a random nonce value that is expirable
+   Data nonce(100, Data::Preallocate);
+   Data timestamp(Timer::getTimeMs() / 1000);
+   generateNonce(timestamp, nonce, request);
+   response.setNonce(nonce.c_str());
 }
 
 void 
-RequestHandler::generateNonce(const Data& timestamp, Data& nonce)
+RequestHandler::generateNonce(const Data& timestamp, Data& nonce, const StunMessage& request)
 {
    nonce += timestamp;
    nonce += ":";
    Data noncePrivate(100, Data::Preallocate);
-   noncePrivate += timestamp;
-   noncePrivate += ":";
-   //noncePrivate += user;  // ?slg? What could we put here
-   noncePrivate += mPrivateNonceKey;
+   {
+      DataStream ds(noncePrivate);
+      ds << timestamp
+         << ":" << request.getRemoteTuple()
+         << ":" << mPrivateNonceKey;
+   }
    nonce += noncePrivate.md5();
 }
 
 RequestHandler::CheckNonceResult
-RequestHandler::checkNonce(const Data& nonce)
+RequestHandler::checkNonce(const Data& nonce, const StunMessage& request)
 {
    ParseBuffer pb(nonce.data(), nonce.size());
    if (!pb.eof() && !isdigit(static_cast< unsigned char >(*pb.position())))
@@ -212,7 +217,7 @@ RequestHandler::checkNonce(const Data& nonce)
    {
       // If nonce hasn't expired yet - ensure this is a nonce we generated
       Data nonceToMatch(100, Data::Preallocate);
-      generateNonce(creationTimeData, nonceToMatch);
+      generateNonce(creationTimeData, nonceToMatch, request);
       if(nonceToMatch == nonce)
       {
          return Valid;
@@ -233,10 +238,10 @@ RequestHandler::checkNonce(const Data& nonce)
 bool 
 RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response)
 {
-   // Don't authenticate shared secret requests, Binding Requests or Indications (if LongTermCredentials are used)
-   if((request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretMethod) ||
-      (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::BindMethod) ||
-      (request.mClass == StunMessage::StunClassIndication))
+   // Don't authenticate indications/responses, or, shared secret and binding requests
+   if((request.mClass != StunMessage::StunClassRequest) ||
+      (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretMethod) ||
+      (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::BindMethod))
    {
       return true;
    }
@@ -244,7 +249,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
    if (!request.mHasMessageIntegrity)
    {
       InfoLog(<< "Received Request with no Message Integrity. Sending 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Unauthorized (no MessageIntegrity)", getConfig().mAuthenticationRealm.c_str());  
+      buildErrorResponseWithRealmAndNonce(response, 401, "Unauthorized (no MessageIntegrity)", getConfig().mAuthenticationRealm, request);
       return false;
    }
    else
@@ -268,14 +273,14 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
          buildErrorResponse(response, 400, "Bad Request (No Nonce and contains Realm)");
          return false;
       }
-      switch(checkNonce(*request.mNonce))
+      switch(checkNonce(*request.mNonce, request))
       {
       case Valid:
          // Do nothing
          break;
       case Expired:
          WarningLog(<< "Nonce expired. Sending 438. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 438, "Stale Nonce", getConfig().mAuthenticationRealm.c_str());
+         buildErrorResponseWithRealmAndNonce(response, 438, "Stale Nonce", getConfig().mAuthenticationRealm, request);
          return false;
          break;
       case NotValid:
@@ -293,7 +298,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       if (!getConfig().isUserNameValid(*request.mUsername, *request.mRealm))
       {
          WarningLog(<< "Invalid username '" << *request.mUsername << "' or realm '" << *request.mRealm << "' (username unknown or potential AuthorizationRealm mismatch). Sending 401. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationRealm.c_str());
+         buildErrorResponseWithRealmAndNonce(response, 401, "Unauthorized", getConfig().mAuthenticationRealm, request);
          return false;
       }
 
@@ -309,7 +314,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       if(!request.checkMessageIntegrity(hmacKey))
       {
          WarningLog(<< "MessageIntegrity is bad. Sending 401. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationRealm.c_str());
+         buildErrorResponseWithRealmAndNonce(response, 401, "Unauthorized", getConfig().mAuthenticationRealm, request);
          return false;
       }
 
@@ -449,7 +454,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn allocate request without authentication.  Sending 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str());  
+      buildErrorResponseWithRealmAndNonce(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm, request);
       return RespondFromReceiving;
    }
 
@@ -495,7 +500,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
    if(request.mHasTurnDontFragment)
    {
       WarningLog(<< "Turn allocate request with Don't Fragment requested, not yet implemented.  Sending 420. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 420, "Don't Fragment not yet implemented", getConfig().mAuthenticationRealm.c_str());  
+      buildErrorResponse(response, 420, "Don't Fragment not yet implemented");
       return RespondFromReceiving;
    }
 
@@ -636,7 +641,7 @@ RequestHandler::processTurnRefreshRequest(TurnAllocationManager& turnAllocationM
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn refresh request without authentication.  Sending 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str());  
+      buildErrorResponseWithRealmAndNonce(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm, request);
       return RespondFromReceiving;
    }
 
@@ -721,7 +726,7 @@ RequestHandler::processTurnCreatePermissionRequest(TurnAllocationManager& turnAl
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn create permission request without authentication.  Send 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str());  
+      buildErrorResponseWithRealmAndNonce(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm, request);
       return RespondFromReceiving;
    }
 
@@ -780,7 +785,7 @@ RequestHandler::processTurnChannelBindRequest(TurnAllocationManager& turnAllocat
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn channel bind request without authentication.  Send 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str() );  
+      buildErrorResponseWithRealmAndNonce(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm, request);
       return RespondFromReceiving;
    }
 
@@ -900,6 +905,7 @@ RequestHandler::processTurnData(TurnAllocationManager& turnAllocationManager, un
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

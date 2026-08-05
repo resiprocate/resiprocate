@@ -15,7 +15,7 @@ public:
    RTPPortManager(int portRangeMin = 17000, int portRangeMax = 18000);
    unsigned int allocateRTPPort();
    void freeRTPPort(unsigned int port);
-   unsigned int getNumAllocatedPortPairs() { return mTotalPortPairs - mRTPPortFreeList.size(); }
+   unsigned int getNumAllocatedPortPairs() { return mTotalPortPairs - (unsigned int)mRTPPortFreeList.size(); }
 
 private:
    unsigned int mPortRangeMin;

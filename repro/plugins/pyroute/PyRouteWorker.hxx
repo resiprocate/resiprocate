@@ -67,7 +67,7 @@ class PyRouteWorker : public resip::Worker
       PyRouteWorker(resip::PyExtensionBase& py, Py::Callable& action, Py::Callable& messageHandlerAction);
       virtual ~PyRouteWorker();
 
-      virtual PyRouteWorker* clone() const;
+      virtual PyRouteWorker* clone() const override;
 
       virtual void onStart() override;
       virtual bool process(resip::ApplicationMessage* msg) override;

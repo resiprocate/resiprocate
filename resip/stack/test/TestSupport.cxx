@@ -95,19 +95,19 @@ namespace resip
 
    void TestSupport::prettyPrint(const char* p, size_t len)
    {
-
       size_t row = 0;
       if (TestSupportPriv::chPerRow == 0)
       {
-         char* p = getenv("COLUMNS");
-         if (p)
-         {
-            TestSupportPriv::chPerRow = strtol(p, 0, 0) / boxWidth;
-         }
-         else
-         {
-            TestSupportPriv::chPerRow = 80 / boxWidth;
-         }
+#ifdef _MSC_VER
+         char buf[32] = { 0 };
+         size_t requiredSize = 0;
+         getenv_s(&requiredSize, buf, sizeof(buf), "COLUMNS");
+         int columns = requiredSize > 0 ? (int)strtol(buf, nullptr, 0) : 80;
+#else
+         const char* p = getenv("COLUMNS");
+         int columns = p ? (int)strtol(p, nullptr, 0) : 80;
+#endif
+         TestSupportPriv::chPerRow = columns / boxWidth;
       }
 
       for (row = 0; row <= len / TestSupportPriv::chPerRow; row++)

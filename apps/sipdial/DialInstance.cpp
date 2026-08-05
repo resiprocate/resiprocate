@@ -41,8 +41,12 @@ DialInstance::DialResult DialInstance::execute()
    Data certPath(mDialerConfiguration.getCertPath());
    if(certPath.size() == 0)
    {
+#ifndef WIN32
       certPath = getenv("HOME");
       certPath += "/.sipdial/certs";
+#else
+      certPath = ".";
+#endif
    }
    security = new Security(certPath);
 

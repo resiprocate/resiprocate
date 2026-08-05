@@ -38,7 +38,9 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
    
    char* inputOutboundProxy = 0;
    char* inputContact = 0;
+#ifndef WIN32
    Data basePath(getenv("HOME"));
+#endif
 
    int outboundEnabled = false;
 

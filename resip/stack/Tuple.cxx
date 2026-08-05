@@ -577,6 +577,80 @@ Tuple::isPrivateAddress() const
    return false;
 }
 
+static Tuple v4thishostonthisnetwork("0.0.0.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4llinklocal("169.254.0.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4ietfprotocol("192.0.0.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4documentation1("192.0.2.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4documentation2("198.51.100.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4documentation3("203.0.113.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v46to5relayanycast("192.88.99.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4benchmarking("198.18.0.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4reserved("240.0.0.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4broadcast("255.255.255.255", 0, UNKNOWN_TRANSPORT);
+static Tuple v4multicast("224.0.0.0", 0, UNKNOWN_TRANSPORT);
+
+#ifdef USE_IPV6
+static Tuple v6unspecified("::", 0, UNKNOWN_TRANSPORT);
+static Tuple v64to6translation("64:ff9b::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6v4mappedaddress("::ffff:0:0", 0, UNKNOWN_TRANSPORT);
+static Tuple v6discardonly("100::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6ietfprotocol("2001::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6benchmarking("2001:2::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6documentation("2001:db8::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6orchid("2001:10::", 0, UNKNOWN_TRANSPORT);
+static Tuple v66to4("2002::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6uniquelocal("fc00::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6linkedscopedunicast("fe80::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6multicast("ff00::", 0, UNKNOWN_TRANSPORT);
+#endif
+
+// Returns true if this is an address that is specified as a special address in RFC 6890, which includes:
+// private addresses, loopback addresses, link-local addresses, and multicast addresses.  These are all 
+// address types that are not expected to be routable on the public internet.
+bool 
+Tuple::isSpecialPurposeAddress() const
+{
+   if (isPrivateAddress()) return true;  // Covers loopback
+
+   if (ipVersion() == V4)
+   {
+      return isEqualWithMask(v4thishostonthisnetwork, 8, true, true) ||  // "This host on this network"
+         isEqualWithMask(v4llinklocal, 16, true, true) ||            // Link Local
+         isEqualWithMask(v4ietfprotocol, 24, true, true) ||          // IETF Protocol assignments, also covers DS-Lite (192.0.0.0/29)
+         isEqualWithMask(v4documentation1, 24, true, true) ||        // Documentation (TEST-NET-1)
+         isEqualWithMask(v4documentation2, 24, true, true) ||        // Documentation (TEST-NET-2)
+         isEqualWithMask(v4documentation3, 24, true, true) ||        // Documentation (TEST-NET-3)
+         isEqualWithMask(v46to5relayanycast, 24, true, true) ||      // 6to4 Relay Anycast
+         isEqualWithMask(v4benchmarking, 15, true, true) ||          // Benchmarking
+         isEqualWithMask(v4reserved, 4, true, true) ||               // Reserved
+         isEqualWithMask(v4broadcast, 32, true, true) ||             // Limited Broadcast
+         isEqualWithMask(v4multicast, 4, true, true);                // Multicast
+   }
+#ifdef USE_IPV6
+   else if (ipVersion() == V6)
+   {
+      return isEqualWithMask(v6unspecified, 128, true, true) ||      // Unspecified address
+         isEqualWithMask(v64to6translation, 96, true, true) ||       // IPv4-IPv6 translation
+         isEqualWithMask(v6v4mappedaddress, 96, true, true) ||       // IPv4-mapped address
+         isEqualWithMask(v6discardonly, 64, true, true) ||           // Discard-only address
+         isEqualWithMask(v6ietfprotocol, 23, true, true) ||          // IETF Protocol assignments, also covers TEREDO (2001::/32)
+         isEqualWithMask(v6benchmarking, 48, true, true) ||          // Benchmarking
+         isEqualWithMask(v6documentation, 32, true, true) ||         // Documentation
+         isEqualWithMask(v6orchid, 28, true, true) ||                // ORCHID
+         isEqualWithMask(v66to4, 16, true, true) ||                  // 6to4
+         isEqualWithMask(v6uniquelocal, 7, true, true) ||            // Unique local address
+         isEqualWithMask(v6linkedscopedunicast, 10, true, true) ||   // Link-Scoped Unicast
+         isEqualWithMask(v6multicast, 8, true, true);                // Multicast
+   }
+#endif
+   else
+   {
+      resip_assert(0);
+   }
+
+   return false;
+}
+
 socklen_t
 Tuple::length() const
 {
@@ -771,6 +845,42 @@ resip::operator<<(EncodeStream& ostrm, const Tuple& tuple)
    ostrm << " ]";
    
    return ostrm;
+}
+
+EncodeStream&
+resip::operator<<(EncodeStream& ostrm, const AddressMask& addressMask)
+{
+   ostrm << addressMask.mAddress << "/" << addressMask.mMaskBits;
+   return ostrm;
+}
+
+bool
+Tuple::isAddressAllowed(const std::vector<AddressMask>& allowed,
+                        const std::vector<AddressMask>& denied) const
+{
+   // Deny wins.
+   for (const AddressMask& entry : denied)
+   {
+      if (entry.mAddress.isEqualWithMask(*this, entry.mMaskBits, true /*ignorePort*/, true /*ignoreTransport*/))
+      {
+         return false;
+      }
+   }
+
+   // If an allow list is configured, this address must match one of its entries.
+   if (!allowed.empty())
+   {
+      for (const AddressMask& entry : allowed)
+      {
+         if (entry.mAddress.isEqualWithMask(*this, entry.mMaskBits, true /*ignorePort*/, true /*ignoreTransport*/))
+         {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   return true;
 }
 
 size_t 

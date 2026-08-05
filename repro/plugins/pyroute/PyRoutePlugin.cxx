@@ -80,7 +80,7 @@ class PyRoutePlugin : public repro::Plugin, public PyExtensionBase
       }
 
 
-      virtual bool init(SipStack& sipStack, ProxyConfig *proxyConfig)
+      virtual bool init(SipStack& sipStack, ProxyConfig *proxyConfig) override
       {
          DebugLog(<<"PyRoutePlugin: init called");
 
@@ -118,7 +118,7 @@ class PyRoutePlugin : public repro::Plugin, public PyExtensionBase
          return true;
       }
 
-      virtual void onRequestProcessorChainPopulated(ProcessorChain& chain)
+      virtual void onRequestProcessorChainPopulated(ProcessorChain& chain) override
       {
          DebugLog(<<"PyRoutePlugin: onRequestProcessorChainPopulated called");
 
@@ -130,17 +130,17 @@ class PyRoutePlugin : public repro::Plugin, public PyExtensionBase
          chain.insertProcessor<LocationServer>(std::move(proc));
       }
 
-      virtual void onResponseProcessorChainPopulated(ProcessorChain& chain)
+      virtual void onResponseProcessorChainPopulated(ProcessorChain& chain) override
       {
          DebugLog(<<"PyRoutePlugin: onResponseProcessorChainPopulated called");
       }
 
-      virtual void onTargetProcessorChainPopulated(ProcessorChain& chain)
+      virtual void onTargetProcessorChainPopulated(ProcessorChain& chain) override
       {
          DebugLog(<<"PyRoutePlugin: onTargetProcessorChainPopulated called");
       }
 
-      virtual void onReload() 
+      virtual void onReload() override
       {
          DebugLog(<<"PyRoutePlugin: onReload called");
       }

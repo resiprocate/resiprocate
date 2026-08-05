@@ -104,7 +104,7 @@ TcpConnection::write( const char* buf, const int count )
           // TCP buffers are backed up - we couldn't write anything - but we shouldn't treat this an error - return we wrote 0 bytes
           return 0;
       }
-      InfoLog (<< "Failed write on " << getSocket() << " " << strerror(e));
+      InfoLog (<< "Failed write on " << getSocket() << " " << strError(e));
       Transport::error(e);
       return -1;
    }

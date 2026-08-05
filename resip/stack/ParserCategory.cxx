@@ -274,7 +274,7 @@ ParserCategory::addParameter(Parameter* param)
    {
       // RFC 3261 7.3.1 & 19.1.1
       // any given parameter-name MUST NOT appear more than once
-      WarningLog(<< "Duplicate parameter-name \"" << param->getName() << "\", skip it.");
+      InfoLog(<< "Duplicate parameter-name \"" << param->getName() << "\", skip it.");
       return false;
    }
 }
@@ -295,7 +295,7 @@ ParserCategory::addParameter(UnknownParameter* unknownParam)
    {
       // RFC 3261 7.3.1 & 19.1.1
       // any given parameter-name MUST NOT appear more than once
-      WarningLog(<< "Duplicate parameter-name \"" << unknownParamName << "\", skip it.");
+      InfoLog(<< "Duplicate parameter-name \"" << unknownParamName << "\", skip it.");
       return false;
    }
 }

@@ -12,10 +12,6 @@
 #include "rutil/DnsUtil.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
-#ifdef WIN32
-extern int sdpTests(void);
-#endif 
-
 //#define RECON_LOCAL_HW_TESTS
 
 ///////////////////////////////////////////////////////////////////////////
@@ -808,11 +804,6 @@ main (int argc, char** argv)
       exit( -1 );
    }
 
-#ifdef WIN32
-   // Run SdpTests
-   sdpTests();
-#endif
-
    Log::initialize(Log::Cout, LOG_LEVEL, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
    initNetwork();
@@ -844,7 +835,7 @@ main (int argc, char** argv)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021-2026, SIP Spectrum, Inc.
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

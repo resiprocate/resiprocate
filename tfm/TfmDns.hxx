@@ -65,14 +65,12 @@ class TfmDns : public ExternalDns
 
       void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData);
 
-      virtual char* errorMessage(long errorCode) 
+      virtual char* errorMessage(long errorCode)
       {
          const char* msg = ares_strerror(errorCode);
-
          size_t len = strlen(msg);
-         char* errorString = new char[len+1];
-
-         strncpy(errorString, msg, len);
+         char* errorString = new char[len + 1];
+         memcpy(errorString, msg, len);
          errorString[len] = '\0';
          return errorString;
       }

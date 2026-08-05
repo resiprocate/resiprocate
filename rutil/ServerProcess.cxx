@@ -65,6 +65,17 @@ ServerProcess::onSignal(int signo)
    mFinished = true;
 }
 
+bool
+ServerProcess::checkPosixProcessControl(const Data& dependentSettings)
+{
+#ifdef WIN32
+   WarningLog(<<dependentSettings<<" not supported on Windows, the setting will be ignored");
+   return false;
+#else
+   return true;
+#endif
+}
+
 void
 ServerProcess::installSignalHandler()
 {
@@ -99,8 +110,11 @@ void
 ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
 {
 #ifdef WIN32
-   // setuid is not supported on Windows
-   throw std::runtime_error("Unable to drop privileges on Windows, please check the config");
+   // setuid is not supported on Windows.  Callers are expected to check
+   // checkPosixProcessControl() first and skip this entirely; warn through the
+   // same helper and return rather than throwing, so that a caller which
+   // forgets does not abort the process over a setting with no meaning here.
+   checkPosixProcessControl("RunAsUser/RunAsGroup");
 #else
    int rval;
    uid_t cur_uid;
@@ -253,16 +267,18 @@ void
 ServerProcess::daemonize()
 {
 #ifdef WIN32
-   // fork is not possible on Windows
-   ErrLog(<<"Unable to fork/daemonize on Windows, please check the config");
-   throw std::runtime_error("Unable to fork/daemonize on Windows, please check the config");
+   // fork() is not possible on Windows.  Callers are expected to check
+   // checkPosixProcessControl() first and skip this entirely; warn through the
+   // same helper and return rather than throwing, so that a caller which
+   // forgets keeps running in the foreground instead of aborting.
+   checkPosixProcessControl("Daemonize");
 #else
    pid_t pid;
    if ((pid = fork()) < 0) 
    {
       // fork() failed
-      ErrLog(<<"fork() failed: "<<strerror(errno));
-      throw std::runtime_error(strerror(errno));
+      ErrLog(<<"fork() failed: "<<strError(errno));
+      throw std::runtime_error(strError(errno));
    }
    else if (pid != 0)
    {
@@ -271,8 +287,8 @@ ServerProcess::daemonize()
    }
    if(chdir("/") < 0)
    {
-      ErrLog(<<"chdir() failed: "<<strerror(errno));
-      throw std::runtime_error(strerror(errno));
+      ErrLog(<<"chdir() failed: "<<strError(errno));
+      throw std::runtime_error(strError(errno));
    }
    // Nothing should be writing to stdout/stderr after this
    close(STDIN_FILENO);
@@ -328,6 +344,7 @@ ServerProcess::onReload()
 
 /* ====================================================================
  *
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2012 Daniel Pocock.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

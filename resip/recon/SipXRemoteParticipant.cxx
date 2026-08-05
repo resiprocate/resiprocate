@@ -649,7 +649,16 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady
             {
                // We have a valid potential media - line - copy over normal media line to make 
                // further processing easier
-               *(*itMediaLine) = *itPotentialMediaLine;  
+
+               // itPotentialMediaLine points into (*itMediaLine)->mPotentialMediaViews. Assigning
+               // *(*itMediaLine) = *itPotentialMediaLine would cause operator= to destroy
+               // mPotentialMediaViews (which owns itPotentialMediaLine's node) before copying
+               // from rhs, resulting in a use-after-free. Swapping the list out first transfers
+               // ownership of the nodes to 'stolen' in O(1) without copying, keeping
+               // itPotentialMediaLine valid for the assignment. 'stolen' is discarded on scope exit.
+               sdpcontainer::SdpMediaLine::SdpMediaLineList stolen;
+               stolen.swap((*itMediaLine)->getPotentialMediaViews()); // empties the list, our iterator now owns the nodes
+               *(*itMediaLine) = *itPotentialMediaLine;               // operator= assigns an empty mPotentialMediaViews, no aliasing
                valid = true;
                break;
             }

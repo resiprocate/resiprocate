@@ -71,7 +71,7 @@ XmlRpcSocketServer::XmlRpcSocketServer(XmlRpcHandler& h, int port, IpVersion ipV
    {
       int e = getErrno();
       logSocketError(e);
-      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed to create socket: " << strerror(e));
+      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed to create socket: " << strError(e));
       setSane(false);
       return;
    }
@@ -88,7 +88,7 @@ XmlRpcSocketServer::XmlRpcSocketServer(XmlRpcHandler& h, int port, IpVersion ipV
    {
       int e = getErrno();
       logSocketError(e);
-      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions SO_REUSEADDR: " << strError(e));
       setSane(false);
       return;
    }
@@ -101,7 +101,7 @@ XmlRpcSocketServer::XmlRpcSocketServer(XmlRpcHandler& h, int port, IpVersion ipV
       {
           int e = getErrno();
           logSocketError(e);
-          ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions IPV6_V6ONLY: " << strerror(e));
+          ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions IPV6_V6ONLY: " << strError(e));
           setSane(false);
           return;
       }
@@ -145,7 +145,7 @@ XmlRpcSocketServer::XmlRpcSocketServer(XmlRpcHandler& h, int port, IpVersion ipV
    if (e != 0)
    {
       int e = getErrno();
-      InfoLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed listen " << strerror(e));
+      InfoLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed listen " << strError(e));
       setSane(false);
       return;
    }
@@ -340,22 +340,22 @@ XmlRpcSocketServer::logSocketError(int e)
    switch (e)
    {
       case EAGAIN:
-         InfoLog (<< "No data ready to read" << strerror(e));
+         InfoLog (<< "No data ready to read" << strError(e));
          break;
       case EINTR:
-         InfoLog (<< "The call was interrupted by a signal before any data was read : " << strerror(e));
+         InfoLog (<< "The call was interrupted by a signal before any data was read : " << strError(e));
          break;
       case EIO:
-         InfoLog (<< "I/O error : " << strerror(e));
+         InfoLog (<< "I/O error : " << strError(e));
          break;
       case EBADF:
-         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << strerror(e));
+         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << strError(e));
          break;
       case EINVAL:
-         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << strerror(e));
+         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << strError(e));
          break;
       case EFAULT:
-         InfoLog (<< "buf is outside your accessible address space : " << strerror(e));
+         InfoLog (<< "buf is outside your accessible address space : " << strError(e));
          break;
 
 #if defined(WIN32)
@@ -453,7 +453,7 @@ XmlRpcSocketServer::logSocketError(int e)
 #endif
 
       default:
-         InfoLog (<< "Some other error (" << e << "): " << strerror(e));
+         InfoLog (<< "Some other error (" << e << "): " << strError(e));
          break;
    }
 }

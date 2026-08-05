@@ -675,7 +675,7 @@ TransportSelector::getFirstInterface(bool is_v4, TransportType type)
    {
       int e = getErrno();
       Transport::error( e );
-      InfoLog(<< "Can't query local hostname : [" << e << "] " << strerror(e) );
+      InfoLog(<< "Can't query local hostname : [" << e << "] " << strError(e) );
       throw Transport::Exception("Can't query local hostname", __FILE__, __LINE__);
    }
    InfoLog(<< "Local hostname is [" << hostname << "]");
@@ -847,7 +847,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       {
          int e = getErrno();
          Transport::error( e );
-         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
+         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strError(e) );
          throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
       }
 
@@ -857,7 +857,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       {
          int e = getErrno();
          Transport::error(e);
-         InfoLog(<< "Can't determine name of socket " << target << " : " << strerror(e) );
+         InfoLog(<< "Can't determine name of socket " << target << " : " << strError(e) );
          throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
       }
 
@@ -911,7 +911,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
          //.dcm. OS X 10.5 workaround, we could #ifdef for specific OS X version.
          if  (!(e ==EAFNOSUPPORT || e == EADDRNOTAVAIL))
          {
-            ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
+            ErrLog(<< "Can't disconnect socket :  " << strError(e) );
             Transport::error(e);
             throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
          }

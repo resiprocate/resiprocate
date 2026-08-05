@@ -32,6 +32,10 @@ using namespace CppUnit;
 using namespace std;
 using namespace resip;
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4996)
+#endif
+
 Security* ReproFixture::security = 0;
 TestProxy* ReproFixture::proxy = 0;
 TestUser* ReproFixture::jason = 0;

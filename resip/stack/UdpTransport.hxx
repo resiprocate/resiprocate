@@ -93,7 +93,33 @@ public:
        StunResultResponseParseFailed
    };
 
+   /** Send a STUN Binding Request to @p dest for public-address discovery.
+
+       The request is unauthenticated, as is typical for public STUN servers.
+       The response is only accepted if it originates from @p dest and echoes
+       the request's transaction id, so spoofed or off-path responses are
+       rejected (RFC 5389/8489).
+
+       @note Short-term credential (MESSAGE-INTEGRITY) support is intentionally
+             not provided here: this is a SIP signaling transport, and STUN on
+             it is used only for unauthenticated public-address discovery.
+             Short-term authenticated Binding Requests belong to ICE
+             connectivity checks on the media/RTP path (see the reTurn client),
+             not the SIP transport.
+
+       @note Only one STUN test may be outstanding per transport at a time. Each
+             call replaces any in-flight request: the stored transaction id and
+             server address are overwritten, so a response to a prior request
+             will no longer be accepted, and stunResult() always reflects the
+             most recent call. This is sufficient for the UserAgent
+             public-address-discovery use case; it is not a general concurrent
+             STUN client. */
    bool stunSendTest(const Tuple& dest);
+
+   /** Return the result of the most recent stunSendTest(); on
+       StunResultSuccess, @p mappedAddress is filled with the discovered
+       public address. @see stunSendTest for the single-outstanding-request
+       restriction. */
    StunResult stunResult(Tuple& mappedAddress);
 
    /// Installs a handler for the unknown datagrams arriving on the udp transport.
@@ -128,9 +154,15 @@ private:
    MsgHeaderScanner mMsgHeaderScanner;
    mutable resip::Mutex  myMutex;
    Tuple mStunMappedAddress;
-   
+
    StunResult mStunResult;
    StunSetting mStunSetting;
+
+   // STUN client state for the outstanding Binding Request (guarded by myMutex).
+   // Used to authenticate responses by source address and transaction id.
+   bool mStunTxIdValid;                  // true while a request is outstanding
+   std::array<unsigned char, 16> mStunTxId;  // transaction id (incl. magic cookie) of the request
+   Tuple mStunServerTuple;               // address the request was sent to
 
    ExternalUnknownDatagramHandler* mExternalUnknownDatagramHandler;
    bool mInWritable;
@@ -143,6 +175,7 @@ private:
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

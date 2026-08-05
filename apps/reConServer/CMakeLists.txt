@@ -43,7 +43,7 @@ target_add_conditional_sources(reConServer BUILD_PYTHON
 target_include_directories(reConServer PRIVATE ${SOCI_INCLUDE_DIRS} ${PostgreSQL_INCLUDE_DIR} ${MySQL_INCLUDE_DIRS})
 
 if(BUILD_PYTHON)
-   target_include_directories(reConServer PRIVATE ${Python3_INCLUDE_DIRS} ${PYCXX_INCLUDE_DIRS})
+   target_include_directories(reConServer SYSTEM PRIVATE ${Python3_INCLUDE_DIRS} ${PYCXX_INCLUDE_DIRS})
 endif()
 
 target_link_libraries(reConServer PUBLIC recon ${SOCI_LIBRARIES})

@@ -26,7 +26,7 @@ public:
    ReConServerProcess();
    virtual ~ReConServerProcess();
 
-   virtual int main(int argc, char** argv);
+   virtual int main(int argc, char** argv); // NOLINT(bugprone-exception-escape) - virtual method named "main"; exceptions are handled by the real main()
    virtual void processCommandLine(resip::Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
    virtual void processKeyboard(char input, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
 protected:

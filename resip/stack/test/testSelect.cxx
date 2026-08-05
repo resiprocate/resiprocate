@@ -118,7 +118,7 @@ main(int argc, char* argv[])
                      break;
                      
                   default:
-                     cerr <<"Error receiving, errno="<<err << " " << strerror(err);
+                     cerr <<"Error receiving, errno="<<err << " " << strError(err);
                      break;
                }
             }

@@ -91,9 +91,20 @@ std::shared_ptr<ConversationProfile> conversationProfile;
 static ReConServerConfig::MediaStack mediaStack = ReConServerConfig::sipXtapi;
 
 int main(int argc, char** argv)
+try
 {
    ReConServerProcess proc;
    return proc.main(argc, argv);
+}
+catch (const std::exception& e)
+{
+   ErrLog(<< "Unhandled exception: " << e.what());
+   return -1;
+}
+catch (...)
+{
+   ErrLog(<< "Unhandled exception");
+   return -1;
 }
 
 
@@ -763,8 +774,12 @@ void ReConServerProcess::processKeyboard(char input, MyConversationManager& myCo
    }
 }
 
-int 
-ReConServerProcess::main (int argc, char** argv)
+// ReConServerProcess::main is a virtual method, not the C++ program entry
+// point; the real main() above wraps it and catches any escaping exception.
+// bugprone-exception-escape matches on the function name "main", so suppress
+// this (false-positive) match here rather than terminate-guard a normal method.
+int
+ReConServerProcess::main (int argc, char** argv) // NOLINT(bugprone-exception-escape)
 {
    installSignalHandler();
 
@@ -793,9 +808,12 @@ ReConServerProcess::main (int argc, char** argv)
       ErrLog(<< "Ignoring KeyboardInput=true setting as we are running as a daemon");
       mKeyboardInput = false;
    }
-   setPidFile(pidFile);
+   if(!pidFile.empty() && checkPosixProcessControl("PidFile"))
+   {
+      setPidFile(pidFile);
+   }
    // Daemonize if necessary
-   if(daemonize)
+   if(daemonize && checkPosixProcessControl("Daemonize"))
    {
       ReConServerProcess::daemonize();
    }
@@ -1453,7 +1471,7 @@ ReConServerProcess::main (int argc, char** argv)
       //mUserAgent->createSubscription("message-summary", uri, 120, Mime("application", "simple-message-summary")); // thread safe
 
       // Drop privileges (can do this now that sockets are bound)
-      if(!runAsUser.empty())
+      if(!runAsUser.empty() && checkPosixProcessControl("RunAsUser/RunAsGroup"))
       {
          InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
          dropPrivileges(runAsUser, runAsGroup);

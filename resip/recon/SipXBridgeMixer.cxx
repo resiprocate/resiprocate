@@ -98,8 +98,12 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
                   if (participant->hasInput() &&                  // Only look at outputs from other participants if we have an input,  and
                       it2->second.getParticipant()->hasOutput())  // Only look at other participant if it has an output
                   {
-                     // Calculate the mixed output gain from the other participant to us
-                     unsigned int outputGain = ((it2->second.getOutputGain() * participantInputGain) / 100) * 10;  // 10 factor is to bring inline with MrpBridgeWeight int type
+                     // Calculate the mixed output gain from the other participant to us.
+                     // getOutputGain()/participantInputGain are percentages (0..100). Their product
+                     // over 100 is the combined percentage; scale that to the bridge's fixed-point
+                     // unity (MP_BRIDGE_GAIN_PASSTHROUGH == 1<<MP_BRIDGE_FRAC_LENGTH == 1024) so that
+                     // 100% maps to exact unity. The old "* 10" produced 1000, i.e. 1000/1024 = 0.98.
+                     unsigned int outputGain = (it2->second.getOutputGain() * participantInputGain * MP_BRIDGE_GAIN_PASSTHROUGH) / (100 * 100);
                      if (processingMultiChannelRecorder)
                      {
                         // If other party is supposed to record to channel 2 then update 
@@ -116,8 +120,9 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
                   if (participant->hasOutput() &&                // Only look at inputs to other participants if we have an output, and
                       it2->second.getParticipant()->hasInput())  // Only look at other participants that have an input and can accept our output
                   {
-                     // Calculate the mixed input gain for the other participant
-                     unsigned int inputGain = ((it2->second.getInputGain() * participantOutputGain) / 100) * 10;  // 10 factor is to bring inline with MrpBridgeWeight int type
+                     // Calculate the mixed input gain for the other participant.
+                     // Scale combined percentage to fixed-point unity (1024) — see note above.
+                     unsigned int inputGain = (it2->second.getInputGain() * participantOutputGain * MP_BRIDGE_GAIN_PASSTHROUGH) / (100 * 100);
 
                      // OtherParty has input and is bridgePort is 0, then other party is the multichannel recorder.
                      if (otherBridgePort == 0)

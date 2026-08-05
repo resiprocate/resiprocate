@@ -18,11 +18,31 @@
 #  undef __OPTIMIZE__ // weird intel bug with ntohs and htons macros
 #endif
 
+/**
+   Lambda capture default that also captures 'this'.
+
+   A plain '[=]' capture-default implicitly captures 'this', which is deprecated
+   in C++20, while spelling it '[=, this]' is a C++20 extension that warns under
+   earlier standards.  RESIP_LAMBDA_CAPTURE_ALL_AND_THIS expands to whichever
+   form is well-formed and warning-free for the language version in use, so the
+   same source compiles cleanly from C++11 through C++20 and later.  (_MSVC_LANG
+   is checked because MSVC reports the real standard there rather than in
+   __cplusplus unless /Zc:__cplusplus is set.)
+
+   Usage:  [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS]() { ...uses this and locals... }
+*/
+#if __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+#  define RESIP_LAMBDA_CAPTURE_ALL_AND_THIS =, this
+#else
+#  define RESIP_LAMBDA_CAPTURE_ALL_AND_THIS =
+#endif
+
 //#if defined(HAVE_SYS_INT_TYPES_H)
 //#include <sys/int_types.h>
 //#endif
 
 #include <cstring>
+#include <string>
 
 #ifndef WIN32
 #  include <netdb.h>
@@ -146,10 +166,10 @@ namespace resip
 
 #if defined(WIN32) || defined(__QNX__)
 #ifndef strcasecmp
-#  define strcasecmp(a,b)    stricmp(a,b)
+#  define strcasecmp(a,b)    _stricmp(a,b)
 #endif
 #ifndef strncasecmp
-#  define strncasecmp(a,b,c) strnicmp(a,b,c)
+#  define strncasecmp(a,b,c) _strnicmp(a,b,c)
 #endif
 #endif
 
@@ -235,6 +255,32 @@ hton64(const uint64_t input)
 }
 
 #endif
+
+#ifndef _MSC_VER
+// strerror_r has two incompatible signatures depending on feature-test macros
+// and the platform's libc. The GNU variant returns char* (the message, which
+// may not be 'buf'); the XSI/POSIX variant returns int (0 on success) and
+// writes the message into 'buf'. Let overload resolution pick the right one.
+inline const char* strErrorResult(char* result, char* /*buf*/)
+{
+   return result;                                   // GNU variant
+}
+inline const char* strErrorResult(int result, char* buf)
+{
+   return (result == 0) ? buf : "Unknown error";    // XSI/POSIX variant
+}
+#endif
+
+inline std::string strError(int err)
+{
+   char buf[256];
+#ifdef _MSC_VER
+   strerror_s(buf, sizeof(buf), err);
+   return buf;
+#else
+   return strErrorResult(strerror_r(err, buf, sizeof(buf)), buf);
+#endif
+}
 
 }
 

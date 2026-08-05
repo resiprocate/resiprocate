@@ -33,12 +33,12 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
                                                        std::shared_ptr<ConversationProfile> conversationProfile) :
    AppDialogSet(conversationManager.getUserAgent()->getDialogUsageManager()),
    mConversationManager(conversationManager),
+   mActiveRemoteParticipantHandle(0),
    mUACOriginalRemoteParticipant(0),
    mNumDialogs(0),
    mForkSelectMode(forkSelectMode),
    mConversationProfile(conversationProfile),
    mUACConnectedDialogId(Data::Empty, Data::Empty, Data::Empty),
-   mActiveRemoteParticipantHandle(0),
    mProposedSdp(0),
    mSecureMediaMode(ConversationProfile::NoSecureMedia),
    mSecureMediaRequired(false)
@@ -453,7 +453,7 @@ RemoteParticipantDialogSet::onNonDialogCreatingProvisional(AppDialogSetHandle, c
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

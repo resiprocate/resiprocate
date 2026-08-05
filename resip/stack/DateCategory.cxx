@@ -89,7 +89,7 @@ DateCategory::DateCategory()
    if (now == ((time_t)-1))
    {
       int e = getErrno();
-      DebugLog (<< "Failed to get time: " << strerror(e));
+      DebugLog (<< "Failed to get time: " << strError(e));
       Transport::error(e);
       return;
    }
@@ -156,24 +156,23 @@ bool
 DateCategory::setDatetime(time_t datetime)
 {
    struct tm gmt;
-#if defined(WIN32) || defined(__sun)
-   struct tm *gmtp = gmtime(&datetime);
-   if (gmtp == 0)
+#if defined(WIN32)
+   if (gmtime_s(&gmt, &datetime) != 0)
    {
-        int e = getErrno();
-        DebugLog (<< "Failed to convert to gmt: " << strerror(e));
-        Transport::error(e);
-        return false;
+      int e = getErrno();
+      DebugLog(<< "Failed to convert to gmt: " << strError(e));
+      Transport::error(e);
+      return false;
    }
-   memcpy(&gmt,gmtp,sizeof(gmt));
 #else
-  if (gmtime_r(&datetime, &gmt) == 0)
-  {
-     int e = getErrno();
-     DebugLog (<< "Failed to convert to gmt: " << strerror(e));
-     Transport::error(e);
-     return false;
-  }
+   // gmtime_r is available on Linux, Solaris, and other POSIX platforms
+   if (gmtime_r(&datetime, &gmt) == 0)
+   {
+      int e = getErrno();
+      DebugLog(<< "Failed to convert to gmt: " << strError(e));
+      Transport::error(e);
+      return false;
+   }
 #endif
 
    mDayOfWeek = static_cast<DayOfWeek>(gmt.tm_wday);

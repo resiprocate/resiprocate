@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
    catch (BaseException& ex)
    {
       std::cerr << "Error parsing configuration: " << ex << std::endl;
-      return false;
+      return 1;
    }
 
    Log::initialize(config, "TurnLoadTestGen");

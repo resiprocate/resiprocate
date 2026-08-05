@@ -66,6 +66,7 @@ const Data& InviteSession::getEndReasonString(InviteSession::EndReason reason)
 
 InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
    : DialogUsage(dum, dialog),
+     mPeerSupportsSessionTimer(false),
      mState(Undefined),
      mNitState(NitComplete),
      mServerNitState(NitComplete),
@@ -235,37 +236,75 @@ InviteSession::getSessionHandle()
 
 void InviteSession::storePeerCapabilities(const SipMessage& msg)
 {
-   if (msg.exists(h_Allows))
-   {
-      mPeerSupportedMethods = msg.header(h_Allows);
-   }
-   if (msg.exists(h_Supporteds))
-   {
-      mPeerSupportedOptionTags = msg.header(h_Supporteds);
-   }
-   if (msg.exists(h_Requires))
-   {
-      mPeerRequiresOptionTags = msg.header(h_Requires);
-   }
-   if (msg.exists(h_AcceptEncodings))
-   {
-      mPeerSupportedEncodings = msg.header(h_AcceptEncodings);
-   }
-   if (msg.exists(h_AcceptLanguages))
-   {
-      mPeerSupportedLanguages = msg.header(h_AcceptLanguages);
-   }
-   if (msg.exists(h_AllowEvents))
-   {
-      mPeerAllowedEvents = msg.header(h_AllowEvents);
-   }
-   if (msg.exists(h_Accepts))
-   {
-      mPeerSupportedMimeTypes = msg.header(h_Accepts);
-   }
+   // Policy: INVITE messages are treated as the authoritative capability-
+   // announcement boundary. UPDATE messages often omit capability headers
+   // (Allow, Supported, etc.) because implementations send lean UPDATEs for
+   // session timer refresh or SDP tweaks. Harvesting capabilities from UPDATE
+   // risks erasing richer data advertised on INVITE. Headers with per-message
+   // semantics (P-Asserted-Identity, User-Agent) are refreshed from any message.
+
+   // Always safe to refresh
    if (msg.exists(h_UserAgent))
    {
       mPeerUserAgent = msg.header(h_UserAgent).value();
+   }
+   if (msg.exists(h_PAssertedIdentities))
+   {
+      mPeerPAssertedIdentities = msg.header(h_PAssertedIdentities);
+   }
+
+   // Peer Session timer support
+   if (msg.method() == INVITE) // Request or response
+   {
+      mPeerSupportsSessionTimer = (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(SessionTimerToken)) ||
+         (msg.exists(h_Requires) && msg.header(h_Requires).find(SessionTimerToken));
+   }
+   else if(msg.method() == UPDATE) // Request or response
+   {
+      // Allow UPDATE to turn on session timer support only - we don't want to allow UPDATE to turn off support if
+      // it doesn't include the headers, but we do want to allow UPDATE to turn on support if it includes the headers.
+      if (!mPeerSupportsSessionTimer)
+      {
+         mPeerSupportsSessionTimer = (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(SessionTimerToken)) ||
+            (msg.exists(h_Requires) && msg.header(h_Requires).find(SessionTimerToken));
+      }
+   }
+
+   // Capability headers: harvest only from INVITE family
+   // Rationale: UPDATE messages are often lean and may omit capability
+   // headers that were advertised on the initial INVITE. Overwriting
+   // with a shorter set (or failing to overwrite) creates inconsistency.
+   // We treat INVITE as the authoritative capability-announcement boundary.
+   if (msg.method() == INVITE) // Request or response
+   {
+      if (msg.exists(h_Allows))
+      {
+         mPeerSupportedMethods = msg.header(h_Allows);
+      }
+      if (msg.exists(h_Supporteds))
+      {
+         mPeerSupportedOptionTags = msg.header(h_Supporteds);
+      }
+      if (msg.exists(h_Requires))
+      {
+         mPeerRequiresOptionTags = msg.header(h_Requires);
+      }
+      if (msg.exists(h_AcceptEncodings))
+      {
+         mPeerSupportedEncodings = msg.header(h_AcceptEncodings);
+      }
+      if (msg.exists(h_AcceptLanguages))
+      {
+         mPeerSupportedLanguages = msg.header(h_AcceptLanguages);
+      }
+      if (msg.exists(h_AllowEvents))
+      {
+         mPeerAllowedEvents = msg.header(h_AllowEvents);
+      }
+      if (msg.exists(h_Accepts))
+      {
+         mPeerSupportedMimeTypes = msg.header(h_Accepts);
+      }
    }
 }
 
@@ -286,8 +325,7 @@ InviteSession::sessionTimerSupportedLocalAndPeer() const
 {
    // Check if session timer extension (RFC4028) is supported locally 
    // and by peer (either supported or requires headers)
-   return mDum.getMasterProfile()->getSupportedOptionTags().find(SessionTimerToken) &&
-      (mPeerSupportedOptionTags.find(SessionTimerToken) || mPeerRequiresOptionTags.find(SessionTimerToken));
+   return mDum.getMasterProfile()->getSupportedOptionTags().find(SessionTimerToken) && mPeerSupportsSessionTimer;
 }
 
 bool
@@ -1347,7 +1385,9 @@ InviteSession::dispatch(const DumTimeout& timeout)
 {
    if (timeout.type() == DumTimeout::Retransmit200)
    {
-      if (mCurrentRetransmit200)
+      if (mCurrentRetransmit200 &&
+          mInvite200 &&
+          timeout.seq() == mInvite200->header(h_CSeq).sequence())
       {
          InfoLog(<< "Retransmitting: " << endl << mInvite200->brief());
          //DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
@@ -1355,12 +1395,18 @@ InviteSession::dispatch(const DumTimeout& timeout)
          mCurrentRetransmit200 *= 2;
          mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(), timeout.seq());
       }
+      else if (mCurrentRetransmit200)   // we ARE retransmitting, but this timer is for a superseded 2xx
+      {
+         InfoLog(<< "Ignoring stale Retransmit200 timer: seq=" << timeout.seq()
+                 << " current=" << (mInvite200 ? mInvite200->header(h_CSeq).sequence() : 0u));
+      }
+      // else: mCurrentRetransmit200 == 0 -> ACK already received; nothing to do (matches prior silent behaviour)
    }
    else if (timeout.type() == DumTimeout::WaitForAck)
    {
       if (mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet
       {
-         if (timeout.seq() == mLastRemoteSessionModification->header(h_CSeq).sequence())
+         if (mInvite200 && timeout.seq() == mInvite200->header(h_CSeq).sequence())
          {
             mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
@@ -1570,10 +1616,10 @@ InviteSession::dispatchConnected(const SipMessage& msg)
 
       case OnAck:
       case OnAckAnswer:
-         // Not checking for strict equality, since request may have been digest challenged
-         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
+         // Stop retransmitting our 2xx once its ACK arrives; correlate by CSeq sequence (RFC 3261 13.2.2.4) - see isAckForCurrent200()
+         if (!isAckForCurrent200(msg))
          {
-            InfoLog(<< "dropped stale ACK");
+            InfoLog(<< "dropped stale or duplicate ACK");
          }
          else
          {
@@ -1797,10 +1843,10 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
       case OnAck:
       case OnAckAnswer:
-         // Not checking for strict equality, since request may have been digest challenged
-         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
+         // Stop retransmitting our 2xx once its ACK arrives; correlate by CSeq sequence (RFC 3261 13.2.2.4) - see isAckForCurrent200()
+         if (!isAckForCurrent200(msg))
          {
-            InfoLog(<< "dropped stale ACK");
+            InfoLog(<< "dropped stale or duplicate ACK");
          }
          else
          {
@@ -1974,10 +2020,10 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
          break;
       }
       case OnAckAnswer:
-         // Not checking for strict equality, since request may have been digest challenged
-         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
+         // Stop retransmitting our 2xx once its ACK arrives; correlate by CSeq sequence (RFC 3261 13.2.2.4) - see isAckForCurrent200()
+         if (!isAckForCurrent200(msg))
          {
-            InfoLog(<< "dropped stale ACK");
+            InfoLog(<< "dropped stale or duplicate ACK");
          }
          else
          {
@@ -1996,10 +2042,10 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
          }
          break;
       case OnAck:
-         // Not checking for strict equality, since request may have been digest challenged
-         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
+         // Stop retransmitting our 2xx once its ACK arrives; correlate by CSeq sequence (RFC 3261 13.2.2.4) - see isAckForCurrent200()
+         if (!isAckForCurrent200(msg))
          {
-            InfoLog(<< "dropped stale ACK");
+            InfoLog(<< "dropped stale or duplicate ACK");
          }
          else
          {
@@ -2204,10 +2250,10 @@ InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
    {
       case OnAck:
       case OnAckAnswer:
-         // Not checking for strict equality, since request may have been digest challenged
-         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
+         // Stop retransmitting our 2xx once its ACK arrives; correlate by CSeq sequence (RFC 3261 13.2.2.4) - see isAckForCurrent200()
+         if (!isAckForCurrent200(msg))
          {
-            InfoLog(<< "dropped stale ACK");
+            InfoLog(<< "dropped stale or duplicate ACK");
          }
          else
          {
@@ -2287,10 +2333,10 @@ InviteSession::dispatchOthers(const SipMessage& msg)
          dispatchMessage(msg);
          break;
       case ACK:
-         // Not checking for strict equality, since request may have been digest challenged
-         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
+         // Stop retransmitting our 2xx once its ACK arrives; correlate by CSeq sequence (RFC 3261 13.2.2.4) - see isAckForCurrent200()
+         if (!isAckForCurrent200(msg))
          {
-            InfoLog(<< "dropped stale ACK");
+            InfoLog(<< "dropped stale or duplicate ACK");
          }
          else
          {
@@ -2616,11 +2662,35 @@ InviteSession::dispatchMessage(const SipMessage& msg)
    }
 }
 
+// RFC 3261 13.2.2.4: the ACK for a 2xx INVITE response carries the same CSeq
+// sequence number as the INVITE/2xx it acknowledges.  mInvite200 holds the 2xx
+// we are currently retransmitting, so its CSeq sequence number is the correct
+// (and only reliable) key for deciding whether an inbound ACK terminates that
+// retransmission.  Keying off this - rather than mLastRemoteSessionModification -
+// is robust under re-INVITE glare (where the session has already moved on to
+// SentReinvite/Glare for a crossing re-INVITE) and under a peer that re-uses or
+// does not strictly increase the in-dialog CSeq.
+bool
+InviteSession::isAckForCurrent200(const SipMessage& ack) const
+{
+   if (!ack.isRequest() || ack.header(h_RequestLine).method() != ACK)
+   {
+      return false;
+   }
+
+   if (mCurrentRetransmit200 == 0 || !mInvite200)
+   {
+      return false;
+   }
+
+   return ack.header(h_CSeq).sequence() == mInvite200->header(h_CSeq).sequence();
+}
+
 void
 InviteSession::startRetransmit200Timer()
 {
    mCurrentRetransmit200 = Timer::T1;
-   unsigned int seq = mLastRemoteSessionModification->header(h_CSeq).sequence();
+   unsigned int seq = mInvite200->header(h_CSeq).sequence();
    mDum.addTimerMs(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(), seq);
    mDum.addTimerMs(DumTimeout::WaitForAck, Timer::TH, getBaseHandle(), seq);
 }
@@ -2812,10 +2882,17 @@ InviteSession::handleSessionTimerResponse(const SipMessage& msg)
 {
    resip_assert(msg.header(h_CSeq).method() == INVITE || msg.header(h_CSeq).method() == UPDATE || msg.header(h_CSeq).method() == OPTIONS);
 
-   // Allow Re-Invites and Updates to update the Peer P-Asserted-Identity
-   if (msg.exists(h_PAssertedIdentities))
+   bool isOptionsRequest = msg.header(h_CSeq).method() == OPTIONS;
+
+   // Allow Re-Invites and Updates (not Options) to update the stored peer capabilities
+   if (!isOptionsRequest)
    {
-       mPeerPAssertedIdentities = msg.header(h_PAssertedIdentities);
+      storePeerCapabilities(msg);
+   }
+   else if (sessionTimerSupportedLocalAndPeer())
+   {
+      // This is an OPTIONS and Session timer is properly supported by both sides, don't let OPTIONS act as a refresh
+      return;
    }
 
    // If session timers are locally supported then handle response
@@ -2862,10 +2939,17 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
 {
    resip_assert(request.header(h_CSeq).method() == INVITE || request.header(h_CSeq).method() == UPDATE || request.header(h_CSeq).method() == OPTIONS);
 
-   // Allow Re-Invites and Updates to update the Peer P-Asserted-Identity
-   if (request.exists(h_PAssertedIdentities))
+   bool isOptionsRequest = request.header(h_CSeq).method() == OPTIONS;
+
+   // Allow Re-Invites and Updates (not Options) to update the stored peer capabilities
+   if (!isOptionsRequest)
    {
-       mPeerPAssertedIdentities = request.header(h_PAssertedIdentities);
+      storePeerCapabilities(request);
+   }
+   else if (sessionTimerSupportedLocalAndPeer())
+   {
+      // This is an OPTIONS and Session timer is properly supported by both sides, don't let OPTIONS act as a refresh
+      return;
    }
 
    // If session timers are locally supported then add necessary headers to response
@@ -2880,8 +2964,7 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
 
       // Check if far-end supports
       bool farEndSupportsTimer = false;
-      if((request.exists(h_Supporteds) && request.header(h_Supporteds).find(SessionTimerToken)) ||
-         (request.exists(h_Requires) && request.header(h_Requires).find(SessionTimerToken)))
+      if(mPeerSupportsSessionTimer)  // set in storePeerCapabilities above
       {
          farEndSupportsTimer = true;
          if(request.exists(h_SessionExpires))
@@ -2911,7 +2994,7 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
                 response.header(h_Requires).push_back(SessionTimerToken);
             }
          }
-         if (request.header(h_CSeq).method() != OPTIONS)
+         if (!isOptionsRequest)
          {
             setSessionTimerHeaders(response);
          }
@@ -3433,6 +3516,8 @@ InviteSession::sendBye()
          Token reason("SIP");
          txt = getEndReasonString(mEndReason);
          reason.param(p_text) = txt;
+         // RFC 3326 reason-text is a quoted-string
+         reason.getParameterByEnum(ParameterTypes::text)->setQuoted(true);
          bye->header(h_Reasons).push_back(reason);
       }
    }

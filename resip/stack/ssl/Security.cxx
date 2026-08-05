@@ -295,7 +295,7 @@ Security::preload()
       if (stat(fileName.c_str(), &s) < 0)
       {
          ErrLog(<< "Error calling stat() for " << fileName.c_str()
-            << ": " << strerror(errno));
+            << ": " << strError(errno));
       }
       else
       {
@@ -395,8 +395,7 @@ int pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 {
    if(password)
    {
-      strncpy(buf, (char *)(password), size);
-      buf[size - 1] = '\0';
+      snprintf(buf, size, "%s", (char*)password);
       return (int)strlen(buf);
    }
    else
@@ -3098,8 +3097,12 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
          }
          else
          {
-            long options = SSL_OP_CIPHER_SERVER_PREFERENCE |
-                           SSL_OP_SINGLE_DH_USE;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+            uint64_t options;
+#else
+            long options;
+#endif
+            options = SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_SINGLE_DH_USE;
             options = SSL_CTX_set_options(ctx, options);
             DebugLog(<<"DH parameters loaded, PFS cipher-suites enabled");
          }

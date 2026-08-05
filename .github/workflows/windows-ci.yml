@@ -13,12 +13,24 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      # Cache the built sipXtapi ExternalProject tree so it is only rebuilt when
+      # the pinned commit (build/sipxtapi-commit.txt) changes. tar preserves the
+      # ExternalProject stamp mtimes, so on a hit the build step sees sipXtapi as
+      # up to date and skips the msbuild. Bump the trailing salt (v1) if the
+      # runner's MSVC toolset changes and a rebuild is required.
+      - name: Cache sipXtapi
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/_build/sipXtapi-prefix
+          key: sipxtapi-${{ runner.os }}-${{ hashFiles('build/sipxtapi-commit.txt') }}-Debug-v1
+
       - name: "Configure"
         run: >
           cmake
           -S ${{ github.workspace }}
           -B ${{ github.workspace }}/_build
           -DUSE_SIPXTAPI=ON
+          -DSIPXTAPI_CONFIGURATIONS=Debug
 
       - name: "Build"
         run: >

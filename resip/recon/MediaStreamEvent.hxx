@@ -45,7 +45,7 @@ class MediaStreamReadyEvent : public resip::DumCommand
          reTurn::StunTuple mRtcpTuple;
       };
 
-      MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, std::shared_ptr<StreamParams> streamParams);
+      MediaStreamReadyEvent(ConversationManager* conversationManager, ParticipantHandle partHandle, std::shared_ptr<StreamParams> streamParams);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -53,14 +53,15 @@ class MediaStreamReadyEvent : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
-      RemoteParticipantDialogSet& mRemoteParticipantDialogSet;
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
       std::shared_ptr<StreamParams> mStreamParams;
 };
 
 class MediaStreamErrorEvent : public resip::DumCommand
 {
    public:
-      MediaStreamErrorEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, unsigned int errorCode);
+      MediaStreamErrorEvent(ConversationManager* conversationManager, ParticipantHandle partHandle, unsigned int errorCode);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -68,7 +69,8 @@ class MediaStreamErrorEvent : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
-      RemoteParticipantDialogSet& mRemoteParticipantDialogSet;
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
       unsigned int mErrorCode;
 };
 
@@ -81,6 +83,7 @@ EncodeStream& operator<<(EncodeStream& strm, const MediaStreamReadyEvent::Stream
 
 /* ====================================================================
 
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

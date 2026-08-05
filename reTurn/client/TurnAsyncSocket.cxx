@@ -1,6 +1,7 @@
 #include "TurnAsyncSocket.hxx"
 #include "../AsyncSocketBase.hxx"
 #include "ErrorCode.hxx"
+#include <rutil/compat.hxx>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
@@ -51,11 +52,19 @@ TurnAsyncSocket::TurnAsyncSocket(asio::io_context& ioService,
 
 TurnAsyncSocket::~TurnAsyncSocket()
 {
-   clearActiveRequestMap();
-   cancelAllocationTimer();
-   cancelChannelBindingTimers();
+   // Destructors are implicitly noexcept; swallow anything thrown during cleanup
+   // so we don't call std::terminate.
+   try
+   {
+      clearActiveRequestMap();
+      cancelAllocationTimer();
+      cancelChannelBindingTimers();
 
-   DebugLog(<< "TurnAsyncSocket::~TurnAsyncSocket destroyed!");
+      DebugLog(<< "TurnAsyncSocket::~TurnAsyncSocket destroyed!");
+   }
+   catch (...)
+   {
+   }
 }
 
 void
@@ -96,7 +105,7 @@ void
 TurnAsyncSocket::setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth)
 {
    Data username_copy{username}, password_copy{password};
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this]() mutable { doSetUsernameAndPassword(std::move(username_copy), std::move(password_copy), shortTermAuth); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS]() mutable { doSetUsernameAndPassword(std::move(username_copy), std::move(password_copy), shortTermAuth); }));
 }
 
 void 
@@ -115,7 +124,7 @@ void
 TurnAsyncSocket::setLocalPassword(const char* password)
 {
    Data password_copy{password};
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this]() mutable { doSetLocalPassword(std::move(password_copy)); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS]() mutable { doSetLocalPassword(std::move(password_copy)); }));
 }
 
 void 
@@ -151,7 +160,7 @@ void
 TurnAsyncSocket::connectivityCheck(const StunTuple& targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
 {
    resip_assert(setIceControlling || setIceControlled);
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doConnectivityCheck(new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS] { doConnectivityCheck(new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms); }));
 }
 
 void
@@ -182,7 +191,7 @@ TurnAsyncSocket::createAllocation(unsigned int lifetimeSecs,
                                   uint64_t reservationToken,
                                   StunTuple::TransportType requestedTransportType)
 {
-    asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doCreateAllocation(lifetimeSecs, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
+    asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS] { doCreateAllocation(lifetimeSecs, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
 }
 
 void
@@ -273,7 +282,7 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetimeSecs,
 void 
 TurnAsyncSocket::refreshAllocation(unsigned int lifetimeSecs)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doRefreshAllocation(lifetimeSecs); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS] { doRefreshAllocation(lifetimeSecs); }));
 }
 
 void 
@@ -323,7 +332,7 @@ TurnAsyncSocket::doDestroyAllocation()
 void
 TurnAsyncSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doSetActiveDestination(address, port); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS] { doSetActiveDestination(address, port); }));
 }
 
 void
@@ -1085,13 +1094,13 @@ TurnAsyncSocket::sendTo(const asio::ip::address& address, unsigned short port, c
 void 
 TurnAsyncSocket::sendFramed(const std::shared_ptr<DataBuffer>& data)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doSendFramed(data); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS] { doSendFramed(data); }));
 }
 
 void 
 TurnAsyncSocket::sendToFramed(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this] { doSendToFramed(address, port, data); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS] { doSendToFramed(address, port, data); }));
 }
 
 void 
@@ -1172,7 +1181,7 @@ void
 TurnAsyncSocket::setSoftware(const char* software)
 {
    Data software_copy{software};
-   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=, this]() mutable { doSetSoftware(std::move(software_copy)); }));
+   asio::dispatch(mIOService, weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS]() mutable { doSetSoftware(std::move(software_copy)); }));
 }
 
 void
@@ -1289,12 +1298,20 @@ TurnAsyncSocket::RequestEntry::stopTimer()
    mRequestTimer.cancel();
 }
 
-TurnAsyncSocket::RequestEntry::~RequestEntry() 
-{ 
-   //std::cout << "RequestEntry::~RequestEntry() " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
-   delete mRequestMessage; 
-   delete mDest;
-   stopTimer();
+TurnAsyncSocket::RequestEntry::~RequestEntry()
+{
+   // Destructors are implicitly noexcept; swallow anything thrown during cleanup
+   // so we don't call std::terminate.
+   try
+   {
+      //std::cout << "RequestEntry::~RequestEntry() " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
+      delete mRequestMessage;
+      delete mDest;
+      stopTimer();
+   }
+   catch (...)
+   {
+   }
 }
 
 void 

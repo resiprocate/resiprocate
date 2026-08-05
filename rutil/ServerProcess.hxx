@@ -20,6 +20,21 @@ public:
    void onSignal(int signo);
 
 protected:
+   /* Returns true when this build can perform POSIX process control:
+      fork(), setuid/setgid and PID file handling.
+
+      Windows has none of these, so there this logs a warning naming the
+      dependent settings and returns false.  The caller then skips an
+      operation that cannot work on this platform rather than attempting it
+      and failing.
+
+      dependentSettings is only the label used in that warning, e.g.
+      "Daemonize" or "RunAsUser/RunAsGroup"; it is not inspected.
+
+      Call this only once the setting is known to be configured, so that no
+      warning is produced for settings the operator never set. */
+   bool checkPosixProcessControl(const Data& dependentSettings);
+
    /* The main subclass can call installSignalHandler()
       if it wants signals handled. */
    void installSignalHandler();
@@ -55,6 +70,7 @@ private:
 
 /* ====================================================================
  *
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2012 Daniel Pocock.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

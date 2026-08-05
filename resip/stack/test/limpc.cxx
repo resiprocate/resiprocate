@@ -14,7 +14,7 @@
 #include <iostream>
 #include <cstdio>
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #include <io.h>
 #include <conio.h>
 #else
@@ -127,10 +127,12 @@ processStdin( Uri* dest, bool sign, bool encryp )
    static unsigned int num=0;
    static char buf[1024];
 
-   char c = getch();
-#ifdef WIN32
+#ifdef _MSC_VER
+   char c = (char)_getch();
    // Output to console windows
    std::cout << c;
+#else
+   char c = getch();
 #endif
       
    if ( c == 0 )

@@ -41,7 +41,6 @@ int main(int argc, char **argv)
   int status, nfds;
   fd_set read_fds, write_fds;
   struct timeval *tvp, tv;
-  char *errmem;
   struct in_addr addr;
 
   if (argc == 0)
@@ -50,23 +49,22 @@ int main(int argc, char **argv)
   status = ares_init(&channel);
   if (status != ARES_SUCCESS)
     {
-      fprintf(stderr, "ares_init: %s\n", ares_strerror(status));//, &errmem));
-      ares_free_errmem(errmem);
+      fprintf(stderr, "ares_init: %s\n", ares_strerror(status));
       return 1;
     }
 
   /* Initiate the queries, one per command-line argument. */
   for (argv++; *argv; argv++)
-    {
-      addr.s_addr = inet_addr(*argv);
-      if (addr.s_addr == INADDR_NONE)
-	ares_gethostbyname(channel, *argv, AF_INET, callback, *argv);
-      else
-	{
-	  ares_gethostbyaddr(channel, &addr, sizeof(addr), AF_INET, callback,
-			     *argv);
-	}
-    }
+  {
+     if (inet_pton(AF_INET, *argv, &addr.s_addr) == 1)
+     {
+        ares_gethostbyaddr(channel, &addr, sizeof(addr), AF_INET, callback, *argv);
+     }
+     else
+     {
+        ares_gethostbyname(channel, *argv, AF_INET, callback, *argv);
+     }
+  }
 
   /* Wait for all queries to complete. */
   while (1)
@@ -88,19 +86,20 @@ int main(int argc, char **argv)
 static void callback(void *arg, int status, struct hostent *host)
 {
   struct in_addr addr;
-  char *mem, **p;
+  char **p;
 
   if (status != ARES_SUCCESS)
     {
-      fprintf(stderr, "%s: %s\n", (char *) arg, ares_strerror(status));//, &mem));
-      ares_free_errmem(mem);
+      fprintf(stderr, "%s: %s\n", (char *) arg, ares_strerror(status));
       return;
     }
 
   for (p = host->h_addr_list; *p; p++)
     {
+      char addrBuf[INET_ADDRSTRLEN];
       memcpy(&addr, *p, sizeof(struct in_addr));
-      printf("%-32s\t%s\n", host->h_name, inet_ntoa(addr));
+      inet_ntop(AF_INET, &addr, addrBuf, sizeof(addrBuf));
+      printf("%-32s\t%s\n", host->h_name, addrBuf);
     }
 }
 

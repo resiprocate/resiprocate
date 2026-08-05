@@ -14,6 +14,17 @@
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
+static FILE* safe_fopen(const char* path, const char* mode)
+{
+#ifdef _MSC_VER
+    FILE* f = nullptr;
+    fopen_s(&f, path, mode);
+    return f;
+#else
+    return fopen(path, mode);
+#endif
+}
+
 void
 wsinv()
 {
@@ -102,7 +113,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("wsinv.dat","r");
+   FILE* fid= safe_fopen("wsinv.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -401,7 +412,7 @@ Content-Length: 0
 */
 #endif
 
-   FILE* fid= fopen("intmeth.dat","r");
+   FILE* fid= safe_fopen("intmeth.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -647,7 +658,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("esc01.dat","r");
+   FILE* fid= safe_fopen("esc01.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -858,7 +869,7 @@ L:0
 
 
 */
-   FILE* fid= fopen("escnull.dat","r");
+   FILE* fid= safe_fopen("escnull.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -1068,7 +1079,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("esc02.dat","r");
+   FILE* fid= safe_fopen("esc02.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -1266,7 +1277,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("lwsdisp.dat","r");
+   FILE* fid= safe_fopen("lwsdisp.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -1473,7 +1484,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("longreq.dat","r");
+   FILE* fid= safe_fopen("longreq.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -1773,7 +1784,7 @@ a=rtpmap:31 LPC
 
 
 */
-   FILE* fid= fopen("dblreq.dat","r");
+   FILE* fid= safe_fopen("dblreq.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -1955,7 +1966,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("semiuri.dat","r");
+   FILE* fid= safe_fopen("semiuri.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -2165,7 +2176,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("transports.dat","r");
+   FILE* fid= safe_fopen("transports.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -2430,7 +2441,7 @@ hÎÿ®<½+ÿuÝÕdŽY=ÖG(òb ÷éAtž3
 */
 #endif
 
-   FILE* fid= fopen("mpart01.dat","r");
+   FILE* fid= safe_fopen("mpart01.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -2692,7 +2703,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("unreason.dat","r");
+   FILE* fid= safe_fopen("unreason.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -2927,7 +2938,7 @@ Contact: <sip:user@host105.example.com>
 
 
 */
-   FILE* fid= fopen("noreason.dat","r");
+   FILE* fid= safe_fopen("noreason.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3106,7 +3117,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("badinv01.dat","r");
+   FILE* fid= safe_fopen("badinv01.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3187,7 +3198,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("clerr.dat","r");
+   FILE* fid= safe_fopen("clerr.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3277,7 +3288,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("ncl.dat","r");
+   FILE* fid= safe_fopen("ncl.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3364,7 +3375,7 @@ Content-Length: 0
 
 
 */
-   FILE* fid= fopen("scalar02.dat","r");
+   FILE* fid= safe_fopen("scalar02.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3438,7 +3449,7 @@ Content-Length: 0
 
 
 */
-   FILE* fid= fopen("scalarlg.dat","r");
+   FILE* fid= safe_fopen("scalarlg.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3519,7 +3530,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("quotbal.dat","r");
+   FILE* fid= safe_fopen("quotbal.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3599,7 +3610,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("ltgtruri.dat","r");
+   FILE* fid= safe_fopen("ltgtruri.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3677,7 +3688,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("lwsruri.dat","r");
+   FILE* fid= safe_fopen("lwsruri.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3757,7 +3768,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("lwsstart.dat","r");
+   FILE* fid= safe_fopen("lwsstart.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3828,7 +3839,7 @@ Content-Length: 0
 
 
 */
-   FILE* fid= fopen("trws.dat","r");
+   FILE* fid= safe_fopen("trws.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3909,7 +3920,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("escruri.dat","r");
+   FILE* fid= safe_fopen("escruri.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -3995,7 +4006,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("baddate.dat","r");
+   FILE* fid= safe_fopen("baddate.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4066,7 +4077,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("regbadct.dat","r");
+   FILE* fid= safe_fopen("regbadct.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4133,7 +4144,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("badaspec.dat","r");
+   FILE* fid= safe_fopen("badaspec.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4208,7 +4219,7 @@ CSeq:    3923239 OPTIONS
 l: 0
 
 */
-   FILE* fid= fopen("baddn.dat","r");
+   FILE* fid= safe_fopen("baddn.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4275,7 +4286,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("badvers.dat","r");
+   FILE* fid= safe_fopen("badvers.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4340,7 +4351,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("mismatch01.dat","r");
+   FILE* fid= safe_fopen("mismatch01.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4417,7 +4428,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("mismatch02.dat","r");
+   FILE* fid= safe_fopen("mismatch02.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4481,7 +4492,7 @@ Contact: <sip:user@host105.example.com>
 
 
 */
-   FILE* fid= fopen("bigcode.dat","r");
+   FILE* fid= safe_fopen("bigcode.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4552,7 +4563,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("badbranch.dat","r");
+   FILE* fid= safe_fopen("badbranch.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4728,7 +4739,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("bcast.dat","r");
+   FILE* fid= safe_fopen("bcast.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4793,7 +4804,7 @@ Content-Length: 0
 
 
 */
-   FILE* fid= fopen("bext01.dat","r");
+   FILE* fid= safe_fopen("bext01.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4857,7 +4868,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("cparam01.dat","r");
+   FILE* fid= safe_fopen("cparam01.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4921,7 +4932,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("cparam02.dat","r");
+   FILE* fid= safe_fopen("cparam02.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -4989,7 +5000,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("insuf.dat","r");
+   FILE* fid= safe_fopen("insuf.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5058,7 +5069,7 @@ t=0 0
 m=audio 49217 RTP/AVP 0
 
 */
-   FILE* fid= fopen("inv2543.dat","r");
+   FILE* fid= safe_fopen("inv2543.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5126,7 +5137,7 @@ Content-Length: 40
 </audio>
 
 */
-   FILE* fid= fopen("invut.dat","r");
+   FILE* fid= safe_fopen("invut.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5193,7 +5204,7 @@ There's no way to know how many octets are supposed to be here.
 
 
 */
-   FILE* fid= fopen("mcl01.dat","r");
+   FILE* fid= safe_fopen("mcl01.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5273,7 +5284,7 @@ a=rtpmap:31 LPC
 
 
 */
-   FILE* fid= fopen("multi01.dat","r");
+   FILE* fid= safe_fopen("multi01.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5336,7 +5347,7 @@ Content-Length: 0
 
 
 */
-   FILE* fid= fopen("novelsc.dat","r");
+   FILE* fid= safe_fopen("novelsc.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5400,7 +5411,7 @@ Content-Length:0
 
 
 */
-   FILE* fid= fopen("regaut01.dat","r");
+   FILE* fid= safe_fopen("regaut01.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5464,7 +5475,7 @@ L:0
 
 
 */
-   FILE* fid= fopen("regescrt.dat","r");
+   FILE* fid= safe_fopen("regescrt.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5538,7 +5549,7 @@ m=video 3227 RTP/AVP 31
 a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("sdp01.dat","r");
+   FILE* fid= safe_fopen("sdp01.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5601,7 +5612,7 @@ Content-Length: 0
 
 
 */
-   FILE* fid= fopen("unkscm.dat","r");
+   FILE* fid= safe_fopen("unkscm.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5665,7 +5676,7 @@ l: 0
 
 
 */
-   FILE* fid= fopen("unksm2.dat","r");
+   FILE* fid= safe_fopen("unksm2.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -5728,7 +5739,7 @@ Content-Length: 0
 
 
 */
-   FILE* fid= fopen("zeromf.dat","r");
+   FILE* fid= safe_fopen("zeromf.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];

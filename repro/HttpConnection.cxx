@@ -96,31 +96,41 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
 {
    Data page(pPage);
 
+   // For REST responses (application/json), callers supply the body and we
+   // must not substitute a canned HTML body.
+   const bool isJson = (pType.type() == "application" && pType.subType() == "json");
+
    switch (response)
    {
       case 401:
       {  
          mTxBuffer += "HTTP/1.0 401 Unauthorized"; mTxBuffer += Symbols::CRLF;
-         
-         page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
-                 "<html><head>"
-                 "<title>401 Unauthorized</title>"
-                 "</head><body>"
-                 "<h1>Unauthorized</h1>"
-                 "</body></html>" );
+
+         if (!isJson)
+         {
+            page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
+                    "<html><head>"
+                    "<title>401 Unauthorized</title>"
+                    "</head><body>"
+                    "<h1>Unauthorized</h1>"
+                    "</body></html>" );
+         }
       }
       break;
 
       case 404:
       {  
          mTxBuffer += "HTTP/1.0 404 Not Found"; mTxBuffer += Symbols::CRLF;
-         
-         page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
-                 "<html><head>"
-                 "<title>404 Not Found</title>"
-                 "</head><body>"
-                 "<h1>Not Found</h1>"
-                 "</body></html>" );
+
+         if (!isJson)
+         {
+            page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
+                    "<html><head>"
+                    "<title>404 Not Found</title>"
+                    "</head><body>"
+                    "<h1>Not Found</h1>"
+                    "</body></html>" );
+         }
       }
       break;
       
@@ -144,9 +154,39 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
       }
       break;
 
+      case 400:
+      {
+         mTxBuffer += "HTTP/1.0 400 Bad Request" ; mTxBuffer += Symbols::CRLF;
+      }
+      break;
+
+      case 405:
+      {
+         mTxBuffer += "HTTP/1.0 405 Method Not Allowed" ; mTxBuffer += Symbols::CRLF;
+      }
+      break;
+
       case 500:
       {
          mTxBuffer += "HTTP/1.0 500 Server failure" ; mTxBuffer += Symbols::CRLF;
+      }
+      break;
+
+      case 501:
+      {
+         mTxBuffer += "HTTP/1.0 501 Not Implemented" ; mTxBuffer += Symbols::CRLF;
+      }
+      break;
+
+      case 503:
+      {
+         mTxBuffer += "HTTP/1.0 503 Service Unavailable" ; mTxBuffer += Symbols::CRLF;
+      }
+      break;
+
+      case 504:
+      {
+         mTxBuffer += "HTTP/1.0 504 Gateway Timeout" ; mTxBuffer += Symbols::CRLF;
       }
       break;
 
@@ -248,7 +288,7 @@ HttpConnection::processSomeReads()
             InfoLog (<< "Some other error");
             break;
       }
-      InfoLog (<< "Failed read on " << (int)mSock << " " << strerror(e));
+      InfoLog (<< "Failed read on " << (int)mSock << " " << strError(e));
       return false;
    }
    else if (bytesRead == 0)
@@ -284,7 +324,20 @@ HttpConnection::tryParse()
    }
    pb.reset(pb.start());
 
+   // Capture the HTTP method (first token) so that the subclass can
+   // dispatch based on GET/POST/PUT/DELETE for REST endpoints.
+   const char* methodStart = pb.position();
    pb.skipToChar(Symbols::SPACE[0]);
+
+   if (pb.eof())
+   {
+      // parse failed - just return
+      return;
+   }
+
+   Data method;
+   pb.data(method, methodStart);
+
    const char* start = pb.skipWhitespace();
    pb.skipToChar(Symbols::SPACE[0]);
    
@@ -297,7 +350,7 @@ HttpConnection::tryParse()
    Data uri;
    pb.data( uri, start );
  
-   DebugLog (<< "parse found URI " << uri );
+   DebugLog (<< "parse found method " << method << " URI " << uri );
    mParsedRequest = true;
      
    
@@ -343,7 +396,7 @@ HttpConnection::tryParse()
       ErrLog (<< "Some problem finding Authorization header in HTTP request" );
    }
    
-   mHttpBase.buildPage(uri,mPageNumber,user,password);
+   mHttpBase.buildPage(method,uri,mPageNumber,user,password);
 }
 
 
@@ -366,7 +419,7 @@ HttpConnection::processSomeWrites()
    if (bytesWritten == INVALID_SOCKET)
    {
       int e = getErrno();
-      InfoLog (<< "HttpConnection failed write on " << mSock << " " << strerror(e));
+      InfoLog (<< "HttpConnection failed write on " << mSock << " " << strError(e));
 
       return false;
    }
@@ -392,6 +445,7 @@ HttpConnection::processSomeWrites()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -195,7 +195,7 @@ XmlRpcSocketConnection::processSomeWrites()
    {
       int e = getErrno();
       XmlRpcSocketServer::logSocketError(e);
-      InfoLog (<< "XmlRpcSocketConnection::processSomeWrites - failed write on " << mSock << " " << strerror(e));
+      InfoLog (<< "XmlRpcSocketConnection::processSomeWrites - failed write on " << mSock << " " << strError(e));
 
       return false;
    }

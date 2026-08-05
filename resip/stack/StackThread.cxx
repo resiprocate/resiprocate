@@ -26,6 +26,9 @@ StackThread::~StackThread()
 #ifndef WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+#pragma warning(push)
+#pragma warning(disable: 4996)
 #endif
 
 void
@@ -38,7 +41,7 @@ StackThread::thread()
          resip::FdSet fdset;
          buildFdSet(fdset);
          mStack.buildFdSet(fdset);
-		 int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(),
+         int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(),
                                                      getTimeTillNextProcessMS()));
          if (ret >= 0)
          {
@@ -59,6 +62,8 @@ StackThread::thread()
 
 #ifndef WIN32
 #pragma GCC diagnostic pop
+#else
+#pragma warning(pop)
 #endif
 
 void
