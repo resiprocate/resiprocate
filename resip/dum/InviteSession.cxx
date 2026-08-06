@@ -1304,60 +1304,6 @@ InviteSession::messageCommand(const Contents& contents)
 }
 
 void
-InviteSession::update(const Contents& contents)
-{
-   auto message = std::make_shared<SipMessage>();
-   mDialog.makeRequest(*message, UPDATE, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
-   // !jf! handle multipart here
-   message->setContents(&contents);
-   DumHelper::setOutgoingEncryptionLevel(*message, mCurrentEncryptionLevel);
-   InfoLog (<< "Trying to send UPDATE: " << message);
-   if (mNitState == NitComplete)
-   {
-      mNitState = NitProceeding;
-      mLastSentNITRequest = message;
-      send(message);
-      return;
-   }
-   mNITQueue.push(new QueuedNIT(message));
-   InfoLog(<< "update - queuing NIT:" << message->brief());
-   return;
-}
-
-class InviteSessionUpdateCommand : public DumCommandAdapter
-{
-public:
-   InviteSessionUpdateCommand(const InviteSessionHandle& inviteSessionHandle, const Contents& contents)
-      : mInviteSessionHandle(inviteSessionHandle),
-        mContents(contents.clone())
-   {
-   }
-
-   void executeCommand() override
-   {
-      if(mInviteSessionHandle.isValid())
-      {
-         mInviteSessionHandle->update(*mContents);
-      }
-   }
-
-   EncodeStream& encodeBrief(EncodeStream& strm) const override
-   {
-      return strm << "InviteSessionUpdateCommand";
-   }
-private:
-   InviteSessionHandle mInviteSessionHandle;
-   std::unique_ptr<Contents> mContents;
-};
-
-
-void
-InviteSession::updateCommand(const Contents& contents)
-{
-   mDum.post(new InviteSessionUpdateCommand(getSessionHandle(), contents));
-}
-
-void
 InviteSession::dispatch(const SipMessage& msg)
 {
    // Look for 2xx retransmissions - resend ACK and filter out of state machine

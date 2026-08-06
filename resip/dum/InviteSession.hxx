@@ -112,9 +112,6 @@ class InviteSession : public DialogUsage
       */
       virtual void message(const Contents& contents);
 
-      /** sends an update request */
-      virtual void update(const Contents& contents);
-
       /** accepts an INFO or MESSAGE request with a 2xx and an optional contents */
       virtual void acceptNIT(int statusCode = 200, const Contents * contents = 0);
 
@@ -145,7 +142,6 @@ class InviteSession : public DialogUsage
       virtual void referCommand(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub = true);
       virtual void infoCommand(const Contents& contents);
       virtual void messageCommand(const Contents& contents);
-      virtual void updateCommand(const Contents& contents);
       /** Asynchronously accepts an INFO or MESSAGE request with a 2xx and an optional contents */
       virtual void acceptNITCommand(int statusCode = 200, const Contents * contents = 0);
       /** Asynchronously rejects an INFO or MESSAGE request with an error status code */
