@@ -1559,7 +1559,9 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    // set version to X509v3 (starts from 0)
    X509_set_version(cert, 2L);
    
-   int serial = Random::getCryptoRandom();  // get an int worth of randomness
+   // RFC 5280 4.1.2.2 wants a positive serial, and getCryptoRandom() fills a
+   // whole int from RAND_bytes, so it is negative about half the time.
+   int serial = Random::getCryptoRandom() & 0x7FFFFFFF;
    resip_assert(sizeof(int)==4);
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    

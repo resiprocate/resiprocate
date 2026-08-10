@@ -95,7 +95,9 @@ int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type 
 
   //  RAND_bytes((char *) serial , 4);
   //serial = 1;
-  serial = Random::getCryptoRandom();  // get an int worth of randomness
+  // RFC 5280 4.1.2.2 wants a positive serial, and getCryptoRandom() fills a
+  // whole int from RAND_bytes, so it is negative about half the time.
+  serial = Random::getCryptoRandom() & 0x7FFFFFFF;
   ASN1_INTEGER_set(X509_get_serialNumber(selfcert),serial);
 
   X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, (unsigned char *) domain.data(), domain.size(), -1, 0);
