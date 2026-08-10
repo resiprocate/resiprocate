@@ -493,7 +493,9 @@ endif()
 # Debian: libsoci-dev
 # FIXME - hardcoded
 # FIXME - MySQL, PostgreSQL
-if(USE_SOCI_POSTGRESQL OR USE_SOCI_MYSQL)
+# reConServer's B2BCallManager includes soci.h unconditionally, so soci_core
+# is needed whenever BUILD_RECONSERVER is on, even without a specific backend.
+if(USE_SOCI_POSTGRESQL OR USE_SOCI_MYSQL OR BUILD_RECONSERVER)
    find_library(SOCI_LIBRARIES soci_core REQUIRED)
    # FIXME include path
    set(SOCI_INCLUDE_DIRS "/usr/include/soci")
