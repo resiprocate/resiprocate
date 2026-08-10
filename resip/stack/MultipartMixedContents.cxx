@@ -70,7 +70,10 @@ MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs
 void
 MultipartMixedContents::setBoundary()
 {
-   Data boundaryToken = Random::getRandomHex(8);
+   // The boundary goes out on the wire in every multipart body, so drawing it
+   // from the process-wide random() stream publishes that stream's output and
+   // makes everything else taken from it predictable.  Use the CSPRNG.
+   Data boundaryToken = Random::getCryptoRandomHex(8);
    mType.param(p_boundary) = boundaryToken;
 }
 
