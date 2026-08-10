@@ -922,7 +922,10 @@ namespace resip
       int min = 0x4000;
       int max = 0x7FFF;
 
-      int ret = stunRand();
+      // Local port selection must not be predictable, and stunRand() draws
+      // from the process-wide random() stream that wire-visible tokens
+      // disclose.  Use the CSPRNG, as stunBuildReqSimple() already does.
+      int ret = Random::getCryptoRandom();
       ret = ret | min;
       ret = ret & max;
 
