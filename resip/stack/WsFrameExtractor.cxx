@@ -9,13 +9,21 @@ using namespace resip;
 
 
 const int WsFrameExtractor::mMaxHeaderLen = 14;
+const size_t WsFrameExtractor::mMaxFrames = 1024;
 
 WsFrameExtractor::WsFrameExtractor(Data::size_type maxMessage)
    : mMaxMessage(maxMessage),
      mMessageSize(0),
      mHaveHeader(false),
-     mHeaderLen(0)
+     mHeaderLen(0),
+     mFinalFrame(false),
+     mMasked(false),
+     mPayloadLength(0),
+     mPayload(0),
+     mPayloadPos(0)
 {
+   memset(mWsMaskKey, 0, sizeof(mWsMaskKey));
+
    // we re-use this for multiple messages throughout
    // the lifetime of this parser object
    mWsHeader = new uint8_t[mMaxHeaderLen];
@@ -25,6 +33,9 @@ WsFrameExtractor::~WsFrameExtractor()
 {
    // FIXME - delete any objects left in the queues
    delete [] mWsHeader;
+
+   // the buffer of a frame that was only partially received
+   delete [] (char*)mPayload;
 
    while(!mFrames.empty()) 
    {
@@ -50,12 +61,23 @@ WsFrameExtractor::processBytes(uint8_t *input, Data::size_type len, bool& dropCo
    Data::size_type pos = 0;
    while(input != 0 && pos < len)
    {
-      while(!mHaveHeader && pos < len)
+      while(!mHaveHeader)
       {
          StackLog(<<"Need a header, parsing bytes...");
-         // Append bytes to the header buffer
+         // Append bytes to the header buffer.  parseHeader() only returns
+         // zero once it has a complete header, so keep re-parsing after
+         // every batch of bytes rather than waiting for more input to
+         // arrive: an oversized frame has to be rejected as soon as its
+         // header is known, not when its payload starts turning up.
          int needed = parseHeader();
-         if(mHeaderLen >= mMaxHeaderLen)
+         if(needed == 0)
+         {
+            break;
+         }
+         // only a header that is still incomplete once mMaxHeaderLen bytes
+         // have been consumed is too long: a full header (64 bit length and
+         // a mask key) occupies exactly mMaxHeaderLen bytes
+         if((mHeaderLen + needed) > mMaxHeaderLen)
          {
             WarningLog(<<"WS Frame header too long");
             dropConnection = true;
@@ -74,27 +96,35 @@ WsFrameExtractor::processBytes(uint8_t *input, Data::size_type len, bool& dropCo
       if(mHaveHeader)
       {
          StackLog(<<"have header, parsing payload data...");
-         // Process input bytes to output buffer, unmasking if necessary
-         if(mMessageSize + mPayloadLength > mMaxMessage)
+         // Process input bytes to output buffer, unmasking if necessary.
+         // mPayloadLength is an attacker controlled 64 bit value, so the
+         // check has to be written to avoid wrapping: comparing
+         // mMessageSize + mPayloadLength against mMaxMessage would let a
+         // peer bypass it with a length close to 2^64.
+         if(mPayloadLength > mMaxMessage ||
+            mMessageSize > mMaxMessage - mPayloadLength)
          {
-            WarningLog(<<"WS frame header describes a payload size bigger than messageSizeMax, max = " << mMaxMessage 
+            WarningLog(<<"WS frame header describes a payload size bigger than messageSizeMax, max = " << mMaxMessage
                  << ", dropping connection");
             dropConnection = true;
             return ret;
          }
 
+         // safe to narrow now that it has been bounded by mMaxMessage
+         const Data::size_type payloadLength = (Data::size_type)mPayloadLength;
+
          if(mPayload == 0)
          {
             StackLog(<<"starting new frame buffer");
             // Include an extra byte at the end for null terminator
-            mPayload = (uint8_t*)new char[mPayloadLength + 1];
+            mPayload = (uint8_t*)new char[payloadLength + 1];
             mPayloadPos = 0;
          }
 
          Data::size_type takeBytes = len - pos;
-         if(takeBytes > mPayloadLength - mPayloadPos)
+         if(takeBytes > payloadLength - mPayloadPos)
          {
-            takeBytes = mPayloadLength - mPayloadPos;
+            takeBytes = payloadLength - mPayloadPos;
          }
 
          if(mMasked)
@@ -112,11 +142,11 @@ WsFrameExtractor::processBytes(uint8_t *input, Data::size_type len, bool& dropCo
             mPayloadPos += takeBytes;
          }
 
-         if(mPayloadPos == mPayloadLength)
+         if(mPayloadPos == payloadLength)
          {
             StackLog(<<"Got a whole frame, queueing it");
-            mMessageSize += mPayloadLength;
-            Data *mFrame = new Data(Data::Borrow, (char *)mPayload, mPayloadLength, mPayloadLength + 1);
+            mMessageSize += payloadLength;
+            Data *mFrame = new Data(Data::Borrow, (char *)mPayload, payloadLength, payloadLength + 1);
             mFrames.push(mFrame);
             mHaveHeader = false;
             mHeaderLen = 0;
@@ -124,6 +154,16 @@ WsFrameExtractor::processBytes(uint8_t *input, Data::size_type len, bool& dropCo
             if(mFinalFrame)
             {
                joinFrames();
+            }
+            else if(mFrames.size() >= mMaxFrames)
+            {
+               // empty and tiny continuation frames don't advance
+               // mMessageSize fast enough (or at all) for the size check
+               // above to ever terminate this, so bound the frame count too
+               WarningLog(<<"WS message fragmented into more than " << mMaxFrames
+                    << " frames, dropping connection");
+               dropConnection = true;
+               return ret;
             }
          }
       }
@@ -172,12 +212,14 @@ WsFrameExtractor::parseHeader()
    }
    else if(mPayloadLength == 127)
    {
-      if(mHeaderLen < 8)
+      // the 64 bit length occupies mWsHeader[2] through mWsHeader[9], so
+      // 10 bytes must have arrived before any of it can be read
+      if(mHeaderLen < 10)
       {
          StackLog(<< "Too short to contain ws data [2]");
-         return (8 - mHeaderLen) + (mMasked ? 4 : 0);
+         return (10 - mHeaderLen) + (mMasked ? 4 : 0);
       }
-      mPayloadLength = (((uint64_t)mWsHeader[hdrPos]) << 56 | ((uint64_t)mWsHeader[hdrPos + 1]) << 48 | ((uint64_t)mWsHeader[hdrPos + 2]) << 40 | ((uint64_t)mWsHeader[hdrPos + 3]) << 32 | ((uint64_t)mWsHeader[hdrPos + 4]) << 24 | ((uint64_t)mWsHeader[hdrPos + 5]) << 16 | ((uint64_t)mWsHeader[hdrPos + 6]) << 8 || ((uint64_t)mWsHeader[hdrPos + 7]));
+      mPayloadLength = (((uint64_t)mWsHeader[hdrPos]) << 56 | ((uint64_t)mWsHeader[hdrPos + 1]) << 48 | ((uint64_t)mWsHeader[hdrPos + 2]) << 40 | ((uint64_t)mWsHeader[hdrPos + 3]) << 32 | ((uint64_t)mWsHeader[hdrPos + 4]) << 24 | ((uint64_t)mWsHeader[hdrPos + 5]) << 16 | ((uint64_t)mWsHeader[hdrPos + 6]) << 8 | ((uint64_t)mWsHeader[hdrPos + 7]));
       hdrPos += 8;
    }
 
@@ -224,9 +266,11 @@ WsFrameExtractor::joinFrames()
       Data::size_type frameSize = msg->size();
 
       // allow extra byte for null terminator
-      char *newBuf = new char [mMessageSize + 1]; 
+      char *newBuf = new char [mMessageSize + 1];
       memcpy(newBuf, _msg, frameSize);
       delete msg;
+      // the Data only borrowed this buffer, so it must be freed separately
+      delete [] _msg;
 
       msg = new Data(Data::Borrow, newBuf, frameSize, mMessageSize + 1);
    }
@@ -252,6 +296,7 @@ WsFrameExtractor::joinFrames()
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

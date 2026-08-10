@@ -135,6 +135,7 @@ test(testTypedef testTypedef.cxx)
 manual_test(testUdp testUdp.cxx)
 test(testUri testUri.cxx TestSupport.cxx)
 test(testWsCookieContext testWsCookieContext.cxx)
+test(testWsFrameExtractor testWsFrameExtractor.cxx)
 
 if(OPENSSL_FOUND)
    test(testSocketFunc testSocketFunc.cxx)

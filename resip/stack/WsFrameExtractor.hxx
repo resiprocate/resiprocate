@@ -21,6 +21,10 @@ class WsFrameExtractor
    private:
 
       static const int mMaxHeaderLen;
+      // an upper bound on the number of frames a single message may be
+      // fragmented into, to stop a peer consuming unbounded memory by
+      // sending an endless run of tiny (or empty) continuation frames
+      static const size_t mMaxFrames;
 
       Data::size_type mMaxMessage;
 
@@ -37,7 +41,10 @@ class WsFrameExtractor
       bool mFinalFrame;
       bool mMasked;
       uint8_t mWsMaskKey[4];
-      Data::size_type mPayloadLength;
+      // the payload length as it appears on the wire: it is a 64 bit
+      // field, so it must be validated against mMaxMessage before it is
+      // used for anything (see processBytes)
+      uint64_t mPayloadLength;
 
       uint8_t *mPayload;
       Data::size_type mPayloadPos;
@@ -53,6 +60,7 @@ class WsFrameExtractor
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
