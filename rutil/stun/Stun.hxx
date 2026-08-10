@@ -383,8 +383,10 @@ namespace resip
    void
       stunCreatePassword(const StunAtrString& username, StunAtrString* password);
 
-   int
-      stunRand();
+   /// @deprecated Draws from the process wide random() stream, which is not
+   /// suitable for anything that has to be unpredictable.  Nothing in the tree
+   /// calls it any more; use Random::getCryptoRandom() instead.
+   RESIP_DEPRECATED(int stunRand());
 
    uint64_t
       stunGetSystemTimeSecs();
