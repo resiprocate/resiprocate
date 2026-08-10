@@ -254,7 +254,7 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    // set version to X509v3 (starts from 0)
    X509_set_version(cert, 2L);
    
-   int serial = Random::getRandom();  // get an int worth of randomness
+   int serial = Random::getCryptoRandom();  // get an int worth of randomness
    resip_assert(sizeof(int)==4);
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    
