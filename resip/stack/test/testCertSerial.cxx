@@ -1,8 +1,12 @@
 #include <cstdlib>
 #include <iostream>
 
+#ifdef USE_SSL
+
 #include <openssl/asn1.h>
 #include <openssl/bn.h>
+#include <openssl/evp.h>
+#include <openssl/rsa.h>
 #include <openssl/x509.h>
 
 #include "resip/stack/ssl/Security.hxx"
@@ -112,7 +116,7 @@ main(int, char**)
       security.generateUserCert(aor, 1 /* expireDays */, 1024 /* keyLen */);
       if (!security.hasUserCert(aor))
       {
-         cerr << "     konnte kein Zertifikat erzeugen fuer " << aor << endl;
+         cerr << "     could not generate a certificate for " << aor << endl;
          continue;
       }
       if (serialIsNegative(security.getUserCertDER(aor)))
@@ -121,10 +125,22 @@ main(int, char**)
       }
    }
 
-   cerr << "     " << negative << " von " << runs
-        << " erzeugten Zertifikaten mit negativer Seriennummer" << endl;
+   cerr << "     " << negative << " of " << runs
+        << " generated certificates had a negative serial" << endl;
    check("generateUserCert produces positive serials only", negative == 0);
 
    cerr << (failures == 0 ? "\nall checks passed\n" : "\nFAILURES\n");
    return failures == 0 ? 0 : -1;
 }
+
+#else // USE_SSL
+
+int
+main(int, char**)
+{
+   // The certificate serials this test exercises are only generated in
+   // SSL-enabled builds, so there is nothing to check here.
+   return 0;
+}
+
+#endif // USE_SSL
