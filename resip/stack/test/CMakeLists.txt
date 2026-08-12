@@ -140,6 +140,7 @@ test(testWsFrameExtractor testWsFrameExtractor.cxx)
 if(OPENSSL_FOUND)
    test(testSocketFunc testSocketFunc.cxx)
    test(testSecurity testSecurity.cxx)
+   test(testCertSerial testCertSerial.cxx TestSupport.cxx)
 endif()
 
 # fuzzing targets
