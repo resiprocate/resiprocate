@@ -46,10 +46,89 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-#define REPRO_BORDERLESS_TABLE_PROPS " border=\"0\" cellspacing=\"2\" cellpadding=\"0\""
-#define REPRO_BORDERED_TABLE_PROPS " border=\"1\" cellspacing=\"1\" cellpadding=\"1\" bgcolor=\"#ffffff\""
+// Presentation is driven entirely by the stylesheet in webadmin/pageOutlinePre.html.
+// "form-table" is the borderless label/field layout, "data-table" is the bordered
+// record listing.
+#define REPRO_BORDERLESS_TABLE_PROPS " class=\"form-table\""
+#define REPRO_BORDERED_TABLE_PROPS " class=\"data-table\""
 
-WebAdmin::RemoveKey::RemoveKey(const Data &key1, const Data &key2) : mKey1(key1), mKey2(key2) 
+// Must match the default ReproRunner uses when deciding whether to start the
+// CommandServer (see ReproRunner.cxx).  These drifted apart: WebAdmin defaulted
+// to 0, so on any install that left CommandPort unset -- which is the shipped
+// repro.config, where the line is commented out -- the CommandServer was running
+// on 5081 but the web UI hid the Restart Proxy button and refused the restart.
+#define REPRO_DEFAULT_COMMAND_PORT 5081
+
+// The repro product mark: a request arriving at the proxy and being forked onward.
+// Kept in sync with the copy in webadmin/pageOutlinePre.html.
+static const char*
+productMarkSvg()
+{
+   return
+      "<svg class=\"logo\" viewBox=\"0 0 32 32\" role=\"img\" aria-label=\"Repro\">"
+      "<rect x=\"0.9\" y=\"0.9\" width=\"30.2\" height=\"30.2\" rx=\"6.5\""
+      " fill=\"var(--mark-navy)\" stroke=\"var(--mark-edge)\" stroke-width=\"1.6\"/>"
+      "<g stroke=\"var(--mark-amber)\" stroke-width=\"2.2\" fill=\"none\" stroke-linecap=\"round\">"
+      "<path d=\"M8 16h7\"/><path d=\"M15 16l8-6.5\"/><path d=\"M15 16l8 6.5\"/></g>"
+      "<circle cx=\"8\" cy=\"16\" r=\"3\" fill=\"var(--mark-amber)\"/>"
+      "<circle cx=\"23\" cy=\"9.5\" r=\"3\" fill=\"#ffb454\"/>"
+      "<circle cx=\"23\" cy=\"22.5\" r=\"3\" fill=\"#ffb454\"/>"
+      "</svg>";
+}
+
+// The same mark as an inline data: URI, for the browser tab icon.  '#' has to be
+// percent encoded (%23) or it would terminate the URI at the first colour.
+static const char*
+faviconLink()
+{
+   return
+      "<link rel=\"icon\" href=\"data:image/svg+xml,"
+      "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'>"
+      "<rect width='32' height='32' rx='7' fill='%2312294d'/>"
+      "<g stroke='%23ff8d09' stroke-width='2.4' fill='none' stroke-linecap='round'>"
+      "<path d='M8 16h7'/><path d='M15 16l8-6.5'/><path d='M15 16l8 6.5'/></g>"
+      "<circle cx='8' cy='16' r='3' fill='%23ff8d09'/>"
+      "<circle cx='23' cy='9.5' r='3' fill='%23ffb454'/>"
+      "<circle cx='23' cy='22.5' r='3' fill='%23ffb454'/>"
+      "</svg>\" />\n";
+}
+
+// Stylesheet for the pages that are served outside of the admin page outline
+// (the login page and the per-user page).  It uses the same palette as
+// webadmin/pageOutlinePre.html so that every repro page looks like one product.
+static const char*
+standaloneStyle()
+{
+   return
+      "<style>\n"
+      "  :root { --bg:#0a0c0f; --bg2:#10141a; --border:#1e2730; --green:#00e676;\n"
+      "          --blue:#40c4ff; --text:#c8d0da; --text-dim:#4a5568; --text-mid:#7a8899;\n"
+      "          --mark-navy:#12294d; --mark-edge:#2f5da8; --mark-amber:#ff8d09;\n"
+      "          --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;\n"
+      "          color-scheme:dark; }\n"
+      "  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }\n"
+      "  body { background:var(--bg); color:var(--text); font-family:var(--mono); font-size:13px;\n"
+      "         line-height:1.55; min-height:100vh; display:flex; align-items:center;\n"
+      "         justify-content:center; padding:24px; }\n"
+      "  .card { background:var(--bg2); border:1px solid var(--border); border-radius:3px;\n"
+      "          padding:26px 28px; max-width:520px; width:100%; }\n"
+      "  .brand { display:flex; align-items:center; gap:12px; }\n"
+      "  .logo { width:38px; height:38px; flex-shrink:0; display:block; }\n"
+      "  .name { font-size:16px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }\n"
+      "  .sub { font-size:10px; letter-spacing:.14em; text-transform:uppercase;\n"
+      "         color:var(--text-dim); margin:6px 0 20px; }\n"
+      "  .cta { display:inline-block; padding:8px 20px; border:1px solid var(--green);\n"
+      "         border-radius:2px; color:var(--green); text-decoration:none; font-size:11px;\n"
+      "         font-weight:600; letter-spacing:.12em; text-transform:uppercase;\n"
+      "         transition:all .15s; }\n"
+      "  .cta:hover { background:var(--green); color:var(--bg); }\n"
+      "  p { color:var(--text-mid); margin-top:18px; font-size:12px; }\n"
+      "  a { color:var(--blue); text-decoration:none; }\n"
+      "  a:hover { text-decoration:underline; }\n"
+      "</style>\n";
+}
+
+WebAdmin::RemoveKey::RemoveKey(const Data &key1, const Data &key2) : mKey1(key1), mKey2(key2)
 {
 }
 
@@ -494,7 +573,6 @@ void
 WebAdmin::buildDomainsSubPage(DataStream& s)
 { 
    Data domainUri;
-   int domainTlsPort;
 
   if (!mRemoveSet.empty() && (mHttpParams["action"] == "Remove"))
    {
@@ -504,32 +582,36 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
          mStore.mConfigStore.eraseDomain(i->mKey1);
          ++j;
       }
-      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+      s << "<p class=\"notice ok\"><em>Removed:</em> " << j << " records</p>" << endl;
    }
    
    Dictionary::iterator pos = mHttpParams.find("domainUri");
    if (pos != mHttpParams.end() && (mHttpParams["action"] == "Add")) // found domainUri key
    {
       domainUri = pos->second;
-      domainTlsPort = mHttpParams["domainTlsPort"].convertInt();
-      if(mStore.mConfigStore.addDomain(domainUri,domainTlsPort))
+      // The per-domain TLS port is dead weight: nothing in repro reads it back
+      // (ConfigStore::getTlsPort has no callers), so the field is no longer
+      // offered in the UI and every record is written with 0.  The column stays
+      // in the database record for schema compatibility.
+      if(mStore.mConfigStore.addDomain(domainUri, 0))
       {
-         s << "<p><em>Added</em> domain: " << domainUri << "</p>" << endl;
+         s << "<p class=\"notice ok\"><em>Added</em> domain: " << domainUri << "</p>" << endl;
       }
       else
       {
-         s << "<p><em>Error</em> adding domain: likely database error (check logs).</p>\n";
+         s << "<p class=\"notice err\"><em>Error</em> adding domain: likely database error (check logs).</p>\n";
       }
    }   
 
    s <<
       "     <h2>Domains</h2>" << endl <<
+      "     <p>Requests addressed to these domains are treated as locally served, rather than" << endl <<
+      "     being proxied onwards to another host.</p>" << endl <<
       "     <form id=\"domainForm\" method=\"get\" action=\"domains.html\" name=\"domainForm\">" << endl <<
       "        <table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl <<
       "          <tr>" << endl <<
       "            <td align=\"right\">New Domain:</td>" << endl <<
-      "            <td><input type=\"text\" name=\"domainUri\" size=\"24\"/></td>" << endl <<
-      "            <td><input type=\"text\" name=\"domainTlsPort\" size=\"4\"/></td>" << endl <<
+      "            <td><input type=\"text\" name=\"domainUri\" size=\"24\" placeholder=\"example.com\"/></td>" << endl <<
       "            <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </table>" << endl <<
@@ -540,8 +622,7 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       "        <thead>" << endl <<
       "          <tr>" << endl <<
       "            <td>Domain</td>" << endl <<
-      "            <td align=\"center\">TLS Port</td>" << endl <<
-      "            <td><input type=\"submit\" name=\"action\" value=\"Remove\"/></td>" << endl << 
+      "            <td><input type=\"submit\" name=\"action\" value=\"Remove\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </thead>" << endl <<
       "        <tbody>" << endl;
@@ -553,7 +634,6 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       s << 
          "          <tr>" << endl <<
          "            <td>" << i->second.mDomain << "</td>" << endl <<
-         "            <td align=\"center\">" << i->second.mTlsPort << "</td>" << endl <<
          "            <td><input type=\"checkbox\" name=\"remove." << i->second.mDomain << "\"/></td>" << endl <<
          "          </tr>" << endl;
    }
@@ -562,7 +642,7 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       "        </tbody>" << endl <<
       "      </table>" << endl <<
       "     </form>" << endl <<
-      "<p><em>WARNING:</em>  You must restart repro after adding domains.</p>" << endl;
+      "<p class=\"notice warn\"><em>WARNING:</em>  You must restart repro after adding domains.</p>" << endl;
 }
 
 void
@@ -576,7 +656,7 @@ WebAdmin::buildAclsSubPage(DataStream& s)
          mStore.mAclStore.eraseAcl(i->mKey1);
          ++j;
       }
-      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+      s << "<p class=\"notice ok\"><em>Removed:</em> " << j << " records</p>" << endl;
    }
    
    Dictionary::iterator pos = mHttpParams.find("aclUri");
@@ -588,24 +668,41 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       
       if (mStore.mAclStore.addAcl(hostOrIp, port, transport))
       {
-         s << "<p><em>Added</em> trusted access for: " << hostOrIp << "</p>\n";
+         s << "<p class=\"notice ok\"><em>Added</em> trusted access for: " << hostOrIp << "</p>\n";
       }
       else 
       {
-         s << "<p>Error parsing: " << hostOrIp << "</p>\n";
+         s << "<p class=\"notice err\"><em>Error</em> parsing: " << hostOrIp << "</p>\n";
       }
    }   
    
    s << 
       "     <h2>ACLs</h2>" << endl <<
+      "     <div class=\"help\">" << endl <<
+      "       <p>Access lists are used as a whitelist to allow gateways and other trusted" << endl <<
+      "       nodes to skip authentication.</p>" << endl <<
+      "       <p>If a hostname or FQDN is used then a TLS transport type is assumed.  All" << endl <<
+      "       other transport types must specify ACLs by address.  Leave Port empty to match" << endl <<
+      "       any port.</p>" << endl <<
+      "       <pre>Host or IP can be in any of these formats" << endl <<
+      "  localhost         localhost  (becomes 127.0.0.1/8, ::1/128 and fe80::1/64)" << endl <<
+      "  bare hostname     server1" << endl <<
+      "  FQDN              server1.example.com" << endl <<
+      "  IPv4 address      192.168.1.100" << endl <<
+      "  IPv4 + mask       192.168.1.0/24" << endl <<
+      "  IPv6 address      ::341:0:23:4bb:0011:2435:abcd" << endl <<
+      "  IPv6 + mask       ::341:0:23:4bb:0011:2435:abcd/80" << endl <<
+      "  IPv6 reference    [::341:0:23:4bb:0011:2435:abcd]" << endl <<
+      "  IPv6 ref + mask   [::341:0:23:4bb:0011:2435:abcd]/64</pre>" << endl <<
+      "     </div>" << endl <<
       "      <form id=\"aclsForm\" method=\"get\" action=\"acls.html\" name=\"aclsForm\">" << endl <<
-      "      <div class=space>" << endl <<
-      "      </div>" << endl <<
       "        <table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl <<
       "          <tr>" << endl <<
       "            <td align=\"right\">Host or IP:</td>" << endl <<
-      "            <td><input type=\"text\" name=\"aclUri\" size=\"24\"/></td>" << endl <<
-      "            <td><input type=\"text\" name=\"aclPort\" value=\"0\" size=\"5\"/></td>" << endl <<
+      "            <td><input type=\"text\" name=\"aclUri\" size=\"24\" placeholder=\"host, FQDN or IP/mask\"/></td>" << endl <<
+      // An empty port box submits nothing, and convertInt() of a missing param is
+      // 0, which is what "any port" means here -- so the box can be left blank.
+      "            <td><input type=\"text\" name=\"aclPort\" size=\"10\" placeholder=\"Port\"/></td>" << endl <<
       "            <td><select name=\"aclTransport\">" << endl <<
       "                <option selected=\"selected\">UDP</option>" << endl <<
       "                <option>TCP</option>" << endl <<
@@ -619,7 +716,9 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "            <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </table>" << endl <<
-      "      <br>" << endl <<
+      "      <div class=space>" << endl <<
+      "        <br>" << endl <<
+      "      </div>" << endl <<
       "      <table" REPRO_BORDERED_TABLE_PROPS ">" << endl <<
       "        <thead>" << endl <<
       "          <tr>" << endl <<
@@ -657,28 +756,10 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       key = mStore.mAclStore.getNextAddressKey(key);
    }
    
-   s <<  
+   s <<
       "        </tbody>" << endl <<
       "      </table>" << endl <<
-      "     </form>" << endl <<
-      
-      "<pre>" << endl <<
-      "      Input can be in any of these formats" << endl <<
-      "      localhost         localhost  (becomes 127.0.0.1/8, ::1/128 and fe80::1/64)" << endl <<
-      "      bare hostname     server1" << endl <<
-      "      FQDN              server1.example.com" << endl <<
-      "      IPv4 address      192.168.1.100" << endl <<
-      "      IPv4 + mask       192.168.1.0/24" << endl <<
-      "      IPv6 address      ::341:0:23:4bb:0011:2435:abcd" << endl <<
-      "      IPv6 + mask       ::341:0:23:4bb:0011:2435:abcd/80" << endl <<
-      "      IPv6 reference    [::341:0:23:4bb:0011:2435:abcd]" << endl <<
-      "      IPv6 ref + mask   [::341:0:23:4bb:0011:2435:abcd]/64" << endl <<
-      "</pre>" << endl <<
-      
-      "<p>Access lists are used as a whitelist to allow " << endl <<
-      "gateways and other trusted nodes to skip authentication.</p>" << endl <<
-      "<p>Note:  If hostnames or FQDN's are used then a TLS transport type is" << endl <<
-      "assumed.  All other transport types must specify ACLs by address.</p>" << endl;
+      "     </form>" << endl;
 }
 
 void
@@ -701,21 +782,25 @@ WebAdmin::buildAddUserSubPage(DataStream& s)
             
       if(mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],true,mHttpParams["name"],mHttpParams["email"]))
       {
-         s << "<p><em>Added:</em> " << user << "@" << domain << "</p>\n";
+         s << "<p class=\"notice ok\"><em>Added:</em> " << user << "@" << domain << "</p>\n";
       }
       else
       {
-         s << "<p><em>Error</em> adding user: likely database error (check logs).</p>\n";
+         s << "<p class=\"notice err\"><em>Error</em> adding user: likely database error (check logs).</p>\n";
       }
    }
 
       s << 
          "<h2>Add User</h2>" << endl <<
-         "<form id=\"addUserForm\" action=\"addUser.html\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+         "<div class=\"help\">" << endl <<
+         "  <p>Full Name and Email are recorded for display purposes only.  They are not used" << endl <<
+         "  for authentication, routing, or as a SIP identity.</p>" << endl <<
+         "</div>" << endl <<
+         "<form id=\"addUserForm\" action=\"addUser.html\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl <<
          "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\">User Name:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"40\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"40\" placeholder=\"alice\"/></td>" << endl << 
          "</tr>" << endl << 
 
          //"<tr>" << endl << 
@@ -747,27 +832,27 @@ WebAdmin::buildAddUserSubPage(DataStream& s)
          "</select></td></tr>" << endl <<
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Password:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"40\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"40\" placeholder=\"account password\"/></td>" << endl << 
          "</tr>" << endl << 
 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Full Name:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"40\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"40\" placeholder=\"Alice Smith\"/></td>" << endl << 
          "</tr>" << endl << 
 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Email:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"40\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"40\" placeholder=\"alice@example.com\"/></td>" << endl << 
          "</tr>" << endl << 
 
          "<tr>" << endl << 
          "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
-         "    <input type=\"reset\" value=\"Cancel\"/>" << endl << 
-         "    <input type=\"submit\" name=\"submit\" value=\"Add\"/>" << endl << 
-         "  </td>" << endl << 
-         "</tr>" << endl << 
-         
-         "</table>" << endl << 
+         "    <input type=\"reset\" value=\"Cancel\"/>" << endl <<
+         "    <input type=\"submit\" name=\"submit\" value=\"Add\"/>" << endl <<
+         "  </td>" << endl <<
+         "</tr>" << endl <<
+
+         "</table>" << endl <<
          "</form>" << endl
          ;
 }
@@ -784,12 +869,16 @@ WebAdmin::buildEditUserSubPage(DataStream& s)
       // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
       
       s << "<h2>Edit User</h2>" << endl <<
-           "<p>Editing Record with key: " << key << "</p>" << endl <<
-           "<p>Note: If you leave the password field empty, the user's current "
-           "password will not be reset. However, if you change the username or "
+           "<div class=\"help\">" << endl <<
+           "  <p>Editing record with key: " << key << "</p>" << endl <<
+           "  <p>If you leave the password field empty, the user's current "
+           "password will not be reset.  However, if you change the username or "
            "domain, a new password is required (the stored password hash is "
            "bound to user+realm, so renaming without a new password would "
-           "invalidate the account).</p>" << endl;
+           "invalidate the account).</p>" << endl <<
+           "  <p>Full Name and Email are recorded for display purposes only.  They are not used "
+           "for authentication, routing, or as a SIP identity.</p>" << endl <<
+           "</div>" << endl;
       
       s << 
          "<form id=\"editUserForm\" action=\"showUsers.html\"  method=\"get\" name=\"editUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
@@ -797,7 +886,7 @@ WebAdmin::buildEditUserSubPage(DataStream& s)
          "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\">User Name:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" value=\"" << rec.user << "\" size=\"40\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" placeholder=\"alice\" value=\"" << rec.user << "\" size=\"40\"/></td>" << endl << 
          "</tr>" << endl << 
          
          //"<tr>" << endl << 
@@ -829,29 +918,29 @@ WebAdmin::buildEditUserSubPage(DataStream& s)
          "</select></td></tr>" << endl <<
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Password:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"40\"/></td>" << endl << 
-         "</tr>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"40\" placeholder=\"leave empty to keep current password\"/></td>" << endl <<
+         "</tr>" << endl <<
          // Note that the UserStore only stores a passwordHash, so we will collect a password.  If one is provided in the
          // edit page, we will use it to generate a new passwordHash, otherwise we will leave the hash alone.
-         
-         "<tr>" << endl << 
-         "  <td align=\"right\" valign=\"middle\" >Full Name:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" value=\"" << rec.name << 
-         "\" size=\"40\"/></td>" << endl << 
-         "</tr>" << endl << 
 
-         "<tr>" << endl << 
-         "  <td align=\"right\" valign=\"middle\" >Email:</td>" << endl << 
+         "<tr>" << endl <<
+         "  <td align=\"right\" valign=\"middle\" >Full Name:</td>" << endl <<
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" value=\"" << rec.name <<
+         "\" size=\"40\" placeholder=\"Alice Smith\"/></td>" << endl <<
+         "</tr>" << endl <<
+
+         "<tr>" << endl <<
+         "  <td align=\"right\" valign=\"middle\" >Email:</td>" << endl <<
          "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" value=\"" << rec.email <<
-         "\" size=\"40\"/></td>" << endl << 
-         "</tr>" << endl << 
+         "\" size=\"40\" placeholder=\"alice@example.com\"/></td>" << endl <<
+         "</tr>" << endl <<
 
-         "<tr>" << endl << 
-         "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
-         "    <input type=\"submit\" name=\"submit\" value=\"Update\"/>" << endl << 
-         "  </td>" << endl << 
-         "</tr>" << endl << 
-         
+         "<tr>" << endl <<
+         "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl <<
+         "    <input type=\"submit\" name=\"submit\" value=\"Update\"/>" << endl <<
+         "  </td>" << endl <<
+         "</tr>" << endl <<
+
          "</table>" << endl <<
          "</form>" << endl
          ;
@@ -877,7 +966,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
          mStore.mUserStore.eraseUser(i->mKey1);
          ++j;
       }
-      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+      s << "<p class=\"notice ok\"><em>Removed:</em> " << j << " records</p>" << endl;
    }
    
    pos = mHttpParams.find("key");
@@ -903,7 +992,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
          bool identityChanged = (user != rec.user) || (realm != rec.realm);
          if (identityChanged && password.empty())
          {
-            s << "<p><em>Error</em> updating user: changing user or domain "
+            s << "<p class=\"notice err\"><em>Error</em> updating user: changing user or domain "
                  "requires a new password (the stored password hash is bound "
                  "to user+realm).</p>\n";
          }
@@ -920,11 +1009,11 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
             // write out the updated record to the database now
             if(mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email, passwordHashAlt))
             {
-               s << "<p><em>Updated:</em> " << key << "</p>" << endl;
+               s << "<p class=\"notice ok\"><em>Updated:</em> " << key << "</p>" << endl;
             }
             else
             {
-               s << "<p><em>Error</em> updating user: likely database error (check logs).</p>\n";
+               s << "<p class=\"notice err\"><em>Error</em> updating user: likely database error (check logs).</p>\n";
             }
          }
       }
@@ -933,14 +1022,15 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
    s << 
       "<h2>Users</h2>" << endl <<
       "<form id=\"showUsers\" method=\"get\" action=\"showUsers.html\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-      "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl << 
-      "<tr>" << endl << 
-      "  <td>User@Domain</td>" << endl << 
-      //  "  <td>Realm</td>" << endl << 
-      "  <td>Name</td>" << endl << 
-      "  <td>Email</td>" << endl << 
-      "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
-      "</tr>" << endl;
+      "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl <<
+      "<thead><tr>" << endl <<
+      "  <td>User@Domain</td>" << endl <<
+      //  "  <td>Realm</td>" << endl <<
+      "  <td>Name</td>" << endl <<
+      "  <td>Email</td>" << endl <<
+      "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl <<
+      "</tr></thead>" << endl <<
+      "<tbody>" << endl;
    
    s << endl;
    
@@ -971,11 +1061,12 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
    
    if ( !key.empty() )
    {
-      s << "<tr><td>Only first 1000 users were displayed<td></tr>" << endl;
+      s << "<tr><td colspan=\"4\">Only first 1000 users were displayed</td></tr>" << endl;
    }
-   
-   s << 
-      "</table>" << endl << 
+
+   s <<
+      "</tbody>" << endl <<
+      "</table>" << endl <<
       "</form>" << endl;
 }
 
@@ -992,7 +1083,7 @@ WebAdmin::buildAddFilterSubPage(DataStream& s)
       
       if (action != "Accept" && actionData.empty())
       {
-         s << "<p><em>Error</em> adding request filter.  You must provide appropriate Action Data for non-Accept action.</p>\n";
+         s << "<p class=\"notice err\"><em>Error</em> adding request filter.  You must provide appropriate Action Data for non-Accept action.</p>\n";
       }
       else
       {
@@ -1010,49 +1101,68 @@ WebAdmin::buildAddFilterSubPage(DataStream& s)
                                           actionData,
                                           mHttpParams["order"].convertInt()))
          {
-            s << "<p><em>Added</em> request filter: " << mHttpParams["cond1header"] << "=" << mHttpParams["cond1regex"] << ", "
+            s << "<p class=\"notice ok\"><em>Added</em> request filter: " << mHttpParams["cond1header"] << "=" << mHttpParams["cond1regex"] << ", "
                                                       << mHttpParams["cond2header"] << "=" << mHttpParams["cond2regex"] << "</p>\n";
          }
          else
          {
-            s << "<p><em>Error</em> adding request filter, likely duplicate found.</p>\n";
+            s << "<p class=\"notice err\"><em>Error</em> adding request filter, likely duplicate found.</p>\n";
          }
       }
    }
 
    s << 
       "<h2>Add Request Filter</h2>" << endl <<
-      "<form id=\"addFilterForm\" method=\"get\" action=\"addFilter.html\" name=\"addFilterForm\">" << endl << 
-      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
+      "<div class=\"help\">" << endl <<
+      "  <p>A request filter matches an incoming request against one or two header values" << endl <<
+      "  and decides whether to accept or reject it.  Both conditions must match for the" << endl <<
+      "  filter to fire; leave the second pair empty to match on one header alone.  Regexes" << endl <<
+      "  are POSIX-standard and are matched against the header's value.</p>" << endl <<
+      "  <p>Method and Event narrow the filter to a single request type; leave them empty to" << endl <<
+      "  match any.  Order decides evaluation sequence when several filters could match --" << endl <<
+      "  lowest first.</p>" << endl <<
+      "  <p>Action Data depends on the chosen Action:</p>" << endl <<
+      "  <pre>Accept       Action Data is ignored." << endl <<
+      "Reject       SIPRejectionCode[, SIPReason]  e.g. 403, Request Blocked" << endl <<
+#ifdef USE_MYSQL
+      "SQL Query    The SQL query to execute.  Replacement strings from the regexes" << endl <<
+      "             above can be used in the query.  The query must return a string" << endl <<
+      "             formatted like the Reject data above, or a string with a status" << endl <<
+      "             code of 0 to accept the request." << endl <<
+#endif
+      "</pre>" << endl <<
+      "</div>" << endl <<
+      "<form id=\"addFilterForm\" method=\"get\" action=\"addFilter.html\" name=\"addFilterForm\">" << endl <<
+      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl <<
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition1 Header:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1header\" size=\"40\" value=\"From\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1header\" size=\"40\" value=\"From\" placeholder=\"header name, e.g. From\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition1 Regex:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1regex\" size=\"40\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1regex\" size=\"40\" placeholder=\"POSIX regex, e.g. sip:1234@.*\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition2 Header:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2header\" size=\"40\" value=\"To\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2header\" size=\"40\" value=\"To\" placeholder=\"header name, e.g. To\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition2 Regex:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2regex\" size=\"40\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2regex\" size=\"40\" placeholder=\"POSIX regex, empty = any\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Method:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"method\" size=\"40\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"method\" size=\"40\" placeholder=\"INVITE, REGISTER... empty = any\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Event:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"event\" size=\"40\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"event\" size=\"40\" placeholder=\"presence, message-summary... empty = any\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
@@ -1070,12 +1180,12 @@ WebAdmin::buildAddFilterSubPage(DataStream& s)
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Action Data:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"actiondata\" size=\"40\" value=\"403, Request Blocked\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"actiondata\" size=\"40\" value=\"403, Request Blocked\" placeholder=\"e.g. 403, Request Blocked\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Order:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"order\" size=\"4\" value=\"0\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"order\" size=\"8\" value=\"0\" placeholder=\"0\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
@@ -1085,20 +1195,8 @@ WebAdmin::buildAddFilterSubPage(DataStream& s)
       "  </td>" << endl << 
       "</tr>" << endl << 
 
-      "</table>" << endl << 
-      "</form>" << endl <<
-
-      "<pre>" << endl <<
-      "If Action is Accept, then Action Data is ignored." << endl <<
-      "If Action is Reject, then Action Data should be set to: SIPRejectionCode[, SIPReason]"  << endl <<
-#ifdef USE_MYSQL
-      "If Action is SQL Query, then Action Data should be set to the SQL Query to execute." << endl <<
-      "Replacement strings from the Regex's above can be used in the query, and the query" << endl <<
-      "must return a string that is formated similar to Action Data when the action is" << endl <<
-      "Reject.  Alternatively it can return a string with status code of 0 to accept the" << endl <<
-      "request." << endl <<
-#endif
-      "</pre>" << endl;
+      "</table>" << endl <<
+      "</form>" << endl;
 }
 
 void
@@ -1127,32 +1225,32 @@ WebAdmin::buildEditFilterSubPage(DataStream& s)
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition1 Header:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1header\" size=\"40\" value=\"" << rec.mCondition1Header.xmlCharDataEncode() << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1header\" size=\"40\" placeholder=\"header name, e.g. From\" value=\"" << rec.mCondition1Header.xmlCharDataEncode() << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition1 Regex:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1regex\" size=\"40\" value=\"" << rec.mCondition1Regex.xmlCharDataEncode() << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1regex\" size=\"40\" placeholder=\"POSIX regex, e.g. sip:1234@.*\" value=\"" << rec.mCondition1Regex.xmlCharDataEncode() << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition2 Header:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2header\" size=\"40\" value=\"" << rec.mCondition2Header.xmlCharDataEncode() << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2header\" size=\"40\" placeholder=\"header name, e.g. To\" value=\"" << rec.mCondition2Header.xmlCharDataEncode() << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition2 Regex:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2regex\" size=\"40\" value=\"" << rec.mCondition2Regex.xmlCharDataEncode() << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2regex\" size=\"40\" placeholder=\"POSIX regex, empty = any\" value=\"" << rec.mCondition2Regex.xmlCharDataEncode() << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Method:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"method\" size=\"40\" value=\"" << rec.mMethod << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"method\" size=\"40\" placeholder=\"INVITE, REGISTER... empty = any\" value=\"" << rec.mMethod << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Event:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"event\" size=\"40\" value=\"" << rec.mEvent << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"event\" size=\"40\" placeholder=\"presence, message-summary... empty = any\" value=\"" << rec.mEvent << "\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
@@ -1170,12 +1268,12 @@ WebAdmin::buildEditFilterSubPage(DataStream& s)
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Action Data:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"actiondata\" size=\"40\" value=\"" << rec.mActionData.xmlCharDataEncode() << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"actiondata\" size=\"40\" placeholder=\"e.g. 403, Request Blocked\" value=\"" << rec.mActionData.xmlCharDataEncode() << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Order:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"order\" size=\"4\" value=\"" << rec.mOrder << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"order\" size=\"8\" placeholder=\"0\" value=\"" << rec.mOrder << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
@@ -1208,7 +1306,7 @@ WebAdmin::buildShowFiltersSubPage(DataStream& s)
          mStore.mFilterStore.eraseFilter(i->mKey1);
          ++j;
       }
-      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+      s << "<p class=\"notice ok\"><em>Removed:</em> " << j << " records</p>" << endl;
    }
    
    pos = mHttpParams.find("key");
@@ -1224,7 +1322,7 @@ WebAdmin::buildShowFiltersSubPage(DataStream& s)
       
          if (action != "Accept" && actionData.empty())
          {
-            s << "<p><em>Error</em> updating request filter.  You must provide appropriate Action Data for non-Accept action.</p>\n";
+            s << "<p class=\"notice err\"><em>Error</em> updating request filter.  You must provide appropriate Action Data for non-Accept action.</p>\n";
          }
          else
          {
@@ -1243,12 +1341,12 @@ WebAdmin::buildShowFiltersSubPage(DataStream& s)
                                              actionData,
                                              mHttpParams["order"].convertInt()))
             {
-               s << "<p><em>Updated</em> request filter: " << mHttpParams["cond1header"] << "=" << mHttpParams["cond1regex"] << ", "
+               s << "<p class=\"notice ok\"><em>Updated</em> request filter: " << mHttpParams["cond1header"] << "=" << mHttpParams["cond1regex"] << ", "
                                                            << mHttpParams["cond2header"] << "=" << mHttpParams["cond2regex"] << "</p>\n";
             }
             else
             {
-               s << "<p><em>Error</em> updating request filter: likely database error (check logs).</p>\n";
+               s << "<p class=\"notice err\"><em>Error</em> updating request filter: likely database error (check logs).</p>\n";
             }
          }
       }
@@ -1319,24 +1417,24 @@ WebAdmin::buildShowFiltersSubPage(DataStream& s)
    }
 
    s << 
-      "<br><form id=\"testFilter\" action=\"showFilters.html\" method=\"get\" name=\"testFilter\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      "<h3>Test Filters</h3>" << endl <<
+      "<form id=\"testFilter\" action=\"showFilters.html\" method=\"get\" name=\"testFilter\" enctype=\"application/x-www-form-urlencoded\">" << endl <<
       "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
       "<tr>" << endl << 
       "  <td align=\"right\">Condition 1 Header:</td>" << endl << 
-      "  <td><input type=\"text\" name=\"cond1TestHeader\" value=\"" << cond1TestHeader.xmlCharDataEncode() << "\" size=\"40\"/></td>" << endl << 
+      "  <td><input type=\"text\" name=\"cond1TestHeader\" placeholder=\"header value to match, e.g. sip:1234@example.com\" value=\"" << cond1TestHeader.xmlCharDataEncode() << "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl <<
       "<tr>" << endl << 
       "  <td align=\"right\">Condition 2 Header:</td>" << endl << 
-      "  <td><input type=\"text\" name=\"cond2TestHeader\" value=\"" << cond2TestHeader.xmlCharDataEncode() << "\" size=\"40\"/></td>" << endl << 
+      "  <td><input type=\"text\" name=\"cond2TestHeader\" placeholder=\"header value to match, empty if unused\" value=\"" << cond2TestHeader.xmlCharDataEncode() << "\" size=\"40\"/></td>" << endl << 
       "  <td><input type=\"submit\" name=\"testFilter\" value=\"Test Filters\"/></td>" << endl << 
       "</tr>" << endl <<
-      "</table>" << endl << 
-      "</form>" << endl <<
-      "<br>" << endl;
-   
+      "</table>" << endl <<
+      "</form>" << endl;
+
    if(!cond1TestHeader.empty())
    {
-      s << "<em>Test Result: </em>";
+      s << "<p class=\"notice\"><em>Test Result:</em> ";
       short action;
       Data actionData;
       if(mStore.mFilterStore.test(cond1TestHeader, cond2TestHeader, action, actionData))
@@ -1357,8 +1455,9 @@ WebAdmin::buildShowFiltersSubPage(DataStream& s)
       }
       else
       {
-         s << "No Match";
+         s << "<em class=\"warn\">No matches</em>";
       }
+      s << "</p>" << endl;
    }
 }
 
@@ -1381,47 +1480,56 @@ WebAdmin::buildAddRouteSubPage(DataStream& s)
                                         routeDestination,
                                         mHttpParams["routeOrder"].convertInt()))
          {
-            s << "<p><em>Added</em> route for: " << routeUri << "</p>\n";
+            s << "<p class=\"notice ok\"><em>Added</em> route for: " << routeUri << "</p>\n";
          }
          else
          {
-            s << "<p><em>Error</em> adding route, likely duplicate found.</p>\n";
+            s << "<p class=\"notice err\"><em>Error</em> adding route, likely duplicate found.</p>\n";
          }
       }
       else
       {
-         s << "<p><em>Error</em> adding route.  You must provide a URI and a route destination.</p>\n";
+         s << "<p class=\"notice err\"><em>Error</em> adding route.  You must provide a URI and a route destination.</p>\n";
       }
    }
 
    s << 
       "<h2>Add Route</h2>" << endl <<
-      "<form id=\"addRouteForm\" method=\"get\" action=\"addRoute.html\" name=\"addRouteForm\">" << endl << 
-      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
+      "<div class=\"help\">" << endl <<
+      "  <p>Static routes use (POSIX-standard) regular expressions to match and rewrite SIP" << endl <<
+      "  URIs.  Method and Event narrow the route to a single request type; leave them empty" << endl <<
+      "  to match any.  Order decides evaluation sequence when several routes could match --" << endl <<
+      "  lowest first.</p>" << endl <<
+      "  <p>The following sends all requests whose userpart is only digits to a gateway:</p>" << endl <<
+      "  <pre>URI:         ^sip:([0-9]+)@example\\.com" << endl <<
+      "Destination: sip:$1@gateway.example.com</pre>" << endl <<
+      "</div>" << endl <<
+      "<form id=\"addRouteForm\" method=\"get\" action=\"addRoute.html\" name=\"addRouteForm\">" << endl <<
+      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl <<
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">URI:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeUri\" size=\"40\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeUri\" size=\"40\" placeholder=\"^sip:([0-9]+)@example.com\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Method:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeMethod\" size=\"40\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeMethod\" size=\"40\" placeholder=\"INVITE, REGISTER... empty = any\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Event:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeEvent\" size=\"40\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeEvent\" size=\"40\" placeholder=\"presence, message-summary... empty = any\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Destination:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeDestination\" size=\"40\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeDestination\" size=\"40\" placeholder=\"sip:$1@gateway.example.com\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Order:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeOrder\" size=\"8\" placeholder=\"0\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
@@ -1431,17 +1539,8 @@ WebAdmin::buildAddRouteSubPage(DataStream& s)
       "  </td>" << endl << 
       "</tr>" << endl << 
 
-      "</table>" << endl << 
-      "</form>" << endl <<
-
-      "<pre>" << endl <<
-      "Static routes use (POSIX-standard) regular expression to match" << endl <<
-      "and rewrite SIP URIs.  The following is an example of sending" << endl <<
-      "all requests that consist of only digits in the userpart of the" << endl <<
-      "SIP URI to a gateway:" << endl << endl <<
-      "   URI:         ^sip:([0-9]+)@example\\.com" << endl <<
-      "   Destination: sip:$1@gateway.example.com" << endl <<
-      "</pre>" << endl;
+      "</table>" << endl <<
+      "</form>" << endl;
 }
 
 void
@@ -1467,28 +1566,28 @@ WebAdmin::buildEditRouteSubPage(DataStream& s)
       "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
       "<tr>" << endl << 
       "<td align=\"right\" valign=\"middle\">URI:</td>" << endl << 
-      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeUri\" value=\"" <<  rec.mMatchingPattern << "\" size=\"40\"/></td>" << endl << 
+      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeUri\" placeholder=\"^sip:([0-9]+)@example.com\" value=\"" <<  rec.mMatchingPattern << "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "<td align=\"right\" valign=\"middle\">Method:</td>" << endl << 
-      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeMethod\" value=\"" <<  rec.mMethod  << "\" size=\"40\"/></td>" << endl << 
+      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeMethod\" placeholder=\"INVITE, REGISTER... empty = any\" value=\"" <<  rec.mMethod  << "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td align=\"right\" valign=\"middle\">Event:</td>" << endl << 
-      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeEvent\" value=\"" << rec.mEvent  << "\" size=\"40\"/></td>" << endl << 
+      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeEvent\" placeholder=\"presence, message-summary... empty = any\" value=\"" << rec.mEvent  << "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td align=\"right\" valign=\"middle\">Destination:</td>" << endl << 
-      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeDestination\" value=\"" << rec.mRewriteExpression <<
+      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeDestination\" placeholder=\"sip:$1@gateway.example.com\" value=\"" << rec.mRewriteExpression <<
                             "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td align=\"right\" valign=\"middle\">Order:</td>" << endl << 
-      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeOrder\" value=\"" << rec.mOrder  <<
+      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeOrder\" placeholder=\"0\" value=\"" << rec.mOrder  <<
                             "\" size=\"4\"/></td>" << endl << 
       "</tr>" << endl << 
 
@@ -1522,7 +1621,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
          mStore.mRouteStore.eraseRoute(i->mKey1);
          ++j;
       }
-      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+      s << "<p class=\"notice ok\"><em>Removed:</em> " << j << " records</p>" << endl;
    }
    
    pos = mHttpParams.find("key");
@@ -1544,16 +1643,16 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
             // write out the updated record to the database now
             if(mStore.mRouteStore.updateRoute(key, method, event, matchingPattern, rewriteExpression, order))
             {
-               s << "<p><em>Updated:</em> " << rec.mMatchingPattern << "</p>" << endl; 
+               s << "<p class=\"notice ok\"><em>Updated:</em> " << rec.mMatchingPattern << "</p>" << endl; 
             }
             else
             {
-               s << "<p><em>Error</em> updating route: likely database error (check logs).</p>\n";
+               s << "<p class=\"notice err\"><em>Error</em> updating route: likely database error (check logs).</p>\n";
             }
          }
          else
          {
-            s << "<p><em>Error</em> updating route.  You must provide a URI and a route destination.</p>\n";
+            s << "<p class=\"notice err\"><em>Error</em> updating route.  You must provide a URI and a route destination.</p>\n";
          }
       }
    }
@@ -1634,11 +1733,12 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
    }
    
    s << 
-      "<br><form id=\"testRoute\" action=\"showRoutes.html\" method=\"get\" name=\"testRoute\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      "<h3>Test Routes</h3>" << endl <<
+      "<form id=\"testRoute\" action=\"showRoutes.html\" method=\"get\" name=\"testRoute\" enctype=\"application/x-www-form-urlencoded\">" << endl <<
       "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
       "<tr>" << endl << 
       " <td align=\"right\">Input:</td>" << endl << 
-      " <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"40\"/></td>" << endl << 
+      " <td><input type=\"text\" name=\"routeTestUri\" placeholder=\"sip:1234@example.com\" value=\"" << uri << "\" size=\"40\"/></td>" << endl << 
       " <td><input type=\"submit\" name=\"testRoute\" value=\"Test Routes\"/></td>" << endl << 
       "</tr>" << endl;
    
@@ -1660,7 +1760,21 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       s<<"                <td></td>" << endl;
       s<<"              </tr>" << endl;
    }
-   
+
+   // A test that matched nothing has to say so, otherwise the page looks
+   // identical to one where the test was never run.
+   if (first && !routeTestUri.empty())
+   {
+      s<<"              <tr>" << endl;
+      s<<"                <td align=\"right\">Targets:</td>" << endl;
+      s<<"                <td><em class=\"warn\">"
+        << (badUri ? "Not a valid SIP URI" : "No matches")
+        << "</em></td>" << endl;
+      s<<"                <td></td>" << endl;
+      s<<"              </tr>" << endl;
+   }
+
+
    s<<
       "</table>" << endl << 
       "</form>" << endl;
@@ -1712,11 +1826,11 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                      " Key was: " << i->mKey2);
          }
       }
-      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+      s << "<p class=\"notice ok\"><em>Removed:</em> " << j << " records</p>" << endl;
    }
 
    Dictionary::iterator pos = mHttpParams.find("regAor");
-   if (pos != mHttpParams.end() && (mHttpParams["action"] == "Add")) // found 
+   if (pos != mHttpParams.end() && (mHttpParams["action"] == "Add Static Registration")) // found
    {
       Data regAor = mHttpParams["regAor"];
       Data regContact = mHttpParams["regContact"];
@@ -1752,62 +1866,67 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                   // Add to RegistrationPersistanceManager
                   mRegDb.updateContact(aor, rec);
 
-                  s << "<p><em>Added</em> permanent registered contact for: " << regAor << "</p>\n";
+                  s << "<p class=\"notice ok\"><em>Added</em> permanent registered contact for: " << regAor << "</p>\n";
                }
                else
                {
-                  s << "<p><em>Error</em> adding static registration: likely database error (check logs).</p>\n";
+                  s << "<p class=\"notice err\"><em>Error</em> adding static registration: likely database error (check logs).</p>\n";
                }
             }
             catch(resip::ParseBuffer::Exception& e)
             {
                WarningLog(<< "Registration add: aor " << regAor << " was malformed: " << e);
-               s << "<p>Error parsing: AOR=" << regAor << "</p>\n";
+               s << "<p class=\"notice err\"><em>Error</em> parsing: AOR=" << regAor << "</p>\n";
             }  
          }
          catch(resip::ParseBuffer::Exception& e)
          {
             WarningLog(<< "Registration add: path " << regPath << " was malformed: " << e);
-            s << "<p>Error parsing: Path=" << regPath << "</p>\n";
+            s << "<p class=\"notice err\"><em>Error</em> parsing: Path=" << regPath << "</p>\n";
          }
       }
       catch(resip::ParseBuffer::Exception& e)
       {
          WarningLog(<< "Registration add: contact " << regContact << " was malformed: " << e);
-         s << "<p>Error parsing: Contact=" << regContact << "</p>\n";
+         s << "<p class=\"notice err\"><em>Error</em> parsing: Contact=" << regContact << "</p>\n";
       }
    }   
    
    s << 
       "<h2>Registrations</h2>" << endl <<
-       "<form id=\"showReg\" method=\"get\" action=\"registrations.html\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-      //"<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>" << endl << 
-      //"<hr/>" << endl << 
+       "<form id=\"showReg\" method=\"get\" action=\"registrations.html\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl <<
+      //"<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>" << endl <<
+      //"<hr/>" << endl <<
 
-      "<div class=space>" << endl <<
-      "</div>" << endl <<
+      "<h3>Add Static Registration</h3>" << endl <<
+      "<p>A static registration is a permanent contact for an AOR: it never expires and is" << endl <<
+      "restored on restart, so it does not need the device to send a REGISTER.  Use it for" << endl <<
+      "gateways and other endpoints that cannot register for themselves.</p>" << endl <<
       "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl <<
       "  <tr>" << endl <<
       "    <td align=\"right\">AOR:</td>" << endl <<
-      "    <td><input type=\"text\" name=\"regAor\" size=\"40\"/></td>" << endl <<
+      "    <td><input type=\"text\" name=\"regAor\" size=\"46\" placeholder=\"sip:alice@example.com\"/></td>" << endl <<
+      "  </tr>" << endl <<
+      "  <tr>" << endl <<
       "    <td align=\"right\">Contact:</td>" << endl <<
-      "    <td><input type=\"text\" name=\"regContact\" size=\"40\"/></td>" << endl <<
+      "    <td><input type=\"text\" name=\"regContact\" size=\"46\" placeholder=\"&lt;sip:alice@192.168.1.10:5060&gt;\"/></td>" << endl <<
       "  </tr>" << endl <<
       "  <tr>" << endl <<
       "    <td align=\"right\">Path:</td>" << endl <<
-      "    <td><input type=\"text\" name=\"regPath\" size=\"40\"/></td>" << endl <<
-      "    <td></td>" << endl <<
-      "    <td align=\"right\"><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
+      "    <td><input type=\"text\" name=\"regPath\" size=\"46\" placeholder=\"optional, comma separated URIs\"/></td>" << endl <<
       "  </tr>" << endl <<
+      "  <tr>" << endl <<
+      "    <td></td>" << endl <<
+      "    <td align=\"right\"><input type=\"submit\" name=\"action\" value=\"Add Static Registration\"/></td>" << endl <<
       "  </tr>" << endl <<
       "</table>" << endl <<
-      "<br>" << endl <<
 
-      "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl << 
+      "<h3>Active Registrations</h3>" << endl <<
+      "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl <<
 
-      "<tr>" << endl << 
-      "  <td>AOR</td>" << endl << 
-      "  <td>Contact</td>" << endl << 
+      "<thead><tr>" << endl <<
+      "  <td>AOR</td>" << endl <<
+      "  <td>Contact</td>" << endl <<
       "  <td>User Agent</td>" << endl <<
       "  <td>Instance ID</td>" << endl <<
       "  <td>Reg ID</td>" << endl <<
@@ -1815,8 +1934,9 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "  <td>Path</td>" << endl <<
       "  <td>Sync'd?</td>" << endl <<
       "  <td>Expires In</td>" << endl <<
-      "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
-      "</tr>" << endl;
+      "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl <<
+      "</tr></thead>" << endl <<
+      "<tbody>" << endl;
   
    uint64_t now = Timer::getTimeSecs();
    RegistrationPersistenceManager::UriList aors;
@@ -1900,7 +2020,8 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       }
    }
                   
-   s << "</table>" << endl << 
+   s << "</tbody>" << endl <<
+      "</table>" << endl <<
       "</form>" << endl;
 }
 
@@ -1938,7 +2059,7 @@ WebAdmin::buildPublicationsSubPage(DataStream& s)
             WarningLog(<< "Publication removal key was malformed: " << e << " Key was: " << i->mKey2);
          }
       }
-      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+      s << "<p class=\"notice ok\"><em>Removed:</em> " << j << " records</p>" << endl;
    }
 
    s <<
@@ -1949,7 +2070,7 @@ WebAdmin::buildPublicationsSubPage(DataStream& s)
 
       "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl <<
 
-      "<tr>" << endl <<
+      "<thead><tr>" << endl <<
       "  <td>AOR</td>" << endl <<
       "  <td>Event Type</td>" << endl <<
       "  <td>ETag</td>" << endl <<
@@ -1957,7 +2078,8 @@ WebAdmin::buildPublicationsSubPage(DataStream& s)
       "  <td>Sync'd?</td>" << endl <<
       "  <td>Expires In</td>" << endl <<
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl <<
-      "</tr>" << endl;
+      "</tr></thead>" << endl <<
+      "<tbody>" << endl;
 
    uint64_t now = Timer::getTimeSecs();
    mPubDb.lockDocuments();
@@ -2015,7 +2137,8 @@ WebAdmin::buildPublicationsSubPage(DataStream& s)
       }
    }
    mPubDb.unlockDocuments();
-   s << "</table>" << endl <<
+   s << "</tbody>" << endl <<
+      "</table>" << endl <<
       "</form>" << endl;
 }
 
@@ -2032,6 +2155,36 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
        mProxy.getStack().reloadDnsServers();
    }
 
+   s << "<h2>Logging and Admin</h2>" << endl
+       << "<div class=\"toolbar\">" << endl
+       << "<form id=\"logLevel\" method=\"get\" action=\"logLevel.html\" name=\"logLevel\">" << endl
+       << "  <label>Log level</label> <select name=\"level\">" << endl
+       << "        <option value=\"NONE\"" << (Log::level() == Log::None ? " selected" : "") << ">NONE" << (Log::level() == Log::None ? " *" : "") << "</option>" << endl
+       << "        <option value=\"CRIT\"" << (Log::level() == Log::Crit ? " selected" : "") << ">CRIT" << (Log::level() == Log::Crit ? " *" : "") << "</option>" << endl
+       << "        <option value=\"ERR\"" << (Log::level() == Log::Err ? " selected" : "") << ">ERR" << (Log::level() == Log::Err ? " *" : "") << "</option>" << endl
+       << "        <option value=\"WARNING\"" << (Log::level() == Log::Warning ? " selected" : "") << ">WARNING" << (Log::level() == Log::Warning ? " *" : "") << "</option>" << endl
+       << "        <option value=\"INFO\"" << (Log::level() == Log::Info ? " selected" : "") << ">INFO" << (Log::level() == Log::Info ? " *" : "") << "</option>" << endl
+       << "        <option value=\"DEBUG\"" << (Log::level() == Log::Debug ? " selected" : "") << ">DEBUG" << (Log::level() == Log::Debug ? " *" : "") << "</option>" << endl
+       << "        <option value=\"STACK\"" << (Log::level() == Log::Stack ? " selected" : "") << ">STACK" << (Log::level() == Log::Stack ? " *" : "") << "</option>" << endl
+       << "       </select>" << endl
+       << "  <input type=\"submit\" name=\"action\" value=\"Set level\"/>" << endl
+       << "</form>" << endl;
+
+#ifdef USE_SSL
+   s << "<form id=\"reloadCerts\" method=\"get\" action=\"reloadcerts.html\" name=\"reloadcerts\">" << endl
+       << "  <input type=\"submit\" name=\"action\" value=\"Reload Certificates\"/>" << endl
+       << "</form>" << endl;
+#endif
+
+   if (mProxy.getConfig().getConfigUnsignedShort("CommandPort", REPRO_DEFAULT_COMMAND_PORT) != 0)
+   {
+       s << "<form id=\"restartProxy\" method=\"get\" action=\"restart.html\" name=\"restart\">" << endl
+           << "  <input type=\"submit\" name=\"action\" value=\"Restart Proxy\"/>" << endl
+           << "</form>" << endl;
+   }
+
+   s << "</div>" << endl;   // toolbar
+
    s << "<h2>DNS Cache</h2>" << endl;
 
    // Get Dns Cache
@@ -2045,20 +2198,19 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
          << endl;
    }
 
-   s << "<form id=\"dnsButtons\" method=\"get\" action=\"settings.html\" name=\"dnsButtons\">" << endl
-       << "  <br><input type=\"submit\" name=\"action\" value=\"Clear DNS Cache\"/>" << endl
+   s << "<div class=\"toolbar\">" << endl
+       << "<form id=\"dnsButtons\" method=\"get\" action=\"settings.html\" name=\"dnsButtons\">" << endl
+       << "  <input type=\"submit\" name=\"action\" value=\"Clear DNS Cache\"/>" << endl
        << "  <input type=\"submit\" name=\"action\" value=\"Reload DNS Servers\"/>" << endl
-       << "</form>" << endl;
-
-   s << "<br><h2>Settings</h2>" << endl <<
-        "<pre>" << mProxy.getConfig() << "</pre>";
+       << "</form>" << endl
+       << "</div>" << endl;
 
    {
       Data buffer;
       DataStream strm(buffer);
       mProxy.getStack().dump(strm);
       strm.flush();
-      s << "<br>Stack Info<br>"
+      s << "<h2>Stack Info</h2>" << endl
         << "<pre>" <<  buffer << "</pre>"
         << endl;
    }
@@ -2068,36 +2220,13 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
       Data buffer;
       DataStream strm(buffer);
       mProxy.getStack().getCongestionManager()->encodeCurrentState(strm);
-      s << "<br>Congestion Manager Statistics<br>"
+      s << "<h2>Congestion Manager Statistics</h2>" << endl
         << "<pre>" <<  buffer << "</pre>"
         << endl;
    }
 
-   s << "<form id=\"logLevel\" method=\"get\" action=\"logLevel.html\" name=\"logLevel\">" << endl
-       << "  <br>Change log level to: <select name=\"level\">" << endl
-       << "        <option value=\"NONE\"" << (Log::level() == Log::None ? " selected" : "") << ">NONE" << (Log::level() == Log::None ? " *" : "") << "</option>" << endl
-       << "        <option value=\"CRIT\"" << (Log::level() == Log::Crit ? " selected" : "") << ">CRIT" << (Log::level() == Log::Crit ? " *" : "") << "</option>" << endl
-       << "        <option value=\"ERR\"" << (Log::level() == Log::Err ? " selected" : "") << ">ERR" << (Log::level() == Log::Err ? " *" : "") << "</option>" << endl
-       << "        <option value=\"WARNING\"" << (Log::level() == Log::Warning ? " selected" : "") << ">WARNING" << (Log::level() == Log::Warning ? " *" : "") << "</option>" << endl
-       << "        <option value=\"INFO\"" << (Log::level() == Log::Info ? " selected" : "") << ">INFO" << (Log::level() == Log::Info ? " *" : "") << "</option>" << endl
-       << "        <option value=\"DEBUG\"" << (Log::level() == Log::Debug ? " selected" : "") << ">DEBUG" << (Log::level() == Log::Debug ? " *" : "") << "</option>" << endl
-       << "        <option value=\"STACK\"" << (Log::level() == Log::Stack ? " selected" : "") << ">STACK" << (Log::level() == Log::Stack ? " *" : "") << "</option>" << endl
-       << "       </select>" << endl
-       << "  <input type=\"submit\" name=\"action\" value=\"Set level\"/>" << endl
-       << "</form>" << endl;
-
-   if (mProxy.getConfig().getConfigUnsignedShort("CommandPort", 0) != 0)
-   {
-       s << "<form id=\"restartProxy\" method=\"get\" action=\"restart.html\" name=\"restart\">" << endl
-           << "  <input type=\"submit\" name=\"action\" value=\"Restart Proxy\"/>" << endl
-           << "</form>" << endl;
-   }
-
-#ifdef USE_SSL
-   s << "<form id=\"reloadCerts\" method=\"get\" action=\"reloadcerts.html\" name=\"reloadcerts\">" << endl
-       << "  <input type=\"submit\" name=\"action\" value=\"Reload Certificates\"/>" << endl
-       << "</form>" << endl;
-#endif
+   s << "<h2>Settings</h2>" << endl <<
+        "<pre>" << mProxy.getConfig() << "</pre>" << endl;
 }
 
 void 
@@ -2118,7 +2247,7 @@ WebAdmin::onDnsCacheDumpRetrieved(std::pair<unsigned long, unsigned long> key, c
 void
 WebAdmin::buildRestartSubPage(DataStream& s)
 {
-   unsigned short port = mProxy.getConfig().getConfigUnsignedShort("CommandPort", 0);
+   unsigned short port = mProxy.getConfig().getConfigUnsignedShort("CommandPort", REPRO_DEFAULT_COMMAND_PORT);
    if (port != 0)
    {
       int sd = 0, rc;
@@ -2156,7 +2285,7 @@ WebAdmin::buildRestartSubPage(DataStream& s)
                   rc = send(sd, request.c_str(), (int)request.size(), 0);
                   if (rc >= 0)
                   {
-                     s << "Restarting proxy..." << endl;
+                     s << "<p class=\"notice ok\"><em>Restarting proxy...</em></p>" << endl;
                      closeSocket(sd);
                      return;
                   }
@@ -2165,11 +2294,11 @@ WebAdmin::buildRestartSubPage(DataStream& s)
             closeSocket(sd);
          }
       }
-      s << "Error issuing restart command." << endl;
+      s << "<p class=\"notice err\"><em>Error</em> issuing restart command.</p>" << endl;
    }
    else
    {
-      s << "CommandServer must be running to use restart feature." << endl;
+      s << "<p class=\"notice warn\"><em>Unavailable:</em> CommandServer must be running to use the restart feature.</p>" << endl;
    }
 }
 
@@ -2188,12 +2317,12 @@ WebAdmin::buildLogLevelSubPage(resip::DataStream& s)
       Log::Level l = Log::toLevel(newLevel);
       Log::setLevel(l);
 
-      s << "Log level changed." << endl;
+      s << "<p class=\"notice ok\"><em>Log level changed</em> to " << newLevel.xmlCharDataEncode() << ".</p>" << endl;
    }
    else
    {
       WarningLog(<<"no log level specified");
-      s << "ERROR: No level specified." << endl;
+      s << "<p class=\"notice err\"><em>Error</em> no log level specified.</p>" << endl;
    }
 }
 
@@ -2201,7 +2330,7 @@ void
 WebAdmin::buildReloadCertsSubPage(resip::DataStream& s)
 {
     mProxy.getStack().reloadCertificates();
-    s << "Reloaded certificates." << endl;
+    s << "<p class=\"notice ok\"><em>Reloaded certificates.</em></p>" << endl;
 }
 
 Data 
@@ -2211,22 +2340,23 @@ WebAdmin::buildUserPage()
    {
       DataStream s(ret);
       
-      s <<  "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl
-        <<    "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" << endl
-        <<    "" << endl
-        <<    "<html xmlns=\"http://www.w3.org/1999/xhtml\">" << endl
-        <<    "" << endl
+      s <<  "<!DOCTYPE html>" << endl
+        <<    "<html lang=\"en\">" << endl
         <<    "<head>" << endl
-        <<    "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />" << endl
+        <<    "<meta charset=\"utf-8\" />" << endl
+        <<    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" << endl
         <<    "<title>Repro Proxy</title>" << endl
+        <<    faviconLink()
+        <<    standaloneStyle()
         <<    "</head>" << endl
-        <<    "" << endl
-        <<    "<body bgcolor=\"#ffffff\">" << endl;
-      
-      //buildAddUserSubPage(s); // !cj! TODO - should do beter page here 
-      
-      s <<    "</body>" << endl
-        <<    "" << endl
+        <<    "<body>" << endl
+        <<    "<div class=\"card\">" << endl
+        <<    "  <div class=\"brand\">" << productMarkSvg() << "<span class=\"name\">Repro</span></div>" << endl;
+
+      //buildAddUserSubPage(s); // !cj! TODO - should do beter page here
+
+      s <<    "</div>" << endl
+        <<    "</body>" << endl
         <<    "</html>" << endl;
             
       s.flush();
@@ -2254,19 +2384,26 @@ WebAdmin::buildDefaultPage()
    {
       DataStream s(ret);
       
-      s << 
-         "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl << 
-         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" << endl << 
-         "<html xmlns=\"http://www.w3.org/1999/xhtml\">" << endl << 
-         "<head>" << endl << 
-         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />" << endl << 
-         "<title>Repro Proxy Login</title>" << endl << 
-         "</head>" << endl << 
+      s <<
+         "<!DOCTYPE html>" << endl <<
+         "<html lang=\"en\">" << endl <<
+         "<head>" << endl <<
+         "<meta charset=\"utf-8\" />" << endl <<
+         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" << endl <<
+         "<title>Repro Proxy Login</title>" << endl <<
+         faviconLink() <<
+         standaloneStyle() <<
+         "</head>" << endl <<
 
-         "<body bgcolor=\"#ffffff\">" << endl << 
-         "  <h1><a href=\"user.html\">Login</a></h1>" << endl << 
-         "  <p>Since repro v1.9.0, the accounts are stored in a file (default filename is users.txt).  You can create it with the <a href=\"http://httpd.apache.org/docs/2.2/programs/htdigest.html\">htdigest</a> utility</p>" << endl << 
-         "</body>" << endl << 
+         "<body>" << endl <<
+         "  <div class=\"card\">" << endl <<
+         "    <div class=\"brand\">" << productMarkSvg() << "<span class=\"name\">Repro</span></div>" << endl <<
+         "    <div class=\"sub\">SIP Proxy &middot; Admin Console</div>" << endl <<
+         "    <a class=\"cta\" href=\"user.html\">Log in</a>" << endl <<
+         "    <p>Note: Web admin accounts are stored in a file (default filename is users.txt).  "
+                "You can create it with the <a href=\"https://httpd.apache.org/docs/current/programs/htdigest.html\">htdigest</a> utility.</p>" << endl <<
+         "  </div>" << endl <<
+         "</body>" << endl <<
          "</html>" << endl;
       
       s.flush();

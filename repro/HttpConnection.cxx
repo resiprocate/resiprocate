@@ -1,6 +1,7 @@
 #include "rutil/ResipAssert.h"
 
 #include "rutil/Data.hxx"
+#include "rutil/DataStream.hxx"
 #include "rutil/Socket.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/TransportType.hxx"
@@ -21,6 +22,44 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 int HttpConnection::nextPageNumber=1;
+
+namespace
+{
+// Canned HTTP status page, styled to match the admin pages (see
+// repro/webadmin/pageOutlinePre.html for the palette these colours come from).
+Data
+statusPage(const char* code, const char* title, const char* detail)
+{
+   Data page;
+   {
+      DataStream s(page);
+      s << "<!DOCTYPE html>"
+           "<html lang=\"en\"><head><meta charset=\"utf-8\" />"
+           "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />"
+           "<title>" << code << " " << title << "</title><style>"
+           "*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}"
+           "body{background:#0a0c0f;color:#c8d0da;"
+           "font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"
+           "font-size:13px;line-height:1.55;min-height:100vh;display:flex;align-items:center;"
+           "justify-content:center;padding:24px}"
+           ".card{background:#10141a;border:1px solid #1e2730;border-radius:3px;"
+           "padding:26px 28px;max-width:460px;width:100%}"
+           ".code{font-size:11px;font-weight:600;letter-spacing:.18em;color:#ffab00;"
+           "text-transform:uppercase;margin-bottom:8px}"
+           ".title{font-size:17px;font-weight:600;letter-spacing:.04em}"
+           "p{color:#7a8899;font-size:12px;margin-top:14px}"
+           "a{color:#40c4ff;text-decoration:none}a:hover{text-decoration:underline}"
+           "</style></head><body><div class=\"card\">"
+           "<div class=\"code\">HTTP " << code << "</div>"
+           "<div class=\"title\">" << title << "</div>"
+           "<p>" << detail << "</p>"
+           "<p><a href=\"/index.html\">&larr; Back to Repro</a></p>"
+           "</div></body></html>";
+      s.flush();
+   }
+   return page;
+}
+}
 
 
 
@@ -108,12 +147,8 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
 
          if (!isJson)
          {
-            page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
-                    "<html><head>"
-                    "<title>401 Unauthorized</title>"
-                    "</head><body>"
-                    "<h1>Unauthorized</h1>"
-                    "</body></html>" );
+            page = statusPage("401", "Unauthorized",
+                              "Valid administrator credentials are required to view this page.");
          }
       }
       break;
@@ -124,12 +159,8 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
 
          if (!isJson)
          {
-            page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
-                    "<html><head>"
-                    "<title>404 Not Found</title>"
-                    "</head><body>"
-                    "<h1>Not Found</h1>"
-                    "</body></html>" );
+            page = statusPage("404", "Not Found",
+                              "The requested page does not exist on this server.");
          }
       }
       break;
@@ -139,12 +170,8 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
          mTxBuffer += "HTTP/1.0 301 Moved Permanently"; mTxBuffer += Symbols::CRLF;
          mTxBuffer += "Location: /index.html"; mTxBuffer += Symbols::CRLF;
          
-         page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
-                 "<html><head>"
-                 "<title>301 Moved Permanently</title>"
-                 "</head><body>"
-                 "<h1>Moved</h1>"
-                 "</body></html>" );
+         page = statusPage("301", "Moved Permanently",
+                           "This page has moved.  Redirecting to the Repro home page.");
       }
       break;
       
