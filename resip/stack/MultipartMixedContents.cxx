@@ -25,14 +25,16 @@ MultipartMixedContents::init()
 
 MultipartMixedContents::MultipartMixedContents()
    : Contents(getStaticType()),
-     mContents()
+     mContents(),
+     mRawFirstPart()
 {
    setBoundary();
 }
 
 MultipartMixedContents::MultipartMixedContents(const Mime& contentsType)
    : Contents(contentsType),
-     mContents()
+     mContents(),
+     mRawFirstPart()
 {
    if (!mType.exists(p_boundary))
    {
@@ -42,7 +44,8 @@ MultipartMixedContents::MultipartMixedContents(const Mime& contentsType)
 
 MultipartMixedContents::MultipartMixedContents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
-     mContents()
+     mContents(),
+     mRawFirstPart()
 {
    if (!mType.exists(p_boundary))
    {
@@ -50,9 +53,15 @@ MultipartMixedContents::MultipartMixedContents(const HeaderFieldValue& hfv, cons
    }
 }
 
+// mRawFirstPart is deliberately not carried over.  It is a view into the buffer
+// rhs was parsed from; the copy gets a buffer of its own but is never parsed
+// again, so carrying the view would leave it pointing at the original.  A copy
+// therefore reports no raw bytes and checkSignature() falls back, which is the
+// behaviour that was there before.
 MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs)
    : Contents(rhs),
-     mContents()
+     mContents(),
+     mRawFirstPart()
 {
    vector<Contents*>::const_iterator j;
 
@@ -80,6 +89,16 @@ MultipartMixedContents::setBoundary(const Data& boundary)
     mType.param(p_boundary) = boundary;
 }
 
+Data
+MultipartMixedContents::getRawFirstPart() const
+{
+   // The const overload of checkParsed() parses without marking the object
+   // DIRTY.  Calling the non-const one here would drop the very bytes this
+   // function exists to return.
+   checkParsed();
+   return mRawFirstPart;
+}
+
 void
 MultipartMixedContents::clear()
 {
@@ -88,6 +107,9 @@ MultipartMixedContents::clear()
    {
       delete *i;
    }
+   // Assign a fresh Data rather than clear(): clear() keeps the shared pointer
+   // and only sets the size to zero.
+   mRawFirstPart = Data();
 }
 
 MultipartMixedContents::~MultipartMixedContents()
@@ -100,9 +122,15 @@ MultipartMixedContents::operator=(const MultipartMixedContents& rhs)
 {
    if (this != &rhs)
    {
+      // Drop the view first: Contents::operator=() replaces the buffer it
+      // points into.  clear() below would do it too, but only after that, and
+      // a reader should not have to reason about the order.  It stays empty
+      // afterwards; see the copy constructor for why the view is not carried
+      // over.
+      mRawFirstPart = Data();
       Contents::operator=(rhs);
       clear();
-      
+
       for (vector<Contents*>::const_iterator i = rhs.mContents.begin(); 
            i != rhs.mContents.end(); ++i)
       {
@@ -179,6 +207,11 @@ MultipartMixedContents::parse(ParseBuffer& pb)
    pb.skipN(boundaryNoCRLF.size());
    pb.assertNotEof();
 
+   // Start from a known state instead of inferring "first part" from mContents
+   // being empty: clear() deletes the parts but leaves the vector filled.
+   bool firstPartSeen = false;
+   mRawFirstPart = Data();
+
    do
    {
       // skip over boundary
@@ -236,6 +269,18 @@ MultipartMixedContents::parse(ParseBuffer& pb)
       pb.assertNotEof();
       Data tmp;
       pb.data(tmp, bodyStart);
+      if (!firstPartSeen)
+      {
+         firstPartSeen = true;
+         // Keep a view of the first part exactly as it arrived, header block
+         // included.  The parse position sits on the CRLF that belongs to the
+         // next boundary (RFC 2046 5.1.1), so that CRLF is correctly left out.
+         // Data::Share means this points into the buffer being parsed instead
+         // of copying it, so an ordinary multipart message costs nothing here.
+         // Only the first part is kept: it is the one RFC 1847 signs.
+         mRawFirstPart = Data(Data::Share, headerStart,
+                              static_cast<Data::size_type>(pb.position() - headerStart));
+      }
       // create contents against body
       mContents.push_back(createContents(contentType, tmp));
       // pre-parse headers
