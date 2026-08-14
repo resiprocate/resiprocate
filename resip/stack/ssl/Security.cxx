@@ -2232,6 +2232,12 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                              Data* signedBy,
                              SignatureStatus* sigStat )
 {
+   // RFC 1847: the signature covers the first body part exactly as it was
+   // received.  Take those bytes first, because the mutable parts() calls
+   // below drop them.  The Data is returned by value and keeps working after
+   // that.
+   const Data rawFirst = multi->getRawFirstPart();
+
    if ( multi->parts().size() != 2 )
    {
       ErrLog(<< "Trying to decode a message with wrong number of contents " << multi->parts().size());
@@ -2260,10 +2266,19 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    Data sigData = sig->getBodyData();
 
    Data textData;
-   DataStream strm( textData );
-   first->encodeHeaders( strm );
-   first->encode( strm );
-   strm.flush();
+   if (!rawFirst.empty())
+   {
+      textData = rawFirst;
+   }
+   else
+   {
+      // Nothing recorded: this body was built locally rather than parsed,
+      // so the re-encoding is both all there is and what goes on the wire.
+      DataStream strm( textData );
+      first->encodeHeaders( strm );
+      first->encode( strm );
+      strm.flush();
+   }
 
    InfoLog( << "text <"    << textData.escaped() << ">" );
    InfoLog( << "signature <" << sigData.escaped() << ">" );
