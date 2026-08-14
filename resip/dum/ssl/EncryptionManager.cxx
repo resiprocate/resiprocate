@@ -902,9 +902,15 @@ bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents** contents)
    MultipartSignedContents* mps;
    if ((mps = dynamic_cast<MultipartSignedContents*>(*contents)))
    {
+      // Look at the parts through the const overload.  The mutable one runs
+      // the non-const checkParsed(), which marks the body DIRTY, and this
+      // function only wants to know what kind of body it is.  Once the body
+      // is DIRTY, BaseSecurity::checkSignature() no longer has the bytes that
+      // arrived and has to fall back to a re-encoding.
+      const MultipartSignedContents* constMps = mps;
       try
       {
-         mps->parts();
+         constMps->parts();
       }
       catch (const BaseException& e)
       {
@@ -924,7 +930,24 @@ bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents** contents)
          return false;
       }
 
-      return isEncryptedRecurse(&(*(mps->parts().begin())));
+      // front() below needs a part to hand out.
+      if (constMps->parts().empty())
+      {
+         return false;
+      }
+
+      // Recurse through a local pointer and write back only if the callee
+      // really replaced the part, which it does for a malformed one.  Handing
+      // out a mutable iterator up front would mark the body DIRTY even when
+      // nothing changes, for the same reason as above.
+      Contents* firstPart = constMps->parts().front();
+      Contents* const beforeRecurse = firstPart;
+      const bool encrypted = isEncryptedRecurse(&firstPart);
+      if (firstPart != beforeRecurse)
+      {
+         mps->parts().front() = firstPart;
+      }
+      return encrypted;
    }
 
    MultipartAlternativeContents* alt = dynamic_cast<MultipartAlternativeContents*>(*contents);
