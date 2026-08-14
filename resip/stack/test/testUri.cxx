@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <iostream>
+#include <set>
 
 #include "TestSupport.hxx"
 #include "resip/stack/UnknownParameterType.hxx"
@@ -1179,6 +1180,281 @@ main(int argc, char* argv[])
       NameAddr allContactsNameAddr;
       allContactsNameAddr.setAllContacts();
       assert(!(defaultNameAddr == allContactsNameAddr));
+   }
+
+   // ---------------------------------------------------------------------
+   // urn: scheme support (RFC 8141), stored as an opaque NID:NSS blob with
+   // its own ABNF distinct from sip:/sips: (RFC 3261) and tel: (RFC 3966).
+   // ---------------------------------------------------------------------
+
+   // Basic parse without angle brackets (as in a Request-URI).
+   {
+      Uri uri("urn:service:sos");
+      assert(uri.scheme() == "urn");
+      assert(uri.user() == "service:sos");
+      assert(uri.host().empty());
+      assert(uri.port() == 0);
+      assert(uri.password().empty());
+   }
+
+   // Round-trip: ':' must not be escaped (unlike the sip:/sips: table).
+   {
+      Uri uri("urn:service:sos");
+      assert(Data::from(uri) == "urn:service:sos");
+   }
+
+   // Same urn: inside a NameAddr with angle brackets and a tag (as in a
+   // real To/From): must parse (isWellFormed()) without confusing the
+   // tag's ';' with part of the URI.
+   {
+      NameAddr na("<urn:service:sos>;tag=abc123");
+      assert(na.isWellFormed());
+      assert(na.uri().scheme() == "urn");
+      assert(na.uri().user() == "service:sos");
+      assert(na.param(p_tag) == "abc123");
+      assert(Data::from(na.uri()) == "urn:service:sos");
+   }
+
+   // ';' is a valid sub-delim inside a urn: NSS (RFC 8141) and must NOT
+   // be treated as a delimiter (unlike tel:, RFC 3966). Must be preserved
+   // as-is, even with several ';' in a row.
+   {
+      NameAddr na("<urn:example:a;b;c>;tag=xyz");
+      assert(na.isWellFormed());
+      assert(na.uri().user() == "example:a;b;c");
+      assert(Data::from(na.uri()) == "urn:example:a;b;c");
+   }
+
+   // Regression test: a bare (unbracketed) urn: directly followed by a
+   // NameAddr parameter must NOT swallow it into the URI's user part --
+   // the ';' must be recognized as the tag separator, not NSS content.
+   // (RFC 3261 sec 20 allows omitting "<...>" here because urn:service:sos
+   // itself contains none of ',', '?', ';'.)
+   {
+      NameAddr na("urn:service:sos;tag=abc123");
+      assert(na.isWellFormed());
+      assert(na.uri().scheme() == "urn");
+      assert(na.uri().user() == "service:sos");
+      assert(na.param(p_tag) == "abc123");
+   }
+
+   // Regression test: a urn: Request-URI (no angle brackets -- Request-URIs
+   // are never bracketed) whose NSS legitimately contains ';' must NOT be
+   // truncated at the first one -- there are no NameAddr parameters that
+   // can follow a Request-URI, so ';'/'?'/',' are just NSS content here.
+   {
+      const Data msgText(
+         "INVITE urn:example:a;b;c SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP host.example.com;branch=z9hG4bK1234\r\n"
+         "Max-Forwards: 70\r\n"
+         "To: <urn:example:a;b;c>\r\n"
+         "From: <sip:caller@example.com>;tag=1234\r\n"
+         "Call-ID: urntest124@example.com\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n");
+      unique_ptr<SipMessage> msg(SipMessage::make(msgText));
+      assert(msg.get());
+      assert(msg->header(h_RequestLine).uri().user() == "example:a;b;c");
+   }
+
+   // A full Request-Line with urn: (no angle brackets) must parse too.
+   {
+      const Data msgText(
+         "INVITE urn:service:sos SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP host.example.com;branch=z9hG4bK1234\r\n"
+         "Max-Forwards: 70\r\n"
+         "To: <urn:service:sos>\r\n"
+         "From: <sip:caller@example.com>;tag=1234\r\n"
+         "Call-ID: urntest123@example.com\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n");
+      unique_ptr<SipMessage> msg(SipMessage::make(msgText));
+      assert(msg.get());
+      assert(msg->header(h_RequestLine).uri().scheme() == "urn");
+      assert(msg->header(h_RequestLine).uri().user() == "service:sos");
+      assert(msg->header(h_To).uri().scheme() == "urn");
+      assert(msg->header(h_To).uri().user() == "service:sos");
+   }
+
+   // %XX decoding in the NSS, same as for sip:/sips: user: internal value
+   // is decoded, and re-encoding restores the original escaping.
+   {
+      NameAddr na("<urn:example:a%20b>"); // %20 = space
+      assert(na.isWellFormed());
+      assert(na.uri().user() == "example:a b");
+      assert(Data::from(na.uri()) == "urn:example:a%20b");
+   }
+   {
+      NameAddr na("<urn:example:a%23b>"); // %23 = '#'
+      assert(na.isWellFormed());
+      assert(na.uri().user() == "example:a#b");
+      assert(Data::from(na.uri()) == "urn:example:a%23b");
+   }
+
+   // Programmatic construction: only space must be escaped (not pchar,
+   // no structural role). ':', '@', ';' and the rest of sub-delims must
+   // not (RFC 8141 pchar), and neither must '?'/'#' -- although not
+   // pchar, they mark rq-components/fragment in a real URN and escaping
+   // them would break round-trip (see the next two blocks).
+   {
+      Uri uri;
+      uri.scheme() = "urn";
+      uri.user() = Data("a b#c?d:e@f;g");
+      assert(Data::from(uri) == "urn:a%20b#c?d:e@f;g");
+   }
+
+   // Round-trip of a real r-component (RFC 8141: "?+"), no pct-encoding:
+   // must come back unchanged, '?' and '+' unescaped.
+   {
+      Uri uri("urn:example:nss?+rcomponent");
+      assert(uri.user() == "example:nss?+rcomponent");
+      assert(Data::from(uri) == "urn:example:nss?+rcomponent");
+   }
+
+   // Round-trip of a real fragment (RFC 8141: '#'): must come back
+   // unchanged, '#' unescaped.
+   {
+      Uri uri("urn:example:nss#fragment");
+      assert(uri.user() == "example:nss#fragment");
+      assert(Data::from(uri) == "urn:example:nss#fragment");
+   }
+
+   // Critical distinction: an ESCAPED '#' ("%23", '#' as NSS data) and a
+   // LITERAL '#' (the real fragment separator) decode to the same
+   // logical value via user() ("example:a#b" either way), but must
+   // re-serialize each in its original form -- otherwise a received
+   // '%23' would silently turn into a real fragment separator on
+   // re-transmission, changing the URN's structural meaning.
+   {
+      Uri uriEscaped("urn:example:a%23b");
+      Uri uriLiteral("urn:example:a#b");
+      assert(uriEscaped.user() == "example:a#b");
+      assert(uriLiteral.user() == "example:a#b");
+      assert(Data::from(uriEscaped) == "urn:example:a%23b");
+      assert(Data::from(uriLiteral) == "urn:example:a#b");
+   }
+
+   // getAor()/getAorNoPort()/getAOR(bool) must canonicalize via
+   // getUrnEncodingTable(), not dump mUser raw -- consistent with how
+   // this AOR path canonicalizes sip:/sips: user (see getAorInternal()).
+   {
+      Uri uri("urn:service:sos");
+      assert(uri.getAor() == "service:sos");
+      assert(uri.getAorNoPort() == "service:sos");
+      assert(uri.getAOR(false) == "urn:service:sos");
+
+      Uri uriSpace;
+      uriSpace.scheme() = "urn";
+      uriSpace.user() = Data("a b");
+      assert(uriSpace.getAor() == "a%20b");
+   }
+
+   // host()/port()/password()/param() on a urn: must not throw and must
+   // behave like tel: (defaults, no host semantics).
+   {
+      Uri uri("urn:service:sos");
+      bool threw = false;
+      try
+      {
+         Data h = uri.host();
+         int p = uri.port();
+         Data pw = uri.password();
+         bool hasTransport = uri.exists(p_transport);
+         (void)h; (void)p; (void)pw; (void)hasTransport;
+      }
+      catch (const BaseException&)
+      {
+         threw = true;
+      }
+      assert(!threw);
+      assert(uri.host().empty());
+      assert(uri.port() == 0);
+      assert(uri.password().empty());
+      assert(!uri.exists(p_transport));
+   }
+
+   // operator==: NID is case-insensitive, NSS is case-sensitive (RFC
+   // 8141), same NSS case rule as the sip:/sips: user part.
+   {
+      // Same NSS, NID differs only in case -> equal (NID case-insensitive).
+      Uri uri1("urn:EXAMPLE:abc");
+      Uri uri2("urn:example:abc");
+      assert(uri1 == uri2);
+
+      // Same NID, NSS differs only in case -> not equal (NSS case-sensitive).
+      Uri uri3("urn:example:ABC");
+      Uri uri4("urn:example:abc");
+      assert(!(uri3 == uri4));
+
+      Uri uri5("urn:example:ABC");
+      Uri uri6("urn:example:ABC");
+      assert(uri5 == uri6);
+   }
+
+   // Regression test: operator<, the hash function and getAor() must all
+   // agree with operator== on NID case-insensitivity -- otherwise
+   // std::set<Uri>/HashMap<Uri,...> and registration/auth keys would
+   // treat two "equal" urn: Uris as distinct.
+   {
+      Uri uri1("urn:EXAMPLE:abc");
+      Uri uri2("urn:example:abc");
+      assert(uri1 == uri2);
+      assert(!(uri1 < uri2) && !(uri2 < uri1));
+      assert(std::hash<Uri>()(uri1) == std::hash<Uri>()(uri2));
+      assert(uri1.getAor() == uri2.getAor());
+
+      std::set<Uri> uriSet;
+      uriSet.insert(uri1);
+      uriSet.insert(uri2);
+      assert(uriSet.size() == 1);
+   }
+
+   // Malformed urn: NID/NSS must be rejected with a ParseException instead
+   // of silently reaching the application as if it were well-formed
+   // (RFC 8141 sec 2 NID grammar, sec 5.1 "urn" NID prohibition).
+   {
+      const char* badUrns[] = {
+         "urn:",                                // no NID at all
+         "urn:a",                                // no NID:NSS separator
+         "urn:a:nss",                             // NID too short (1 char)
+         "urn:-ab:nss",                           // NID starts with '-'
+         "urn:ab-:nss",                           // NID ends with '-'
+         "urn:a_b:nss",                           // '_' not allowed in NID
+         "urn:abcdefghijklmnopqrstuvwxyz01234567:nss", // NID > 32 chars
+         "urn:example:",                          // empty NSS
+         "urn:urn:nss",                           // NID must not be "urn"
+         "urn:URN:nss",                           // ...case-insensitively
+      };
+      for (const char* bad : badUrns)
+      {
+         bool threw = false;
+         try
+         {
+            Uri uri(bad);
+            uri.checkParsed();
+         }
+         catch (ParseException&)
+         {
+            threw = true;
+         }
+         assert(threw);
+      }
+   }
+
+   // No regression: sip: and tel: must behave exactly as before
+   // (their own escaping table still applies, not the new urn: one).
+   {
+      Uri uri("sip:alice@example.com:5060");
+      assert(Data::from(uri) == "sip:alice@example.com:5060");
+      assert(uri.host() == "example.com");
+      assert(uri.port() == 5060);
+   }
+   {
+      Uri uri("tel:+34911234567");
+      assert(Data::from(uri) == "tel:+34911234567");
+      assert(uri.host().empty());
    }
 
    cerr << endl << "All OK" << endl;

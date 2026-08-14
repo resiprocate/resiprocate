@@ -37,7 +37,10 @@ MasterProfile::MasterProfile() :
    addSupportedMethod(OPTIONS);
    addSupportedMethod(BYE);
    addSupportedMethod(UPDATE);
-   addSupportedScheme(Symbols::Sip);  
+   addSupportedScheme(Symbols::Sip);
+   // urn: (e.g. RFC 5031 emergency service URNs) is intentionally not
+   // added to the default supported schemes. An application that wants 
+   // it should call addSupportedScheme(Symbols::Urn) itself.
 }
 
 void 

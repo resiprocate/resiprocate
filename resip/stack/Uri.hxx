@@ -162,6 +162,7 @@ class Uri : public ParserCategory
       /** Modifies the default URI encoding character sets */
       static void setUriUserEncoding(unsigned char c, bool encode);
       static void setUriPasswordEncoding(unsigned char c, bool encode);
+      static void setUriUrnEncoding(unsigned char c, bool encode);
       
       bool hasEmbedded() const;
       SipMessage& embedded();
@@ -186,6 +187,22 @@ class Uri : public ParserCategory
       
       bool aorEqual(const Uri& rhs) const;
       void setIsBetweenAngleQuotes(bool value) { mIsBetweenAngleQuotes = value; }
+
+      /**
+         @brief Tells the parser this URI is being parsed as a bare
+                (unbracketed) addr-spec inside a header value (e.g. a
+                To/From without "<...>"), where NameAddr-style header
+                parameters (";tag=...", etc.) may follow directly with no
+                separator of their own. Needed so schemes like urn: (whose
+                NSS may legitimately contain ';'/'?'/',', RFC 8141) know to
+                stop at those characters here -- unlike every other
+                context (Request-URI, a standalone Uri built directly from
+                a string, or between angle brackets), where the same
+                characters are legal NSS content and nothing ambiguous can
+                follow. Set by NameAddr::parse() only; false everywhere
+                else by default.
+      */
+      void setIsBareAddrSpec(bool value) { mIsBareAddrSpec = value; }
 
       /**
          @brief Compares two known URI parameters for equality.
@@ -215,6 +232,16 @@ class Uri : public ParserCategory
       */
       static bool isSignificantUriParameter(const ParameterTypes::Type type) noexcept;
 
+      /**
+         @brief Checks if this URI's scheme has sip:/sips:/tel: user-part
+                semantics, i.e. whether its user() can be safely copied into
+                another URI (e.g. a Contact, which is always sip:/sips:)
+                that assumes that syntax.
+         @return `true` for sip:, sips: and tel:; `false` for any other
+                 scheme (e.g. urn:, whose user-part ABNF is incompatible).
+      */
+      bool isUserRelevant() const;
+
       typedef std::bitset<Uri::uriEncodingTableSize> EncodingTable;
 
       static EncodingTable& getUserEncodingTable()
@@ -235,6 +262,26 @@ class Uri : public ParserCategory
                               "0123456789"
                               "-_.!~*\\()&=+$").flip());
          return passwordEncodingTable;
+      }
+
+      /**
+         @brief Encoding table for the NID:NSS (plus optional
+                rq-components/fragment) of a urn: URI (RFC 8141:
+                namestring = "urn" ":" NID ":" NSS).
+                https://tools.ietf.org/html/rfc8141#section-2
+      */
+      static EncodingTable& getUrnEncodingTable()
+      {
+         static EncodingTable urnEncodingTable(
+               Data::toBitset("abcdefghijklmnopqrstuvwxyz"
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                              "0123456789"
+                              "-._~"           // unreserved
+                              "!$&'()*+,;="    // sub-delims
+                              ":@"             // pchar extras
+                              "/"              // NSS = pchar *(pchar / "/")
+                              "?#").flip());   // rq-components / fragment markers
+         return urnEncodingTable;
       }
 
       static EncodingTable& getLocalNumberTable()
@@ -302,6 +349,7 @@ class Uri : public ParserCategory
       mutable Data mCanonicalHost;  ///< cache for IPv6 host comparison
 
       bool mIsBetweenAngleQuotes;
+      bool mIsBareAddrSpec;
 
    private:
       std::unique_ptr<Data> mEmbeddedHeadersText;

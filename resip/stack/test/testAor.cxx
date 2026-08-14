@@ -41,6 +41,28 @@ main(int argc, char* argv[])
    {
       Aor aor;
    }
+
+   // urn: (RFC 8141): stored as an opaque NID:NSS blob in user(), no
+   // host/port. Regression test for mPort/mOldPort being left
+   // uninitialized on this early-return path (found in review): call
+   // value() twice to catch a stale/garbage cached value.
+   {
+      Aor aor("urn:service:sos");
+      assert(aor.scheme() == "urn");
+      assert(aor.user() == "service:sos");
+      assert(aor.host().empty());
+      assert(aor.port() == 0);
+      assert(aor.value() == "urn:service:sos");
+      assert(aor.value() == "urn:service:sos"); // second call: cache must agree
+   }
+
+   // ';' is valid NSS content (RFC 8141) and must not be treated as a
+   // delimiter here.
+   {
+      Aor aor("urn:example:a;b;c");
+      assert(aor.user() == "example:a;b;c");
+      assert(aor.value() == "urn:example:a;b;c");
+   }
 }
 
 /* ====================================================================

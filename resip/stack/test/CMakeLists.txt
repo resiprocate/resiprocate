@@ -87,6 +87,7 @@ add_custom_command ( TARGET RFC4475TortureTests POST_BUILD
    COMMAND_EXPAND_LISTS
 )
 manual_test(limpc limpc.cxx)
+test(testAor testAor.cxx)
 test(testAppTimer testAppTimer.cxx)
 test(testApplicationSip testApplicationSip.cxx TestSupport.cxx)
 manual_test(testClient testClient.cxx)
