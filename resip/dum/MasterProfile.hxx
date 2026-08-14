@@ -19,8 +19,16 @@ class MasterProfile : public UserProfile
       /// Creates an Identity/Profile with no BaseProfile - this is the root of all profiles
       MasterProfile();  
       
-      /// Default is "sip"
-      virtual void addSupportedScheme(const Data& scheme);          
+      /// Default is "sip". Note: "urn" (RFC 8141, e.g. the RFC 5031
+      /// emergency service URNs like "urn:service:sos") is intentionally
+      /// NOT included by default -- accepting urn: Request-URIs is
+      /// deployment policy, not something the library should impose on
+      /// every application. An application that wants to accept them
+      /// (e.g. an emergency-services UAS) should call this explicitly:
+      /// @code
+      ///    masterProfile->addSupportedScheme(Symbols::Urn);
+      /// @endcode
+      virtual void addSupportedScheme(const Data& scheme);
       virtual bool isSchemeSupported(const Data& scheme) const;
       virtual void clearSupportedSchemes() noexcept;
 

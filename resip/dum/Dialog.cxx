@@ -125,20 +125,27 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                      {
                         // Contact header will always have a sip: scheme so it's safe to copy
                         // the user part from sip:, sips: and tel: but not from others like urn:
-                        if (isEqualNoCase(request.header(h_To).uri().scheme(), Symbols::Sip) ||
-                           isEqualNoCase(request.header(h_To).uri().scheme(), Symbols::Sips) ||
-                           isEqualNoCase(request.header(h_To).uri().scheme(), Symbols::Tel))
+                        // (RFC 8141's NID:NSS has nothing to do with a sip: user's ABNF).
+                        // When skipped, mLocalContact.uri().user() keeps whatever
+                        // getOverrideHostAndPort() set above (or stays empty) --
+                        // e.g. for a urn: To (an incoming request targeting an
+                        // emergency-services URN), the local Contact ends up with
+                        // no user part at all: "sip:host:port". Legal per RFC 3261
+                        // (Contact only needs a valid sip:/sips: URI), and arguably
+                        // the only sane choice here, since there is no sip:-shaped
+                        // user to carry over from a urn: To.
+                        if (request.header(h_To).uri().isUserRelevant())
                         {
                            mLocalContact.uri().user() = request.header(h_To).uri().user();
                         }
                      }
                      else
                      {
-                        // Contact header will always have a sip: scheme so it's safe to copy
-                        // the user part from sip:, sips: and tel: but not from others like urn:
-                        if (isEqualNoCase(request.header(h_RequestLine).uri().scheme(), Symbols::Sip) ||
-                           isEqualNoCase(request.header(h_RequestLine).uri().scheme(), Symbols::Sips) ||
-                           isEqualNoCase(request.header(h_RequestLine).uri().scheme(), Symbols::Tel))
+                        // Same reasoning as above, for the case where the
+                        // Request-URI (rather than To) carries the user to copy
+                        // -- e.g. a urn: Request-URI (RFC 5031 emergency call)
+                        // also leaves mLocalContact.uri().user() untouched.
+                        if (request.header(h_RequestLine).uri().isUserRelevant())
                         {
                            mLocalContact.uri().user() = request.header(h_RequestLine).uri().user();
                         }

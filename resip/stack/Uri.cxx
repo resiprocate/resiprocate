@@ -40,7 +40,8 @@ Uri::Uri(PoolBase* pool)
      mScheme(Data::Share, Symbols::DefaultSipScheme),
      mPort(0),
      mHostCanonicalized(false),
-     mIsBetweenAngleQuotes(false)
+     mIsBetweenAngleQuotes(false),
+     mIsBareAddrSpec(false)
 {
 }
 
@@ -48,17 +49,19 @@ Uri::Uri(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool) :
    ParserCategory(hfv, type, pool),
    mPort(0),
    mHostCanonicalized(false),
-   mIsBetweenAngleQuotes(false)
+   mIsBetweenAngleQuotes(false),
+   mIsBareAddrSpec(false)
 {}
 
 
 static const Data parseContext("Uri constructor");
 Uri::Uri(const Data& data)
-   : ParserCategory(), 
+   : ParserCategory(),
      mScheme(Symbols::DefaultSipScheme),
      mPort(0),
      mHostCanonicalized(false),
-     mIsBetweenAngleQuotes(false)
+     mIsBetweenAngleQuotes(false),
+     mIsBareAddrSpec(false)
 {
    HeaderFieldValue hfv(data.data(), data.size());
    // must copy because parse creates overlays
@@ -81,6 +84,7 @@ Uri::Uri(const Uri& rhs,
      mHostCanonicalized(rhs.mHostCanonicalized),
      mCanonicalHost(rhs.mCanonicalHost),
      mIsBetweenAngleQuotes(rhs.mIsBetweenAngleQuotes),
+     mIsBareAddrSpec(rhs.mIsBareAddrSpec),
      mEmbeddedHeadersText(rhs.mEmbeddedHeadersText.get() ? new Data(*rhs.mEmbeddedHeadersText) : 0),
      mEmbeddedHeaders(rhs.mEmbeddedHeaders.get() ? new SipMessage(*rhs.mEmbeddedHeaders) : 0),
      mUserRaw(rhs.mUserRaw ? new Data(*rhs.mUserRaw) : nullptr)
@@ -520,27 +524,15 @@ bool Uri::isSignificantUriParameter(const ParameterTypes::Type type) noexcept
           type == ParameterTypes::transport;
 }
 
-// urn: (RFC 8141): NID is case-insensitive, NSS is case-sensitive.
-// mUser stores "NID:NSS" (plus optional rq-components/fragment)
-// as one blob (see Uri::parse()), so split on the first ':' -- the NID
-// itself can't contain one (NID = alphanum *(alphanum/"-") alphanum) --
-// and compare each side with the right case rule. 
-// No ':' found (e.g. a malformed/hand-built value) falls back to a plain 
-// case-sensitive compare of the whole thing.
-static bool
-urnUserEqual(const Data& a, const Data& b)
+bool Uri::isUserRelevant() const
 {
-   const Data::size_type sepA = a.find(Symbols::COLON);
-   const Data::size_type sepB = b.find(Symbols::COLON);
-   if (sepA == Data::npos || sepB == Data::npos)
-   {
-      return a == b;
-   }
-   return isEqualNoCase(a.substr(0, sepA), b.substr(0, sepB)) &&
-          a.substr(sepA) == b.substr(sepB);
+   checkParsed();
+   return isEqualNoCase(mScheme, Symbols::Sip) ||
+          isEqualNoCase(mScheme, Symbols::Sips) ||
+          isEqualNoCase(mScheme, Symbols::Tel);
 }
 
-bool 
+bool
 Uri::operator==(const Uri& other) const
 {
    checkParsed();
@@ -579,15 +571,23 @@ Uri::operator==(const Uri& other) const
       }
    }
    
-   // urn: needs its own NID/NSS-aware comparison in urnUserEqual()
-   // sip:/sips: user comparison is case-sensitive (RFC 3261 19.1.4);
-   // every other scheme defaults to case-insensitive.
+   // Case-sensitive user comparison for:
+   // - sip:/sips: per RFC 3261 sec 19.1.4.
+   // - urn: because the NID (case-insensitive per RFC 8141) is already
+   //   normalized to lowercase by Uri::parse() (see comment there), so a
+   //   plain compare here is correct: NID case differences have already
+   //   been folded away, and NSS case is preserved and compared as-is.
+   //   Known deviation: mUser also holds any rq-components/fragment
+   //   (see the comment in Uri::parse()'s urn branch), which RFC 8141
+   //   sec 3.1 explicitly excludes from URN equivalence -- so here
+   //   "urn:example:nss?+rcomponent" != "urn:example:nss", where the RFC
+   //   would consider them equivalent. Acceptable for SIP routing
+   //   purposes (this is the same granularity used to compare the
+   //   sip:/sips: user part above), but not a strict RFC 8141 comparison.
+   // Every other scheme defaults to case-insensitive.
    bool userEqual;
-   if (isEqualNoCase(mScheme, Symbols::Urn))
-   {
-      userEqual = urnUserEqual(mUser, other.mUser);
-   }
-   else if (isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips))
+   if (isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips) ||
+       isEqualNoCase(mScheme, Symbols::Urn))
    {
       userEqual = (mUser == other.mUser);
    }
@@ -958,7 +958,7 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
 #ifdef HANDLE_CHARACTER_ESCAPING
       {
          oDataStream str(aor);
-         if (mScheme == Symbols::Urn)
+         if (isEqualNoCase(mScheme, Symbols::Urn))
          {
             mUser.escapeToStream(str, getUrnEncodingTable());
          }
@@ -1139,6 +1139,38 @@ Uri::getAorAsUri(TransportType transportTypeToRemoveDefaultPort) const
    return ret;
 }
 
+#ifdef HANDLE_CHARACTER_ESCAPING
+// Decodes [start, pb.position()) into `user`, capturing the as-received
+// bytes into `userRaw` (only if a '%' escape is present) so encodeParsed()
+// can re-emit them verbatim instead of losing the sender's original
+// escaping. Shared by the sip:/sips: and urn: user-parsing below -- both
+// need the exact same "scan for '%', then dataUnescaped" dance.
+static void
+decodeUserPreservingEscapes(ParseBuffer& pb, const char* start,
+                             Data& user, std::unique_ptr<Data>& userRaw)
+{
+   const char* userEnd = pb.position();
+   bool userHasEscape = false;
+   for (const char* p = start; p < userEnd; ++p)
+   {
+      if (*p == Symbols::PERCENT[0])
+      {
+         userHasEscape = true;
+         break;
+      }
+   }
+   pb.dataUnescaped(user, start);
+   // Capture the as-received bytes only after the decode succeeds -- it can
+   // throw on a malformed escape, and userRaw must never hold bytes that
+   // fail to decode, so the encode-path re-decode cannot throw. userRaw
+   // then always decodes back to the user just produced.
+   if (userHasEscape)
+   {
+      userRaw.reset(new Data(start, (Data::size_type)(userEnd - start)));
+   }
+}
+#endif
+
 void
 Uri::parse(ParseBuffer& pb)
 {
@@ -1179,42 +1211,108 @@ Uri::parse(ParseBuffer& pb)
       if (mIsBetweenAngleQuotes)
       {
          // Inside "<...>" the only terminator is '>' (SIP requires angle
-         // brackets exactly to avoid ';' clashing with NameAddr params).
+         // brackets exactly to avoid ';'/'?'/',' clashing with NameAddr
+         // params -- RFC 3261 sec 20 -- so within brackets those chars are
+         // legal NSS content and must not be treated as delimiters).
          static std::bitset<256> delimiter=Data::toBitset("\r\n\t >");
+         pb.skipToOneOf(delimiter);
+      }
+      else if (mIsBareAddrSpec)
+      {
+         // Bare (unbracketed) URI inside a header value (e.g. To/From
+         // without "<...>"), flagged by NameAddr::parse(): stop at
+         // ';'/'?'/',' too, since NameAddr parameters (";tag=...") may
+         // follow directly and RFC 8141 gives no way to tell them apart
+         // from NSS content here. Per RFC 3261 sec 20, a producer whose
+         // NSS needs these characters must use "<...>" instead, where the
+         // permissive rule above still applies.
+         static std::bitset<256> delimiter=Data::toBitset("\r\n\t ;?,");
          pb.skipToOneOf(delimiter);
       }
       else
       {
-         // No angle brackets (e.g. Request-URI): terminator is whitespace.
+         // Every other context: a Request-URI (RequestLine, never
+         // bracketed but with nothing that can follow except whitespace
+         // then SIP-Version), a standalone Uri built directly from a
+         // string, or any other direct caller. ';'/'?'/',' here are legal
+         // NSS content, same as the bracketed case above.
          pb.skipToOneOf(ParseBuffer::Whitespace);
       }
 #ifdef HANDLE_CHARACTER_ESCAPING
-      // -- same mechanism used for sip:/sips: user.
       // Decode %XX so user() returns the logical value, as for sip:/sips:.
       // But '#'/'?' are structural when unescaped (fragment/rq-components),
       // so a received "%23"/"%3F" (escaped data) and a literal "#"/"?"
       // (real separator) must not collapse to the same mUser and then
-      // re-encode with the wrong form. Bytes containing '%' are kept
-      // verbatim (mUserRaw) and re-emitted as-is while still decoding to
-      // the same value 
-      const char* userEnd = pb.position();
-      bool userHasEscape = false;
-      for (const char* p = anchor; p < userEnd; ++p)
-      {
-         if (*p == Symbols::PERCENT[0])
-         {
-            userHasEscape = true;
-            break;
-         }
-      }
-      pb.dataUnescaped(mUser, anchor);
-      if (userHasEscape)
-      {
-         mUserRaw.reset(new Data(anchor, (Data::size_type)(userEnd - anchor)));
-      }
+      // re-encode with the wrong form -- decodeUserPreservingEscapes()
+      // keeps the as-received bytes in mUserRaw for that case.
+      decodeUserPreservingEscapes(pb, anchor, mUser, mUserRaw);
 #else
       pb.data(mUser, anchor);
 #endif
+      // RFC 8141 sec 2: NID = alphanum *(alphanum/"-") alphanum, 2-32
+      // chars, and the NSS must be non-empty; sec 5.1: the NID must not be
+      // "urn" itself (nonsensical/reserved). Reject anything else here so
+      // a malformed urn: fails to parse instead of silently reaching the
+      // application (e.g. DUM) looking like a well-formed one.
+      const Data::size_type sep = mUser.find(Symbols::COLON);
+      if (sep == Data::npos)
+      {
+         pb.fail(__FILE__, __LINE__, "urn: missing NID:NSS separator.");
+      }
+      if (sep < 2 || sep > 32)
+      {
+         pb.fail(__FILE__, __LINE__, "urn: NID must be 2-32 characters.");
+      }
+      for (Data::size_type i = 0; i < sep; ++i)
+      {
+         const unsigned char c = (unsigned char)mUser[i];
+         // Explicit ASCII range, not isalnum(): RFC 8141's NID ABNF is
+         // ASCII-only, but isalnum() follows the process-wide C locale,
+         // so a non-C locale (common in embedded/softswitch apps that
+         // call setlocale() for logging/i18n) would accept 8-bit
+         // characters here that RFC 8141 does not allow.
+         const bool isAsciiAlnum = (c >= '0' && c <= '9') ||
+                                   (c >= 'A' && c <= 'Z') ||
+                                   (c >= 'a' && c <= 'z');
+         if (!isAsciiAlnum && !(c == '-' && i > 0 && i < sep - 1))
+         {
+            pb.fail(__FILE__, __LINE__, "urn: NID has an invalid character.");
+         }
+      }
+      if (sep + 1 >= mUser.size())
+      {
+         pb.fail(__FILE__, __LINE__, "urn: NSS must not be empty.");
+      }
+      if (isEqualNoCase(mUser.substr(0, sep), Symbols::Urn))
+      {
+         pb.fail(__FILE__, __LINE__, "urn: NID must not be \"urn\".");
+      }
+
+      // RFC 8141 sec 2.2: the NID is case-insensitive. Normalize it to
+      // lowercase here, the same way schemeLowercase() already normalizes
+      // the scheme, so operator==, operator<, the hash function and
+      // getAorInternal() all agree on urn: equality without needing a
+      // urn-specific comparator.
+      // NB: this only runs at parse() time, so a hand-built Uri (user()
+      // set directly) is not validated/normalized -- same accepted
+      // limitation as the scheme case-sensitivity noted on
+      // getAorInternal()/encodeParsed().
+      {
+         Data nid(mUser.substr(0, sep));
+         nid.lowercase();
+         mUser = nid + mUser.substr(sep);
+      }
+      // mUserRaw is deliberately left untouched (still the exact bytes
+      // received): the validation above runs on the decoded mUser, so a
+      // NID could in principle hide a gratuitous, unnecessary %-escape
+      // (e.g. "urn:EX%41MPLE:nss") that isn't reflected at the same byte
+      // offset in mUserRaw -- rewriting mUserRaw's NID prefix in place,
+      // like above, would silently corrupt it in that case. Leaving it
+      // untouched is simpler and always correct: encodeParsed()'s
+      // decodedUserRaw==mUser check already re-decodes mUserRaw and falls
+      // back to escaping mUser fresh whenever they no longer match (e.g.
+      // because of this normalization step here), which is exactly the
+      // desired outcome whenever the NID's original casing has changed.
       return;
    }
 
@@ -1275,28 +1373,10 @@ Uri::parse(ParseBuffer& pb)
       if(atSign)
       {
 #ifdef HANDLE_CHARACTER_ESCAPING
-         // Scan the user part -- exactly the range dataUnescaped decodes below
-         // (':' before a password, else '@') -- for an escape before decoding.
-         // (This '%' scan repeats one dataUnescaped does internally.)
-         const char* userEnd = pb.position();
-         bool userHasEscape = false;
-         for (const char* p = start; p < userEnd; ++p)
-         {
-            if (*p == Symbols::PERCENT[0])
-            {
-               userHasEscape = true;
-               break;
-            }
-         }
-         pb.dataUnescaped(mUser, start);
-         // Capture the as-received bytes only after the decode succeeds -- it can
-         // throw on a malformed escape, and mUserRaw must never hold bytes that
-         // fail to decode, so the encode-path re-decode cannot throw. mUserRaw
-         // then always decodes back to the mUser just produced.
-         if (userHasEscape)
-         {
-            mUserRaw.reset(new Data(start, (Data::size_type)(userEnd - start)));
-         }
+         // The range dataUnescaped decodes here is exactly [start, position),
+         // i.e. up to ':' before a password, else '@' -- decodeUserPreservingEscapes()
+         // scans it for an escape and keeps the as-received bytes in mUserRaw.
+         decodeUserPreservingEscapes(pb, start, mUser, mUserRaw);
 #else
          pb.data(mUser, start);
 #endif
@@ -1423,37 +1503,12 @@ Uri::encodeParsed(EncodeStream& str) const
    if (!mUser.empty())
    {
 #ifdef HANDLE_CHARACTER_ESCAPING
-      if (mScheme == Symbols::Urn)
-      {
-         // Same mUserRaw mechanism as sip:/sips: below: emit as-received
-         // bytes verbatim while they still decode to mUser, so '%23'
-         // (escaped data) and a literal '#' (real fragment separator)
-         // don't collapse and re-encode with the wrong character. Falls
-         // back to getUrnEncodingTable() (doesn't escape ':', '@', ';',
-         // '?', '#', sub-delims) if mUser was edited after parsing, or
-         // there's no mUserRaw (e.g. hand-built Uri).
-         if (mUserRaw)
-         {
-            Data decodedUserRaw;
-            ParseBuffer pbUrn(mUserRaw->data(), mUserRaw->size());
-            const char* anchorUrn = pbUrn.position();
-            pbUrn.skipToEnd();
-            pbUrn.dataUnescaped(decodedUserRaw, anchorUrn);
-            if (decodedUserRaw == mUser)
-            {
-               str << *mUserRaw;
-            }
-            else
-            {
-               mUser.escapeToStream(str, getUrnEncodingTable());
-            }
-         }
-         else
-         {
-            mUser.escapeToStream(str, getUrnEncodingTable());
-         }
-      }
-      else if (mUserRaw)
+      // urn: uses its own table (doesn't escape ':', '@', ';', '?', '#',
+      // sub-delims -- RFC 8141); every other scheme uses the sip:/sips:
+      // user table.
+      const EncodingTable& table = isEqualNoCase(mScheme, Symbols::Urn)
+         ? getUrnEncodingTable() : getUserEncodingTable();
+      if (mUserRaw)
       {
          // Emit the as-received bytes verbatim while they still decode (via the
          // same dataUnescaped as parse) to the current mUser, so the sender's
@@ -1473,12 +1528,12 @@ Uri::encodeParsed(EncodeStream& str) const
          }
          else
          {
-            mUser.escapeToStream(str, getUserEncodingTable());
+            mUser.escapeToStream(str, table);
          }
       }
       else
       {
-         mUser.escapeToStream(str, getUserEncodingTable());
+         mUser.escapeToStream(str, table);
       }
 #else
       str << mUser;

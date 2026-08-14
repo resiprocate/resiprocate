@@ -13,8 +13,9 @@ Aor::Aor()
 }
 
 Aor::Aor(const Data& value)
+   : mOwnedBuffer(value.data(), value.size())
 {
-   ParseBuffer pb(value);
+   ParseBuffer pb(mOwnedBuffer);
    
    pb.skipWhitespace();
    const char* start = pb.position();

@@ -107,9 +107,14 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
       }
       // Contact header will always have a sip: scheme so it's safe to copy
       // the user part from sip:, sips: and tel: but not from others like urn:
-      if (isEqualNoCase(from.uri().scheme(), Symbols::Sip) ||
-         isEqualNoCase(from.uri().scheme(), Symbols::Sips) ||
-         isEqualNoCase(from.uri().scheme(), Symbols::Tel))
+      // (RFC 8141's NID:NSS has nothing to do with a sip: user's ABNF).
+      // When skipped, contact.uri().user() keeps whatever it already had:
+      // empty by default, or whatever getOverrideHostAndPort() set above --
+      // i.e. for a urn: "from" (e.g. an emergency-services From), an
+      // override profile's own user is now preserved instead of being
+      // clobbered by the (incompatible) urn: user. Legal either way; see
+      // the analogous comment in Dialog.cxx for the To/Request-URI case.
+      if (from.uri().isUserRelevant())
       {
          contact.uri().user() = from.uri().user();
       }

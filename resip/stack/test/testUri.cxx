@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <iostream>
+#include <set>
 
 #include "TestSupport.hxx"
 #include "resip/stack/UnknownParameterType.hxx"
@@ -1224,6 +1225,39 @@ main(int argc, char* argv[])
       assert(Data::from(na.uri()) == "urn:example:a;b;c");
    }
 
+   // Regression test: a bare (unbracketed) urn: directly followed by a
+   // NameAddr parameter must NOT swallow it into the URI's user part --
+   // the ';' must be recognized as the tag separator, not NSS content.
+   // (RFC 3261 sec 20 allows omitting "<...>" here because urn:service:sos
+   // itself contains none of ',', '?', ';'.)
+   {
+      NameAddr na("urn:service:sos;tag=abc123");
+      assert(na.isWellFormed());
+      assert(na.uri().scheme() == "urn");
+      assert(na.uri().user() == "service:sos");
+      assert(na.param(p_tag) == "abc123");
+   }
+
+   // Regression test: a urn: Request-URI (no angle brackets -- Request-URIs
+   // are never bracketed) whose NSS legitimately contains ';' must NOT be
+   // truncated at the first one -- there are no NameAddr parameters that
+   // can follow a Request-URI, so ';'/'?'/',' are just NSS content here.
+   {
+      const Data msgText(
+         "INVITE urn:example:a;b;c SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP host.example.com;branch=z9hG4bK1234\r\n"
+         "Max-Forwards: 70\r\n"
+         "To: <urn:example:a;b;c>\r\n"
+         "From: <sip:caller@example.com>;tag=1234\r\n"
+         "Call-ID: urntest124@example.com\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n");
+      unique_ptr<SipMessage> msg(SipMessage::make(msgText));
+      assert(msg.get());
+      assert(msg->header(h_RequestLine).uri().user() == "example:a;b;c");
+   }
+
    // A full Request-Line with urn: (no angle brackets) must parse too.
    {
       const Data msgText(
@@ -1357,6 +1391,56 @@ main(int argc, char* argv[])
       Uri uri5("urn:example:ABC");
       Uri uri6("urn:example:ABC");
       assert(uri5 == uri6);
+   }
+
+   // Regression test: operator<, the hash function and getAor() must all
+   // agree with operator== on NID case-insensitivity -- otherwise
+   // std::set<Uri>/HashMap<Uri,...> and registration/auth keys would
+   // treat two "equal" urn: Uris as distinct.
+   {
+      Uri uri1("urn:EXAMPLE:abc");
+      Uri uri2("urn:example:abc");
+      assert(uri1 == uri2);
+      assert(!(uri1 < uri2) && !(uri2 < uri1));
+      assert(std::hash<Uri>()(uri1) == std::hash<Uri>()(uri2));
+      assert(uri1.getAor() == uri2.getAor());
+
+      std::set<Uri> uriSet;
+      uriSet.insert(uri1);
+      uriSet.insert(uri2);
+      assert(uriSet.size() == 1);
+   }
+
+   // Malformed urn: NID/NSS must be rejected with a ParseException instead
+   // of silently reaching the application as if it were well-formed
+   // (RFC 8141 sec 2 NID grammar, sec 5.1 "urn" NID prohibition).
+   {
+      const char* badUrns[] = {
+         "urn:",                                // no NID at all
+         "urn:a",                                // no NID:NSS separator
+         "urn:a:nss",                             // NID too short (1 char)
+         "urn:-ab:nss",                           // NID starts with '-'
+         "urn:ab-:nss",                           // NID ends with '-'
+         "urn:a_b:nss",                           // '_' not allowed in NID
+         "urn:abcdefghijklmnopqrstuvwxyz01234567:nss", // NID > 32 chars
+         "urn:example:",                          // empty NSS
+         "urn:urn:nss",                           // NID must not be "urn"
+         "urn:URN:nss",                           // ...case-insensitively
+      };
+      for (const char* bad : badUrns)
+      {
+         bool threw = false;
+         try
+         {
+            Uri uri(bad);
+            uri.checkParsed();
+         }
+         catch (ParseException&)
+         {
+            threw = true;
+         }
+         assert(threw);
+      }
    }
 
    // No regression: sip: and tel: must behave exactly as before

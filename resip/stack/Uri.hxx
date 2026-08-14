@@ -189,6 +189,22 @@ class Uri : public ParserCategory
       void setIsBetweenAngleQuotes(bool value) { mIsBetweenAngleQuotes = value; }
 
       /**
+         @brief Tells the parser this URI is being parsed as a bare
+                (unbracketed) addr-spec inside a header value (e.g. a
+                To/From without "<...>"), where NameAddr-style header
+                parameters (";tag=...", etc.) may follow directly with no
+                separator of their own. Needed so schemes like urn: (whose
+                NSS may legitimately contain ';'/'?'/',', RFC 8141) know to
+                stop at those characters here -- unlike every other
+                context (Request-URI, a standalone Uri built directly from
+                a string, or between angle brackets), where the same
+                characters are legal NSS content and nothing ambiguous can
+                follow. Set by NameAddr::parse() only; false everywhere
+                else by default.
+      */
+      void setIsBareAddrSpec(bool value) { mIsBareAddrSpec = value; }
+
+      /**
          @brief Compares two known URI parameters for equality.
          @param param1 The first parameter to compare.
          @param param2 The second parameter to compare.
@@ -215,6 +231,16 @@ class Uri : public ParserCategory
          @note Follows RFC 3261 section 19.1.4.
       */
       static bool isSignificantUriParameter(const ParameterTypes::Type type) noexcept;
+
+      /**
+         @brief Checks if this URI's scheme has sip:/sips:/tel: user-part
+                semantics, i.e. whether its user() can be safely copied into
+                another URI (e.g. a Contact, which is always sip:/sips:)
+                that assumes that syntax.
+         @return `true` for sip:, sips: and tel:; `false` for any other
+                 scheme (e.g. urn:, whose user-part ABNF is incompatible).
+      */
+      bool isUserRelevant() const;
 
       typedef std::bitset<Uri::uriEncodingTableSize> EncodingTable;
 
@@ -323,6 +349,7 @@ class Uri : public ParserCategory
       mutable Data mCanonicalHost;  ///< cache for IPv6 host comparison
 
       bool mIsBetweenAngleQuotes;
+      bool mIsBareAddrSpec;
 
    private:
       std::unique_ptr<Data> mEmbeddedHeadersText;
