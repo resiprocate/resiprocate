@@ -66,9 +66,16 @@ class MultipartMixedContents : public Contents
          parts(); a reference into the object would go empty under the caller.
 
          Empty when the bytes are not available: for an object that was built
-         locally rather than parsed, after mutable access through parts(), and
-         on a copy.  A copy has a buffer of its own, but it is not parsed
-         again, so there is no point at which the view could be established.
+         locally rather than parsed, and after mutable access through parts().
+
+         A copy is not empty by construction.  The copy constructor does not
+         carry the view over, since it points into the buffer of the original,
+         but it also does not force the original to parse.  Copying a body that
+         is still unparsed therefore leaves a copy that is unparsed as well,
+         holding a deep copy of the buffer, and the first access parses that
+         buffer and establishes a view into it.  Copying a body that was
+         already parsed leaves a copy with the parts and no view, because
+         nothing parses a second time.
       */
       Data getRawFirstPart() const;
 

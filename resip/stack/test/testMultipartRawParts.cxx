@@ -4,7 +4,6 @@
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/MultipartSignedContents.hxx"
 #include "resip/stack/PlainContents.hxx"
-#include "rutil/DataStream.hxx"
 #include "rutil/ParseBuffer.hxx"
 
 using namespace resip;
@@ -180,8 +179,10 @@ main(int, char**)
       check("mutable access drops the record", mps.getRawFirstPart().empty());
    }
 
-   // A copy does not own the buffer the original was parsed from, so it reports
-   // no raw bytes rather than a view that could outlive what it points at.
+   // A copy of a body that was already parsed has no record.  The view points
+   // into the buffer of the original, and nothing parses a second time, so
+   // there is no point at which a view into the copy's own buffer could be
+   // established.
    {
       const Data body("transfer 100 to bob");
       Data expected;
@@ -190,7 +191,29 @@ main(int, char**)
       MultipartSignedContents mps(hfv, signedType());
       check("the original has a record", !mps.getRawFirstPart().empty());
       MultipartSignedContents copy(mps);
-      check("a copy has no record", copy.getRawFirstPart().empty());
+      check("a copy of a parsed body has no record", copy.getRawFirstPart().empty());
+   }
+
+   // A copy taken before anything touched the original is the other case, and
+   // it does end up with a record.  The copy constructor deliberately does not
+   // force the original to parse, so the copy is unparsed as well and holds a
+   // buffer of its own; its first access parses that buffer and establishes a
+   // view into it.  Same bytes, different buffer.
+   {
+      const Data body("transfer 100 to bob");
+      Data expected;
+      const Data raw = build(Data("Content-Type: text/plain"), body, expected);
+      HeaderFieldValue hfv(raw.data(), raw.size());
+      MultipartSignedContents mps(hfv, signedType());
+
+      // Nothing has read mps at this point, deliberately.
+      MultipartSignedContents copy(mps);
+      check("a copy of an untouched body records its own bytes",
+            copy.getRawFirstPart() == expected);
+
+      // And the original still works afterwards, from its own buffer.
+      check("the original is unaffected by the copy",
+            mps.getRawFirstPart() == expected);
    }
 
    // Nothing was parsed, so there is nothing to hand back.
