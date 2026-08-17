@@ -2274,6 +2274,19 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    {
       // Nothing recorded: this body was built locally rather than parsed,
       // so the re-encoding is both all there is and what goes on the wire.
+      //
+      // It also happens when something upstream reached the body through the
+      // mutable parts().  That case is a regression rather than a normal one,
+      // and from here the two are indistinguishable, so say which path was
+      // taken.  Without this line a future caller that drops the bytes turns
+      // into "signatures mysteriously stopped verifying" instead of something
+      // greppable.
+      InfoLog( << "No received bytes recorded for the first body part; "
+               << "verifying against a re-encoding.  This is expected for a "
+               << "locally built body and a regression if the body was parsed, "
+               << "which happens when a caller reaches it through the mutable "
+               << "MultipartMixedContents::parts()." );
+
       DataStream strm( textData );
       first->encodeHeaders( strm );
       first->encode( strm );
