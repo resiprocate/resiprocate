@@ -37,8 +37,47 @@ class MultipartMixedContents : public Contents
       virtual void parse(ParseBuffer& pb);
 
       typedef std::vector<Contents*> Parts;
-      Parts& parts() {checkParsed(); return mContents;}
+      // Mutable access drops what getRawFirstPart() returns.  A caller that
+      // can change the parts must not be handed bytes that claim to be the
+      // ones that arrived.
+      //
+      // Assigning a fresh Data rather than calling clear() on the old one:
+      // Data::clear() only sets the size to zero and deliberately keeps the
+      // shared pointer, so "empty" and "points nowhere" would otherwise be two
+      // different states.
+      Parts& parts() {checkParsed(); mRawFirstPart = Data(); return mContents;}
       const Parts& parts() const {checkParsed(); return mContents;}
+
+      /**
+         The first body part exactly as it arrived: header block, the empty
+         line, and the body.  The CRLF in front of the following boundary is
+         not included, since RFC 2046 section 5.1.1 counts it as part of the
+         delimiter.
+
+         RFC 1847 requires the signature of a multipart/signed body to cover
+         these bytes rather than a re-encoding of the parsed part, so
+         BaseSecurity::checkSignature() needs them.  Only the first part is
+         kept, because that is the part the signature covers.
+
+         What is kept internally is a view into the buffer this object was
+         parsed from, so parsing an ordinary multipart body costs nothing
+         extra.  What this function hands back is a self contained copy of it,
+         returned by value so that it stays usable after a later call to
+         parts(); a reference into the object would go empty under the caller.
+
+         Empty when the bytes are not available: for an object that was built
+         locally rather than parsed, and after mutable access through parts().
+
+         Whether a copy has a record depends on when it was taken.  The copy
+         constructor does not carry the view over, since it points into the
+         buffer of the original, but it also does not force the original to
+         parse.  Copying a body that is still unparsed leaves a copy that is
+         unparsed as well, holding a deep copy of the buffer, and the first
+         access parses that buffer and establishes a view into it.  Copying a
+         body that was already parsed leaves a copy with the parts and no
+         view, because nothing parses a second time.
+      */
+      Data getRawFirstPart() const;
 
       void setBoundary(const Data& boundary);
 
@@ -63,6 +102,10 @@ class MultipartMixedContents : public Contents
    private:
       void setBoundary();
       std::vector<Contents*> mContents;
+      // A read-only view of the first part inside the buffer this object was
+      // parsed from, not a copy of it.  Empty unless this object was parsed,
+      // see getRawFirstPart().
+      Data mRawFirstPart;
 };
 
 static bool invokeMultipartMixedContentsInit = MultipartMixedContents::init();
