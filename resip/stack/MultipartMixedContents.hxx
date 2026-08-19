@@ -68,14 +68,14 @@ class MultipartMixedContents : public Contents
          Empty when the bytes are not available: for an object that was built
          locally rather than parsed, and after mutable access through parts().
 
-         A copy is not empty by construction.  The copy constructor does not
-         carry the view over, since it points into the buffer of the original,
-         but it also does not force the original to parse.  Copying a body that
-         is still unparsed therefore leaves a copy that is unparsed as well,
-         holding a deep copy of the buffer, and the first access parses that
-         buffer and establishes a view into it.  Copying a body that was
-         already parsed leaves a copy with the parts and no view, because
-         nothing parses a second time.
+         Whether a copy has a record depends on when it was taken.  The copy
+         constructor does not carry the view over, since it points into the
+         buffer of the original, but it also does not force the original to
+         parse.  Copying a body that is still unparsed leaves a copy that is
+         unparsed as well, holding a deep copy of the buffer, and the first
+         access parses that buffer and establishes a view into it.  Copying a
+         body that was already parsed leaves a copy with the parts and no
+         view, because nothing parses a second time.
       */
       Data getRawFirstPart() const;
 

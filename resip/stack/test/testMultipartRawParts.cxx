@@ -216,6 +216,35 @@ main(int, char**)
             mps.getRawFirstPart() == expected);
    }
 
+   // Assignment behaves the same way, and the comment on operator= says so.
+   {
+      const Data body("transfer 100 to bob");
+      Data expected;
+      const Data raw = build(Data("Content-Type: text/plain"), body, expected);
+
+      {
+         HeaderFieldValue hfv(raw.data(), raw.size());
+         MultipartSignedContents src(hfv, signedType());
+
+         // Nothing has read src at this point, deliberately.
+         MultipartSignedContents dst;
+         dst = src;
+         check("assignment from an untouched body records its own bytes",
+               dst.getRawFirstPart() == expected);
+      }
+
+      {
+         HeaderFieldValue hfv(raw.data(), raw.size());
+         MultipartSignedContents src(hfv, signedType());
+         (void)src.getRawFirstPart();
+
+         MultipartSignedContents dst;
+         dst = src;
+         check("assignment from a parsed body has no record",
+               dst.getRawFirstPart().empty());
+      }
+   }
+
    // Nothing was parsed, so there is nothing to hand back.
    {
       MultipartSignedContents built;

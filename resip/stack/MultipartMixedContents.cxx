@@ -53,11 +53,14 @@ MultipartMixedContents::MultipartMixedContents(const HeaderFieldValue& hfv, cons
    }
 }
 
-// mRawFirstPart is deliberately not carried over.  It is a view into the buffer
-// rhs was parsed from; the copy gets a buffer of its own but is never parsed
-// again, so carrying the view would leave it pointing at the original.  A copy
-// therefore reports no raw bytes and checkSignature() falls back, which is the
-// behaviour that was there before.
+// mRawFirstPart is deliberately not carried over: it is a view into the buffer
+// rhs was parsed from, and the copy has a buffer of its own.  Whether the copy
+// ends up with a record depends on when it was taken.  Copying an unparsed body
+// leaves the copy unparsed as well, holding a deep copy of the buffer, and its
+// first access parses that buffer and records a view into it.  Copying a body
+// that was already parsed leaves the parts and no record, because nothing
+// parses a second time, and checkSignature() then falls back to the
+// re-encoding.  See getRawFirstPart() in the header.
 MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs)
    : Contents(rhs),
      mContents(),
@@ -124,9 +127,12 @@ MultipartMixedContents::operator=(const MultipartMixedContents& rhs)
    {
       // Drop the view first: Contents::operator=() replaces the buffer it
       // points into.  clear() below would do it too, but only after that, and
-      // a reader should not have to reason about the order.  It stays empty
-      // afterwards; see the copy constructor for why the view is not carried
-      // over.
+      // a reader should not have to reason about the order.  Whether a record
+      // reappears afterwards depends on when the assignment happened, exactly
+      // as for the copy constructor: from a source nothing has read, this
+      // object stays unparsed with a buffer of its own and its first access
+      // records a view into that buffer; from a source that was already
+      // parsed, no record.
       mRawFirstPart = Data();
       Contents::operator=(rhs);
       clear();

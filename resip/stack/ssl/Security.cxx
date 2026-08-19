@@ -2272,19 +2272,25 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    }
    else
    {
-      // Nothing recorded: this body was built locally rather than parsed,
-      // so the re-encoding is both all there is and what goes on the wire.
+      // Nothing recorded.  Three ways to get here, and only the last one is
+      // a defect:
       //
-      // It also happens when something upstream reached the body through the
-      // mutable parts().  That case is a regression rather than a normal one,
-      // and from here the two are indistinguishable, so say which path was
+      //   - the body was built locally rather than parsed, so the re-encoding
+      //     is both all there is and what goes on the wire;
+      //   - the body is a copy of one that had already been parsed.  A copy
+      //     keeps the parts but not the view, and SipMessage::init() clones
+      //     mContents, so an ordinary message copy lands here;
+      //   - something upstream reached the body through the mutable parts().
+      //
+      // From here the three are indistinguishable, so say which path was
       // taken.  Without this line a future caller that drops the bytes turns
       // into "signatures mysteriously stopped verifying" instead of something
       // greppable.
       InfoLog( << "No received bytes recorded for the first body part; "
-               << "verifying against a re-encoding.  This is expected for a "
-               << "locally built body and a regression if the body was parsed, "
-               << "which happens when a caller reaches it through the mutable "
+               << "verifying against a re-encoding.  Expected for a locally "
+               << "built body and for a copy of an already parsed one; a "
+               << "regression if this body was parsed here, which happens when "
+               << "a caller reaches it through the mutable "
                << "MultipartMixedContents::parts()." );
 
       DataStream strm( textData );
