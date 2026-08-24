@@ -2247,8 +2247,23 @@ Helper::getSdpRecurse(Contents* tree)
    {
       try
       {
-         MultipartSignedContents::Parts::const_iterator it = mps->parts().begin();
-         Contents* contents = getSdpRecurse(*it);
+         // Read the parts through the const overload.  The mutable one runs the
+         // non-const checkParsed(), which marks the body DIRTY, and this
+         // function only reads.  Once the body is DIRTY,
+         // BaseSecurity::checkSignature() no longer has the bytes that arrived
+         // and has to fall back to a re-encoding.  DUM callers are shielded by
+         // EncryptionManager running first, direct Helper::getSdp() callers are
+         // not.
+         const MultipartSignedContents* constMps = mps;
+         const MultipartSignedContents::Parts& parts = constMps->parts();
+
+         // front() below needs a part to hand out.
+         if (parts.empty())
+         {
+            return 0;
+         }
+
+         Contents* contents = getSdpRecurse(parts.front());
          return static_cast<SdpContents*>(contents);
       }
       catch (ParseException& e)

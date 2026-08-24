@@ -2232,6 +2232,12 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                              Data* signedBy,
                              SignatureStatus* sigStat )
 {
+   // RFC 1847: the signature covers the first body part exactly as it was
+   // received.  Take those bytes first, because the mutable parts() calls
+   // below drop them.  The Data is returned by value and keeps working after
+   // that.
+   const Data rawFirst = multi->getRawFirstPart();
+
    if ( multi->parts().size() != 2 )
    {
       ErrLog(<< "Trying to decode a message with wrong number of contents " << multi->parts().size());
@@ -2260,10 +2266,38 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    Data sigData = sig->getBodyData();
 
    Data textData;
-   DataStream strm( textData );
-   first->encodeHeaders( strm );
-   first->encode( strm );
-   strm.flush();
+   if (!rawFirst.empty())
+   {
+      textData = rawFirst;
+   }
+   else
+   {
+      // Nothing recorded.  Three ways to get here, and only the last one is
+      // a defect:
+      //
+      //   - the body was built locally rather than parsed, so the re-encoding
+      //     is both all there is and what goes on the wire;
+      //   - the body is a copy of one that had already been parsed.  A copy
+      //     keeps the parts but not the view, and SipMessage::init() clones
+      //     mContents, so an ordinary message copy lands here;
+      //   - something upstream reached the body through the mutable parts().
+      //
+      // From here the three are indistinguishable, so say which path was
+      // taken.  Without this line a future caller that drops the bytes turns
+      // into "signatures mysteriously stopped verifying" instead of something
+      // greppable.
+      InfoLog( << "No received bytes recorded for the first body part; "
+               << "verifying against a re-encoding.  Expected for a locally "
+               << "built body and for a copy of an already parsed one; a "
+               << "regression if this body was parsed here, which happens when "
+               << "a caller reaches it through the mutable "
+               << "MultipartMixedContents::parts()." );
+
+      DataStream strm( textData );
+      first->encodeHeaders( strm );
+      first->encode( strm );
+      strm.flush();
+   }
 
    InfoLog( << "text <"    << textData.escaped() << ">" );
    InfoLog( << "signature <" << sigData.escaped() << ">" );
