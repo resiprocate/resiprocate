@@ -820,10 +820,18 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
 #endif
    }
 
-   // Iterate by header type enum value (not insertion order) so that headers
-   // are encoded in the deterministic, enum-declared order. See the comment in
-   // HeaderTypes.hxx: "The Type enum controls the order of output". find() is
-   // O(1), so this is no slower than iterating the container directly.
+   // Iterate by header type enum value (not insertion order) so that headers are
+   // encoded in the deterministic, enum-declared order. See the comment in
+   // HeaderTypes.hxx: "The Type enum controls the order of output of the headers
+   // in the encoded SipMessage". The leading entries of that enum follow the
+   // recommendation in RFC 3261 section 7.3.1, that headers needed for proxy
+   // processing appear towards the top of the message to facilitate rapid parsing.
+   //
+   // !slg! Note this costs more than iterating mKnownHeaders directly: find() is
+   // O(1), but the loop still probes all Headers::MAX_HEADERS types no matter how
+   // few headers the message actually carries, whereas iterating the container
+   // visits only the headers that are present. Recovering the enum order without
+   // paying that is worth revisiting.
    for (int t = 0; t < Headers::MAX_HEADERS; ++t)
    {
       const Headers::Type type = static_cast<Headers::Type>(t);
@@ -870,8 +878,9 @@ EncodeStream&
 SipMessage::encodeEmbedded(EncodeStream& str) const
 {
    bool first = true;
-   // Iterate by header type enum value (not insertion order) so that headers
-   // are encoded in the deterministic, enum-declared order. See encode() above.
+   // Iterate by header type enum value (not insertion order) so that headers are
+   // encoded in the deterministic, enum-declared order. See encode() above, including
+   // the note about the cost of probing all Headers::MAX_HEADERS types.
    for (int t = 0; t < Headers::MAX_HEADERS; ++t)
    {
       const Headers::Type type = static_cast<Headers::Type>(t);
