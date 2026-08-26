@@ -168,6 +168,7 @@ class InviteSession : public DialogUsage
       const SdpContents& getProposedRemoteSdp() const;
 
       bool isConnected() const;
+      bool isSessionModificationInFlight() const;  // we have sent an UPDATE/OPTIONS/reINVITE that hasn't been answered yet
       bool isTerminated() const;
       bool isEarly() const;     // UAC Early states
       bool isAccepted() const;  // UAS States after accept is called
@@ -346,6 +347,8 @@ class InviteSession : public DialogUsage
 
       void setSessionTimerHeaders(SipMessage& msg);
       void sessionRefresh();
+      void checkDeferredSessionExpiration();
+      bool expireSessionAfterFailedModification();
       void setSessionTimerPreferences();
       void startSessionTimer();
       void handleSessionTimerResponse(const SipMessage& msg);
@@ -415,6 +418,7 @@ class InviteSession : public DialogUsage
       unsigned int mSessionRefreshTimerSeq;
       unsigned int mSessionExpirationTimerSeq;
       bool mSessionRefreshReInvite;
+      bool mSessionExpirationPending;  // Session-Expiration timer fired while a session modification was in flight
 
       class QueuedNIT
       {

@@ -82,6 +82,7 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mSessionRefreshTimerSeq(0),
      mSessionExpirationTimerSeq(0),
      mSessionRefreshReInvite(false),
+     mSessionExpirationPending(false),
      mReferSub(true),
      mCurrentEncryptionLevel(DialogUsageManager::None),
      mProposedEncryptionLevel(DialogUsageManager::None),
@@ -415,6 +416,24 @@ InviteSession::isAccepted() const
 
       default:
          return true;
+   }
+}
+
+bool
+InviteSession::isSessionModificationInFlight() const
+{
+   // Note:  the Glare states are deliberately not included - in those we are waiting on the 491 
+   //        timer and have no transaction outstanding in the stack.
+   switch (mState)
+   {
+      case SentUpdate:
+      case SentReinvite:
+      case SentReinviteNoOffer:
+      case SentOptions:
+         return true;
+
+      default:
+         return false;
    }
 }
 
@@ -1378,6 +1397,8 @@ InviteSession::dispatch(const SipMessage& msg)
          resip_assert(0);
          break;
    }
+
+   checkDeferredSessionExpiration();
 }
 
 void
@@ -1523,11 +1544,32 @@ InviteSession::dispatch(const DumTimeout& timeout)
    }
    else if (timeout.type() == DumTimeout::SessionExpiration)
    {
-      if (timeout.seq() == mSessionExpirationTimerSeq)
+      // Note:  a session timer can still be pending when the session ends - the timer sequence numbers
+      //        are only bumped when the timers are restarted - and DUM will deliver it as long as this
+      //        usage hasn't been destroyed yet.  There is nothing left to expire at that point, and the
+      //        application has already been told the session is over (or has asked to end it - 
+      //        isTerminated() covers WaitingToTerminate and friends too).
+      if (timeout.seq() == mSessionExpirationTimerSeq && !isTerminated())
       {
-         // this is so the app can decide to ignore this. default implementation
-         // will call end next - which will send a BYE
-         mDum.mInviteSessionHandler->onSessionExpired(getSessionHandle());
+         if (isSessionModificationInFlight())
+         {
+            // Don't expire the session while we still have a request outstanding in the stack.  The
+            // application will destroy this session as soon as it's told the session expired, and the
+            // stack would then be left retransmitting a request that belongs to a session that no
+            // longer exists.  Wait for the modification to complete instead - if it succeeds these
+            // timers are restarted and this expiry is dropped, and if it fails the application is told
+            // the session expired at that point.  Note: mSessionInterval is at least 90 seconds and
+            // refreshes are sent at mSessionInterval/2, so even waiting out TimerF still leaves us
+            // expiring the session before the negotiated expiry time.
+            InfoLog(<< "Session expired while a session modification is in flight - deferring expiry until it completes");
+            mSessionExpirationPending = true;
+         }
+         else
+         {
+            // this is so the app can decide to ignore this. default implementation
+            // will call end next - which will send a BYE
+            mDum.mInviteSessionHandler->onSessionExpired(getSessionHandle());
+         }
       }
    }
    else if (timeout.type() == DumTimeout::SessionRefresh)
@@ -1551,6 +1593,8 @@ InviteSession::dispatch(const DumTimeout& timeout)
          }
       }
    }
+
+   checkDeferredSessionExpiration();
 }
 
 void
@@ -1711,6 +1755,10 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          break;
 
       case OnGeneralFailure:
+         if (expireSessionAfterFailedModification())
+         {
+            break;
+         }
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -1828,6 +1876,10 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
       case OnGeneralFailure:
          mStaleReInviteTimerSeq++;
+         if (expireSessionAfterFailedModification())
+         {
+            break;
+         }
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -1936,6 +1988,10 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
 
       case OnGeneralFailure:
          mStaleReInviteTimerSeq++;
+         if (expireSessionAfterFailedModification())
+         {
+            break;
+         }
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -1988,6 +2044,10 @@ InviteSession::dispatchSentOptions(const SipMessage& msg)
          break;
 
       case OnGeneralFailure:
+         if (expireSessionAfterFailedModification())
+         {
+            break;
+         }
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -2841,8 +2901,46 @@ InviteSession::setSessionTimerPreferences()
 }
 
 void
+InviteSession::checkDeferredSessionExpiration()
+{
+   // The session expired while a session modification was in flight.  If that modification has now
+   // completed without ending the session, then it's safe to expire the session - the stack is no
+   // longer retransmitting anything on our behalf.
+   if (mSessionExpirationPending && !isSessionModificationInFlight() && !isTerminated())
+   {
+      mSessionExpirationPending = false;
+      InfoLog(<< "Session modification complete - applying deferred session expiry");
+      mDum.mInviteSessionHandler->onSessionExpired(getSessionHandle());
+   }
+}
+
+bool
+InviteSession::expireSessionAfterFailedModification()
+{
+   // A session modification that was holding off a session expiry has failed outright (a 408 from
+   // TimerF, for instance).  The session is ending because it expired, not because the request
+   // failed, so report the expiry - the application then sees the same callback it would have seen
+   // had the modification not been in flight.  Returns true if the application ended the session as
+   // a result; if it chose to ignore the expiry then the caller carries on and ends the session
+   // anyway, since the modification failed (via standard OnGeneralFailure handling in sent 
+   // update/reinvite states)
+   if (!mSessionExpirationPending)
+   {
+      return false;
+   }
+
+   transition(Connected);  // the modification transaction is over
+   mProposedLocalOfferAnswer.reset();
+   checkDeferredSessionExpiration();
+   return isTerminated();
+}
+
+void
 InviteSession::startSessionTimer()
 {
+   // Any previously deferred session expiry belongs to the timers we are about to replace
+   mSessionExpirationPending = false;
+
    if(mSessionInterval >= 90)  // 90 is the absolute minimum - RFC4028
    {
       // For session expiration -  BYE should be sent a minimum of 32 and one third of the SessionInterval, seconds 
