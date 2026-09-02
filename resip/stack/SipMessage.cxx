@@ -277,7 +277,7 @@ SipMessage::init(const SipMessage& rhs)
    }
 
    for (UnknownHeaders::const_iterator i = rhs.mUnknownHeaders.begin();
-        i != rhs.mUnknownHeaders.end(); i++)
+        i != rhs.mUnknownHeaders.end(); ++i)
    {
       mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(
                                    i->first,
@@ -330,19 +330,18 @@ void
 SipMessage::freeMem(bool leaveResponseStuff)
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
-        i != mUnknownHeaders.end(); i++)
+        i != mUnknownHeaders.end(); ++i)
    {
       freeHfvl(i->second);
    }
 
-   if(!leaveResponseStuff)
+   if (!leaveResponseStuff)
    {
       clearHeaders();
 
-      for (vector<char*>::iterator i = mBufferList.begin();
-           i != mBufferList.end(); i++)
+      for (char* buffer : mBufferList)
       {
-         delete [] *i;
+         delete [] buffer;
       }
    }
 
@@ -356,10 +355,9 @@ SipMessage::freeMem(bool leaveResponseStuff)
    delete mForceTarget;
    delete mReason;
 
-   for(std::vector<MessageDecorator*>::iterator i=mOutboundDecorators.begin();
-         i!=mOutboundDecorators.end();++i)
+   for (MessageDecorator* decorator : mOutboundDecorators)
    {
-      delete *i;
+      delete decorator;
    }
 }
 
@@ -436,7 +434,7 @@ SipMessage::parseAllHeaders()
    }
 
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
-        i != mUnknownHeaders.end(); i++)
+        i != mUnknownHeaders.end(); ++i)
    {
       ParserContainerBase* scs = i->second->getParserContainer();
       if (!scs)
@@ -858,7 +856,7 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
    }
 
    for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin(); 
-        i != mUnknownHeaders.end(); i++)
+        i != mUnknownHeaders.end(); ++i)
    {
       i->second->encode(i->first, str);
    }
@@ -907,7 +905,7 @@ SipMessage::encodeEmbedded(EncodeStream& str) const
    }
 
    for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin(); 
-        i != mUnknownHeaders.end(); i++)
+        i != mUnknownHeaders.end(); ++i)
    {
       if (first)
       {
@@ -1248,7 +1246,7 @@ StringCategories&
 SipMessage::header(const ExtensionHeader& headerName)
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
-        i != mUnknownHeaders.end(); i++)
+        i != mUnknownHeaders.end(); ++i)
    {
       if (isEqualNoCase(i->first, headerName.getName()))
       {
@@ -1272,7 +1270,7 @@ bool
 SipMessage::exists(const ExtensionHeader& symbol) const
 {
    for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin();
-        i != mUnknownHeaders.end(); i++)
+        i != mUnknownHeaders.end(); ++i)
    {
       if (isEqualNoCase(i->first, symbol.getName()))
       {
@@ -1286,7 +1284,7 @@ void
 SipMessage::remove(const ExtensionHeader& headerName)
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
-        i != mUnknownHeaders.end(); i++)
+        i != mUnknownHeaders.end(); ++i)
    {
       if (isEqualNoCase(i->first, headerName.getName()))
       {
@@ -1809,10 +1807,9 @@ SipMessage::callOutboundDecorators(const Tuple& src,
 {
    rollbackOutboundDecorators();
 
-   std::vector<MessageDecorator*>::iterator i;
-   for (i = mOutboundDecorators.begin(); i != mOutboundDecorators.end(); i++)
+   for (MessageDecorator* decorator : mOutboundDecorators)
    {
-      (*i)->decorateMessage(*this, src, dest, sigcompId);
+      decorator->decorateMessage(*this, src, dest, sigcompId);
    }
    mIsDecorated = true;
 }
@@ -1822,7 +1819,7 @@ SipMessage::clearOutboundDecorators()
 {
    rollbackOutboundDecorators();
 
-   while(!mOutboundDecorators.empty())
+   while (!mOutboundDecorators.empty())
    {
       delete mOutboundDecorators.back();
       mOutboundDecorators.pop_back();
@@ -1834,8 +1831,8 @@ SipMessage::rollbackOutboundDecorators()
 {
    if (mIsDecorated)
    {
-      std::vector<MessageDecorator*>::reverse_iterator r;
-      for (r = mOutboundDecorators.rbegin(); r != mOutboundDecorators.rend(); ++r)
+      for (std::vector<MessageDecorator*>::reverse_iterator r = mOutboundDecorators.rbegin();
+         r != mOutboundDecorators.rend(); ++r)
       {
          (*r)->rollbackMessage(*this);
       }
@@ -1846,13 +1843,11 @@ SipMessage::rollbackOutboundDecorators()
 void 
 SipMessage::copyOutboundDecoratorsToStackCancel(SipMessage& cancel)
 {
-  std::vector<MessageDecorator*>::iterator i;
-  for (i = mOutboundDecorators.begin();
-       i != mOutboundDecorators.end(); i++)
+  for (MessageDecorator* decorator : mOutboundDecorators)
   {
-     if((*i)->copyToStackCancels())
+     if (decorator->copyToStackCancels())
      {
-        cancel.addOutboundDecorator(std::unique_ptr<MessageDecorator>((*i)->clone()));
+        cancel.addOutboundDecorator(std::unique_ptr<MessageDecorator>(decorator->clone()));
      }    
   }
 }
@@ -1860,13 +1855,11 @@ SipMessage::copyOutboundDecoratorsToStackCancel(SipMessage& cancel)
 void 
 SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
 {
-  std::vector<MessageDecorator*>::iterator i;
-  for (i = mOutboundDecorators.begin();
-       i != mOutboundDecorators.end(); i++)
+  for (MessageDecorator* decorator : mOutboundDecorators)
   {
-     if((*i)->copyToStackFailureAcks())
+     if (decorator->copyToStackFailureAcks())
      {
-        ack.addOutboundDecorator(std::unique_ptr<MessageDecorator>((*i)->clone()));
+        ack.addOutboundDecorator(std::unique_ptr<MessageDecorator>(decorator->clone()));
      }    
   }
 }
