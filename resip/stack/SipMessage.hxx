@@ -925,7 +925,17 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
 
       /// unknown header interface
+      /**
+       * @brief Retrieves extension header values.
+       *
+       * Throws an exception if the header is not found.
+       */
       const StringCategories& header(const ExtensionHeader& symbol) const;
+      /**
+       * @brief Retrieves extension header values.
+       *
+       * Adds an empty list of header values if the header is not found.
+       */
       StringCategories& header(const ExtensionHeader& symbol);
       bool exists(const ExtensionHeader& symbol) const;
       void remove(const ExtensionHeader& symbol);
