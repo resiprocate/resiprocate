@@ -962,9 +962,9 @@ SipMessage::addBuffer(char* buf)
 }
 
 void 
-SipMessage::setStartLine(const char* st, int len)
+SipMessage::setStartLine(const char* st, uint32_t len)
 {
-   if(len >= 4 && !strncasecmp(st,"SIP/",4))
+   if (len >= 4 && !strncasecmp(st,"SIP/",4))
    {
       // Response
       mStartLine = new (mStartLineMem) StatusLine(st, len);
@@ -1293,61 +1293,60 @@ SipMessage::remove(const ExtensionHeader& headerName)
 }
 
 void
-SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLen, 
-                      const char* start, int len)
+SipMessage::addHeader(Headers::Type header, const char* headerName, uint32_t headerNameLen,
+                      const char* value, uint32_t valueLen)
 {
    if (header != Headers::UNKNOWN)
    {
       resip_assert(header > Headers::UNKNOWN && header < Headers::MAX_HEADERS);
       HeaderFieldValueList* hfvl = ensureHeaders(header);
 
-      if(Headers::isMulti(header))
+      if (Headers::isMulti(header))
       {
-         if (len)
+         if (valueLen > 0)
          {
-            hfvl->push_back(start, len, false);
+            hfvl->push_back(value, valueLen, false);
          }
       }
       else
       {
 #ifdef PEDANTIC_STACK
-         if(hfvl->size()==1)
+         if (hfvl->size() == 1)
          {
-            if(!mReason)
+            if (!mReason)
             {
-               mReason=new Data;
+               mReason = new Data;
             }
             
-            if(mInvalid)
+            if (mInvalid)
             {
-               mReason->append(",",1);
+               mReason->append(",", 1);
             }
-            mInvalid=true;
-            mReason->append("Multiple values in single-value header ",39);
-            (*mReason)+=Headers::getHeaderName(header);
+            mInvalid = true;
+            mReason->append("Multiple values in single-value header ", 39);
+            (*mReason) += Headers::getHeaderName(header);
             return;
          }
 #endif
          if (hfvl->empty())
          {
-            hfvl->push_back(start ? start : Data::Empty.data(), len, false);
+            hfvl->push_back(value, valueLen, false);
          }
       }
-
    }
    else
    {
-      resip_assert(headerLen >= 0);
+      resip_assert(headerNameLen >= 0);
       for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
-           i != mUnknownHeaders.end(); i++)
+           i != mUnknownHeaders.end(); ++i)
       {
-         if (i->first.size() == (unsigned int)headerLen &&
-             strncasecmp(i->first.data(), headerName, headerLen) == 0)
+         if (i->first.size() == headerNameLen &&
+             strncasecmp(i->first.data(), headerName, headerNameLen) == 0)
          {
             // add to end of list
-            if (len)
+            if (valueLen > 0)
             {
-               i->second->push_back(start, len, false);
+               i->second->push_back(value, valueLen, false);
             }
             return;
          }
@@ -1355,11 +1354,11 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
 
       // didn't find it, add an entry
       HeaderFieldValueList *hfvs = getEmptyHfvl();
-      if (len)
+      if (valueLen > 0)
       {
-         hfvs->push_back(start, len, false);
+         hfvs->push_back(value, valueLen, false);
       }
-      mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(Data(headerName, headerLen),
+      mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(Data(headerName, headerNameLen),
                                                                   hfvs));
    }
 }

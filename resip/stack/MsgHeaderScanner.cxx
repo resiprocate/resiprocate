@@ -990,7 +990,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
                                               mFieldKind,
                                               mFieldName,
                                               mFieldNameLength,
-                                              0,
+                                              charPtr,
                                               0,
                                               0);
             ++mNumHeaders;
