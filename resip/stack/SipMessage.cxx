@@ -1219,24 +1219,29 @@ SipMessage::releaseContents()
 const StringCategories& 
 SipMessage::header(const ExtensionHeader& headerName) const
 {
+   ParserContainer<StringCategory>* parser = nullptr;
    for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin();
-        i != mUnknownHeaders.end(); i++)
+        i != mUnknownHeaders.end(); ++i)
    {      
       if (isEqualNoCase(i->first, headerName.getName()))
       {
          HeaderFieldValueList* hfvs = i->second;
-         if (hfvs->getParserContainer() == 0)
+         if (hfvs->getParserContainer() == nullptr)
          {
             SipMessage* nc_this(const_cast<SipMessage*>(this));
             hfvs->setParserContainer(nc_this->makeParserContainer<StringCategory>(hfvs, Headers::RESIP_DO_NOT_USE));
          }
-         return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
+         parser = dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
+         break;
       }
    }
-   // missing extension header
-   resip_assert(false);
 
-   return *(StringCategories*)0;
+   if (!parser)
+   {
+      throw Exception("Missing extension header", __FILE__, __LINE__);
+   }
+
+   return *parser;
 }
 
 StringCategories& 
