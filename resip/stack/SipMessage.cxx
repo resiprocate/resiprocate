@@ -235,11 +235,11 @@ SipMessage::clear(bool leaveResponseStuff)
 
    mUnknownHeaders.clear();
 
-   mStartLine = 0;
-   mContents = 0;
+   mStartLine = nullptr;
+   mContents = nullptr;
    mContentsHfv.clear();
-   mForceTarget = 0;
-   mReason=0;
+   mForceTarget = nullptr;
+   mReason = nullptr;
    mOutboundDecorators.clear();
 }
 
@@ -260,7 +260,7 @@ SipMessage::init(const SipMessage& rhs)
    mInvalid = rhs.mInvalid;
    if(!rhs.mReason)
    {
-      mReason=0;
+      mReason = nullptr;
    }
    else
    {
@@ -283,15 +283,15 @@ SipMessage::init(const SipMessage& rhs)
                                    i->first,
                                    getCopyHfvl(*i->second)));
    }
-   if (rhs.mStartLine != 0)
+   if (rhs.mStartLine != nullptr)
    {
       mStartLine = rhs.mStartLine->clone(mStartLineMem);
    }
-   if (rhs.mContents != 0)
+   if (rhs.mContents != nullptr)
    {
       mContents = rhs.mContents->clone();
    }
-   else if (rhs.mContentsHfv.getBuffer() != 0)
+   else if (rhs.mContentsHfv.getBuffer() != nullptr)
    {
       mContentsHfv.copyWithPadding(rhs.mContentsHfv);
    }
@@ -299,7 +299,7 @@ SipMessage::init(const SipMessage& rhs)
    {
       // no body to copy
    }
-   if (rhs.mForceTarget != 0)
+   if (rhs.mForceTarget != nullptr)
    {
       mForceTarget = new Uri(*rhs.mForceTarget);
    }
@@ -346,10 +346,10 @@ SipMessage::freeMem(bool leaveResponseStuff)
       }
    }
 
-   if(mStartLine)
+   if (mStartLine)
    {
       mStartLine->~StartLine();
-      mStartLine=0;
+      mStartLine = nullptr;
    }
 
    delete mContents;
@@ -374,7 +374,7 @@ SipMessage::make(const Data& data, bool isExternal)
 {
    Tuple fakeWireTuple;
    fakeWireTuple.setType(UDP);
-   SipMessage* msg = new SipMessage(isExternal ? &fakeWireTuple : 0);
+   SipMessage* msg = new SipMessage(isExternal ? &fakeWireTuple : nullptr);
 
    size_t len = data.size();
    char *buffer = new char[len + 5];
@@ -390,8 +390,8 @@ SipMessage::make(const Data& data, bool isExternal)
       DebugLog(<<"Scanner rejecting buffer as unparsable / fragmented.");
       DebugLog(<< data);
       delete msg; 
-      msg = 0; 
-      return 0;
+      msg = nullptr;
+      return nullptr;
    }
 
    // no pp error
@@ -448,7 +448,7 @@ SipMessage::parseAllHeaders()
       scs->parseAll();
    }
    
-   resip_assert(mStartLine);
+   resip_assert(mStartLine != nullptr);
 
    mStartLine->checkParsed();
    
@@ -644,11 +644,11 @@ SipMessage::getCanonicalIdentityString() const
    strm << Symbols::BAR;
    
    // bodies 
-   if (mContents != 0)
+   if (mContents != nullptr)
    {
       mContents->encode(strm);
    }
-   else if (mContentsHfv.getBuffer() != 0)
+   else if (mContentsHfv.getBuffer() != nullptr)
    {
       mContentsHfv.encode(strm);
    }
@@ -825,19 +825,19 @@ SipMessage::encodeSipFrag(EncodeStream& str) const
 EncodeStream&
 SipMessage::encode(EncodeStream& str, bool isSipFrag) const
 {
-   if (mStartLine != 0)
+   if (mStartLine != nullptr)
    {
       mStartLine->encode(str);
       str << "\r\n";
    }
 
    Data contents;
-   if (mContents != 0)
+   if (mContents != nullptr)
    {
       oDataStream temp(contents);
       mContents->encode(temp);
    }
-   else if (mContentsHfv.getBuffer() != 0)
+   else if (mContentsHfv.getBuffer() != nullptr)
    {
 #if 0
       // !bwc! This causes an additional copy; sure would be nice to have a way
@@ -921,7 +921,7 @@ SipMessage::encodeEmbedded(EncodeStream& str) const
       i->second->encodeEmbedded(i->first, str);
    }
 
-   if (mContents != 0 || mContentsHfv.getBuffer() != 0)
+   if (mContents != nullptr || mContentsHfv.getBuffer() != nullptr)
    {
       if (first)
       {
@@ -935,7 +935,7 @@ SipMessage::encodeEmbedded(EncodeStream& str) const
       Data contents;
       // !dlb! encode escaped for characters
       // .kw. what does that mean? what needs to be escaped?
-      if(mContents != 0)
+      if (mContents != nullptr)
       {
          DataStream s(contents);
          mContents->encode(s);
@@ -1081,7 +1081,7 @@ SipMessage::setBody(const char* start, uint32_t len)
 void
 SipMessage::setRawBody(const HeaderFieldValue& body)
 {
-   setContents(0);
+   setContents(unique_ptr<Contents>());
    mContentsHfv = body;
 }
 
@@ -1092,10 +1092,10 @@ SipMessage::setContents(unique_ptr<Contents> contents)
    Contents* contentsP = contents.release();
 
    delete mContents;
-   mContents = 0;
+   mContents = nullptr;
    mContentsHfv.clear();
 
-   if (contentsP == 0)
+   if (contentsP == nullptr)
    {
       // The semantics of setContents(0) are to delete message contents
       remove(h_ContentType);
@@ -1148,7 +1148,7 @@ SipMessage::setContents(const Contents* contents)
 Contents*
 SipMessage::getContents() const
 {
-   if (mContents == 0 && mContentsHfv.getBuffer() != 0)
+   if (mContents == nullptr && mContentsHfv.getBuffer() != nullptr)
    {
       if (empty(h_ContentType) ||
             !const_header(h_ContentType).isWellFormed())
@@ -1205,7 +1205,7 @@ SipMessage::releaseContents()
    Contents* c=getContents();
    // .bwc. unique_ptr owns the Contents. No other references allowed!
    unique_ptr<Contents> ret(c ? c->clone() : nullptr);
-   setContents(nullptr);
+   setContents(unique_ptr<Contents>());
 
    if (ret != nullptr && !ret->isWellFormed())
    {
@@ -1253,7 +1253,7 @@ SipMessage::header(const ExtensionHeader& headerName)
       if (isEqualNoCase(i->first, headerName.getName()))
       {
          HeaderFieldValueList* hfvs = i->second;
-         if (hfvs->getParserContainer() == 0)
+         if (hfvs->getParserContainer() == nullptr)
          {
             hfvs->setParserContainer(makeParserContainer<StringCategory>(hfvs, Headers::RESIP_DO_NOT_USE));
          }
@@ -1372,7 +1372,7 @@ RequestLine&
 SipMessage::header(const RequestLineType& l)
 {
    resip_assert (!isResponse());
-   if (mStartLine == 0 )
+   if (mStartLine == nullptr)
    { 
       mStartLine = new (mStartLineMem) RequestLine;
       mRequest = true;
@@ -1384,7 +1384,7 @@ const RequestLine&
 SipMessage::header(const RequestLineType& l) const
 {
    resip_assert (!isResponse());
-   if (mStartLine == 0 )
+   if (mStartLine == nullptr)
    { 
       // request line missing
       resip_assert(false);
@@ -1396,7 +1396,7 @@ StatusLine&
 SipMessage::header(const StatusLineType& l)
 {
    resip_assert (!isRequest());
-   if (mStartLine == 0 )
+   if (mStartLine == nullptr)
    { 
       mStartLine = new (mStartLineMem) StatusLine;
       mResponse = true;
@@ -1408,7 +1408,7 @@ const StatusLine&
 SipMessage::header(const StatusLineType& l) const
 {
    resip_assert (!isRequest());
-   if (mStartLine == 0 )
+   if (mStartLine == nullptr)
    { 
       // status line missing
       resip_assert(false);
@@ -1492,24 +1492,24 @@ SipMessage::remove(Headers::Type type)
 const H_##_header::Type&                                                                                \
 SipMessage::header(const H_##_header& headerType) const                                                 \
 {                                                                                                       \
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());                           \
-   if (hfvs->getParserContainer() == 0)                                                                 \
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());                                  \
+   if (hfvs->getParserContainer() == nullptr)                                                           \
    {                                                                                                    \
       SipMessage* nc_this(const_cast<SipMessage*>(this)); \
-      hfvs->setParserContainer(nc_this->makeParserContainer<H_##_header::Type>(hfvs, headerType.getTypeNum()));  \
+      hfvs->setParserContainer(nc_this->makeParserContainer<H_##_header::Type>(hfvs, headerType.getTypeNum())); \
    }                                                                                                    \
-   return static_cast<ParserContainer<H_##_header::Type>*>(hfvs->getParserContainer())->front();       \
+   return static_cast<ParserContainer<H_##_header::Type>*>(hfvs->getParserContainer())->front();        \
 }                                                                                                       \
                                                                                                         \
 H_##_header::Type&                                                                                      \
 SipMessage::header(const H_##_header& headerType)                                                       \
 {                                                                                                       \
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());                           \
-   if (hfvs->getParserContainer() == 0)                                                                 \
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());                                  \
+   if (hfvs->getParserContainer() == nullptr)                                                           \
    {                                                                                                    \
       hfvs->setParserContainer(makeParserContainer<H_##_header::Type>(hfvs, headerType.getTypeNum()));  \
    }                                                                                                    \
-   return static_cast<ParserContainer<H_##_header::Type>*>(hfvs->getParserContainer())->front();       \
+   return static_cast<ParserContainer<H_##_header::Type>*>(hfvs->getParserContainer())->front();        \
 }
 
 #undef defineMultiHeader
@@ -1517,24 +1517,24 @@ SipMessage::header(const H_##_header& headerType)                               
 const H_##_header##s::Type&                                                                     \
 SipMessage::header(const H_##_header##s& headerType) const                                      \
 {                                                                                               \
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());                  \
-   if (hfvs->getParserContainer() == 0)                                                         \
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());                         \
+   if (hfvs->getParserContainer() == nullptr)                                                   \
    {                                                                                            \
       SipMessage* nc_this(const_cast<SipMessage*>(this)); \
-      hfvs->setParserContainer(nc_this->makeParserContainer<H_##_header##s::ContainedType>(hfvs, headerType.getTypeNum()));        \
+      hfvs->setParserContainer(nc_this->makeParserContainer<H_##_header##s::ContainedType>(hfvs, headerType.getTypeNum())); \
    }                                                                                            \
-   return *static_cast<H_##_header##s::Type*>(hfvs->getParserContainer());                     \
+   return *static_cast<H_##_header##s::Type*>(hfvs->getParserContainer());                      \
 }                                                                                               \
                                                                                                 \
 H_##_header##s::Type&                                                                           \
 SipMessage::header(const H_##_header##s& headerType)                                            \
 {                                                                                               \
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());                  \
-   if (hfvs->getParserContainer() == 0)                                                         \
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());                         \
+   if (hfvs->getParserContainer() == nullptr)                                                   \
    {                                                                                            \
-      hfvs->setParserContainer(makeParserContainer<H_##_header##s::ContainedType>(hfvs, headerType.getTypeNum()));        \
+      hfvs->setParserContainer(makeParserContainer<H_##_header##s::ContainedType>(hfvs, headerType.getTypeNum())); \
    }                                                                                            \
-   return *static_cast<H_##_header##s::Type*>(hfvs->getParserContainer());                     \
+   return *static_cast<H_##_header##s::Type*>(hfvs->getParserContainer());                      \
 }
 
 defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC 3261");
@@ -1707,20 +1707,20 @@ void
 SipMessage::clearForceTarget()
 {
    delete mForceTarget;
-   mForceTarget = 0;
+   mForceTarget = nullptr;
 }
 
 const Uri&
 SipMessage::getForceTarget() const
 {
-   resip_assert(mForceTarget);
+   resip_assert(mForceTarget != nullptr);
    return *mForceTarget;
 }
 
 bool
 SipMessage::hasForceTarget() const
 {
-   return (mForceTarget != 0);
+   return (mForceTarget != nullptr);
 }
 
 SipMessage& 
