@@ -3,10 +3,12 @@
 
 #include <sys/types.h>
 
+#include <cstddef>
 #include <list>
 #include <vector>
-#include <utility>
+#include <limits>
 #include <memory>
+#include <utility>
 #include <iterator>
 #include <type_traits>
 
@@ -21,12 +23,27 @@
 #include "resip/stack/MessageDecorator.hxx"
 #include "resip/stack/Cookie.hxx"
 #include "resip/stack/WsCookieContext.hxx"
+#include "rutil/ResipAssert.h"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DinkyPool.hxx"
 #include "rutil/StlPoolAllocator.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
+#pragma intrinsic(_BitScanForward)
+#if defined(_M_X64) || defined(_M_ARM64)
+#pragma intrinsic(_BitScanForward64)
+#endif
+#if defined(_M_IX86) || defined(_M_X64)
+#pragma intrinsic(_tzcnt_u32)
+#endif
+#if defined(_M_X64)
+#pragma intrinsic(_tzcnt_u64)
+#endif
+#endif
 
 namespace resip
 {
@@ -176,6 +193,17 @@ class SipMessage : public TransactionMessage
        * by users (e.g. they are not found by searching or exposed during iteration). "Unused" elements can be
        * reused if the user attempts to insert an element with the matching header type. After that, the reused
        * element becomes publicly accessible again.
+       *
+       * The container can produce a read-only ordered view over its elements. When iterating over the view
+       * elements, headers are ordered by their types, i.e. `Headers::Type` enum values. The view does not
+       * expose "unused" elements. The view does not own or manage container elements and is invalidated
+       * on the parent container modifications.
+       *
+       * @note Ordering headers facilitates deterministic SIP message serialization. See the comment in
+       *       `HeaderTypes.hxx`: "The Type enum controls the order of output of the headers in the encoded
+       *       SipMessage". The leading entries of that enum follow the recommendation in RFC 3261 section 7.3.1,
+       *       that headers needed for proxy processing appear towards the top of the message to facilitate
+       *       rapid parsing.
        */
       class KnownHeaders
       {
@@ -185,6 +213,13 @@ class SipMessage : public TransactionMessage
             /// Header index value that indicates invalid index
             static constexpr HeaderIndex InvalidHeaderIndex = static_cast<HeaderIndex>(-1);
             static_assert(Headers::MAX_HEADERS <= InvalidHeaderIndex, "HeaderIndex type is too small to cover all SIP header types");
+
+            /// Type of the word to use for "used" bit mask. Chosen as the "natural" unsigned integer type for the current target.
+            using UsedBitMaskWord = std::size_t;
+            /// Number of bits in the "used" bit mask word
+            static constexpr unsigned int UsedBitMaskWordBits = static_cast<unsigned int>(std::numeric_limits<UsedBitMaskWord>::digits);
+            /// Number of words in the "used" bit mask
+            static constexpr unsigned int UsedBitMaskWordCount = (static_cast<unsigned int>(Headers::MAX_HEADERS) + UsedBitMaskWordBits - 1u) / UsedBitMaskWordBits;
 
          public:
             /// Publicly accessible information about a header
@@ -274,7 +309,7 @@ class SipMessage : public TransactionMessage
 
                   reference operator*() const noexcept { return *mIterator; }
                   pointer operator->() const noexcept { return mIterator.operator->(); }
-                  UsedIterator operator++() { increment(); return *this; }
+                  UsedIterator& operator++() { increment(); return *this; }
                   UsedIterator operator++(int) { UsedIterator copy(*this); increment(); return copy; }
 
                   friend bool operator==(UsedIterator const& left, UsedIterator const& right) noexcept { return left.mIterator == right.mIterator; }
@@ -308,6 +343,209 @@ class SipMessage : public TransactionMessage
             using difference_type = TypedHeaders::difference_type;
             using allocator_type = TypedHeaders::allocator_type;
 
+            /// Ordered view over headers. The headers are produced in the order of `Headers::Type` enum values.
+            class OrderedView
+            {
+                  friend class KnownHeaders;
+
+               public:
+                  using value_type = KnownHeaders::value_type;
+                  using reference = KnownHeaders::reference;
+                  using const_reference = KnownHeaders::const_reference;
+                  using pointer = KnownHeaders::pointer;
+                  using const_pointer = KnownHeaders::const_pointer;
+                  using size_type = KnownHeaders::size_type;
+                  using difference_type = KnownHeaders::difference_type;
+
+               private:
+                  /// Iterator type
+                  class Iterator
+                  {
+                        friend class OrderedView;
+
+                     public:
+                        using iterator_category = std::forward_iterator_tag;
+                        using difference_type = std::ptrdiff_t;
+                        using value_type = KnownHeaders::value_type;
+                        using reference = value_type const&;
+                        using pointer = const value_type*;
+
+                     private:
+                        using size_type = OrderedView::size_type;
+
+                     private:
+                        /// Pointer to the parent container
+                        const KnownHeaders* mKnownHeaders;
+                        /// Iterator position
+                        size_type mPos;
+
+                     public:
+                        constexpr Iterator() noexcept : mKnownHeaders(nullptr), mPos(0u) {}
+                        Iterator(Iterator const&) = default;
+
+                        /// Initializing constructor
+                        explicit constexpr Iterator(const KnownHeaders* knownHeaders, size_type pos) noexcept :
+                           mKnownHeaders(knownHeaders),
+                           mPos(pos)
+                        {
+                        }
+
+                        reference operator*() const noexcept { return dereference(); }
+                        pointer operator->() const noexcept { return &dereference(); }
+                        Iterator& operator++() { increment(); return *this; }
+                        Iterator operator++(int) { Iterator copy(*this); increment(); return copy; }
+
+                        friend bool operator==(Iterator const& left, Iterator const& right) noexcept
+                        {
+                           resip_assert(left.mKnownHeaders == right.mKnownHeaders);
+                           return left.mPos == right.mPos;
+                        }
+                        friend bool operator!=(Iterator const& left, Iterator const& right) noexcept
+                        {
+                           resip_assert(left.mKnownHeaders == right.mKnownHeaders);
+                           return left.mPos != right.mPos;
+                        }
+
+                     private:
+                        /// Obtains reference to the element
+                        reference dereference() const noexcept
+                        {
+                           resip_assert(mKnownHeaders != nullptr);
+                           return mKnownHeaders->mHeaders[mKnownHeaders->mHeaderIndices[mPos]];
+                        }
+
+                        /// Increments the iterator to the next used entry or end of the list
+                        void increment() noexcept
+                        {
+                           resip_assert(mPos < Headers::MAX_HEADERS);
+                           ++mPos;
+                           advanceToNextUsedEntry();
+                        }
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(push)
+// unary minus operator applied to unsigned type, result still unsigned
+#pragma warning(disable: 4146)
+#endif
+
+                        /// Advances to the next used entry in the list
+                        void advanceToNextUsedEntry() noexcept
+                        {
+                           resip_assert(mKnownHeaders != nullptr);
+
+                           size_type mask_pos = mPos / UsedBitMaskWordBits;
+                           size_type bit_pos = mPos % UsedBitMaskWordBits;
+                           for (; mask_pos < UsedBitMaskWordCount; ++mask_pos)
+                           {
+                              const UsedBitMaskWord mask =
+                                 mKnownHeaders->mUsedBitMask[mask_pos] & static_cast<UsedBitMaskWord>(-(static_cast<UsedBitMaskWord>(1u) << bit_pos));
+                              if (mask != 0u)
+                              {
+                                 bit_pos = countrZeroNz(mask);
+                                 break;
+                              }
+                              bit_pos = 0u;
+                           }
+
+                           mPos = mask_pos * UsedBitMaskWordBits + bit_pos;
+
+                           resip_assert(mPos < Headers::MAX_HEADERS || mPos == (static_cast<size_type>(UsedBitMaskWordCount) * UsedBitMaskWordBits));
+                        }
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(pop)
+#endif
+
+                        /**
+                         * @brief Returns the number of trailing zero bits in a non-zero integer.
+                         *
+                         * This function is similar to C++20 `std::countr_zero`, except that it requires its input
+                         * argument to be non-zero. This allows it to compile to a single `bsf` instruction on x86
+                         * CPUs without BMI1, while `std::countr_zero` would require an extra branch.
+                         */
+#if defined(__GNUC__) || defined(__clang__)
+                        static unsigned int countrZeroNz(unsigned int bitmask) noexcept { return __builtin_ctz(bitmask); }
+                        static unsigned int countrZeroNz(unsigned long bitmask) noexcept { return __builtin_ctzl(bitmask); }
+                        static unsigned int countrZeroNz(unsigned long long bitmask) noexcept { return __builtin_ctzll(bitmask); }
+#elif defined(_MSC_VER)
+                        static unsigned int countrZeroNz(uint32_t bitmask) noexcept
+                        {
+                           // On modern CPUs, tzcnt is slightly faster than bsf. CPUs without BMI1 will execute tzcnt
+                           // and produce the same result as bsf for non-zero input.
+#if defined(_M_IX86) || defined(_M_X64)
+                           return static_cast<unsigned int>(_tzcnt_u32(bitmask));
+#else
+                           unsigned long res;
+                           _BitScanForward(&res, bitmask);
+                           return static_cast<unsigned int>(res);
+#endif
+                        }
+
+                        static unsigned int countrZeroNz(uint64_t bitmask) noexcept
+                        {
+#if defined(_M_X64)
+                           return static_cast<unsigned int>(_tzcnt_u64(bitmask));
+#elif defined(_M_ARM64)
+                           unsigned long res;
+                           _BitScanForward64(&res, bitmask);
+                           return static_cast<unsigned int>(res);
+#else
+                           unsigned int base_count = 0u;
+                           uint32_t bitmask32 = static_cast<uint32_t>(bitmask);
+                           if (bitmask32 == 0u)
+                           {
+                              base_count = 32u;
+                              bitmask32 = static_cast<uint32_t>(bitmask >> 32u);
+                           }
+                           return base_count + countrZeroNz(bitmask32);
+#endif
+                        }
+#else
+                        static unsigned int countrZeroNz(UsedBitMaskWord bitmask) noexcept
+                        {
+                           unsigned int res = 0u;
+                           for (unsigned int bits = UsedBitMaskWordBits >> 1u; bits > 0u && (bitmask & 1u) == 0u; bits >>= 1u)
+                           {
+                              if ((bitmask & ((static_cast<UsedBitMaskWord>(1u) << bits) - 1u)) == 0u)
+                              {
+                                 bitmask >>= bits;
+                                 res += bits;
+                              }
+                           }
+                           return res;
+                        }
+#endif
+                  };
+
+               public:
+                  using iterator = Iterator;
+                  using const_iterator = Iterator;
+
+               private:
+                  /// Pointer to the parent container
+                  const KnownHeaders* mKnownHeaders;
+
+               private:
+                  explicit OrderedView(KnownHeaders const& knownHeaders) noexcept : mKnownHeaders(&knownHeaders)
+                  {
+                  }
+
+               public:
+                  /// Returns `true` if the container is empty. Does not consider "unused" elements.
+                  bool empty() const noexcept { return mKnownHeaders->empty(); }
+                  /// Returns the number of elements in the container. Does not consider "unused" elements.
+                  size_type size() const noexcept { return mKnownHeaders->size(); }
+
+                  /// Iterator access
+                  const_iterator cbegin() const noexcept { return begin(); }
+                  const_iterator cend() const noexcept { return end(); }
+
+                  const_iterator begin() const noexcept { const_iterator it(mKnownHeaders, 0u); it.advanceToNextUsedEntry(); return it; }
+                  const_iterator end() const noexcept { return const_iterator(mKnownHeaders, static_cast<size_type>(UsedBitMaskWordCount) * UsedBitMaskWordBits); }
+            };
+
+            friend class OrderedView::Iterator;
+
          private:
             /// Information about headers
             TypedHeaders mHeaders;
@@ -315,13 +553,15 @@ class SipMessage : public TransactionMessage
             HeaderIndex mSize;
             /// Indices into `mHeaders`. If an element is `InvalidHeaderIndex` it means the corresponding header has no entry in the list.
             HeaderIndex mHeaderIndices[Headers::MAX_HEADERS];
+            /// Bit mask indicating non-"unused" elements in `mHeaders`. Bit positions correspond to `Headers::Type` enum values.
+            UsedBitMaskWord mUsedBitMask[UsedBitMaskWordCount];
 
          public:
-            KnownHeaders() noexcept : mSize(0) { resetIndices(); }
+            KnownHeaders() noexcept : mSize(0u) { resetIndices(); }
             explicit KnownHeaders(const allocator_type& alloc)
                noexcept(std::is_nothrow_constructible<TypedHeaders, const allocator_type&>::value) :
                mHeaders(alloc),
-               mSize(0)
+               mSize(0u)
             {
                resetIndices();
             }
@@ -331,7 +571,7 @@ class SipMessage : public TransactionMessage
             KnownHeaders& operator=(const KnownHeaders&) = delete;
 
             /// Returns `true` if the container is empty. Does not consider "unused" elements.
-            bool empty() const noexcept { return mSize == 0; }
+            bool empty() const noexcept { return mSize == 0u; }
             /// Returns the number of elements in the container. Does not consider "unused" elements.
             size_type size() const noexcept { return static_cast<size_type>(mSize); }
             /// Clears the container. Does not free `HeaderFieldValueList` objects but clears them and marks as "unused".
@@ -379,8 +619,11 @@ class SipMessage : public TransactionMessage
             template<typename ValuesFactory>
             iterator insert(Headers::Type type, ValuesFactory&& valuesFactory);
 
+            /// Returns an ordered view over the list of headers
+            OrderedView ordered() const noexcept { return OrderedView(*this); }
+
          private:
-            /// Resets all header indices to `InvalidHeaderIndex`
+            /// Resets all header indices to `InvalidHeaderIndex` and clears the "used" bit mask
             void resetIndices() noexcept;
       };
 
