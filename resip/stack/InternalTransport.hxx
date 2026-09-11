@@ -86,6 +86,8 @@ class InternalTransport : public Transport
    protected:
       friend class SipStack;
 
+      virtual Socket getListenerSocket() const { return mFd; }
+
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
 
       // .bwc. We use this to interrupt the select call when our tx fifo goes
