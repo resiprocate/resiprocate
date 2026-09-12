@@ -14,7 +14,6 @@
 #include <glibmm/ustring.h>
 #include <gstreamermm.h>
 
-#define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
 
 #include "../../rutil/Subsystem.hxx"

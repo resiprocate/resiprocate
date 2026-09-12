@@ -44,7 +44,6 @@
 #include <gstreamermm/pipeline.h>
 //#include <gstreamermm/promise.h>
 
-#define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
 
 using namespace resipgst;

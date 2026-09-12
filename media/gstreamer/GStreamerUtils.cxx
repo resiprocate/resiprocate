@@ -9,7 +9,6 @@
 #include <gst/rtp/gstrtcpbuffer.h>
 #include <glibmm.h>
 #include <gstreamermm.h>
-#define GST_USE_UNSTABLE_API
 #include <gst/webrtc/gstwebrtcbin.h>
 
 #include "rutil/Logger.hxx"
