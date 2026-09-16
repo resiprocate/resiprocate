@@ -144,6 +144,7 @@ option(BUILD_RECON "Build reCon Conversation Manager library" TRUE)
 option(USE_SRTP1 "Use srtp 1.x instead of current version" FALSE)
 option(BUILD_RECONSERVER "Build reConServer" FALSE)
 option(USE_SIPXTAPI "Link against sipXtapi" FALSE)
+option(USE_SYSTEM_SIPXTAPI "Non-Windows: link against an installed sipXtapi (e.g. Debian libsipxtapi-dev) instead of building it from source" FALSE)
 option(SIPXTAPI_PROJS_IN_VS_GUI "Surface the sipXtapi projects in the Visual Studio GUI (not compatible when building from cmake or ninja)" FALSE)
 option(USE_KURENTO "Build Kurento client (requires websocketpp)" FALSE)
 option(USE_GSTREAMER "Link against Gstreamer" FALSE)
@@ -173,12 +174,21 @@ option(RESIP_ASSERT_SYSLOG "Log assertion failures with Syslog" ${RESIP_ASSERT_S
 option(REGENERATE_MEDIA_SAMPLES "Regenerate the header files containing raw audio samples (requires sox, xxd)" ${REGENERATE_MEDIA_SAMPLES_DEFAULT})
 option(BUILD_DSO_PLUGINS "Build DSO plugins" ${BUILD_DSO_PLUGINS_DEFAULT})
 
-if(WIN32)
-    # Windows vcxproj files specify 10 in sipXtapi
-    set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 10 CACHE STRING "recon: Maximum connections on bridge (must match value sipXtapi was compiled with)")
+# recon's bridge size must match the value sipXtapi was compiled with.  When
+# sipXtapi is built from source it is compiled with this value, so it is free to
+# choose (e.g. -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20).  A prebuilt sipXtapi package
+# has its value baked in, and the Debian package uses 20.
+set(_bridge_doc "recon: Maximum connections on bridge (must match value sipXtapi was compiled with)")
+if(USE_SIPXTAPI AND USE_SYSTEM_SIPXTAPI AND NOT WIN32)
+    set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20 CACHE STRING "${_bridge_doc}")
+    if(NOT DEFAULT_BRIDGE_MAX_IN_OUTPUTS EQUAL 20)
+        message(FATAL_ERROR "DEFAULT_BRIDGE_MAX_IN_OUTPUTS is ${DEFAULT_BRIDGE_MAX_IN_OUTPUTS}, but USE_SYSTEM_SIPXTAPI requires 20, the value the prebuilt sipXtapi package was compiled with.  Pass -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20, or turn USE_SYSTEM_SIPXTAPI off to build sipXtapi from source with a different value.")
+    endif()
 else()
-    # Pre-build linux packages uses 20
-    set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20 CACHE STRING "recon: Maximum connections on bridge (must match value sipXtapi was compiled with)")
+    set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 10 CACHE STRING "${_bridge_doc}")
+endif()
+if(NOT DEFAULT_BRIDGE_MAX_IN_OUTPUTS MATCHES "^[1-9][0-9]*$")
+    message(FATAL_ERROR "DEFAULT_BRIDGE_MAX_IN_OUTPUTS must be a positive integer, not '${DEFAULT_BRIDGE_MAX_IN_OUTPUTS}'")
 endif()
 
 # This must be enabled when building with the Android ndkports tools.
@@ -694,23 +704,18 @@ if(USE_SRTP)
 endif()
 
 # sipXtapi
-# Debian: libsipxtapi-dev
+# By default sipXtapi is cloned from GitHub and built from source (msbuild on
+# Windows, autotools via build/build_sipxtapi.sh elsewhere).  Elsewhere,
+# USE_SYSTEM_SIPXTAPI=ON uses an installed copy instead - Debian:
+# libsipxtapi-dev.
 if(USE_SIPXTAPI)
    option_def(USE_SIPXTAPI)
-   if(WIN32)
-      # arg0 - cmake library reference name
-      # arg1 - lib filename (without .lib appended)
-      # arg2 - OPTIONAL configuration directory postfix
-      function(add_sipx_lib)
-        add_library(${ARGV0} SHARED IMPORTED GLOBAL)
-        set_target_properties(${ARGV0} PROPERTIES
-            IMPORTED_CONFIGURATIONS "Release;Debug"
-            IMPORTED_IMPLIB_RELEASE "${SIPXTAPI_ROOT_DIR}/x64/Release${ARGV2}/${ARGV1}.lib"
-            IMPORTED_IMPLIB_DEBUG "${SIPXTAPI_ROOT_DIR}/x64/Debug${ARGV2}/${ARGV1}.lib")
-        add_dependencies(${ARGV0} sipXtapi)
-        set(SIPXTAPI_LIBRARIES ${SIPXTAPI_LIBRARIES} ${ARGV0} PARENT_SCOPE)
-      endfunction()
-
+   if(NOT WIN32 AND USE_SYSTEM_SIPXTAPI)
+      find_package(sipXtapi REQUIRED)
+      # Packaged sipXtapi builds predate the recording and log callback APIs
+      set(SIPX_NO_RECORD true)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__pingtel_on_posix__")
+   else()
       # Pin sipXtapi to a specific commit for reproducible builds and to give CI
       # a stable cache key.  The commit lives in build/sipxtapi-commit.txt so the
       # CMake pin and the CI cache key share a single source of truth; bump that
@@ -736,13 +741,38 @@ if(USE_SIPXTAPI)
         set(_sipxtapi_git_tag_arg "")
         message(WARNING "sipXtapi is not pinned (building default branch HEAD). Set a commit SHA in build/sipxtapi-commit.txt for reproducible builds and CI caching.")
       endif()
+   endif()
+
+   if(WIN32)
+      # arg0 - cmake library reference name
+      # arg1 - lib filename (without .lib appended)
+      # arg2 - OPTIONAL configuration directory postfix
+      function(add_sipx_lib)
+        add_library(${ARGV0} SHARED IMPORTED GLOBAL)
+        set_target_properties(${ARGV0} PROPERTIES
+            IMPORTED_CONFIGURATIONS "Release;Debug"
+            IMPORTED_IMPLIB_RELEASE "${SIPXTAPI_ROOT_DIR}/x64/Release${ARGV2}/${ARGV1}.lib"
+            IMPORTED_IMPLIB_DEBUG "${SIPXTAPI_ROOT_DIR}/x64/Debug${ARGV2}/${ARGV1}.lib")
+        add_dependencies(${ARGV0} sipXtapi)
+        set(SIPXTAPI_LIBRARIES ${SIPXTAPI_LIBRARIES} ${ARGV0} PARENT_SCOPE)
+      endfunction()
+
+      # The sipXtapi projects hard-code DEFAULT_BRIDGE_MAX_IN_OUTPUTS, so rewrite
+      # it to our value.  This is the configure step because ExternalProject
+      # re-runs a configure step whose command line changes, so changing the
+      # value re-applies it (and msbuild then rebuilds what it affects).
+      set(_sipxtapi_configure_step
+          CONFIGURE_COMMAND ${CMAKE_COMMAND}
+                            -DSIPXTAPI_SOURCE_DIR=<SOURCE_DIR>
+                            -DVALUE=${DEFAULT_BRIDGE_MAX_IN_OUTPUTS}
+                            -P ${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules/SetSipXtapiBridgeSize.cmake)
 
       if(SIPXTAPI_PROJS_IN_VS_GUI)
         # No need to build in this config - VS GUI will do it
         ExternalProject_Add(sipXtapi
           GIT_REPOSITORY https://github.com/sipXtapi/sipXtapi.git
           ${_sipxtapi_git_tag_arg}
-          CONFIGURE_COMMAND ""
+          ${_sipxtapi_configure_step}
           BUILD_COMMAND ""
           UPDATE_COMMAND ""
           INSTALL_COMMAND ""
@@ -766,7 +796,7 @@ if(USE_SIPXTAPI)
         ExternalProject_Add(sipXtapi
           GIT_REPOSITORY https://github.com/sipXtapi/sipXtapi.git
           ${_sipxtapi_git_tag_arg}
-          CONFIGURE_COMMAND ""
+          ${_sipxtapi_configure_step}
           BUILD_IN_SOURCE TRUE
           ${_sipxtapi_build_step}
           UPDATE_COMMAND ""
@@ -862,9 +892,48 @@ if(USE_SIPXTAPI)
         add_sipx_msproject(plgspeex-proj sipXmediaLib/src/mp/codecs/plgspeex/plgspeex-msvc17.vcxproj sipXtapi/CodecPlugins)
         add_sipx_msproject(plgtones-proj sipXmediaLib/src/mp/codecs/plgtones/plgtones-msvc17.vcxproj sipXtapi/CodecPlugins)
       endif()
-   else()
-      find_package(sipXtapi REQUIRED)
-      set(SIPX_NO_RECORD true)
+   elseif(NOT USE_SYSTEM_SIPXTAPI)
+      # ExternalProject clones sipXtapi and build_sipxtapi.sh runs its autotools
+      # build, installing into the ExternalProject prefix.  Building needs git,
+      # autoconf, automake, libtool, patch, pkg-config and the development
+      # packages for pcre (1.x), OpenSSL and ALSA.
+      set(SIPXTAPI_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/sipXtapi-prefix")
+      set(_sipxtapi_libs sipXport sipXsdp sipXmedia sipXmediaProcessing)
+      set(_sipxtapi_byproducts "")
+      foreach(_lib IN LISTS _sipxtapi_libs)
+        list(APPEND _sipxtapi_byproducts
+             "${SIPXTAPI_INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${_lib}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+      endforeach()
+      ExternalProject_Add(sipXtapi
+        GIT_REPOSITORY https://github.com/sipXtapi/sipXtapi.git
+        ${_sipxtapi_git_tag_arg}
+        UPDATE_COMMAND ""
+        # The build is all in BUILD_COMMAND; this only names the value sipXtapi
+        # is built with.  ExternalProject re-runs a configure step whose command
+        # line changes, and the build step after it, so changing
+        # DEFAULT_BRIDGE_MAX_IN_OUTPUTS rebuilds sipXtapi with the new value.
+        CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo
+                          "sipXtapi DEFAULT_BRIDGE_MAX_IN_OUTPUTS=${DEFAULT_BRIDGE_MAX_IN_OUTPUTS}"
+        BUILD_IN_SOURCE TRUE
+        BUILD_COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/build/build_sipxtapi.sh
+                      <SOURCE_DIR> <INSTALL_DIR> ${DEFAULT_BRIDGE_MAX_IN_OUTPUTS}
+        INSTALL_COMMAND ""
+        BUILD_BYPRODUCTS ${_sipxtapi_byproducts}
+      )
+
+      # The include directory must exist at configure time for it to be used
+      # in a target's interface.
+      file(MAKE_DIRECTORY "${SIPXTAPI_INSTALL_DIR}/include/sipxtapi")
+      set(SIPXTAPI_INCLUDE_DIRS "${SIPXTAPI_INSTALL_DIR}/include/sipxtapi")
+
+      set(SIPXTAPI_LIBRARIES "")
+      foreach(_lib _byproduct IN ZIP_LISTS _sipxtapi_libs _sipxtapi_byproducts)
+        add_library(sipXtapi_${_lib} SHARED IMPORTED GLOBAL)
+        set_target_properties(sipXtapi_${_lib} PROPERTIES IMPORTED_LOCATION "${_byproduct}")
+        add_dependencies(sipXtapi_${_lib} sipXtapi)
+        list(APPEND SIPXTAPI_LIBRARIES sipXtapi_${_lib})
+      endforeach()
+
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__pingtel_on_posix__")
    endif()
 endif()
@@ -903,7 +972,18 @@ endif()
 # Apache Qpid Proton
 # Debian: libqpid-proton-cpp12-dev
 if(BUILD_QPID_PROTON)
-   pkg_check_modules(QPIDPROTON libqpid-proton-cpp REQUIRED)
+   pkg_check_modules(QPIDPROTON libqpid-proton-cpp)
+   if(NOT QPIDPROTON_FOUND)
+      # Debian 12's libqpid-proton-cpp.pc requires libqpid-proton-core.pc and
+      # libqpid-proton-proactor.pc, which no Debian 12 package ships, so
+      # pkg-config fails even though the library is installed.
+      find_path(QPIDPROTON_INCLUDE_DIRS proton/container.hpp)
+      find_library(QPIDPROTON_LIBRARIES qpid-proton-cpp)
+      if(NOT QPIDPROTON_INCLUDE_DIRS OR NOT QPIDPROTON_LIBRARIES)
+         message(FATAL_ERROR "Qpid Proton C++ (libqpid-proton-cpp) not found; install it or disable BUILD_QPID_PROTON")
+      endif()
+      message(STATUS "Found Qpid Proton C++ without pkg-config: ${QPIDPROTON_LIBRARIES}")
+   endif()
    option_def(BUILD_QPID_PROTON)
 endif()
 

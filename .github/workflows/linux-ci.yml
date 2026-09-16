@@ -8,19 +8,22 @@ concurrency:
 jobs:
   build:
     name: Build with ${{ matrix.c-compiler }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
-      image: debian:bullseye-slim
+      # Debian 12.  Bullseye (11) left LTS in August 2026 and its security
+      # archive is being pruned, which broke dependency installation outright.
+      # Trixie (13) no longer ships libpcre3-dev, which sipXtapi still needs.
+      image: debian:bookworm-slim
       options: --ulimit memlock=-1
     strategy:
       fail-fast: false
       matrix:
-        c-compiler: [gcc-10, clang-13]
+        c-compiler: [gcc-12, clang-16]
         include:
-          - c-compiler: gcc-10
-            cxx-compiler: g++-10
-          - c-compiler: clang-13
-            cxx-compiler: clang++-13
+          - c-compiler: gcc-12
+            cxx-compiler: g++-12
+          - c-compiler: clang-16
+            cxx-compiler: clang++-16
     env:
       CC: /usr/bin/${{ matrix.c-compiler }}
       CXX: /usr/bin/${{ matrix.cxx-compiler }}
@@ -31,29 +34,23 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Adding the debify repository is not optional: it is the only source
-          # of libsipxtapi-dev 3.3.0~test20-2.  Debian bullseye itself only has
-          # 3.3.0~test18, whose -dev package omits headers recon needs, and the
-          # fallback is silent - configure still succeeds and the build dies
-          # ~86% in.  Fetching the script to a file rather than piping it into
-          # a shell means a failed download fails this step; a pipeline reports
-          # only the shell's exit status, and an empty script exits 0.  What
-          # actually got installed is checked in the step after this one.
-          apt-get update -qq
-          apt-get install -qq wget
-          wget -O /tmp/add-apt-debify http://apt.debify.org/add-apt-debify
-          bash /tmp/add-apt-debify
-          rm -f /tmp/add-apt-debify
-          apt-get update -qq
+          # sipXtapi is no longer taken from a package: CMake builds it from
+          # source at the commit pinned in build/sipxtapi-commit.txt (see
+          # build/build_sipxtapi.sh).  autoconf through libasound2-dev below
+          # are what that build needs.
           PACKAGES=" \
-            clang-13 \
-            clang-tidy-13 \
+            autoconf \
+            automake \
+            ca-certificates \
+            clang-16 \
+            clang-tidy-16 \
             cmake \
             default-libmysqlclient-dev \
-            g++-10 \
+            g++-12 \
             git \
             gperf \
             libasio-dev \
+            libasound2-dev \
             libboost-all-dev \
             libc-ares-dev \
             libcppunit-dev \
@@ -62,33 +59,37 @@ jobs:
             libgeoip-dev \
             libgloox-dev \
             libgstreamermm-1.0-dev \
+            libpcre3-dev \
             libpopt-dev \
             libpq-dev \
             postgresql-server-dev-all \
             libqpid-proton-cpp12-dev \
             libradcli-dev \
-            libsipxtapi-dev \
             libsnmp-dev \
             libsoci-dev \
             libsrtp2-dev \
             libssl-dev \
             libtelepathy-qt5-dev \
+            libtool \
             libwebsocketpp-dev \
             libxerces-c-dev \
-            lld-13 \
+            lld-16 \
             make \
+            patch \
             perl \
+            pkg-config \
             python3-cxx-dev \
             python3-dev \
             sox \
+            wget \
             xxd"
           # deb.debian.org resets connections mid-download often enough to red
           # a run on its own ("Error reading from server ... 104"), and one bad
-          # .deb fails the whole job.  Retry the install a few times, refreshing
-          # the lists in between; $PACKAGES is deliberately unquoted so it word
-          # splits into arguments.
+          # .deb fails the whole job.  Retry the update and install a few
+          # times; $PACKAGES is deliberately unquoted so it word splits into
+          # arguments.
           attempt=1
-          until apt-get install -qq $PACKAGES
+          until apt-get update -qq && apt-get install -qq $PACKAGES
           do
             if [ "$attempt" -ge 3 ]
             then
@@ -98,25 +99,22 @@ jobs:
             echo "apt-get install failed, retrying (attempt $attempt)"
             attempt=$((attempt + 1))
             sleep 10
-            apt-get update -qq
           done
 
-      - name: Verify sipXtapi headers
-        run: |
-          apt-cache policy libsipxtapi-dev
-          # recon includes CpTopologyGraphFactoryImpl.h, which upstream only
-          # moved from noinst_HEADERS to nobase_include_HEADERS in Nov 2025.
-          # It is present in the debify build and absent from Debian's older
-          # one, so its absence means we got the wrong libsipxtapi-dev.
-          if [ ! -f /usr/include/sipxtapi/CpTopologyGraphFactoryImpl.h ]
-          then
-            echo "::error::libsipxtapi-dev does not provide CpTopologyGraphFactoryImpl.h - the debify repository was probably not used.  recon cannot build against this package."
-            dpkg -L libsipxtapi-dev | grep -i cptopology || true
-            exit 1
-          fi
-
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      # Cache the built sipXtapi ExternalProject tree so it is only rebuilt when
+      # the pinned commit or the build script changes.  tar preserves the
+      # ExternalProject stamp mtimes, so on a hit the build sees sipXtapi as up
+      # to date and skips it.  sipXtapi is built with the job's compiler, so
+      # each matrix entry has its own entry.  Bump the trailing salt (v1) to
+      # force a rebuild, e.g. after changing the container image.
+      - name: Cache sipXtapi
+        uses: actions/cache@v4
+        with:
+          path: sipXtapi-prefix
+          key: sipxtapi-bookworm-${{ matrix.c-compiler }}-${{ hashFiles('build/sipxtapi-commit.txt', 'build/build_sipxtapi.sh') }}-v1
 
       - name: Upgrade CMake
         run: ./build/travis/upgradecmake
@@ -131,8 +129,8 @@ jobs:
         run: ./build/travis/build
 
       - name: Analyse
-        if: ${{ matrix.c-compiler == 'clang-13' }}
-        run: run-clang-tidy-13 -j ${{ steps.cpu-cores.outputs.count }} -quiet
+        if: ${{ matrix.c-compiler == 'clang-16' }}
+        run: run-clang-tidy-16 -j ${{ steps.cpu-cores.outputs.count }} -quiet
 
       - name: Test
         run: make -j1 CTEST_OUTPUT_ON_FAILURE=1 test

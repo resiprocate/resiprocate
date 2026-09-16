@@ -30,7 +30,7 @@ fi
 #   so we can easily diff the configuration.
 # - we don't enable ichat-gw because of https://www.resiprocate.org/bugzilla/show_bug.cgi?id=133
 #     (compile fails on clang)
-CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags` ${WARNING_CONFIG}" \
+CPPFLAGS="-I/usr/include/postgresql -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags` ${WARNING_CONFIG}" \
   CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
 cmake \
     -DCMAKE_BUILD_TYPE=Debug \
@@ -65,7 +65,6 @@ cmake \
     -DUSE_SRTP1=OFF \
     -DUSE_LIBWEBRTC=OFF \
     -DRECON_LOCAL_HW_TESTS=OFF \
-    -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 \
     -DBUILD_P2P=OFF \
     -DBUILD_PYTHON=ON \
     -DBUILD_QPID_PROTON=ON \

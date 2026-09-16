@@ -58,6 +58,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
     -DUSE_SRTP1=OFF \
     -DBUILD_RECONSERVER=ON \
     -DUSE_SIPXTAPI=ON \
+    -DUSE_SYSTEM_SIPXTAPI=ON \
     -DUSE_KURENTO=ON \
     -DUSE_GSTREAMER=ON \
     -DUSE_LIBWEBRTC=OFF \
