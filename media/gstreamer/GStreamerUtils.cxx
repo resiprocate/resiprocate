@@ -9,8 +9,9 @@
 #include <gst/rtp/gstrtcpbuffer.h>
 #include <glibmm.h>
 #include <gstreamermm.h>
-#define GST_USE_UNSTABLE_API
-#include <gst/webrtc/gstwebrtcbin.h>
+// In earlier versions of gstreamer, we needed this to gain access
+// to certain API types/methods but it is not currently required.
+//#include <gst/webrtc/gstwebrtcbin.h>
 
 #include "rutil/Logger.hxx"
 #include "rutil/Subsystem.hxx"

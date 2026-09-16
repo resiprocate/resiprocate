@@ -1,3 +1,8 @@
+# The Gstreamer webrtc component is still technically considered
+# unstable.  Linking to it generates warnings at compile time.
+# Setting the flag GST_USE_UNSTABLE_API disables the warnings.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGST_USE_UNSTABLE_API")
+
 set(INCLUDES
    reConServer.hxx
    reConServerConfig.hxx

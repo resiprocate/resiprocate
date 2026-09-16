@@ -24,7 +24,6 @@
 #include <gst/sdp/gstsdpmessage.h>
 #include <glibmm/object.h>
 
-#define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
 
 namespace resip

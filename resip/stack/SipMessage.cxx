@@ -29,9 +29,23 @@ using namespace std;
 void
 SipMessage::KnownHeaders::clear() noexcept
 {
-   for (iterator it = begin(), e = end(); it != e;)
+   if (mSize > 0)
    {
-      erase(it++);
+      for (reference elem : mHeaders)
+      {
+         if (elem.getType() != Headers::UNKNOWN)
+         {
+            elem.getValues()->clear();
+            elem.setType(Headers::UNKNOWN);
+         }
+      }
+
+      for (UsedBitMaskWord& word : mUsedBitMask)
+      {
+         word = 0u;
+      }
+
+      mSize = 0u;
    }
 }
 
@@ -46,7 +60,7 @@ SipMessage::KnownHeaders::clearAndDispose(Disposer&& disposer) noexcept
    }
 
    mHeaders.clear();
-   mSize = 0;
+   mSize = 0u;
    resetIndices();
 }
 
@@ -54,12 +68,17 @@ SipMessage::KnownHeaders::clearAndDispose(Disposer&& disposer) noexcept
 void
 SipMessage::KnownHeaders::erase(iterator it) noexcept
 {
-   resip_assert(it->getType() != Headers::UNKNOWN);
+   const Headers::Type type = it->getType();
+   resip_assert(type != Headers::UNKNOWN);
    resip_assert(it->getValues() != nullptr);
    resip_assert(mSize > 0);
 
    it->getValues()->clear();
    it->setType(Headers::UNKNOWN);
+
+   mUsedBitMask[static_cast<unsigned int>(type) / UsedBitMaskWordBits] &=
+      ~(static_cast<UsedBitMaskWord>(1u) << (static_cast<unsigned int>(type) % UsedBitMaskWordBits));
+
    --mSize;
 }
 
@@ -93,15 +112,25 @@ SipMessage::KnownHeaders::insert(Headers::Type type, ValuesFactory&& valuesFacto
       ++mSize;
    }
 
+   mUsedBitMask[static_cast<unsigned int>(type) / UsedBitMaskWordBits] |=
+      static_cast<UsedBitMaskWord>(1u) << (static_cast<unsigned int>(type) % UsedBitMaskWordBits);
+
    return iterator(mHeaders.begin() + pos, mHeaders.end());
 }
 
-/// Resets all header indices to `InvalidHeaderIndex`
+/// Resets all header indices to `InvalidHeaderIndex` and clears the "used" bit mask
 void
 SipMessage::KnownHeaders::resetIndices() noexcept
 {
    for (HeaderIndex& index : mHeaderIndices)
+   {
       index = InvalidHeaderIndex;
+   }
+
+   for (UsedBitMaskWord& word : mUsedBitMask)
+   {
+      word = 0u;
+   }
 }
 
 /// Finds header information, if present in the list. Returns `end()` if not found. Does not produce "unused" entries.
@@ -820,29 +849,11 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
 #endif
    }
 
-   // Iterate by header type enum value (not insertion order) so that headers are
-   // encoded in the deterministic, enum-declared order. See the comment in
-   // HeaderTypes.hxx: "The Type enum controls the order of output of the headers
-   // in the encoded SipMessage". The leading entries of that enum follow the
-   // recommendation in RFC 3261 section 7.3.1, that headers needed for proxy
-   // processing appear towards the top of the message to facilitate rapid parsing.
-   //
-   // !slg! Note this costs more than iterating mKnownHeaders directly: find() is
-   // O(1), but the loop still probes all Headers::MAX_HEADERS types no matter how
-   // few headers the message actually carries, whereas iterating the container
-   // visits only the headers that are present. Recovering the enum order without
-   // paying that is worth revisiting.
-   for (int t = 0; t < Headers::MAX_HEADERS; ++t)
+   for (KnownHeaders::OrderedView::const_reference info : mKnownHeaders.ordered())
    {
-      const Headers::Type type = static_cast<Headers::Type>(t);
-      if (type == Headers::ContentLength) // !dlb! hack...
+      if (info.getType() != Headers::ContentLength) // !dlb! hack...
       {
-         continue;
-      }
-      auto it = mKnownHeaders.find(type);
-      if (it != mKnownHeaders.end())
-      {
-         it->getValues()->encode(type, str);
+         info.getValues()->encode(info.getType(), str);
       }
    }
 
@@ -878,31 +889,21 @@ EncodeStream&
 SipMessage::encodeEmbedded(EncodeStream& str) const
 {
    bool first = true;
-   // Iterate by header type enum value (not insertion order) so that headers are
-   // encoded in the deterministic, enum-declared order. See encode() above, including
-   // the note about the cost of probing all Headers::MAX_HEADERS types.
-   for (int t = 0; t < Headers::MAX_HEADERS; ++t)
+   for (KnownHeaders::OrderedView::const_reference info : mKnownHeaders.ordered())
    {
-      const Headers::Type type = static_cast<Headers::Type>(t);
-      if (type == Headers::ContentLength)
+      if (info.getType() != Headers::ContentLength)
       {
-         continue;
+         if (first)
+         {
+            str << Symbols::QUESTION;
+            first = false;
+         }
+         else
+         {
+            str << Symbols::AMPERSAND;
+         }
+         info.getValues()->encodeEmbedded(Headers::getHeaderName(info.getType()), str);
       }
-      auto it = mKnownHeaders.find(type);
-      if (it == mKnownHeaders.end())
-      {
-         continue;
-      }
-      if (first)
-      {
-         str << Symbols::QUESTION;
-         first = false;
-      }
-      else
-      {
-         str << Symbols::AMPERSAND;
-      }
-      it->getValues()->encodeEmbedded(Headers::getHeaderName(type), str);
    }
 
    for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin(); 
