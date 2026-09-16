@@ -90,6 +90,15 @@ build_lib()
       make clean
     fi
     make -j"${jobs}"
+    if [ "${lib}" = sipXmediaLib ]
+    then
+      # make install does not descend into the contrib speex sipXmediaLib is
+      # configured to use, and libtool relinks the speex codec plugin against
+      # the installed libraries while installing it, so install the contrib
+      # speex first.  Otherwise the relink finds no libspeex/libspeexdsp (or
+      # quietly picks up the system's, if libspeex-dev happens to be present).
+      make -C contrib/libspeex install
+    fi
     make install
   )
 }
@@ -112,9 +121,6 @@ build_lib 1 sipXmediaLib \
   --enable-codec-ilbc \
   --enable-codec-gsm \
   --enable-codec-opus
-# sipXmediaLib's make install does not descend into the contrib speex it was
-# configured to use, and sipXmediaAdapterLib links against it.
-make -C "${SRC_DIR}/sipXmediaLib/contrib/libspeex" install
 build_lib "${CORES}" sipXmediaAdapterLib \
   --disable-stream-player \
   --enable-topology-graph
