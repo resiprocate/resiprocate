@@ -255,7 +255,7 @@ Connection::performWrite()
       }
       if (mEnablePostConnectSocketFuncCall)
       {
-          mTransport->callSocketFunc(getSocket());
+          mTransport->applySocketOptions(getSocket());
       }
    }
 
@@ -573,7 +573,7 @@ Connection::isServer() const
 void 
 Connection::invokeAfterSocketCreationFunc() const
 {
-    mTransport->callSocketFunc(getSocket());
+    mTransport->applySocketOptions(getSocket());
 }
 
 /* ====================================================================

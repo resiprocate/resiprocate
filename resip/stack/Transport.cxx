@@ -122,6 +122,81 @@ Transport::onReload()
 }
 
 void
+Transport::drainDscpRefresh()
+{
+   // The refresh first: the class the report reads has to be the one this pass
+   // wrote, not the one the sockets carried before it.
+   if (mDscpRefreshPending.load())
+   {
+      applyDscpToOwnSockets();
+   }
+
+   if (mDscpReportPending.exchange(false))
+   {
+      reportDscp();
+   }
+}
+
+void
+Transport::applyDscpToOwnSockets()
+{
+   // Clear the request before reading the value it was raised for. A setDscp()
+   // that lands after this either carries the value this pass is about to
+   // write, or raises the request again for the next cycle.
+   mDscpRefreshPending.store(false);
+
+   const int wanted = mDscp.load();
+
+   // Before the traversal, not after: with nothing to write and nothing to
+   // undo, the user's AfterSocketCreationFunc must not be re-invoked on every
+   // socket this transport holds.
+   if (effectiveDscp(wanted) < 0)
+   {
+      return;
+   }
+
+   invokeAfterSocketCreationFunc();
+
+   // What this pass wrote, not what mDscp says now. A value that changed while
+   // the traversal ran has raised its own request; recording it here instead
+   // would claim a class the sockets do not carry.
+   mWasMarkRequested.store(wanted >= 0);
+}
+
+void
+Transport::reportDscp() const
+{
+   const Socket listener = getListenerSocket();
+   if (listener == INVALID_SOCKET)
+   {
+      return;
+   }
+
+   const int carried = getSocketTos(listener, ipVersion());
+   if (carried < 0)
+   {
+      ErrLog(<< *this << " cannot read the signaling DSCP class back from its listener");
+      return;
+   }
+
+   // Compared, not just stated: the operator has only the mismatch to act on.
+   // As a class rather than a byte, so the kernel's own ECN bits do not read as
+   // one.
+   const int wanted = effectiveDscp();
+   if (wanted >= 0
+       && (carried >> 2) != wanted)
+   {
+      ErrLog(<< *this << " asked for signaling DSCP " << wanted
+             << " but its listener carries " << (carried >> 2)
+             << " (ToS byte " << carried << ")");
+      return;
+   }
+
+   InfoLog(<< *this << " signaling DSCP " << (carried >> 2)
+           << " (ToS byte " << carried << ")");
+}
+
+void
 Transport::error(int e)
 {
    if (e != EAGAIN)
@@ -486,8 +561,67 @@ Transport::basicCheck(const SipMessage& msg)
    return true;
 }
 
+bool
+Transport::setDscp(int dscp)
+{
+   // Refused once per change, not once per socket. Whether the value is a class
+   // is a property of the configuration; a socket that cannot be given it is a
+   // different failure, and one that repeats on every socket.
+   if (dscp < -1 || dscp > 63)
+   {
+      ErrLog(<< *this << " refusing DSCP class " << dscp << ", outside -1..63");
+      return false;
+   }
+
+   if (mDscp.exchange(dscp) != dscp)
+   {
+      mDscpRefreshPending.store(true);
+   }
+
+   // Raised on every call, not only on a change: the check re-runs, so a
+   // marking that failed is reported again on the next reload rather than going
+   // quiet and reading as fixed. One getsockopt on the listener.
+   mDscpReportPending.store(true);
+
+   return true;
+}
+
+int
+Transport::effectiveDscp() const
+{
+   return effectiveDscp(mDscp.load());
+}
+
+int
+Transport::effectiveDscp(int wanted) const
+{
+   if (wanted >= 0)
+   {
+      return wanted;
+   }
+
+   return mWasMarkRequested.load() ? 0 : -1;
+}
+
 void
-Transport::callSocketFunc(Socket sock)
+Transport::applySocketOptions(Socket sock) const
+{
+   const int dscp = effectiveDscp();
+   if (dscp >= 0)
+   {
+      // The return is deliberately not reported here. Whether a socket takes the
+      // class belongs to the transport, so reporting it per socket would repeat
+      // on every socket a refresh touches; the listener read-back reports the
+      // state once instead. The per-socket detail is at Stack.
+      setSocketDscp(sock, dscp, ipVersion());
+      mWasMarkRequested.store(true);
+   }
+
+   callSocketFunc(sock);
+}
+
+void
+Transport::callSocketFunc(Socket sock) const
 {
    if (mSocketFunc)
    {
