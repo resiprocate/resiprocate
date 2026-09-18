@@ -935,13 +935,11 @@ MsgHeaderScanner::scanChunk(char * chunk,
    {
       textStartCharPtr = chunk;
    }
-   --charPtr;  // The loop starts by advancing "charPtr", so pre-adjust it.
-   for (;;)
+   for (;; ++charPtr)
    {
       // BEGIN message header character scan block BEGIN
       // The code in this block is executed once per message header character.
       // This entire file is designed specifically to minimize this block's size.
-      ++charPtr;
       CharInfo *charInfo = &localCharInfoArray[((unsigned char) (*charPtr))];
       CharCategory charCategory = charInfo->category;
       localTextPropBitMask |= charInfo->textPropBitMask;
@@ -992,7 +990,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
                                               mFieldKind,
                                               mFieldName,
                                               mFieldNameLength,
-                                              0,
+                                              charPtr,
                                               0,
                                               0);
             ++mNumHeaders;
