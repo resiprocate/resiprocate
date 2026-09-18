@@ -125,7 +125,7 @@ verifyCallback(int preverifyOk, X509_STORE_CTX* storeCtx)
          BIO* bio = BIO_new(BIO_s_mem());
          if (bio)
          {
-            X509_NAME* subjectName = X509_get_subject_name(cert);
+            const X509_NAME* subjectName = X509_get_subject_name(cert);
             if (subjectName)
             {
                // RFC 2253 is the preferred format (readable and reversible)
@@ -1209,7 +1209,7 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    SSL_CTX_set_options(mTlsCtx, BaseSecurity::OpenSSLCTXSetOptions);
    SSL_CTX_clear_options(mTlsCtx, BaseSecurity::OpenSSLCTXClearOptions);
    
-   mSslCtx = SSL_CTX_new( SSLv23_method() );
+   mSslCtx = SSL_CTX_new( TLS_method() );
    resip_assert(mSslCtx);
    SSL_CTX_set_default_passwd_cb(mSslCtx, pem_passwd_cb);
    SSL_CTX_set_cert_store(mSslCtx, mRootSslCerts);
@@ -2404,7 +2404,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
             if (gen->type == GEN_URI)
             {
                ASN1_IA5STRING* uri = gen->d.uniformResourceIdentifier;
-               Data name(uri->data, uri->length);
+               Data name(ASN1_STRING_get0_data(uri), ASN1_STRING_length(uri));
                InfoLog(<< "subjectAltName of signing cert contains <" << name << ">" );
                try
                {
@@ -2599,8 +2599,8 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
 
    Data commonName;
 
-   // look at the Common Name to find the peerName of the cert 
-   X509_NAME* subject = X509_get_subject_name(cert);
+   // look at the Common Name to find the peerName of the cert
+   const X509_NAME* subject = X509_get_subject_name(cert);
    if(NULL == subject)
    {
       ErrLog( << "Invalid certificate: subject not found ");
@@ -2666,7 +2666,7 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       if (gen->type == GEN_DNS)
       {
          ASN1_IA5STRING* asn = gen->d.dNSName;
-         Data dns(asn->data, asn->length);
+         Data dns(ASN1_STRING_get0_data(asn), ASN1_STRING_length(asn));
          PeerName peerName(SubjectAltName, dns);
          peerNames.push_back(peerName);
          InfoLog(<< "subjectAltName of TLS session cert contains DNS <" << dns << ">" );
@@ -2677,7 +2677,7 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
          if(useEmailAsSIP)
          {
             ASN1_IA5STRING* asn = gen->d.rfc822Name;
-            Data email(asn->data, asn->length);
+            Data email(ASN1_STRING_get0_data(asn), ASN1_STRING_length(asn));
             PeerName peerName(SubjectAltName, email);
             peerNames.push_back(peerName);
             InfoLog(<< "subjectAltName of TLS session cert contains EMAIL <" << email << ">" );
@@ -2692,12 +2692,14 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
          // MUST contain exactly four octets.  For IP Version 6, as specified in
          // RFC 1883, the octet string MUST contain exactly sixteen octets."
          ASN1_OCTET_STRING* asn = gen->d.iPAddress;
-         if (asn->length == 4)
+         const unsigned char* asnData = ASN1_STRING_get0_data(asn);
+         const int asnLen = ASN1_STRING_length(asn);
+         if (asnLen == 4)
          {
-            uint32_t ip = (asn->data[0] << 24) |
-                (asn->data[1] << 16) |
-                (asn->data[2] << 8) |
-                (asn->data[3]);
+            uint32_t ip = (asnData[0] << 24) |
+                (asnData[1] << 16) |
+                (asnData[2] << 8) |
+                (asnData[3]);
 
             sockaddr_in sa;
             sa.sin_family = AF_INET;
@@ -2712,26 +2714,26 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
                 InfoLog(<< "subjectAltName of TLS session cert contains IP ADDRESS <" << ipv4 << ">" );
             }
          }
-         else if (asn->length == 16)
+         else if (asnLen == 16)
          {
             sockaddr_in6 sa;
             sa.sin6_family = AF_INET6;
-            sa.sin6_addr.s6_addr[0] = asn->data[0];
-            sa.sin6_addr.s6_addr[1] = asn->data[1];
-            sa.sin6_addr.s6_addr[2] = asn->data[2];
-            sa.sin6_addr.s6_addr[3] = asn->data[3];
-            sa.sin6_addr.s6_addr[4] = asn->data[4];
-            sa.sin6_addr.s6_addr[5] = asn->data[5];
-            sa.sin6_addr.s6_addr[6] = asn->data[6];
-            sa.sin6_addr.s6_addr[7] = asn->data[7];
-            sa.sin6_addr.s6_addr[8] = asn->data[8];
-            sa.sin6_addr.s6_addr[9] = asn->data[9];
-            sa.sin6_addr.s6_addr[10] = asn->data[10];
-            sa.sin6_addr.s6_addr[11] = asn->data[11];
-            sa.sin6_addr.s6_addr[12] = asn->data[12];
-            sa.sin6_addr.s6_addr[13] = asn->data[13];
-            sa.sin6_addr.s6_addr[14] = asn->data[14];
-            sa.sin6_addr.s6_addr[15] = asn->data[15];
+            sa.sin6_addr.s6_addr[0] = asnData[0];
+            sa.sin6_addr.s6_addr[1] = asnData[1];
+            sa.sin6_addr.s6_addr[2] = asnData[2];
+            sa.sin6_addr.s6_addr[3] = asnData[3];
+            sa.sin6_addr.s6_addr[4] = asnData[4];
+            sa.sin6_addr.s6_addr[5] = asnData[5];
+            sa.sin6_addr.s6_addr[6] = asnData[6];
+            sa.sin6_addr.s6_addr[7] = asnData[7];
+            sa.sin6_addr.s6_addr[8] = asnData[8];
+            sa.sin6_addr.s6_addr[9] = asnData[9];
+            sa.sin6_addr.s6_addr[10] = asnData[10];
+            sa.sin6_addr.s6_addr[11] = asnData[11];
+            sa.sin6_addr.s6_addr[12] = asnData[12];
+            sa.sin6_addr.s6_addr[13] = asnData[13];
+            sa.sin6_addr.s6_addr[14] = asnData[14];
+            sa.sin6_addr.s6_addr[15] = asnData[15];
 
             char addrStr[INET6_ADDRSTRLEN];
             if (inet_ntop(sa.sin6_family, &(sa.sin6_addr), addrStr, INET6_ADDRSTRLEN) != NULL)
@@ -2749,7 +2751,7 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       if(gen->type == GEN_URI) 
       {
          ASN1_IA5STRING* asn = gen->d.uniformResourceIdentifier;
-         Uri uri(Data(asn->data, asn->length));
+         Uri uri(Data(ASN1_STRING_get0_data(asn), ASN1_STRING_length(asn)));
          try
          {
              PeerName peerName(SubjectAltName, uri.host());

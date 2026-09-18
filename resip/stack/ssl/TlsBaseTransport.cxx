@@ -60,11 +60,11 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
       switch(sslType)
       {
       case SecurityTypes::SSLv23:
-         DebugLog(<<"Using SSLv23_method");
-         mDomainCtx = mSecurity->createDomainCtx(SSLv23_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+         DebugLog(<<"Using SecurityTypes::SSLv23");
+         mDomainCtx = mSecurity->createDomainCtx(TLS_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
          break;
       case SecurityTypes::TLSv1:
-         DebugLog(<<"Using TLS_method");
+         DebugLog(<<"Using SecurityTypes::TLSv1");
          mDomainCtx = mSecurity->createDomainCtx(TLS_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
          if (mDomainCtx) {
             SSL_CTX_set_min_proto_version(mDomainCtx, TLS1_VERSION);
@@ -104,12 +104,12 @@ TlsBaseTransport::getCtx()
    }
    else if(mSslType == SecurityTypes::SSLv23)
    {
-      DebugLog(<<"Using SSLv23_method");
+      DebugLog(<<"Using SecurityTypes::SSLv23 (dynamic version negotiation)");
       ctx = mSecurity->getSslCtx();
    }
    else
    {
-      DebugLog(<<"Using TLSv1_method");
+      DebugLog(<<"Using SecurityTypes::TLSv1 (pinned to TLSv1)");
       ctx = mSecurity->getTlsCtx();
    }
    // FIXME: would be better to do this in a method called asynchronously after onReload
@@ -168,7 +168,8 @@ TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

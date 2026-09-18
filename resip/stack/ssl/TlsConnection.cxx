@@ -268,7 +268,11 @@ TlsConnection::checkState()
                   {
                      // OpenSSL docs:  If no peer certificate was presented, the returned result code is X509_V_OK. 
                      // This is because no verification error occurred, it does however not indicate success.
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
                      X509* peerCert = SSL_get_peer_certificate(mSsl);
+#else
+                     X509* peerCert = SSL_get1_peer_certificate(mSsl);
+#endif
                      if (peerCert)
                      {
                         ds << "peer supplied a certificate, it has either not been checked or it was checked successfully";
@@ -724,8 +728,12 @@ TlsConnection::computePeerName()
            << SSL_CIPHER_get_version(ciph) << " "
            << SSL_CIPHER_get_name(ciph) << " ");
 
-   // get the certificate if other side has one 
+   // get the certificate if other side has one
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
    X509* cert = SSL_get_peer_certificate(mSsl);
+#else
+   X509* cert = SSL_get1_peer_certificate(mSsl);
+#endif
    if (!cert)
    {
       DebugLog(<< "No peer certificate in TLS connection");
@@ -775,7 +783,8 @@ TlsConnection::computePeerName()
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
- * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

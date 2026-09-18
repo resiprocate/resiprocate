@@ -206,7 +206,11 @@ DtlsSocket::getRemoteFingerprint(char *fprint)
 {
    X509 *x;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
    x=SSL_get_peer_certificate(mSsl);
+#else
+   x=SSL_get1_peer_certificate(mSsl);
+#endif
    if(!x) // No certificate
       return false;
 
@@ -418,6 +422,7 @@ DtlsSocket::getReadTimeout()
 /* ====================================================================
 
  Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

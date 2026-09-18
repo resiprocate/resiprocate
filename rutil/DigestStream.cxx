@@ -9,18 +9,7 @@
 #endif
 
 #ifdef USE_SSL
-   #include <openssl/evp.h> 
-   #if OPENSSL_VERSION_NUMBER < 0x10100000L // openssl 1.1.0 api changes
-   static EVP_MD_CTX* EVP_MD_CTX_new()
-   {
-      return new EVP_MD_CTX;
-   }
-   static void EVP_MD_CTX_free(EVP_MD_CTX* pCtx)
-   {
-      EVP_MD_CTX_cleanup(pCtx);
-      delete pCtx;
-   }
-   #endif
+   #include <openssl/evp.h>
 #else
    #include "rutil/vmd5.hxx"
    #include "rutil/Sha1.hxx"

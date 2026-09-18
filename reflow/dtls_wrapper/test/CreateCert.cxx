@@ -1,5 +1,7 @@
 #include "CreateCert.hxx"
 
+#include <openssl/bn.h>
+#include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
@@ -22,8 +24,15 @@ int dtls::createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*
    // Make sure that necessary algorithms exist:
    resip_assert(EVP_sha1());
 
-   RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
-   resip_assert(rsa);    // couldn't make key pair
+   BIGNUM* bn = BN_new();
+   BN_set_word(bn, RSA_F4);
+
+   RSA* rsa = RSA_new();
+   resip_assert(rsa);
+
+   ret = RSA_generate_key_ex(rsa, keyLen, bn, NULL);
+   BN_free(bn);
+   resip_assert(ret);    // couldn't make key pair
    
    EVP_PKEY* privkey = EVP_PKEY_new();
    resip_assert(privkey);
@@ -92,6 +101,7 @@ int dtls::createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*
 /* ====================================================================
 
  Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

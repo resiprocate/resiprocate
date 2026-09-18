@@ -110,7 +110,11 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
       <<  SSL_CIPHER_get_name(ciph) << " " );
 
    // get the certificate - should always exist since mode is set for SSL to verify the cert first
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
    X509* cert = SSL_get_peer_certificate(mSocket.native_handle());
+#else
+   X509* cert = SSL_get1_peer_certificate(mSocket.native_handle());
+#endif
    resip_assert(cert);
 
    // Look at the SubjectAltName, and if found, set as peerName
@@ -126,7 +130,7 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
       if (gen->type == GEN_DNS)
       {
          ASN1_IA5STRING* asn = gen->d.dNSName;
-         resip::Data dns(asn->data, asn->length);
+         resip::Data dns(ASN1_STRING_get0_data(asn), ASN1_STRING_length(asn));
          InfoLog(<< "subjectAltName of TLS session cert contains DNS <" << dns << ">" );
          hostnamePresentInSubjectAltName = true;
          if(resip::isEqualNoCase(dns, hostname.c_str()))
@@ -151,8 +155,8 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
    // If there are no peer names from the subjectAltName, then use the commonName
    if(!hostnamePresentInSubjectAltName)
    {   
-      // look at the Common Name to find the peerName of the cert 
-      X509_NAME* subject = X509_get_subject_name(cert);
+      // look at the Common Name to find the peerName of the cert
+      const X509_NAME* subject = X509_get_subject_name(cert);
       if(!subject)
       {
          ErrLog( << "Invalid certificate: subject not found ");
@@ -235,7 +239,7 @@ TurnTlsSocket::cancelSocket()
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2008-2018, SIP Spectrum, Inc.
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

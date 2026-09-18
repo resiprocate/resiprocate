@@ -68,10 +68,10 @@ class TestDtlsSocketContext : public DtlsSocketContext
 
 int main(int argc,char **argv)
 {
-  SSL_library_init();
-  SSL_load_error_strings();
-  ERR_load_crypto_strings();
-  srtp_init();  
+  // OpenSSL 1.1.0+ initializes itself automatically; explicit calls to
+  // SSL_library_init(), SSL_load_error_strings() and ERR_load_crypto_strings()
+  // are no longer needed (and are deprecated).
+  srtp_init();
 
   X509 *clientCert,*serverCert;
   EVP_PKEY *clientKey,*serverKey;
