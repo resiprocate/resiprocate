@@ -2616,10 +2616,10 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
          break;
       }
       resip_assert( i != -1 );
-      X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
+      const X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
       resip_assert( entry );
       
-      ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
+      const ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
       resip_assert( s );
       
       int t = ASN1_STRING_type(s);
