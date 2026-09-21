@@ -1,3 +1,4 @@
+#include <cerrno>
 #include <cstdlib>
 #include <iostream>
 
@@ -41,12 +42,38 @@ check(int actual, int expected, const char* what)
 static const int CS5 = 40;
 static const int CS5_BYTE = 160;
 
+// Windows does not document IPV6_TCLASS as settable, and refuses it with
+// WSAENOPROTOOPT on some builds.
+static bool
+carriesTclass(Socket fd)
+{
+   const int probe = 0;
+   if (::setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, (const char *)&probe, sizeof(probe)) != -1)
+   {
+      return true;
+   }
+   const int e = getErrno();
+
+#ifdef WIN32
+   const int unsupported = WSAENOPROTOOPT;
+#else
+   const int unsupported = ENOPROTOOPT;
+#endif
+
+   if (e != unsupported)
+   {
+      return true;
+   }
+
+   cerr << "skip IPV6_TCLASS is not available here (error " << e << ")" << endl;
+   return false;
+}
+
 int
 main()
 {
-   // At Stack, so that the per-socket line setSocketDscp() writes on a failure
-   // reaches the test output with the error number in it. Without it a refused
-   // option is reported only as a value that does not match.
+   // At Stack, so the per-socket line setSocketDscp() writes on a failure
+   // reaches the test output with the error number in it.
    Log::initialize(Log::Cout, Log::Stack, Data::Empty);
 
    // Windows opens no socket before WSAStartup, and nothing here has run the
@@ -59,9 +86,8 @@ main()
    check(setSocketDscp(v4, CS5, V4), CS5, "V4: sets the class and reads it back");
    check(setSocketDscp(v4, 0, V4), 0, "V4: clears the class to 0");
 
-   // The class is not the byte. A helper that stored its argument unshifted
-   // would round-trip correctly and still mark the wrong packets, so read the
-   // byte the socket actually carries rather than trusting the return alone.
+   // The class is not the byte: a helper that stored its argument unshifted
+   // would round-trip correctly and still mark the wrong packets.
    check(setSocketDscp(v4, CS5, V4), CS5, "V4: sets the class again");
 
    int carried = 0;
@@ -75,29 +101,32 @@ main()
    Socket v6 = ::socket(AF_INET6, SOCK_DGRAM, 0);
    check(v6 != INVALID_SOCKET, "opened an AF_INET6 socket");
 
-   // Windows has no IPV6_TCLASS -- setsockopt refuses it with WSAENOPROTOOPT
-   // (10042) -- so none of this can be asked of a socket there. It refuses
-   // IP_TOS on an AF_INET6 socket too, which is what the decoy needs.
+   // Seed the wrong level first: setsockopt(IPPROTO_IP, IP_TOS) succeeds on an
+   // AF_INET6 socket and reads back, so an implementation using the IPv4 level
+   // would return the class and look correct while marking nothing on the wire.
+   // Windows refuses it there, and reads the traffic class back from it, so the
+   // decoy cannot be laid.
 #ifndef WIN32
-   // Seed the wrong level with a different value first. setsockopt(IPPROTO_IP,
-   // IP_TOS) succeeds on an AF_INET6 socket and reads back, so an
-   // implementation using the IPv4 level here would return the class and look
-   // correct while marking nothing on the wire.
    int decoy = 96;
    ::setsockopt(v6, IPPROTO_IP, IP_TOS, (const char *)&decoy, sizeof(decoy));
-
-   check(setSocketDscp(v6, CS5, V6), CS5, "V6: sets the traffic class and reads it back");
-
-   int tclass = 0;
-   socklen_t tclassLen = sizeof(tclass);
-   ::getsockopt(v6, IPPROTO_IPV6, IPV6_TCLASS, (char *)&tclass, &tclassLen);
-   check(tclass, CS5_BYTE, "V6: wrote IPV6_TCLASS");
-
-   int strayTos = 0;
-   socklen_t strayTosLen = sizeof(strayTos);
-   ::getsockopt(v6, IPPROTO_IP, IP_TOS, (char *)&strayTos, &strayTosLen);
-   check(strayTos == decoy, "V6: left the IPv4 level untouched");
 #endif
+
+   if (carriesTclass(v6))
+   {
+      check(setSocketDscp(v6, CS5, V6), CS5, "V6: sets the traffic class and reads it back");
+
+      int tclass = 0;
+      socklen_t tclassLen = sizeof(tclass);
+      ::getsockopt(v6, IPPROTO_IPV6, IPV6_TCLASS, (char *)&tclass, &tclassLen);
+      check(tclass, CS5_BYTE, "V6: wrote IPV6_TCLASS");
+
+#ifndef WIN32
+      int strayTos = 0;
+      socklen_t strayTosLen = sizeof(strayTos);
+      ::getsockopt(v6, IPPROTO_IP, IP_TOS, (char *)&strayTos, &strayTosLen);
+      check(strayTos == decoy, "V6: left the IPv4 level untouched");
+#endif
+   }
 
    // Out of range is refused rather than shifted into a neighbouring class.
    check(setSocketDscp(v4, 64, V4) == -1, "V4: a class above 63 is refused");
@@ -107,8 +136,7 @@ main()
    // Refusing writes nothing: the class set before it is still on the socket.
    check(getSocketDscp(v4, V4), CS5, "a refused class leaves the socket as it was");
 
-   // A socket that cannot carry the option must be reported, not thrown: the
-   // caller keeps serving traffic.
+   // Reported, not thrown: the caller keeps serving traffic.
    bool threw = false;
    int unusable = 0;
    try

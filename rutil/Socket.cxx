@@ -296,8 +296,8 @@ int resip::setSocketDscp(Socket fd, int dscp, IpVersion version)
    const int option = isV6 ? IPV6_TCLASS : IP_TOS;
    const char* optionName = isV6 ? "IPV6_TCLASS" : "IP_TOS";
 
-   // A guard for a direct caller: the transport refuses the value before it
-   // reaches a socket, so this cannot fire on the stack's own path.
+   // For a direct caller: the transport refuses the value first, so this
+   // cannot fire on the stack's own path.
    if (dscp < 0 || dscp > 63)
    {
       ErrLog(<< "DSCP class " << dscp << " out of range 0..63 on fd " << fd);
@@ -309,10 +309,8 @@ int resip::setSocketDscp(Socket fd, int dscp, IpVersion version)
    if (::setsockopt(fd, level, option, (const char *)&tos, sizeof(tos)) == -1)
    {
       int e = getErrno();
-      // Below Debug: a refresh reaches every socket the transport holds, so this
-      // would arrive in bursts. The caller reports the state once from the
-      // listener; the descriptor and the error number are here for whoever needs
-      // to know why one socket refused it.
+      // Below Debug: a refresh reaches every socket the transport holds, so
+      // this arrives in bursts. The caller reports the state once instead.
       StackLog(<< "setsockopt(" << optionName << ", " << tos << ") failed on fd " << fd
                << ": error " << e);
       return -1;
@@ -332,9 +330,7 @@ int resip::getSocketTos(Socket fd, IpVersion version)
    if (::getsockopt(fd, level, option, (char *)&tos, &optlen) == -1)
    {
       int e = getErrno();
-      // Below Debug, for the same reason as the write: this runs per socket on a
-      // refresh. A caller that reads back once, such as the listener report,
-      // raises its own error.
+      // Below Debug, for the same reason as the write above.
       StackLog(<< "getsockopt(" << (isV6 ? "IPV6_TCLASS" : "IP_TOS")
                << ") failed on fd " << fd << ": error " << e);
       return -1;

@@ -102,9 +102,8 @@ readTos(Socket fd)
    return tos;
 }
 
-// Puts the transport's current class on a throwaway socket, the way binding or
-// accepting one does. Marking a socket is what records that a mark was made, so
-// a test that wants that state has to go through here rather than set the flag.
+// Marking a socket is what records that a mark was made, so a test that wants
+// that state has to go through here rather than set the flag.
 static void
 markOneSocket(Transport& transport)
 {
@@ -180,9 +179,7 @@ main()
       check(t.effectiveDscp(), -1, "and leaves the transport unmarked");
    }
 
-   // The per-socket entry point every transport routes through: it puts the
-   // effective class on the socket handed to it, and leaves the sockets of a
-   // transport that was never given one exactly as they were.
+   // The per-socket entry point every transport routes through.
    {
       // Seeded, not fresh: a fresh socket already reads 0, so an implementation
       // that wrote 0 here would pass while breaking the no-op guarantee.
@@ -243,10 +240,9 @@ main()
       check(t.listenerReads(), 1, "and reported once, not on every cycle");
    }
 
-   // A reload hands every transport the class from the configuration, whether or
-   // not the file changed it. Walking every socket of every transport for a
-   // reload that changed something else is the cost this avoids -- but the
-   // read-back line is owed on every reload, so it is raised either way.
+   // A reload hands every transport the class from the configuration, whether
+   // or not the file changed it. The walk is skipped; the read-back line is
+   // owed on every reload, so it is raised either way.
    {
       FakeTosTransport t(fifo);
       t.setDscp(CS5);
@@ -259,8 +255,8 @@ main()
 
    // A service that never asked for a marking must see the library behave
    // exactly as it does today: the user's socket callback is not re-invoked
-   // behind its back. This holds whether the service left the value alone or
-   // set it to -1 explicitly.
+   // behind its back, and nothing is logged. This holds whether it left the
+   // value alone or set it to -1 explicitly.
    {
       FakeTosTransport t(fifo);
       t.drainDscpRefresh();
@@ -272,7 +268,7 @@ main()
       t.setDscp(-1);
       t.drainDscpRefresh();
       check(t.traversals(), 0, "a transport set to -1 is not walked either");
-      check(t.listenerReads(), 1, "but is still reported");
+      check(t.listenerReads(), 0, "and is not read back either");
    }
 
    {
@@ -282,6 +278,7 @@ main()
       t.setDscp(-1);
       t.drainDscpRefresh();
       check(t.traversals(), 2, "clearing a class that was written still walks");
+      check(t.listenerReads(), 2, "and the undo pass reports the reset");
    }
 
    // A value that changes while the traversal runs must be recorded as what the

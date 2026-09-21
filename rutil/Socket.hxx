@@ -127,10 +127,11 @@ int setSocketRcvBufLen(Socket fd, int buflen);	// setsockopt(SO_RCVBUF)
    datagram socket on Linux keeps them, a stream socket clears them, and Windows
    refuses the value outright.
 
-   Not every platform carries the option. Windows has no IPV6_TCLASS and refuses
-   it with WSAENOPROTOOPT, so a V6 caller there gets -1 and no marking. It does
-   accept IP_TOS, though Microsoft documents that as unsupported as well and
-   points at policy-based QoS instead.
+   Not every platform carries the option. Windows does not document IPV6_TCLASS
+   as settable -- the constant is in the SDK, and whether the stack honours it
+   has been seen to differ between builds -- so a V6 caller there may get -1 and
+   no marking. It does accept IP_TOS, though Microsoft documents that as
+   unsupported as well and points at policy-based QoS instead.
 
    @return the class read back, or -1 if {dscp} is out of range or the option
    could not be set or read. The value is read back rather than assumed, so a

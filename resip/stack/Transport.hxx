@@ -426,7 +426,7 @@ class Transport : public FdSetIOObserver
 
          Call this directly only while the transport is still single-threaded,
          before its processing thread starts. Once it is running, ask through
-         onReload() instead: the traversal walks the list of connections that
+         setDscp() instead: the traversal walks the list of connections that
          thread owns.
       */
       void applyDscpToOwnSockets();
@@ -442,12 +442,14 @@ class Transport : public FdSetIOObserver
    private:
 
       /**
-         Compares the class this transport's listener carries against the one
-         asked for, and logs the mismatch. Read from the socket rather than from
-         the configured value: the two differ when the write failed, and the
-         read-back is the only evidence the marking is real.
+         Compares the class this transport's listener carries against {wanted},
+         the value the drain cycle acted on, and logs the mismatch. Read from the
+         socket rather than from the configured value: the two differ when the
+         write failed, and the read-back is the only evidence the marking is
+         real. {wanted} below zero -- a transport the feature never touched --
+         reports nothing.
       */
-      void reportDscp() const;
+      void reportDscp(int wanted) const;
 
    public:
 

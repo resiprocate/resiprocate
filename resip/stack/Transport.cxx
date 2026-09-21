@@ -124,8 +124,11 @@ Transport::onReload()
 void
 Transport::drainDscpRefresh()
 {
-   // The refresh first: the class the report reads has to be the one this pass
-   // wrote, not the one the sockets carried before it.
+   // Read before the traversal clears the mark state, so a reset still reports
+   // the 0 it wrote.
+   const int handled = effectiveDscp();
+
+   // The refresh first, so the report reads the class this pass wrote.
    if (mDscpRefreshPending.load())
    {
       applyDscpToOwnSockets();
@@ -133,7 +136,7 @@ Transport::drainDscpRefresh()
 
    if (mDscpReportPending.exchange(false))
    {
-      reportDscp();
+      reportDscp(handled);
    }
 }
 
@@ -147,9 +150,8 @@ Transport::applyDscpToOwnSockets()
 
    const int wanted = mDscp.load();
 
-   // Before the traversal, not after: with nothing to write and nothing to
-   // undo, the user's AfterSocketCreationFunc must not be re-invoked on every
-   // socket this transport holds.
+   // Before the traversal: with nothing to write and nothing to undo, the
+   // user's AfterSocketCreationFunc must not be re-invoked at all.
    if (effectiveDscp(wanted) < 0)
    {
       return;
@@ -157,15 +159,19 @@ Transport::applyDscpToOwnSockets()
 
    invokeAfterSocketCreationFunc();
 
-   // What this pass wrote, not what mDscp says now. A value that changed while
-   // the traversal ran has raised its own request; recording it here instead
-   // would claim a class the sockets do not carry.
+   // What this pass wrote, not what mDscp says now: a value that changed while
+   // the traversal ran has raised its own request.
    mWasMarkRequested.store(wanted >= 0);
 }
 
 void
-Transport::reportDscp() const
+Transport::reportDscp(int wanted) const
 {
+   if (wanted < 0)
+   {
+      return;
+   }
+
    const Socket listener = getListenerSocket();
    if (listener == INVALID_SOCKET)
    {
@@ -179,12 +185,9 @@ Transport::reportDscp() const
       return;
    }
 
-   // Compared, not just stated: the operator has only the mismatch to act on.
-   // As a class rather than a byte, so the kernel's own ECN bits do not read as
-   // one.
-   const int wanted = effectiveDscp();
-   if (wanted >= 0
-       && (carried >> 2) != wanted)
+   // As a class rather than a byte, so the kernel's own ECN bits do not read
+   // as a mismatch.
+   if ((carried >> 2) != wanted)
    {
       ErrLog(<< *this << " asked for signaling DSCP " << wanted
              << " but its listener carries " << (carried >> 2)
@@ -564,9 +567,7 @@ Transport::basicCheck(const SipMessage& msg)
 bool
 Transport::setDscp(int dscp)
 {
-   // Refused once per change, not once per socket. Whether the value is a class
-   // is a property of the configuration; a socket that cannot be given it is a
-   // different failure, and one that repeats on every socket.
+   // Refused once per change, not once per accepted connection.
    if (dscp < -1 || dscp > 63)
    {
       ErrLog(<< *this << " refusing DSCP class " << dscp << ", outside -1..63");
@@ -578,9 +579,8 @@ Transport::setDscp(int dscp)
       mDscpRefreshPending.store(true);
    }
 
-   // Raised on every call, not only on a change: the check re-runs, so a
-   // marking that failed is reported again on the next reload rather than going
-   // quiet and reading as fixed. One getsockopt on the listener.
+   // Raised on every call, not only on a change: a marking that failed is then
+   // reported again on the next reload rather than reading as fixed.
    mDscpReportPending.store(true);
 
    return true;
@@ -609,10 +609,8 @@ Transport::applySocketOptions(Socket sock) const
    const int dscp = effectiveDscp();
    if (dscp >= 0)
    {
-      // The return is deliberately not reported here. Whether a socket takes the
-      // class belongs to the transport, so reporting it per socket would repeat
-      // on every socket a refresh touches; the listener read-back reports the
-      // state once instead. The per-socket detail is at Stack.
+      // The return is dropped on purpose: the listener read-back reports the
+      // state once, instead of once per socket a refresh touches.
       setSocketDscp(sock, dscp, ipVersion());
       mWasMarkRequested.store(true);
    }
