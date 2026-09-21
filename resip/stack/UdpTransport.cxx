@@ -121,6 +121,8 @@ UdpTransport::setPollGrp(FdPollGrp *grp)
 void
 UdpTransport::process() 
 {
+   drainDscpRefresh();
+
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_TXNOW)!= 0 )
    {
        processTxAll();
@@ -200,6 +202,8 @@ UdpTransport::buildFdSet( FdSet& fdset )
 void
 UdpTransport::process(FdSet& fdset)
 {
+   drainDscpRefresh();
+
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
    // preparse and stuff into RxFifo

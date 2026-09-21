@@ -16,6 +16,8 @@
 #include <memory>
 #include <utility>
 
+#include <atomic>
+
 namespace resip
 {
 
@@ -370,8 +372,86 @@ class Transport : public FdSetIOObserver
       //# queued messages on this transport
       virtual unsigned int getFifoSize() const=0;
 
-      void callSocketFunc(Socket sock);
+      void callSocketFunc(Socket sock) const;
       virtual void invokeAfterSocketCreationFunc() const = 0;  //used to invoke the after socket creation func immediately for all existing sockets - can be used to modify QOS settings at runtime
+
+      /**
+         Sets the DSCP class this transport puts on its sockets, and returns
+         whether it was accepted. The range is 0 to 63; -1 asks for no marking,
+         and is the state of a transport this was never called on. Callable from
+         any thread.
+
+         A value outside -1..63 is refused and the transport keeps the one it
+         had. A value that differs schedules a refresh of the sockets this
+         transport already holds, which it serves from its own processing cycle
+         -- and with it, the AfterSocketCreationFunc a user installed. Setting
+         the same value again schedules no refresh, so a service may call this on
+         every configuration reload.
+      */
+      bool setDscp(int dscp);
+
+      /**
+         The class to write to a socket right now, or -1 to leave it alone.
+
+         | mDscp | mWasMarkRequested | result |
+         |-------|-------------------|--------|
+         | >= 0  | any               | mDscp |
+         | -1    | true              | 0, undo the mark we made |
+         | -1    | false             | -1, never marked, leave the socket alone |
+
+         The last two rows are why a mark is tracked at all: undoing one and
+         never having made one are different actions.
+      */
+      int effectiveDscp() const;
+
+      /**
+         effectiveDscp() for a value the caller has already read. A traversal
+         has to read mDscp exactly once -- a value that changes while it runs
+         raises its own request, and reading again would mix the two passes.
+      */
+      int effectiveDscp(int wanted) const;
+
+      /**
+         The one place a socket of this transport is configured. Puts the
+         effective DSCP class on {sock}, then hands it to the user's
+         AfterSocketCreationFunc. Every site that configures a socket -- the
+         listener, an accepted connection, an outgoing connection -- routes
+         through here, so a socket cannot be created without passing it.
+      */
+      void applySocketOptions(Socket sock) const;
+
+      /**
+         Re-runs the per-socket set-up on every socket this transport holds --
+         the listener, and each established connection.
+
+         Call this directly only while the transport is still single-threaded,
+         before its processing thread starts. Once it is running, ask through
+         setDscp() instead: the traversal walks the list of connections that
+         thread owns.
+      */
+      void applyDscpToOwnSockets();
+
+   protected:
+
+      /**
+         Serves a pending refresh and a pending report. Called by the owning
+         thread at the top of its processing cycle.
+      */
+      void drainDscpRefresh();
+
+   private:
+
+      /**
+         Compares the class this transport's listener carries against {wanted},
+         the value the drain cycle acted on, and logs the mismatch. Read from the
+         socket rather than from the configured value: the two differ when the
+         write failed, and the read-back is the only evidence the marking is
+         real. {wanted} below zero -- a transport the feature never touched --
+         reports nothing.
+      */
+      void reportDscp(int wanted) const;
+
+   public:
 
       virtual void setCongestionManager(CongestionManager* manager)
       {
@@ -408,6 +488,12 @@ class Transport : public FdSetIOObserver
 
    protected:
 
+      /**
+         The transport's own listening or bound socket, or INVALID_SOCKET for a
+         transport that holds none.
+      */
+      virtual Socket getListenerSocket() const { return INVALID_SOCKET; }
+
       Data mInterface;
       Tuple mTuple;
 
@@ -427,6 +513,19 @@ class Transport : public FdSetIOObserver
       AfterSocketCreationFuncPtr mSocketFunc;
       Compression &mCompression;
       unsigned mTransportFlags;
+
+      // The signalling DSCP class, and the state its refresh needs.
+      std::atomic<int> mDscp { -1 };           //!< the class to write, -1 for "do not mark"
+      /// Set by setDscp() when the value changes, cleared by the owning thread's
+      /// refresh. Sequentially consistent on purpose: under a relaxed order that
+      /// refresh could see the request and still read the previous mDscp.
+      std::atomic<bool> mDscpRefreshPending { false };
+      /// Set by every setDscp() call, cleared by the owning thread's report, so
+      /// a reload that changed nothing still says what the listener carries.
+      std::atomic<bool> mDscpReportPending { false };
+      /// Whether this transport has asked a socket to carry a class that a clear
+      /// would have to undo.
+      mutable std::atomic<bool> mWasMarkRequested { false };
 };
 
 EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);

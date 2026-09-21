@@ -487,6 +487,8 @@ DtlsTransport::_doHandshake(void)
 void
 DtlsTransport::process(FdSet& fdset)
 {
+   drainDscpRefresh();
+
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
    // preparse and stuff into RxFifo

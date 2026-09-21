@@ -122,6 +122,84 @@ Transport::onReload()
 }
 
 void
+Transport::drainDscpRefresh()
+{
+   // Read before the traversal clears the mark state, so a reset still reports
+   // the 0 it wrote.
+   const int handled = effectiveDscp();
+
+   // The refresh first, so the report reads the class this pass wrote.
+   if (mDscpRefreshPending.load())
+   {
+      applyDscpToOwnSockets();
+   }
+
+   if (mDscpReportPending.exchange(false))
+   {
+      reportDscp(handled);
+   }
+}
+
+void
+Transport::applyDscpToOwnSockets()
+{
+   // Clear the request before reading the value it was raised for. A setDscp()
+   // that lands after this either carries the value this pass is about to
+   // write, or raises the request again for the next cycle.
+   mDscpRefreshPending.store(false);
+
+   const int wanted = mDscp.load();
+
+   // Before the traversal: with nothing to write and nothing to undo, the
+   // user's AfterSocketCreationFunc must not be re-invoked at all.
+   if (effectiveDscp(wanted) < 0)
+   {
+      return;
+   }
+
+   invokeAfterSocketCreationFunc();
+
+   // What this pass wrote, not what mDscp says now: a value that changed while
+   // the traversal ran has raised its own request.
+   mWasMarkRequested.store(wanted >= 0);
+}
+
+void
+Transport::reportDscp(int wanted) const
+{
+   if (wanted < 0)
+   {
+      return;
+   }
+
+   const Socket listener = getListenerSocket();
+   if (listener == INVALID_SOCKET)
+   {
+      return;
+   }
+
+   const int carried = getSocketTos(listener, ipVersion());
+   if (carried < 0)
+   {
+      ErrLog(<< *this << " cannot read the signaling DSCP class back from its listener");
+      return;
+   }
+
+   // As a class rather than a byte, so the kernel's own ECN bits do not read
+   // as a mismatch.
+   if ((carried >> 2) != wanted)
+   {
+      ErrLog(<< *this << " asked for signaling DSCP " << wanted
+             << " but its listener carries " << (carried >> 2)
+             << " (ToS byte " << carried << ")");
+      return;
+   }
+
+   InfoLog(<< *this << " signaling DSCP " << (carried >> 2)
+           << " (ToS byte " << carried << ")");
+}
+
+void
 Transport::error(int e)
 {
    if (e != EAGAIN)
@@ -486,8 +564,62 @@ Transport::basicCheck(const SipMessage& msg)
    return true;
 }
 
+bool
+Transport::setDscp(int dscp)
+{
+   // Refused once per change, not once per accepted connection.
+   if (dscp < -1 || dscp > 63)
+   {
+      ErrLog(<< *this << " refusing DSCP class " << dscp << ", outside -1..63");
+      return false;
+   }
+
+   if (mDscp.exchange(dscp) != dscp)
+   {
+      mDscpRefreshPending.store(true);
+   }
+
+   // Raised on every call, not only on a change: a marking that failed is then
+   // reported again on the next reload rather than reading as fixed.
+   mDscpReportPending.store(true);
+
+   return true;
+}
+
+int
+Transport::effectiveDscp() const
+{
+   return effectiveDscp(mDscp.load());
+}
+
+int
+Transport::effectiveDscp(int wanted) const
+{
+   if (wanted >= 0)
+   {
+      return wanted;
+   }
+
+   return mWasMarkRequested.load() ? 0 : -1;
+}
+
 void
-Transport::callSocketFunc(Socket sock)
+Transport::applySocketOptions(Socket sock) const
+{
+   const int dscp = effectiveDscp();
+   if (dscp >= 0)
+   {
+      // The return is dropped on purpose: the listener read-back reports the
+      // state once, instead of once per socket a refresh touches.
+      setSocketDscp(sock, dscp, ipVersion());
+      mWasMarkRequested.store(true);
+   }
+
+   callSocketFunc(sock);
+}
+
+void
+Transport::callSocketFunc(Socket sock) const
 {
    if (mSocketFunc)
    {

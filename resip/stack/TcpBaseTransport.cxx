@@ -192,10 +192,7 @@ TcpBaseTransport::processListen()
 
       DebugLog (<< this << " Received TCP connection from: " << tuple << " mTuple: " << mTuple << " as fd=" << sock);
 
-      if (mSocketFunc)
-      {
-         mSocketFunc(sock, transport(), __FILE__, __LINE__);
-      }
+      applySocketOptions(sock);
 
       Connection* c = mConnectionManager.findConnection(tuple);
       if(!c)
@@ -331,10 +328,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       throw Exception("Failed to configure connected socket", __FILE__,__LINE__);
    }
    makeSocketNonBlocking(sock);
-   if (mSocketFunc)
-   {
-      mSocketFunc(sock, transport(), __FILE__, __LINE__);
-   }
+   applySocketOptions(sock);
    const sockaddr& servaddr = dest.getSockaddr();
    int ret = connect( sock, &servaddr, dest.length() );
 
@@ -451,6 +445,8 @@ TcpBaseTransport::processAllWriteRequests()
 void
 TcpBaseTransport::process()
 {
+   drainDscpRefresh();
+
    // called within SipStack's thread. There is some risk of
    // recursion here if connection starts doing anything fancy.
    // For backward-compat when not-epoll, don't handle transmit synchronously
@@ -465,6 +461,8 @@ TcpBaseTransport::process()
 void
 TcpBaseTransport::process(FdSet& fdSet)
 {
+   drainDscpRefresh();
+
    resip_assert( mPollGrp==NULL );
 
    processAllWriteRequests();

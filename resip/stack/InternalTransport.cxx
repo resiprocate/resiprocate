@@ -203,10 +203,7 @@ InternalTransport::bind()
       throw Transport::Exception("Failed making socket non-blocking", __FILE__,__LINE__);
    }
 
-   if (mSocketFunc)
-   {
-      mSocketFunc(mFd, transport(), __FILE__, __LINE__);
-   }
+   applySocketOptions(mFd);
 }
 
 unsigned int
@@ -272,10 +269,7 @@ InternalTransport::poke()
 void 
 InternalTransport::invokeAfterSocketCreationFunc() const
 {
-    if (mSocketFunc)
-    {
-        mSocketFunc(mFd, transport(), __FILE__, __LINE__);
-    }
+    applySocketOptions(mFd);
 }
 
 

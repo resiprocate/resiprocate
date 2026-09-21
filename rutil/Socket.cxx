@@ -289,6 +289,63 @@ int resip::setSocketRcvBufLen(Socket fd, int buflen)
    return lastgoodset;
 }
 
+int resip::setSocketDscp(Socket fd, int dscp, IpVersion version)
+{
+   const bool isV6 = (version == V6);
+   const int level = isV6 ? IPPROTO_IPV6 : IPPROTO_IP;
+   const int option = isV6 ? IPV6_TCLASS : IP_TOS;
+   const char* optionName = isV6 ? "IPV6_TCLASS" : "IP_TOS";
+
+   // For a direct caller: the transport refuses the value first, so this
+   // cannot fire on the stack's own path.
+   if (dscp < 0 || dscp > 63)
+   {
+      ErrLog(<< "DSCP class " << dscp << " out of range 0..63 on fd " << fd);
+      return -1;
+   }
+
+   const int tos = dscp << 2;
+
+   if (::setsockopt(fd, level, option, (const char *)&tos, sizeof(tos)) == -1)
+   {
+      int e = getErrno();
+      // Below Debug: a refresh reaches every socket the transport holds, so
+      // this arrives in bursts. The caller reports the state once instead.
+      StackLog(<< "setsockopt(" << optionName << ", " << tos << ") failed on fd " << fd
+               << ": error " << e);
+      return -1;
+   }
+
+   return getSocketDscp(fd, version);
+}
+
+int resip::getSocketTos(Socket fd, IpVersion version)
+{
+   const bool isV6 = (version == V6);
+   const int level = isV6 ? IPPROTO_IPV6 : IPPROTO_IP;
+   const int option = isV6 ? IPV6_TCLASS : IP_TOS;
+
+   int tos = 0;
+   socklen_t optlen = sizeof(tos);
+   if (::getsockopt(fd, level, option, (char *)&tos, &optlen) == -1)
+   {
+      int e = getErrno();
+      // Below Debug, for the same reason as the write above.
+      StackLog(<< "getsockopt(" << (isV6 ? "IPV6_TCLASS" : "IP_TOS")
+               << ") failed on fd " << fd << ": error " << e);
+      return -1;
+   }
+
+   return tos;
+}
+
+int resip::getSocketDscp(Socket fd, IpVersion version)
+{
+   const int tos = getSocketTos(fd, version);
+
+   return (tos < 0) ? -1 : (tos >> 2);
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
