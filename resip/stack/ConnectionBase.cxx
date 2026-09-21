@@ -935,7 +935,7 @@ ConnectionBase::decompressNewBytes(int bytesRead)
     }
 #endif
 
-    char *sipBuffer = new char[bytesUncompressed];
+    char *sipBuffer = MsgHeaderScanner::allocateBuffer(bytesUncompressed);
     memmove(sipBuffer, uncompressed, bytesUncompressed);
     mMessage->addBuffer(sipBuffer);
     mMsgHeaderScanner.prepareForMessage(mMessage);
