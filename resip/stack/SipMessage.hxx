@@ -23,6 +23,7 @@
 #include "resip/stack/MessageDecorator.hxx"
 #include "resip/stack/Cookie.hxx"
 #include "resip/stack/WsCookieContext.hxx"
+#include "rutil/compat.hxx"
 #include "rutil/ResipAssert.h"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
@@ -924,7 +925,17 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
 
       /// unknown header interface
+      /**
+       * @brief Retrieves extension header values.
+       *
+       * Throws an exception if the header is not found.
+       */
       const StringCategories& header(const ExtensionHeader& symbol) const;
+      /**
+       * @brief Retrieves extension header values.
+       *
+       * Adds an empty list of header values if the header is not found.
+       */
       StringCategories& header(const ExtensionHeader& symbol);
       bool exists(const ExtensionHeader& symbol) const;
       void remove(const ExtensionHeader& symbol);
@@ -973,14 +984,14 @@ class SipMessage : public TransactionMessage
       void setContents(std::unique_ptr<Contents> contents);
 
       /// @internal transport interface
-      void setStartLine(const char* start, int len); 
+      void setStartLine(const char* start, uint32_t len);
 
       void setBody(const char* start, uint32_t len); 
       
-      /// Add HeaderFieldValue given enum, header name, pointer start, content length
+      /// Add HeaderFieldValue given enum, header name and value
       void addHeader(Headers::Type header,
-                     const char* headerName, int headerLen, 
-                     const char* start, int len);
+                     const char* headerName, uint32_t headerNameLen,
+                     const char* value, uint32_t valuelen);
 
       // Returns the source tuple for the transport that the message was received from
       // only makes sense for messages received from the wire.  Differs from Source

@@ -12,6 +12,7 @@
 #include "resip/stack/Symbols.hxx"
 #include "resip/stack/UnknownParameter.hxx"
 #include "resip/stack/Uri.hxx"
+#include "rutil/compat.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
@@ -1646,13 +1647,13 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
 
       if (isEqualNoCase(bodyData, headerName))
       {
-         mEmbeddedHeaders->setBody(decodedContents, len); 
+         mEmbeddedHeaders->setBody(decodedContents, len);
       }
       else
       {
          DebugLog(<< "Uri::parseEmbeddedHeaders(" << headerName << ", " << Data(decodedContents, len) << ")");
          mEmbeddedHeaders->addHeader(Headers::getType(headerName.data(), headerName.size()),
-                                     headerName.data(), (int)headerName.size(),
+                                     headerName.data(), static_cast<uint32_t>(headerName.size()),
                                      decodedContents, len);
       }
    }
