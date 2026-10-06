@@ -156,6 +156,7 @@ ClientRegistration::removeBinding(const NameAddr& contact)
             send(next);
          }
 
+         mLastMyContacts = mMyContacts;
          mMyContacts.erase(i);
          return;
       }
@@ -176,8 +177,10 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 
    auto next = tryModification(Removing);
 
-   mAllContacts.clear();
-   mMyContacts.clear();
+   mLastAllContacts = std::move(mAllContacts);
+   mLastMyContacts = std::move(mMyContacts);
+   mAllContacts = {};
+   mMyContacts = {};
 
    NameAddr all;
    all.setAllContacts();
@@ -213,7 +216,8 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
    auto next = tryModification(Removing);
 
    next->header(h_Contacts) = mMyContacts;
-   mMyContacts.clear();
+   mLastMyContacts = std::move(mMyContacts);
+   mMyContacts = {};
 
    NameAddrs& myContacts = next->header(h_Contacts);
 
@@ -680,7 +684,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
             }
          }
-         
+
          mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
          mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
 
@@ -689,6 +693,24 @@ ClientRegistration::dispatch(const SipMessage& msg)
          if(retryInterval > 0)
          {
             InfoLog( << "Registration error " << code << " for " << msg.header(h_To) << ", retrying in " << retryInterval << " seconds.");
+            return;
+         }
+
+         if (mState == Removing && !mEndWhenDone && (code == 401 || code == 407))
+         {
+            // In this case; we attempted to remove the bindings and met an authentication challenge - the bindings should still exist.
+            if (!mLastAllContacts.empty())
+            {
+               mAllContacts = std::move(mLastAllContacts);
+               mLastAllContacts = {};
+            }
+            if (!mLastMyContacts.empty())
+            {
+               mMyContacts = std::move(mLastMyContacts);
+               mLastMyContacts = {};
+            }
+
+            mState = Registered;
             return;
          }
 
