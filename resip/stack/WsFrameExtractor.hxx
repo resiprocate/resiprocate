@@ -14,9 +14,28 @@ class WsFrameExtractor
 {
    public:
 
+      // frame opcodes (RFC 6455 section 5.2)
+      static const uint8_t OpContinuation = 0x0;
+      static const uint8_t OpText = 0x1;
+      static const uint8_t OpBinary = 0x2;
+      static const uint8_t OpClose = 0x8;
+      static const uint8_t OpPing = 0x9;
+      static const uint8_t OpPong = 0xA;
+
+      // A Close, Ping or Pong frame.  These are never returned by processBytes():
+      // a peer may send one at any time, even between the fragments of a message,
+      // and its payload is not SIP.
+      struct ControlFrame
+      {
+         uint8_t opcode;
+         Data payload;
+      };
+
       WsFrameExtractor(Data::size_type maxMessage);
       ~WsFrameExtractor();
       std::unique_ptr<Data> processBytes(uint8_t *input, Data::size_type len, bool& dropConnection);
+      // the control frames received so far, in the order they arrived
+      bool popControlFrame(ControlFrame& frame);
 
    private:
 
@@ -38,8 +57,13 @@ class WsFrameExtractor
       int mHeaderLen;
       uint8_t *mWsHeader;
 
+      std::queue<ControlFrame> mControlFrames;
+      // set once a Close frame has arrived: nothing the peer sends after it is processed
+      bool mClosed;
+
       bool mFinalFrame;
       bool mMasked;
+      uint8_t mOpcode;
       uint8_t mWsMaskKey[4];
       // the payload length as it appears on the wire: it is a 64 bit
       // field, so it must be validated against mMaxMessage before it is
@@ -50,6 +74,7 @@ class WsFrameExtractor
       Data::size_type mPayloadPos;
 
       int parseHeader();
+      bool isControlFrame() const;
       void joinFrames();
 
 };

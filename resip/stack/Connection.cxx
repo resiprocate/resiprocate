@@ -127,13 +127,25 @@ Connection::performWrite()
    switch(mOutstandingSends.front()->command)
    {
    case SendData::CloseConnection:
-      // .bwc. Close this connection.
-      return -1;
+      // .bwc. Close this connection.  A WebSocket connection sends a Close frame
+      // first: it is framed below, and the connection is closed once it is written.
+      if(mSendingTransmissionFormat != WebSocketData)
+      {
+         return -1;
+      }
       break;
    case SendData::EnableFlowTimer:
       enableFlowTimer();
       removeFrontOutstandingSend();
       return 0;
+      break;
+   case SendData::SendWsPong:
+      if(mSendingTransmissionFormat != WebSocketData)
+      {
+         WarningLog(<<"WebSocket Pong queued on a connection that is not a WebSocket, dropping it");
+         removeFrontOutstandingSend();
+         return 0;
+      }
       break;
    default:
       // do nothing
@@ -156,11 +168,34 @@ Connection::performWrite()
    else if(mSendingTransmissionFormat == WebSocketHandshake)
    {
       mSendingTransmissionFormat = WebSocketData;
+      // this is the handshake response, which is HTTP and is sent as it is: marking it
+      // stops a retry after a partial write from framing the rest of it
+      mOutstandingSends.front()->isAlreadyEncoded = true;
    }
-   else if(mSendingTransmissionFormat == WebSocketData)
+   else if(mSendingTransmissionFormat == WebSocketData &&
+           !mOutstandingSends.front()->isAlreadyEncoded)
    {
-      SendData *dataWs, *oldSd;
-      const Data& dataRaw = mOutstandingSends.front()->data;
+      // Frame the data, once: it is replaced in place, so the SendData keeps its command,
+      // and marked as encoded, so a write retried after a partial write (or
+      // SSL_ERROR_WANT_WRITE) sends the same bytes instead of framing them again
+      SendData* sd = mOutstandingSends.front();
+      uint8_t opcode = WsFrameExtractor::OpBinary;
+      if(sd->command == SendData::CloseConnection)
+      {
+         opcode = WsFrameExtractor::OpClose;
+         if(sd->data.empty())
+         {
+            // a Close we start ourselves: status 1000, normal closure
+            static const char normalClosure[2] = { 0x03, (char)0xE8 };
+            sd->data = Data(normalClosure, 2);
+         }
+      }
+      else if(sd->command == SendData::SendWsPong)
+      {
+         opcode = WsFrameExtractor::OpPong;
+      }
+
+      const Data& dataRaw = sd->data;
       uint64_t dataSize = 1 + 1 + dataRaw.size();
       uint64_t lSize = (uint64_t)dataRaw.size();
       uint8_t* uBuffer;
@@ -174,16 +209,12 @@ Connection::performWrite()
          dataSize += 8;
       }
 
-      oldSd = mOutstandingSends.front();
-      dataWs = new SendData(oldSd->destination,
-            Data(Data::Take, new char[(int)dataSize], (Data::size_type)dataSize),
-            oldSd->transactionId,
-            oldSd->sigcompId,
-            false);
-      resip_assert(dataWs && dataWs->data.data());
-      uBuffer = (uint8_t*)dataWs->data.data();
+      Data framed(Data::Take, new char[(int)dataSize], (Data::size_type)dataSize);
+      resip_assert(framed.data());
+      uBuffer = (uint8_t*)framed.data();
 
-      uBuffer[0] = 0x82;
+      // FIN plus the opcode
+      uBuffer[0] = (uint8_t)(0x80 | opcode);
       if(lSize <= 0x7D)
       {
          uBuffer[1] = (uint8_t)lSize;
@@ -211,15 +242,14 @@ Connection::performWrite()
       }
 
       memcpy(uBuffer, dataRaw.data(), dataRaw.size());
-      mOutstandingSends.front() = dataWs;
-      dataWs = 0;
-      delete oldSd;
+      sd->data.takeBuf(framed);
+      sd->isAlreadyEncoded = true;
    }
 
 #ifdef USE_SIGCOMP
    // Perform compression here, if appropriate
    if (mSendingTransmissionFormat == Compressed
-       && !(mOutstandingSends.front()->isAlreadyCompressed))
+       && !(mOutstandingSends.front()->isAlreadyEncoded))
    {
       const Data& uncompressed = mOutstandingSends.front()->data;
       osc::SigcompMessage *sm = 
@@ -284,7 +314,14 @@ Connection::performWrite()
       if (mSendPos == data.size())
       {
          mSendPos = 0;
+         // only a WebSocket Close gets this far as a CloseConnection
+         const bool closeNow = mOutstandingSends.front()->command == SendData::CloseConnection;
          removeFrontOutstandingSend();
+         if (closeNow)
+         {
+            DebugLog(<< "WebSocket Close sent, closing connection: " << mWho);
+            return -1;
+         }
       }
       return (int)bytesWritten;
    }
@@ -474,6 +511,28 @@ Connection::onSingleCRLF()
    mTransport->keepAlivePong(mWho);
 }
 
+void
+Connection::onWsClose(const Data& payload)
+{
+   // RFC 6455 section 5.5.1: answer with a Close of our own, echoing the peer's
+   // status code, then close the TCP connection (performWrite() does both).  The
+   // write is queued, so anything already waiting to be sent goes out first.
+   SendData* close = new SendData(mWho,
+                                  payload.size() >= 2 ? Data(payload.data(), 2) : Data::Empty,
+                                  Data::Empty, Data::Empty);
+   close->command = SendData::CloseConnection;
+   requestWrite(close);
+}
+
+void
+Connection::onWsPing(const Data& payload)
+{
+   // RFC 6455 section 5.5.3: a Pong carries the Ping's payload back
+   SendData* pong = new SendData(mWho, payload, Data::Empty, Data::Empty);
+   pong->command = SendData::SendWsPong;
+   requestWrite(pong);
+}
+
 bool 
 Connection::hasDataToRead()
 {
@@ -579,6 +638,7 @@ Connection::invokeAfterSocketCreationFunc() const
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without

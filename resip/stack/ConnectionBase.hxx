@@ -108,6 +108,10 @@ class ConnectionBase
    protected:
       virtual void onDoubleCRLF(){}
       virtual void onSingleCRLF(){}
+      // WebSocket control frames from the peer (RFC 6455 section 5.5); the payload of a
+      // Close is its status code and reason, if it sent any
+      virtual void onWsClose(const Data& payload){}
+      virtual void onWsPing(const Data& payload){}
       Transport* mTransport;
       Tuple mWho;
       TransportFailure::FailureReason mFailureReason;
@@ -148,6 +152,7 @@ operator<<(EncodeStream& strm, const resip::ConnectionBase& c);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without

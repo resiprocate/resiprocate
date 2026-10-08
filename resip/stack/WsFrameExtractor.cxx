@@ -11,13 +11,25 @@ using namespace resip;
 const int WsFrameExtractor::mMaxHeaderLen = 14;
 const size_t WsFrameExtractor::mMaxFrames = 1024;
 
+const uint8_t WsFrameExtractor::OpContinuation;
+const uint8_t WsFrameExtractor::OpText;
+const uint8_t WsFrameExtractor::OpBinary;
+const uint8_t WsFrameExtractor::OpClose;
+const uint8_t WsFrameExtractor::OpPing;
+const uint8_t WsFrameExtractor::OpPong;
+
+// RFC 6455 section 5.5: a control frame carries at most 125 bytes
+static const uint64_t MaxControlPayload = 125;
+
 WsFrameExtractor::WsFrameExtractor(Data::size_type maxMessage)
    : mMaxMessage(maxMessage),
      mMessageSize(0),
      mHaveHeader(false),
      mHeaderLen(0),
+     mClosed(false),
      mFinalFrame(false),
      mMasked(false),
+     mOpcode(OpContinuation),
      mPayloadLength(0),
      mPayload(0),
      mPayloadPos(0)
@@ -59,6 +71,12 @@ WsFrameExtractor::processBytes(uint8_t *input, Data::size_type len, bool& dropCo
    std::unique_ptr<Data> ret;
    dropConnection = false;
    Data::size_type pos = 0;
+   if(mClosed && input != 0 && len > 0)
+   {
+      // RFC 6455 section 5.5.1: the peer must not send anything after a Close
+      StackLog(<<"discarding " << len << " bytes received after a WebSocket Close");
+      pos = len;
+   }
    while(input != 0 && pos < len)
    {
       while(!mHaveHeader)
@@ -96,12 +114,34 @@ WsFrameExtractor::processBytes(uint8_t *input, Data::size_type len, bool& dropCo
       if(mHaveHeader)
       {
          StackLog(<<"have header, parsing payload data...");
+         const bool control = isControlFrame();
+         if(mOpcode != OpContinuation && mOpcode != OpText && mOpcode != OpBinary &&
+            mOpcode != OpClose && mOpcode != OpPing && mOpcode != OpPong)
+         {
+            WarningLog(<<"WS frame with reserved opcode " << (int)mOpcode << ", dropping connection");
+            dropConnection = true;
+            return ret;
+         }
+         if(control)
+         {
+            // RFC 6455 section 5.5: control frames are never fragmented and
+            // carry at most 125 bytes, so they cannot be used to get round the
+            // message size limit below
+            if(!mFinalFrame || mPayloadLength > MaxControlPayload)
+            {
+               WarningLog(<<"WS control frame (opcode " << (int)mOpcode << ") is fragmented or longer than "
+                    << MaxControlPayload << " bytes, dropping connection");
+               dropConnection = true;
+               return ret;
+            }
+         }
          // Process input bytes to output buffer, unmasking if necessary.
          // mPayloadLength is an attacker controlled 64 bit value, so the
          // check has to be written to avoid wrapping: comparing
          // mMessageSize + mPayloadLength against mMaxMessage would let a
-         // peer bypass it with a length close to 2^64.
-         if(mPayloadLength > mMaxMessage ||
+         // peer bypass it with a length close to 2^64.  Control frames are
+         // not part of a message and were bounded above.
+         else if(mPayloadLength > mMaxMessage ||
             mMessageSize > mMaxMessage - mPayloadLength)
          {
             WarningLog(<<"WS frame header describes a payload size bigger than messageSizeMax, max = " << mMaxMessage
@@ -142,7 +182,28 @@ WsFrameExtractor::processBytes(uint8_t *input, Data::size_type len, bool& dropCo
             mPayloadPos += takeBytes;
          }
 
-         if(mPayloadPos == payloadLength)
+         if(mPayloadPos == payloadLength && control)
+         {
+            StackLog(<<"Got a whole control frame, opcode " << (int)mOpcode);
+            ControlFrame frame;
+            frame.opcode = mOpcode;
+            frame.payload = Data((const char*)mPayload, payloadLength);
+            mControlFrames.push(frame);
+            delete [] (char*)mPayload;
+            mPayload = 0;
+            mHaveHeader = false;
+            mHeaderLen = 0;
+            if(mOpcode == OpClose)
+            {
+               mClosed = true;
+               if(pos < len)
+               {
+                  StackLog(<<"discarding " << (len - pos) << " bytes received after a WebSocket Close");
+               }
+               pos = len;
+            }
+         }
+         else if(mPayloadPos == payloadLength)
          {
             StackLog(<<"Got a whole frame, queueing it");
             mMessageSize += payloadLength;
@@ -191,6 +252,7 @@ WsFrameExtractor::parseHeader()
    uint64_t hdrPos = 2;
 
    mFinalFrame = (mWsHeader[0] >> 7) != 0;
+   mOpcode = mWsHeader[0] & 0x0F;
    mMasked = (mWsHeader[1] >> 7) != 0;
 
    if(mWsHeader[0] & 0x40 || mWsHeader[0] & 0x20 || mWsHeader[0] & 0x10)
@@ -237,12 +299,32 @@ WsFrameExtractor::parseHeader()
       hdrPos += 4;
    }
 
-   StackLog(<< "successfully processed a WebSocket frame header, payload length = " << mPayloadLength
+   StackLog(<< "successfully processed a WebSocket frame header, opcode = " << (int)mOpcode
+            << ", payload length = " << mPayloadLength
             << ", masked = "<< mMasked << ", final frame = "<< mFinalFrame);
 
    mHaveHeader = true;
    mPayload = 0;
    return 0;
+}
+
+bool
+WsFrameExtractor::isControlFrame() const
+{
+   // RFC 6455 section 5.5: opcodes with the high bit set are control frames
+   return (mOpcode & 0x08) != 0;
+}
+
+bool
+WsFrameExtractor::popControlFrame(ControlFrame& frame)
+{
+   if(mControlFrames.empty())
+   {
+      return false;
+   }
+   frame = mControlFrames.front();
+   mControlFrames.pop();
+   return true;
 }
 
 void

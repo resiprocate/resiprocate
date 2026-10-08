@@ -35,6 +35,9 @@ typedef vector<uint8_t> Wire;
 
 static const uint8_t OpContinuation = 0x00;
 static const uint8_t OpText = 0x01;
+static const uint8_t OpClose = 0x08;
+static const uint8_t OpPing = 0x09;
+static const uint8_t OpPong = 0x0A;
 
 // The extractor bounds the number of fragments a single message may be
 // split into; this must match WsFrameExtractor::mMaxFrames, which is
@@ -113,11 +116,13 @@ struct FeedResult
    FeedResult() : dropped(false) {}
 
    vector<Data> messages;
+   vector<WsFrameExtractor::ControlFrame> controls;
    bool dropped;
 };
 
 // Push the bytes through the extractor in chunkSize pieces, draining
-// completed messages the same way ConnectionBase::wsProcessData() does.
+// completed messages and then control frames the same way
+// ConnectionBase::wsProcessData() does.
 static FeedResult
 feed(WsFrameExtractor& extractor, Wire wire, size_t chunkSize = 0)
 {
@@ -150,6 +155,11 @@ feed(WsFrameExtractor& extractor, Wire wire, size_t chunkSize = 0)
          {
             result.dropped = true;
          }
+      }
+      WsFrameExtractor::ControlFrame control;
+      while(extractor.popControlFrame(control))
+      {
+         result.controls.push_back(control);
       }
       pos += take;
    }
@@ -572,6 +582,189 @@ testNullTermination()
    }
 }
 
+static Data
+closePayload(unsigned int status, const char* reason = "")
+{
+   Data payload;
+   payload += (char)(status >> 8);
+   payload += (char)(status & 0xFF);
+   payload += reason;
+   return payload;
+}
+
+// What a browser sends when a page closes its SIP WebSocket: a masked Close
+// with status 1000.  It must come out as a control frame, not as a message
+// (it used to be handed to the SIP parser, which logged it as an error).
+static void
+testCloseFrame()
+{
+   const uint8_t key[4] = { 0x0f, 0x1e, 0x2d, 0x3c };
+   for(size_t chunk = 1; chunk <= 9; chunk++)
+   {
+      WsFrameExtractor extractor(8192);
+      Wire wire;
+      appendFrame(wire, true, OpClose, closePayload(1000), key);
+
+      FeedResult result = feed(extractor, wire, chunk);
+      CHECK(!result.dropped);
+      CHECK(result.messages.empty());
+      CHECK(result.controls.size() == 1);
+      if(result.controls.size() == 1)
+      {
+         CHECK(result.controls[0].opcode == OpClose);
+         CHECK(result.controls[0].payload == closePayload(1000));
+      }
+   }
+
+   // a Close with no status code at all is legal too
+   WsFrameExtractor extractor(8192);
+   Wire wire;
+   appendFrame(wire, true, OpClose, Data::Empty, key);
+   FeedResult result = feed(extractor, wire);
+   CHECK(!result.dropped);
+   CHECK(result.messages.empty());
+   CHECK(result.controls.size() == 1);
+   if(result.controls.size() == 1)
+   {
+      CHECK(result.controls[0].opcode == OpClose);
+      CHECK(result.controls[0].payload.empty());
+   }
+}
+
+// Messages before a Close are delivered; anything after it is ignored, in
+// the same buffer or in a later one (RFC 6455 section 5.5.1).
+static void
+testNothingAfterClose()
+{
+   WsFrameExtractor extractor(8192);
+   Wire wire;
+   appendFrame(wire, true, OpText, Data("BYE sip:alice@example.org SIP/2.0"));
+   appendFrame(wire, true, OpClose, closePayload(1001, "going away"));
+   appendFrame(wire, true, OpText, Data("after the close"));
+
+   FeedResult result = feed(extractor, wire);
+   CHECK(!result.dropped);
+   CHECK(result.messages.size() == 1);
+   if(result.messages.size() == 1)
+   {
+      CHECK(result.messages[0] == Data("BYE sip:alice@example.org SIP/2.0"));
+   }
+   CHECK(result.controls.size() == 1);
+
+   Wire later;
+   appendFrame(later, true, OpText, Data("still after the close"));
+   appendFrame(later, true, OpPing, Data("ping"));
+   result = feed(extractor, later);
+   CHECK(!result.dropped);
+   CHECK(result.messages.empty());
+   CHECK(result.controls.empty());
+}
+
+static void
+testPingAndPong()
+{
+   const uint8_t key[4] = { 0x99, 0x88, 0x77, 0x66 };
+   WsFrameExtractor extractor(8192);
+   Wire wire;
+   appendFrame(wire, true, OpPing, Data("are you there"), key);
+   appendFrame(wire, true, OpText, Data("OPTIONS sip:example.org SIP/2.0"), key);
+   appendFrame(wire, true, OpPong, Data("yes"), key);
+   // an empty Ping at the very end of the input must not wait for more bytes
+   appendFrame(wire, true, OpPing, Data::Empty, key);
+
+   FeedResult result = feed(extractor, wire);
+   CHECK(!result.dropped);
+   CHECK(result.messages.size() == 1);
+   if(result.messages.size() == 1)
+   {
+      CHECK(result.messages[0] == Data("OPTIONS sip:example.org SIP/2.0"));
+   }
+   CHECK(result.controls.size() == 3);
+   if(result.controls.size() == 3)
+   {
+      CHECK(result.controls[0].opcode == OpPing);
+      CHECK(result.controls[0].payload == Data("are you there"));
+      CHECK(result.controls[1].opcode == OpPong);
+      CHECK(result.controls[1].payload == Data("yes"));
+      CHECK(result.controls[2].opcode == OpPing);
+      CHECK(result.controls[2].payload.empty());
+   }
+}
+
+// A control frame may arrive between the fragments of a message; it must not
+// become part of the message, nor count towards its size.
+static void
+testControlFrameBetweenFragments()
+{
+   const uint8_t key[4] = { 0x10, 0x20, 0x30, 0x40 };
+   for(size_t chunk = 1; chunk <= 7; chunk += 3)
+   {
+      WsFrameExtractor extractor(30);
+      Wire wire;
+      appendFrame(wire, false, OpText, Data("part one, "), key);
+      appendFrame(wire, true, OpPing, repeated('p', 125), key);
+      appendFrame(wire, false, OpContinuation, Data("part two, "), key);
+      appendFrame(wire, true, OpContinuation, Data("part three"), key);
+
+      FeedResult result = feed(extractor, wire, chunk);
+      CHECK(!result.dropped);
+      CHECK(result.messages.size() == 1);
+      if(result.messages.size() == 1)
+      {
+         CHECK(result.messages[0] == Data("part one, part two, part three"));
+      }
+      CHECK(result.controls.size() == 1);
+      if(result.controls.size() == 1)
+      {
+         CHECK(result.controls[0].opcode == OpPing);
+         CHECK(result.controls[0].payload == repeated('p', 125));
+      }
+   }
+}
+
+// Control frames longer than 125 bytes, fragmented control frames and
+// reserved opcodes are protocol errors (RFC 6455 sections 5.2 and 5.5).
+static void
+testInvalidControlFrames()
+{
+   {
+      WsFrameExtractor extractor(8192);
+      Wire wire;
+      appendFrame(wire, true, OpPing, repeated('x', 126));
+      FeedResult result = feed(extractor, wire);
+      CHECK(result.dropped);
+      CHECK(result.controls.empty());
+   }
+   {
+      // the header alone is enough to reject it: the payload never has to arrive
+      WsFrameExtractor extractor(8192);
+      Wire wire;
+      appendHeader(wire, true, OpClose, UINT64_C(0xFFFFFFFFFFFFFFFF), 0, Len64);
+      FeedResult result = feed(extractor, wire);
+      CHECK(result.dropped);
+      CHECK(result.controls.empty());
+   }
+   {
+      WsFrameExtractor extractor(8192);
+      Wire wire;
+      appendFrame(wire, false, OpPing, Data("fragmented"));
+      FeedResult result = feed(extractor, wire);
+      CHECK(result.dropped);
+      CHECK(result.controls.empty());
+   }
+   static const uint8_t reserved[] = { 0x3, 0x4, 0x5, 0x6, 0x7, 0xB, 0xC, 0xD, 0xE, 0xF };
+   for(size_t i = 0; i < sizeof(reserved); i++)
+   {
+      WsFrameExtractor extractor(8192);
+      Wire wire;
+      appendFrame(wire, true, reserved[i], Data("reserved"));
+      FeedResult result = feed(extractor, wire);
+      CHECK(result.dropped);
+      CHECK(result.messages.empty());
+      CHECK(result.controls.empty());
+   }
+}
+
 int
 main()
 {
@@ -593,6 +786,11 @@ main()
    testMalformedInput();
    testDestructorWithPartialFrame();
    testNullTermination();
+   testCloseFrame();
+   testNothingAfterClose();
+   testPingAndPong();
+   testControlFrameBetweenFragments();
+   testInvalidControlFrames();
 
    if(sFailures > 0)
    {

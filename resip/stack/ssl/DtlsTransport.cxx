@@ -314,7 +314,7 @@ void DtlsTransport::_write(FdSet& fdset)
    // If message needs to be compressed, compress it here.
    if (mSigcompStack &&
       sendData->sigcompId.size() > 0 &&
-      !sendData->isAlreadyCompressed)
+      !sendData->isAlreadyEncoded)
    {
       osc::SigcompMessage* sm = mSigcompStack->compressMessage
       (sendData->data.data(), sendData->data.size(),

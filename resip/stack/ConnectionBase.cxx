@@ -892,6 +892,36 @@ ConnectionBase::wsProcessData(int bytesRead)
       msg = mWsFrameExtractor.processBytes(0, 0, dropConnection);
    }
 
+   // Close, Ping and Pong frames are not SIP, so they are not passed to the parser
+   // above (a browser closing its WebSocket used to be logged there as an invalid
+   // SIP message)
+   WsFrameExtractor::ControlFrame control;
+   while(mWsFrameExtractor.popControlFrame(control))
+   {
+      switch(control.opcode)
+      {
+         case WsFrameExtractor::OpClose:
+         {
+            Data status("none");
+            if(control.payload.size() >= 2)
+            {
+               const unsigned char* code = (const unsigned char*)control.payload.data();
+               status = Data((code[0] << 8) | code[1]);
+            }
+            InfoLog(<< "WebSocket closed by the peer, status " << status << ", closing connection, who: " << mWho << " " << this);
+            onWsClose(control.payload);
+            break;
+         }
+         case WsFrameExtractor::OpPing:
+            StackLog(<< "got a WebSocket Ping, replying, who: " << mWho << " " << this);
+            onWsPing(control.payload);
+            break;
+         default:
+            StackLog(<< "got a WebSocket Pong, who: " << mWho << " " << this);
+            break;
+      }
+   }
+
    if(dropConnection)
    {
       return false;
