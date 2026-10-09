@@ -306,11 +306,6 @@ WinSecurity::getCredentials(MsCertStoreType eType)
                                     X509 *cert;
                                     STACK_OF(X509) *ca = NULL;
                                     PKCS12 *p12;
-                                    //int i;
-                                    //CRYPTO_malloc_init();
-                                    //OpenSSL_add_all_algorithms();
-                                    //SSLeay_add_all_algorithms();
-                                    //ERR_load_crypto_strings();
 
                                     BIO* input = BIO_new_mem_buf((void*)dataBlob.pbData, dataBlob.cbData);
                                     p12 = d2i_PKCS12_bio(input, NULL);
@@ -382,6 +377,7 @@ WinSecurity::getCredentials(MsCertStoreType eType)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

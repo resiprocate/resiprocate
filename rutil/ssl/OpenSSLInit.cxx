@@ -2,9 +2,8 @@
   #include "config.h"
 #endif
 
-#include "rutil/Mutex.hxx"
-#include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/ResipAssert.h"
 
 #ifdef USE_SSL
 
@@ -12,22 +11,13 @@
 
 #include <openssl/opensslv.h>
 #if OPENSSL_VERSION_NUMBER < 0x1010100fL
-#error OpenSSL 1.1.1 or later is required
+#error resip requires OpenSSL 1.1.1 or later
 #endif
 
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
-
-#if  defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1900)
-// OpenSSL builds use an older version of visual studio that require the following definition
-// Also will need to link with legacy_stdio_definitions.lib.  It's possible that future build of 
-// SL's windows OpenSSL binaries will be built with VS2015 and will not require this, however it shouldn't
-// hurt to be here.
-// http://stackoverflow.com/questions/30412951/unresolved-external-symbol-imp-fprintf-and-imp-iob-func-sdl2
-extern "C" { FILE __iob_func[3] = { *stdin,*stdout,*stderr }; }
-#endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
