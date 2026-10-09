@@ -26,6 +26,7 @@
 #include "rutil/Socket.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "rutil/FileSystem.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -421,7 +422,15 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
    }
    SSL_CTX_set_cert_store(ctx, x509Store);
 
-   updateDomainCtx(ctx, domain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+   try
+   {
+      updateDomainCtx(ctx, domain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+   }
+   catch(...)
+   {
+      SSL_CTX_free(ctx);  // also frees x509Store
+      throw;
+   }
 
    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    SSL_CTX_set_cipher_list(ctx, mCipherList.cipherList().c_str());
@@ -448,7 +457,6 @@ Security::updateDomainCtx(SSL_CTX* ctx, const Data& domain, const Data& certific
       if(SSL_CTX_use_certificate_chain_file(ctx, certFilename.c_str()) != 1)
       {
          ErrLog (<< "Error reading domain chain file " << certFilename);
-         SSL_CTX_free(ctx);
          throw BaseSecurity::Exception("Failed opening PEM chain file", __FILE__,__LINE__);
       }
 
@@ -468,13 +476,11 @@ Security::updateDomainCtx(SSL_CTX* ctx, const Data& domain, const Data& certific
       if(SSL_CTX_use_PrivateKey_file(ctx, keyFilename.c_str(), SSL_FILETYPE_PEM) != 1)
       {
          ErrLog (<< "Error reading domain private key file " << keyFilename);
-         SSL_CTX_free(ctx);
          throw BaseSecurity::Exception("Failed opening PEM private key file", __FILE__,__LINE__);
       }
       if (!SSL_CTX_check_private_key(ctx))
       {
          ErrLog (<< "Invalid domain private key from file: " << keyFilename);
-         SSL_CTX_free(ctx);
          throw BaseSecurity::Exception("Invalid domain private key", __FILE__,__LINE__);
       }
 
@@ -2751,16 +2757,19 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       if(gen->type == GEN_URI) 
       {
          ASN1_IA5STRING* asn = gen->d.uniformResourceIdentifier;
-         Uri uri(Data(ASN1_STRING_get0_data(asn), ASN1_STRING_length(asn)));
+         Data uriString(ASN1_STRING_get0_data(asn), ASN1_STRING_length(asn));
          try
          {
+             // The Uri constructor parses, so it has to be inside the try: an
+             // exception escaping from here would break the TLS handshake code
+             Uri uri(uriString);
              PeerName peerName(SubjectAltName, uri.host());
              peerNames.push_back(peerName);
              InfoLog(<< "subjectAltName of TLS session cert contains URI <" << uri << ">" );
          }
          catch (...)
          {
-             InfoLog(<< "subjectAltName of TLS session cert contains unparsable URI");
+             InfoLog(<< "subjectAltName of TLS session cert contains unparsable URI <" << uriString << ">, ignoring it");
          }
       }
    }
@@ -2994,41 +3003,42 @@ BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
    throw invalid_argument(error.c_str());
 }
 /**
-   Does a wildcard match on domain and certificate name
-   @todo    looks incomplete, make better
+   Matches a certificate name, which may hold a wildcard, against the domain
+   name we connected to, following RFC 6125 section 6.4.3: the wildcard has to
+   be the whole left-most label ("*.example.com"), it stands for exactly one
+   non-empty label of the domain name, at least two labels have to follow it,
+   and it never matches an IP address.
 */
-int 
+int
 BaseSecurity::matchHostNameWithWildcards(const Data& certificateName, const Data& domainName)
 {
-   const char *dot = NULL;
-
-   const char *certName = certificateName.c_str();
-   if(certName == NULL)
-      return 0;
-
-   const char *domName = domainName.c_str();
-   if(domName == NULL)
-      return 0;
-
-   dot = strchr(domName, '.');
-   if (dot == NULL)
+   if(isEqualNoCase(certificateName, domainName))
    {
-      char *pnt = (char *)strchr(certName, '.'); // bad
-      /* hostname is not fully-qualified; unqualify the certName. */
-      if (pnt != NULL) 
-      {
-         *pnt = '\0';
-      }
+      return 1;
    }
-   else 
+
+   static const Data wildcardLabel("*.");
+   if(!certificateName.prefix(wildcardLabel) || DnsUtil::isIpAddress(domainName))
    {
-      if (strncmp(certName, "*.", 2) == 0) 
-      {
-         domName = dot + 1;
-         certName += 2;
-      }
+      return 0;
    }
-   return !strcasecmp(certName, domName);
+
+   // What the wildcard's label is followed by has to be two labels or more,
+   // otherwise "*.com" would match every host in a top-level domain
+   const Data certificateBase = certificateName.substr(wildcardLabel.size());
+   const Data::size_type baseDot = certificateBase.find(".");
+   if(baseDot == Data::npos || baseDot == 0 || baseDot + 1 == certificateBase.size())
+   {
+      return 0;
+   }
+
+   // The wildcard stands for the domain name's first label, which can't be empty
+   const Data::size_type dot = domainName.find(".");
+   if(dot == Data::npos || dot == 0)
+   {
+      return 0;
+   }
+   return isEqualNoCase(domainName.substr(dot + 1), certificateBase);
 }
 
 bool

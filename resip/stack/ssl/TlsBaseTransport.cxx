@@ -61,20 +61,75 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
       {
       case SecurityTypes::SSLv23:
          DebugLog(<<"Using SecurityTypes::SSLv23");
-         mDomainCtx = mSecurity->createDomainCtx(TLS_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
          break;
       case SecurityTypes::TLSv1:
          DebugLog(<<"Using SecurityTypes::TLSv1");
-         mDomainCtx = mSecurity->createDomainCtx(TLS_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
-         if (mDomainCtx) {
-            SSL_CTX_set_min_proto_version(mDomainCtx, TLS1_VERSION);
-            SSL_CTX_set_max_proto_version(mDomainCtx, TLS1_VERSION);
-         }
          break;
       default:
          throw invalid_argument("Unrecognised SecurityTypes::SSLType value");
       }
+      mDomainCtx = createDomainCtx();
    }
+}
+
+SSL_CTX*
+TlsBaseTransport::createDomainCtx()
+{
+   // Built from the members rather than the constructor's arguments: the
+   // SSL_CTX keeps a pointer to the passphrase, and a reload needs them anyway
+   SSL_CTX* ctx = mSecurity->createDomainCtx(TLS_method(), tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
+   if(ctx)
+   {
+      if(mSslType == SecurityTypes::TLSv1)
+      {
+         SSL_CTX_set_min_proto_version(ctx, TLS1_VERSION);
+         SSL_CTX_set_max_proto_version(ctx, TLS1_VERSION);
+      }
+      if(mCertVerifyCallback)
+      {
+         SSL_CTX_set_cert_verify_callback(ctx, mCertVerifyCallback, mCertVerifyCallbackArg);
+      }
+   }
+   return ctx;
+}
+
+void
+TlsBaseTransport::reloadDomainCtx()
+{
+   if(!mDomainCtx)
+   {
+      // No domain, so this transport uses Security's shared SSL_CTX and has
+      // no certificate of its own to reload
+      return;
+   }
+
+   DebugLog(<<"TlsBaseTransport::reloadDomainCtx, re-reading certificate and private key for domain " << tlsDomain());
+   SSL_CTX* ctx = nullptr;
+   try
+   {
+      ctx = createDomainCtx();
+   }
+   catch(BaseException& e)
+   {
+      ErrLog(<<"Failed to reload the certificate/private key for domain " << tlsDomain() << ", still using the previous ones: " << e);
+      return;
+   }
+   catch(...)
+   {
+      ErrLog(<<"Failed to reload the certificate/private key for domain " << tlsDomain() << ", still using the previous ones");
+      return;
+   }
+   if(!ctx)
+   {
+      ErrLog(<<"Failed to reload the certificate/private key for domain " << tlsDomain() << ", still using the previous ones");
+      return;
+   }
+
+   // Connections set up with the old SSL_CTX hold their own reference to it,
+   // so it is only destroyed once the last of them has closed
+   SSL_CTX_free(mDomainCtx);
+   mDomainCtx = ctx;
+   InfoLog(<<"Reloaded the certificate and private key for domain " << tlsDomain());
 }
 
 
@@ -93,9 +148,19 @@ TlsBaseTransport::onReload()
    mReloadCertificate = true;
 }
 
-SSL_CTX* 
+SSL_CTX*
 TlsBaseTransport::getCtx()
-{ 
+{
+   // FIXME: would be better to do this in a method called asynchronously after onReload
+   // as doing it here may slow down the connection.
+   // HUP is only likely to happen once per day for log reloads so the impact of doing it
+   // here is negligible
+   if(mReloadCertificate)
+   {
+      mReloadCertificate = false;
+      reloadDomainCtx();
+   }
+
    SSL_CTX *ctx = NULL;
    if(mDomainCtx)
    {
@@ -111,25 +176,6 @@ TlsBaseTransport::getCtx()
    {
       DebugLog(<<"Using SecurityTypes::TLSv1 (pinned to TLSv1)");
       ctx = mSecurity->getTlsCtx();
-   }
-   // FIXME: would be better to do this in a method called asynchronously after onReload
-   // as doing it here may slow down the connection.
-   // HUP is only likely to happen once per day for log reloads so the impact of doing it
-   // here is negligible
-   if(mReloadCertificate)
-   {
-      DebugLog(<<"TlsBaseTransport::getCtx, re-reading certificate and private key for domain " << tlsDomain());
-      try
-      {
-         mSecurity->updateDomainCtx(mDomainCtx, tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
-      }
-      catch (...)
-      {
-         ErrLog(<<"failed to read the certificate/private key files");
-      }
-      // an extra log entry so we can see how long it took
-      StackLog(<<"TlsBaseTransport::getCtx, updated certificate and private key for domain " << tlsDomain());
-      mReloadCertificate = false;
    }
    return ctx;
 }
@@ -147,8 +193,9 @@ TlsBaseTransport::setPeerCertificateVerificationCallback(
 
    // For full details of this callback see:
    // https://www.openssl.org/docs/ssl/SSL_CTX_set_cert_verify_callback.html
-   SSL_CTX_set_cert_verify_callback(getCtx(),
-      (int (*)(X509_STORE_CTX *,void *))func, arg);
+   mCertVerifyCallback = (int (*)(X509_STORE_CTX *,void *))func;
+   mCertVerifyCallbackArg = arg;
+   SSL_CTX_set_cert_verify_callback(getCtx(), mCertVerifyCallback, mCertVerifyCallbackArg);
 
    return true;
 }
@@ -167,8 +214,8 @@ TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

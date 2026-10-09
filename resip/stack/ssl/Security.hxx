@@ -278,8 +278,14 @@ class Security : public BaseSecurity
       void loadCADirectory(const Data& directoryName);
       void loadCAFile(const Data& fileName);
       virtual void preload();
-      virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, 
+      /// Throws BaseSecurity::Exception if the certificate or private key can't
+      /// be loaded; nothing is left allocated in that case.
+      virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename,
                                        const Data& privateKeyFilename, const Data& privateKeyPassPhrase);
+      /// Loads the domain's certificate chain and private key into ctx.  Throws
+      /// BaseSecurity::Exception if either can't be loaded.  ctx stays owned by
+      /// the caller, but may hold a partial update after a failure, so a context
+      /// that is in use should be replaced by one from createDomainCtx() instead.
       virtual void updateDomainCtx(SSL_CTX* ctx, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename, const Data& privateKeyPassPhrase);
 
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
@@ -299,6 +305,7 @@ class Security : public BaseSecurity
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
