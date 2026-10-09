@@ -191,17 +191,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          DebugLog(<< "ConnectionBase::process setting source, who: " << mWho << " " << this);
          mMessage->setSource(mWho);
          mMessage->setTlsDomain(mTransport->tlsDomain());
-
-#ifdef USE_SSL
-         // Set TlsPeerName if message is from TlsConnection
-         TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
-         if(tlsConnection)
-         {
-            std::list<Data> peerNameList;
-            tlsConnection->getPeerNames(peerNameList);
-            mMessage->setTlsPeerNames(peerNameList);
-         }
-#endif
+         mMessage->setConnectionInfo(getConnectionInfo());
          mMsgHeaderScanner.prepareForMessage(mMessage);
          // Fall through to the next case.
       }
@@ -829,24 +819,7 @@ ConnectionBase::wsProcessData(int bytesRead)
 
       mMessage->setSource(mWho);
       mMessage->setTlsDomain(mTransport->tlsDomain());
-
-#ifdef USE_SSL
-      // Set TlsPeerName if message is from TlsConnection
-      TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
-      if(tlsConnection)
-      {
-         std::list<Data> peerNameList;
-         tlsConnection->getPeerNames(peerNameList);
-         mMessage->setTlsPeerNames(peerNameList);
-      }
-#endif
-
-      WsConnectionBase *wsConnectionBase = dynamic_cast<WsConnectionBase *>(this);
-      if (wsConnectionBase)
-      {
-         mMessage->setWsCookies(wsConnectionBase->getCookies());
-         mMessage->setWsCookieContext(wsConnectionBase->getWsCookieContext());
-      }
+      mMessage->setConnectionInfo(getConnectionInfo());
 
       Data::size_type msg_len = msg->size();
       // cast permitted, as it is borrowed:
@@ -953,17 +926,7 @@ ConnectionBase::decompressNewBytes(int bytesRead)
 
     mMessage->setSource(mWho);
     mMessage->setTlsDomain(mTransport->tlsDomain());
-
-#ifdef USE_SSL
-    // Set TlsPeerName if message is from TlsConnection
-    TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
-    if(tlsConnection)
-    {
-       std::list<Data> peerNameList;
-       tlsConnection->getPeerNames(peerNameList);
-       mMessage->setTlsPeerNames(peerNameList);
-    }
-#endif
+    mMessage->setConnectionInfo(getConnectionInfo());
 
     char *sipBuffer = MsgHeaderScanner::allocateBuffer(bytesUncompressed);
     memmove(sipBuffer, uncompressed, bytesUncompressed);
@@ -1122,11 +1085,44 @@ ConnectionBase::setBuffer(char* bytes, int count)
    mBufferSize = count;
 }
 
-Transport* 
+Transport*
 ConnectionBase::transport() const
 {
    resip_assert_not_null(this);
    return mTransport;
+}
+
+const std::shared_ptr<const ConnectionInfo>&
+ConnectionBase::getConnectionInfo()
+{
+   // Building it once is enough: a TLS connection finishes its handshake, and a
+   // WebSocket connection its Upgrade, before any SIP message can arrive on it
+   if(!mConnectionInfoBuilt)
+   {
+      mConnectionInfoBuilt = true;
+      std::shared_ptr<ConnectionInfo> info;
+#ifdef USE_SSL
+      TlsConnection* tlsConnection = dynamic_cast<TlsConnection*>(this);
+      if(tlsConnection)
+      {
+         info = std::make_shared<ConnectionInfo>();
+         tlsConnection->getPeerNames(info->mTlsPeerNames);
+         info->mTlsSni = tlsConnection->getSni();
+      }
+#endif
+      WsConnectionBase* wsConnectionBase = dynamic_cast<WsConnectionBase*>(this);
+      if(wsConnectionBase)
+      {
+         if(!info)
+         {
+            info = std::make_shared<ConnectionInfo>();
+         }
+         info->mWsCookies = wsConnectionBase->getCookies();
+         info->mWsCookieContext = wsConnectionBase->getWsCookieContext();
+      }
+      mConnectionInfo = std::move(info);
+   }
+   return mConnectionInfo;
 }
 
 EncodeStream& 

@@ -22,6 +22,7 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/MessageDecorator.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/ConnectionInfo.hxx"
 #include "resip/stack/WsCookieContext.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/ResipAssert.h"
@@ -683,16 +684,10 @@ class SipMessage : public TransactionMessage
       };
 
       /// Mark message as internally generated
-      inline void setFromTU() 
-      {
-         mIsExternal = false;
-      }
+      inline void setFromTU() { mIsExternal = false; }
 
       /// Mark message as externally generated
-      inline void setFromExternal()
-      {
-         mIsExternal = true;
-      }
+      inline void setFromExternal() { mIsExternal = true; }
       
       /** 
          @brief Check if SipMessage is to be treated as it came off the wire.
@@ -701,10 +696,7 @@ class SipMessage : public TransactionMessage
                  an internally generated response to an internally generated 
                  request (ie: 408), false otherwise.
       */
-      inline bool isExternal() const
-      {
-         return mIsExternal;
-      }
+      inline bool isExternal() const { return mIsExternal; }
 
       /** 
          @brief Check if SipMessage came off the wire.
@@ -716,10 +708,7 @@ class SipMessage : public TransactionMessage
 
          @return true if the message came from an IP interface, false otherwise.
       */
-      inline bool isFromWire() const
-      {
-         return mReceivedTransportTuple.getType() != UNKNOWN_TRANSPORT;
-      }
+      inline bool isFromWire() const { return mReceivedTransportTuple.getType() != UNKNOWN_TRANSPORT; }
       
       /// @brief Check if SipMessage is a client transaction
       /// @return true if the message is external and is a response or
@@ -730,7 +719,7 @@ class SipMessage : public TransactionMessage
       
       @return string representation of a SIP message.
       */
-      virtual EncodeStream& encode(EncodeStream& str) const;      
+      virtual EncodeStream& encode(EncodeStream& str) const;
       //sipfrags will not output Content Length if there is no body--introduce
       //friendship to hide this?
       virtual EncodeStream& encodeSipFrag(EncodeStream& str) const;
@@ -743,8 +732,8 @@ class SipMessage : public TransactionMessage
       inline bool isRequest() const {return mRequest;}
       /// Returns true if message is a response, false otherwise
       inline bool isResponse() const {return mResponse;}
-      /// Returns true if message failed to parse, false otherwise      
-      inline bool isInvalid() const{return mInvalid;}
+      /// Returns true if message failed to parse, false otherwise
+      inline bool isInvalid() const {return mInvalid;}
       
       /// @brief returns the method type of the message
       /// @see MethodTypes
@@ -753,35 +742,23 @@ class SipMessage : public TransactionMessage
       const Data& methodStr() const;
       
       /// Returns a string containing the response reason text
-      const resip::Data* getReason() const{return mReason;}
+      const resip::Data* getReason() const { return mReason; }
       
       /// Returns the RequestLine.  This is only valid for request messages.
-      const RequestLine& 
-      header(const RequestLineType& l) const;
+      const RequestLine& header(const RequestLineType& l) const;
 
       /// Returns the RequestLine.  This is only valid for request messages.
-      RequestLine& 
-      header(const RequestLineType& l);
+      RequestLine& header(const RequestLineType& l);
 
-      inline const RequestLine& 
-      const_header(const RequestLineType& l) const
-      {
-         return header(l);
-      }
+      inline const RequestLine& const_header(const RequestLineType& l) const { return header(l); }
 
       /// Returns the StatusLine.  This is only valid for response messages.
-      const StatusLine& 
-      header(const StatusLineType& l) const;
+      const StatusLine& header(const StatusLineType& l) const;
 
       /// Returns the StatusLine.  This is only valid for response messages.
-      StatusLine& 
-      header(const StatusLineType& l);
+      StatusLine& header(const StatusLineType& l);
 
-      inline const StatusLine& 
-      const_header(const StatusLineType& l) const
-      {
-         return header(l);
-      }
+      inline const StatusLine& const_header(const StatusLineType& l) const { return header(l); }
 
       /// Returns true if the given header field is present, false otherwise
       bool exists(const HeaderBase& headerType) const;
@@ -790,10 +767,7 @@ class SipMessage : public TransactionMessage
       /// @brief Prevents a header field from being present when the message is prepared
       /// for sending to a transport.  This does not free the memory that was 
       /// used by the header.
-      inline void remove(const HeaderBase& headerType)
-      {
-         remove(headerType.getTypeNum());
-      }
+      inline void remove(const HeaderBase& headerType) { remove(headerType.getTypeNum()); }
 
       void remove(Headers::Type type);
 
@@ -931,6 +905,7 @@ class SipMessage : public TransactionMessage
        * Throws an exception if the header is not found.
        */
       const StringCategories& header(const ExtensionHeader& symbol) const;
+
       /**
        * @brief Retrieves extension header values.
        *
@@ -945,6 +920,7 @@ class SipMessage : public TransactionMessage
       void setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerType);
       const KnownHeaders& getRawHeaders() const noexcept { return mKnownHeaders; }
       const UnknownHeaders& getRawUnknownHeaders() const noexcept { return mUnknownHeaders; }
+
       /**
          Return the raw body string (if it exists). The returned HFV
          and its underlying memory is owned by the SipMessage, and may
@@ -973,14 +949,13 @@ class SipMessage : public TransactionMessage
         * @return pointer to the contents of the SIP message
         **/
       Contents* getContents() const;
+
       /// Removes the contents from the message
       std::unique_ptr<Contents> releaseContents();
 
       /// @brief Set the contents of the message
       /// @param contents to store in the message
       void setContents(const Contents* contents);
-      /// @brief Set the contents of the message
-      /// @param contents to store in the message
       void setContents(std::unique_ptr<Contents> contents);
 
       /// @internal transport interface
@@ -1015,7 +990,7 @@ class SipMessage : public TransactionMessage
 
       void addBuffer(char* buf);
 
-      uint64_t getCreatedTimeMicroSec() const {return mCreatedTime;}
+      uint64_t getCreatedTimeMicroSec() const { return mCreatedTime; }
 
       /// deal with a notion of an "out-of-band" forced target for SIP routing
       void setForceTarget(const Uri& uri);
@@ -1026,18 +1001,31 @@ class SipMessage : public TransactionMessage
       const Data& getTlsDomain() const { return mTlsDomain; }
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
 
-      const std::list<Data>& getTlsPeerNames() const { return mTlsPeerNames; }
-      void setTlsPeerNames(const std::list<Data>& tlsPeerNames) { mTlsPeerNames = tlsPeerNames; }
+      /// TLS and WebSocket details of the connection this message was received
+      /// on, shared by every message received on that connection.  Null if the
+      /// message did not arrive on a TLS or WebSocket connection.
+      const std::shared_ptr<const ConnectionInfo>& getConnectionInfo() const noexcept { return mConnectionInfo; }
+      void setConnectionInfo(std::shared_ptr<const ConnectionInfo> connectionInfo) noexcept { mConnectionInfo = std::move(connectionInfo); }
 
-      const CookieList& getWsCookies() const { return mWsCookies; }
-      void setWsCookies(const CookieList& wsCookies) { mWsCookies = wsCookies; }
+      // Shortcuts to the fields of getConnectionInfo(); empty if there is none.
+      const std::list<Data>& getTlsPeerNames() const;
+      /// SNI (TLS server_name) the peer sent in its ClientHello.  Only set for
+      /// messages received on a TLS/WSS connection that we accepted (server mode);
+      /// empty if the peer did not send one.
+      const Data& getTlsSni() const;
+      const CookieList& getWsCookies() const;
+      std::shared_ptr<WsCookieContext> getWsCookieContext() const noexcept;
 
-      std::shared_ptr<WsCookieContext> getWsCookieContext() const noexcept { return mWsCookieContext; }
-      void setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext) noexcept { mWsCookieContext = wsCookieContext; }
+      // Each of these gives this message its own copy of the ConnectionInfo with
+      // the one field changed, so other messages from the same connection keep
+      // theirs.
+      void setTlsPeerNames(const std::list<Data>& tlsPeerNames);
+      void setWsCookies(const CookieList& wsCookies);
+      void setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext);
 
       Data getCanonicalIdentityString() const;
-      
-      SipMessage& mergeUri(const Uri& source);      
+ 
+      SipMessage& mergeUri(const Uri& source);
 
       void setSecurityAttributes(std::unique_ptr<SecurityAttributes>) noexcept;
       const SecurityAttributes* getSecurityAttributes() const noexcept { return mSecurityAttributes.get(); }
@@ -1073,7 +1061,7 @@ class SipMessage : public TransactionMessage
       void compute2543TransactionHash() const;
 
       EncodeStream& 
-      encode(EncodeStream& str, bool isSipFrag) const;      
+      encode(EncodeStream& str, bool isSipFrag) const;
 
       void copyFrom(const SipMessage& message);
 
@@ -1182,14 +1170,9 @@ class SipMessage : public TransactionMessage
       // domain associated with this message for tls cert
       Data mTlsDomain;
 
-      // peers domain associate with this message (MTLS)
-      std::list<Data> mTlsPeerNames;
-
-      // cookies associated with this message from the WebSocket Upgrade request
-      CookieList mWsCookies;
-
-      // parsed cookie authentication elements associated with this message from the WebSocket Upgrade request
-      std::shared_ptr<WsCookieContext> mWsCookieContext;
+      // TLS peer names, SNI and WebSocket cookies of the connection the message
+      // was received on, shared with every other message from that connection
+      std::shared_ptr<const ConnectionInfo> mConnectionInfo;
 
       std::unique_ptr<SecurityAttributes> mSecurityAttributes;
 

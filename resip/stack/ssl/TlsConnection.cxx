@@ -171,7 +171,7 @@ TlsConnection::checkState()
    {
       if (mServer)
       {
-         InfoLog(<< "TLS handshake starting (Server mode)");
+         InfoLog(<< "TLS handshake starting (server mode)");
          SSL_set_accept_state(mSsl);
          mTlsState = Handshaking;
       }
@@ -186,9 +186,6 @@ TlsConnection::checkState()
          SSL_set_connect_state(mSsl);
          mTlsState = Handshaking;
       }
-
-      InfoLog(<< "TLS connected");
-      mTlsState = Handshaking;
    }
 
    mHandShakeWantsRead = false;
@@ -309,6 +306,11 @@ TlsConnection::checkState()
                ds << "unhandled SSL_get_error result: " << err;
                failureSubCode = err;
             }
+            if (mServer)
+            {
+               const char* sni = SSL_get_servername(mSsl, TLSEXT_NAMETYPE_host_name);
+               ds << "; SNI received: " << (sni ? sni : "<none>");
+            }
             ds.flush();
             ErrLog(<< failureString);
             handleOpenSSLErrorQueue(handshakeRet, err, "SSL_do_handshake", addToAdditionalFailureStrings);
@@ -320,7 +322,16 @@ TlsConnection::checkState()
    }
    else // handshakeRet > 1
    {
-      InfoLog(<< "TLS connected");
+      if (mServer)
+      {
+         const char* sni = SSL_get_servername(mSsl, TLSEXT_NAMETYPE_host_name);
+         mSni = sni ? Data(sni) : Data::Empty;
+         InfoLog(<< "TLS connected (server mode), SNI received: " << (sni ? sni : "<none>"));
+      }
+      else
+      {
+         InfoLog(<< "TLS connected (client mode)");
+      }
    }
 
    // force peer name to get checked and perhaps cert loaded
@@ -782,8 +793,8 @@ TlsConnection::computePeerName()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

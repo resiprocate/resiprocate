@@ -175,6 +175,7 @@
     <ClInclude Include="Compression.hxx" />
     <ClInclude Include="Connection.hxx" />
     <ClInclude Include="ConnectionBase.hxx" />
+    <ClInclude Include="ConnectionInfo.hxx" />
     <ClInclude Include="ConnectionManager.hxx" />
     <ClInclude Include="ConnectionTerminated.hxx" />
     <ClInclude Include="Contents.hxx" />

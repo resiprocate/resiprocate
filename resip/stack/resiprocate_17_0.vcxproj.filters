@@ -540,6 +540,9 @@
     <ClInclude Include="ConnectionBase.hxx">
       <Filter>Transports</Filter>
     </ClInclude>
+    <ClInclude Include="ConnectionInfo.hxx">
+      <Filter>Transports</Filter>
+    </ClInclude>
     <ClInclude Include="ConnectionManager.hxx">
       <Filter>Transports</Filter>
     </ClInclude>

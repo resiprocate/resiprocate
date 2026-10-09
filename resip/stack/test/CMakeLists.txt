@@ -145,6 +145,7 @@ if(OPENSSL_FOUND)
    test(testSocketFunc testSocketFunc.cxx)
    test(testSecurity testSecurity.cxx)
    test(testCertSerial testCertSerial.cxx TestSupport.cxx)
+   test(testTlsSni testTlsSni.cxx)
 endif()
 
 # fuzzing targets

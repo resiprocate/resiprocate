@@ -11,6 +11,7 @@
 #include "resip/stack/SendData.hxx"
 #include "resip/stack/WsFrameExtractor.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/ConnectionInfo.hxx"
 
 namespace osc
 {
@@ -105,6 +106,7 @@ class ConnectionBase
       std::unique_ptr<Data> makeWsHandshakeResponse();
       bool isUsingSecWebSocketKey();
       bool isUsingDeprecatedSecWebSocketKeys();
+      const std::shared_ptr<const ConnectionInfo>& getConnectionInfo();
    protected:
       virtual void onDoubleCRLF(){}
       virtual void onSingleCRLF(){}
@@ -135,6 +137,11 @@ class ConnectionBase
       uint64_t mLastUsed;
       ConnState mConnState;
       MsgHeaderScanner mMsgHeaderScanner;
+
+      // TLS/WebSocket details given to every message received on this
+      // connection; built when the first message arrives
+      std::shared_ptr<const ConnectionInfo> mConnectionInfo;
+      bool mConnectionInfoBuilt = false;
 
       static size_t messageSizeMax;
 

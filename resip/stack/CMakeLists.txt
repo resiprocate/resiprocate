@@ -17,6 +17,7 @@ set(INCLUDES
    Compression.hxx
    ConnectionBase.hxx
    Connection.hxx
+   ConnectionInfo.hxx
    ConnectionManager.hxx
    ConnectionTerminated.hxx
    ContentsFactoryBase.hxx

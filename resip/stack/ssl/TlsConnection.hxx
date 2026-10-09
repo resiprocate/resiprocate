@@ -50,7 +50,12 @@ class TlsConnection : public Connection
       virtual bool transportWrite();
       
       void getPeerNames(std::list<Data> & peerNames) const;
-      
+
+      /// SNI the client sent in its ClientHello, for connections we accepted
+      /// (server mode); empty if it sent none, and for client mode connections.
+      /// Only valid once the handshake has completed.
+      const Data& getSni() const { return mSni; }
+
       typedef enum TlsState { Initial, Broken, Handshaking, Up } TlsState;
       static const char * fromState(TlsState);
    
@@ -73,6 +78,7 @@ class TlsConnection : public Connection
       SSL* mSsl;
       BIO* mBio;
       std::list<BaseSecurity::PeerName> mPeerNames;
+      Data mSni;
 };
  
 }
@@ -82,8 +88,9 @@ class TlsConnection : public Connection
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

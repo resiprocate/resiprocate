@@ -267,6 +267,7 @@ SipMessage::init(const SipMessage& rhs)
       mReason = new Data(*rhs.mReason);
    }
    mTlsDomain = rhs.mTlsDomain;
+   mConnectionInfo = rhs.mConnectionInfo;
 
    mKnownHeaders.reserve(rhs.mKnownHeaders.size());
    for (KnownHeaders::const_reference info : rhs.mKnownHeaders)
@@ -1793,10 +1794,68 @@ SipMessage::mergeUri(const Uri& source)
    return *this;   
 }
 
-void 
+void
 SipMessage::setSecurityAttributes(std::unique_ptr<SecurityAttributes> sec) noexcept
 {
    mSecurityAttributes = std::move(sec);
+}
+
+const std::list<Data>&
+SipMessage::getTlsPeerNames() const
+{
+   static const std::list<Data> empty;
+   return mConnectionInfo ? mConnectionInfo->mTlsPeerNames : empty;
+}
+
+const Data&
+SipMessage::getTlsSni() const
+{
+   return mConnectionInfo ? mConnectionInfo->mTlsSni : Data::Empty;
+}
+
+const CookieList&
+SipMessage::getWsCookies() const
+{
+   static const CookieList empty;
+   return mConnectionInfo ? mConnectionInfo->mWsCookies : empty;
+}
+
+std::shared_ptr<WsCookieContext>
+SipMessage::getWsCookieContext() const noexcept
+{
+   return mConnectionInfo ? mConnectionInfo->mWsCookieContext : nullptr;
+}
+
+// Gives this message a ConnectionInfo of its own that the caller can change,
+// so the change doesn't reach other messages sharing the current one
+static std::shared_ptr<ConnectionInfo>
+copyConnectionInfo(const std::shared_ptr<const ConnectionInfo>& current)
+{
+   return current ? std::make_shared<ConnectionInfo>(*current) : std::make_shared<ConnectionInfo>();
+}
+
+void
+SipMessage::setTlsPeerNames(const std::list<Data>& tlsPeerNames)
+{
+   std::shared_ptr<ConnectionInfo> info = copyConnectionInfo(mConnectionInfo);
+   info->mTlsPeerNames = tlsPeerNames;
+   mConnectionInfo = std::move(info);
+}
+
+void
+SipMessage::setWsCookies(const CookieList& wsCookies)
+{
+   std::shared_ptr<ConnectionInfo> info = copyConnectionInfo(mConnectionInfo);
+   info->mWsCookies = wsCookies;
+   mConnectionInfo = std::move(info);
+}
+
+void
+SipMessage::setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext)
+{
+   std::shared_ptr<ConnectionInfo> info = copyConnectionInfo(mConnectionInfo);
+   info->mWsCookieContext = std::move(wsCookieContext);
+   mConnectionInfo = std::move(info);
 }
 
 void
