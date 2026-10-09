@@ -533,13 +533,40 @@ TlsConnection::read(char* buf, int count)
             return -1;
          }
          break;
+         case SSL_ERROR_SYSCALL:
+         {
+            if (ERR_peek_error() == 0)
+            {
+               // Nothing from OpenSSL itself: the socket failed, or (OpenSSL 1.1.1)
+               // the peer closed the connection without a TLS close_notify
+               const int e = getErrno();
+               if (bytesRead == 0 || e == 0)
+               {
+                  InfoLog(<< "TLS connection closed by the peer without a close_notify");
+               }
+               else
+               {
+                  InfoLog(<< "TLS read failed, socket error=" << e << ": " << Transport::errorToString(e));
+               }
+               return -1;
+            }
+            handleOpenSSLErrorQueue(bytesRead, err, "SSL_read");
+            return -1;
+         }
+         break;
          default:
          {
-            handleOpenSSLErrorQueue(bytesRead, err, "SSL_read");
-            if (err == 5)
+#if defined(SSL_R_UNEXPECTED_EOF_WHILE_READING)
+            // How OpenSSL 3 reports a peer closing without a TLS close_notify
+            if (err == SSL_ERROR_SSL &&
+                ERR_GET_REASON(ERR_peek_error()) == SSL_R_UNEXPECTED_EOF_WHILE_READING)
             {
-               WarningLog(<< "err=5 sometimes indicates that intermediate certificates may be missing from local PEM file");
+               InfoLog(<< "TLS connection closed by the peer without a close_notify");
+               ERR_clear_error();
+               return -1;
             }
+#endif
+            handleOpenSSLErrorQueue(bytesRead, err, "SSL_read");
             return -1;
          }
          break;
@@ -792,6 +819,7 @@ TlsConnection::computePeerName()
    if (mPeerNames.empty())
    {
       ErrLog(<< "Invalid certificate: no subjectAltName/CommonName found");
+      X509_free(cert); cert = NULL;
       return;
    }
 
@@ -800,12 +828,15 @@ TlsConnection::computePeerName()
       // add the certificate to the Security store
       unsigned char* buf = NULL;
       int len = i2d_X509(cert, &buf);
-      Data derCert(buf, len);
-      for (std::list<BaseSecurity::PeerName>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+      if (len > 0)
       {
-         if (!mSecurity->hasDomainCert(it->mName, false /* logErrors? */))
+         Data derCert(buf, len);
+         for (std::list<BaseSecurity::PeerName>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
          {
-            mSecurity->addDomainCertDER(it->mName, derCert);
+            if (!mSecurity->hasDomainCert(it->mName, false /* logErrors? */))
+            {
+               mSecurity->addDomainCertDER(it->mName, derCert);
+            }
          }
       }
       OPENSSL_free(buf); buf = NULL;

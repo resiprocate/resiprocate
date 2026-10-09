@@ -53,8 +53,9 @@ addExtension(X509* cert, X509V3_CTX* v3ctx, int nid, const char* value)
 }
 
 /// A CA certificate when issuer is null, otherwise an end entity certificate
-/// signed by issuer.  subjectAltNames is in OpenSSL's config syntax, for example
-/// "DNS:a.test, URI:sip:a.test"; empty for none.  Returns null on failure.
+/// signed by issuer.  commonName may be null or empty for a certificate without
+/// one.  subjectAltNames is in OpenSSL's config syntax, for example
+/// "DNS:a.test, URI:sip:a.test"; null or empty for none.  Returns null on failure.
 inline X509*
 makeCert(EVP_PKEY* key, const char* commonName, const char* subjectAltNames,
          X509* issuer, EVP_PKEY* issuerKey)
@@ -66,8 +67,11 @@ makeCert(EVP_PKEY* key, const char* commonName, const char* subjectAltNames,
    X509_gmtime_adj(X509_getm_notBefore(cert), -60 * 60);
    X509_gmtime_adj(X509_getm_notAfter(cert), 60 * 60 * 24);
    X509_set_pubkey(cert, key);
-   X509_NAME_add_entry_by_txt(X509_get_subject_name(cert), "CN", MBSTRING_ASC,
-                              (const unsigned char*)commonName, -1, -1, 0);
+   if (commonName && *commonName)
+   {
+      X509_NAME_add_entry_by_txt(X509_get_subject_name(cert), "CN", MBSTRING_ASC,
+                                 (const unsigned char*)commonName, -1, -1, 0);
+   }
    X509_set_issuer_name(cert, X509_get_subject_name(issuer ? issuer : cert));
 
    X509V3_CTX v3ctx;

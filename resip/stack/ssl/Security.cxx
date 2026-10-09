@@ -411,16 +411,10 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
    SSL_CTX* ctx = SSL_CTX_new(method);
    resip_assert(ctx);
 
-   X509_STORE* x509Store = X509_STORE_new();
-   resip_assert(x509Store);
-
-   // Load root certs into store
-   X509List::iterator it;
-   for(it = mRootCerts.begin(); it != mRootCerts.end(); it++)
-   {
-      X509_STORE_add_cert(x509Store,*it);
-   }
-   SSL_CTX_set_cert_store(ctx, x509Store);
+   // Share the root certificate store with Security's own SSL_CTXs (every root
+   // certificate is added to it), so roots added after this transport was
+   // created are trusted too.  set1 takes a reference of its own.
+   SSL_CTX_set1_cert_store(ctx, mRootSslCerts);
 
    try
    {
@@ -428,7 +422,7 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
    }
    catch(...)
    {
-      SSL_CTX_free(ctx);  // also frees x509Store
+      SSL_CTX_free(ctx);
       throw;
    }
 
@@ -2792,8 +2786,9 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
    }
    sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
 
-   // If there are no peer names from the subjectAltName, then use the commonName
-   if(peerNames.empty())
+   // If there are no peer names from the subjectAltName, then use the commonName,
+   // if the certificate has one: an empty name would match an empty target domain
+   if(peerNames.empty() && !commonName.empty())
    {
       PeerName peerName(CommonName, commonName);
       peerNames.push_back(peerName);
@@ -2832,9 +2827,14 @@ BaseSecurity::getCertName(X509 *cert)
 /**
    Applies the certificate and domain name matching rules
 */
-int 
+int
 BaseSecurity::matchHostName(const Data& certificateName, const Data& domainName)
 {
+   // An empty name never identifies anyone, even when both are empty
+   if(certificateName.empty() || domainName.empty())
+   {
+      return 0;
+   }
    if(mAllowWildcardCertificates)
       return matchHostNameWithWildcards(certificateName,domainName);
    return isEqualNoCase(certificateName,domainName);

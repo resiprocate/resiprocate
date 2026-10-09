@@ -56,6 +56,8 @@ testMatchHostName()
    checkMatch("EXAMPLE.com", "example.COM", true);
    checkMatch("*.example.com", "a.example.com", false);
    checkMatch("example.com", "other.com", false);
+   checkMatch("", "", false);                               // empty names never match
+   checkMatch("example.com", "", false);
 
    cerr << "-- matchHostName, wildcards allowed (RFC 6125 section 6.4.3)" << endl;
    BaseSecurity::setAllowWildcardCertificates(true);
@@ -70,6 +72,7 @@ testMatchHostName()
    checkMatch("*.0.0.1", "127.0.0.1", false);               // never an IP address
    checkMatch("f*.example.com", "foo.example.com", false);  // only a whole label
    checkMatch("pbx.attacker.com", "pbx", false);            // used to match
+   checkMatch("", "", false);
 
    // The old code wrote a NUL into the certificate name when the domain name
    // had no dot, corrupting the caller's (const) peer name
@@ -350,6 +353,112 @@ testSessionResumption(Security& security, X509* caCert, EVP_PKEY* caKey)
    remove(resumeKeyFile);
 }
 
+static const char* const nonameCertFile = "testTlsSecurity_noname_cert.pem";
+static const char* const nonameKeyFile = "testTlsSecurity_noname_key.pem";
+
+// A certificate with neither a subjectAltName nor a commonName used to give
+// one empty peer name, which matched a connection with no target domain
+static void
+testCertificateWithoutNames(Security& security, X509* caCert, EVP_PKEY* caKey)
+{
+   cerr << "-- a certificate without any names" << endl;
+   EVP_PKEY* key = makeKey();
+   X509* cert = key ? makeCert(key, nullptr, nullptr, caCert, caKey) : nullptr;
+   const bool haveCerts = cert && writeCertFile(nonameCertFile, cert) && writeKeyFile(nonameKeyFile, key);
+   check("test certificates could be created", haveCerts);
+
+   if (haveCerts)
+   {
+      std::list<BaseSecurity::PeerName> names;
+      BaseSecurity::getCertNames(cert, names);
+      check("getCertNames finds no names, not an empty one", names.empty());
+
+      const int serverPort = resipTestPort(5291);
+      const int clientPort = resipTestPort(5292);
+      Fifo<TransactionMessage> serverFifo;
+      TlsTransport server(serverFifo, serverPort, V4, "127.0.0.1", security, "noname.test",
+                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::None, false, nonameCertFile, nonameKeyFile);
+      Fifo<TransactionMessage> clientFifo;
+      TlsTransport client(clientFifo, clientPort, V4, "127.0.0.1", security, Data::Empty,
+                          SecurityTypes::SSLv23);
+
+      // No target domain, so there's no name the server's certificate could match
+      const Tuple dest("127.0.0.1", serverPort, V4, TLS);
+      client.send(client.makeSendData(dest, makeRequest("127.0.0.1", clientPort, serverPort), "tid"));
+      check("client with no target domain rejects a certificate without names",
+            receive(client, clientFifo, server, serverFifo) == nullptr);
+   }
+
+   X509_free(cert);
+   EVP_PKEY_free(key);
+   remove(nonameCertFile);
+   remove(nonameKeyFile);
+}
+
+static const char* const lateServerCertFile = "testTlsSecurity_late_server_cert.pem";
+static const char* const lateServerKeyFile = "testTlsSecurity_late_server_key.pem";
+static const char* const lateClientCertFile = "testTlsSecurity_late_client_cert.pem";
+static const char* const lateClientKeyFile = "testTlsSecurity_late_client_key.pem";
+
+// Transports with a domain used to copy the root certificates when they were
+// created, so a root added later wasn't trusted by them
+static void
+testRootAddedAfterTransports(X509* caCert, EVP_PKEY* caKey)
+{
+   cerr << "-- a root certificate added after the transports were created" << endl;
+   EVP_PKEY* serverKey = makeKey();
+   EVP_PKEY* clientKey = makeKey();
+   X509* serverCert = serverKey ? makeCert(serverKey, "late.test", "DNS:late.test", caCert, caKey) : nullptr;
+   X509* clientCert = clientKey ? makeCert(clientKey, "client.test", "DNS:client.test", caCert, caKey) : nullptr;
+   const bool haveCerts = serverCert && clientCert &&
+                          writeCertFile(lateServerCertFile, serverCert) && writeKeyFile(lateServerKeyFile, serverKey) &&
+                          writeCertFile(lateClientCertFile, clientCert) && writeKeyFile(lateClientKeyFile, clientKey);
+   check("test certificates could be created", haveCerts);
+
+   if (haveCerts)
+   {
+      // No root certificates yet
+      Security security;
+
+      // Both have a domain: the client verifies the server, and the server
+      // (Optional) verifies the client's certificate
+      const int serverPort = resipTestPort(5293);
+      const int clientPort = resipTestPort(5294);
+      Fifo<TransactionMessage> serverFifo;
+      TlsTransport server(serverFifo, serverPort, V4, "127.0.0.1", security, "late.test",
+                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::Optional, false, lateServerCertFile, lateServerKeyFile);
+      Fifo<TransactionMessage> clientFifo;
+      TlsTransport client(clientFifo, clientPort, V4, "127.0.0.1", security, "client.test",
+                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::None, false, lateClientCertFile, lateClientKeyFile);
+
+      security.addRootCertPEM(toPem(caCert));
+
+      const Tuple dest("127.0.0.1", serverPort, V4, TLS, "late.test");
+      client.send(client.makeSendData(dest, makeRequest("late.test", clientPort, serverPort), "tid"));
+      std::unique_ptr<SipMessage> received = receive(client, clientFifo, server, serverFifo);
+      check("client trusts the server through the root added later", received != nullptr);
+      if (received)
+      {
+         // Peer names are only filled in for a certificate that verified
+         const std::list<Data>& peerNames = received->getTlsPeerNames();
+         check("server trusts the client through the root added later",
+               peerNames.size() == 1 && peerNames.front() == "client.test");
+      }
+   }
+
+   X509_free(clientCert);
+   X509_free(serverCert);
+   EVP_PKEY_free(clientKey);
+   EVP_PKEY_free(serverKey);
+   remove(lateServerCertFile);
+   remove(lateServerKeyFile);
+   remove(lateClientCertFile);
+   remove(lateClientKeyFile);
+}
+
 int
 main(int, char**)
 {
@@ -371,6 +480,9 @@ main(int, char**)
       security.addRootCertPEM(toPem(caCert));
       testReload(security, caCert, caKey);
       testSessionResumption(security, caCert, caKey);
+      testCertificateWithoutNames(security, caCert, caKey);
+
+      testRootAddedAfterTransports(caCert, caKey);
    }
    X509_free(caCert);
    EVP_PKEY_free(caKey);
