@@ -155,9 +155,9 @@ TlsBaseTransport::getCtx()
    // as doing it here may slow down the connection.
    // HUP is only likely to happen once per day for log reloads so the impact of doing it
    // here is negligible
-   if(mReloadCertificate)
+   // exchange() so that a reload requested while this one runs isn't lost
+   if(mReloadCertificate.exchange(false))
    {
-      mReloadCertificate = false;
       reloadDomainCtx();
    }
 

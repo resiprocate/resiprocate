@@ -13,6 +13,8 @@
 
 #include <openssl/ssl.h>
 
+#include <atomic>
+
 namespace resip
 {
 
@@ -90,7 +92,8 @@ class TlsBaseTransport : public TcpBaseTransport
       const Data mCertificateFilename;
       const Data mPrivateKeyFilename;
       const Data mPrivateKeyPassPhrase;
-      volatile bool mReloadCertificate;
+      // Set by onReload(), which runs on another thread than the transport's
+      std::atomic<bool> mReloadCertificate;
 
    private:
       SSL_CTX* createDomainCtx();

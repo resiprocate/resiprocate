@@ -9,6 +9,7 @@
 #include "resip/stack/ssl/Security.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Uri.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "rutil/Socket.hxx"
 
 #include <openssl/opensslv.h>
@@ -115,23 +116,29 @@ TlsConnection::TlsConnection(Transport* transport, const Tuple& tuple,
 TlsConnection::~TlsConnection()
 {
 #if defined(USE_SSL)
-   ERR_clear_error();
-   int ret = SSL_shutdown(mSsl);
-   if (ret < 0)
+   // Only send a close_notify on a connection that is up: OpenSSL says not to
+   // call SSL_shutdown() after a fatal error, and one before the handshake has
+   // finished just fails and logs an error
+   if (mTlsState == Up)
    {
-      int err = SSL_get_error(mSsl, ret);
-      switch (err)
+      ERR_clear_error();
+      int ret = SSL_shutdown(mSsl);
+      if (ret < 0)
       {
-         case SSL_ERROR_WANT_READ:
-         case SSL_ERROR_WANT_WRITE:
-         case SSL_ERROR_NONE:
-            // WANT_READ or WANT_WRITE can arise for bi-directional shutdown on
-            // non-blocking sockets, safe to ignore
-            StackLog(<< "Got TLS shutdown error condition of " << err);
-            break;
+         int err = SSL_get_error(mSsl, ret);
+         switch (err)
+         {
+            case SSL_ERROR_WANT_READ:
+            case SSL_ERROR_WANT_WRITE:
+            case SSL_ERROR_NONE:
+               // WANT_READ or WANT_WRITE can arise for bi-directional shutdown on
+               // non-blocking sockets, safe to ignore
+               StackLog(<< "Got TLS shutdown error condition of " << err);
+               break;
 
-         default:
-            handleOpenSSLErrorQueue(ret, err, "SSL_shutdown");
+            default:
+               handleOpenSSLErrorQueue(ret, err, "SSL_shutdown");
+         }
       }
    }
    SSL_free(mSsl);
@@ -177,8 +184,24 @@ TlsConnection::checkState()
       }
       else
       {
-         InfoLog(<< "TLS handshake starting (client mode), SNI=" << who().getTargetDomain());
-         SSL_set_tlsext_host_name(mSsl, who().getTargetDomain().c_str()); // set the SNI hostname
+         const Data& targetDomain = who().getTargetDomain();
+         // RFC 6066 section 3: SNI carries a host name, never an IP address.
+         // SSL_set_tlsext_host_name() also fails for an empty name, and the
+         // error it leaves queued would make SSL_get_error() report the
+         // handshake below as failed.
+         if (!targetDomain.empty() && !DnsUtil::isIpAddress(targetDomain))
+         {
+            InfoLog(<< "TLS handshake starting (client mode), SNI=" << targetDomain);
+            if (SSL_set_tlsext_host_name(mSsl, targetDomain.c_str()) != 1)
+            {
+               WarningLog(<< "Failed to set SNI " << targetDomain << ", continuing without it");
+               ERR_clear_error();
+            }
+         }
+         else
+         {
+            InfoLog(<< "TLS handshake starting (client mode), no SNI for target <" << targetDomain << ">");
+         }
          SSL_set_connect_state(mSsl);
          mTlsState = Handshaking;
       }
@@ -581,8 +604,14 @@ TlsConnection::write(const char* buf, int count)
       return 0;
    }
 
+   if (count <= 0)
+   {
+      // SSL_write() returns 0 for this too, which would read as a failure below
+      return 0;
+   }
+
    ret = SSL_write(mSsl, (const char*)buf, count);
-   if (ret < 0)
+   if (ret <= 0)  // 0 is a failure too: SSL_get_error() says whether it can be retried
    {
       int err = SSL_get_error(mSsl, ret);
       switch (err)

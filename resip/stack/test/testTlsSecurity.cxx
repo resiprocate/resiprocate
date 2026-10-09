@@ -2,11 +2,14 @@
 #include "config.h"
 #endif
 
+#include <atomic>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <memory>
+#include <thread>
 
 #ifdef USE_SSL
 
@@ -24,8 +27,8 @@ using namespace resip;
 using namespace std;
 using namespace TlsTest;
 
-// Certificate name matching, subjectAltName parsing, and reloading a TLS
-// transport's certificate.
+// Certificate name matching, subjectAltName parsing, reloading a TLS
+// transport's certificate, and session resumption.
 
 static int failures = 0;
 
@@ -241,6 +244,112 @@ testReload(Security& security, X509* caCert, EVP_PKEY* caKey)
    remove(clientKeyFile);
 }
 
+static const char* const resumeCertFile = "testTlsSecurity_resume_cert.pem";
+static const char* const resumeKeyFile = "testTlsSecurity_resume_key.pem";
+
+// One handshake by a plain OpenSSL client, offering the session resume if
+// there is one.  It blocks, so it runs on a thread of its own while the test
+// drives the server; a receive timeout keeps it from blocking for ever.
+static bool
+opensslHandshake(SSL_CTX* ctx, int port, SSL_SESSION* resume, SSL_SESSION** session, bool* reused)
+{
+   const Data address = Data("127.0.0.1:") + Data(port);
+   BIO* bio = BIO_new_connect(address.c_str());
+   if (!bio || BIO_do_connect(bio) != 1)
+   {
+      BIO_free_all(bio);
+      return false;
+   }
+   int fd = -1;
+   BIO_get_fd(bio, &fd);
+#ifdef WIN32
+   DWORD timeout = 5000;
+#else
+   struct timeval timeout = { 5, 0 };
+#endif
+   setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+
+   SSL* ssl = SSL_new(ctx);
+   SSL_set_bio(ssl, bio, bio);  // ssl owns bio from here
+   if (resume)
+   {
+      SSL_set_session(ssl, resume);
+   }
+   const bool ok = SSL_connect(ssl) == 1;
+   if (ok)
+   {
+      if (session) *session = SSL_get1_session(ssl);
+      if (reused) *reused = SSL_session_reused(ssl) == 1;
+      SSL_shutdown(ssl);
+   }
+   SSL_free(ssl);
+   return ok;
+}
+
+// Runs handshake on another thread, driving server until it has finished
+static bool
+runWithServer(TlsTransport& server, const std::function<bool()>& handshake)
+{
+   std::atomic<bool> done(false);
+   bool ok = false;
+   std::thread client([&]() { ok = handshake(); done = true; });
+   while (!done)
+   {
+      FdSet fdset;
+      server.buildFdSet(fdset);
+      fdset.selectMilliSeconds(10);
+      server.process(fdset);
+   }
+   client.join();
+   return ok;
+}
+
+static void
+testSessionResumption(Security& security, X509* caCert, EVP_PKEY* caKey)
+{
+   cerr << "-- resuming a session with a server that asks for client certificates" << endl;
+   EVP_PKEY* key = makeKey();
+   X509* cert = key ? makeCert(key, "resume.test", "DNS:resume.test", caCert, caKey) : nullptr;
+   const bool haveCerts = cert && writeCertFile(resumeCertFile, cert) && writeKeyFile(resumeKeyFile, key);
+   check("test certificates could be created", haveCerts);
+
+   if (haveCerts)
+   {
+      // Optional sets SSL_VERIFY_PEER, which is what needs the session id context
+      const int serverPort = resipTestPort(5281);
+      Fifo<TransactionMessage> serverFifo;
+      TlsTransport server(serverFifo, serverPort, V4, "127.0.0.1", security, "resume.test",
+                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::Optional, false, resumeCertFile, resumeKeyFile);
+
+      // TLS 1.2, so the session ticket arrives during the handshake and is
+      // there for the second connection.  The client presents no certificate
+      // and doesn't check the server's: only resumption is tested here.
+      SSL_CTX* clientCtx = SSL_CTX_new(TLS_client_method());
+      SSL_CTX_set_max_proto_version(clientCtx, TLS1_2_VERSION);
+
+      SSL_SESSION* session = nullptr;
+      check("first connection: handshake succeeds",
+            runWithServer(server, [&]() { return opensslHandshake(clientCtx, serverPort, nullptr, &session, nullptr); }));
+      check("first connection: client has a session to resume", session != nullptr);
+
+      if (session)
+      {
+         bool reused = false;
+         check("second connection: handshake succeeds",
+               runWithServer(server, [&]() { return opensslHandshake(clientCtx, serverPort, session, nullptr, &reused); }));
+         check("second connection: session was resumed", reused);
+         SSL_SESSION_free(session);
+      }
+      SSL_CTX_free(clientCtx);
+   }
+
+   X509_free(cert);
+   EVP_PKEY_free(key);
+   remove(resumeCertFile);
+   remove(resumeKeyFile);
+}
+
 int
 main(int, char**)
 {
@@ -261,6 +370,7 @@ main(int, char**)
       Security security;
       security.addRootCertPEM(toPem(caCert));
       testReload(security, caCert, caKey);
+      testSessionResumption(security, caCert, caKey);
    }
    X509_free(caCert);
    EVP_PKEY_free(caKey);

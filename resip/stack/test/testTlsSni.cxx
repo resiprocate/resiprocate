@@ -83,8 +83,9 @@ main(int, char**)
    EVP_PKEY* caKey = makeKey();
    EVP_PKEY* serverKey = makeKey();
    X509* caCert = caKey ? makeCert(caKey, "testTlsSni CA", nullptr, nullptr, nullptr) : nullptr;
+   // The IP address lets a client that connects to 127.0.0.1 accept the certificate
    X509* serverCert = (caCert && serverKey) ?
-      makeCert(serverKey, serverDomain, (Data("DNS:") + serverDomain).c_str(), caCert, caKey) : nullptr;
+      makeCert(serverKey, serverDomain, (Data("DNS:") + serverDomain + ", IP:127.0.0.1").c_str(), caCert, caKey) : nullptr;
    const bool haveCerts = serverCert && writeCertFile(certFile, serverCert) && writeKeyFile(keyFile, serverKey);
    check("test certificates could be created", haveCerts);
 
@@ -128,6 +129,21 @@ main(int, char**)
 
          SipMessage copy(*first);
          check("a copy of a received message keeps its SNI", copy.getTlsSni() == serverDomain);
+      }
+
+      // RFC 6066 doesn't allow an IP address as SNI, so a client connecting to
+      // one sends none.  A client of its own, so the connection is a new one.
+      const int ipClientPort = resipTestPort(5172);
+      Fifo<TransactionMessage> ipClientFifo;
+      TlsTransport ipClient(ipClientFifo, ipClientPort, V4, "127.0.0.1", security, Data::Empty,
+                            SecurityTypes::SSLv23);
+      const Tuple ipDest("127.0.0.1", serverPort, V4, TLS, "127.0.0.1");
+      ipClient.send(ipClient.makeSendData(ipDest, makeRequest("127.0.0.1", ipClientPort, serverPort), "tid3"));
+      std::unique_ptr<SipMessage> byIp = receive(ipClient, ipClientFifo, server, serverFifo);
+      check("server received a request sent to its IP address", byIp != nullptr);
+      if (byIp)
+      {
+         check("no SNI for a client connecting to an IP address", byIp->getTlsSni().empty());
       }
    }
 

@@ -438,6 +438,23 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
    SSL_CTX_set_options(ctx, BaseSecurity::OpenSSLCTXSetOptions);
    SSL_CTX_clear_options(ctx, BaseSecurity::OpenSSLCTXClearOptions);
 
+   // A server that asks for client certificates (SSL_VERIFY_PEER) needs a
+   // session id context, or OpenSSL fails the handshake of any client that
+   // tries to resume a session (SSL_R_SESSION_ID_CONTEXT_UNINITIALIZED)
+   // instead of doing a full one.  Derived from the domain so sessions are
+   // only resumed in the context they were set up in.
+   const Data sessionContext(Data("resip:") + domain);
+   unsigned char sessionIdContext[EVP_MAX_MD_SIZE];
+   unsigned int sessionIdContextLength = 0;
+   if(EVP_Digest(sessionContext.data(), sessionContext.size(), sessionIdContext,
+                 &sessionIdContextLength, EVP_sha256(), nullptr) != 1 ||
+      sessionIdContextLength > SSL_MAX_SID_CTX_LENGTH ||
+      SSL_CTX_set_session_id_context(ctx, sessionIdContext, sessionIdContextLength) != 1)
+   {
+      WarningLog(<< "Failed to set the TLS session id context for domain " << domain
+                 << ", clients verified with a certificate can't resume sessions");
+   }
+
    return ctx;
 }
 
