@@ -113,6 +113,8 @@ class ClientRegistration: public NonDialogUsage
       std::shared_ptr<SipMessage> mLastRequest;
       NameAddrs mMyContacts; // Contacts that this UA is requesting 
       NameAddrs mAllContacts; // All the contacts Registrar knows about 
+      NameAddrs mLastMyContacts;
+      NameAddrs mLastAllContacts;
       unsigned int mTimerSeq; // expected timer seq (all < are stale)
 
       State mState;
