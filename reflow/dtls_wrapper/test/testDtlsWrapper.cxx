@@ -307,6 +307,74 @@ main(int, char**)
                pair.completed() && srtpRoundTrip(*pair.mClient, *pair.mServer, tagLength) == libsrtpHasGcm);
       }
 
+      // G. Cookie exchange (RFC 6347 section 4.2.1): a DtlsListener only creates a server socket
+      //    for a peer whose ClientHello returns the cookie it was given, keeping nothing until then
+      {
+         std::unique_ptr<DtlsListener> listener = serverFactory.createListener();
+         PipeContext* serverContext = nullptr;
+         auto makeContext = [&serverContext]()
+         {
+            std::unique_ptr<PipeContext> context(new PipeContext);
+            serverContext = context.get();
+            return std::unique_ptr<DtlsSocketContext>(std::move(context));
+         };
+
+         std::unique_ptr<PipeContext> clientContextOwner(new PipeContext);
+         PipeContext* clientContext = clientContextOwner.get();
+         std::unique_ptr<DtlsSocket> client(clientFactory.createClient(std::move(clientContextOwner)));
+         client->startClient();
+         check("cookie: the client sent a ClientHello", clientContext->mOut.size() == 1);
+         Datagram firstHello = clientContext->mOut.front();
+         clientContext->mOut.pop_front();
+
+         std::vector<unsigned char> response;
+         std::unique_ptr<DtlsSocket> server(listener->handlePacket(firstHello.data(), firstHello.size(), "192.0.2.1:5004", response, makeContext));
+         check("cookie: a ClientHello without a cookie doesn't create a socket", !server);
+         check("cookie: it is answered with a HelloVerifyRequest smaller than the ClientHello",
+               !response.empty() && response.size() < firstHello.size());
+
+         client->handlePacketMaybe(response.data(), response.size());
+         check("cookie: the client sends its ClientHello again, with the cookie", clientContext->mOut.size() == 1);
+         Datagram cookieHello = clientContext->mOut.front();
+         clientContext->mOut.pop_front();
+
+         // The same ClientHello from another address doesn't have a valid cookie for it
+         std::vector<unsigned char> otherResponse;
+         std::unique_ptr<DtlsSocket> spoofed(listener->handlePacket(cookieHello.data(), cookieHello.size(), "198.51.100.7:5004", otherResponse, makeContext));
+         check("cookie: a cookie isn't accepted from another address", !spoofed);
+
+         const unsigned char junk[] = { 22, 0xfe, 0xfd, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1, 2, 3 };
+         std::unique_ptr<DtlsSocket> fromJunk(listener->handlePacket(junk, sizeof(junk), "192.0.2.1:5004", otherResponse, makeContext));
+         check("cookie: a malformed packet doesn't create a socket", !fromJunk);
+
+         server.reset(listener->handlePacket(cookieHello.data(), cookieHello.size(), "192.0.2.1:5004", response, makeContext));
+         check("cookie: the ClientHello with the cookie creates the server socket", server != nullptr && serverContext != nullptr);
+         if (server && serverContext)
+         {
+            check("cookie: the server socket answers it straight away", !serverContext->mOut.empty() && response.empty());
+            for (int i = 0; i < 50 && (!clientContext->mOut.empty() || !serverContext->mOut.empty()); i++)
+            {
+               while (!serverContext->mOut.empty())
+               {
+                  Datagram d = serverContext->mOut.front();
+                  serverContext->mOut.pop_front();
+                  client->handlePacketMaybe(d.data(), d.size());
+               }
+               while (!clientContext->mOut.empty())
+               {
+                  Datagram d = clientContext->mOut.front();
+                  clientContext->mOut.pop_front();
+                  server->handlePacketMaybe(d.data(), d.size());
+               }
+            }
+            check("cookie: the handshake completes", clientContext->mCompleted && serverContext->mCompleted &&
+                  !clientContext->mFailed && !serverContext->mFailed);
+            check("cookie: the server sees the client's certificate", server->checkFingerprint("sha-256", clientFingerprint));
+            int tagLength = -1;
+            check("cookie: SRTP works", srtpRoundTrip(*client, *server, tagLength));
+         }
+      }
+
       // B. An error an earlier OpenSSL call left on this thread's queue (here a failed
       //    certificate parse) must not be taken as this handshake's error.  OpenSSL's
       //    handshake state machine currently clears the queue itself; DtlsSocket clears it

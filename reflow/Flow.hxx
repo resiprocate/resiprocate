@@ -166,7 +166,15 @@ private:
    std::map<reTurn::StunTuple, dtls::DtlsSocket*> mDtlsSockets;
    dtls::DtlsSocket* getDtlsSocket(const reTurn::StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketClient(const StunTuple& endpoint);
-   dtls::DtlsSocket* createDtlsSocketServer(const StunTuple& endpoint);
+#ifdef USE_SSL
+   // Handles a DTLS packet from an endpoint without a DtlsSocket: through mDtlsListener's cookie
+   // exchange, so a server DtlsSocket is only created once the endpoint proves it receives at its
+   // address, and only up to MaxDtlsSockets.  Returns the new socket, if one was created.
+   dtls::DtlsSocket* acceptDtlsSocketServer(const StunTuple& endpoint, const unsigned char* data, size_t len);
+   static const size_t MaxDtlsSockets = 8;
+   std::unique_ptr<dtls::DtlsListener> mDtlsListener;
+   bool mDtlsSocketLimitLogged = false;
+#endif
 
    volatile FlowState mFlowState;
    void changeFlowState(FlowState newState);

@@ -19,6 +19,8 @@
 #include "FlowDtlsSocketContext.hxx"
 
 #include <memory>
+#include <sstream>
+#include <vector>
 
 using namespace flowmanager;
 using namespace resip;
@@ -833,14 +835,14 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
 
       StunTuple endpoint(mLocalBinding.getTransportType(), address, port);
       DtlsSocket* dtlsSocket = getDtlsSocket(endpoint);
-      if(!dtlsSocket)
+      if(dtlsSocket)
+      {
+         dtlsSocket->handlePacketMaybe((const unsigned char*) data->data(), data->size());
+      }
+      else
       {
          // If don't have a socket already for this endpoint and we are receiving data, then assume we are the server side of the DTLS connection
-         dtlsSocket = createDtlsSocketServer(endpoint);
-      }
-      if(dtlsSocket)
-      { 
-         dtlsSocket->handlePacketMaybe((const unsigned char*) data->data(), data->size());
+         acceptDtlsSocketServer(endpoint, (const unsigned char*) data->data(), data->size());
       }
 
       // Packet was a DTLS packet - do not queue for app
@@ -945,18 +947,72 @@ Flow::createDtlsSocketClient(const StunTuple& endpoint)
    return dtlsSocket;
 }
 
-DtlsSocket* 
-Flow::createDtlsSocketServer(const StunTuple& endpoint)
+DtlsSocket*
+Flow::acceptDtlsSocketServer(const StunTuple& endpoint, const unsigned char* data, size_t len)
 {
-   DtlsSocket* dtlsSocket = getDtlsSocket(endpoint);
-   if(!dtlsSocket && mMediaStream.mDtlsFactory)
+   if(!mMediaStream.mDtlsFactory)
    {
-      InfoLog(LOG_PREFIX << "Creating DTLS Server socket");
-      std::unique_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
-      dtlsSocket = mMediaStream.mDtlsFactory->createServer(std::move(socketContext));
-      mDtlsSockets[endpoint] = dtlsSocket;
+      return 0;
    }
 
+   if(mDtlsSockets.size() >= MaxDtlsSockets)
+   {
+      // Make room by dropping the sockets that will never carry media: those whose handshake
+      // failed, and those whose handshake completed but have no SRTP although the remote SDP
+      // fingerprint is known - their certificate didn't match it (eg. forks that lost, or a
+      // peer that was rejected), or SRTP couldn't be set up.  The socket carrying SRTP, and ones
+      // still handshaking or waiting for the SDP fingerprint, are kept.
+      for(std::map<reTurn::StunTuple, dtls::DtlsSocket*>::iterator it = mDtlsSockets.begin(); it != mDtlsSockets.end();)
+      {
+         dtls::DtlsSocket* socket = it->second;
+         const bool rejected = socket->handshakeCompleted() && !mRemoteSDPFingerprint.empty() &&
+                               !((FlowDtlsSocketContext*)socket->getSocketContext())->isSrtpInitialized();
+         if(socket->handshakeFailed() || rejected)
+         {
+            DebugLog(LOG_PREFIX << "Dropping DTLS socket for " << it->first << " (" << (rejected ? "no SRTP" : "handshake failed") << ") to make room");
+            delete it->second;
+            it = mDtlsSockets.erase(it);
+         }
+         else
+         {
+            ++it;
+         }
+      }
+      if(mDtlsSockets.size() >= MaxDtlsSockets)
+      {
+         if(!mDtlsSocketLimitLogged)
+         {
+            WarningLog(LOG_PREFIX << "Already " << mDtlsSockets.size() << " DTLS sockets, ignoring DTLS from new endpoints, eg. " << endpoint);
+            mDtlsSocketLimitLogged = true;
+         }
+         return 0;
+      }
+   }
+
+   if(!mDtlsListener)
+   {
+      mDtlsListener = mMediaStream.mDtlsFactory->createListener();
+   }
+
+   // The cookie is bound to the endpoint's address and port
+   std::ostringstream peer;
+   peer << endpoint.getAddress().to_string() << ":" << endpoint.getPort();
+
+   std::vector<unsigned char> response;
+   DtlsSocket* dtlsSocket = mDtlsListener->handlePacket(data, len, peer.str(), response, [this, &endpoint]()
+   {
+      return std::unique_ptr<DtlsSocketContext>(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
+   });
+   if(!response.empty())
+   {
+      // A HelloVerifyRequest, carrying the cookie
+      rawSendTo(endpoint.getAddress(), endpoint.getPort(), (const char*)response.data(), (unsigned int)response.size());
+   }
+   if(dtlsSocket)
+   {
+      InfoLog(LOG_PREFIX << "Created DTLS Server socket for " << endpoint);
+      mDtlsSockets[endpoint] = dtlsSocket;
+   }
    return dtlsSocket;
 }
 

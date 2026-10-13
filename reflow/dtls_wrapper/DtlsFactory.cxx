@@ -9,6 +9,8 @@
 #include <rutil/ssl/OpenSSLInit.hxx>
 
 #include <openssl/e_os2.h>
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
@@ -17,6 +19,7 @@
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
 
+#include <string>
 #include <utility>
 
 using namespace dtls;
@@ -40,6 +43,13 @@ DtlsFactory::DtlsFactory(std::unique_ptr<DtlsTimerContext> tc,X509 *cert, EVP_PK
    // Set SRTP profiles
    r=SSL_CTX_set_tlsext_use_srtp(mContext, DefaultSrtpProfile);
    resip_assert(r==0);
+
+   // DTLS cookies, for DtlsListener
+   r=RAND_bytes(mCookieSecret, sizeof(mCookieSecret));
+   resip_assert(r==1);
+   SSL_CTX_set_app_data(mContext, this);
+   SSL_CTX_set_cookie_generate_cb(mContext, generateCookie);
+   SSL_CTX_set_cookie_verify_cb(mContext, verifyCookie);
 }
 
 DtlsFactory::~DtlsFactory()
@@ -57,7 +67,49 @@ DtlsFactory::createClient(std::unique_ptr<DtlsSocketContext> context)
 DtlsSocket*
 DtlsFactory::createServer(std::unique_ptr<DtlsSocketContext> context)
 {
-   return new DtlsSocket(std::move(context), this, DtlsSocket::Server);  
+   return new DtlsSocket(std::move(context), this, DtlsSocket::Server);
+}
+
+std::unique_ptr<DtlsListener>
+DtlsFactory::createListener()
+{
+   return std::unique_ptr<DtlsListener>(new DtlsListener(this));
+}
+
+int
+DtlsFactory::cookiePeerIndex()
+{
+   static const int index = SSL_get_ex_new_index(0, (void*)"dtls cookie peer", nullptr, nullptr, nullptr);
+   return index;
+}
+
+bool
+DtlsFactory::computeCookie(SSL* ssl, unsigned char* cookie, unsigned int* cookieLen)
+{
+   DtlsFactory* factory = static_cast<DtlsFactory*>(SSL_CTX_get_app_data(SSL_get_SSL_CTX(ssl)));
+   const std::string* peer = static_cast<const std::string*>(SSL_get_ex_data(ssl, cookiePeerIndex()));
+   if(!factory || !peer || peer->empty())
+   {
+      return false;
+   }
+   return HMAC(EVP_sha256(), factory->mCookieSecret, sizeof(factory->mCookieSecret),
+               (const unsigned char*)peer->data(), peer->size(), cookie, cookieLen) != nullptr;
+}
+
+int
+DtlsFactory::generateCookie(SSL* ssl, unsigned char* cookie, unsigned int* cookieLen)
+{
+   // cookie has room for DTLS1_COOKIE_LENGTH (255) bytes, the HMAC takes 32
+   return computeCookie(ssl, cookie, cookieLen) ? 1 : 0;
+}
+
+int
+DtlsFactory::verifyCookie(SSL* ssl, const unsigned char* cookie, unsigned int cookieLen)
+{
+   unsigned char expected[EVP_MAX_MD_SIZE];
+   unsigned int expectedLen = 0;
+   return computeCookie(ssl, expected, &expectedLen) &&
+          cookieLen == expectedLen && CRYPTO_memcmp(cookie, expected, expectedLen) == 0 ? 1 : 0;
 }
 
 void
@@ -105,7 +157,8 @@ DtlsFactory::demuxPacket(const unsigned char *data, size_t len)
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

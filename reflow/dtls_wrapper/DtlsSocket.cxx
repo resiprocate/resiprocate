@@ -44,35 +44,63 @@ DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFac
    mSocketContext(std::move(socketContext)),
    mFactory(factory),
    mReadTimer(0),
-   mSocketType(type), 
-   mHandshakeCompleted(false)
-{  
+   mSsl(newSsl(factory, type)),
+   mInBio(SSL_get_rbio(mSsl)),
+   mOutBio(SSL_get_wbio(mSsl)),
+   mSocketType(type),
+   mHandshakeCompleted(false),
+   mHandshakeFailed(false)
+{
+   mSocketContext->setDtlsSocket(this);
+}
+
+DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, SSL* acceptedSsl, const std::string& peer):
+   mSocketContext(std::move(socketContext)),
+   mFactory(factory),
+   mReadTimer(0),
+   mSsl(acceptedSsl),
+   mInBio(SSL_get_rbio(acceptedSsl)),
+   mOutBio(SSL_get_wbio(acceptedSsl)),
+   mSocketType(Server),
+   mHandshakeCompleted(false),
+   mHandshakeFailed(false),
+   mCookiePeer(peer)
+{
    mSocketContext->setDtlsSocket(this);
 
+   // DTLSv1_listen left the SSL doing cookie exchange, so the cookie callbacks may still be
+   // asked to check one (eg. for a retransmitted ClientHello)
+   SSL_set_ex_data(mSsl, DtlsFactory::cookiePeerIndex(), &mCookiePeer);
+}
+
+SSL*
+DtlsSocket::newSsl(DtlsFactory* factory, SocketType type)
+{
    resip_assert(factory->mContext);
-   mSsl=SSL_new(factory->mContext);
-   resip_assert(mSsl!=0);
+   SSL* ssl=SSL_new(factory->mContext);
+   resip_assert(ssl!=0);
 
    switch(type)
    {
    case Client:
-      SSL_set_connect_state(mSsl);
+      SSL_set_connect_state(ssl);
       break;
    case Server:
-      SSL_set_accept_state(mSsl);
-      SSL_set_verify(mSsl,SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, dummy_cb);
+      SSL_set_accept_state(ssl);
+      SSL_set_verify(ssl,SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, dummy_cb);
       break;
    default:
       resip_assert(0);
    }
 
-   mInBio=BIO_new(BIO_f_dwrap());
-   BIO_push(mInBio,BIO_new(BIO_s_mem()));
+   BIO* inBio=BIO_new(BIO_f_dwrap());
+   BIO_push(inBio,BIO_new(BIO_s_mem()));
 
-   mOutBio=BIO_new(BIO_f_dwrap());
-   BIO_push(mOutBio,BIO_new(BIO_s_mem()));
+   BIO* outBio=BIO_new(BIO_f_dwrap());
+   BIO_push(outBio,BIO_new(BIO_s_mem()));
 
-   SSL_set_bio(mSsl,mInBio,mOutBio);
+   SSL_set_bio(ssl,inBio,outBio);
+   return ssl;
 }
 
 DtlsSocket::~DtlsSocket()
@@ -186,6 +214,7 @@ DtlsSocket::doHandshakeIteration()
    default:
       cerr << "SSL error " << sslerr << endl;
 
+      mHandshakeFailed = true;
       mSocketContext->handshakeFailed(errbuf);
       // Don't leave this failure's errors on the queue: the next OpenSSL call on this thread
       // that checks SSL_get_error() without clearing it first would take them as its own
@@ -447,6 +476,77 @@ int
 DtlsSocket::getReadTimeout()
 {
    return 500;
+}
+
+DtlsListener::DtlsListener(DtlsFactory* factory) :
+   mFactory(factory),
+   mSsl(0)
+{
+}
+
+DtlsListener::~DtlsListener()
+{
+   if(mSsl) SSL_free(mSsl);
+}
+
+DtlsSocket*
+DtlsListener::handlePacket(const unsigned char* bytes, size_t len, const std::string& peer,
+                           std::vector<unsigned char>& response,
+                           const std::function<std::unique_ptr<DtlsSocketContext>()>& makeContext)
+{
+   response.clear();
+   if(len == 0 || DtlsFactory::demuxPacket(bytes, len) != DtlsFactory::dtls)
+   {
+      return 0;
+   }
+
+   if(!mSsl)
+   {
+      mSsl = DtlsSocket::newSsl(mFactory, DtlsSocket::Server);
+      SSL_set_ex_data(mSsl, DtlsFactory::cookiePeerIndex(), &mPeer);
+   }
+   mPeer = peer;
+
+   BIO* inBio = SSL_get_rbio(mSsl);
+   BIO* outBio = SSL_get_wbio(mSsl);
+   BIO_reset(inBio);
+   BIO_reset(outBio);
+   int r = BIO_write(inBio, bytes, (int)len);
+   resip_assert(r == (int)len);  // Can't happen
+
+   // Answers a ClientHello without a valid cookie for peer with a HelloVerifyRequest, keeping
+   // nothing: returns 1 only for a ClientHello with a valid cookie
+   ERR_clear_error();
+   BIO_ADDR* address = BIO_ADDR_new();
+   r = DTLSv1_listen(mSsl, address);
+   BIO_ADDR_free(address);
+
+   unsigned char* out = 0;
+   long outLen = BIO_get_mem_data(outBio, &out);
+   if(outLen > 0)
+   {
+      response.assign(out, out + outLen);
+   }
+
+   if(r <= 0)
+   {
+      // Not a ClientHello with a valid cookie (r is 0), or one OpenSSL couldn't handle (r < 0,
+      // so start again with a fresh SSL).  Don't leave its errors for the next caller on this thread.
+      ERR_clear_error();
+      if(r < 0)
+      {
+         SSL_free(mSsl);
+         mSsl = 0;
+      }
+      return 0;
+   }
+
+   // The peer has proved it receives at its address: the SSL, holding its ClientHello, becomes
+   // the new server socket's, which carries on the handshake
+   DtlsSocket* socket = new DtlsSocket(makeContext(), mFactory, mSsl, peer);
+   mSsl = 0;
+   socket->doHandshakeIteration();
+   return socket;
 }
 
 #endif 

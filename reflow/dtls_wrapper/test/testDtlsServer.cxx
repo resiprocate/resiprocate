@@ -1,7 +1,10 @@
 #include <ctype.h>
 #include <iostream>
+#include <sstream>
+#include <vector>
 
 #include <rutil/Data.hxx>
+#include <rutil/DnsUtil.hxx>
 #include <rutil/Socket.hxx>
 #include <openssl/ssl.h>
 #include <openssl/srtp.h>
@@ -53,6 +56,8 @@ int main(int argc,char **argv)
    std::cout << "Entering wait loop\n";
    TestDtlsUdpSocketContext *sockContext=0;
    std::unique_ptr<DtlsSocket> dtlsSocket;
+   // As reflow's Flow: the server socket is only created once the client completes the cookie exchange
+   std::unique_ptr<DtlsListener> listener = serverFactory->createListener();
 
    while(1)
    {
@@ -75,16 +80,30 @@ int main(int argc,char **argv)
             r=recvfrom(fd, (char*)buffer, sizeof(buffer), 0, (sockaddr *)&src,&srclen);
             assert(r>=0);
 
-            // The first packet initiates the association
-            if(!sockContext)
+            // The first ClientHello with a valid cookie initiates the association
+            if(!dtlsSocket)
             {
-               sockContext=new TestDtlsUdpSocketContext(fd,&src);
-
-               std::cout << "Made the socket context\n";
-
-               dtlsSocket.reset(serverFactory->createServer(std::unique_ptr<DtlsSocketContext>(sockContext)));
-
-               std::cout << "Made the DTLS socket\n";
+               if(DtlsFactory::demuxPacket(buffer,r)==DtlsFactory::dtls)
+               {
+                  std::ostringstream peer;
+                  peer << DnsUtil::inet_ntop(src.sin_addr) << ":" << ntohs(src.sin_port);
+                  std::vector<unsigned char> response;
+                  dtlsSocket.reset(listener->handlePacket(buffer, r, peer.str(), response, [&]()
+                  {
+                     sockContext=new TestDtlsUdpSocketContext(fd,&src);
+                     return std::unique_ptr<DtlsSocketContext>(sockContext);
+                  }));
+                  if(!response.empty())
+                  {
+                     std::cout << "Sent a HelloVerifyRequest\n";
+                     sendto(fd, (const char*)response.data(), (int)response.size(), 0, (const sockaddr*)&src, sizeof(src));
+                  }
+                  if(dtlsSocket)
+                  {
+                     std::cout << "Made the DTLS socket, after the cookie exchange\n";
+                  }
+               }
+               continue;
             }
 
             switch(DtlsFactory::demuxPacket(buffer,r))

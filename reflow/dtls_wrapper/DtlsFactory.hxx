@@ -12,10 +12,12 @@
 
 typedef struct x509_st X509;
 typedef struct ssl_ctx_st SSL_CTX;
+typedef struct ssl_st SSL;
 typedef struct evp_pkey_st EVP_PKEY;
 
 namespace dtls
 {
+class DtlsListener;
 class DtlsSocket;
 class DtlsSocketContext;
 class DtlsTimerContext;
@@ -39,6 +41,10 @@ class DtlsFactory
      // Creates a new DtlsSocket to be used as a server
      DtlsSocket* createServer(std::unique_ptr<DtlsSocketContext> context);
 
+     // Creates a DtlsListener, to create server DtlsSockets only for peers that complete a
+     // cookie exchange (see DtlsListener)
+     std::unique_ptr<DtlsListener> createListener();
+
      // Returns the fingerprint of the user cert that was passed into the constructor
      void getMyCertFingerprint(char *fingerprint);
 
@@ -59,9 +65,20 @@ class DtlsFactory
      
 private:
      friend class DtlsSocket;
+     friend class DtlsListener;
+
+     // DTLS cookies (RFC 6347 section 4.2.1): an HMAC of the peer's address under a random secret
+     static int generateCookie(SSL* ssl, unsigned char* cookie, unsigned int* cookieLen);
+     static int verifyCookie(SSL* ssl, const unsigned char* cookie, unsigned int cookieLen);
+     static bool computeCookie(SSL* ssl, unsigned char* cookie, unsigned int* cookieLen);
+
+     // The SSL ex_data index of the peer (const std::string*) a cookie is for
+     static int cookiePeerIndex();
+
      SSL_CTX* mContext;
      std::unique_ptr<DtlsTimerContext> mTimerContext;
      X509 *mCert;
+     unsigned char mCookieSecret[32];
 };
 
 }
@@ -70,7 +87,8 @@ private:
 #endif 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

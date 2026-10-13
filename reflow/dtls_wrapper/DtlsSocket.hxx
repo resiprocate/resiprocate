@@ -7,7 +7,9 @@
 #ifndef DtlsSocket_hxx
 #define DtlsSocket_hxx
 
+#include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 extern "C" 
 {
@@ -119,16 +121,26 @@ class DtlsSocket
       // returns true if the DTLS handshake has completed
       bool handshakeCompleted() { return mHandshakeCompleted; }
 
+      // returns true if the DTLS handshake has failed
+      bool handshakeFailed() const { return mHandshakeFailed; }
+
       DtlsSocketContext* getSocketContext() { return mSocketContext.get(); }
 
    private:
       friend class DtlsFactory;
+      friend class DtlsListener;
 
       // Causes an immediate handshake iteration to happen, which will retransmit the handshake
-      void forceRetransmit();     
+      void forceRetransmit();
 
       // Creates an SSL socket, and if client sets state to connect_state and if server sets state to accept_state.  Sets SSL BIO's.
       DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType);
+
+      // A server socket continuing the handshake DtlsListener started on acceptedSsl, with peer
+      DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, SSL* acceptedSsl, const std::string& peer);
+
+      // Creates the SSL object for a socket of the given type, with its BIOs
+      static SSL* newSsl(DtlsFactory* factory, SocketType type);
 
       // Give CPU cyces to the handshake process - checks current state and acts appropraitely
       void doHandshakeIteration();
@@ -148,6 +160,36 @@ class DtlsSocket
       
       SocketType mSocketType;
       bool mHandshakeCompleted;
+      bool mHandshakeFailed;
+      std::string mCookiePeer;  // the peer of a socket created by DtlsListener, for the cookie callbacks
+};
+
+// Stands in front of the server DtlsSockets for one local address, doing the cookie exchange of
+// RFC 6347 section 4.2.1: a ClientHello from a new peer is answered with a HelloVerifyRequest and
+// nothing is kept for the peer; only a ClientHello that returns a valid cookie - which proves the
+// peer receives at its address - gets a server DtlsSocket.  So packets from spoofed addresses
+// can't make us keep state, or answer them with a full handshake flight (amplification).
+class DtlsListener
+{
+   public:
+      ~DtlsListener();
+
+      // Handles a DTLS packet from peer (anything that identifies its address and port, eg.
+      // "192.0.2.1:5004"), which has no DtlsSocket yet.  Returns a new server DtlsSocket, with the
+      // context makeContext() returns, once peer's ClientHello carries a valid cookie - the socket
+      // has already handled that ClientHello.  Otherwise returns null, with response holding what
+      // to send back to peer (a HelloVerifyRequest), if anything.
+      DtlsSocket* handlePacket(const unsigned char* bytes, size_t len, const std::string& peer,
+                               std::vector<unsigned char>& response,
+                               const std::function<std::unique_ptr<DtlsSocketContext>()>& makeContext);
+
+   private:
+      friend class DtlsFactory;
+      explicit DtlsListener(DtlsFactory* factory);
+
+      DtlsFactory* mFactory;
+      SSL* mSsl;          // the SSL DTLSv1_listen runs on, handed to the socket it creates
+      std::string mPeer;  // the peer of the packet being handled, for the cookie callbacks
 };
 
 }
