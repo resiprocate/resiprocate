@@ -12,7 +12,6 @@ set(INCLUDES
    MediaStream.hxx
    RTCPEventLoggingHandler.hxx
    Srtp2Helper.hxx
-   dtls_wrapper/bf_dwrap.hxx
    dtls_wrapper/DtlsFactory.hxx
    dtls_wrapper/DtlsSocket.hxx
    dtls_wrapper/DtlsTimer.hxx
@@ -30,7 +29,6 @@ add_library(reflow
    dtls_wrapper/DtlsTimer.cxx
    dtls_wrapper/DtlsSocket.cxx
    dtls_wrapper/DtlsFactory.cxx
-   dtls_wrapper/bf_dwrap.cxx
 
    ${INCLUDES}
 )

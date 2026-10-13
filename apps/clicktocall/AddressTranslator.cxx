@@ -49,7 +49,7 @@ AddressTranslator::addTranslation(const resip::Data& matchingPattern,
       // of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
       // std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
       // use the EMCAScript syntax.
-      const std::regex_constants::syntax_option_type flags = std::regex_constants::ECMAScript;
+      std::regex_constants::syntax_option_type flags = std::regex_constants::ECMAScript;
       if( filter.mRewriteExpression.find("$") == Data::npos )
       {
          flags |= std::regex_constants::nosubs;
@@ -180,7 +180,7 @@ AddressTranslator::translate(const resip::Data& address, resip::Data& translatio
 
 /* ====================================================================
 
- Copyright (c) 2009, SIP Spectrum, Inc.
+ Copyright (c) 2009-2026, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

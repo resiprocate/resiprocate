@@ -27,8 +27,7 @@ main (int argc, char** argv)
 #endif
 
    int sd, rc;
-   struct sockaddr_in localAddr, servAddr;
-   struct hostent *h;
+   struct sockaddr_in localAddr = {}, servAddr = {};
 
    if(argc != 6) 
    {
@@ -36,19 +35,23 @@ main (int argc, char** argv)
       exit(1);
    }
 
-   h = gethostbyname(argv[1]);
-   if(h==0) 
+   // getaddrinfo replaces deprecated gethostbyname
+   struct addrinfo hints = {};
+   struct addrinfo* res = nullptr;
+   hints.ai_family = AF_INET;
+   hints.ai_socktype = SOCK_STREAM;
+   if(getaddrinfo(argv[1], nullptr, &hints, &res) != 0 || res == nullptr)
    {
       ErrLog(<< "unknown host " << argv[1]);
       exit(1);
    }
 
-   servAddr.sin_family = h->h_addrtype;
-   memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
+   memcpy(&servAddr, res->ai_addr, res->ai_addrlen);
    servAddr.sin_port = htons(atoi(argv[2]));
+   freeaddrinfo(res);
 
    // Create TCP Socket
-   sd = socket(AF_INET, SOCK_STREAM, 0);
+   sd = (int)socket(AF_INET, SOCK_STREAM, 0);
    if(sd < 0) 
    {
       ErrLog(<< "cannot open socket");
@@ -83,11 +86,11 @@ main (int argc, char** argv)
       "    <AnchorCall>" + Data(argv[5][0] == '0' ? "false" : "true") + "</AnchorCall>\r\n"
       "  </Request>\r\n"
       "</ClickToCall>\r\n");   
-   rc = send(sd, request.c_str(), request.size(), 0);
+   rc = send(sd, request.c_str(), (int)request.size(), 0);
    if(rc < 0) 
    {
       ErrLog(<< "error sending");
-      close(sd);
+      closeSocket(sd);
       exit(1);
    }
 
@@ -98,7 +101,7 @@ main (int argc, char** argv)
       if(rc < 0) 
       {
          ErrLog(<< "error receiving");
-         close(sd);
+         closeSocket(sd);
          exit(1);
       }
 
@@ -156,7 +159,7 @@ main (int argc, char** argv)
 
 /* ====================================================================
 
- Copyright (c) 2009, SIP Spectrum, Inc.
+ Copyright (c) 2009-2026, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

@@ -16,7 +16,6 @@
 
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
-#include "bf_dwrap.hxx"
 
 #include <utility>
 
@@ -98,13 +97,9 @@ DtlsSocket::newSsl(DtlsFactory* factory, SocketType type)
       resip_assert(0);
    }
 
-   BIO* inBio=BIO_new(BIO_f_dwrap());
-   BIO_push(inBio,BIO_new(BIO_s_mem()));
-
-   BIO* outBio=BIO_new(BIO_f_dwrap());
-   BIO_push(outBio,BIO_new(BIO_s_mem()));
-
-   SSL_set_bio(ssl,inBio,outBio);
+   // Datagrams are passed in and out through memory BIOs: an empty one reads as -1 with the
+   // retry flag set, so OpenSSL wants more input rather than seeing the end of the stream
+   SSL_set_bio(ssl, BIO_new(BIO_s_mem()), BIO_new(BIO_s_mem()));
    return ssl;
 }
 

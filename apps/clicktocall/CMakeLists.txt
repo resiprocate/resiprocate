@@ -37,6 +37,9 @@ add_executable(clicktocall
 target_include_directories(clicktocall PRIVATE ${PCRE_INCLUDE_DIRS})
 target_link_libraries(clicktocall PUBLIC dum ${PCRE_LIBRARIES})
 
+# clicktocallxml: a command line client that asks clicktocall to make a call over XML-RPC
+add_subdirectory(test)
+
 install(TARGETS clicktocall DESTINATION ${CMAKE_INSTALL_SBINDIR})
 
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/clicktocall ${INCLUDES})
