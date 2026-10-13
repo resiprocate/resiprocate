@@ -44,7 +44,6 @@
 
 #include <sys/types.h>
 #include <openssl/opensslv.h>
-#include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
@@ -798,17 +797,6 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
    PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? 
                                  mDomainPrivateKeys : mUserPrivateKeys);
 
-   /*
-   // make a copy of the the key 
-   resip_assert( EVP_PKEY_type(pKey->type) == EVP_PKEY_RSA );
-   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
-   resip_assert( rsa );
-   EVP_PKEY* nKey = EVP_PKEY_new();
-   resip_assert( nKey );
-   EVP_PKEY_set1_RSA(nKey, rsa);
-   */
-   
-   //privateKeys.insert(std::make_pair(name, nKey));
    privateKeys.insert(std::make_pair(name, pKey));
       
    if (write)
@@ -1541,37 +1529,25 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    // Make sure that necessary algorithms exist:
    resip_assert(EVP_sha256());
 
-   RSA* rsa = NULL;
+   // An RSA key (the default public exponent is 65537)
+   EVP_PKEY* privkey = NULL;
+   EVP_PKEY_CTX* keyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+   bool generated = keyCtx &&
+                    EVP_PKEY_keygen_init(keyCtx) == 1 &&
+                    EVP_PKEY_CTX_set_rsa_keygen_bits(keyCtx, keyLen) == 1 &&
+                    EVP_PKEY_keygen(keyCtx, &privkey) == 1;
+   EVP_PKEY_CTX_free(keyCtx);
+   if (!generated)
    {
-      BIGNUM *e = BN_new();
-      RSA *r = NULL;
-      if(!e) goto done;
-      if(! BN_set_word(e, RSA_F4)) goto done;
-      r = RSA_new();
-      if(!r) goto done;
-      if (RSA_generate_key_ex(r, keyLen, e, NULL) == -1)
-         goto done;
-
-      rsa = r;
-      r = NULL;
-   done:
-      if (e)
-         BN_free(e);
-      if (r)
-         RSA_free(r);
-    }
-   resip_assert(rsa);    // couldn't make key pair
-   
-   EVP_PKEY* privkey = EVP_PKEY_new();
-   resip_assert(privkey);
-   ret = EVP_PKEY_set1_RSA(privkey, rsa);
-   resip_assert(ret);
+      ErrLog( <<"Unable to generate a " << keyLen << " bit RSA key for " << aor );
+      throw Exception("Unable to generate a key pair in generateUserCert", __FILE__,__LINE__);
+   }
 
    X509* cert = X509_new();
    resip_assert(cert);
    
    X509_NAME* subject = X509_NAME_new();
-   X509_EXTENSION* ext = X509_EXTENSION_new();
+   X509_EXTENSION* ext;
    
    // set version to X509v3 (starts from 0)
    X509_set_version(cert, 2L);
@@ -1595,6 +1571,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    resip_assert(ret);
    ret = X509_set_subject_name(cert, subject);
    resip_assert(ret);
+   X509_NAME_free(subject);  // the certificate holds copies
    
    const long duration = 60*60*24*expireDays;   
    X509_gmtime_adj(X509_getm_notBefore(cert),0);
@@ -1866,20 +1843,12 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    EVP_PKEY* pKey = k->second;
    resip_assert( pKey );
 
-   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
-
-   if ( !rsa )
+   if ( EVP_PKEY_base_id(pKey) != EVP_PKEY_RSA )
    {
       ErrLog( << "Private key (type=" << EVP_PKEY_id(pKey) << ") for "
               << signerDomain << " is not of type RSA" );
       throw Exception("No RSA private key when computing identity",__FILE__,__LINE__);
    }
-
-   resip_assert( rsa );
-
-   unsigned char result[4096];
-   unsigned int resultSize = sizeof(result);
-   resip_assert( static_cast<int>(resultSize) >= RSA_size(rsa) );
 
    unsigned char digest[EVP_MAX_MD_SIZE];
    unsigned int digestSize = sizeof(digest);
@@ -1891,10 +1860,19 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    }
    DebugLog( << "hash of string is 0x" << Data(digest, digestSize).hex() );
 
-   int r = RSA_sign(EVP_MD_nid(digestType), digest, digestSize, result, &resultSize, rsa);
-   if( r != 1 )
+   // RSASSA-PKCS1-v1_5 signature of the SHA-256 digest
+   unsigned char result[4096];
+   size_t resultSize = sizeof(result);
+   EVP_PKEY_CTX* signCtx = EVP_PKEY_CTX_new(pKey, NULL);
+   bool signedOk = signCtx &&
+                   EVP_PKEY_sign_init(signCtx) == 1 &&
+                   EVP_PKEY_CTX_set_rsa_padding(signCtx, RSA_PKCS1_PADDING) == 1 &&
+                   EVP_PKEY_CTX_set_signature_md(signCtx, digestType) == 1 &&
+                   EVP_PKEY_sign(signCtx, result, &resultSize, digest, digestSize) == 1;
+   EVP_PKEY_CTX_free(signCtx);
+   if( !signedOk )
    {
-      ErrLog(<< "RSA_sign failed with return " << r);
+      ErrLog(<< "Signing the identity digest failed");
       resip_assert(0);
       return Data::Empty;
    }
@@ -1950,15 +1928,23 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    }
    DebugLog( << "hash of string is 0x" << Data(digest, digestSize).hex() );
 
-   EVP_PKEY* pKey = X509_get_pubkey( cert );
-   resip_assert( pKey );
+   EVP_PKEY* pKey = X509_get_pubkey( cert );  // a new reference
+   if ( !pKey || EVP_PKEY_base_id(pKey) != EVP_PKEY_RSA )
+   {
+      ErrLog( << "Public key for " << signerDomain << " is not of type RSA" );
+      EVP_PKEY_free(pKey);
+      return false;
+   }
 
-   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
-   resip_assert( rsa );
-
-   int ret = RSA_verify(EVP_MD_nid(digestType), digest,
-                        digestSize, (unsigned char*)sig.data(), (unsigned int)sig.size(),
-                        rsa);
+   // RSASSA-PKCS1-v1_5 signature of the SHA-256 digest
+   EVP_PKEY_CTX* verifyCtx = EVP_PKEY_CTX_new(pKey, NULL);
+   int ret = verifyCtx &&
+             EVP_PKEY_verify_init(verifyCtx) == 1 &&
+             EVP_PKEY_CTX_set_rsa_padding(verifyCtx, RSA_PKCS1_PADDING) == 1 &&
+             EVP_PKEY_CTX_set_signature_md(verifyCtx, digestType) == 1 &&
+             EVP_PKEY_verify(verifyCtx, (const unsigned char*)sig.data(), sig.size(), digest, digestSize) == 1;
+   EVP_PKEY_CTX_free(verifyCtx);
+   EVP_PKEY_free(pKey);
    DebugLog( << "rsa verify result is " << ret  );
 
    static const char IDENTITY_OUT_MSG[] = "identity-out-msg";
@@ -2627,7 +2613,8 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
    int i =-1;
    while( true )
    {
-      i = X509_NAME_get_index_by_NID(subject, NID_commonName,i);
+      // OpenSSL 1.1.1 takes a non-const X509_NAME here, 3.0+ a const one
+      i = X509_NAME_get_index_by_NID(const_cast<X509_NAME*>(subject), NID_commonName,i);
       if ( i == -1 )
       {
          break;

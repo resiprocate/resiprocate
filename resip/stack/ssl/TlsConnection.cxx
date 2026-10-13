@@ -463,6 +463,10 @@ TlsConnection::read(char* buf, int count)
       return -1;
    }
 
+   // SSL_get_error() checks this thread's error queue first, so it must be empty before the
+   // call: an error something else on this thread left there would otherwise turn a
+   // retryable SSL_ERROR_WANT_READ into a fatal SSL_ERROR_SSL
+   ERR_clear_error();
    int bytesRead = SSL_read(mSsl, buf, count);
    //StackLog(<< "SSL_read returned " << bytesRead << " bytes [" << Data(Data::Borrow, buf, (bytesRead > 0)?(bytesRead):(0)) << "]");
 
@@ -637,6 +641,7 @@ TlsConnection::write(const char* buf, int count)
       return 0;
    }
 
+   ERR_clear_error();  // SSL_get_error() needs an empty error queue - see read()
    ret = SSL_write(mSsl, (const char*)buf, count);
    if (ret <= 0)  // 0 is a failure too: SSL_get_error() says whether it can be retried
    {

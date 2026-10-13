@@ -192,6 +192,40 @@ main(int argc, char* argv[])
       assert(mediaLine.getDirection() == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV);
    }
 
+   // Several fingerprints, none SHA-256: SdpHelper takes the strongest SHA-2 one, then SHA-1, and
+   // only MD5 if there is nothing else - not just the first one
+   {
+      struct { const char* fingerprints; sdpcontainer::SdpMediaLine::SdpFingerPrintHashFuncType expected; const char* value; } cases[] = {
+         { "a=fingerprint:MD5 AA:BB\r\n"
+           "a=fingerprint:SHA-1 4A:AD\r\n",
+           sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_1, "4A:AD" },
+         { "a=fingerprint:SHA-1 4A:AD\r\n"
+           "a=fingerprint:SHA-512 51:2A\r\n"
+           "a=fingerprint:SHA-384 38:4A\r\n",
+           sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_384, "38:4A" },
+         { "a=fingerprint:MD5 AA:BB\r\n",
+           sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_MD5, "AA:BB" },
+      };
+      for (const auto& c : cases)
+      {
+         Data txt = Data("v=0\r\n"
+            "o=DTLS 1251901012 1 IN IP4 10.1.83.143\r\n"
+            "s=sess\r\n"
+            "c=IN IP4 10.1.83.143\r\n"
+            "t=0 0\r\n"
+            "m=audio 45894 UDP/TLS/RTP/SAVP 0\r\n") + c.fingerprints;
+         HeaderFieldValue hfv(txt.data(), txt.size());
+         Mime type("application", "sdp");
+         SdpContents stackSdp(hfv, type);
+         std::unique_ptr<sdpcontainer::Sdp> sdp(SdpHelper::createSdpFromResipSdp(stackSdp));
+
+         assert(sdp->getMediaLines().size() == 1);
+         sdpcontainer::SdpMediaLine& mediaLine = *sdp->getMediaLines().front();
+         assert(mediaLine.getFingerPrintHashFunction() == c.expected);
+         assert(mediaLine.getFingerPrint() == c.value);
+      }
+   }
+
    // RFC5939 (Capability Negotiation) Example 4.1
    // Note: The Sdp class doesn't currently support the rtcp-db attribute, so it will ignored
    {

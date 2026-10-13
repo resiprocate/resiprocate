@@ -13,6 +13,8 @@
 
 #ifdef USE_SSL
 
+#include <openssl/err.h>
+
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/ssl/TlsTransport.hxx"
@@ -459,6 +461,107 @@ testRootAddedAfterTransports(X509* caCert, EVP_PKEY* caKey)
    remove(lateClientKeyFile);
 }
 
+static const char* const queueServerCertFile = "testTlsSecurity_queue_server_cert.pem";
+static const char* const queueServerKeyFile = "testTlsSecurity_queue_server_key.pem";
+
+// Leaves an error on this thread's OpenSSL error queue, as code that reads PEM certificates
+// until there are no more does (eg. the STIR/SHAKEN certificate chains)
+static void
+leaveStaleOpenSSLError()
+{
+   BIO* empty = BIO_new_mem_buf("", 0);
+   X509* none = PEM_read_bio_X509(empty, nullptr, nullptr, nullptr);
+   X509_free(none);
+   BIO_free(empty);
+}
+
+// Runs both transports, with an error left on the queue before each, until the server
+// receives a request (or 5 seconds pass)
+static std::unique_ptr<SipMessage>
+receiveWithStaleErrors(TlsTransport& client, Fifo<TransactionMessage>& clientFifo,
+                       TlsTransport& server, Fifo<TransactionMessage>& serverFifo, unsigned int forMs = 5000)
+{
+   const uint64_t deadline = Timer::getTimeMs() + forMs;
+   while (Timer::getTimeMs() < deadline)
+   {
+      FdSet fdset;
+      server.buildFdSet(fdset);
+      client.buildFdSet(fdset);
+      fdset.selectMilliSeconds(10);
+      leaveStaleOpenSSLError();
+      server.process(fdset);
+      leaveStaleOpenSSLError();
+      client.process(fdset);
+
+      while (clientFifo.messageAvailable())
+      {
+         delete clientFifo.getNext();
+      }
+      while (serverFifo.messageAvailable())
+      {
+         std::unique_ptr<TransactionMessage> msg(serverFifo.getNext());
+         if (dynamic_cast<SipMessage*>(msg.get()))
+         {
+            return std::unique_ptr<SipMessage>(static_cast<SipMessage*>(msg.release()));
+         }
+      }
+   }
+   return nullptr;
+}
+
+// An error something else on the transport's thread left on OpenSSL's error queue mustn't be
+// taken as a failure of the connection's own SSL_read/SSL_write: SSL_get_error() checks the
+// queue first, so a retryable SSL_ERROR_WANT_READ - eg. when the client reads the server's
+// TLS 1.3 session tickets, which carry no application data - would look fatal and the
+// connection would be closed
+static void
+testStaleErrorOnQueue(X509* caCert, EVP_PKEY* caKey)
+{
+   cerr << "-- an error another caller left on the OpenSSL error queue" << endl;
+   EVP_PKEY* serverKey = makeKey();
+   X509* serverCert = serverKey ? makeCert(serverKey, "queue.test", "DNS:queue.test", caCert, caKey) : nullptr;
+   const bool haveCerts = serverCert &&
+                          writeCertFile(queueServerCertFile, serverCert) && writeKeyFile(queueServerKeyFile, serverKey);
+   check("test certificates could be created", haveCerts);
+
+   if (haveCerts)
+   {
+      Security security;
+      security.addRootCertPEM(toPem(caCert));
+
+      const int serverPort = resipTestPort(5295);
+      const int clientPort = resipTestPort(5296);
+      Fifo<TransactionMessage> serverFifo;
+      TlsTransport server(serverFifo, serverPort, V4, "127.0.0.1", security, "queue.test",
+                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::None, false, queueServerCertFile, queueServerKeyFile);
+      Fifo<TransactionMessage> clientFifo;
+      TlsTransport client(clientFifo, clientPort, V4, "127.0.0.1", security, Data::Empty,
+                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::None, false, Data::Empty, Data::Empty);
+
+      const Tuple dest("127.0.0.1", serverPort, V4, TLS, "queue.test");
+      client.send(client.makeSendData(dest, makeRequest("queue.test", clientPort, serverPort), "tid1"));
+      std::unique_ptr<SipMessage> first = receiveWithStaleErrors(client, clientFifo, server, serverFifo);
+      check("first request received", first != nullptr);
+
+      // Give the client time to read what the server sent after the handshake
+      receiveWithStaleErrors(client, clientFifo, server, serverFifo, 300);
+
+      client.send(client.makeSendData(dest, makeRequest("queue.test", clientPort, serverPort), "tid2"));
+      std::unique_ptr<SipMessage> second = receiveWithStaleErrors(client, clientFifo, server, serverFifo);
+      check("second request received", second != nullptr);
+      check("second request came over the same connection",
+            first && second && first->getSource().getPort() == second->getSource().getPort());
+   }
+
+   ERR_clear_error();
+   X509_free(serverCert);
+   EVP_PKEY_free(serverKey);
+   remove(queueServerCertFile);
+   remove(queueServerKeyFile);
+}
+
 int
 main(int, char**)
 {
@@ -483,6 +586,7 @@ main(int, char**)
       testCertificateWithoutNames(security, caCert, caKey);
 
       testRootAddedAfterTransports(caCert, caKey);
+      testStaleErrorOnQueue(caCert, caKey);
    }
    X509_free(caCert);
    EVP_PKEY_free(caKey);

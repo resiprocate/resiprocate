@@ -160,7 +160,9 @@ class BaseSecurity
       Data getUserPrivateKeyPEM(const Data& aor) const;
       Data getUserPrivateKeyDER(const Data& aor) const;
 
-      void generateUserCert(const Data& aor, int expireDays=365, int keyLen=1024);
+      // Generates a self-signed certificate (SHA-256) and RSA key of keyLen bits for aor, and adds
+      // them as its user certificate and private key - throws if the key can't be generated
+      void generateUserCert(const Data& aor, int expireDays=365, int keyLen=2048);
 
       // Produces a detached signature
       MultipartSignedContents* sign(const Data& senderAor, Contents* );

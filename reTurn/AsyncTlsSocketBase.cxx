@@ -196,7 +196,8 @@ AsyncTlsSocketBase::validateServerCertificateHostname()
       int i =-1;
       while( !valid )
       {
-         i = X509_NAME_get_index_by_NID(subject, NID_commonName,i);
+         // OpenSSL 1.1.1 takes a non-const X509_NAME here, 3.0+ a const one
+         i = X509_NAME_get_index_by_NID(const_cast<X509_NAME*>(subject), NID_commonName,i);
          if ( i == -1 )
          {
             break;

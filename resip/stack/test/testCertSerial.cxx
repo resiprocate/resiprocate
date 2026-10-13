@@ -3,13 +3,15 @@
 
 #ifdef USE_SSL
 
+// Before the OpenSSL headers: it brings in <wincrypt.h> on Windows, whose X509_NAME macro
+// OpenSSL's headers #undef
+#include "resip/stack/ssl/Security.hxx"
+
 #include <openssl/asn1.h>
 #include <openssl/bn.h>
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
-
-#include "resip/stack/ssl/Security.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Log.hxx"
 
@@ -65,12 +67,12 @@ main(int, char**)
       bool sawIt = false;
       bool builtOne = false;
 
-      EVP_PKEY* key = EVP_PKEY_new();
-      RSA* rsa = RSA_new();
-      BIGNUM* e = BN_new();
-      BN_set_word(e, RSA_F4);
-      if (RSA_generate_key_ex(rsa, 1024, e, 0) == 1 &&
-          EVP_PKEY_set1_RSA(key, rsa) == 1)
+      EVP_PKEY* key = 0;
+      EVP_PKEY_CTX* keyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, 0);
+      if (keyCtx &&
+          EVP_PKEY_keygen_init(keyCtx) == 1 &&
+          EVP_PKEY_CTX_set_rsa_keygen_bits(keyCtx, 2048) == 1 &&
+          EVP_PKEY_keygen(keyCtx, &key) == 1)
       {
          X509* cert = X509_new();
          X509_set_version(cert, 2L);
@@ -99,8 +101,7 @@ main(int, char**)
          }
          X509_free(cert);
       }
-      BN_free(e);
-      RSA_free(rsa);
+      EVP_PKEY_CTX_free(keyCtx);
       EVP_PKEY_free(key);
 
       check("control: a certificate with a negative serial could be built", builtOne);

@@ -58,6 +58,11 @@ public:
                                   std::shared_ptr<FlowContext> context = nullptr);
 
    void initializeDtlsFactory(const char* certAor);
+#ifdef USE_SSL
+   // Creates the self-signed RSA certificate initializeDtlsFactory uses, for the AOR sip:<pAor>,
+   // signed with SHA-256.  Returns non-zero on success.
+   static int createCert(const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey);
+#endif
    dtls::DtlsFactory* getDtlsFactory() { return mDtlsFactory; }
 
    void setRTCPEventLoggingHandler(std::shared_ptr<RTCPEventLoggingHandler> handler) noexcept { mRtcpEventLoggingHandler = handler; }
@@ -74,7 +79,6 @@ private:
    asio::io_context mIOService;
    IOServiceThread* mIOServiceThread;
    asio::executor_work_guard<asio::io_context::executor_type>* mIOServiceWork;
-   static int createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey );
    asio::ssl::context mSslContext;
    
    X509* mClientCert;
@@ -89,6 +93,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -20,7 +20,7 @@
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
 #include "DtlsTimer.hxx"
-#include "CreateCert.hxx"
+#include "reflow/FlowManager.hxx"
 
 using namespace dtls;
 
@@ -175,11 +175,21 @@ main(int, char**)
    EVP_PKEY* clientKey = nullptr;
    EVP_PKEY* serverKey = nullptr;
 
-   // RSA certificates, as FlowManager creates
-   createCert(resip::Data("sip:client@example.com"), 365, 2048, clientCert, clientKey);
-   createCert(resip::Data("sip:server@example.com"), 365, 2048, serverCert, serverKey);
+   // The certificates FlowManager creates (with a shorter key, to be quicker)
+   flowmanager::FlowManager::createCert(resip::Data("client@example.com"), 365, 2048, clientCert, clientKey);
+   flowmanager::FlowManager::createCert(resip::Data("server@example.com"), 365, 2048, serverCert, serverKey);
    bool haveCerts = clientCert && clientKey && serverCert && serverKey;
    check("test certificates could be created", haveCerts);
+   if (haveCerts)
+   {
+      // So the SHA-256 fingerprint we advertise uses the certificate's own signature hash
+      check("test certificates are signed with SHA-256",
+            X509_get_signature_nid(clientCert) == NID_sha256WithRSAEncryption &&
+            X509_get_signature_nid(serverCert) == NID_sha256WithRSAEncryption);
+      check("test certificates have RSA keys of the size asked for",
+            EVP_PKEY_base_id(clientKey) == EVP_PKEY_RSA && EVP_PKEY_bits(clientKey) == 2048 &&
+            EVP_PKEY_base_id(serverKey) == EVP_PKEY_RSA && EVP_PKEY_bits(serverKey) == 2048);
+   }
    if (!haveCerts)
    {
       return -1;

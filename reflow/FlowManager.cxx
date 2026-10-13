@@ -21,7 +21,6 @@
 #include "Srtp2Helper.hxx"
 
 #ifdef USE_SSL  
-#include <openssl/bn.h>
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
@@ -226,30 +225,27 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    Data aor = "sip:" + pAor;
    
    // Make sure that necessary algorithms exist:
-   resip_assert(EVP_sha1());
+   resip_assert(EVP_sha256());
 
-   BIGNUM *bn;
-   bn = BN_new();
-   BN_set_word(bn, RSA_F4);
-
-   RSA *rsa;
-   rsa = RSA_new();
-   resip_assert(rsa);
-
-   ret = RSA_generate_key_ex(rsa, keyLen, bn, NULL);
-   BN_free(bn);
-   resip_assert(ret);    // couldn't make key pair
-   
-   EVP_PKEY* privkey = EVP_PKEY_new();
-   resip_assert(privkey);
-   ret = EVP_PKEY_set1_RSA(privkey, rsa);
-   resip_assert(ret);
+   // An RSA key (the default public exponent is 65537): ECDSA would be quicker to generate,
+   // but older endpoints may only support RSA
+   EVP_PKEY* privkey = NULL;
+   EVP_PKEY_CTX* keyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+   ret = keyCtx &&
+         EVP_PKEY_keygen_init(keyCtx) == 1 &&
+         EVP_PKEY_CTX_set_rsa_keygen_bits(keyCtx, keyLen) == 1 &&
+         EVP_PKEY_keygen(keyCtx, &privkey) == 1;
+   EVP_PKEY_CTX_free(keyCtx);
+   if(!ret)
+   {
+      return 0;  // couldn't make key pair
+   }
 
    X509* cert = X509_new();
    resip_assert(cert);
    
    X509_NAME* subject = X509_NAME_new();
-   X509_EXTENSION* ext = X509_EXTENSION_new();
+   X509_EXTENSION* ext;
    
    // set version to X509v3 (starts from 0)
    X509_set_version(cert, 2L);
@@ -271,6 +267,7 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    resip_assert(ret);
    ret = X509_set_subject_name(cert, subject);
    resip_assert(ret);
+   X509_NAME_free(subject);  // the certificate holds copies
    
    const long duration = 60*60*24*expireDays;   
    X509_gmtime_adj(X509_getm_notBefore(cert),0);
@@ -295,7 +292,8 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    
    // TODO add extensions NID_subject_key_identifier and NID_authority_key_identifier
    
-   ret = X509_sign(cert, privkey, EVP_sha1());
+   // SHA-256, the hash function of the fingerprint we advertise (RFC 4572 required them to match)
+   ret = X509_sign(cert, privkey, EVP_sha256());
    resip_assert(ret);
 
    outCert = cert;
@@ -306,7 +304,7 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
 
 /* ====================================================================
 
- Copyright (c) 2008-2022, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2008-2026, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

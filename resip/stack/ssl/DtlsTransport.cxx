@@ -192,6 +192,10 @@ DtlsTransport::_read()
 
    SSL_set0_rbio(ssl, rbio);
 
+   // SSL_get_error() checks this thread's error queue first, so it must be empty before the
+   // call: an error something else on this thread left there would otherwise turn a
+   // retryable SSL_ERROR_WANT_READ into SSL_ERROR_SSL
+   ERR_clear_error();
    len = SSL_read(ssl, mRxSslBuffer.data(), static_cast<int>(mRxSslBuffer.size()));
    int err = SSL_get_error(ssl, len);
 
@@ -309,6 +313,8 @@ void DtlsTransport::_write(FdSet& fdset)
 
    int expected;
    int count;
+
+   ERR_clear_error();  // SSL_get_error() needs an empty error queue - see _read()
 
 #ifdef USE_SIGCOMP
    // If message needs to be compressed, compress it here.

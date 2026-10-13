@@ -398,6 +398,26 @@ Sdp* SdpHelper::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
    return sdp;
 }
 
+// Order in which to choose between several fingerprints (RFC 8122) - lower is preferred.  SHA-256
+// is the most implemented hash type currently used for fingerprints, so prefer it over all others,
+// then the other SHA-2 functions, then SHA-1.  MD5 and MD2 aren't safe to authenticate a
+// certificate with, so only take one of those if there is nothing else.
+static int
+fingerPrintHashFuncPreference(SdpMediaLine::SdpFingerPrintHashFuncType hashType)
+{
+   switch(hashType)
+   {
+   case SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_256: return 0;
+   case SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_384: return 1;
+   case SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_512: return 2;
+   case SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_224: return 3;
+   case SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_1:   return 4;
+   case SdpMediaLine::FINGERPRINT_HASH_FUNC_MD5:     return 5;
+   case SdpMediaLine::FINGERPRINT_HASH_FUNC_MD2:     return 6;
+   default:                                          return 7;  // FINGERPRINT_HASH_FUNC_NONE
+   }
+}
+
 // Resolve a direction attribute stated directly on the session.  Returns false if the
 // session states no direction at all.
 static bool
@@ -745,25 +765,13 @@ SdpHelper::parseMediaLine(const SdpContents::Session::Medium& resipMedia, const 
          {
             SdpMediaLine::SdpFingerPrintHashFuncType hashType;
             resip::Data fingerprint;
-            if (parseFingerPrintLine(*it2, hashType, fingerprint))
+            // In the future we should support multiple fingerprints better and store a list of hash
+            // algorithms and fingerprints instead of just picking one to use.
+            if (parseFingerPrintLine(*it2, hashType, fingerprint) &&
+                fingerPrintHashFuncPreference(hashType) < fingerPrintHashFuncPreference(bestHashType))
             {
-               // SHA-256 is the most implemented hash type currently used for fingerprints, 
-               // prefer this over all others.  In the future we should support multiple fingerprints 
-               // better and store a list of hash algorithms and fingerprints instead of just picking
-               // one to use.
-               if(hashType == SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_256)
-               {
-                  bestHashType = hashType;
-                  bestFingerprint = fingerprint;
-                  break; 
-               } 
-               else if (bestHashType == SdpMediaLine::FINGERPRINT_HASH_FUNC_NONE)
-               {
-                  // If there is no SHA-256 fingerprint, then just use the first one we
-                  // successfully parse
-                  bestHashType = hashType;
-                  bestFingerprint = fingerprint;
-               }
+               bestHashType = hashType;
+               bestFingerprint = fingerprint;
             }
          }
       }
