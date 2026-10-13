@@ -56,7 +56,7 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
                                 char* password, unsigned int passwordSize)
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // Should we check here if TLS and deny?
 
@@ -144,7 +144,7 @@ asio::error_code
 TurnSocket::bindRequest()
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // Ensure Connected
    if(!mConnected)
@@ -190,7 +190,7 @@ TurnSocket::createAllocation(unsigned int lifetime,
                              StunTuple::TransportType requestedTransportType)
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // Store Allocation Properties
    mRequestedLifetime = lifetime;
@@ -310,7 +310,7 @@ asio::error_code
 TurnSocket::refreshAllocation()
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // Form Turn Allocate request
    StunMessage request;
@@ -363,7 +363,7 @@ TurnSocket::refreshAllocation()
 asio::error_code 
 TurnSocket::destroyAllocation()
 {
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
    if(mHaveAllocation)
    {
       mRequestedLifetime = 0;
@@ -408,7 +408,7 @@ asio::error_code
 TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // ensure there is an allocation
    if(!mHaveAllocation)
@@ -485,7 +485,7 @@ asio::error_code
 TurnSocket::clearActiveDestination()
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // ensure there is an allocation
    if(!mHaveAllocation)
@@ -518,7 +518,7 @@ TurnSocket::send(const char* buffer, unsigned int size)
 asio::error_code 
 TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
 {
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
    // ensure there is an allocation 
    if(!mHaveAllocation)
    {
@@ -545,7 +545,7 @@ TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const 
 asio::error_code 
 TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size)
 {
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // Check to see if an allocation refresh is required - if so send it and make sure it was sucessful
    asio::error_code ret = checkIfAllocationRefreshRequired();
@@ -612,7 +612,7 @@ asio::error_code
 TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
    bool done = false;
 
    // TODO - rethink this scheme so that we don't need to copy recieved data
@@ -703,7 +703,7 @@ TurnSocket::receiveFrom(const asio::ip::address& address, unsigned short port, c
    unsigned short sourcePort;
    bool done = false;
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    while(!done)
    {
@@ -1085,6 +1085,7 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

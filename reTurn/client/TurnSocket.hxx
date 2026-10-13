@@ -136,7 +136,9 @@ protected:
    bool mConnected;
 
 private:
-   resip::Mutex mMutex;
+   // Recursive: eg. destroyAllocation() calls refreshAllocation(), and sendTo() and receive() refresh
+   // the allocation when it is due
+   resip::RecursiveMutex mMutex;
    asio::error_code channelBind(RemotePeer& remotePeer);
    asio::error_code checkIfAllocationRefreshRequired();
    asio::error_code checkIfChannelBindingRefreshRequired();
@@ -153,6 +155,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

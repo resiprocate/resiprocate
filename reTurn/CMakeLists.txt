@@ -46,8 +46,8 @@ add_library(reTurnCommon
    ${INCLUDES_COMMON}
 )
 
-add_executable(reTurnServer
-   reTurnServer.cxx
+# The server's classes, as a library so tests can run the server in-process
+add_library(reTurnServerLib STATIC
    ConnectionManager.cxx
    RequestHandler.cxx
    ReTurnConfig.cxx
@@ -66,6 +66,13 @@ add_executable(reTurnServer
    UserAuthData.cxx
 
    ${INCLUDES}
+)
+target_include_directories(reTurnServerLib PUBLIC ${PROJECT_SOURCE_DIR})
+target_link_libraries(reTurnServerLib reTurnCommon)
+set_target_properties(reTurnServerLib PROPERTIES FOLDER reTurn)
+
+add_executable(reTurnServer
+   reTurnServer.cxx
 )
 
 target_include_directories(reTurnCommon PUBLIC ${ASIO_INCLUDE_DIRS})
@@ -89,7 +96,7 @@ add_custom_command ( TARGET reTurnServer POST_BUILD
 )
 
 target_include_directories(reTurnServer PRIVATE ${PROJECT_SOURCE_DIR})
-target_link_libraries(reTurnServer reTurnCommon)
+target_link_libraries(reTurnServer reTurnServerLib)
 set_target_properties(reTurnServer PROPERTIES FOLDER reTurn)
 
 if(WIN32 AND WITH_SSL)

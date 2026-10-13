@@ -16,8 +16,9 @@ ChannelManager::ChannelManager()
 {
    // make starting channel number random; use the CSPRNG so the channel
    // number is not predictable (CWE-338) - predictable channels aid TURN
-   // data injection.
-   int randInt = resip::Random::getCryptoRandom();
+   // data injection.  getCryptoRandom() fills a whole int, so it's often negative: take it as
+   // unsigned, or the remainder is negative and the channel number below MIN_CHANNEL_NUM.
+   unsigned int randInt = (unsigned int)resip::Random::getCryptoRandom();
    mNextChannelNumber = MIN_CHANNEL_NUM + (unsigned short)(randInt % (MAX_CHANNEL_NUM-MIN_CHANNEL_NUM+1));
 }
 
