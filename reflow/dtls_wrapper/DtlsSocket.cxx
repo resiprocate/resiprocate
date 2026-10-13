@@ -146,6 +146,10 @@ DtlsSocket::doHandshakeIteration()
    if(mHandshakeCompleted)
       return;
 
+   // OpenSSL requires this thread's error queue to be empty before the call, since
+   // SSL_get_error() checks it first (the handshake state machine currently clears it
+   // itself, but that isn't documented)
+   ERR_clear_error();
    r=SSL_do_handshake(mSsl);
    errbuf[0]=0;
    ERR_error_string_n(ERR_peek_error(),errbuf,sizeof(errbuf));
@@ -186,6 +190,9 @@ DtlsSocket::doHandshakeIteration()
       cerr << "SSL error " << sslerr << endl;
 
       mSocketContext->handshakeFailed(errbuf);
+      // Don't leave this failure's errors on the queue: the next OpenSSL call on this thread
+      // that checks SSL_get_error() without clearing it first would take them as its own
+      ERR_clear_error();
       // Note: need to fall through to propagate alerts, if any
       break;
    }
@@ -421,8 +428,8 @@ DtlsSocket::getReadTimeout()
 #endif 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
  Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

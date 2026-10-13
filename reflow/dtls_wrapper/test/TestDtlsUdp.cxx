@@ -12,8 +12,6 @@
 
 #include <memory.h>
 
-#include <boost/predef/other/endian.h>
-
 #include <openssl/ssl.h>
 #include <openssl/srtp.h>
 
@@ -25,13 +23,17 @@
 #include "CreateCert.hxx"
 #include "TestDtlsUdp.hxx"
 
-extern "C" 
+// The fixed RTP header (RFC 3550 section 5.1).  Defined here because libsrtp's
+// srtp_hdr_t lives in srtp_priv.h, which libsrtp2 doesn't install.
+struct RtpHeader
 {
-#include "../../Srtp2Helper.hxx"
-// this file isn't shipped in the packages for srtp2
-// see: https://www.resiprocate.org/bugzilla/show_bug.cgi?id=169
-#include <srtp/srtp_priv.h>
-}
+   unsigned char vpxcc;  // version (2 bits), padding, extension, CSRC count
+   unsigned char mpt;    // marker bit, payload type (7 bits)
+   uint16_t seq;         // network byte order
+   uint32_t ts;          // network byte order
+   uint32_t ssrc;        // network byte order
+};
+static_assert(sizeof(RtpHeader) == 12, "RTP header must be 12 bytes");
 
 void DumpHexa2(const unsigned char* pInMsg, unsigned long ulInMsgLen, std::string &rOutDump)
 {
@@ -91,26 +93,7 @@ TestDtlsUdpSocketContext::write(const unsigned char* data, unsigned int len)
 
    if ( s == SOCKET_ERROR )
    {
-      int e = errno;
-      switch (e)
-      {
-      case ECONNREFUSED:
-      case EHOSTDOWN:
-      case EHOSTUNREACH:
-         {
-            // quietly ignore this 
-         }
-         break;
-      case EAFNOSUPPORT:
-         {
-            clog << "err EAFNOSUPPORT in send" << endl;
-         }
-         break;
-      default:
-         {
-            clog << "err " << e << " "  << strerror(e) << " in send" << endl;
-         }
-      }
+      clog << "err " << getErrno() << " in send" << endl;
       assert(0);
    }
 
@@ -143,7 +126,7 @@ TestDtlsUdpSocketContext::handshakeCompleted()
       cout <<"SRTP Extension negotiated profile="<<srtp_profile->name << endl;
    }
 
-   mSocket->createSrtpSessionPolicies(srtpPolicyIn,srtpPolicyOut);
+   mSocket->createSrtpSessionPolicies(srtpPolicyOut,srtpPolicyIn);  // (outbound, inbound)
 
    r=srtp_create(&srtpIn,&srtpPolicyIn);
    assert(r==0);
@@ -176,28 +159,24 @@ TestDtlsUdpSocketContext::handshakeFailed(const char *err)
 void
 TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int len)
 {
-   srtp_hdr_t *hdr;
+   RtpHeader *hdr;
    unsigned char *buffer, *ptr;
    int l=0;
 
    cerr << "Sending RTP packet of length " << len << endl;
 
-   buffer=(unsigned char *)malloc(sizeof(srtp_hdr_t)+len+SRTP_MAX_TRAILER_LEN+4);
+   buffer=(unsigned char *)malloc(sizeof(RtpHeader)+len+SRTP_MAX_TRAILER_LEN+4);
    assert(buffer!=0);
    ptr=buffer;
-   hdr=(srtp_hdr_t *)ptr;
-   ptr+=sizeof(srtp_hdr_t);
-   l+=sizeof(srtp_hdr_t);
+   hdr=(RtpHeader *)ptr;
+   ptr+=sizeof(RtpHeader);
+   l+=sizeof(RtpHeader);
 
-   hdr->version = 2;              /* RTP version two     */
-   hdr->p    = 0;                 /* no padding needed   */
-   hdr->x    = 0;                 /* no header extension */
-   hdr->cc   = 0;                 /* no CSRCs            */
-   hdr->m    = 0;                 /* marker bit          */
-   hdr->pt   = 0xf;               /* payload type        */
-   hdr->seq  = mRtpSeq++;         /* sequence number     */
-   hdr->ts   = htonl(0xdecafbad); /* timestamp           */
-   hdr->ssrc = htonl(ssrc);       /* synch. source       */
+   hdr->vpxcc = 0x80;             /* version 2, no padding, extension or CSRCs */
+   hdr->mpt   = 0x0f;             /* no marker, payload type 15 */
+   hdr->seq   = htons(mRtpSeq++); /* sequence number     */
+   hdr->ts    = htonl(0xdecafbad);/* timestamp           */
+   hdr->ssrc  = htonl(ssrc);      /* synch. source       */
 
    memcpy(ptr,data,len);
    l+=len;
@@ -215,19 +194,18 @@ TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int le
 void
 TestDtlsUdpSocketContext::recvRtpData(unsigned char *in, unsigned int inlen, unsigned char *out, unsigned int *outlen,unsigned int maxoutlen)
 {
-   srtp_hdr_t *hdr;
    int len_int=(int)inlen;
-   hdr=(srtp_hdr_t *)in;
 
    if(useSrtp)
    {
-      srtp_err_status_t r=srtp_unprotect(srtpIn,hdr,&len_int);
+      srtp_err_status_t r=srtp_unprotect(srtpIn,in,&len_int);
       assert(r==srtp_err_status_ok);
       inlen=(unsigned int)len_int;
    }
 
-   in+=sizeof(srtp_hdr_t);
-   inlen-=sizeof(srtp_hdr_t);
+   assert(inlen>=sizeof(RtpHeader));
+   in+=sizeof(RtpHeader);
+   inlen-=sizeof(RtpHeader);
 
    assert(inlen<maxoutlen);
    memcpy(out,in,inlen);
@@ -237,7 +215,8 @@ TestDtlsUdpSocketContext::recvRtpData(unsigned char *in, unsigned int inlen, uns
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

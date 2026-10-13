@@ -25,7 +25,7 @@ int main(int argc,char **argv)
 
    assert(argc==2);
 
-   createCert(resip::Data("sip:server@example.com"),365,1024,serverCert,serverKey);
+   createCert(resip::Data("sip:server@example.com"),365,2048,serverCert,serverKey);
 
    TestTimerContext *ourTimer=new TestTimerContext();
    std::unique_ptr<DtlsFactory> serverFactory(new DtlsFactory(std::unique_ptr<DtlsTimerContext>(ourTimer),serverCert,serverKey));
@@ -124,7 +124,8 @@ int main(int argc,char **argv)
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

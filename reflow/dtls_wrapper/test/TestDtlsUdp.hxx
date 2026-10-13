@@ -25,13 +25,13 @@ class TestDtlsUdpSocketContext: public DtlsSocketContext {
   private:
      int mFd;
      struct sockaddr_in mPeerAddr;
-     uint32_t ssrc;   // TODO: initialize with something
+     uint32_t ssrc = 0x12345678;
      srtp_policy_t srtpPolicyIn;
-     srtp_policy_t srtpPolicyOut;     
+     srtp_policy_t srtpPolicyOut;
      srtp_t srtpIn;
      srtp_t srtpOut;
-     bool useSrtp; 
-     uint16_t mRtpSeq; // TODO: initialize with something
+     bool useSrtp = false;  // set once the handshake has produced the SRTP sessions
+     uint16_t mRtpSeq = 0;
 };
 
 }
@@ -41,7 +41,8 @@ class TestDtlsUdpSocketContext: public DtlsSocketContext {
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
