@@ -13,16 +13,20 @@
 namespace dtls
 {
 
+// A timer is shared by its owner, which can invalidate it, and the DtlsTimerContext it's added
+// to, which fires it when it expires: it's freed when both have let it go, whether it fired,
+// was invalidated, or was dropped unfired (eg. cancelled at shutdown).
 class DtlsTimer
 {
    public:
-      DtlsTimer(unsigned int seq); 
+      DtlsTimer(unsigned int seq);
       virtual ~DtlsTimer();
-      
+
       virtual void expired()=0;
+      // Calls expired(), unless the timer has been invalidated
       virtual void fire();
       unsigned int getSeq() { return mSeq; }
-      //invalid could call though to context and call an external cancel
+      // The owner no longer wants the timer to fire
       void invalidate() { mValid = false; }
 
       // The lock the timer's owner holds while it uses what the timer acts on, and while it
@@ -41,9 +45,11 @@ class DtlsTimerContext
 {     
    public:
       virtual ~DtlsTimerContext() {}
-      virtual void addTimer(DtlsTimer* timer, unsigned int waitMs)=0;
-      //could add cancel here
+      // Fires timer after waitMs, keeping its reference until then (or until it drops the timer
+      // unfired)
+      virtual void addTimer(std::shared_ptr<DtlsTimer> timer, unsigned int waitMs)=0;
    protected:
+      // The caller must hold a reference to timer: firing it can release the owner's
       void fire(DtlsTimer *timer);
 };
    

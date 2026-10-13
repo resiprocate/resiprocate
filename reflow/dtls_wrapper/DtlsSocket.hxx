@@ -72,8 +72,8 @@ class DtlsSocket
       // Inspects packet to see if it's a DTLS packet, if so continue processing
       bool handlePacketMaybe(const unsigned char* bytes, size_t len);
       
-      // Called by DtlsSocketTimer when the retransmission timer expires: deletes the timer and
-      // retransmits the last flight if OpenSSL's timer has expired (see handleTimeout)
+      // Called by DtlsSocketTimer when the retransmission timer expires: retransmits the last
+      // flight if OpenSSL's timer has expired (see handleTimeout)
       void expired(DtlsSocketTimer*);
       
       // Size of the buffer getMyCertFingerprint and computeFingerprint write to: a SHA-256
@@ -166,7 +166,7 @@ class DtlsSocket
       // Internals
       std::unique_ptr<DtlsSocketContext> mSocketContext;
       DtlsFactory* mFactory;
-      DtlsTimer *mReadTimer;  // Timer used during handshake process
+      std::shared_ptr<DtlsTimer> mReadTimer;  // Retransmission timer, during the handshake
       
       // OpenSSL context data
       SSL *mSsl;

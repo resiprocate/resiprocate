@@ -37,6 +37,7 @@ namespace flowmanager
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 class IOServiceThread;
+class FlowDtlsTimerContext;
 
 class FlowManager
 {
@@ -96,6 +97,7 @@ private:
    X509* mClientCert;
    EVP_PKEY* mClientKey;
    dtls::DtlsFactory* mDtlsFactory;
+   FlowDtlsTimerContext* mDtlsTimerContext;  // owned by mDtlsFactory
    bool mValidateTlsServerHostname = true;
 };
 

@@ -8,9 +8,10 @@
 
 using namespace dtls;
 
-DtlsTimer::DtlsTimer(unsigned int seq)
+DtlsTimer::DtlsTimer(unsigned int seq) :
+   mSeq(seq),
+   mValid(true)
 {
-   mValid=true;
 }
 
 DtlsTimer::~DtlsTimer() 
@@ -20,23 +21,15 @@ DtlsTimer::~DtlsTimer()
 void
 DtlsTimer::fire()
 {
-   // A local reference keeps the lock alive when the timer is deleted below (or by expired())
-   std::shared_ptr<std::mutex> lock = mLock;
    std::unique_lock<std::mutex> guard;
-   if(lock)
+   if(mLock)
    {
-      guard = std::unique_lock<std::mutex>(*lock);
+      guard = std::unique_lock<std::mutex>(*mLock);
    }
 
    if(mValid)
    {
       expired();
-   }
-   else
-   {
-      //memory mangement is overly tricky and possibly wrong...deleted by target
-      //if valid is the contract. weak pointers would help.
-      delete this;
    }
 }
 

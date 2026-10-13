@@ -61,45 +61,36 @@ public:
    bool mFailed = false;
 };
 
-// Keeps the timers so they can be released at the end: an invalidated timer deletes
-// itself when fired, and the sockets invalidate theirs when they are destroyed.
+// Keeps the timers, never firing them, until it's destroyed
 // (TestTimerContext only keeps the latest timer, so can't be shared by several sockets.)
 class CollectingTimerContext : public DtlsTimerContext
 {
 public:
-   ~CollectingTimerContext() override
-   {
-      for (DtlsTimer* timer : mTimers) fire(timer);
-   }
-   void addTimer(DtlsTimer* timer, unsigned int) override { mTimers.push_back(timer); }
+   void addTimer(std::shared_ptr<DtlsTimer> timer, unsigned int) override { mTimers.push_back(std::move(timer)); }
 
-   std::vector<DtlsTimer*> mTimers;
+   std::vector<std::shared_ptr<DtlsTimer>> mTimers;
 };
 
 // Keeps the timers until the test fires them, as if their time had passed
 class ManualTimerContext : public DtlsTimerContext
 {
 public:
-   ~ManualTimerContext() override
+   void addTimer(std::shared_ptr<DtlsTimer> timer, unsigned int waitMs) override
    {
-      for (DtlsTimer* timer : mTimers) fire(timer);
-   }
-   void addTimer(DtlsTimer* timer, unsigned int waitMs) override
-   {
-      mTimers.push_back(timer);
+      mTimers.push_back(std::move(timer));
       mLastWaitMs = waitMs;
       ++mAdded;
    }
    // Fires the timers added so far; returns how many
    size_t fireAll()
    {
-      std::vector<DtlsTimer*> due;
+      std::vector<std::shared_ptr<DtlsTimer>> due;
       due.swap(mTimers);
-      for (DtlsTimer* timer : due) fire(timer);
+      for (const auto& timer : due) fire(timer.get());
       return due.size();
    }
 
-   std::vector<DtlsTimer*> mTimers;
+   std::vector<std::shared_ptr<DtlsTimer>> mTimers;
    unsigned int mLastWaitMs = 0;
    int mAdded = 0;
 };
@@ -600,6 +591,49 @@ main(int, char**)
          firing.join();
          check("timer lock: the timer runs once the owner releases it", fired);
       }
+   }
+
+   // M. FlowManager's timers are freed once they have fired, and its destructor cancels the
+   //    ones still pending on its io thread, rather than waiting for them to fire (OpenSSL backs
+   //    off to 60 seconds), and frees them too
+   {
+      struct CountedTimer : public DtlsTimer
+      {
+         CountedTimer() : DtlsTimer(0) { ++live(); }
+         ~CountedTimer() override { --live(); }
+         void expired() override { ++fired(); }
+         static std::atomic<int>& live() { static std::atomic<int> count(0); return count; }
+         static std::atomic<int>& fired() { static std::atomic<int> count(0); return count; }
+      };
+      std::chrono::steady_clock::time_point start;
+      {
+         flowmanager::FlowManager flowManager;
+         flowManager.initializeDtlsFactory("shutdown@example.com");
+         DtlsFactory* factory = flowManager.getDtlsFactory();
+         check("shutdown: FlowManager's DTLS factory was created", factory != nullptr);
+         if (factory)
+         {
+            factory->getTimerContext().addTimer(std::make_shared<CountedTimer>(), 50);
+            for (int i = 0; i < 100 && CountedTimer::fired() == 0; ++i)
+            {
+               std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            check("timers: a timer fires on FlowManager's io thread, and is freed then",
+                  CountedTimer::fired() == 1 && CountedTimer::live() == 0);
+
+            // A socket destroyed mid-handshake leaves its retransmission timer pending
+            std::unique_ptr<DtlsSocket> client(factory->createClient(std::unique_ptr<DtlsSocketContext>(new PipeContext)));
+            client->startClient();
+            client.reset();
+            factory->getTimerContext().addTimer(std::make_shared<CountedTimer>(), 3000);
+         }
+         start = std::chrono::steady_clock::now();
+      }
+      const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+      check("shutdown: FlowManager's destructor doesn't wait for the pending DTLS timers", seconds < 0.5);
+      check("shutdown: the pending timers are freed without firing",
+            CountedTimer::live() == 0 && CountedTimer::fired() == 1);
    }
 
    X509_free(clientCert);

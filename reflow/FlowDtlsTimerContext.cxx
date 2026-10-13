@@ -22,36 +22,57 @@ using namespace std;
 using namespace std::chrono;
 
 FlowDtlsTimerContext::FlowDtlsTimerContext(asio::io_context& ioService) :
-  mIOService(ioService) 
+  mIOService(ioService),
+  mStopped(false)
 {
 }
 
-void 
-FlowDtlsTimerContext::addTimer(dtls::DtlsTimer *timer, unsigned int durationMs) 
+void
+FlowDtlsTimerContext::addTimer(std::shared_ptr<dtls::DtlsTimer> timer, unsigned int durationMs)
 {
-   // addTimer is called from whichever thread uses the DtlsSocket, so the asio timer is kept
-   // alive by its own handler rather than in a map the io thread would share
+   std::lock_guard<std::mutex> lock(mMutex);
+   if(mStopped)
+   {
+      return;  // timer is freed when its owner lets it go
+   }
+
+   // The handler holds timer until it runs: when the asio timer expires, or is cancelled by stop()
    auto deadlineTimer = std::make_shared<asio::steady_timer>(mIOService);
    deadlineTimer->expires_after(milliseconds(durationMs));
    deadlineTimer->async_wait([this, timer, deadlineTimer](const asio::error_code& errorCode)
    {
-      handleTimeout(timer, errorCode);
+      {
+         std::lock_guard<std::mutex> lock(mMutex);
+         mPending.erase(deadlineTimer);
+      }
+      if(!errorCode)
+      {
+         timer->fire();
+      }
+      else if(errorCode != asio::error::operation_aborted)
+      {
+         ErrLog(<< "Timer error: " << errorCode.message());
+      }
    });
-   //InfoLog(<< "FlowDtlsTimerContext: starting timer for " << durationMs << "ms.");
-}    
+   mPending.insert(deadlineTimer);
+}
 
-void 
-FlowDtlsTimerContext::handleTimeout(dtls::DtlsTimer *timer, const asio::error_code& errorCode) 
+void
+FlowDtlsTimerContext::stop()
 {
-   if(!errorCode)
    {
-      //InfoLog(<< "FlowDtlsTimerContext: timer expired!");
-      timer->fire();
+      std::lock_guard<std::mutex> lock(mMutex);
+      mStopped = true;
    }
-   else
+   // An asio timer can't be used from two threads at once: cancel them on the io thread
+   asio::post(mIOService, [this]()
    {
-     ErrLog(<< "Timer error: " << errorCode.message());
-   }
+      std::lock_guard<std::mutex> lock(mMutex);
+      for(const auto& deadlineTimer : mPending)
+      {
+         deadlineTimer->cancel();
+      }
+   });
 }
 
 #endif

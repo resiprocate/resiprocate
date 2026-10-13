@@ -47,7 +47,6 @@ int dummy_cb(int d, X509_STORE_CTX *x)
 DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
    mSocketContext(std::move(socketContext)),
    mFactory(factory),
-   mReadTimer(0),
    mSsl(newSsl(factory, type)),
    mInBio(SSL_get_rbio(mSsl)),
    mOutBio(SSL_get_wbio(mSsl)),
@@ -61,7 +60,6 @@ DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFac
 DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, SSL* acceptedSsl, const std::string& peer):
    mSocketContext(std::move(socketContext)),
    mFactory(factory),
-   mReadTimer(0),
    mSsl(acceptedSsl),
    mInBio(SSL_get_rbio(acceptedSsl)),
    mOutBio(SSL_get_wbio(acceptedSsl)),
@@ -116,13 +114,12 @@ DtlsSocket::~DtlsSocket()
 void
 DtlsSocket::expired(DtlsSocketTimer* timer)
 {
-   // The timer has fired, so nothing will fire it again: it's ours to delete.  (DtlsTimer::fire
-   // doesn't touch the timer after calling expired().)
-   if(timer == mReadTimer)
+   // The timer has fired, so nothing will fire it again (the timer context still holds it while
+   // it fires)
+   if(timer == mReadTimer.get())
    {
-      mReadTimer = 0;
+      mReadTimer.reset();
    }
-   delete timer;
 
    handleTimeout();
 }
@@ -221,11 +218,11 @@ DtlsSocket::writeOutput()
 void
 DtlsSocket::scheduleTimer()
 {
-   // Replaces any timer set before: a timer that's been invalidated deletes itself when it fires
+   // Replaces any timer set before: the timer context frees an invalidated timer when it's due
    if(mReadTimer)
    {
       mReadTimer->invalidate();
-      mReadTimer = 0;
+      mReadTimer.reset();
    }
 
    // OpenSSL runs the retransmission timer while the handshake is in progress (starting at 1
@@ -234,7 +231,7 @@ DtlsSocket::scheduleTimer()
    if(!mHandshakeCompleted && !mHandshakeFailed && DTLSv1_get_timeout(mSsl, &tv) == 1)
    {
       unsigned int waitMs = (unsigned int)tv.tv_sec * 1000 + ((unsigned int)tv.tv_usec + 999) / 1000;
-      mReadTimer = new DtlsSocketTimer(0, this);
+      mReadTimer = std::make_shared<DtlsSocketTimer>(0, this);
       mReadTimer->setLock(mSocketContext->timerLock());
       mFactory->mTimerContext->addTimer(mReadTimer, waitMs > 0 ? waitMs : 1);
    }

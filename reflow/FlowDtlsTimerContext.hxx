@@ -4,6 +4,8 @@
 // !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO since inlined shared_from_this has 
 // a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
 #include <memory>
+#include <mutex>
+#include <set>
 
 #include <asio.hpp>
 #ifdef USE_SSL
@@ -25,11 +27,17 @@ class FlowDtlsTimerContext: public dtls::DtlsTimerContext
 {
   public:
      FlowDtlsTimerContext(asio::io_context& ioService);
-     void addTimer(dtls::DtlsTimer *timer, unsigned int durationMs);
-     void handleTimeout(dtls::DtlsTimer *timer, const asio::error_code& errorCode);
+     void addTimer(std::shared_ptr<dtls::DtlsTimer> timer, unsigned int durationMs) override;
+
+     // For shutdown: cancels the timers pending on the io thread, freeing them unfired, and
+     // ignores timers added from now on, so they don't keep the io_context running
+     void stop();
 
    private:
      asio::io_context& mIOService;
+     std::mutex mMutex;  // addTimer is called from whichever thread uses the DtlsSocket
+     std::set<std::shared_ptr<asio::steady_timer>> mPending;
+     bool mStopped;
 };
 
 }

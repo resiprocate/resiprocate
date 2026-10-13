@@ -66,8 +66,9 @@ FlowManager::FlowManager()
    mSslContext(asio::ssl::context::sslv23),
    mClientCert(0),
    mClientKey(0),
-   mDtlsFactory(0)
-#endif  
+   mDtlsFactory(0),
+   mDtlsTimerContext(0)
+#endif
 {
    mIOServiceWork = new asio::executor_work_guard<asio::io_context::executor_type>(mIOService.get_executor());
    mIOServiceThread = new IOServiceThread(mIOService);
@@ -102,6 +103,11 @@ FlowManager::FlowManager()
 
 FlowManager::~FlowManager()
 {
+#ifdef USE_SSL
+   // The io thread runs until it has nothing left to do: don't leave it waiting for DTLS
+   // retransmission timers (up to a minute away) of sockets that are gone
+   if(mDtlsTimerContext) mDtlsTimerContext->stop();
+#endif
    delete mIOServiceWork;
    mIOServiceThread->join();
    delete mIOServiceThread;
@@ -126,8 +132,8 @@ FlowManager::initializeDtlsFactory(const char* certAor)
    Data aor(certAor);  
    if(createCert(aor, 365 /* expireDays */, DTLS_CERT_KEY_LENGTH /* keyLen */, mClientCert, mClientKey))
    {
-      FlowDtlsTimerContext* timerContext = new FlowDtlsTimerContext(mIOService);
-      mDtlsFactory = new DtlsFactory(std::unique_ptr<DtlsTimerContext>(timerContext), mClientCert, mClientKey);
+      mDtlsTimerContext = new FlowDtlsTimerContext(mIOService);
+      mDtlsFactory = new DtlsFactory(std::unique_ptr<DtlsTimerContext>(mDtlsTimerContext), mClientCert, mClientKey);
       resip_assert(mDtlsFactory);
    }
    else
