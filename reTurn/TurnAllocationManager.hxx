@@ -28,6 +28,8 @@ public:
 
    void allocationExpired(const asio::error_code& e, const TurnAllocationKey& turnAllocationKey);
 
+   bool empty() const { return mTurnAllocationMap.empty(); }
+
 private:
    typedef std::map<TurnAllocationKey, TurnAllocation*> TurnAllocationMap;  // .slg. consider using hash table
    TurnAllocationMap mTurnAllocationMap;
@@ -40,6 +42,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -30,6 +30,71 @@ TurnManager::~TurnManager()
    InfoLog(<< "Turn Manager destroyed.");
 }
 
+bool
+TurnManager::allocationQuotaReached(const resip::Data& username) const
+{
+   if(mConfig.mMaxAllocationsPerUser == 0)
+   {
+      return false;
+   }
+   std::map<resip::Data, unsigned long>::const_iterator it = mAllocationsPerUser.find(username);
+   return it != mAllocationsPerUser.end() && it->second >= mConfig.mMaxAllocationsPerUser;
+}
+
+void
+TurnManager::addAllocation(const resip::Data& username)
+{
+   ++mAllocationsPerUser[username];
+}
+
+void
+TurnManager::removeAllocation(const resip::Data& username)
+{
+   std::map<resip::Data, unsigned long>::iterator it = mAllocationsPerUser.find(username);
+   if(it != mAllocationsPerUser.end() && --it->second == 0)
+   {
+      mAllocationsPerUser.erase(it);
+   }
+}
+
+bool
+TurnManager::addConnection(const asio::ip::address& address)
+{
+   unsigned long& count = mConnectionsPerIp[address];
+   if(mConfig.mMaxTcpConnectionsPerIp != 0 && count >= mConfig.mMaxTcpConnectionsPerIp)
+   {
+      // Logged once while the address is at the limit, as an attacker may keep trying
+      if(mConnectionLimitLogged.insert(address).second)
+      {
+         WarningLog(<< "Already " << count << " TCP/TLS connections from " << address.to_string() << " (MaxTcpConnectionsPerIp), closing new ones");
+      }
+      else
+      {
+         DebugLog(<< "Already " << count << " TCP/TLS connections from " << address.to_string() << ", closing a new one");
+      }
+      return false;
+   }
+   ++count;
+   return true;
+}
+
+void
+TurnManager::removeConnection(const asio::ip::address& address)
+{
+   std::map<asio::ip::address, unsigned long>::iterator it = mConnectionsPerIp.find(address);
+   if(it != mConnectionsPerIp.end())
+   {
+      if(--it->second < mConfig.mMaxTcpConnectionsPerIp)
+      {
+         mConnectionLimitLogged.erase(address);
+      }
+      if(it->second == 0)
+      {
+         mConnectionsPerIp.erase(it);
+      }
+   }
+}
+
 unsigned short 
 TurnManager::allocateAnyPort(StunTuple::TransportType transport)
 {
@@ -202,6 +267,7 @@ TurnManager::advanceLastAllocatedPort(StunTuple::TransportType transport, unsign
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

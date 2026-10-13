@@ -68,13 +68,15 @@ public:
    unsigned short mAllocationPortRangeMax;
    unsigned long mDefaultAllocationLifetime;
    unsigned long mMaxAllocationLifetime;
-   unsigned long mMaxAllocationsPerUser;  // TODO - enforcement needs to be implemented
+   unsigned long mMaxAllocationsPerUser;  // over all transports, 0 for no limit
 
    resip::Data mTlsServerCertificateFilename;
    resip::Data mTlsServerPrivateKeyFilename;
    resip::Data mTlsTempDhFilename;
    resip::Data mTlsPrivateKeyPassword;
    unsigned long mTlsHandshakeTimeout;  // seconds, 0 for none
+   unsigned long mTcpConnectionIdleTimeout;  // seconds a TCP/TLS connection without an allocation may receive nothing, 0 for none
+   unsigned long mMaxTcpConnectionsPerIp;    // TCP and TLS connections from one client IP address, 0 for no limit
    long mOpenSSLCTXSetOptions;    // SSL_OP_* flags for SSL_CTX_set_options, as repro's settings of the same name
    long mOpenSSLCTXClearOptions;  // SSL_OP_* flags for SSL_CTX_clear_options
 

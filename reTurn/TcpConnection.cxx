@@ -39,12 +39,16 @@ TcpConnection::start()
    asio::error_code ec;
    mLocalAddress = mSocket.local_endpoint(ec).address();
    mLocalPort = mSocket.local_endpoint(ec).port();
+   // Closed if it goes TcpConnectionIdleTimeout without receiving anything while it carries no
+   // allocation
+   startIdleTimer(mRequestHandler.getConfig().mTcpConnectionIdleTimeout, [this]() { return !mTurnAllocationManager.empty(); });
    doFramedReceive();
 }
 
 void 
 TcpConnection::stop()
 {
+   stopIdleTimer();
    asio::error_code ec;
    mSocket.close(ec);
 }
@@ -58,6 +62,7 @@ TcpConnection::close()
 void 
 TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
+   noteReceived();
    if (data->size() > 4)
    {
       /*
@@ -163,6 +168,7 @@ TcpConnection::onSendFailure(const asio::error_code& error)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

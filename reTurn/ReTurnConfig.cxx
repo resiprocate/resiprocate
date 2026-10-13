@@ -63,6 +63,8 @@ ReTurnConfig::ReTurnConfig() :
    mTlsTempDhFilename("dh2048.pem"),
    mTlsPrivateKeyPassword(""),
    mTlsHandshakeTimeout(30),
+   mTcpConnectionIdleTimeout(60),
+   mMaxTcpConnectionsPerIp(0),      // 0 - no max
 #ifdef USE_SSL
    // The same defaults as repro (resip::BaseSecurity::OpenSSLCTXSetOptions)
    mOpenSSLCTXSetOptions(SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION),
@@ -104,6 +106,8 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);
    mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", mTlsPrivateKeyPassword);
    mTlsHandshakeTimeout = getConfigUnsignedLong("TlsHandshakeTimeout", mTlsHandshakeTimeout);
+   mTcpConnectionIdleTimeout = getConfigUnsignedLong("TcpConnectionIdleTimeout", mTcpConnectionIdleTimeout);
+   mMaxTcpConnectionsPerIp = getConfigUnsignedLong("MaxTcpConnectionsPerIp", mMaxTcpConnectionsPerIp);
 #ifdef USE_SSL
    // As repro: a list of SSL_OP_* names replaces the default
    for (const char* name : { "OpenSSLCTXSetOptions", "OpenSSLCTXClearOptions" })

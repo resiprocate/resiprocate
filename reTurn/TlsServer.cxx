@@ -19,7 +19,7 @@ TlsServer::TlsServer(asio::io_context& ioService, RequestHandler& requestHandler
 : mIOService(ioService),
   mAcceptor(ioService),
   mContext(asio::ssl::context::sslv23),  // SSLv23 (actually chooses TLS version dynamically)
-  mConnectionManager(),
+  mConnectionManager(requestHandler.getTurnManager()),
   mRequestHandler(requestHandler)
 {
    // Set Context options 
@@ -99,7 +99,17 @@ TlsServer::handleAccept(const asio::error_code& e)
 {
    if (!e)
    {
-      mConnectionManager.start(mNewConnection);
+      // Started if its client's address doesn't already have too many connections
+      asio::error_code ec;
+      const asio::ip::address remoteAddress = ((TlsConnection*)mNewConnection.get())->socket().remote_endpoint(ec).address();
+      if(!ec)
+      {
+         mConnectionManager.start(mNewConnection, remoteAddress);
+      }
+      else
+      {
+         mNewConnection->stop();  // eg. the client has gone already
+      }
 
       mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
       mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), std::bind(&TlsServer::handleAccept, this, std::placeholders::_1));

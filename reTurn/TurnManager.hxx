@@ -2,7 +2,9 @@
 #define TURNMANAGER_HXX
 
 #include <map>
+#include <set>
 #include <asio.hpp>
+#include <rutil/Data.hxx>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
@@ -28,7 +30,22 @@ public:
 
    const ReTurnConfig& getConfig() { return mConfig; }
 
+   /// Allocations per user, over all transports: TurnAllocation adds and removes its own
+   /// (MaxAllocationsPerUser)
+   bool allocationQuotaReached(const resip::Data& username) const;
+   void addAllocation(const resip::Data& username);
+   void removeAllocation(const resip::Data& username);
+
+   /// TCP and TLS connections per client IP address (MaxTcpConnectionsPerIp): addConnection
+   /// returns false, counting nothing, if the address already has as many as allowed
+   bool addConnection(const asio::ip::address& address);
+   void removeConnection(const asio::ip::address& address);
+
 private:
+   std::map<resip::Data, unsigned long> mAllocationsPerUser;
+   std::map<asio::ip::address, unsigned long> mConnectionsPerIp;
+   std::set<asio::ip::address> mConnectionLimitLogged;  // addresses refused since they reached the limit
+
 
    typedef enum
    {
@@ -55,6 +72,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

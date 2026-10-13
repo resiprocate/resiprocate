@@ -73,6 +73,12 @@ static const unsigned short turnPort = 45478;      // UDP and TCP
 static const unsigned short tlsPort = 45349;
 static const unsigned short noTls12TurnPort = 45480;
 static const unsigned short noTls12TlsPort = 45351;
+static const char* const idleConfig = "testReTurnServer_idle.config";
+static const unsigned short idleTurnPort = 45482;
+static const unsigned short idleTlsPort = 45353;
+static const char* const limitsConfig = "testReTurnServer_limits.config";
+static const unsigned short limitsTurnPort = 45484;
+static const unsigned short limitsTlsPort = 45355;
 static const asio::ip::address localhost = asio::ip::make_address("127.0.0.1");
 
 // A local TCP port that's free now, for a client asked to use a given port.  (Not a fixed one: a
@@ -603,10 +609,191 @@ writeCertificates()
 
 #endif // USE_SSL
 
-int
-main(int, char**)
+// Seconds until the server closes socket (anything it sends is read and ignored), or -1 if it's
+// still open after maxSeconds
+static double
+secondsUntilClosed(asio::ip::tcp::socket& socket, double maxSeconds)
 {
-   resip::Log::initialize(resip::Log::Cout, resip::Log::None, "testReTurnServer");
+   socket.non_blocking(true);
+   const auto start = std::chrono::steady_clock::now();
+   for (;;)
+   {
+      char buffer[1024];
+      asio::error_code ec;
+      socket.read_some(asio::buffer(buffer), ec);
+      const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+      if (ec && ec != asio::error::would_block)
+      {
+         return seconds;
+      }
+      if (seconds > maxSeconds)
+      {
+         return -1;
+      }
+      if (ec)
+      {
+         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      }
+   }
+}
+
+#ifdef USE_SSL
+// A TLS connection to the server on port, once its handshake is done (the server's certificate
+// isn't checked): ec is the outcome
+struct TlsClientConnection
+{
+   TlsClientConnection(asio::io_context& io, unsigned short port) :
+      context(asio::ssl::context::tls_client),
+      stream(io, context)
+   {
+      stream.lowest_layer().connect(asio::ip::tcp::endpoint(localhost, port), ec);
+      if (!ec)
+      {
+         stream.handshake(asio::ssl::stream_base::client, ec);
+      }
+   }
+   asio::ssl::context context;
+   asio::ssl::stream<asio::ip::tcp::socket> stream;
+   asio::error_code ec;
+};
+#endif
+
+// TcpConnectionIdleTimeout (1 second here): a TCP or TLS connection that receives nothing while it
+// carries no allocation is closed
+static void
+testIdleTimeout()
+{
+   cerr << "-- TcpConnectionIdleTimeout" << endl;
+   asio::io_context io;
+   {
+      asio::ip::tcp::socket socket(io);
+      socket.connect(asio::ip::tcp::endpoint(localhost, idleTurnPort));
+      const double seconds = secondsUntilClosed(socket, 4);
+      check("idle: a TCP connection that sends nothing is closed after the timeout", seconds > 0.8 && seconds < 3);
+   }
+#ifdef USE_SSL
+   {
+      TlsClientConnection tls(io, idleTlsPort);
+      check("idle: a TLS connection completes its handshake", !tls.ec);
+      const double seconds = secondsUntilClosed(tls.stream.next_layer(), 4);
+      check("idle: a TLS connection that sends nothing after its handshake is closed after the timeout", seconds > 0.8 && seconds < 3);
+   }
+#endif
+   {
+      TurnTcpSocket client(localhost, 0);
+      client.setUsernameAndPassword("test", "1234");
+      check("idle: STUN bind", !client.connect("127.0.0.1", idleTurnPort) && !client.bindRequest());
+      std::this_thread::sleep_for(std::chrono::seconds(2));
+      check("idle: a connection gone quiet since a STUN bind is closed", (bool)client.bindRequest());
+   }
+   {
+      TurnTcpSocket client(localhost, 0);
+      client.setUsernameAndPassword("test", "1234");
+      check("idle: TURN allocation",
+            !client.connect("127.0.0.1", idleTurnPort) &&
+            !client.createAllocation(TurnSocket::UnspecifiedLifetime, TurnSocket::UnspecifiedBandwidth,
+                                     StunMessage::PropsNone, TurnSocket::UnspecifiedToken, StunTuple::UDP));
+      std::this_thread::sleep_for(std::chrono::seconds(2));
+      check("idle: a quiet connection carrying an allocation is kept open", !client.refreshAllocation());
+      check("idle: the allocation is released", !client.destroyAllocation());
+      std::this_thread::sleep_for(std::chrono::seconds(2));
+      check("idle: once its allocation is gone, the quiet connection is closed", (bool)client.bindRequest());
+   }
+}
+
+// MaxTcpConnectionsPerIp (4 here), counting TCP and TLS connections together, and
+// MaxAllocationsPerUser (2 here), counting allocations over all transports
+static void
+testLimits()
+{
+   cerr << "-- MaxTcpConnectionsPerIp" << endl;
+   {
+      asio::io_context io;
+      asio::ip::tcp::socket tcp1(io);
+      asio::ip::tcp::socket tcp2(io);
+      tcp1.connect(asio::ip::tcp::endpoint(localhost, limitsTurnPort));
+      tcp2.connect(asio::ip::tcp::endpoint(localhost, limitsTurnPort));
+#ifdef USE_SSL
+      TlsClientConnection tls1(io, limitsTlsPort);
+      TlsClientConnection tls2(io, limitsTlsPort);
+      check("connections: TLS connections are accepted alongside TCP ones, up to the limit", !tls1.ec && !tls2.ec);
+#else
+      asio::ip::tcp::socket tcp3(io);
+      asio::ip::tcp::socket tcp4(io);
+      tcp3.connect(asio::ip::tcp::endpoint(localhost, limitsTurnPort));
+      tcp4.connect(asio::ip::tcp::endpoint(localhost, limitsTurnPort));
+#endif
+      check("connections: up to the limit, they stay open", secondsUntilClosed(tcp1, 0.3) < 0);
+
+      asio::ip::tcp::socket overTcp(io);
+      overTcp.connect(asio::ip::tcp::endpoint(localhost, limitsTurnPort));
+      const double tcpSeconds = secondsUntilClosed(overTcp, 2);
+      check("connections: one more TCP connection is closed at once", tcpSeconds >= 0 && tcpSeconds < 0.5);
+#ifdef USE_SSL
+      asio::ip::tcp::socket overTls(io);
+      overTls.connect(asio::ip::tcp::endpoint(localhost, limitsTlsPort));
+      const double tlsSeconds = secondsUntilClosed(overTls, 2);
+      check("connections: so is one more TLS connection - the limit counts both", tlsSeconds >= 0 && tlsSeconds < 0.5);
+#endif
+
+      tcp2.close();
+      std::this_thread::sleep_for(std::chrono::milliseconds(300));
+      asio::ip::tcp::socket again(io);
+      again.connect(asio::ip::tcp::endpoint(localhost, limitsTurnPort));
+      check("connections: once one is closed, a new one is accepted", secondsUntilClosed(again, 0.3) < 0);
+   }
+
+   cerr << "-- MaxAllocationsPerUser" << endl;
+   {
+      auto allocate = [](TurnSocket& client)
+      {
+         client.setUsernameAndPassword("test", "1234");
+         asio::error_code ec = client.connect("127.0.0.1", limitsTurnPort);
+         if (!ec)
+         {
+            ec = client.createAllocation(TurnSocket::UnspecifiedLifetime, TurnSocket::UnspecifiedBandwidth,
+                                         StunMessage::PropsNone, TurnSocket::UnspecifiedToken, StunTuple::UDP);
+         }
+         return ec;
+      };
+      TurnUdpSocket first(localhost, 0);
+      TurnUdpSocket second(localhost, 0);
+      TurnUdpSocket third(localhost, 0);
+      TurnTcpSocket overTcp(localhost, 0);
+      check("allocations: a user's allocations are accepted up to the limit", !allocate(first) && !allocate(second));
+      check("allocations: one more is refused with 486 (Allocation Quota Reached)", allocate(third).value() == 486);
+      check("allocations: over TCP too - the limit counts all transports", allocate(overTcp).value() == 486);
+      check("allocations: once one is released, another is accepted",
+            !first.destroyAllocation() &&
+            !third.createAllocation(TurnSocket::UnspecifiedLifetime, TurnSocket::UnspecifiedBandwidth,
+                                    StunMessage::PropsNone, TurnSocket::UnspecifiedToken, StunTuple::UDP));
+      // Released, so none are left when the server is stopped
+      second.destroyAllocation();
+      third.destroyAllocation();
+   }
+}
+
+// Runs test with a server configured from configFile
+static void
+runWithServer(const char* configFile, const std::function<void()>& test)
+{
+   InProcessServer server(configFile);
+   try
+   {
+      test();
+   }
+   catch (const std::exception& e)
+   {
+      // Caught while the server is still running (see InProcessServer)
+      check((std::string("the tests ran without an exception: ") + e.what()).c_str(), false);
+   }
+}
+
+int
+main(int argc, char** argv)
+{
+   // Run with a log level (eg. testReTurnServer INFO) to see reTurn's logging
+   resip::Log::initialize(resip::Log::Cout, argc > 1 ? resip::Log::toLevel(resip::Data(argv[1])) : resip::Log::None, "testReTurnServer");
 
    bool ready = true;
 #ifdef USE_SSL
@@ -620,7 +807,12 @@ main(int, char**)
    ready = ready &&
            writeConfig(defaultConfig, turnPort, tlsPort, "") &&
            writeConfig(noTls12Config, noTls12TurnPort, noTls12TlsPort,
-                       "OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2, SSL_OP_NO_SSLv3, SSL_OP_NO_COMPRESSION, SSL_OP_NO_TLSv1_2\n");
+                       "OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2, SSL_OP_NO_SSLv3, SSL_OP_NO_COMPRESSION, SSL_OP_NO_TLSv1_2\n") &&
+           writeConfig(idleConfig, idleTurnPort, idleTlsPort,
+                       "TcpConnectionIdleTimeout = 1\nAllocationPortRangeMin = 60000\nAllocationPortRangeMax = 60999\n") &&
+           writeConfig(limitsConfig, limitsTurnPort, limitsTlsPort,
+                       "TcpConnectionIdleTimeout = 0\nMaxTcpConnectionsPerIp = 4\nMaxAllocationsPerUser = 2\n"
+                       "AllocationPortRangeMin = 61000\nAllocationPortRangeMax = 61999\n");
    check("certificates, users and config files written", ready);
 
    if (ready)
@@ -641,6 +833,8 @@ main(int, char**)
             check("options: with SSL_OP_NO_TLSv1_2, a TLS 1.2 client is refused", !handshakes(noTls12TlsPort, TLS1_2_VERSION));
             check("options: with SSL_OP_NO_TLSv1_2, a TLS 1.3 client is accepted", handshakes(noTls12TlsPort, TLS1_3_VERSION));
 #endif
+            runWithServer(idleConfig, testIdleTimeout);
+            runWithServer(limitsConfig, testLimits);
          }
          catch (const std::exception& e)
          {
@@ -653,7 +847,7 @@ main(int, char**)
       }
    }
 
-   for (const char* file : { caFile, certFile, keyFile, usersFile, defaultConfig, noTls12Config })
+   for (const char* file : { caFile, certFile, keyFile, usersFile, defaultConfig, noTls12Config, idleConfig, limitsConfig })
    {
       remove(file);
    }

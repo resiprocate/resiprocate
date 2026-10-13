@@ -2,31 +2,43 @@
 #include <functional>
 
 #include "ConnectionManager.hxx"
+#include "TurnManager.hxx"
 
 namespace reTurn {
 
 void 
-ConnectionManager::start(ConnectionPtr c)
+ConnectionManager::start(ConnectionPtr c, const asio::ip::address& remoteAddress)
 {
-  mConnections.insert(c);
+  if(!mTurnManager.addConnection(remoteAddress))
+  {
+     c->stop();
+     return;
+  }
+  mConnections[c] = remoteAddress;
   c->start();
 }
 
 void 
 ConnectionManager::stop(ConnectionPtr c)
 {
-  mConnections.erase(c);
+  std::map<ConnectionPtr, asio::ip::address>::iterator it = mConnections.find(c);
+  if(it != mConnections.end())
+  {
+     mTurnManager.removeConnection(it->second);
+     mConnections.erase(it);
+  }
   c->stop();
 }
 
 void 
 ConnectionManager::stopAll()
 {
-   std::set<ConnectionPtr>::iterator it = mConnections.begin();
+   std::map<ConnectionPtr, asio::ip::address>::iterator it = mConnections.begin();
 
    for(; it != mConnections.end(); it++)
    {
-      (*it)->stop();
+      mTurnManager.removeConnection(it->second);
+      it->first->stop();
    }
    mConnections.clear();
 }
@@ -36,6 +48,7 @@ ConnectionManager::stopAll()
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

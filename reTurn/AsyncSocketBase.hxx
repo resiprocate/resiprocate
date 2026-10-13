@@ -9,6 +9,7 @@
 #include "DataBuffer.hxx"
 #include "StunTuple.hxx"
 
+#include <chrono>
 #include <cstddef>
 #include <deque>
 #include <functional>
@@ -94,6 +95,14 @@ protected:
    void asyncConnect(asio::ip::tcp::socket& socket, const asio::ip::tcp::resolver::results_type& endpoints);
    asio::ip::tcp::endpoint mLocalTcpEndpoint;
 
+   /// For server connections (TcpConnectionIdleTimeout): the connection is closed, with close(),
+   /// once nothing has been received on it for timeoutSeconds while inUse() is false - eg. while
+   /// it carries no allocation.  0 for no timeout.  Call noteReceived() for each message received,
+   /// and stopIdleTimer() when the connection is stopped.
+   void startIdleTimer(unsigned int timeoutSeconds, std::function<bool()> inUse);
+   void noteReceived() { mLastReceived = std::chrono::steady_clock::now(); }
+   void stopIdleTimer();
+
    /// The io_context used to perform asynchronous operations.
    asio::io_context& mIOService;
 
@@ -116,6 +125,12 @@ protected:
 private:
    void asyncConnectFrom(asio::ip::tcp::socket& socket, asio::ip::tcp::resolver::results_type endpoints,
                          asio::ip::tcp::resolver::results_type::const_iterator next, asio::error_code lastError);
+
+   void waitIdle(std::chrono::steady_clock::duration wait);
+   std::unique_ptr<asio::steady_timer> mIdleTimer;
+   std::chrono::steady_clock::duration mIdleTimeout;
+   std::function<bool()> mInUse;
+   std::chrono::steady_clock::time_point mLastReceived;
 
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers) = 0;
    virtual void transportReceive() = 0;

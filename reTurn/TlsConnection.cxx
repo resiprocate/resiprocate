@@ -54,6 +54,7 @@ TlsConnection::start()
 void 
 TlsConnection::stop()
 {
+  stopIdleTimer();
   asio::error_code ec;
   //mSocket.shutdown(ec);  // !slg! note: this fn gives a stack overflow since ASIO 1.0.0 for some reason
   mSocket.lowest_layer().close(ec);
@@ -76,6 +77,9 @@ TlsConnection::onServerHandshakeSuccess()
    asio::error_code ec;
    mLocalAddress = mSocket.lowest_layer().local_endpoint().address();
    mLocalPort = mSocket.lowest_layer().local_endpoint().port();
+   // Closed if it goes TcpConnectionIdleTimeout without receiving anything while it carries no
+   // allocation
+   startIdleTimer(mRequestHandler.getConfig().mTcpConnectionIdleTimeout, [this]() { return !mTurnAllocationManager.empty(); });
    doFramedReceive();
 }
  
@@ -89,6 +93,7 @@ TlsConnection::onServerHandshakeFailure(const asio::error_code& e)
 void 
 TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
+   noteReceived();
    if (data->size() > 4)
    {
       /*

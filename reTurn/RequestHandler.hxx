@@ -41,6 +41,7 @@ public:
    void processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, const std::shared_ptr<DataBuffer>& data);
 
    const ReTurnConfig& getConfig() { return mTurnManager.getConfig(); }
+   TurnManager& getTurnManager() { return mTurnManager; }
 
 private:
 

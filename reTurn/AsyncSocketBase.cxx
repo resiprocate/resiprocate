@@ -231,6 +231,63 @@ AsyncSocketBase::asyncConnectFrom(asio::ip::tcp::socket& socket, asio::ip::tcp::
    });
 }
 
+void
+AsyncSocketBase::startIdleTimer(unsigned int timeoutSeconds, std::function<bool()> inUse)
+{
+   if(timeoutSeconds == 0)
+   {
+      return;
+   }
+   mIdleTimeout = std::chrono::seconds(timeoutSeconds);
+   mInUse = std::move(inUse);
+   mIdleTimer.reset(new asio::steady_timer(mIOService));
+   noteReceived();
+   waitIdle(mIdleTimeout);
+}
+
+void
+AsyncSocketBase::stopIdleTimer()
+{
+   mInUse = nullptr;  // in case the timer has fired already, and its handler is queued
+   if(mIdleTimer)
+   {
+      mIdleTimer->cancel();
+   }
+}
+
+void
+AsyncSocketBase::waitIdle(std::chrono::steady_clock::duration wait)
+{
+   // Rather than being set again for each message received, the timer is set for when the
+   // connection would have been idle long enough, and then checks.  It holds a weak reference: it
+   // doesn't keep a stopped connection alive.
+   std::weak_ptr<AsyncSocketBase> weakSelf = shared_from_this();
+   mIdleTimer->expires_after(wait);
+   mIdleTimer->async_wait([weakSelf](const asio::error_code& e)
+   {
+      std::shared_ptr<AsyncSocketBase> self = weakSelf.lock();
+      if(e == asio::error::operation_aborted || !self || !self->mInUse)
+      {
+         return;
+      }
+      const std::chrono::steady_clock::duration idle = std::chrono::steady_clock::now() - self->mLastReceived;
+      if(self->mInUse())
+      {
+         self->waitIdle(self->mIdleTimeout);  // kept for as long as it's in use
+      }
+      else if(idle < self->mIdleTimeout)
+      {
+         self->waitIdle(self->mIdleTimeout - idle);
+      }
+      else
+      {
+         InfoLog(<< "Closing the connection from " << self->mConnectedAddress.to_string() << ":" << self->mConnectedPort
+                 << ": nothing received for " << std::chrono::duration_cast<std::chrono::seconds>(idle).count() << " seconds");
+         self->close();
+      }
+   });
+}
+
 } // namespace
 
 

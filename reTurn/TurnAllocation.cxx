@@ -54,6 +54,9 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
 
    // Register for Turn Transport onDestroyed notification
    mLocalTurnSocket->registerAsyncSocketBaseHandler(this);
+
+   // Counted against the user's quota until destroyed
+   mTurnManager.addAllocation(mClientAuth.getClientUsername());
 }
 
 TurnAllocation::~TurnAllocation()
@@ -69,6 +72,7 @@ TurnAllocation::~TurnAllocation()
 
       // Deallocate Port
       mTurnManager.deallocatePort(mRequestedTuple.getTransportType(), mRequestedTuple.getPort());
+      mTurnManager.removeAllocation(mClientAuth.getClientUsername());
 
       // Cleanup Permission Memory
       TurnPermissionMap::iterator it;
@@ -343,6 +347,7 @@ TurnAllocation::addChannelBinding(const StunTuple& peerAddress, unsigned short c
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

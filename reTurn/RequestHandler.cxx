@@ -470,8 +470,13 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
       return RespondFromReceiving;
    }
 
-   // TODO - add a check that a per-user quota for number of allowed TurnAllocations 
-   // has not been exceeded - if so send 486 (Allocation Quota Reached)
+   // The user may only have so many allocations at once (MaxAllocationsPerUser)
+   if(mTurnManager.allocationQuotaReached(*request.mUsername))
+   {
+      WarningLog(<< "User " << *request.mUsername << " already has " << getConfig().mMaxAllocationsPerUser << " allocations.  Sending 486. Sender=" << request.mRemoteTuple);
+      buildErrorResponse(response, 486, "Allocation Quota Reached");
+      return RespondFromReceiving;
+   }
 
    // Build the Allocation Tuple
    StunTuple allocationTuple(request.mLocalTuple.getTransportType(), // Default to receiving transport
@@ -597,6 +602,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
       if(!allocation->startRelay())
       {
          // TODO - we could handle this better perhaps try to allocate a new port
+         delete allocation;  // frees its port, and its place in the user's quota
          ErrLog(<< "Error starting allocation relay.  Sending 500. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 500, "Server Error");  
          return RespondFromReceiving;

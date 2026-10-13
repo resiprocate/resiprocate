@@ -111,7 +111,9 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 #ifdef USE_IPV6
       std::shared_ptr<reTurn::UdpServer> udpV6TurnServer;
       std::shared_ptr<reTurn::TcpServer> tcpV6TurnServer;
+#ifdef USE_SSL
       std::shared_ptr<reTurn::TlsServer> tlsV6TurnServer;
+#endif
 #endif
 
       // The one and only RequestHandler - if altStunPort is non-zero, then assume RFC3489 support is enabled and pass settings to request handler
@@ -133,10 +135,12 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 #ifdef USE_IPV6
       udpV6TurnServer = std::make_shared<reTurn::UdpServer>(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort);
       tcpV6TurnServer = std::make_shared<reTurn::TcpServer>(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort);
+#ifdef USE_SSL
       if(reTurnConfig.mTlsTurnPort != 0)
       {
          tlsV6TurnServer = std::make_shared<reTurn::TlsServer>(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTlsTurnPort);
       }
+#endif
 #endif
 
       if(reTurnConfig.mAltStunPort != 0) // if alt stun port is non-zero, then RFC3489 support is enabled

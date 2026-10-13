@@ -1,23 +1,27 @@
 #ifndef CONNECTION_MANAGER_HXX
 #define CONNECTION_MANAGER_HXX
 
-#include <set>
+#include <map>
 #include "AsyncSocketBase.hxx"
 
 namespace reTurn {
 
+class TurnManager;
+
 /// Manages open connections so that they may be cleanly stopped when the server
-/// needs to shut down.
+/// needs to shut down, and counts them per client IP address (with turnManager, which counts
+/// all the servers' connections, for MaxTcpConnectionsPerIp).
 class ConnectionManager
 {
 public:
    // noncopyable
-   ConnectionManager() {};
+   explicit ConnectionManager(TurnManager& turnManager) : mTurnManager(turnManager) {}
    ConnectionManager(const ConnectionManager&) = delete;
    ConnectionManager& operator=(const ConnectionManager&) = delete;
 
-  /// Add the specified connection to the manager and start it.
-   void start(ConnectionPtr c);
+  /// Add the specified connection, from remoteAddress, to the manager and start it - or, if
+  /// remoteAddress already has as many connections as allowed, close it.
+   void start(ConnectionPtr c, const asio::ip::address& remoteAddress);
 
   /// Stop the specified connection.
   void stop(ConnectionPtr c);
@@ -26,8 +30,10 @@ public:
   void stopAll();
 
 private:
-  /// The managed connections.
-  std::set<ConnectionPtr> mConnections;
+  TurnManager& mTurnManager;
+
+  /// The managed connections, and their client's address
+  std::map<ConnectionPtr, asio::ip::address> mConnections;
 };
 
 } 
@@ -37,6 +43,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
