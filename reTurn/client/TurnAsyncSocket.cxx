@@ -1138,7 +1138,15 @@ TurnAsyncSocket::doSendFramed(const std::shared_ptr<DataBuffer>& data)
 void 
 TurnAsyncSocket::doSendToFramed(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
-   // Setup Remote Peer 
+   // Without an allocation there's no relay to frame the data for: send it as it is (eg. DTLS,
+   // and media, on a flow that isn't using TURN)
+   if(!mHaveAllocation)
+   {
+      sendToUnframed(address, port, data);
+      return;
+   }
+
+   // Setup Remote Peer
    StunTuple remoteTuple(mRelayTransportType, address, port);
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
    if(!remotePeer)

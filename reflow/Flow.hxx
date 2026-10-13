@@ -108,7 +108,9 @@ public:
    /// function textual name, eg. "sha-256".  SRTP is only set up for dtls-srtp
    /// connections whose peer certificate matches it, so none is set up until
    /// this is called; connections that have already completed their handshake
-   /// are checked now.
+   /// are checked now.  Calling it means DTLS-SRTP was negotiated: from then on,
+   /// media is only sent to, and passed on from, endpoints whose DTLS handshake
+   /// has set up SRTP - never in the clear.
    void setRemoteSDPFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint);
 
    /// Retrieves the stored remote SDP Fingerprint.

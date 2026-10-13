@@ -47,5 +47,31 @@ install(TARGETS reflow DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install_and_preserve_hierarchy(${CMAKE_INSTALL_INCLUDEDIR}/reflow ${INCLUDES})
 
 if(BUILD_TESTING)
-    add_subdirectory(dtls_wrapper/test)
+   # For the test directories: test() is run by ctest, manual_test() isn't
+   function(copy_openssl_dlls)
+      if(WIN32 AND WITH_SSL)
+        add_custom_command ( TARGET ${ARGV0} POST_BUILD
+          COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          $<TARGET_FILE:OPENSSL> $<TARGET_FILE_DIR:${ARGV0}>
+          COMMAND_EXPAND_LISTS
+        )
+      endif()
+   endfunction()
+
+   function(manual_test)
+      add_executable(${ARGV})
+      set_target_properties(${ARGV0} PROPERTIES FOLDER reflow/ManualTests)
+      target_link_libraries(${ARGV0} reflow)
+      copy_openssl_dlls(${ARGV0})
+   endfunction()
+
+   function(test)
+      test_base(${ARGV})
+      set_target_properties(${ARGV0} PROPERTIES FOLDER reflow/Tests)
+      target_link_libraries(${ARGV0} reflow)
+      copy_openssl_dlls(${ARGV0})
+   endfunction()
+
+   add_subdirectory(dtls_wrapper/test)
+   add_subdirectory(test)
 endif()

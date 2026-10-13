@@ -324,26 +324,25 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
    {
       Lock lock(mMutex);
       DtlsSocket* dtlsSocket = getDtlsSocket(StunTuple(mLocalBinding.getTransportType(), address, port));
-      if(dtlsSocket)
+      if(dtlsSocket && ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->isSrtpInitialized())
       {
-         if(((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->isSrtpInitialized())
+         srtp_err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
+         if(status != srtp_err_status_ok)
          {
-            srtp_err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
-            if(status != srtp_err_status_ok)
-            {
-               ErrLog(LOG_PREFIX << "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
-               onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
-               return false;
-            }
-         }
-         else
-         {
-            //WarningLog(LOG_PREFIX << "Unable to send packet yet - handshake is not completed yet");
-            onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::InvalidState, asio::error::misc_category));
+            ErrLog(LOG_PREFIX << "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
+            onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
             return false;
          }
       }
-   }   
+      else if(dtlsSocket || !mRemoteSDPFingerprint.empty())
+      {
+         // DTLS-SRTP (negotiated, as the remote SDP fingerprint is set, or under way with this
+         // endpoint): nothing is sent in the clear - not before the handshake has set up SRTP,
+         // nor to an endpoint without one
+         onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::InvalidState, asio::error::misc_category));
+         return false;
+      }
+   }
 #endif //USE_SSL
    
    return true;
@@ -439,14 +438,15 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
    asio::error_code errorCode;
    unsigned int receivedsize = (unsigned int)receivedData->mData->size();
 
-   // SRTP Unprotect (if required)
+   // SRTP Unprotect (if required): a packet that isn't authentic SRTP - altered, forged, or plain
+   // RTP - isn't passed on
    if(mMediaStream.mSRTPSessionInCreated)
    {
       srtp_err_status_t status = mMediaStream.srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
       if(status != srtp_err_status_ok)
       {
          ErrLog(LOG_PREFIX << "Unable to SRTP unprotect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
-         //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
+         errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
       }
    }
 #ifdef USE_SSL
@@ -454,22 +454,21 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
    {
       Lock lock(mMutex);
       DtlsSocket* dtlsSocket = getDtlsSocket(StunTuple(mLocalBinding.getTransportType(), receivedData->mAddress, receivedData->mPort));
-      if(dtlsSocket)
+      if(dtlsSocket && ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->isSrtpInitialized())
       {
-         if(((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->isSrtpInitialized())
+         srtp_err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
+         if(status != srtp_err_status_ok)
          {
-            srtp_err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
-            if(status != srtp_err_status_ok)
-            {
-               ErrLog(LOG_PREFIX << "Unable to SRTP unprotect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
-               //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
-            }
+            ErrLog(LOG_PREFIX << "Unable to SRTP unprotect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
+            errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
          }
-         else
-         {
-            //WarningLog(LOG_PREFIX << "Unable to send packet yet - handshake is not completed yet");
-            errorCode = asio::error_code(flowmanager::InvalidState, asio::error::misc_category);
-         }
+      }
+      else if(dtlsSocket || !mRemoteSDPFingerprint.empty())
+      {
+         // DTLS-SRTP (negotiated, as the remote SDP fingerprint is set, or under way with this
+         // endpoint): only SRTP from an endpoint whose handshake has set it up is passed on
+         DebugLog(LOG_PREFIX << "Discarding media from " << receivedData->mAddress.to_string() << ":" << receivedData->mPort << ", which has no DTLS-SRTP association");
+         errorCode = asio::error_code(flowmanager::InvalidState, asio::error::misc_category);
       }
    }
 #endif //USE_SSL
