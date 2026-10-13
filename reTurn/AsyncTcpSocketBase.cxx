@@ -31,24 +31,18 @@ AsyncTcpSocketBase::getSocketDescriptor()
 asio::error_code 
 AsyncTcpSocketBase::bind(const asio::ip::address& address, unsigned short port)
 {
-   asio::error_code errorCode;
-   mSocket.open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
-   if(!errorCode)
-   {
-      mSocket.set_option(asio::ip::tcp::no_delay(true), errorCode); // ?slg? do we want this?
-      mSocket.set_option(asio::ip::tcp::socket::reuse_address(true), errorCode);
-      mSocket.bind(asio::ip::tcp::endpoint(address, port), errorCode);
-   }   
-   return errorCode;
+   // connect() binds the socket again, for each address it tries
+   mLocalTcpEndpoint = asio::ip::tcp::endpoint(address, port);
+   return openAndBind(mSocket);
 }
 
-void 
+void
 AsyncTcpSocketBase::connect(const std::string& address, unsigned short port)
 {
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-   mResolver.async_resolve(mSocket.local_endpoint().protocol(), address, service.c_str(),
+   mResolver.async_resolve(mLocalTcpEndpoint.protocol(), address, service.c_str(),
         std::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
                     std::placeholders::_1,
                     std::placeholders::_2));
@@ -62,10 +56,7 @@ AsyncTcpSocketBase::handleTcpResolve(const asio::error_code& ec,
    {
       // Attempt a connection to the first endpoint in the list. Each endpoint
       // will be tried until we successfully establish a connection.
-      //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
-      asio::async_connect(mSocket, endpoints,
-                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            std::placeholders::_1, std::placeholders::_2));
+      asyncConnect(mSocket, endpoints);
    }
    else
    {
@@ -199,8 +190,8 @@ AsyncTcpSocketBase::transportClose()
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

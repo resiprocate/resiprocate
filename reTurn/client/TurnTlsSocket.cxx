@@ -47,48 +47,52 @@ TurnTlsSocket::TurnTlsSocket(bool validateServerCertificateHostname,
                              const std::string& rootCertificatesFile) : 
    TurnTcpSocket(address,port),
    mSslContext(makeClientContext(rootCertificatesFile)),
-   mSocket(mIOService, mSslContext),
+   mSocket(new asio::ssl::stream<asio::ip::tcp::socket>(mIOService, mSslContext)),
    mValidateServerCertificateHostname(validateServerCertificateHostname)
 {
    mLocalBinding.setTransportType(StunTuple::TLS);
-
-   asio::error_code errorCode;
-   mSocket.lowest_layer().open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
-   if(!errorCode)
-   {
-      mSocket.lowest_layer().set_option(asio::ip::tcp::socket::reuse_address(true));
-      mSocket.lowest_layer().set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
-      mSocket.lowest_layer().bind(asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
-   }
+   // connect() opens the socket and binds it to address and port
 }
 
-asio::error_code 
+asio::error_code
 TurnTlsSocket::connect(const std::string& address, unsigned short port)
 {
    // Get a list of endpoints corresponding to the server name.
    asio::ip::tcp::resolver resolver(mIOService);
    resip::Data service(port);
-   asio::ip::tcp::resolver::results_type results = resolver.resolve(mSocket.lowest_layer().local_endpoint().protocol(), address, service.c_str());
+   asio::error_code errorCode;
+   asio::ip::tcp::resolver::results_type results = resolver.resolve(protocol(), address, service.c_str(), errorCode);
+   if(errorCode)
+   {
+      return errorCode;
+   }
    asio::ip::tcp::resolver::results_type::const_iterator endpoint_iterator = results.begin();
    asio::ip::tcp::resolver::results_type::const_iterator end = results.end();
 
-   // SNI, and the check that the server certificate is for address, made during the handshake
-   if (!AsyncTlsSocketBase::setupClientSsl(mSocket.native_handle(), address, mValidateServerCertificateHostname))
-   {
-      return asio::error::invalid_argument;
-   }
-
-   // Try each endpoint until we successfully establish a connection.
-   asio::error_code errorCode = asio::error::host_not_found;
+   // Try each endpoint until we successfully establish a connection
+   errorCode = asio::error::host_not_found;
    while (errorCode && endpoint_iterator != end)
    {
-      mSocket.lowest_layer().close();
-      mSocket.lowest_layer().connect(*endpoint_iterator, errorCode);
+      // A new SSL stream, on a new socket bound to the local binding: after a failed handshake
+      // the SSL object can't be used again, nor anything left in the stream's buffers
+      mSocket.reset(new asio::ssl::stream<asio::ip::tcp::socket>(mIOService, mSslContext));
+
+      // SNI, and the check that the server certificate is for address, made during the handshake
+      if (!AsyncTlsSocketBase::setupClientSsl(mSocket->native_handle(), address, mValidateServerCertificateHostname))
+      {
+         return asio::error::invalid_argument;
+      }
+
+      errorCode = openAndBind(mSocket->next_layer());
+      if(!errorCode)
+      {
+         mSocket->lowest_layer().connect(*endpoint_iterator, errorCode);
+      }
       if(!errorCode)
       {
          DebugLog(<< "Connected!");
-         mSocket.handshake(asio::ssl::stream_base::client, errorCode);
-         AsyncTlsSocketBase::logClientHandshakeResult(mSocket.native_handle(), address, errorCode);
+         mSocket->handshake(asio::ssl::stream_base::client, errorCode);
+         AsyncTlsSocketBase::logClientHandshakeResult(mSocket->native_handle(), address, errorCode);
          if(!errorCode)
          {
             mConnected = true;
@@ -107,7 +111,7 @@ asio::error_code
 TurnTlsSocket::rawWrite(const char* buffer, unsigned int size)
 {
    asio::error_code errorCode;
-   asio::write(mSocket, asio::buffer(buffer, size), asio::transfer_all(), errorCode); 
+   asio::write(*mSocket, asio::buffer(buffer, size), asio::transfer_all(), errorCode); 
    return errorCode;
 }
 
@@ -115,21 +119,21 @@ asio::error_code
 TurnTlsSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
 {
    asio::error_code errorCode;
-   asio::write(mSocket, buffers, asio::transfer_all(), errorCode);
+   asio::write(*mSocket, buffers, asio::transfer_all(), errorCode);
    return errorCode;
 }
 
 void 
 TurnTlsSocket::readHeader()
 {
-   asio::async_read(mSocket, asio::buffer(mReadBuffer, 4),
+   asio::async_read(*mSocket, asio::buffer(mReadBuffer, 4),
                     std::bind(&TurnTlsSocket::handleReadHeader, this, std::placeholders::_1));
 }
 
 void 
 TurnTlsSocket::readBody(unsigned int len)
 {
-   asio::async_read(mSocket, asio::buffer(&mReadBuffer[4], len),
+   asio::async_read(*mSocket, asio::buffer(&mReadBuffer[4], len),
                     std::bind(&TurnTlsSocket::handleRawRead, this, std::placeholders::_1, std::placeholders::_2));
 }
 
@@ -137,7 +141,7 @@ void
 TurnTlsSocket::cancelSocket()
 {
    asio::error_code ec;
-   mSocket.lowest_layer().cancel(ec);
+   mSocket->lowest_layer().cancel(ec);
 }
 
 } // namespace

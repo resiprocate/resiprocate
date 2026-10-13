@@ -7,6 +7,8 @@
 #ifndef TURNTLSSOCKET_HXX
 #define TURNTLSSOCKET_HXX
 
+#include <memory>
+
 #include <asio.hpp>
 #include <asio/ssl.hpp>
 
@@ -25,7 +27,7 @@ public:
                           unsigned short port = 0,
                           const std::string& rootCertificatesFile = "ca.pem");
 
-   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.lowest_layer().native_handle(); }
+   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket->lowest_layer().native_handle(); }
    virtual  asio::error_code connect(const std::string& address, unsigned short port);
 
 protected:
@@ -38,7 +40,9 @@ protected:
 
 private:
    asio::ssl::context mSslContext;
-   asio::ssl::stream<asio::ip::tcp::socket> mSocket;
+   // Made again for each connection attempt: once a handshake has failed, its SSL object can't
+   // be used for another
+   std::unique_ptr<asio::ssl::stream<asio::ip::tcp::socket>> mSocket;
    bool mValidateServerCertificateHostname;
 };
 

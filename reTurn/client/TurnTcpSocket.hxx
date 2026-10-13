@@ -35,6 +35,13 @@ protected:
    /// Handle completion of a read operation for first 32 bits
    virtual void handleReadHeader(const asio::error_code& e);
 
+   /// Opens socket and binds it to the local binding (address and port), for a connection
+   /// attempt.  The socket isn't opened before connect(), which makes a new one for each address
+   /// it tries.
+   asio::error_code openAndBind(asio::ip::tcp::socket& socket);
+   /// The protocol (IPv4 or IPv6) of the local binding
+   asio::ip::tcp protocol() const;
+
 private:
 
    asio::ip::tcp::socket mSocket;
@@ -47,8 +54,8 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

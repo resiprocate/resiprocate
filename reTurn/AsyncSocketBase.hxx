@@ -86,6 +86,14 @@ protected:
    virtual void handleSend(const asio::error_code& e);
    virtual void handleReceive(const asio::error_code& e, size_t bytesTransferred);
 
+   /// For TCP and TLS client sockets.  openAndBind opens socket and binds it to mLocalTcpEndpoint
+   /// (set by bind()).  asyncConnect connects socket to each of endpoints in turn until one
+   /// succeeds, then calls handleConnect - like asio::async_connect, but binding the socket before
+   /// each attempt: asio::async_connect closes it first, losing the binding.
+   asio::error_code openAndBind(asio::ip::tcp::socket& socket);
+   void asyncConnect(asio::ip::tcp::socket& socket, const asio::ip::tcp::resolver::results_type& endpoints);
+   asio::ip::tcp::endpoint mLocalTcpEndpoint;
+
    /// The io_context used to perform asynchronous operations.
    asio::io_context& mIOService;
 
@@ -106,6 +114,9 @@ protected:
    BeforeClosedHandler mOnBeforeSocketCloseFp;
 
 private:
+   void asyncConnectFrom(asio::ip::tcp::socket& socket, asio::ip::tcp::resolver::results_type endpoints,
+                         asio::ip::tcp::resolver::results_type::const_iterator next, asio::error_code lastError);
+
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers) = 0;
    virtual void transportReceive() = 0;
    virtual void transportFramedReceive() = 0;
@@ -139,6 +150,7 @@ typedef std::shared_ptr<AsyncSocketBase> ConnectionPtr;
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

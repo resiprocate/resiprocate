@@ -75,6 +75,16 @@ static const unsigned short noTls12TurnPort = 45480;
 static const unsigned short noTls12TlsPort = 45351;
 static const asio::ip::address localhost = asio::ip::make_address("127.0.0.1");
 
+// A local TCP port that's free now, for a client asked to use a given port.  (Not a fixed one: a
+// connection from it in an earlier run may still be in TIME_WAIT.)
+static unsigned short
+freeTcpPort()
+{
+   asio::io_context io;
+   asio::ip::tcp::acceptor acceptor(io, asio::ip::tcp::endpoint(localhost, 0));
+   return acceptor.local_endpoint().port();
+}
+
 // reTurnServer's UDP, TCP and TLS servers and what's behind them, configured from configFile
 class InProcessServer
 {
@@ -470,6 +480,24 @@ testUdpAndTcp()
             (bool)client.createAllocation(TurnSocket::UnspecifiedLifetime, TurnSocket::UnspecifiedBandwidth,
                                           StunMessage::PropsNone, TurnSocket::UnspecifiedToken, StunTuple::UDP));
    }
+   {
+      // The reflexive address is where the server sees the client's connection come from
+      const unsigned short clientTcpPort = freeTcpPort();
+      TurnTcpSocket client(localhost, clientTcpPort);
+      check("sync TCP: connects from the local port asked for",
+            !client.connect("127.0.0.1", turnPort) && !client.bindRequest() &&
+            client.getReflexiveTuple().getPort() == clientTcpPort);
+   }
+   {
+      const unsigned short clientTcpPort = freeTcpPort();
+      AsyncHandler handler;
+      runAsyncClient(handler, "127.0.0.1", turnPort, "1234", [clientTcpPort](asio::io_context& io, AsyncHandler& handler)
+      {
+         return std::shared_ptr<TurnAsyncSocket>(std::make_shared<TurnAsyncTcpSocket>(io, &handler, localhost, clientTcpPort));
+      });
+      check("async TCP: connects from the local port asked for",
+            handler.mBound == 1 && handler.mReflexive.getPort() == clientTcpPort);
+   }
 }
 
 #ifdef USE_SSL
@@ -487,6 +515,16 @@ testTls()
       TurnTlsSocket client(true, localhost, 0, caFile);
       check("sync TLS: connecting to 127.0.0.1 fails - the certificate is only for localhost",
             (bool)client.connect("127.0.0.1", tlsPort));
+      // As connect() does for the next address a name resolves to, after a failed handshake
+      check("sync TLS: after a failed handshake, connecting again works",
+            !client.connect("localhost", tlsPort) && !client.bindRequest());
+   }
+   {
+      const unsigned short clientTlsPort = freeTcpPort();
+      TurnTlsSocket client(true, localhost, clientTlsPort, caFile);
+      check("sync TLS: connects from the local port asked for",
+            !client.connect("localhost", tlsPort) && !client.bindRequest() &&
+            client.getReflexiveTuple().getPort() == clientTlsPort);
    }
 
    asio::ssl::context sslContext(asio::ssl::context::tls_client);
@@ -503,6 +541,16 @@ testTls()
       AsyncHandler handler;
       runAsyncClient(handler, "127.0.0.1", tlsPort, "1234", asyncTls);
       check("async TLS: connecting to 127.0.0.1 fails - the certificate is only for localhost", handler.mConnected == -1);
+   }
+   {
+      const unsigned short clientTlsPort = freeTcpPort();
+      AsyncHandler handler;
+      runAsyncClient(handler, "localhost", tlsPort, "1234", [&sslContext, clientTlsPort](asio::io_context& io, AsyncHandler& handler)
+      {
+         return std::shared_ptr<TurnAsyncSocket>(std::make_shared<TurnAsyncTlsSocket>(io, sslContext, true, &handler, localhost, clientTlsPort));
+      });
+      check("async TLS: connects from the local port asked for",
+            handler.mBound == 1 && handler.mReflexive.getPort() == clientTlsPort);
    }
 
    cerr << "-- TLS: a client that never handshakes" << endl;

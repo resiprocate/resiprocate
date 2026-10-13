@@ -5,6 +5,7 @@
 #include "ReTurnSubsystem.hxx"
 
 #include <functional>
+#include <iterator>
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -168,10 +169,66 @@ AsyncSocketBase::close()
    asio::post(mIOService, std::bind(&AsyncSocketBase::transportClose, shared_from_this()));
 }
 
-std::shared_ptr<DataBuffer>  
+std::shared_ptr<DataBuffer>
 AsyncSocketBase::allocateBuffer(const size_t size)
 {
    return std::make_shared<DataBuffer>(size);
+}
+
+asio::error_code
+AsyncSocketBase::openAndBind(asio::ip::tcp::socket& socket)
+{
+   asio::error_code errorCode;
+   socket.close(errorCode);
+   socket.open(mLocalTcpEndpoint.protocol(), errorCode);
+   if(!errorCode)
+   {
+      asio::error_code ignored;
+      socket.set_option(asio::ip::tcp::no_delay(true), ignored); // ?slg? do we want this?
+      socket.set_option(asio::ip::tcp::socket::reuse_address(true), ignored);
+      socket.bind(mLocalTcpEndpoint, errorCode);
+   }
+   return errorCode;
+}
+
+void
+AsyncSocketBase::asyncConnect(asio::ip::tcp::socket& socket, const asio::ip::tcp::resolver::results_type& endpoints)
+{
+   asyncConnectFrom(socket, endpoints, endpoints.begin(), asio::error::host_not_found);
+}
+
+void
+AsyncSocketBase::asyncConnectFrom(asio::ip::tcp::socket& socket, asio::ip::tcp::resolver::results_type endpoints,
+                                  asio::ip::tcp::resolver::results_type::const_iterator next, asio::error_code lastError)
+{
+   if(next == endpoints.end())
+   {
+      handleConnect(lastError, asio::ip::tcp::endpoint());
+      return;
+   }
+
+   // Each attempt on a new socket, bound to the local endpoint
+   asio::error_code errorCode = openAndBind(socket);
+   if(errorCode)
+   {
+      handleConnect(errorCode, asio::ip::tcp::endpoint());
+      return;
+   }
+
+   const asio::ip::tcp::endpoint endpoint = *next;
+   std::shared_ptr<AsyncSocketBase> self = shared_from_this();
+   socket.async_connect(endpoint, [self, &socket, endpoints, next, endpoint](const asio::error_code& ec)
+   {
+      // Done if connected, or if the socket has been closed meanwhile; otherwise try the next endpoint
+      if(!ec || ec == asio::error::operation_aborted)
+      {
+         self->handleConnect(ec, endpoint);
+      }
+      else
+      {
+         self->asyncConnectFrom(socket, endpoints, std::next(next), ec);
+      }
+   });
 }
 
 } // namespace
@@ -179,6 +236,7 @@ AsyncSocketBase::allocateBuffer(const size_t size)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

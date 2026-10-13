@@ -17,33 +17,56 @@ TurnTcpSocket::TurnTcpSocket(const asio::ip::address& address, unsigned short po
    mSocket(mIOService)
 {
    mLocalBinding.setTransportType(StunTuple::TCP);
-
-   asio::error_code errorCode;
-   mSocket.open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
-   if(!errorCode)
-   {
-      mSocket.set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
-      mSocket.set_option(asio::ip::tcp::socket::reuse_address(true));
-      mSocket.bind(asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
-   }
+   // connect() opens the socket and binds it to address and port
 }
 
-asio::error_code 
+asio::ip::tcp
+TurnTcpSocket::protocol() const
+{
+   return mLocalBinding.getAddress().is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4();
+}
+
+asio::error_code
+TurnTcpSocket::openAndBind(asio::ip::tcp::socket& socket)
+{
+   asio::error_code errorCode;
+   socket.open(protocol(), errorCode);
+   if(!errorCode)
+   {
+      asio::error_code ignored;
+      socket.set_option(asio::ip::tcp::no_delay(true), ignored); // ?slg? do we want this?
+      socket.set_option(asio::ip::tcp::socket::reuse_address(true), ignored);
+      socket.bind(asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
+   }
+   return errorCode;
+}
+
+asio::error_code
 TurnTcpSocket::connect(const std::string& address, unsigned short port)
 {
    // Get a list of endpoints corresponding to the server name.
    asio::ip::tcp::resolver resolver(mIOService);
    resip::Data service(port);
-   asio::ip::tcp::resolver::results_type results = resolver.resolve(mSocket.local_endpoint().protocol(), address, service.c_str());
+   asio::error_code errorCode;
+   asio::ip::tcp::resolver::results_type results = resolver.resolve(protocol(), address, service.c_str(), errorCode);
+   if(errorCode)
+   {
+      return errorCode;
+   }
    asio::ip::tcp::resolver::results_type::const_iterator endpoint_iterator = results.begin();
    asio::ip::tcp::resolver::results_type::const_iterator end = results.end();
 
-   // Try each endpoint until we successfully establish a connection.
-   asio::error_code errorCode = asio::error::host_not_found;
+   // Try each endpoint until we successfully establish a connection, each on a new socket bound
+   // to the local binding
+   errorCode = asio::error::host_not_found;
    while (errorCode && endpoint_iterator != end)
    {
       mSocket.close();
-      mSocket.connect(*endpoint_iterator, errorCode);
+      errorCode = openAndBind(mSocket);
+      if(!errorCode)
+      {
+         mSocket.connect(*endpoint_iterator, errorCode);
+      }
 
       if(!errorCode)
       {
@@ -163,6 +186,7 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

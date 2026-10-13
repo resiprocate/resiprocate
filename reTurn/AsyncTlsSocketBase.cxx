@@ -42,15 +42,9 @@ AsyncTlsSocketBase::getSocketDescriptor()
 asio::error_code 
 AsyncTlsSocketBase::bind(const asio::ip::address& address, unsigned short port)
 {
-   asio::error_code errorCode;
-   mSocket.lowest_layer().open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
-   if(!errorCode)
-   {
-      mSocket.lowest_layer().set_option(asio::ip::tcp::socket::reuse_address(true), errorCode);
-      mSocket.lowest_layer().set_option(asio::ip::tcp::no_delay(true), errorCode); // ?slg? do we want this?
-      mSocket.lowest_layer().bind(asio::ip::tcp::endpoint(address, port), errorCode);
-   }
-   return errorCode;
+   // connect() binds the socket again, for each address it tries
+   mLocalTcpEndpoint = asio::ip::tcp::endpoint(address, port);
+   return openAndBind(mSocket.next_layer());
 }
 
 void 
@@ -61,7 +55,7 @@ AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-   mResolver.async_resolve(mSocket.lowest_layer().local_endpoint().protocol(), address, service.c_str(),
+   mResolver.async_resolve(mLocalTcpEndpoint.protocol(), address, service.c_str(),
         std::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
                     std::placeholders::_1,
                     std::placeholders::_2));
@@ -74,11 +68,9 @@ AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
    if (!ec)
    {
       // Attempt a connection to the first endpoint in the list. Each endpoint
-      // will be tried until we successfully establish a connection.
-      //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
-      asio::async_connect(mSocket.lowest_layer(), endpoints,
-                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            std::placeholders::_1, std::placeholders::_2));
+      // will be tried until we successfully establish a connection (the handshake is with the
+      // first that accepts)
+      asyncConnect(mSocket.next_layer(), endpoints);
    }
    else
    {
@@ -322,8 +314,8 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Plantronics, Inc.
  Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
