@@ -76,13 +76,15 @@ FlowManager::FlowManager()
 #ifdef USE_SSL
    // Setup SSL context
    asio::error_code ec; 
-   mSslContext.set_verify_mode(asio::ssl::context::verify_peer | 
+   mSslContext.set_verify_mode(asio::ssl::context::verify_peer |
                                asio::ssl::context::verify_fail_if_no_peer_cert);
+
+   // More can be added with addTlsRootCertificates()
 #define VERIFY_FILE "ca.pem"
-   mSslContext.load_verify_file(VERIFY_FILE, ec);   // TODO make a setting
+   mSslContext.load_verify_file(VERIFY_FILE, ec);
    if(ec)
    {
-      // App may not care about DTLS - log as Info only
+      // App may not use TURN over TLS - log as Info only
       InfoLog(<< "Unable to load verify file: " << VERIFY_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
    }
 #endif 
@@ -189,7 +191,8 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        stunPassword,
                                        forceCOMedia,
                                        mRtcpEventLoggingHandler,
-                                       context);
+                                       context,
+                                       mValidateTlsServerHostname);
    }
    else
    {
@@ -211,13 +214,27 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        stunPassword,
                                        forceCOMedia,
                                        nullptr,
-                                       context);
+                                       context,
+                                       mValidateTlsServerHostname);
    }
    return newMediaStream;
 }
 
-#ifdef USE_SSL 
-int 
+#ifdef USE_SSL
+bool
+FlowManager::addTlsRootCertificates(const resip::Data& rootCertificatesFile)
+{
+   asio::error_code ec;
+   mSslContext.load_verify_file(rootCertificatesFile.c_str(), ec);
+   if(ec)
+   {
+      ErrLog(<< "Unable to load TLS root certificates from " << rootCertificatesFile << ", error=" << ec.value() << "(" << ec.message() << ")");
+      return false;
+   }
+   return true;
+}
+
+int
 FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey )
 {
    int ret;

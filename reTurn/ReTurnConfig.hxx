@@ -74,6 +74,9 @@ public:
    resip::Data mTlsServerPrivateKeyFilename;
    resip::Data mTlsTempDhFilename;
    resip::Data mTlsPrivateKeyPassword;
+   unsigned long mTlsHandshakeTimeout;  // seconds, 0 for none
+   long mOpenSSLCTXSetOptions;    // SSL_OP_* flags for SSL_CTX_set_options, as repro's settings of the same name
+   long mOpenSSLCTXClearOptions;  // SSL_OP_* flags for SSL_CTX_clear_options
 
    resip::Data mUsersDatabaseFilename;
    bool mUserDatabaseHashedPasswords;
@@ -123,6 +126,7 @@ class ReTurnUserFileScanner
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

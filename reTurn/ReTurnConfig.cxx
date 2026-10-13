@@ -16,6 +16,10 @@
 #include "ReTurnSubsystem.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include <rutil/Logger.hxx>
+#ifdef USE_SSL
+#include <openssl/ssl.h>
+#include "rutil/ssl/OpenSSLOptions.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -58,6 +62,14 @@ ReTurnConfig::ReTurnConfig() :
    mTlsServerPrivateKeyFilename(""),
    mTlsTempDhFilename("dh2048.pem"),
    mTlsPrivateKeyPassword(""),
+   mTlsHandshakeTimeout(30),
+#ifdef USE_SSL
+   // The same defaults as repro (resip::BaseSecurity::OpenSSLCTXSetOptions)
+   mOpenSSLCTXSetOptions(SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION),
+#else
+   mOpenSSLCTXSetOptions(0),
+#endif
+   mOpenSSLCTXClearOptions(0),
    mUsersDatabaseFilename(""),
    mUserDatabaseHashedPasswords(false),
    mDaemonize(false),
@@ -91,6 +103,23 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mTlsServerPrivateKeyFilename = getConfigData("TlsServerPrivateKeyFilename", mTlsServerPrivateKeyFilename);
    mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);
    mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", mTlsPrivateKeyPassword);
+   mTlsHandshakeTimeout = getConfigUnsignedLong("TlsHandshakeTimeout", mTlsHandshakeTimeout);
+#ifdef USE_SSL
+   // As repro: a list of SSL_OP_* names replaces the default
+   for (const char* name : { "OpenSSLCTXSetOptions", "OpenSSLCTXClearOptions" })
+   {
+      std::set<Data> values;
+      if (getConfigValue(name, values))
+      {
+         long& options = (Data(name) == "OpenSSLCTXSetOptions") ? mOpenSSLCTXSetOptions : mOpenSSLCTXClearOptions;
+         options = 0;
+         for (const Data& value : values)
+         {
+            options |= parseOpenSSLCTXOption(value);  // throws std::invalid_argument for an unknown name
+         }
+      }
+   }
+#endif
    mUserDatabaseHashedPasswords = getConfigBool("UserDatabaseHashedPasswords", mUserDatabaseHashedPasswords);
    mDaemonize = getConfigBool("Daemonize", mDaemonize);
    mPidFile = getConfigData("PidFile", mPidFile);
@@ -454,7 +483,7 @@ ReTurnUserFileScanner::onSignal(int signum)
 
 /* ====================================================================
 
- Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2008-2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

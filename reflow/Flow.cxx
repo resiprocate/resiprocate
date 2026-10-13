@@ -167,7 +167,7 @@ Flow::Flow(asio::io_context& ioService,
    case StunTuple::TLS:
       mTurnSocket = std::make_shared<TurnAsyncTlsSocket>(mIOService, 
                                                mSslContext, 
-                                               false, // validateServerCertificateHostname - TODO - make this configurable
+                                               mMediaStream.mValidateTlsServerHostname,  // check the server certificate is for its host name
                                                this, 
                                                mLocalBinding.getAddress(), 
                                                mLocalBinding.getPort());
@@ -964,7 +964,7 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
 
 /* ====================================================================
 
- Copyright (c) 2007-2023, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2007-2026, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

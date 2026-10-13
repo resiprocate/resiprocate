@@ -17,16 +17,18 @@ namespace reTurn {
    class TurnTlsSocket : public TurnTcpSocket
 {
 public:
+   /// validateServerCertificateHostname: check the server certificate is for the host name (or
+   /// IP address) passed to connect().  rootCertificatesFile: the PEM file of root certificates
+   /// to verify the server certificate with.
    explicit TurnTlsSocket(bool validateServerCertificateHostname,
                           const asio::ip::address& address = UnspecifiedIpAddress, 
-                          unsigned short port = 0);
+                          unsigned short port = 0,
+                          const std::string& rootCertificatesFile = "ca.pem");
 
    virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.lowest_layer().native_handle(); }
    virtual  asio::error_code connect(const std::string& address, unsigned short port);
 
 protected:
-   virtual bool validateServerCertificateHostname(const std::string& hostname);
-
    virtual asio::error_code rawWrite(const char* buffer, unsigned int size);
    virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers);
 
@@ -47,8 +49,8 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

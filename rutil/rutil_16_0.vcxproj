@@ -487,6 +487,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="ssl\OpenSSLOptions.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="ParseBuffer.cxx" />
     <ClCompile Include="ParseException.cxx" />
     <ClCompile Include="Poll.cxx" />
@@ -579,6 +585,7 @@
     <ClInclude Include="Sha1.hxx" />
     <ClInclude Include="ssl\OpenSSLDeleter.hxx" />
     <ClInclude Include="ssl\OpenSSLInit.hxx" />
+    <ClInclude Include="ssl\OpenSSLOptions.hxx" />
     <ClInclude Include="ParseBuffer.hxx" />
     <ClInclude Include="ParseException.hxx" />
     <ClInclude Include="Poll.hxx" />

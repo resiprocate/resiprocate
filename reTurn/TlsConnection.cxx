@@ -48,7 +48,7 @@ TlsConnection::start()
 {
    DebugLog(<< "TlsConnection started.");
 
-   doHandshake();
+   doHandshake(mRequestHandler.getConfig().mTlsHandshakeTimeout);
 }
 
 void 
@@ -196,6 +196,7 @@ TlsConnection::onSendFailure(const asio::error_code& error)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

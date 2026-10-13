@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
          std::shared_ptr<TurnAsyncSocket> turnSocket;
 
 #ifdef USE_SSL
-         asio::ssl::context sslContext(asio::ssl::context::tlsv1);
+         asio::ssl::context sslContext(asio::ssl::context::tls_client);  // any TLS version reTurn accepts
          // Setup SSL context
          sslContext.set_verify_mode(asio::ssl::context::verify_peer);
          sslContext.load_verify_file(config.getConfigData("TLSRootCertFile", "ca.pem", true).c_str());
@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
 
 /* ====================================================================
 
- Copyright (c) 2023-2024, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2023-2026, SIP Spectrum, Inc. http://sipspectrum.com
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

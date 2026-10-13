@@ -65,6 +65,18 @@ public:
 #endif
    dtls::DtlsFactory* getDtlsFactory() { return mDtlsFactory; }
 
+#ifdef USE_SSL
+   /// Adds the root (CA) certificates in a PEM file to those TURN servers' TLS certificates are
+   /// verified with.  "ca.pem" in the working directory is loaded at construction, if it exists.
+   /// Returns false if the file can't be loaded.
+   bool addTlsRootCertificates(const resip::Data& rootCertificatesFile);
+#endif
+
+   /// Whether flows using TURN over TLS check that the server's certificate is for the TURN
+   /// server's host name (or IP address) - default true.  Applies to media streams created after
+   /// the call.
+   void setValidateTlsServerHostname(bool validate) { mValidateTlsServerHostname = validate; }
+
    void setRTCPEventLoggingHandler(std::shared_ptr<RTCPEventLoggingHandler> handler) noexcept { mRtcpEventLoggingHandler = handler; }
    RTCPEventLoggingHandler* getRTCPEventLoggingHandler() const noexcept { return 0 != mRtcpEventLoggingHandler.get() ? mRtcpEventLoggingHandler.get() : 0; }
 
@@ -84,6 +96,7 @@ private:
    X509* mClientCert;
    EVP_PKEY* mClientKey;
    dtls::DtlsFactory* mDtlsFactory;
+   bool mValidateTlsServerHostname = true;
 };
 
 }

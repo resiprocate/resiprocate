@@ -77,7 +77,8 @@ public:
                const char* stunPassword = 0,
                bool forceCOMedia = false,
                std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = nullptr,
-               std::shared_ptr<FlowContext> context = nullptr);
+               std::shared_ptr<FlowContext> context = nullptr,
+               bool validateTlsServerHostname = true);  // for TURN over TLS: see FlowManager::setValidateTlsServerHostname
    virtual ~MediaStream();
 
    Flow* getRtpFlow() { return mRtpFlow; }
@@ -114,6 +115,7 @@ protected:
    resip::Data mStunUsername;
    resip::Data mStunPassword;
    bool mForceCOMedia;
+   bool mValidateTlsServerHostname;
 
 private:
    // Note: these member variables are set at creation time and never changed, thus
@@ -135,8 +137,8 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

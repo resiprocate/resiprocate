@@ -70,6 +70,7 @@ set(INCLUDES
    ssl/SHA1Stream.hxx
    ssl/OpenSSLDeleter.hxx
    ssl/OpenSSLInit.hxx
+   ssl/OpenSSLOptions.hxx
    CountStream.hxx
    Crc32.hxx
    vmd5.hxx
@@ -176,6 +177,7 @@ add_library(rutil
 target_add_conditional_sources(rutil OPENSSL_FOUND
    ssl/OpenSSLDeleter.cxx
    ssl/OpenSSLInit.cxx
+   ssl/OpenSSLOptions.cxx
    ssl/SHA1Stream.cxx
 )
 

@@ -25,8 +25,10 @@ TlsServer::TlsServer(asio::io_context& ioService, RequestHandler& requestHandler
    // Set Context options 
    asio::error_code ec;
    mContext.set_options(asio::ssl::context::default_workarounds |  // Implement various bug workarounds.
-                        asio::ssl::context::no_sslv2 | // Disable SSL v2.
                         asio::ssl::context::single_dh_use);  // enforce recalculation of the DH key for eatch session
+   // OpenSSLCTXSetOptions / OpenSSLCTXClearOptions, eg. SSL_OP_NO_TLSv1 and SSL_OP_NO_TLSv1_1 to require TLS 1.2
+   SSL_CTX_set_options(mContext.native_handle(), mRequestHandler.getConfig().mOpenSSLCTXSetOptions);
+   SSL_CTX_clear_options(mContext.native_handle(), mRequestHandler.getConfig().mOpenSSLCTXClearOptions);
    
    mContext.set_password_callback(std::bind(&TlsServer::getPassword, this));
 
@@ -120,8 +122,8 @@ TlsServer::handleAccept(const asio::error_code& e)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

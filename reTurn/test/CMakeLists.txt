@@ -12,3 +12,6 @@ function(TEST)
 endfunction()
 
 test(stunTestVectors stunTestVectors.cxx)
+if(WITH_SSL)
+   test(testTlsSockets testTlsSockets.cxx)
+endif()

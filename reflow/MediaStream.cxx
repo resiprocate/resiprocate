@@ -37,7 +37,8 @@ MediaStream::MediaStream(asio::io_context& ioService,
                          const char* stunPassword,
                          bool forceCOMedia,
                          std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
-                         std::shared_ptr<FlowContext> context) :
+                         std::shared_ptr<FlowContext> context,
+                         bool validateTlsServerHostname) :
 #ifdef USE_SSL
    mDtlsFactory(dtlsFactory),
 #endif  
@@ -49,6 +50,7 @@ MediaStream::MediaStream(asio::io_context& ioService,
    mStunUsername(stunUsername),
    mStunPassword(stunPassword),
    mForceCOMedia(forceCOMedia),
+   mValidateTlsServerHostname(validateTlsServerHostname),
    mMediaStreamHandler(mediaStreamHandler)
 {
    // Rtcp is enabled if localRtcpBinding transport type != None
@@ -327,6 +329,7 @@ MediaStream::onFlowError(unsigned int componentId, unsigned int errorCode)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

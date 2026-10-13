@@ -286,7 +286,7 @@ int main(int argc, char* argv[])
 
 #ifdef USE_SSL
     // Setup SSL context
-    asio::ssl::context sslContext(asio::ssl::context::tlsv1);
+    asio::ssl::context sslContext(asio::ssl::context::tls_client);  // any TLS version reTurn accepts
     // Enable certificate validation
     sslContext.set_verify_mode(asio::ssl::context::verify_peer |   // Verify the peer.
                                asio::ssl::context::verify_fail_if_no_peer_cert);  // Fail verification if the peer has no certificate.
@@ -327,8 +327,8 @@ int main(int argc, char* argv[])
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

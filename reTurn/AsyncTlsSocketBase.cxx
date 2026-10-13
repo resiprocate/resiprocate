@@ -6,12 +6,14 @@
 #ifdef USE_SSL
 #include <functional>
 
+#include <openssl/err.h>
 #include <openssl/opensslv.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
 #include "AsyncTlsSocketBase.hxx"
 #include "AsyncSocketBaseHandler.hxx"
+#include <rutil/DnsUtil.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
 
@@ -25,6 +27,8 @@ AsyncTlsSocketBase::AsyncTlsSocketBase(asio::io_context& ioService, asio::ssl::c
    : AsyncSocketBase(ioService),
    mSocket(ioService, context),
    mResolver(ioService),
+   mHandshakeTimer(ioService),
+   mServerHandshakeDone(false),
    mValidateServerCertificateHostname(validateServerCertificateHostname)
 {
 }
@@ -82,15 +86,75 @@ AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
    }
 }
 
-void 
+bool
+AsyncTlsSocketBase::setupClientSsl(SSL* ssl, const std::string& hostname, bool validateHostname)
+{
+   const bool isIpAddress = resip::DnsUtil::isIpAddress(hostname.c_str());
+
+   // RFC 6066 section 3: SNI carries a host name, never an IP address
+   if (!hostname.empty() && !isIpAddress && SSL_set_tlsext_host_name(ssl, hostname.c_str()) != 1)
+   {
+      WarningLog(<< "Failed to set SNI " << hostname << ", continuing without it");
+   }
+
+   bool ok = true;
+   if (validateHostname)
+   {
+      // OpenSSL checks the server certificate against the name during the handshake, as RFC 6125
+      // describes: a DNS or IP address subjectAltName, or the common name if there are no DNS
+      // subjectAltNames, with wildcards only as a whole left-most label
+      if (isIpAddress)
+      {
+         ok = X509_VERIFY_PARAM_set1_ip_asc(SSL_get0_param(ssl), hostname.c_str()) == 1;
+      }
+      else
+      {
+         SSL_set_hostflags(ssl, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+         ok = !hostname.empty() && SSL_set1_host(ssl, hostname.c_str()) == 1;
+      }
+      if (!ok)
+      {
+         ErrLog(<< "Unable to validate the server certificate against <" << hostname << ">");
+      }
+   }
+
+   // Leave nothing on the error queue for the handshake: SSL_get_error() checks it first
+   ERR_clear_error();
+   return ok;
+}
+
+void
+AsyncTlsSocketBase::logClientHandshakeResult(SSL* ssl, const std::string& hostname, const asio::error_code& ec)
+{
+   if (!ec)
+   {
+      const SSL_CIPHER* cipher = SSL_get_current_cipher(ssl);
+      InfoLog(<< "TLS session set up with " << hostname << ": " << SSL_get_version(ssl)
+              << " " << (cipher ? SSL_CIPHER_get_name(cipher) : "unknown cipher"));
+   }
+   else if (SSL_get_verify_result(ssl) != X509_V_OK)
+   {
+      // eg. X509_V_ERR_HOSTNAME_MISMATCH when the certificate isn't for hostname
+      WarningLog(<< "TLS handshake with " << hostname << " failed, server certificate rejected: "
+                 << X509_verify_cert_error_string(SSL_get_verify_result(ssl)));
+   }
+}
+
+void
 AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
                                   const asio::ip::tcp::endpoint& endpoint)
 {
    if (!ec)
    {
+      if (!setupClientSsl(mSocket.native_handle(), mHostname, mValidateServerCertificateHostname))
+      {
+         onConnectFailure(asio::error::invalid_argument);
+         return;
+      }
+
       // The connection was successful - now do handshake.
-      mSocket.async_handshake(asio::ssl::stream_base::client, 
-                              std::bind(&AsyncSocketBase::handleClientHandshake, shared_from_this(), 
+      mSocket.async_handshake(asio::ssl::stream_base::client,
+                              std::bind(&AsyncSocketBase::handleClientHandshake, shared_from_this(),
                                           std::placeholders::_1, endpoint));
    }
    else
@@ -99,27 +163,19 @@ AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
    }
 }
 
-void 
+void
 AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
                                           const asio::ip::tcp::endpoint& endpoint)
 {
+   logClientHandshakeResult(mSocket.native_handle(), mHostname, ec);
    if (!ec)
    {
-      // The handshake was successful.
+      // The handshake was successful - and so was the check of the server certificate's name,
+      // when that was asked for
       mConnected = true;
       mConnectedAddress = endpoint.address();
       mConnectedPort = endpoint.port();
-
-      // Validate that hostname in cert matches connection hostname
-      if(!mValidateServerCertificateHostname || validateServerCertificateHostname())
-      {
-         onConnectSuccess();
-      }
-      else
-      {
-         WarningLog(<< "Hostname in certificate does not match connection hostname!");
-         onConnectFailure(asio::error::operation_aborted);
-      }
+      onConnectSuccess();
    }
    else
    {
@@ -127,117 +183,33 @@ AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
    }
 }
 
-bool 
-AsyncTlsSocketBase::validateServerCertificateHostname()
+void
+AsyncTlsSocketBase::doHandshake(unsigned int timeoutSeconds)
 {
-   bool valid = false;
-
-   // print session info
-   const SSL_CIPHER *ciph;
-   ciph=SSL_get_current_cipher(mSocket.native_handle());
-   InfoLog( << "TLS session set up with " 
-      <<  SSL_get_version(mSocket.native_handle()) << " "
-      <<  SSL_CIPHER_get_version(ciph) << " "
-      <<  SSL_CIPHER_get_name(ciph) << " " );
-
-   // get the certificate - should always exist since mode is set for SSL to verify the cert first
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
-   X509* cert = SSL_get_peer_certificate(mSocket.native_handle());
-#else
-   X509* cert = SSL_get1_peer_certificate(mSocket.native_handle());
-#endif
-   resip_assert(cert);
-
-   // Look at the SubjectAltName, and if found, set as peerName
-   bool hostnamePresentInSubjectAltName = false;
-   GENERAL_NAMES* gens;
-   gens = (GENERAL_NAMES*)X509_get_ext_d2i(cert, NID_subject_alt_name, 0, 0);
-   for(int i = 0; i < sk_GENERAL_NAME_num(gens); i++)
-   {  
-      GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, i);
-
-      DebugLog(<< "subjectAltName of cert contains type <" << gen->type << ">" );
-
-      if (gen->type == GEN_DNS)
+   if (timeoutSeconds > 0)
+   {
+      // Don't let a client hold the connection open without ever completing the handshake
+      std::shared_ptr<AsyncSocketBase> self = shared_from_this();
+      mHandshakeTimer.expires_after(std::chrono::seconds(timeoutSeconds));
+      mHandshakeTimer.async_wait([this, self](const asio::error_code& e)
       {
-         ASN1_IA5STRING* asn = gen->d.dNSName;
-         resip::Data dns(ASN1_STRING_get0_data(asn), ASN1_STRING_length(asn));
-         InfoLog(<< "subjectAltName of TLS session cert contains DNS <" << dns << ">" );
-         hostnamePresentInSubjectAltName = true;
-         if(resip::isEqualNoCase(dns, mHostname.c_str()))
+         if (e != asio::error::operation_aborted && !mServerHandshakeDone)
          {
-            valid = true;
-            break;
+            WarningLog(<< "TLS handshake not completed in time, closing the connection");
+            asio::error_code ec;
+            mSocket.lowest_layer().close(ec);  // the handshake then fails with operation_aborted
          }
-      }
-
-      if (gen->type == GEN_EMAIL)
-      {
-         DebugLog(<< "subjectAltName of cert has EMAIL type" );
-      }
-
-      if(gen->type == GEN_URI) 
-      {
-         DebugLog(<< "subjectAltName of cert has URI type" );
-      }
+      });
    }
-   sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
-
-   // If there are no peer names from the subjectAltName, then use the commonName
-   if(!hostnamePresentInSubjectAltName)
-   {   
-      // look at the Common Name to find the peerName of the cert
-      const X509_NAME* subject = X509_get_subject_name(cert);
-      if(!subject)
-      {
-         ErrLog( << "Invalid certificate: subject not found ");
-      }
-   
-      int i =-1;
-      while( !valid )
-      {
-         // OpenSSL 1.1.1 takes a non-const X509_NAME here, 3.0+ a const one
-         i = X509_NAME_get_index_by_NID(const_cast<X509_NAME*>(subject), NID_commonName,i);
-         if ( i == -1 )
-         {
-            break;
-         }
-         resip_assert( i != -1 );
-         const X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
-         resip_assert( entry );
-
-         const ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
-         resip_assert( s );
-   
-         int t = ASN1_STRING_type(s);
-         int l = ASN1_STRING_length(s);
-         const unsigned char* d = ASN1_STRING_get0_data(s);
-         resip::Data name(d,l);
-         DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
-         resip_assert( name.size() == (unsigned)l );
-   
-         InfoLog( << "Found common name in cert: " << name );      
-         if(resip::isEqualNoCase(name, mHostname.c_str()))
-         {
-            valid = true;
-         }
-      }
-   }
-   
-   X509_free(cert);
-   return valid;
+   mSocket.async_handshake(asio::ssl::stream_base::server,
+                           std::bind(&AsyncSocketBase::handleServerHandshake, shared_from_this(), std::placeholders::_1));
 }
 
 void
-AsyncTlsSocketBase::doHandshake()
-{
-   mSocket.async_handshake(asio::ssl::stream_base::server, 
-                           std::bind(&AsyncSocketBase::handleServerHandshake, shared_from_this(), std::placeholders::_1));  
-}
-
-void 
 AsyncTlsSocketBase::handleServerHandshake(const asio::error_code& e)
 {
+   mServerHandshakeDone = true;
+   mHandshakeTimer.cancel();
    if(e)
    {
       onServerHandshakeFailure(e);
