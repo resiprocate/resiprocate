@@ -145,6 +145,8 @@ Flow::Flow(asio::io_context& ioService,
     mPrivatePeer(false),
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
+    mSharedMutex(std::make_shared<resip::Mutex>()),
+    mMutex(*mSharedMutex),
     mActiveDestinationPort(0),
     mFlowState(Unconnected),
     mReceivedDataFifo(maxReceiveFifoDuration, maxReceiveFifoSize)

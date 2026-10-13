@@ -5,6 +5,11 @@
 #ifdef USE_SSL
 
 #include <iostream>
+#ifdef WIN32
+#include <winsock2.h>  // struct timeval
+#else
+#include <sys/time.h>
+#endif
 #include "rutil/ResipAssert.h"
 #include <ctype.h>
 #include <string.h>
@@ -107,22 +112,27 @@ DtlsSocket::~DtlsSocket()
 {
    if(mReadTimer) mReadTimer->invalidate();
 
-   // Properly shutdown the socket and free it - note: this also free's the BIO's
-   SSL_shutdown(mSsl);
+   // Free the SSL - note: this also free's the BIO's.  No SSL_shutdown(): the close_notify it
+   // writes would only go to the memory BIO freed here, never to the peer, and before the
+   // handshake has completed it just leaves an error on this thread's queue.
    SSL_free(mSsl);
 }
 
 void
 DtlsSocket::expired(DtlsSocketTimer* timer)
 {
-   forceRetransmit();
-   //delete timer;
+   // The timer has fired, so nothing will fire it again: it's ours to delete.  (DtlsTimer::fire
+   // doesn't touch the timer after calling expired().)
+   if(timer == mReadTimer)
+   {
+      mReadTimer = 0;
+   }
+   delete timer;
 
-   //assert(timer == mReadTimer);   
-   //mReadTimer = 0;
+   handleTimeout();
 }
 
-void 
+void
 DtlsSocket::startClient()
 {
    resip_assert(mSocketType == Client);
@@ -146,29 +156,103 @@ DtlsSocket::handlePacketMaybe(const unsigned char* bytes, size_t len)
    resip_assert(r==(int)len);  // Can't happen
 
    // Note: we must catch any below exceptions--if there are any
-   doHandshakeIteration();
+   if(mHandshakeCompleted)
+   {
+      handlePacketAfterHandshake();
+   }
+   else
+   {
+      doHandshakeIteration();
+   }
 
    return true;
 }
 
 void
-DtlsSocket::forceRetransmit()
+DtlsSocket::handleTimeout()
 {
+   if(mHandshakeCompleted || mHandshakeFailed)
+      return;
+
    BIO_reset(mInBio);
    BIO_reset(mOutBio);
-   BIO_ctrl(mInBio,BIO_CTRL_DGRAM_SET_RECV_TIMEOUT,0,0);
 
-   doHandshakeIteration();
+   // Retransmits the last flight if OpenSSL's timer has expired (doubling it each time), and
+   // fails once OpenSSL has retransmitted as many times as it allows
+   ERR_clear_error();
+   if(DTLSv1_handle_timeout(mSsl) < 0)
+   {
+      char errbuf[1024];
+      errbuf[0]=0;
+      ERR_error_string_n(ERR_peek_error(),errbuf,sizeof(errbuf));
+      mHandshakeFailed = true;
+      mSocketContext->handshakeFailed(errbuf[0] ? errbuf : "DTLS handshake timed out");
+      ERR_clear_error();
+   }
+
+   writeOutput();
+   scheduleTimer();
 }
 
 void
-DtlsSocket::doHandshakeIteration() 
+DtlsSocket::handlePacketAfterHandshake()
+{
+   // No application data is expected over DTLS-SRTP, but reading processes what the peer sends
+   // after the handshake: eg. its last flight again if it didn't get our final one, which OpenSSL
+   // answers by retransmitting ours
+   ERR_clear_error();
+   unsigned char buffer[2048];
+   while(SSL_read(mSsl, buffer, sizeof(buffer)) > 0)
+   {
+   }
+   ERR_clear_error();
+
+   writeOutput();
+}
+
+void
+DtlsSocket::writeOutput()
+{
+   // If mOutBio is now nonzero-length, then we need to write the
+   // data to the network. TODO: warning, MTU issues!
+   unsigned char *outBioData;
+   int outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
+   if(outBioLen)
+   {
+      mSocketContext->write(outBioData,outBioLen);
+   }
+}
+
+void
+DtlsSocket::scheduleTimer()
+{
+   // Replaces any timer set before: a timer that's been invalidated deletes itself when it fires
+   if(mReadTimer)
+   {
+      mReadTimer->invalidate();
+      mReadTimer = 0;
+   }
+
+   // OpenSSL runs the retransmission timer while the handshake is in progress (starting at 1
+   // second and doubling); fire ours when it expires
+   struct timeval tv;
+   if(!mHandshakeCompleted && !mHandshakeFailed && DTLSv1_get_timeout(mSsl, &tv) == 1)
+   {
+      unsigned int waitMs = (unsigned int)tv.tv_sec * 1000 + ((unsigned int)tv.tv_usec + 999) / 1000;
+      mReadTimer = new DtlsSocketTimer(0, this);
+      mReadTimer->setLock(mSocketContext->timerLock());
+      mFactory->mTimerContext->addTimer(mReadTimer, waitMs > 0 ? waitMs : 1);
+   }
+}
+
+void
+DtlsSocket::doHandshakeIteration()
 {
    int r;
    char errbuf[1024];
    int sslerr;
 
-   if(mHandshakeCompleted)
+   if(mHandshakeCompleted || mHandshakeFailed)
       return;
 
    // OpenSSL requires this thread's error queue to be empty before the call, since
@@ -179,37 +263,15 @@ DtlsSocket::doHandshakeIteration()
    errbuf[0]=0;
    ERR_error_string_n(ERR_peek_error(),errbuf,sizeof(errbuf));
 
-   // See what was written
-   int outBioLen;
-   unsigned char *outBioData;  
-   outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
-
    // Now handle handshake errors */
    switch(sslerr=SSL_get_error(mSsl,r))
    {
    case SSL_ERROR_NONE:
-      mHandshakeCompleted = true;       
+      mHandshakeCompleted = true;
       mSocketContext->handshakeCompleted();
-      if(mReadTimer) mReadTimer->invalidate();
-      mReadTimer = 0;
       break;
    case SSL_ERROR_WANT_READ:
-      // There are two cases here:
-      // (1) We didn't get enough data. In this case we leave the
-      //     timers alone and wait for more packets.
-      // (2) We did get a full flight and then handled it, but then
-      //     wrote some more message and now we need to flush them
-      //     to the network and now reset the timers
-      //
-      // If data was written then this means we got a complete
-      // something or a retransmit so we need to reset the timer
-      if(outBioLen)
-      {
-         if(mReadTimer) mReadTimer->invalidate();
-         mReadTimer=new DtlsSocketTimer(0,this);
-         mFactory->mTimerContext->addTimer(mReadTimer,getReadTimeout());
-      }
-
+      // Waiting for the peer's next flight (any we've just written goes out below)
       break;
    default:
       cerr << "SSL error " << sslerr << endl;
@@ -223,15 +285,8 @@ DtlsSocket::doHandshakeIteration()
       break;
    }
 
-   // If mOutBio is now nonzero-length, then we need to write the
-   // data to the network. TODO: warning, MTU issues! 
-   if(outBioLen)
-   {
-      //cerr << "Writing data: ";
-      //cerr.write((char*)outBioData, outBioLen);
-      //cerr << " length " << outBioLen << endl;
-      mSocketContext->write(outBioData,outBioLen);
-   }
+   writeOutput();
+   scheduleTimer();
 }
 
 static bool
@@ -469,13 +524,6 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
    OPENSSL_cleanse(srtp_key.clientMasterSalt.data(), srtp_key.clientMasterSalt.size());
    OPENSSL_cleanse(srtp_key.serverMasterSalt.data(), srtp_key.serverMasterSalt.size());
    return true;
-}
-
-// Wrapper for currently nonexistent OpenSSL fxn
-int
-DtlsSocket::getReadTimeout()
-{
-   return 500;
 }
 
 DtlsListener::DtlsListener(DtlsFactory* factory) :

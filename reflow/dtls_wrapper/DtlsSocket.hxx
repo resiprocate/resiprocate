@@ -9,6 +9,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 extern "C" 
@@ -37,6 +38,10 @@ class DtlsSocketContext
       virtual void write(const unsigned char* data, unsigned int len)=0;
       virtual void handshakeCompleted()=0;
       virtual void handshakeFailed(const char *err)=0;
+
+      // The lock the application holds while it uses the socket, if its timers fire on another
+      // thread: the socket's retransmission timer takes it too before it runs (see DtlsTimer::setLock)
+      virtual std::shared_ptr<std::mutex> timerLock() { return nullptr; }
 
    protected:
       DtlsSocket *mSocket;
@@ -67,7 +72,8 @@ class DtlsSocket
       // Inspects packet to see if it's a DTLS packet, if so continue processing
       bool handlePacketMaybe(const unsigned char* bytes, size_t len);
       
-      // Called by DtlSocketTimer when timer expires - causes a retransmission (forceRetransmit)
+      // Called by DtlsSocketTimer when the retransmission timer expires: deletes the timer and
+      // retransmits the last flight if OpenSSL's timer has expired (see handleTimeout)
       void expired(DtlsSocketTimer*);
       
       // Size of the buffer getMyCertFingerprint and computeFingerprint write to: a SHA-256
@@ -130,8 +136,20 @@ class DtlsSocket
       friend class DtlsFactory;
       friend class DtlsListener;
 
-      // Causes an immediate handshake iteration to happen, which will retransmit the handshake
-      void forceRetransmit();
+      // The retransmission timer has fired: retransmits the last flight (DTLSv1_handle_timeout),
+      // or reports the handshake as failed once OpenSSL gives up
+      void handleTimeout();
+
+      // Handles a packet after the handshake: eg. the peer's last flight again, if our final one
+      // was lost, which OpenSSL answers by retransmitting ours
+      void handlePacketAfterHandshake();
+
+      // Sends what OpenSSL wrote to mOutBio
+      void writeOutput();
+
+      // Sets mReadTimer to fire when OpenSSL's retransmission timer expires (DTLSv1_get_timeout),
+      // or clears it if no timer is running
+      void scheduleTimer();
 
       // Creates an SSL socket, and if client sets state to connect_state and if server sets state to accept_state.  Sets SSL BIO's.
       DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType);
@@ -145,9 +163,6 @@ class DtlsSocket
       // Give CPU cyces to the handshake process - checks current state and acts appropraitely
       void doHandshakeIteration();
 
-      // returns the amount of time between handshake retranmssions (500ms)
-      int getReadTimeout();
-      
       // Internals
       std::unique_ptr<DtlsSocketContext> mSocketContext;
       DtlsFactory* mFactory;

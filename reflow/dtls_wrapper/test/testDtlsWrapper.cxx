@@ -2,12 +2,17 @@
 #include "config.h"
 #endif
 
+#include <algorithm>
+#include <atomic>
 #include <cctype>
+#include <chrono>
 #include <cstring>
 #include <deque>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <openssl/err.h>
@@ -25,11 +30,13 @@
 using namespace dtls;
 
 // DTLS handshakes between a client and a server DtlsSocket, run in memory: each
-// side's output is handed to the other.  Checks that both sides see each other's
-// certificate fingerprint and agree an SRTP profile, that SDP fingerprints are checked
-// properly, that SRTP is set up with the negotiated profile, that a failed handshake
-// leaves nothing on this thread's OpenSSL error queue, and that a handshake isn't
-// disturbed by an error an earlier call left there.
+// side's output is handed to the other.  Checks how packets are classified, that both
+// sides see each other's certificate fingerprint and agree an SRTP profile, that SDP
+// fingerprints are checked properly, that SRTP is set up with the negotiated profile, the
+// cookie exchange in front of server sockets, that OpenSSL's error queue is left empty
+// (after a failed handshake, and when a socket is destroyed) and that a handshake isn't
+// disturbed by an error an earlier call left there, that lost flights are retransmitted,
+// and that a retransmission timer waits for the lock its socket's owner holds.
 
 static int failures = 0;
 
@@ -69,6 +76,34 @@ public:
    std::vector<DtlsTimer*> mTimers;
 };
 
+// Keeps the timers until the test fires them, as if their time had passed
+class ManualTimerContext : public DtlsTimerContext
+{
+public:
+   ~ManualTimerContext() override
+   {
+      for (DtlsTimer* timer : mTimers) fire(timer);
+   }
+   void addTimer(DtlsTimer* timer, unsigned int waitMs) override
+   {
+      mTimers.push_back(timer);
+      mLastWaitMs = waitMs;
+      ++mAdded;
+   }
+   // Fires the timers added so far; returns how many
+   size_t fireAll()
+   {
+      std::vector<DtlsTimer*> due;
+      due.swap(mTimers);
+      for (DtlsTimer* timer : due) fire(timer);
+      return due.size();
+   }
+
+   std::vector<DtlsTimer*> mTimers;
+   unsigned int mLastWaitMs = 0;
+   int mAdded = 0;
+};
+
 struct Pair
 {
    Pair(DtlsFactory& clientFactory, DtlsFactory& serverFactory)
@@ -86,6 +121,12 @@ struct Pair
    void run()
    {
       mClient->startClient();
+      pump();
+   }
+
+   // Passes each side's output to the other until neither has anything more to say
+   void pump()
+   {
       for (int i = 0; i < 50 && (!mClientContext->mOut.empty() || !mServerContext->mOut.empty()); i++)
       {
          while (!mClientContext->mOut.empty())
@@ -170,6 +211,31 @@ main(int, char**)
 {
    srtp_init();
 
+   // A. Packets are classified by their first byte, as RFC 7983 section 7 sets out
+   {
+      struct { unsigned char firstByte; DtlsFactory::PacketType type; } cases[] = {
+         { 0, DtlsFactory::stun }, { 3, DtlsFactory::stun },
+         { 4, DtlsFactory::unknown }, { 16, DtlsFactory::unknown }, { 19, DtlsFactory::unknown },  // 16-19 ZRTP
+         { 20, DtlsFactory::dtls }, { 63, DtlsFactory::dtls },
+         { 64, DtlsFactory::unknown }, { 79, DtlsFactory::unknown },  // TURN ChannelData
+         { 127, DtlsFactory::unknown },
+         { 128, DtlsFactory::rtp }, { 191, DtlsFactory::rtp },
+         { 192, DtlsFactory::unknown }, { 255, DtlsFactory::unknown },
+      };
+      bool allRight = true;
+      for (const auto& c : cases)
+      {
+         if (DtlsFactory::demuxPacket(&c.firstByte, 1) != c.type)
+         {
+            std::cerr << "     first byte " << (int)c.firstByte << " misclassified" << std::endl;
+            allRight = false;
+         }
+      }
+      check("classify: STUN 0-3, DTLS 20-63, RTP 128-191, anything else unknown", allRight);
+      const unsigned char none = 22;
+      check("classify: an empty datagram is unknown", DtlsFactory::demuxPacket(&none, 0) == DtlsFactory::unknown);
+   }
+
    X509* clientCert = nullptr;
    X509* serverCert = nullptr;
    EVP_PKEY* clientKey = nullptr;
@@ -203,7 +269,7 @@ main(int, char**)
       clientFactory.getMyCertFingerprint(clientFingerprint);
       serverFactory.getMyCertFingerprint(serverFingerprint);
 
-      // A. A plain handshake
+      // B. A plain handshake
       {
          ERR_clear_error();
          Pair pair(clientFactory, serverFactory);
@@ -228,7 +294,7 @@ main(int, char**)
                clientProfile && serverProfile && clientProfile->id == serverProfile->id);
       }
 
-      // E. SDP fingerprints (RFC 8122) are checked with the hash function they name, as a
+      // C. SDP fingerprints (RFC 8122) are checked with the hash function they name, as a
       //    whole, with hex digits in either case
       {
          Pair pair(clientFactory, serverFactory);
@@ -270,7 +336,7 @@ main(int, char**)
                !DtlsSocket::computeFingerprint(serverCert, EVP_sha512(), tooSmall, sizeof(tooSmall)));
       }
 
-      // F. The SRTP sessions use the profile DTLS negotiated: SHA1_32 has a 4 byte RTP auth tag
+      // D. The SRTP sessions use the profile DTLS negotiated: SHA1_32 has a 4 byte RTP auth tag
       {
          struct { const char* name; int tagLength; } profiles[] = {
             { "SRTP_AES128_CM_SHA1_80", 10 },
@@ -307,7 +373,7 @@ main(int, char**)
                pair.completed() && srtpRoundTrip(*pair.mClient, *pair.mServer, tagLength) == libsrtpHasGcm);
       }
 
-      // G. Cookie exchange (RFC 6347 section 4.2.1): a DtlsListener only creates a server socket
+      // E. Cookie exchange (RFC 6347 section 4.2.1): a DtlsListener only creates a server socket
       //    for a peer whose ClientHello returns the cookie it was given, keeping nothing until then
       {
          std::unique_ptr<DtlsListener> listener = serverFactory.createListener();
@@ -375,7 +441,7 @@ main(int, char**)
          }
       }
 
-      // B. An error an earlier OpenSSL call left on this thread's queue (here a failed
+      // F. An error an earlier OpenSSL call left on this thread's queue (here a failed
       //    certificate parse) must not be taken as this handshake's error.  OpenSSL's
       //    handshake state machine currently clears the queue itself; DtlsSocket clears it
       //    too, as OpenSSL documents is required
@@ -391,7 +457,7 @@ main(int, char**)
          check("stale error: handshake still completed on both sides", pair.completed());
       }
 
-      // C. A failed handshake doesn't leave its error for whatever runs next on this thread.
+      // G. A failed handshake doesn't leave its error for whatever runs next on this thread.
       //    The client offers only an ECDSA cipher suite and the server's certificate is RSA,
       //    so there is no cipher they share.
       {
@@ -406,11 +472,133 @@ main(int, char**)
          }
       }
 
-      // D. And the next handshake on this thread works
+      // H. And the next handshake on this thread works
       {
          Pair pair(clientFactory, serverFactory);
          pair.run();
          check("after a failed handshake: the next one completes", pair.completed());
+      }
+
+      // I. Retransmission: when a flight is lost, the socket's timer - set for as long as OpenSSL
+      //    waits - retransmits it when it fires, and is set again
+      {
+         ManualTimerContext* timers = new ManualTimerContext;
+         DtlsFactory timedFactory(std::unique_ptr<DtlsTimerContext>(timers), clientCert, clientKey);
+         std::unique_ptr<PipeContext> contextOwner(new PipeContext);
+         PipeContext* context = contextOwner.get();
+         std::unique_ptr<DtlsSocket> client(timedFactory.createClient(std::move(contextOwner)));
+         client->startClient();
+         check("retransmit: the ClientHello is sent", context->mOut.size() == 1);
+         Datagram hello = context->mOut.front();
+         context->mOut.clear();  // lost
+         check("retransmit: a timer is set, for no more than OpenSSL's first timeout (1 second)",
+               timers->mTimers.size() == 1 && timers->mLastWaitMs > 0 && timers->mLastWaitMs <= 1000);
+
+         for (int round = 1; round <= 2; ++round)
+         {
+            std::this_thread::sleep_for(std::chrono::milliseconds(timers->mLastWaitMs + 50));
+            const unsigned int waited = timers->mLastWaitMs;
+            timers->fireAll();
+            std::string what = "retransmit " + std::to_string(round) + ": ";
+            // The same ClientHello, in a record with a new sequence number (bytes 5 to 10 of
+            // the 13 byte DTLS record header)
+            check((what + "the ClientHello is sent again when the timer fires").c_str(),
+                  context->mOut.size() == 1 && context->mOut.front().size() == hello.size() &&
+                  std::equal(hello.begin() + 13, hello.end(), context->mOut.front().begin() + 13));
+            context->mOut.clear();  // lost again
+            check((what + "a timer is set again, for longer (backoff)").c_str(),
+                  timers->mTimers.size() == 1 && timers->mLastWaitMs > waited);
+         }
+      }
+
+      // J. When the server's final flight is lost, the client's retransmission reaches a server
+      //    that has completed its handshake - which has to send its final flight again
+      {
+         ManualTimerContext* clientTimers = new ManualTimerContext;
+         DtlsFactory clientTimedFactory(std::unique_ptr<DtlsTimerContext>(clientTimers), clientCert, clientKey);
+         Pair pair(clientTimedFactory, serverFactory);
+         pair.mClient->startClient();
+         // Run the handshake until the server completes, losing what it sends then
+         for (int i = 0; i < 50 && !pair.mServerContext->mCompleted; i++)
+         {
+            while (!pair.mClientContext->mOut.empty())
+            {
+               Datagram d = pair.mClientContext->mOut.front();
+               pair.mClientContext->mOut.pop_front();
+               pair.mServer->handlePacketMaybe(d.data(), d.size());
+            }
+            if (pair.mServerContext->mCompleted) break;
+            while (!pair.mServerContext->mOut.empty())
+            {
+               Datagram d = pair.mServerContext->mOut.front();
+               pair.mServerContext->mOut.pop_front();
+               pair.mClient->handlePacketMaybe(d.data(), d.size());
+            }
+         }
+         pair.mServerContext->mOut.clear();  // the server's final flight is lost
+         check("final flight lost: the server has completed, the client hasn't",
+               pair.mServerContext->mCompleted && !pair.mClientContext->mCompleted);
+
+         std::this_thread::sleep_for(std::chrono::milliseconds(clientTimers->mLastWaitMs + 50));
+         clientTimers->fireAll();
+         check("final flight lost: the client retransmits its last flight", !pair.mClientContext->mOut.empty());
+         pair.pump();
+         check("final flight lost: the completed server sends its final flight again, and the client completes",
+               pair.completed());
+      }
+
+      // K. Destroying a socket - mid-handshake, after a failed handshake, or after a completed
+      //    one - leaves nothing on this thread's error queue
+      {
+         ERR_clear_error();
+         {
+            std::unique_ptr<DtlsSocket> client(clientFactory.createClient(std::unique_ptr<DtlsSocketContext>(new PipeContext)));
+            client->startClient();
+         }
+         check("destroyed mid-handshake: nothing left on the error queue", ERR_peek_error() == 0);
+
+         DtlsFactory ecdsaOnlyFactory(std::unique_ptr<DtlsTimerContext>(new CollectingTimerContext), clientCert, clientKey);
+         ecdsaOnlyFactory.setCipherSuites("ECDHE-ECDSA-AES128-GCM-SHA256");
+         {
+            Pair pair(ecdsaOnlyFactory, serverFactory);
+            pair.run();
+         }
+         check("destroyed after a failed handshake: nothing left on the error queue", ERR_peek_error() == 0);
+
+         {
+            Pair pair(clientFactory, serverFactory);
+            pair.run();
+         }
+         check("destroyed after a completed handshake: nothing left on the error queue", ERR_peek_error() == 0);
+      }
+
+      // L. A retransmission timer fired on another thread waits for the lock the socket's owner
+      //    holds while it uses the socket (DtlsSocketContext::timerLock), as reflow's timers fire
+      //    on its io thread while the application uses the socket under the Flow's lock
+      {
+         struct LockingContext : public PipeContext
+         {
+            std::shared_ptr<std::mutex> mLock = std::make_shared<std::mutex>();
+            std::shared_ptr<std::mutex> timerLock() override { return mLock; }
+         };
+         ManualTimerContext* timers = new ManualTimerContext;
+         DtlsFactory timedFactory(std::unique_ptr<DtlsTimerContext>(timers), clientCert, clientKey);
+         std::unique_ptr<LockingContext> contextOwner(new LockingContext);
+         std::shared_ptr<std::mutex> lock = contextOwner->mLock;
+         std::unique_ptr<DtlsSocket> client(timedFactory.createClient(std::move(contextOwner)));
+         client->startClient();
+         check("timer lock: a timer is set", timers->mTimers.size() == 1);
+
+         std::atomic<bool> fired(false);
+         std::thread firing;
+         {
+            std::lock_guard<std::mutex> owner(*lock);
+            firing = std::thread([&]() { timers->fireAll(); fired = true; });
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            check("timer lock: the timer waits while the owner holds the lock", !fired);
+         }
+         firing.join();
+         check("timer lock: the timer runs once the owner releases it", fired);
       }
    }
 

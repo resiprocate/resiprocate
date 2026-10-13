@@ -29,10 +29,14 @@ FlowDtlsTimerContext::FlowDtlsTimerContext(asio::io_context& ioService) :
 void 
 FlowDtlsTimerContext::addTimer(dtls::DtlsTimer *timer, unsigned int durationMs) 
 {
+   // addTimer is called from whichever thread uses the DtlsSocket, so the asio timer is kept
+   // alive by its own handler rather than in a map the io thread would share
    auto deadlineTimer = std::make_shared<asio::steady_timer>(mIOService);
    deadlineTimer->expires_after(milliseconds(durationMs));
-   deadlineTimer->async_wait(std::bind(&FlowDtlsTimerContext::handleTimeout, this, timer, std::placeholders::_1));
-   mDeadlineTimers[timer] = deadlineTimer;
+   deadlineTimer->async_wait([this, timer, deadlineTimer](const asio::error_code& errorCode)
+   {
+      handleTimeout(timer, errorCode);
+   });
    //InfoLog(<< "FlowDtlsTimerContext: starting timer for " << durationMs << "ms.");
 }    
 
@@ -48,13 +52,13 @@ FlowDtlsTimerContext::handleTimeout(dtls::DtlsTimer *timer, const asio::error_co
    {
      ErrLog(<< "Timer error: " << errorCode.message());
    }
-   mDeadlineTimers.erase(timer);
 }
 
 #endif
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

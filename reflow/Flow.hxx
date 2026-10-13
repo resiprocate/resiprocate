@@ -153,8 +153,11 @@ private:
    uint8_t mAllocationProps;
    uint64_t mReservationToken; 
 
-   // Mutex to protect the following members that may be get/set from multiple threads
-   resip::Mutex mMutex;
+   // Mutex to protect the following members that may be get/set from multiple threads.  Shared
+   // with the DtlsSockets' retransmission timers, which take it when they fire (on the io thread)
+   // and may still be pending when the Flow is destroyed.
+   std::shared_ptr<resip::Mutex> mSharedMutex;
+   resip::Mutex& mMutex;
    StunTuple mReflexiveTuple;
    StunTuple mRelayTuple;
    resip::Data mRemoteSDPFingerprintHashFunction;

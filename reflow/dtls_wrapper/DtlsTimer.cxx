@@ -18,8 +18,16 @@ DtlsTimer::~DtlsTimer()
 }
 
 void
-DtlsTimer::fire() 
+DtlsTimer::fire()
 {
+   // A local reference keeps the lock alive when the timer is deleted below (or by expired())
+   std::shared_ptr<std::mutex> lock = mLock;
+   std::unique_lock<std::mutex> guard;
+   if(lock)
+   {
+      guard = std::unique_lock<std::mutex>(*lock);
+   }
+
    if(mValid)
    {
       expired();
@@ -42,7 +50,8 @@ DtlsTimerContext::fire(DtlsTimer *timer)
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2007-2026, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

@@ -66,6 +66,13 @@ FlowDtlsSocketContext::handshakeFailed(const char *err)
    ErrLog(<< "Flow Dtls Handshake failed: " << err << "  ComponentId=" << mFlow.getComponentId());
 }
 
+std::shared_ptr<std::mutex>
+FlowDtlsSocketContext::timerLock()
+{
+   // The Flow's mutex, which it holds whenever it uses its DtlsSockets
+   return mFlow.mSharedMutex;
+}
+
 void
 FlowDtlsSocketContext::checkRemoteFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint)
 {

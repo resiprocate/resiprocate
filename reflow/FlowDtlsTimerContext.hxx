@@ -30,7 +30,6 @@ class FlowDtlsTimerContext: public dtls::DtlsTimerContext
 
    private:
      asio::io_context& mIOService;
-     std::map<dtls::DtlsTimer*, std::shared_ptr<asio::steady_timer> > mDeadlineTimers;  
 };
 
 }
@@ -39,8 +38,8 @@ class FlowDtlsTimerContext: public dtls::DtlsTimerContext
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

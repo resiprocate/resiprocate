@@ -140,13 +140,17 @@ DtlsFactory::setCipherSuites(const char *str)
 DtlsFactory::PacketType
 DtlsFactory::demuxPacket(const unsigned char *data, size_t len) 
 {
-   resip_assert(len>=1);
+   // By the first byte, as RFC 7983 section 7 sets out: 0-3 STUN, 20-63 DTLS, 128-191 RTP/RTCP.
+   // Anything else (eg. 16-19 ZRTP, 64-79 TURN ChannelData) is unknown, as is an empty datagram,
+   // which a peer can send.
+   if(len == 0)
+      return unknown;
 
-   if((data[0]==0)   || (data[0]==1))
+   if(data[0]<=3)
       return stun;
    if((data[0]>=128) && (data[0]<=191))
       return rtp;
-   if((data[0]>=20)  && (data[0]<=64))
+   if((data[0]>=20)  && (data[0]<=63))
       return dtls;
 
    return unknown;

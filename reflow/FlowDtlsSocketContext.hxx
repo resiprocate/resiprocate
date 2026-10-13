@@ -36,6 +36,7 @@ public:
    virtual void write(const unsigned char* data, unsigned int len);
    virtual void handshakeCompleted();
    virtual void handshakeFailed(const char *err);
+   virtual std::shared_ptr<std::mutex> timerLock();
 
    srtp_t* getSrtpSessionIn() { return &mSRTPSessionIn; }
    srtp_t* getSrtpSessionOut() { return &mSRTPSessionOut; }

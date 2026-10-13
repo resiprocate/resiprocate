@@ -7,6 +7,9 @@
 #ifndef DTLS_Timer_hxx
 #define DTLS_Timer_hxx
 
+#include <memory>
+#include <mutex>
+
 namespace dtls
 {
 
@@ -21,9 +24,16 @@ class DtlsTimer
       unsigned int getSeq() { return mSeq; }
       //invalid could call though to context and call an external cancel
       void invalidate() { mValid = false; }
+
+      // The lock the timer's owner holds while it uses what the timer acts on, and while it
+      // invalidates the timer: fire() takes it too, so a timer firing on another thread neither
+      // races the owner nor runs for an owner that has invalidated it meanwhile.  Shared, so it
+      // outlives the owner while the timer is pending.
+      void setLock(std::shared_ptr<std::mutex> lock) { mLock = std::move(lock); }
    private:
       unsigned int mSeq;
-      bool mValid;            
+      bool mValid;
+      std::shared_ptr<std::mutex> mLock;
 };
 
 
@@ -45,7 +55,8 @@ class DtlsTimerContext
 #endif
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2007-2026, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
