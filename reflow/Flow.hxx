@@ -104,9 +104,12 @@ public:
    void startDtlsClient(const char* address, unsigned short port);
 
    /// This method should be called when remote fingerprint is discovered
-   /// via SDP negotiation.  After this is called only dtls-srtp connections
-   /// with a matching fingerprint will be maintained.
-   void setRemoteSDPFingerprint(const resip::Data& fingerprint);
+   /// via SDP negotiation (RFC 8122 a=fingerprint): hashFunction is its hash
+   /// function textual name, eg. "sha-256".  SRTP is only set up for dtls-srtp
+   /// connections whose peer certificate matches it, so none is set up until
+   /// this is called; connections that have already completed their handshake
+   /// are checked now.
+   void setRemoteSDPFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint);
 
    /// Retrieves the stored remote SDP Fingerprint.
    const resip::Data getRemoteSDPFingerprint();
@@ -119,6 +122,9 @@ public:
    unsigned int getComponentId() { return mComponentId; }
 
 private:
+   // Reads mRemoteSDPFingerprint* from its handshakeCompleted callback, which is run with mMutex held
+   friend class FlowDtlsSocketContext;
+
    asio::io_context& mIOService;
    asio::ssl::context& mSslContext;
 
@@ -151,6 +157,7 @@ private:
    resip::Mutex mMutex;
    StunTuple mReflexiveTuple;
    StunTuple mRelayTuple;
+   resip::Data mRemoteSDPFingerprintHashFunction;
    resip::Data mRemoteSDPFingerprint;
    asio::ip::address mActiveDestinationAddress;
    unsigned short mActiveDestinationPort;
@@ -225,7 +232,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2007-2023, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2007-2026, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

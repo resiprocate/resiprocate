@@ -60,7 +60,7 @@ public:
 
    void setActiveDestination(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
    void startDtlsClient(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
-   void setRemoteSDPFingerprint(const resip::Data& fingerprint);
+   void setRemoteSDPFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint);
    bool createSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, size_t remoteKeyLen);
 
    // Media Stream Processing
@@ -106,7 +106,7 @@ private:
 
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2022, Daniel Pocock https://danielpocock.com
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021-2026, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -145,7 +145,7 @@ KurentoRemoteParticipantDialogSet::startDtlsClient(const char* address, unsigned
 }
 
 void 
-KurentoRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& fingerprint)
+KurentoRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint)
 {
 // FIXME Kurento
 }

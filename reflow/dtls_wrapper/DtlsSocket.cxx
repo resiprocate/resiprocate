@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include "rutil/ResipAssert.h"
+#include <ctype.h>
 #include <string.h>
 
 #include "DtlsFactory.hxx"
@@ -16,10 +17,6 @@
 
 using namespace std;
 using namespace dtls;
-
-//const int SRTP_MASTER_KEY_BASE64_LEN = SRTP_MASTER_KEY_LEN * 4 / 3;
-const int SRTP_MASTER_KEY_KEY_LEN = 16;
-const int SRTP_MASTER_KEY_SALT_LEN = 14;
 
 // Our local timers
 class dtls::DtlsSocketTimer : public DtlsTimer
@@ -208,11 +205,45 @@ DtlsSocket::doHandshakeIteration()
    }
 }
 
-bool
-DtlsSocket::getRemoteFingerprint(char *fprint)
+static bool
+equalsIgnoreCase(const char* a, const char* b)
 {
-   X509 *x;
+   for(; *a && *b; a++, b++)
+   {
+      if(tolower((unsigned char)*a) != tolower((unsigned char)*b))
+         return false;
+   }
+   return *a == *b;
+}
 
+// The RFC 8122 hash function textual names we accept: those of the IANA registry,
+// less md2 and md5, which aren't safe to authenticate a certificate with
+static const EVP_MD*
+fingerprintDigest(const char* hashFunction)
+{
+   if(!hashFunction) return 0;
+   if(equalsIgnoreCase(hashFunction, "sha-1")) return EVP_sha1();
+   if(equalsIgnoreCase(hashFunction, "sha-224")) return EVP_sha224();
+   if(equalsIgnoreCase(hashFunction, "sha-256")) return EVP_sha256();
+   if(equalsIgnoreCase(hashFunction, "sha-384")) return EVP_sha384();
+   if(equalsIgnoreCase(hashFunction, "sha-512")) return EVP_sha512();
+   return 0;
+}
+
+bool
+DtlsSocket::isFingerprintHashFunctionSupported(const char* hashFunction)
+{
+   return fingerprintDigest(hashFunction) != 0;
+}
+
+bool
+DtlsSocket::getRemoteFingerprint(const char* hashFunction, char *fingerprint, size_t fingerprintSize)
+{
+   const EVP_MD* digest = fingerprintDigest(hashFunction);
+   if(!digest)
+      return false;
+
+   X509 *x;
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
    x=SSL_get_peer_certificate(mSsl);
 #else
@@ -221,32 +252,48 @@ DtlsSocket::getRemoteFingerprint(char *fprint)
    if(!x) // No certificate
       return false;
 
-   computeFingerprint(x,fprint);
+   bool computed = computeFingerprint(x, digest, fingerprint, fingerprintSize);
    X509_free(x);
-   return true;
+   return computed;
 }
 
 bool
-DtlsSocket::checkFingerprint(const char* fingerprint, size_t len)
+DtlsSocket::checkFingerprint(const char* hashFunction, const char* fingerprint)
 {
-   char fprint[100];
+   char fprint[EVP_MAX_MD_SIZE * 3];
 
-   if(getRemoteFingerprint(fprint)==false)
-      return false;
-
-   // used to be strncasecmp
-   if(strncmp(fprint,fingerprint,len)){
-      cerr << "Fingerprint mismatch, got " << fprint << "expecting " << fingerprint << endl;
-      return false;
-   }
-
-   return true;
+   // The whole fingerprint must match; its hex digits may be in either case (RFC 8122 section 5)
+   return fingerprint &&
+          getRemoteFingerprint(hashFunction, fprint, sizeof(fprint)) &&
+          equalsIgnoreCase(fprint, fingerprint);
 }
 
 void
 DtlsSocket::getMyCertFingerprint(char *fingerprint)
 {
    mFactory->getMyCertFingerprint(fingerprint);
+}
+
+// Maps the SRTP protection profile DTLS negotiated to libsrtp's - returns false if there
+// isn't one, or libsrtp doesn't support it (the AES-GCM profiles need libsrtp built with GCM)
+static bool
+negotiatedSrtpProfile(SRTP_PROTECTION_PROFILE* negotiated, srtp_profile_t& profile)
+{
+   if(!negotiated)
+      return false;
+
+   switch(negotiated->id)
+   {
+   case SRTP_AES128_CM_SHA1_80: profile = srtp_profile_aes128_cm_sha1_80; break;
+   case SRTP_AES128_CM_SHA1_32: profile = srtp_profile_aes128_cm_sha1_32; break;
+   case SRTP_AEAD_AES_128_GCM:  profile = srtp_profile_aead_aes_128_gcm;  break;
+   case SRTP_AEAD_AES_256_GCM:  profile = srtp_profile_aead_aes_256_gcm;  break;
+   default: return false;
+   }
+
+   srtp_crypto_policy_t policy;
+   return srtp_crypto_policy_set_from_profile_for_rtp(&policy, profile) == srtp_err_status_ok &&
+          srtp_crypto_policy_set_from_profile_for_rtcp(&policy, profile) == srtp_err_status_ok;
 }
 
 SrtpSessionKeys
@@ -257,11 +304,22 @@ DtlsSocket::getSrtpSessionKeys()
 
    SrtpSessionKeys keys;
 
-   unsigned char material[SRTP_MASTER_KEY_LEN << 1];
-   if (!SSL_export_keying_material(
+   srtp_profile_t profile;
+   if(!negotiatedSrtpProfile(getSrtpProfile(), profile))
+   {
+      return keys;
+   }
+   unsigned int keyLen = srtp_profile_get_master_key_length(profile);
+   unsigned int saltLen = srtp_profile_get_master_salt_length(profile);
+
+   // RFC 5764 section 4.2: client key, server key, client salt, server salt
+   unsigned char material[2 * SRTP_MAX_KEY_LEN];
+   size_t materialLen = 2 * (keyLen + saltLen);
+   if(materialLen > sizeof(material) ||
+      !SSL_export_keying_material(
       mSsl,
       material,
-      sizeof(material),
+      materialLen,
       "EXTRACTOR-dtls_srtp", 19, NULL, 0, 0))
    {
       return keys;
@@ -269,16 +327,17 @@ DtlsSocket::getSrtpSessionKeys()
 
    size_t offset = 0;
 
-   keys.clientMasterKey.assign(material + offset, material + offset + SRTP_MASTER_KEY_KEY_LEN);
+   keys.clientMasterKey.assign(material + offset, material + offset + keyLen);
    offset += keys.clientMasterKey.size();
-   keys.serverMasterKey.assign(material + offset, material + offset + SRTP_MASTER_KEY_KEY_LEN);
+   keys.serverMasterKey.assign(material + offset, material + offset + keyLen);
    offset += keys.serverMasterKey.size();
-   keys.clientMasterSalt.assign(material + offset, material + offset + SRTP_MASTER_KEY_SALT_LEN);
+   keys.clientMasterSalt.assign(material + offset, material + offset + saltLen);
    offset += keys.clientMasterSalt.size();
-   keys.serverMasterSalt.assign(material + offset, material + offset + SRTP_MASTER_KEY_SALT_LEN);
+   keys.serverMasterSalt.assign(material + offset, material + offset + saltLen);
    offset += keys.serverMasterSalt.size();
 
-   return keys;   
+   OPENSSL_cleanse(material, sizeof(material));
+   return keys;
 }
 
 SRTP_PROTECTION_PROFILE*
@@ -289,113 +348,77 @@ DtlsSocket::getSrtpProfile()
    return SSL_get_selected_srtp_profile(mSsl);
 }
 
-// Fingerprint is assumed to be long enough
 void
-DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint) 
+DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint)
 {
-   unsigned char md[EVP_MAX_MD_SIZE];
-   int r;
-   unsigned int i,n;
-
-   //r=X509_digest(cert,EVP_sha1(),md,&n);
-   r=X509_digest(cert,EVP_sha256(),md,&n);  // !slg! TODO - is sha1 vs sha256 supposed to come from DTLS handshake? fixing to to SHA-256 for compatibility with current web-rtc implementations
-   resip_assert(r==1);
-
-   // worst case output: EVP_MAX_MD_SIZE * 3 bytes (2 hex chars + colon/null)
-   // TODO - pass size in as an argument
-   size_t remaining = EVP_MAX_MD_SIZE * 3;
-
-   for(i=0;i<n;i++)
-   {
-      snprintf(fingerprint,remaining,"%02X",md[i]);
-      fingerprint+=2;
-
-      if(i<(n-1))
-         *fingerprint++=':';
-      else
-         *fingerprint++=0;
-   }
+   bool computed = computeFingerprint(cert, EVP_sha256(), fingerprint, FingerprintSize);
+   resip_assert(computed);
 }
 
-//TODO: assert(0) into exception, as elsewhere
-void
+bool
+DtlsSocket::computeFingerprint(X509 *cert, const EVP_MD* digest, char *fingerprint, size_t fingerprintSize)
+{
+   unsigned char md[EVP_MAX_MD_SIZE];
+   unsigned int n;
+
+   if(X509_digest(cert,digest,md,&n) != 1 || n == 0 ||
+      fingerprintSize < n * 3)  // 2 hex digits and a colon (or the terminating null) per byte
+   {
+      return false;
+   }
+
+   static const char hex[] = "0123456789ABCDEF";
+   for(unsigned int i=0;i<n;i++)
+   {
+      *fingerprint++ = hex[md[i] >> 4];
+      *fingerprint++ = hex[md[i] & 0x0f];
+      *fingerprint++ = (i < n-1) ? ':' : 0;
+   }
+   return true;
+}
+
+// Fills in a policy for one direction's keys, from the negotiated profile
+static void
+initSrtpPolicy(srtp_policy_t& policy, srtp_profile_t profile, const std::vector<unsigned char>& key, const std::vector<unsigned char>& salt)
+{
+   memset(&policy, 0, sizeof(srtp_policy_t));
+   policy.window_size = 128;
+   policy.allow_repeat_tx = 1;
+
+   uint8_t* keyAndSalt = new uint8_t[SRTP_MAX_KEY_LEN];
+   memcpy(keyAndSalt, key.data(), key.size());
+   memcpy(keyAndSalt + key.size(), salt.data(), salt.size());
+   policy.key = keyAndSalt;
+
+   // Can't fail: negotiatedSrtpProfile has checked libsrtp supports the profile
+   srtp_crypto_policy_set_from_profile_for_rtp(&policy.rtp, profile);
+   srtp_crypto_policy_set_from_profile_for_rtcp(&policy.rtcp, profile);
+   policy.next = NULL;
+}
+
+bool
 DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy)
 {
    resip_assert(mHandshakeCompleted);
 
-   /* we assume that the default profile is in effect, for now */
-   srtp_profile_t profile = srtp_profile_aes128_cm_sha1_80;
-   unsigned int key_len = srtp_profile_get_master_key_length(profile);
-   unsigned int salt_len = srtp_profile_get_master_salt_length(profile);
+   srtp_profile_t profile;
+   if(!negotiatedSrtpProfile(getSrtpProfile(), profile))
+   {
+      return false;
+   }
 
-   /* get keys from srtp_key and initialize the inbound and outbound sessions */
-   uint8_t *client_master_key_and_salt=new uint8_t[SRTP_MAX_KEY_LEN];
-   uint8_t *server_master_key_and_salt=new uint8_t[SRTP_MAX_KEY_LEN];
+   SrtpSessionKeys srtp_key = getSrtpSessionKeys();
+   if(srtp_key.clientMasterKey.empty())
+   {
+      return false;
+   }
+
    srtp_policy_t client_policy;
-   memset(&client_policy, 0, sizeof(srtp_policy_t));
-   client_policy.window_size = 128;
-   client_policy.allow_repeat_tx = 1;
+   initSrtpPolicy(client_policy, profile, srtp_key.clientMasterKey, srtp_key.clientMasterSalt);
    srtp_policy_t server_policy;
-   memset(&server_policy, 0, sizeof(srtp_policy_t));
-   server_policy.window_size = 128;
-   server_policy.allow_repeat_tx = 1;
+   initSrtpPolicy(server_policy, profile, srtp_key.serverMasterKey, srtp_key.serverMasterSalt);
 
-   SrtpSessionKeys srtp_key = getSrtpSessionKeys();   
-   /* set client_write key */  
-   client_policy.key = client_master_key_and_salt;
-   if (srtp_key.clientMasterKey.size() != key_len)
-   {
-      cout << "error: unexpected client key length" << endl;
-      resip_assert(0);
-   }
-   if (srtp_key.clientMasterSalt.size() != salt_len)
-   {
-      cout << "error: unexpected client salt length" << endl;
-      resip_assert(0);      
-   }
-
-   memcpy(client_master_key_and_salt, &srtp_key.clientMasterKey.front(), key_len);
-   memcpy(client_master_key_and_salt + key_len, &srtp_key.clientMasterSalt.front(), salt_len);
-
-   //cout << "client master key and salt: " << 
-   //   octet_string_hex_string(client_master_key_and_salt, key_len + salt_len) << endl;
-
-   /* initialize client SRTP policy from profile  */
-   srtp_err_status_t err = srtp_crypto_policy_set_from_profile_for_rtp(&client_policy.rtp, profile);
-   if (err) resip_assert(0);
-
-   err = srtp_crypto_policy_set_from_profile_for_rtcp(&client_policy.rtcp, profile);
-   if (err) resip_assert(0);
-   client_policy.next = NULL;
-
-   /* set server_write key */
-   server_policy.key = server_master_key_and_salt;
-
-   if (srtp_key.serverMasterKey.size() != key_len)
-   {
-      cout << "error: unexpected server key length" << endl;
-      resip_assert(0);
-   }
-   if (srtp_key.serverMasterSalt.size() != salt_len)
-   {
-      cout << "error: unexpected salt length" << endl;
-      resip_assert(0);      
-   }
-
-   memcpy(server_master_key_and_salt, &srtp_key.serverMasterKey.front(), key_len);
-   memcpy(server_master_key_and_salt + key_len, &srtp_key.serverMasterSalt.front(), salt_len);
-   //cout << "server master key and salt: " << 
-   //   octet_string_hex_string(server_master_key_and_salt, key_len + salt_len) << endl;
-
-   /* initialize server SRTP policy from profile  */
-   err = srtp_crypto_policy_set_from_profile_for_rtp(&server_policy.rtp, profile);
-   if (err) resip_assert(0);
-
-   err = srtp_crypto_policy_set_from_profile_for_rtcp(&server_policy.rtcp, profile);
-   if (err) resip_assert(0);
-   server_policy.next = NULL;
-
-   if (mSocketType == Client) 
+   if (mSocketType == Client)
    {
       client_policy.ssrc.type = ssrc_any_outbound;
       outboundPolicy = client_policy;
@@ -411,11 +434,12 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
       client_policy.ssrc.type = ssrc_any_inbound;
       inboundPolicy = client_policy;
    }
-   /* zeroize the input keys (but not the srtp session keys that are in use) */
-   //not done...not much of a security whole imho...the lifetime of these seems odd though
-   //    memset(client_master_key_and_salt, 0x00, SRTP_MAX_KEY_LEN);
-   //    memset(server_master_key_and_salt, 0x00, SRTP_MAX_KEY_LEN);
-   //    memset(&srtp_key, 0x00, sizeof(srtp_key));
+
+   OPENSSL_cleanse(srtp_key.clientMasterKey.data(), srtp_key.clientMasterKey.size());
+   OPENSSL_cleanse(srtp_key.serverMasterKey.data(), srtp_key.serverMasterKey.size());
+   OPENSSL_cleanse(srtp_key.clientMasterSalt.data(), srtp_key.clientMasterSalt.size());
+   OPENSSL_cleanse(srtp_key.serverMasterSalt.data(), srtp_key.serverMasterSalt.size());
+   return true;
 }
 
 // Wrapper for currently nonexistent OpenSSL fxn

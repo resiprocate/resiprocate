@@ -145,7 +145,7 @@ LibWebRTCRemoteParticipantDialogSet::startDtlsClient(const char* address, unsign
 }
 
 void 
-LibWebRTCRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& fingerprint)
+LibWebRTCRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint)
 {
 // FIXME LibWebRTC
 }

@@ -557,22 +557,18 @@ Flow::startDtlsClient(const char* address, unsigned short port)
 #endif 
 
 void 
-Flow::setRemoteSDPFingerprint(const resip::Data& fingerprint)
+Flow::setRemoteSDPFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint)
 {
    Lock lock(mMutex);
+   mRemoteSDPFingerprintHashFunction = hashFunction;
    mRemoteSDPFingerprint = fingerprint;
 
 #ifdef USE_SSL
-   // Check all existing DtlsSockets and tear down those that don't match
+   // Check all existing DtlsSockets: set up SRTP for those that match, and tear it down for those that don't
    std::map<reTurn::StunTuple, dtls::DtlsSocket*>::iterator it;
    for(it = mDtlsSockets.begin(); it != mDtlsSockets.end(); it++)
    {
-      if(it->second->handshakeCompleted() && 
-         !it->second->checkFingerprint(fingerprint.c_str(), fingerprint.size()))
-      {
-         InfoLog(LOG_PREFIX << "Marking Dtls socket bad with non-matching fingerprint!");
-         ((FlowDtlsSocketContext*)it->second->getSocketContext())->fingerprintMismatch();
-      }
+      ((FlowDtlsSocketContext*)it->second->getSocketContext())->checkRemoteFingerprint(hashFunction, fingerprint);
    }
 #endif //USE_SSL
 }

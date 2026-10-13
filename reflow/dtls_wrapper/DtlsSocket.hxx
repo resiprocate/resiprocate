@@ -68,12 +68,23 @@ class DtlsSocket
       // Called by DtlSocketTimer when timer expires - causes a retransmission (forceRetransmit)
       void expired(DtlsSocketTimer*);
       
-      // Retrieves the finger print of the certificate presented by the remote party
-      bool getRemoteFingerprint(char *fingerprint);
+      // Size of the buffer getMyCertFingerprint and computeFingerprint write to: a SHA-256
+      // fingerprint, as uppercase hex pairs separated by colons
+      static const size_t FingerprintSize = 32 * 3;
 
-      // Retrieves the finger print of the certificate presented by the remote party and checks
-      // it agains the passed in certificate
-      bool checkFingerprint(const char* fingerprint, size_t len);
+      // Retrieves the finger print of the certificate presented by the remote party, computed with
+      // the hash function an SDP fingerprint names (see checkFingerprint) - returns false if there is
+      // no certificate, the hash function isn't supported, or the fingerprint doesn't fit in
+      // fingerprintSize (EVP_MAX_MD_SIZE * 3 is always enough)
+      bool getRemoteFingerprint(const char* hashFunction, char *fingerprint, size_t fingerprintSize);
+
+      // Checks the certificate presented by the remote party against an SDP fingerprint
+      // (RFC 8122): hashFunction is its hash function textual name (eg. "sha-256"), and
+      // fingerprint its uppercase or lowercase hex pairs separated by colons
+      bool checkFingerprint(const char* hashFunction, const char* fingerprint);
+
+      // Returns true if checkFingerprint supports this hash function textual name
+      static bool isFingerprintHashFunctionSupported(const char* hashFunction);
 
       // Retrieves the finger print of our local certificate, same as getMyCertFingerprint from DtlsFactory
       void getMyCertFingerprint(char *fingerprint);
@@ -84,18 +95,26 @@ class DtlsSocket
       // Returns the socket type: Client or Server
 	   SocketType getSocketType() {return mSocketType;} 
 
-      // Retreives the SRTP session keys from the Dtls session
+      // Retreives the SRTP session keys from the Dtls session, sized for the negotiated SRTP
+      // profile - empty if no profile was negotiated or libsrtp doesn't support it
       SrtpSessionKeys getSrtpSessionKeys();
 
-      // Utility fn to compute a certificates fingerprint
+      // Utility fn to compute a certificate's SHA-256 fingerprint into a buffer of FingerprintSize
       static void computeFingerprint(X509 *cert, char *fingerprint);
- 
-      // Retrieves the DTLS negotiated SRTP profile - may return 0 if profile selection failed
-      SRTP_PROTECTION_PROFILE* getSrtpProfile();      
 
-      // Creates SRTP session policies appropriately based on socket type (client vs server) and keys
-      // extracted from the DTLS handshake process
-      void createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy);      
+      // Utility fn to compute a certificate's fingerprint with the given digest - returns false
+      // if it doesn't fit in fingerprintSize (EVP_MAX_MD_SIZE * 3 is always enough)
+      static bool computeFingerprint(X509 *cert, const EVP_MD* digest, char *fingerprint, size_t fingerprintSize);
+
+      // Retrieves the DTLS negotiated SRTP profile - may return 0 if profile selection failed
+      SRTP_PROTECTION_PROFILE* getSrtpProfile();
+
+      // Creates SRTP session policies appropriately based on socket type (client vs server), the
+      // negotiated SRTP profile and keys extracted from the DTLS handshake process.  Returns false
+      // if no SRTP profile was negotiated or libsrtp doesn't support it.  On success the policies'
+      // key members point to memory allocated with new[]: the caller must delete[] them once
+      // it has created its SRTP sessions (srtp_create copies them).
+      bool createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy);
       
       // returns true if the DTLS handshake has completed
       bool handshakeCompleted() { return mHandshakeCompleted; }
@@ -137,7 +156,8 @@ class DtlsSocket
 #endif 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

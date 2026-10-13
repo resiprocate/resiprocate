@@ -145,7 +145,7 @@ GstRemoteParticipantDialogSet::startDtlsClient(const char* address, unsigned sho
 }
 
 void 
-GstRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& fingerprint)
+GstRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint)
 {
 // FIXME Gst
 }

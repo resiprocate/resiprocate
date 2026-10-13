@@ -382,15 +382,15 @@ SipXRemoteParticipantDialogSet::startDtlsClient(const char* address, unsigned sh
 }
 
 void 
-SipXRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& fingerprint)
+SipXRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint)
 {
    if(mMediaStream && mMediaStream->getRtpFlow())
    {
-      mMediaStream->getRtpFlow()->setRemoteSDPFingerprint(fingerprint);
+      mMediaStream->getRtpFlow()->setRemoteSDPFingerprint(hashFunction, fingerprint);
    }
    if(mMediaStream && mMediaStream->getRtcpFlow())
    {
-      mMediaStream->getRtcpFlow()->setRemoteSDPFingerprint(fingerprint);
+      mMediaStream->getRtcpFlow()->setRemoteSDPFingerprint(hashFunction, fingerprint);
    }
 }
 

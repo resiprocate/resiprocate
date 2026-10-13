@@ -29,6 +29,10 @@
 #include <resip/dum/ServerOutOfDialogReq.hxx>
 #include <resip/dum/ServerSubscription.hxx>
 
+#ifdef USE_SSL
+#include "reflow/dtls_wrapper/DtlsSocket.hxx"
+#endif
+
 #include <rutil/WinLeakCheck.hxx>
 
 #include <utility>
@@ -39,6 +43,21 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
+
+// Returns the hash function textual name (RFC 8122) of a media line's fingerprint if there is
+// one and reflow's DTLS-SRTP can check it, or 0 if not
+static const char*
+supportedFingerprintHashFunction(const sdpcontainer::SdpMediaLine& mediaLine)
+{
+#ifdef USE_SSL
+   const char* hashFunction = sdpcontainer::SdpMediaLine::SdpFingerPrintHashFuncTypeString[mediaLine.getFingerPrintHashFunction()];
+   if(!mediaLine.getFingerPrint().empty() && dtls::DtlsSocket::isFingerprintHashFunctionSupported(hashFunction))
+   {
+      return hashFunction;
+   }
+#endif
+   return 0;
+}
 
 /* Technically, there are a range of features that need to be implemented
    to be fully (S)AVPF compliant.
@@ -443,8 +462,8 @@ SipXRemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessio
          {
             bool supportedFingerprint = false;
 
-            // We will only process Dtls-Srtp if fingerprint is in SHA-1 format
-            if (sdpMediaLine.getFingerPrintHashFunction() == sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_1)
+            // We will only process Dtls-Srtp if we can check the fingerprint's hash function
+            if (supportedFingerprintHashFunction(sdpMediaLine))
             {
                answer.session().clearAttribute("fingerprint");  // ensure we don't add these twice
                answer.session().clearAttribute("setup");  // ensure we don't add these twice
@@ -976,28 +995,27 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
             // Process Fingerprint and setup settings (if required) 
             else if((*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP)
             {
-               // We will only process Dtls-Srtp if fingerprint is in SHA-1 format
-               if((*itRemMediaLine)->getFingerPrintHashFunction() == sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_1)
+               // We will only process Dtls-Srtp if we can check the fingerprint's hash function
+               const char* hashFunction = supportedFingerprintHashFunction(**itRemMediaLine);
+               if(hashFunction)
                {
-                  if(!(*itRemMediaLine)->getFingerPrint().empty())
+                  InfoLog(<< "Fingerprint retrieved from remote SDP: " << hashFunction << " " << (*itRemMediaLine)->getFingerPrint());
+                  // ensure we only accept media streams with this fingerprint
+                  sipXDialogSet->setRemoteSDPFingerprint(hashFunction, (*itRemMediaLine)->getFingerPrint());
+
+                  // If remote setup value is not active then we must be the Dtls client  - ensure client DtlsSocket is create
+                  if((*itRemMediaLine)->getTcpSetupAttribute() != sdpcontainer::SdpMediaLine::TCP_SETUP_ATTRIBUTE_ACTIVE)
                   {
-                     InfoLog(<< "Fingerprint retrieved from remote SDP: " << (*itRemMediaLine)->getFingerPrint());
-                     // ensure we only accept media streams with this fingerprint
-                     sipXDialogSet->setRemoteSDPFingerprint((*itRemMediaLine)->getFingerPrint());
-
-                     // If remote setup value is not active then we must be the Dtls client  - ensure client DtlsSocket is create
-                     if((*itRemMediaLine)->getTcpSetupAttribute() != sdpcontainer::SdpMediaLine::TCP_SETUP_ATTRIBUTE_ACTIVE)
-                     {
-                        // If we are the active end, then kick start the DTLS handshake
-                        sipXDialogSet->startDtlsClient(remoteIPAddress.c_str(), remoteRtpPort, remoteRtcpPort);
-                     }
-
-                     supportedFingerprint = true;
+                     // If we are the active end, then kick start the DTLS handshake
+                     sipXDialogSet->startDtlsClient(remoteIPAddress.c_str(), remoteRtpPort, remoteRtcpPort);
                   }
+
+                  supportedFingerprint = true;
                }
                else if((*itRemMediaLine)->getFingerPrintHashFunction() != sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_NONE)
                {
-                  InfoLog(<< "Fingerprint found, but is not using SHA-1 hash.");
+                  InfoLog(<< "Fingerprint found, but its hash function is not supported: "
+                          << sdpcontainer::SdpMediaLine::SdpFingerPrintHashFuncTypeString[(*itRemMediaLine)->getFingerPrintHashFunction()]);
                }
             }
 
@@ -1238,7 +1256,7 @@ SipXRemoteParticipant::mediaStackPortAvailable()
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021-2026, SIP Spectrum, Inc.
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
  Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.

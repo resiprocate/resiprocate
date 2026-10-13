@@ -115,7 +115,7 @@ TestDtlsUdpSocketContext::handshakeCompleted()
 
    cout << "Hey, amazing, it worked\n";
 
-   if(mSocket->getRemoteFingerprint(fprint))
+   if(mSocket->getRemoteFingerprint("sha-256",fprint,sizeof(fprint)))
    {
       cout << "Remote fingerprint == " << fprint << endl;
    } 
@@ -126,12 +126,15 @@ TestDtlsUdpSocketContext::handshakeCompleted()
       cout <<"SRTP Extension negotiated profile="<<srtp_profile->name << endl;
    }
 
-   mSocket->createSrtpSessionPolicies(srtpPolicyOut,srtpPolicyIn);  // (outbound, inbound)
+   bool created=mSocket->createSrtpSessionPolicies(srtpPolicyOut,srtpPolicyIn);  // (outbound, inbound)
+   assert(created);
 
    r=srtp_create(&srtpIn,&srtpPolicyIn);
    assert(r==0);
    r=srtp_create(&srtpOut,&srtpPolicyOut);
    assert(r==0);
+   delete[] srtpPolicyIn.key;
+   delete[] srtpPolicyOut.key;
 
    useSrtp=true;
 
