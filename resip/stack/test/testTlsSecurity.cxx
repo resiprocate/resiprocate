@@ -14,6 +14,7 @@
 #ifdef USE_SSL
 
 #include <openssl/err.h>
+#include <openssl/rsa.h>  // EVP_PKEY_CTX_set_rsa_keygen_bits: a macro there in OpenSSL 1.1.1
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/ssl/Security.hxx"

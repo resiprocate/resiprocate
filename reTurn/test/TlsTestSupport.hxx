@@ -52,7 +52,11 @@ makeCert(EVP_PKEY* key, const char* cn, const char* subjectAltName, X509* issuer
    X509_gmtime_adj(X509_getm_notBefore(cert), -60);
    X509_gmtime_adj(X509_getm_notAfter(cert), 60 * 60);
    X509_set_pubkey(cert, key);
-   X509_NAME_add_entry_by_txt(X509_get_subject_name(cert), "CN", MBSTRING_ASC, (const unsigned char*)cn, -1, -1, 0);
+   // (The name is built, then set: OpenSSL 4's X509_get_subject_name returns it const)
+   X509_NAME* subject = X509_NAME_new();
+   X509_NAME_add_entry_by_txt(subject, "CN", MBSTRING_ASC, (const unsigned char*)cn, -1, -1, 0);
+   X509_set_subject_name(cert, subject);
+   X509_NAME_free(subject);
    X509_set_issuer_name(cert, issuerCert ? X509_get_subject_name(issuerCert) : X509_get_subject_name(cert));
 
    X509V3_CTX ctx;

@@ -6,15 +6,17 @@
 
 #ifdef USE_SSL
 
+// (resip's headers first: they include <windows.h>, whose wincrypt.h defines X509_NAME as a
+// macro - which OpenSSL's headers undefine, if they come after it)
+#include "resip/stack/ssl/Security.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Log.hxx"
+
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
-
-#include "resip/stack/ssl/Security.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Log.hxx"
 
 using namespace resip;
 using namespace std;
@@ -54,7 +56,11 @@ makeSelfSignedCert(EVP_PKEY* key, const char* cn)
    X509_gmtime_adj(X509_getm_notBefore(cert), -60);
    X509_gmtime_adj(X509_getm_notAfter(cert), 60 * 60);
    X509_set_pubkey(cert, key);
-   X509_NAME_add_entry_by_txt(X509_get_subject_name(cert), "CN", MBSTRING_ASC, (const unsigned char*)cn, -1, -1, 0);
+   // (The name is built, then set: OpenSSL 4's X509_get_subject_name returns it const)
+   X509_NAME* subject = X509_NAME_new();
+   X509_NAME_add_entry_by_txt(subject, "CN", MBSTRING_ASC, (const unsigned char*)cn, -1, -1, 0);
+   X509_set_subject_name(cert, subject);
+   X509_NAME_free(subject);
    X509_set_issuer_name(cert, X509_get_subject_name(cert));
    if (X509_sign(cert, key, EVP_sha256()) <= 0)
    {
