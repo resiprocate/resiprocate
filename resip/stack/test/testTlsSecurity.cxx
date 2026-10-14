@@ -562,6 +562,99 @@ testStaleErrorOnQueue(X509* caCert, EVP_PKEY* caKey)
    remove(queueServerKeyFile);
 }
 
+// An RSA key, as DHE cipher suites (TLS 1.2 has DHE_RSA, and no DHE_ECDSA) need
+static EVP_PKEY*
+makeRsaKey()
+{
+   EVP_PKEY* key = nullptr;
+   EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr);
+   if (ctx && EVP_PKEY_keygen_init(ctx) == 1 && EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 2048) == 1)
+   {
+      EVP_PKEY_keygen(ctx, &key);
+   }
+   EVP_PKEY_CTX_free(ctx);
+   return key;
+}
+
+// Whether a TLS 1.2 client offering only DHE cipher suites completes a handshake with a server
+// using serverCtx (with cert and key): which it can only if the server has DH parameters
+static bool
+dheHandshake(SSL_CTX* serverCtx, X509* cert, EVP_PKEY* key)
+{
+   SSL_CTX* clientCtx = SSL_CTX_new(TLS_client_method());
+   SSL_CTX_set_max_proto_version(clientCtx, TLS1_2_VERSION);
+   SSL_CTX_set_cipher_list(clientCtx, "DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384");
+   SSL* client = SSL_new(clientCtx);
+   SSL* server = SSL_new(serverCtx);
+   SSL_use_certificate(server, cert);
+   SSL_use_PrivateKey(server, key);
+   SSL_set_verify(server, SSL_VERIFY_NONE, nullptr);
+   BIO* clientBio = nullptr;
+   BIO* serverBio = nullptr;
+   BIO_new_bio_pair(&clientBio, 0, &serverBio, 0);
+   SSL_set_bio(client, clientBio, clientBio);
+   SSL_set_bio(server, serverBio, serverBio);
+   SSL_set_connect_state(client);
+   SSL_set_accept_state(server);
+
+   bool clientDone = false;
+   bool serverDone = false;
+   bool failed = false;
+   for (int i = 0; i < 50 && !failed && !(clientDone && serverDone); ++i)
+   {
+      for (SSL* ssl : { client, server })
+      {
+         const int r = SSL_do_handshake(ssl);
+         if (r == 1)
+         {
+            (ssl == client ? clientDone : serverDone) = true;
+         }
+         else
+         {
+            const int e = SSL_get_error(ssl, r);
+            failed = failed || (e != SSL_ERROR_WANT_READ && e != SSL_ERROR_WANT_WRITE);
+         }
+      }
+   }
+   const char* cipher = SSL_get_cipher_name(client);
+   const bool dhe = clientDone && serverDone && cipher && strncmp(cipher, "DHE-", 4) == 0;
+   SSL_free(client);
+   SSL_free(server);
+   SSL_CTX_free(clientCtx);
+   ERR_clear_error();
+   return dhe;
+}
+
+// The Diffie-Hellman parameters Security is given (TlsDHParamsFilename) are installed in its
+// SSL contexts, so DHE cipher suites can be negotiated
+static void
+testDHParams(X509* caCert, EVP_PKEY* caKey)
+{
+   cerr << "-- DH parameters" << endl;
+   EVP_PKEY* key = makeRsaKey();
+   X509* cert = key ? makeCert(key, "dhe.test", "DNS:dhe.test", caCert, caKey) : nullptr;
+   check("RSA certificate could be created", cert != nullptr);
+   if (cert)
+   {
+      {
+         // (Its SSL context: the other, the TLS context, only does TLS 1.0)
+         Security security(BaseSecurity::StrongestSuite, Data::Empty, TEST_DH_FILE);
+         check("with DH parameters: a DHE cipher suite is negotiated", dheHandshake(security.getSslCtx(), cert, key));
+      }
+      {
+         Security security(BaseSecurity::StrongestSuite, Data::Empty, "testTlsSecurity_no_such_file.pem");
+         check("with a DH parameters file that can't be read: no DHE (and no crash)", !dheHandshake(security.getSslCtx(), cert, key));
+         check("with a DH parameters file that can't be read: nothing left on the error queue", ERR_peek_error() == 0);
+      }
+      {
+         Security security;
+         check("without DH parameters: no DHE", !dheHandshake(security.getSslCtx(), cert, key));
+      }
+   }
+   X509_free(cert);
+   EVP_PKEY_free(key);
+}
+
 int
 main(int, char**)
 {
@@ -587,6 +680,7 @@ main(int, char**)
 
       testRootAddedAfterTransports(caCert, caKey);
       testStaleErrorOnQueue(caCert, caKey);
+      testDHParams(caCert, caKey);
    }
    X509_free(caCert);
    EVP_PKEY_free(caKey);

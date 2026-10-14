@@ -2982,8 +2982,29 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       if(bio == NULL)
       {
          WarningLog(<< "Unable to load DH parameters (required for PFS): BIO_new_file failed to open file " << mDHParamsFilename);
+         ERR_clear_error();
+         return;
       }
 
+      bool loaded = false;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+      // OpenSSL 3 deprecates the DH type and its functions: the parameters are read as an EVP_PKEY
+      EVP_PKEY* dh = PEM_read_bio_Parameters(bio, NULL);
+      if(dh == NULL || !(EVP_PKEY_is_a(dh, "DH") || EVP_PKEY_is_a(dh, "DHX")))
+      {
+         WarningLog(<< "Unable to load DH parameters (required for PFS): no DH parameters read from file " << mDHParamsFilename);
+         EVP_PKEY_free(dh);
+      }
+      else if(!SSL_CTX_set0_tmp_dh_pkey(ctx, dh))  // takes dh, if it succeeds
+      {
+         WarningLog(<< "Unable to load DH parameters (required for PFS): SSL_CTX_set0_tmp_dh_pkey failed for file " << mDHParamsFilename);
+         EVP_PKEY_free(dh);
+      }
+      else
+      {
+         loaded = true;
+      }
+#else
       DH* dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
       if(dh == NULL)
       {
@@ -2997,18 +3018,28 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
          }
          else
          {
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-            uint64_t options;
-#else
-            long options;
-#endif
-            options = SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_SINGLE_DH_USE;
-            options = SSL_CTX_set_options(ctx, options);
-            DebugLog(<<"DH parameters loaded, PFS cipher-suites enabled");
+            loaded = true;
          }
          DH_free(dh);
       }
+#endif
       BIO_free(bio);
+
+      if(loaded)
+      {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+         uint64_t options;
+#else
+         long options;
+#endif
+         options = SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_SINGLE_DH_USE;
+         options = SSL_CTX_set_options(ctx, options);
+         DebugLog(<<"DH parameters loaded, PFS cipher-suites enabled");
+      }
+      else
+      {
+         ERR_clear_error();  // what failed is logged: don't leave it for the next OpenSSL call on this thread
+      }
    }
 }
 

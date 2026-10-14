@@ -148,6 +148,7 @@ if(OPENSSL_FOUND)
    test(testSecurityKeys testSecurityKeys.cxx)
    test(testTlsSni testTlsSni.cxx)
    test(testTlsSecurity testTlsSecurity.cxx)
+   target_compile_definitions(testTlsSecurity PRIVATE TEST_DH_FILE="${CMAKE_SOURCE_DIR}/repro/dh2048.pem")
 endif()
 
 # fuzzing targets
