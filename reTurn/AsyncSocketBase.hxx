@@ -71,6 +71,17 @@ public:
    /// Utility API
    static std::shared_ptr<DataBuffer> allocateBuffer(size_t size);
 
+   /// Over TCP and TLS, a TURN ChannelData message is padded to a multiple of 4 bytes, the padding
+   /// not counted in its length (RFC 5766 11.5, RFC 8656 12.5): the padding after one of length bytes
+   static size_t channelDataPadding(size_t length) { return (4 - length % 4) % 4; }
+
+   /// For a UDP socket, between open() and bind().  UDP sockets don't set SO_REUSEADDR: there's no
+   /// TIME_WAIT for it to help with, and it would let the socket share a port another socket has
+   /// (or, on Windows, bind over it), splitting its traffic.  On Windows this sets
+   /// SO_EXCLUSIVEADDRUSE, so neither can another socket - one that sets SO_REUSEADDR - bind over
+   /// this one.
+   static void setExclusiveAddressUse(asio::ip::udp::socket& socket);
+
    // Stubbed out async handlers needed by Protocol specific Subclasses of this - the requirement for these 
    // to be in the base class all revolves around the shared_from_this() use/requirement
    virtual void start() { resip_assert(false); }
@@ -144,12 +155,13 @@ private:
    class SendData
    {
    public:
-      SendData(const StunTuple& destination, std::shared_ptr<DataBuffer> frameData, std::shared_ptr<DataBuffer> data, size_t bufferStartPos = 0) :
-         mDestination(destination), mFrameData(frameData), mData(data), mBufferStartPos(bufferStartPos) {}
+      SendData(const StunTuple& destination, std::shared_ptr<DataBuffer> frameData, std::shared_ptr<DataBuffer> data, size_t bufferStartPos = 0, size_t padding = 0) :
+         mDestination(destination), mFrameData(frameData), mData(data), mBufferStartPos(bufferStartPos), mPadding(padding) {}
       StunTuple mDestination;
       std::shared_ptr<DataBuffer> mFrameData;
       std::shared_ptr<DataBuffer> mData;
       size_t mBufferStartPos;
+      size_t mPadding;  // bytes sent after the data: ChannelData over TCP/TLS is padded to a multiple of 4
    };
    /// Queue of data to send
    typedef std::deque<SendData> SendDataQueue;

@@ -68,8 +68,8 @@ AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, co
       memcpy(&(*frame)[0], &channel, 2);
       unsigned short msgsize = htons((unsigned short)data->size());
       memcpy(&(*frame)[2], (void*)&msgsize, 2);
-      // TODO !SLG! - if sending over TCP/TLS then message must be padded to be on a 4 byte boundary
-      mSendDataQueue.push_back(SendData(destination, frame, data, bufferStartPos));
+      const size_t padding = destination.getTransportType() == StunTuple::UDP ? 0 : channelDataPadding(data->size());
+      mSendDataQueue.push_back(SendData(destination, frame, data, bufferStartPos, padding));
    }
    if (!writeInProgress)
    {
@@ -108,6 +108,11 @@ AsyncSocketBase::sendFirstQueuedData()
       bufs.push_back(asio::buffer(mSendDataQueue.front().mFrameData->data(), mSendDataQueue.front().mFrameData->size()));
    }
    bufs.push_back(asio::buffer(mSendDataQueue.front().mData->data()+mSendDataQueue.front().mBufferStartPos, mSendDataQueue.front().mData->size()-mSendDataQueue.front().mBufferStartPos));
+   if (mSendDataQueue.front().mPadding)
+   {
+      static const char zeros[3] = { 0, 0, 0 };
+      bufs.push_back(asio::buffer(zeros, mSendDataQueue.front().mPadding));
+   }
    transportSend(mSendDataQueue.front().mDestination, bufs);
 }
 
@@ -173,6 +178,20 @@ std::shared_ptr<DataBuffer>
 AsyncSocketBase::allocateBuffer(const size_t size)
 {
    return std::make_shared<DataBuffer>(size);
+}
+
+void
+AsyncSocketBase::setExclusiveAddressUse(asio::ip::udp::socket& socket)
+{
+#ifdef _WIN32
+   BOOL on = TRUE;
+   if(::setsockopt(socket.native_handle(), SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char*)&on, sizeof(on)) != 0)
+   {
+      WarningLog(<< "Unable to set SO_EXCLUSIVEADDRUSE on a UDP socket, error=" << WSAGetLastError());
+   }
+#else
+   (void)socket;
+#endif
 }
 
 asio::error_code

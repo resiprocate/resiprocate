@@ -27,7 +27,7 @@ TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_context& ioService,
 {
    mLocalBinding.setTransportType(StunTuple::TLS);
 
-   bind(address, port);
+   mBindError = bind(address, port);
 }
 
 void 
@@ -80,7 +80,7 @@ TurnAsyncTlsSocket::onSendFailure(const asio::error_code& e)
 
 /* ====================================================================
 
- Copyright (c) 2023, SIP Specturm, Inc. http://sipspectrum.com
+ Copyright (c) 2008-2026, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

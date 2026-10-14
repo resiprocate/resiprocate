@@ -515,62 +515,12 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
       // TODO - bandwidth check - if insufficient send 507 (Insufficient Bandwidth Capacity)
    }
                                 
-   unsigned short port = 0;  // Default to Any free port
-   if(request.mHasTurnEvenPort)
+   if(request.mHasTurnEvenPort && request.mHasTurnReservationToken)
    {
-      if(request.mHasTurnReservationToken)
-      {
-         WarningLog(<< "Both Even Port and Reservation Token attributes are present.  Sending 400. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 400, "Bad request - both Even Port and Reservation Token present");  
-         return RespondFromReceiving;
-      }
-      if(request.mTurnEvenPort.propType == StunMessage::PropsPortEven)
-      {
-         // Attempt to allocate an even port
-         port = mTurnManager.allocateEvenPort(allocationTuple.getTransportType());
-      }
-      else if(request.mTurnEvenPort.propType == StunMessage::PropsPortPair)
-      {
-         // Attempt to allocate an even port, with a free adjacent odd port
-         port = mTurnManager.allocateEvenPortPair(allocationTuple.getTransportType());
-
-         // Add Reservation Token to response - for now just use reserved port number as token
-         response.mHasTurnReservationToken = true;
-         response.mTurnReservationToken = port + 1;
-      }
-      if(port == 0)
-      {
-         WarningLog(<< "Unable to allocate requested port.  Sending 508. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 508, "Insufficient Port Capacity");  
-         return RespondFromReceiving;
-      }
+      WarningLog(<< "Both Even Port and Reservation Token attributes are present.  Sending 400. Sender=" << request.mRemoteTuple);
+      buildErrorResponse(response, 400, "Bad request - both Even Port and Reservation Token present");
+      return RespondFromReceiving;
    }
-
-   if(request.mHasTurnReservationToken)
-   {
-      // Try to allocate reserved port - for now reservation token is reserved port number
-      port = (unsigned short)request.mTurnReservationToken;
-      if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), port, true /* allocate reserved */))
-      {
-         WarningLog(<< "Unable to allocate requested port - bad reservation token.  Sending 508. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 508, "Insufficient Port Capacity");  
-         return RespondFromReceiving;
-      }      
-   }
-
-   if(port == 0)
-   {
-      // Allocate any available port
-      port = mTurnManager.allocateAnyPort(allocationTuple.getTransportType());      
-      if(port == 0)
-      {
-         WarningLog(<< "Unable to allocate port.  Sending 508. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 508, "Insufficient Port Capacity");  
-         return RespondFromReceiving;
-      }      
-   }
-
-   allocationTuple.setPort(port);
 
    uint32_t lifetime = getConfig().mDefaultAllocationLifetime;
    if(request.mHasTurnLifetime)
@@ -587,33 +537,98 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
       }
    }
 
-   // We now have an internal 5-Tuple and an allocation tuple - create the allocation
-
-   try
+   // If the relay can't be bound to the port (eg. another program uses it, or the OS has excluded
+   // it), the port is freed and the next one tried, until each in the range has been - except a
+   // reserved port, which the reservation token names
+   const unsigned int portsInRange = getConfig().mAllocationPortRangeMax - getConfig().mAllocationPortRangeMin + 1;
+   for(unsigned int attempt = 1; ; ++attempt)
    {
-      allocation = new TurnAllocation(mTurnManager,
-                                      turnAllocationManager,
-                                      turnSocket, 
-                                      request.mLocalTuple, 
-                                      request.mRemoteTuple, 
-                                      StunAuth(*request.mUsername, response.mHmacKey), // The HMAC is already calculated and added to the response in handleAuthentication
-                                      allocationTuple, 
-                                      lifetime);
-      if(!allocation->startRelay())
+      unsigned short port = 0;  // Default to Any free port
+      if(request.mHasTurnEvenPort)
       {
-         // TODO - we could handle this better perhaps try to allocate a new port
-         delete allocation;  // frees its port, and its place in the user's quota
-         ErrLog(<< "Error starting allocation relay.  Sending 500. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 500, "Server Error");  
+         if(request.mTurnEvenPort.propType == StunMessage::PropsPortEven)
+         {
+            // Attempt to allocate an even port
+            port = mTurnManager.allocateEvenPort(allocationTuple.getTransportType());
+         }
+         else if(request.mTurnEvenPort.propType == StunMessage::PropsPortPair)
+         {
+            // Attempt to allocate an even port, with a free adjacent odd port
+            port = mTurnManager.allocateEvenPortPair(allocationTuple.getTransportType());
+
+            // Add Reservation Token to response - for now just use reserved port number as token
+            response.mHasTurnReservationToken = port != 0;
+            response.mTurnReservationToken = port + 1;
+         }
+         if(port == 0)
+         {
+            WarningLog(<< "Unable to allocate requested port.  Sending 508. Sender=" << request.mRemoteTuple);
+            buildErrorResponse(response, 508, "Insufficient Port Capacity");
+            return RespondFromReceiving;
+         }
+      }
+
+      if(request.mHasTurnReservationToken)
+      {
+         // Try to allocate reserved port - for now reservation token is reserved port number
+         port = (unsigned short)request.mTurnReservationToken;
+         if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), port, true /* allocate reserved */))
+         {
+            WarningLog(<< "Unable to allocate requested port - bad reservation token.  Sending 508. Sender=" << request.mRemoteTuple);
+            buildErrorResponse(response, 508, "Insufficient Port Capacity");
+            return RespondFromReceiving;
+         }
+      }
+
+      if(port == 0)
+      {
+         // Allocate any available port
+         port = mTurnManager.allocateAnyPort(allocationTuple.getTransportType());
+         if(port == 0)
+         {
+            WarningLog(<< "Unable to allocate port.  Sending 508. Sender=" << request.mRemoteTuple);
+            buildErrorResponse(response, 508, "Insufficient Port Capacity");
+            return RespondFromReceiving;
+         }
+      }
+
+      allocationTuple.setPort(port);
+
+      // We now have an internal 5-Tuple and an allocation tuple - create the allocation
+      try
+      {
+         allocation = new TurnAllocation(mTurnManager,
+                                         turnAllocationManager,
+                                         turnSocket,
+                                         request.mLocalTuple,
+                                         request.mRemoteTuple,
+                                         StunAuth(*request.mUsername, response.mHmacKey), // The HMAC is already calculated and added to the response in handleAuthentication
+                                         allocationTuple,
+                                         lifetime);
+      }
+      catch (const asio::system_error&)
+      {
+         mTurnManager.deallocatePort(allocationTuple.getTransportType(), port);
+         ErrLog(<< "Error allocating socket for allocation.  Sending 500. Sender=" << request.mRemoteTuple);
+         response.mHasTurnReservationToken = false;
+         buildErrorResponse(response, 500, "Server Error");
          return RespondFromReceiving;
       }
-   }
-   catch (const asio::system_error&)
-   {
-      // TODO - handle port in use error better - try to allocate a new port or something?
-      ErrLog(<< "Error allocating socket for allocation.  Sending 500. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 500, "Server Error");  
-      return RespondFromReceiving;
+
+      if(allocation->startRelay())
+      {
+         break;
+      }
+      delete allocation;  // frees its port (and a port reserved with it), and its place in the user's quota
+      allocation = 0;
+      if(request.mHasTurnReservationToken || attempt >= portsInRange)
+      {
+         ErrLog(<< "Unable to start an allocation relay.  Sending 508. Sender=" << request.mRemoteTuple);
+         response.mHasTurnReservationToken = false;
+         buildErrorResponse(response, 508, "Insufficient Port Capacity");
+         return RespondFromReceiving;
+      }
+      WarningLog(<< "Unable to start an allocation relay on port " << port << ", trying another.  Sender=" << request.mRemoteTuple);
    }
 
    // Add the new allocation to be managed

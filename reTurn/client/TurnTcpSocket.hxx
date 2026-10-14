@@ -23,6 +23,10 @@ public:
    // to endpoint
    virtual asio::error_code connect(const std::string& address, unsigned short port);
 
+   /// Milliseconds the TCP connect to each address connect() tries may take - and, for TLS, the
+   /// handshake - before it fails with asio::error::timed_out.  Default 10 seconds.
+   void setConnectTimeout(unsigned int milliseconds) { mConnectTimeout = milliseconds; }
+
 protected:
    virtual asio::error_code rawWrite(const char* buffer, unsigned int size);
    virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers);
@@ -41,6 +45,15 @@ protected:
    asio::error_code openAndBind(asio::ip::tcp::socket& socket);
    /// The protocol (IPv4 or IPv6) of the local binding
    asio::ip::tcp protocol() const;
+
+   /// For a step of connect() started as an asynchronous operation that sets result (initially
+   /// asio::error::would_block) when it completes: runs the io_context until it does, or until the
+   /// connect timeout passes - when cancel() is called (eg. to close the socket), and timed_out is
+   /// returned
+   asio::error_code waitForConnectStep(asio::error_code& result, const std::function<void()>& cancel);
+   unsigned int mConnectTimeout = 10000;
+
+   size_t mPadding = 0;  // after the ChannelData message being read
 
 private:
 

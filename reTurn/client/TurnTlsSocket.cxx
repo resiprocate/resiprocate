@@ -83,15 +83,21 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
          return asio::error::invalid_argument;
       }
 
+      // The TCP connect and the handshake each fail after the connect timeout
+      const std::function<void()> closeSocket = [this]() { asio::error_code ignored; mSocket->lowest_layer().close(ignored); };
       errorCode = openAndBind(mSocket->next_layer());
       if(!errorCode)
       {
-         mSocket->lowest_layer().connect(*endpoint_iterator, errorCode);
+         asio::error_code result = asio::error::would_block;
+         mSocket->lowest_layer().async_connect(*endpoint_iterator, [&result](const asio::error_code& ec) { result = ec; });
+         errorCode = waitForConnectStep(result, closeSocket);
       }
       if(!errorCode)
       {
          DebugLog(<< "Connected!");
-         mSocket->handshake(asio::ssl::stream_base::client, errorCode);
+         asio::error_code result = asio::error::would_block;
+         mSocket->async_handshake(asio::ssl::stream_base::client, [&result](const asio::error_code& ec) { result = ec; });
+         errorCode = waitForConnectStep(result, closeSocket);
          AsyncTlsSocketBase::logClientHandshakeResult(mSocket->native_handle(), address, errorCode);
          if(!errorCode)
          {
@@ -102,8 +108,7 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
          }
          // As the async client: only a failed TCP connect moves on to the next address.  A
          // handshake that fails (eg. the certificate isn't for the name) would fail with the
-         // others too - and the handshake has no timeout, so trying one that accepts the TCP
-         // connection but never answers would block.
+         // others too.
          return errorCode;
       }
       ++endpoint_iterator;

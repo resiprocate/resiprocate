@@ -367,6 +367,19 @@ checkOnlySrtpIsDelivered(const std::string& what, Call& call)
    check(what + "media still flows afterwards", delivered(call.a, call.b, what + " afterwards"));
 }
 
+// A media stream whose local port another socket has can't work: it reports an error, rather than
+// becoming ready with a socket that sends from a port the OS picks
+static void
+testPortInUse(FlowManager& manager)
+{
+   std::cerr << "-- a local port another socket has" << std::endl;
+   asio::io_context io;
+   asio::ip::udp::socket holder(io, asio::ip::udp::endpoint(localhost, 0));
+   Endpoint endpoint(manager, holder.local_endpoint().port(), 0x1111);
+   check("port in use: the media stream reports an error", waitFor([&endpoint]() { return (bool)endpoint.mError; }, 1000));
+   check("port in use: and doesn't become ready", !endpoint.mReady);
+}
+
 static void
 testPlain(FlowManager& managerA, FlowManager& managerB)
 {
@@ -615,6 +628,7 @@ main(int argc, char** argv)
       check("the DTLS factories are created", managerA.getDtlsFactory() && managerB.getDtlsFactory());
 #endif
 
+      testPortInUse(managerA);
       testPlain(managerA, managerB);
       testSdes(managerA, managerB);
 #ifdef USE_SSL

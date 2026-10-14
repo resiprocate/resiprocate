@@ -6,6 +6,7 @@
 #endif
 
 #include "UdpEchoServer.hxx"
+#include "../AsyncSocketBase.hxx"
 #include "../ReTurnSubsystem.hxx"
 #include <rutil/Logger.hxx>
 #include <rutil/WinLeakCheck.hxx>
@@ -34,7 +35,7 @@ UdpEchoServer::UdpEchoServer(const Data& localAddress, unsigned int port) :
    mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
    if (!errorCode)
    {
-      mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
+      AsyncSocketBase::setExclusiveAddressUse(mSocket);
       mSocket.bind(asio::ip::udp::endpoint(address, port));
    }
    mIntervalReadCount = 0;
@@ -126,7 +127,7 @@ void UdpEchoServer::checkLog()
 
 /* ====================================================================
 
- Copyright (c) 2024 SIP Spectrum, Inc http://www.sipspectrum.com
+ Copyright (c) 2024-2026 SIP Spectrum, Inc http://www.sipspectrum.com
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

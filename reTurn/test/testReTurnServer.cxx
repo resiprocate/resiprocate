@@ -76,6 +76,9 @@ static const unsigned short noTls12TlsPort = 45351;
 static const char* const idleConfig = "testReTurnServer_idle.config";
 static const unsigned short idleTurnPort = 45482;
 static const unsigned short idleTlsPort = 45353;
+static const char* const relayPortsConfig = "testReTurnServer_relayports.config";
+static const unsigned short relayPortsTurnPort = 45486;
+static const unsigned short relayPortsTlsPort = 45357;
 static const char* const limitsConfig = "testReTurnServer_limits.config";
 static const unsigned short limitsTurnPort = 45484;
 static const unsigned short limitsTlsPort = 45355;
@@ -100,28 +103,36 @@ public:
       char program[] = "testReTurnServer";
       char* argv[] = { program, nullptr };
       mConfig.parseConfig(1, argv, configFile);
-      mTurnManager.reset(new TurnManager(mIo, mConfig));
+      mTurnManager.reset(new TurnManager(*mIo, mConfig));
       mRequestHandler.reset(new RequestHandler(*mTurnManager));
-      mUdpServer = std::make_shared<UdpServer>(mIo, *mRequestHandler, mConfig.mTurnAddress, mConfig.mTurnPort);
-      mTcpServer = std::make_shared<TcpServer>(mIo, *mRequestHandler, mConfig.mTurnAddress, mConfig.mTurnPort);
+      mUdpServer = std::make_shared<UdpServer>(*mIo, *mRequestHandler, mConfig.mTurnAddress, mConfig.mTurnPort);
+      mTcpServer = std::make_shared<TcpServer>(*mIo, *mRequestHandler, mConfig.mTurnAddress, mConfig.mTurnPort);
       mUdpServer->start();
       mTcpServer->start();
 #ifdef USE_SSL
-      mTlsServer = std::make_shared<TlsServer>(mIo, *mRequestHandler, mConfig.mTurnAddress, mConfig.mTlsTurnPort);
+      mTlsServer = std::make_shared<TlsServer>(*mIo, *mRequestHandler, mConfig.mTurnAddress, mConfig.mTlsTurnPort);
       mTlsServer->start();
 #endif
-      mThread = std::thread([this]() { mIo.run(); });
+      mThread = std::thread([this]() { mIo->run(); });
    }
 
+   // As reTurnServer's main(): the io_context goes before the TurnManager and RequestHandler, as
+   // its pending handlers keep servers, connections and allocations alive, which use them
    ~InProcessServer()
    {
-      mIo.stop();
+      mIo->stop();
       mThread.join();
+      mUdpServer.reset();
+      mTcpServer.reset();
+#ifdef USE_SSL
+      mTlsServer.reset();
+#endif
+      mIo.reset();
    }
 
 private:
    ReTurnConfig mConfig;
-   asio::io_context mIo;
+   std::unique_ptr<asio::io_context> mIo{new asio::io_context};
    std::unique_ptr<TurnManager> mTurnManager;
    std::unique_ptr<RequestHandler> mRequestHandler;
    std::shared_ptr<UdpServer> mUdpServer;
@@ -241,6 +252,15 @@ testSyncRelay(const std::string& what, TurnSocket& client, bool udp)
    check((what + "peer B gets the data, from the relay address").c_str(), peerB.receive(from) == toPeerB && from == relay);
    peerB.sendTo(fromPeerB, relay);
    check((what + "peer B's answer is relayed to the client, in a Data indication").c_str(), syncReceives(client, fromPeerB, peerB.port()));
+
+   // Peers' data that arrives while the client waits for a response - here, it arrives just
+   // before the refresh is sent - is kept for receive()
+   peerA.sendTo(fromPeerA, relay);
+   peerB.sendTo(fromPeerB, relay);
+   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+   check((what + "a refresh succeeds, with peers' data arriving while it waits").c_str(), !client.refreshAllocation());
+   check((what + "the peers' data is then received, from the channel and a Data indication").c_str(),
+         syncReceives(client, fromPeerA, peerA.port()) && syncReceives(client, fromPeerB, peerB.port()));
 }
 
 // The clients start their channel numbers at a random one, which must be in the range the server
@@ -821,6 +841,20 @@ testIdleTimeout()
    }
 }
 
+// Connects client to the server on port and allocates (a UDP relay), as user test
+static asio::error_code
+allocateOn(TurnSocket& client, unsigned short port)
+{
+   client.setUsernameAndPassword("test", "1234");
+   asio::error_code ec = client.connect("127.0.0.1", port);
+   if (!ec)
+   {
+      ec = client.createAllocation(TurnSocket::UnspecifiedLifetime, TurnSocket::UnspecifiedBandwidth,
+                                   StunMessage::PropsNone, TurnSocket::UnspecifiedToken, StunTuple::UDP);
+   }
+   return ec;
+}
+
 // MaxTcpConnectionsPerIp (4 here), counting TCP and TLS connections together, and
 // MaxAllocationsPerUser (2 here), counting allocations over all transports
 static void
@@ -865,17 +899,7 @@ testLimits()
 
    cerr << "-- MaxAllocationsPerUser" << endl;
    {
-      auto allocate = [](TurnSocket& client)
-      {
-         client.setUsernameAndPassword("test", "1234");
-         asio::error_code ec = client.connect("127.0.0.1", limitsTurnPort);
-         if (!ec)
-         {
-            ec = client.createAllocation(TurnSocket::UnspecifiedLifetime, TurnSocket::UnspecifiedBandwidth,
-                                         StunMessage::PropsNone, TurnSocket::UnspecifiedToken, StunTuple::UDP);
-         }
-         return ec;
-      };
+      auto allocate = [](TurnSocket& client) { return allocateOn(client, limitsTurnPort); };
       TurnUdpSocket first(localhost, 0);
       TurnUdpSocket second(localhost, 0);
       TurnUdpSocket third(localhost, 0);
@@ -887,10 +911,237 @@ testLimits()
             !first.destroyAllocation() &&
             !third.createAllocation(TurnSocket::UnspecifiedLifetime, TurnSocket::UnspecifiedBandwidth,
                                     StunMessage::PropsNone, TurnSocket::UnspecifiedToken, StunTuple::UDP));
-      // Released, so none are left when the server is stopped
-      second.destroyAllocation();
-      third.destroyAllocation();
    }
+}
+
+// Allocates over UDP and over TCP, leaving the allocations - and the TCP connection - for the
+// server to have when it's stopped
+static void
+testStopWithAllocations(std::unique_ptr<TurnUdpSocket>& udp, std::unique_ptr<TurnTcpSocket>& tcp)
+{
+   cerr << "-- stopping the server with allocations" << endl;
+   udp.reset(new TurnUdpSocket(localhost, 0));
+   tcp.reset(new TurnTcpSocket(localhost, 0));
+   check("stop: allocations over UDP and TCP", !allocateOn(*udp, limitsTurnPort) && !allocateOn(*tcp, limitsTurnPort));
+}
+
+// A UDP socket bound to 127.0.0.1:port, plainly - as another program's might be - or, with reuse,
+// setting SO_REUSEADDR as a socket that means to share a port, or take it over, would
+static void
+bindUdp(asio::ip::udp::socket& socket, unsigned short port, asio::error_code& ec, bool reuse = false)
+{
+   socket.open(asio::ip::udp::v4(), ec);
+   if (!ec && reuse)
+   {
+      socket.set_option(asio::ip::udp::socket::reuse_address(true), ec);
+   }
+   if (!ec)
+   {
+      socket.bind(asio::ip::udp::endpoint(localhost, port), ec);
+   }
+}
+
+// A relay port that can't be bound (here, as another socket holds it) is skipped for the next
+// one; once every port in the range has been tried, the allocation is refused with 508.  Relay
+// sockets neither share a port nor (on Windows) bind over one another socket has, and another
+// socket can't bind over theirs.
+static void
+testRelayPortInUse()
+{
+   cerr << "-- relay ports that can't be bound" << endl;
+   // Hold an even port P, with P + 1 free: the server's relay ports are just P and P + 1.  They're
+   // below the ephemeral ranges (Windows 49152-, Linux 32768-), so the OS doesn't give P + 1 to the
+   // test's clients meanwhile.
+   asio::io_context io;
+   std::unique_ptr<asio::ip::udp::socket> holder;
+   unsigned short held = 0;
+   for (unsigned short port = 20000; port < 30000 && held == 0; port += 2)
+   {
+      std::unique_ptr<asio::ip::udp::socket> socket(new asio::ip::udp::socket(io));
+      asio::error_code ec;
+      bindUdp(*socket, port, ec);
+      if (!ec)
+      {
+         asio::ip::udp::socket next(io);
+         bindUdp(next, port + 1, ec);
+         if (!ec)
+         {
+            held = port;
+            holder = std::move(socket);
+         }
+      }
+   }
+   check("relay ports: an even port is held, with the next one free", held != 0);
+   if (held == 0)
+   {
+      return;
+   }
+
+   const std::string range = "AllocationPortRangeMin = " + std::to_string(held) + "\nAllocationPortRangeMax = " + std::to_string(held + 1) + "\n";
+   check("relay ports: config written", writeConfig(relayPortsConfig, relayPortsTurnPort, relayPortsTlsPort, range.c_str()));
+   InProcessServer server(relayPortsConfig);
+   TurnUdpSocket first(localhost, 0);
+   check("relay ports: the held port is skipped, and the next one relays",
+         !allocateOn(first, relayPortsTurnPort) && first.getRelayTuple().getPort() == held + 1);
+   {
+      asio::ip::udp::socket intruder(io);
+      asio::error_code ec;
+      bindUdp(intruder, held + 1, ec, true);
+      check("relay ports: another socket can't bind over the relay's port, even setting SO_REUSEADDR", (bool)ec);
+   }
+   TurnUdpSocket second(localhost, 0);
+   check("relay ports: with every port in the range tried, an allocation is refused with 508 (Insufficient Port Capacity)",
+         allocateOn(second, relayPortsTurnPort).value() == 508);
+   first.destroyAllocation();
+}
+
+// A TCP proxy between one client and the server on serverPort, recording what each sends
+class TcpRecorder
+{
+public:
+   explicit TcpRecorder(unsigned short serverPort) :
+      mAcceptor(mIo, asio::ip::tcp::endpoint(localhost, 0)),
+      mClient(mIo),
+      mServer(mIo)
+   {
+      mThread = std::thread([this, serverPort]()
+      {
+         asio::error_code ec;
+         mAcceptor.accept(mClient, ec);
+         if (!ec)
+         {
+            mServer.connect(asio::ip::tcp::endpoint(localhost, serverPort), ec);
+         }
+         if (!ec)
+         {
+            std::thread toServer([this]() { pump(mClient, mServer, mFromClient); });
+            pump(mServer, mClient, mFromServer);
+            toServer.join();
+         }
+      });
+   }
+
+   ~TcpRecorder()
+   {
+      asio::error_code ec;
+      mAcceptor.close(ec);  // in case no client came
+      waitUntilClosed();
+   }
+
+   unsigned short port() const { return mAcceptor.local_endpoint().port(); }
+
+   // Once the client has closed its connection
+   void waitUntilClosed()
+   {
+      if (mThread.joinable())
+      {
+         mThread.join();
+      }
+   }
+
+   std::string fromClient() { std::lock_guard<std::mutex> lock(mMutex); return mFromClient; }
+   std::string fromServer() { std::lock_guard<std::mutex> lock(mMutex); return mFromServer; }
+
+private:
+   void pump(asio::ip::tcp::socket& from, asio::ip::tcp::socket& to, std::string& record)
+   {
+      char buffer[4096];
+      for (;;)
+      {
+         asio::error_code ec;
+         const size_t size = from.read_some(asio::buffer(buffer), ec);
+         if (ec)
+         {
+            to.shutdown(asio::ip::tcp::socket::shutdown_send, ec);
+            return;
+         }
+         {
+            std::lock_guard<std::mutex> lock(mMutex);
+            record.append(buffer, size);
+         }
+         asio::write(to, asio::buffer(buffer, size), ec);
+         if (ec)
+         {
+            return;
+         }
+      }
+   }
+
+   asio::io_context mIo;
+   asio::ip::tcp::acceptor mAcceptor;
+   asio::ip::tcp::socket mClient;
+   asio::ip::tcp::socket mServer;
+   std::mutex mMutex;
+   std::string mFromClient;
+   std::string mFromServer;
+   std::thread mThread;
+};
+
+// Whether a TURN over TCP stream is whole messages framed as RFC 5766 11.5 / RFC 8656 12.5 have
+// it: STUN, 20 bytes and its length, and ChannelData, 4 bytes and its length padded to a multiple
+// of 4.  channelData is set to the number of ChannelData messages.
+static bool
+parsesAsTurnFraming(const std::string& stream, int& channelData)
+{
+   channelData = 0;
+   size_t pos = 0;
+   while (pos + 4 <= stream.size())
+   {
+      const unsigned char firstByte = (unsigned char)stream[pos];
+      const size_t length = (unsigned char)stream[pos + 2] << 8 | (unsigned char)stream[pos + 3];
+      size_t messageSize;
+      if (firstByte <= 3)
+      {
+         messageSize = 20 + length;
+      }
+      else if ((firstByte & 0xC0) == 0x40)
+      {
+         messageSize = 4 + length + (4 - length % 4) % 4;
+         ++channelData;
+      }
+      else
+      {
+         return false;
+      }
+      pos += messageSize;
+   }
+   return pos == stream.size();
+}
+
+// Over TCP, ChannelData is padded to a multiple of 4 bytes - by the client and by the server - so
+// messages after one whose length isn't stay aligned
+static void
+testChannelDataPadding()
+{
+   cerr << "-- ChannelData over TCP is padded" << endl;
+   TcpRecorder recorder(turnPort);
+   {
+      TurnTcpSocket client(localhost, 0);
+      check("padding: allocation, through the recorder", !allocateOn(client, recorder.port()));
+      const asio::ip::udp::endpoint relay(client.getRelayTuple().getAddress(), client.getRelayTuple().getPort());
+      Peer peer;
+      check("padding: a channel is bound to the peer", !client.setActiveDestination(localhost, peer.port()));
+      asio::ip::udp::endpoint from;
+      bool sent = true;
+      bool answered = true;
+      // Lengths of each remainder modulo 4
+      for (const std::string& payload : { std::string("a"), std::string("ab"), std::string("abc"), std::string("abcd"), std::string("abcde") })
+      {
+         sent = sent && !client.send(payload.data(), (unsigned int)payload.size()) && peer.receive(from) == payload;
+         peer.sendTo(payload + "!", relay);
+         answered = answered && syncReceives(client, payload + "!", peer.port());
+      }
+      check("padding: the client's data reaches the peer as it was sent", sent);
+      check("padding: the peer's data reaches the client as it was sent", answered);
+      check("padding: and STUN after it still works (the allocation is released)", !client.destroyAllocation());
+   }
+   recorder.waitUntilClosed();
+   int fromClient = 0;
+   int fromServer = 0;
+   check("padding: what the client sent is RFC framing, ChannelData padded",
+         parsesAsTurnFraming(recorder.fromClient(), fromClient) && fromClient == 5);
+   check("padding: what the server sent is RFC framing, ChannelData padded",
+         parsesAsTurnFraming(recorder.fromServer(), fromServer) && fromServer == 5);
 }
 
 // Runs test with a server configured from configFile
@@ -943,6 +1194,7 @@ main(int argc, char** argv)
          {
             testChannelNumbers();
             testUdpAndTcp();
+            testChannelDataPadding();
 #ifdef USE_SSL
             testTls();
 
@@ -954,6 +1206,14 @@ main(int argc, char** argv)
 #endif
             runWithServer(idleConfig, testIdleTimeout);
             runWithServer(limitsConfig, testLimits);
+            testRelayPortInUse();
+            {
+               // The clients outlive the server
+               std::unique_ptr<TurnUdpSocket> udpClient;
+               std::unique_ptr<TurnTcpSocket> tcpClient;
+               runWithServer(limitsConfig, [&udpClient, &tcpClient]() { testStopWithAllocations(udpClient, tcpClient); });
+               check("stop: the server stops, with its allocations, without crashing", true);
+            }
          }
          catch (const std::exception& e)
          {
@@ -966,7 +1226,7 @@ main(int argc, char** argv)
       }
    }
 
-   for (const char* file : { caFile, certFile, keyFile, usersFile, defaultConfig, noTls12Config, idleConfig, limitsConfig })
+   for (const char* file : { caFile, certFile, keyFile, usersFile, defaultConfig, noTls12Config, idleConfig, limitsConfig, relayPortsConfig })
    {
       remove(file);
    }

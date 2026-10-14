@@ -40,7 +40,7 @@ AsyncUdpSocketBase::bind(const asio::ip::address& address, unsigned short port)
       }
 #endif
 #endif
-      mSocket.set_option(asio::ip::udp::socket::reuse_address(true), errorCode);
+      setExclusiveAddressUse(mSocket);
       mSocket.set_option(asio::socket_base::receive_buffer_size(66560));
       //mSocket.set_option(asio::socket_base::send_buffer_size(66560));
       mSocket.bind(asio::ip::udp::endpoint(address, port), errorCode);
@@ -133,8 +133,8 @@ AsyncUdpSocketBase::transportClose()
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

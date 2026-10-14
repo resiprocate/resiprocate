@@ -11,6 +11,7 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
+#include <deque>
 #include <functional>
 
 #include <vector>
@@ -134,6 +135,12 @@ protected:
    char mReadBuffer[8192];
    char mWriteBuffer[8192];
    bool mConnected;
+
+   // Peers' data (ChannelData, and Data indications) that arrived while waiting for a response,
+   // for receive() - the size of mReadBuffer that holds one is passed to queueReceived()
+   std::deque<std::vector<char>> mReceivedWhileWaiting;
+   static const size_t MaxReceivedWhileWaiting = 100;
+   void queueReceived(unsigned int size);
 
 private:
    // Recursive: eg. destroyAllocation() calls refreshAllocation(), and sendTo() and receive() refresh

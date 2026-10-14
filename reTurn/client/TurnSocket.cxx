@@ -1,4 +1,5 @@
 #include "TurnSocket.hxx"
+#include "../AsyncSocketBase.hxx"
 #include "ErrorCode.hxx"
 #include <rutil/Lock.hxx>
 #include <rutil/WinLeakCheck.hxx>
@@ -575,7 +576,13 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
 
       std::vector<asio::const_buffer> bufs;
       bufs.push_back(asio::buffer(framing, sizeof(framing)));
-      bufs.push_back(asio::buffer(buffer, size));  // TODO !SLG! - if sending over TCP/TLS then message must be padded to be on a 4 byte boundary
+      bufs.push_back(asio::buffer(buffer, size));
+      if(mLocalBinding.getTransportType() != StunTuple::UDP)
+      {
+         // Over TCP and TLS, padded to a multiple of 4 bytes (RFC 5766 11.5, RFC 8656 12.5)
+         static const char zeros[3] = { 0, 0, 0 };
+         bufs.push_back(asio::buffer(zeros, AsyncSocketBase::channelDataPadding(size)));
+      }
 
       return rawWrite(bufs);
    }
@@ -608,7 +615,18 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
    }
 }
 
-asio::error_code 
+void
+TurnSocket::queueReceived(unsigned int size)
+{
+   if(mReceivedWhileWaiting.size() >= MaxReceivedWhileWaiting)
+   {
+      WarningLog(<< "TurnSocket: " << mReceivedWhileWaiting.size() << " packets received while waiting for a response, not yet received - dropping the oldest");
+      mReceivedWhileWaiting.pop_front();
+   }
+   mReceivedWhileWaiting.emplace_back(mReadBuffer, mReadBuffer + size);
+}
+
+asio::error_code
 TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    asio::error_code errorCode;
@@ -622,12 +640,25 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
    {
       done = true;
 
-      // Wait for response
+      // Wait for response - unless peers' data arrived while waiting for a response to a request
       unsigned int readSize;
-      errorCode = rawRead(timeout, &readSize, sourceAddress, sourcePort); // Note: SourceAddress and sourcePort may be overwritten below if from Turn Relay
-      if(errorCode)
+      if(!mHaveAllocation)
       {
-         return errorCode;
+         mReceivedWhileWaiting.clear();
+      }
+      if(!mReceivedWhileWaiting.empty())
+      {
+         readSize = (unsigned int)mReceivedWhileWaiting.front().size();
+         memcpy(mReadBuffer, mReceivedWhileWaiting.front().data(), readSize);
+         mReceivedWhileWaiting.pop_front();
+      }
+      else
+      {
+         errorCode = rawRead(timeout, &readSize, sourceAddress, sourcePort); // Note: SourceAddress and sourcePort may be overwritten below if from Turn Relay
+         if(errorCode)
+         {
+            return errorCode;
+         }
       }
 
       // Note if this is a UDP RFC3489 back compat socket, then allocations are not allowed and handleRawData will always be used
@@ -1038,8 +1069,20 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
             StunMessage* response = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[0], readsize);
 
             // If response is valid and has no unknown comprehension-required attributes then we can process it
-            if(response->isValid() && response->mUnknownRequiredAttributes.numAttributes == 0) 
+            if(response->isValid() && response->mUnknownRequiredAttributes.numAttributes == 0)
             {
+               // Not a response: a Data indication (a peer's data, kept for receive()), or
+               // something not for us here
+               if(response->mClass != StunMessage::StunClassSuccessResponse && response->mClass != StunMessage::StunClassErrorResponse)
+               {
+                  if(mHaveAllocation && response->mClass == StunMessage::StunClassIndication && response->mMethod == StunMessage::TurnDataMethod)
+                  {
+                     queueReceived(readsize);
+                  }
+                  delete response;
+                  continue;  // read next message
+               }
+
                if(!response->checkMessageIntegrity(request.mHmacKey))
                {
                   WarningLog(<< "Stun response message integrity is bad!");
@@ -1087,11 +1130,10 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
                return 0;
             }
          }
-         else  // Channel Data Message
+         else  // Channel Data Message: a peer's data, kept for receive()
          {
-            // TODO - handle buffering of Turn data that is receive while waiting for a Request/Response
-            errorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);  
-            return 0;
+            queueReceived(readsize);
+            continue;  // read next message
          }
       }
       else

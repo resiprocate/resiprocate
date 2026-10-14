@@ -231,6 +231,23 @@ testServerHandshakeTimeout(X509* caCert, EVP_PKEY* caKey)
    check("a client that handshakes: the timeout doesn't close the connection later", open);
 }
 
+// The sync client's connect timeout: here a server whose TCP connection is made (in the listening
+// socket's backlog) but which never answers the handshake
+static void
+testClientConnectTimeout()
+{
+   cerr << "-- client connect timeout" << endl;
+   asio::io_context io;
+   asio::ip::tcp::acceptor neverAccepts(io, asio::ip::tcp::endpoint(asio::ip::make_address("127.0.0.1"), 0));
+   TurnTlsSocket client(true, asio::ip::make_address("127.0.0.1"), 0, caFile);
+   client.setConnectTimeout(500);
+   const auto start = std::chrono::steady_clock::now();
+   const asio::error_code ec = client.connect("127.0.0.1", neverAccepts.local_endpoint().port());
+   const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+   check("a server that never answers the handshake: connect fails with timed_out", ec == asio::error::timed_out);
+   check("a server that never answers the handshake: after about the connect timeout", seconds > 0.4 && seconds < 3);
+}
+
 int
 main(int, char**)
 {
@@ -243,6 +260,7 @@ main(int, char**)
    {
       testClient(caCert, caKey);
       testServerHandshakeTimeout(caCert, caKey);
+      testClientConnectTimeout();
    }
    X509_free(caCert);
    EVP_PKEY_free(caKey);

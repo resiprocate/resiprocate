@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <csignal>
+#include <memory>
 #include <string>
 #include <asio.hpp>
 #ifdef USE_SSL
@@ -95,8 +96,10 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
       // Initialize Logging
       resip::Log::initialize(reTurnConfig, argv[0]);
 
-      // Initialize server.
-      asio::io_context ioService;                                // The one and only ioService for the stunServer
+      // Initialize server.  The io_context is destroyed first at shutdown (see below), so it's
+      // held by a pointer.
+      std::unique_ptr<asio::io_context> ioContext(new asio::io_context);
+      asio::io_context& ioService = *ioContext;                  // The one and only ioService for the stunServer
       reTurn::TurnManager turnManager(ioService, reTurnConfig);  // The one and only Turn Manager
 
       std::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
@@ -184,8 +187,8 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
          dropPrivileges(reTurnConfig.mRunAsUser, reTurnConfig.mRunAsGroup);
       }
 
-      ReTurnUserFileScanner userFileScanner(ioService, reTurnConfig);
-      userFileScanner.start();
+      std::unique_ptr<ReTurnUserFileScanner> userFileScanner(new ReTurnUserFileScanner(ioService, reTurnConfig));
+      userFileScanner->start();
 
 #ifdef _WIN32
       // Set console control handler to allow server to be stopped.
@@ -221,6 +224,27 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 
       // Wait for thread to exit
       thread.join();
+
+      // Shut down in order: first what uses the io_context, then the io_context itself.  Its
+      // pending handlers keep servers, connections and their allocations alive, and those use the
+      // TurnManager and RequestHandler - so they must go while those still exist.
+      userFileScanner.reset();
+      udpTurnServer.reset();
+      tcpTurnServer.reset();
+#ifdef USE_SSL
+      tlsTurnServer.reset();
+#endif
+      a1p2StunUdpServer.reset();
+      a2p1StunUdpServer.reset();
+      a2p2StunUdpServer.reset();
+#ifdef USE_IPV6
+      udpV6TurnServer.reset();
+      tcpV6TurnServer.reset();
+#ifdef USE_SSL
+      tlsV6TurnServer.reset();
+#endif
+#endif
+      ioContext.reset();
    }
    catch (const std::exception& e)
    {

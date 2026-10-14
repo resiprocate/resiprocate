@@ -23,7 +23,7 @@ TurnAsyncUdpSocket::TurnAsyncUdpSocket(asio::io_context& ioService,
    AsyncUdpSocketBase(ioService)
 {
    mLocalBinding.setTransportType(StunTuple::UDP);
-   bind(address, port);
+   mBindError = bind(address, port);
 }
 
 void 
@@ -83,7 +83,7 @@ TurnAsyncUdpSocket::onSendFailure(const asio::error_code& e)
 
 /* ====================================================================
 
- Copyright (c) 2023, SIP Specturm, Inc. http://sipspectrum.com
+ Copyright (c) 2008-2026, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

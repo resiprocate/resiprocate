@@ -3,6 +3,7 @@
 #endif
 
 #include "TurnTcpSocket.hxx"
+#include "../AsyncSocketBase.hxx"
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
 
@@ -42,6 +43,31 @@ TurnTcpSocket::openAndBind(asio::ip::tcp::socket& socket)
 }
 
 asio::error_code
+TurnTcpSocket::waitForConnectStep(asio::error_code& result, const std::function<void()>& cancel)
+{
+   bool timedOut = false;
+   asio::steady_timer timer(mIOService);
+   timer.expires_after(std::chrono::milliseconds(mConnectTimeout));
+   timer.async_wait([&timedOut, &cancel](const asio::error_code& e)
+   {
+      if(!e)
+      {
+         timedOut = true;
+         cancel();  // the operation then completes, with operation_aborted
+      }
+   });
+
+   mIOService.restart();
+   while(result == asio::error::would_block && mIOService.run_one() > 0)
+   {
+   }
+   timer.cancel();
+   mIOService.run();  // lets the timer's handler finish
+   mIOService.restart();
+   return timedOut ? asio::error_code(asio::error::timed_out) : result;
+}
+
+asio::error_code
 TurnTcpSocket::connect(const std::string& address, unsigned short port)
 {
    // Get a list of endpoints corresponding to the server name.
@@ -65,7 +91,9 @@ TurnTcpSocket::connect(const std::string& address, unsigned short port)
       errorCode = openAndBind(mSocket);
       if(!errorCode)
       {
-         mSocket.connect(*endpoint_iterator, errorCode);
+         asio::error_code result = asio::error::would_block;
+         mSocket.async_connect(*endpoint_iterator, [&result](const asio::error_code& ec) { result = ec; });
+         errorCode = waitForConnectStep(result, [this]() { asio::error_code ignored; mSocket.close(ignored); });
       }
 
       if(!errorCode)
@@ -107,7 +135,7 @@ TurnTcpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::
    mIOService.run();
    mIOService.restart();
 
-   *bytesRead = (unsigned int)mBytesRead+4;
+   *bytesRead = (unsigned int)(mBytesRead + 4 - (mBytesRead >= mPadding ? mPadding : 0));
    if(!mReadErrorCode)
    {
       if(sourceAddress)
@@ -162,12 +190,18 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
       memcpy(&dataLen, &mReadBuffer[2], 2);
       dataLen = ntohs(dataLen);
 
+      // ChannelData's padding is read with it, but not counted in what rawRead reports
+      mPadding = 0;
       if((mReadBuffer[0] & 0xC0) == 0)  // If first 2 bits are 00 then this is a stun message
       {
          dataLen += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
       }
+      else
+      {
+         mPadding = AsyncSocketBase::channelDataPadding(dataLen);
+      }
 
-      readBody(dataLen);
+      readBody(dataLen + (unsigned int)mPadding);
    }
    else 
    {

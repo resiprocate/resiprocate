@@ -228,6 +228,16 @@ Flow::activateFlow(uint8_t allocationProps)
 {
    mAllocationProps = allocationProps;
 
+   if (mTurnSocket && mTurnSocket->getBindError())
+   {
+      // Eg. another socket has the local port: the flow can't work - its socket would send from a
+      // port the OS picks - so it's not made ready, and the application is told
+      const asio::error_code& e = mTurnSocket->getBindError();
+      ErrLog(LOG_PREFIX << "Unable to bind to the local address and port, error=" << e.value() << "(" << e.message() << ")");
+      mMediaStream.onFlowError(mComponentId, e.value());
+      return;
+   }
+
    if (mTurnSocket)
    {
       if(mMediaStream.mNatTraversalMode != MediaStream::NoNatTraversal &&

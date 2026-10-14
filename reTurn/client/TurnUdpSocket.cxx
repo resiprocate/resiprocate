@@ -3,6 +3,7 @@
 #endif
 
 #include "TurnUdpSocket.hxx"
+#include "../AsyncSocketBase.hxx"
 
 using namespace std;
 
@@ -18,7 +19,7 @@ TurnUdpSocket::TurnUdpSocket(const asio::ip::address& address, unsigned short po
    mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
    if(!errorCode)
    {
-      mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
+      AsyncSocketBase::setExclusiveAddressUse(mSocket);
       mSocket.bind(asio::ip::udp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
    }
 }
@@ -107,6 +108,7 @@ TurnUdpSocket::cancelSocket()
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

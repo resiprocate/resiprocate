@@ -56,6 +56,10 @@ public:
    virtual void disableTurnAsyncHandler();
    virtual unsigned int getSocketDescriptor() = 0;
 
+   /// The outcome of binding the socket to the local address and port it was created with: eg.
+   /// address_in_use if another socket has the port
+   const asio::error_code& getBindError() const { return mBindError; }
+
    // Note: Shared Secret requests have been deprecated by RFC5389, and not 
    //       widely implemented in RFC3489 - so not really needed at all
    void requestSharedSecret();
@@ -112,6 +116,7 @@ public:
    virtual void setOnBeforeSocketClosedFp(AsyncSocketBase::BeforeClosedHandler fp);
 
 protected:
+   asio::error_code mBindError;  // set by the constructors of the transport specific sockets
 
    void handleReceivedData(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    void handleChannelData(const std::shared_ptr<DataBuffer>& data);
