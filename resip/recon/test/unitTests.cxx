@@ -731,12 +731,17 @@ void executeConversationTest(SipXMediaStackAdapter::MediaInterfaceMode mode)
    //////////////////////////////////////////////////////////////////////////////
    auto profileAlice = createUserAgentMasterProfile();
    profileAlice->addTransport(UDP, aliceUri.uri().port(), V4);
+   // Alice and Bob each have their own RTP ports: sockets don't share them
+   profileAlice->rtpPortRangeMin() = 16384;
+   profileAlice->rtpPortRangeMax() = 16483;
    auto conversationProfileAlice = createConversationProfile(profileAlice, 16384);
    conversationProfileAlice->setDefaultFrom(aliceUri);
    conversationProfileAlice->setUserAgent("Test-Alice");
 
    auto profileBob = createUserAgentMasterProfile();
    profileBob->addTransport(UDP, bobUri.uri().port(), V4);
+   profileBob->rtpPortRangeMin() = 16484;
+   profileBob->rtpPortRangeMax() = 16583;
    auto conversationProfileBob = createConversationProfile(profileBob, 16385);
    conversationProfileBob->setDefaultFrom(bobUri);
    conversationProfileBob->setUserAgent("Test-Bob");

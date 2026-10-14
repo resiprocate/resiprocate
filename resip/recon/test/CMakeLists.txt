@@ -27,6 +27,7 @@ endfunction()
 # These are failing on some linux builds - TODO - fix me
 if(WIN32)
   test(unitTests unitTests.cxx)
+  test(testDtlsSrtp testDtlsSrtp.cxx)
 endif()
 
 add_executable(testUA

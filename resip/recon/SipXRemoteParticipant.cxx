@@ -879,6 +879,7 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
    const sdpcontainer::SdpMediaLine::CodecList* remoteCodecs = 0;
    bool supportedCryptoSuite = false;
    bool supportedFingerprint = false;
+   bool localFingerprint = false;
 
    resip_assert(localSdp);
 
@@ -919,6 +920,7 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
          //InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", found audio media line in local sdp");
          localMediaDirection = (*itMediaLine)->getDirection();
          localCodecs = &(*itMediaLine)->getCodecs();
+         localFingerprint = !(*itMediaLine)->getFingerPrint().empty();
          break;
       }
    }
@@ -992,8 +994,13 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
                   }
                }
             }
-            // Process Fingerprint and setup settings (if required) 
-            else if((*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP)
+            // Process Fingerprint and setup settings (if required): DTLS-SRTP was negotiated if the remote
+            // media line is UDP/TLS/RTP/SAVP, or if ours offered or answered it - with a fingerprint - and the
+            // remote one has a fingerprint too.  The latter covers RFC 8643 (OSRTP) RTP/AVP media lines with
+            // fingerprints, and an answer of ours that took the UDP/TLS/RTP/SAVP potential configuration
+            // (tcap/pcfg) of an RTP/AVP offer - whose media line, here, is still RTP/AVP.
+            else if((*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP ||
+                    localFingerprint)
             {
                // We will only process Dtls-Srtp if we can check the fingerprint's hash function
                const char* hashFunction = supportedFingerprintHashFunction(**itRemMediaLine);
