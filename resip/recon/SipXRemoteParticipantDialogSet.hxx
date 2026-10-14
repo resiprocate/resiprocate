@@ -76,6 +76,8 @@ protected:
    virtual void fixUpSdp(resip::SdpContents* sdp);
 
 private:
+   unsigned int allocateRTPPort();
+
    SipXMediaStackAdapter& mSipXMediaStackAdapter;
    unsigned int mLocalRTPPort;
    bool mAllocateLocalRTPPortFailed;
@@ -111,7 +113,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2026, SIP Spectrum, Inc.
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

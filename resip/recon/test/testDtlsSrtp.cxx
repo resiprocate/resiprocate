@@ -10,6 +10,8 @@
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 
+#include <asio.hpp>
+
 #include <atomic>
 #include <chrono>
 #include <cstring>
@@ -17,7 +19,8 @@
 #include <iostream>
 
 // Calls between two recon user agents that negotiate DTLS-SRTP: each end has to take the
-// remote fingerprint from the SDP and, if it's the active end, start the DTLS handshake.
+// remote fingerprint from the SDP and, if it's the active end, start the DTLS handshake.  And
+// as DTLS-SRTP is only set up on the ports in the SDP, that the ports recon offers can be used.
 
 using namespace recon;
 using namespace resip;
@@ -141,16 +144,25 @@ createConversationProfile(std::shared_ptr<UserAgentMasterProfile> profile, const
 }
 
 // Alice calls Bob, who answers: returns whether both ends set up DTLS-SRTP for RTP, with the
-// fingerprint each was given in the SDP
+// fingerprint each was given in the SDP.  If firstPortInUse, another socket has the first RTP
+// port of Alice's range.
 static bool
 dtlsSrtpCall(int basePort, ConversationProfile::SecureMediaMode aliceMode, bool aliceRequired,
-             ConversationProfile::SecureMediaMode bobMode, bool bobRequired)
+             ConversationProfile::SecureMediaMode bobMode, bool bobRequired, bool firstPortInUse = false)
 {
    NameAddr aliceUri("sip:alice@127.0.0.1:" + Data(basePort));
    NameAddr bobUri("sip:bob@127.0.0.1:" + Data(basePort + 1));
    bool connected = false;
    bool setUp = false;
    {
+      asio::io_context ioContext;
+      asio::ip::udp::socket holder(ioContext);
+      if (firstPortInUse)
+      {
+         holder.open(asio::ip::udp::v4());
+         holder.bind(asio::ip::udp::endpoint(asio::ip::make_address("127.0.0.1"), (unsigned short)(basePort + 10)));
+      }
+
       auto profileAlice = createUserAgentMasterProfile(basePort, basePort + 10);
       TestConversationManager alice;
       UserAgent aliceUa(&alice, profileAlice);
@@ -215,6 +227,11 @@ main(int argc, char** argv)
    cerr << "-- DTLS-SRTP optional, offered to an end that doesn't ask for it" << endl;
    check("DTLS-SRTP offered: both ends set up SRTP from DTLS",
          dtlsSrtpCall(33300, ConversationProfile::SrtpDtls, false, ConversationProfile::NoSecureMedia, false));
+
+   // The RTP port recon is given has to be one its media stream can bind: else the call's media fails
+   cerr << "-- the first RTP port of the range is in use" << endl;
+   check("an RTP port in use: the call takes the next one, and sets up DTLS-SRTP on it",
+         dtlsSrtpCall(33400, ConversationProfile::SrtpDtls, true, ConversationProfile::SrtpDtls, true, true));
 #else
    cerr << "built without SSL: nothing to test" << endl;
 #endif

@@ -3,6 +3,8 @@
 
 #include <deque>
 
+#include "rutil/Data.hxx"
+
 namespace resip
 {
 
@@ -13,9 +15,15 @@ class RTPPortManager
 {
 public:
    RTPPortManager(int portRangeMin = 17000, int portRangeMax = 18000);
+   /// Allocates an RTP port (even - the RTCP port is the one after it).  Returns 0 if none is free.
    unsigned int allocateRTPPort();
+   /// Allocates an RTP port that UDP sockets can be bound to on address, with the RTCP port after it:
+   /// a port another socket has (eg. another application's) is skipped - a media stream can't share
+   /// it - and put back at the end of the free list.  Returns 0 if no free port can be bound.
+   unsigned int allocateRTPPort(const resip::Data& address);
    void freeRTPPort(unsigned int port);
    unsigned int getNumAllocatedPortPairs() { return mTotalPortPairs - (unsigned int)mRTPPortFreeList.size(); }
+   unsigned int getNumFreePortPairs() { return (unsigned int)mRTPPortFreeList.size(); }
 
 private:
    unsigned int mPortRangeMin;

@@ -72,12 +72,30 @@ SipXRemoteParticipantDialogSet::~SipXRemoteParticipantDialogSet()
    InfoLog(<< "SipXRemoteParticipantDialogSet destroyed.  mActiveRemoteParticipantHandle=" << getActiveRemoteParticipantHandle());
 }
 
+// Allocates an RTP port from the RTPPortManager, for the media stream to bind it and the RTCP port after
+// it: one that another socket has (eg. another application's) is skipped, as a UDP socket can't share
+// it.  TURN over TCP and TLS binds TCP sockets instead - with SO_REUSEADDR, as resip's are - so their
+// ports aren't checked.
+unsigned int
+SipXRemoteParticipantDialogSet::allocateRTPPort()
+{
+   ConversationProfile* profile = getConversationProfile().get();
+   resip_assert(profile);
+   std::shared_ptr<RTPPortManager> portManager = mSipXMediaStackAdapter.getRTPPortManager();
+   if(profile->natTraversalMode() == ConversationProfile::TurnTcpAllocation ||
+      profile->natTraversalMode() == ConversationProfile::TurnTlsAllocation)
+   {
+      return portManager->allocateRTPPort();
+   }
+   return portManager->allocateRTPPort(profile->sessionCaps().session().connection().getAddress());
+}
+
 unsigned int 
 SipXRemoteParticipantDialogSet::getLocalRTPPort()
 {
    if(mLocalRTPPort == 0 && !mAllocateLocalRTPPortFailed)
    {
-      mLocalRTPPort = mSipXMediaStackAdapter.getRTPPortManager()->allocateRTPPort();
+      mLocalRTPPort = allocateRTPPort();
       if(mLocalRTPPort == 0)
       {
          WarningLog(<< "Could not allocate a free RTP port for RemoteParticipantDialogSet!");

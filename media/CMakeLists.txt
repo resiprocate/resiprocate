@@ -37,4 +37,5 @@ set_target_properties(resipmedia PROPERTIES FOLDER resipmedia)
 
 if(BUILD_TESTING)
     add_subdirectory(sdpcontainer/test)
+    add_subdirectory(test)
 endif()
