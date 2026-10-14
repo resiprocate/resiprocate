@@ -52,7 +52,8 @@ DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFac
    mOutBio(SSL_get_wbio(mSsl)),
    mSocketType(type),
    mHandshakeCompleted(false),
-   mHandshakeFailed(false)
+   mHandshakeFailed(false),
+   mCreated(std::chrono::steady_clock::now())
 {
    mSocketContext->setDtlsSocket(this);
 }
@@ -66,6 +67,7 @@ DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFac
    mSocketType(Server),
    mHandshakeCompleted(false),
    mHandshakeFailed(false),
+   mCreated(std::chrono::steady_clock::now()),
    mCookiePeer(peer)
 {
    mSocketContext->setDtlsSocket(this);
@@ -98,6 +100,11 @@ DtlsSocket::newSsl(DtlsFactory* factory, SocketType type)
    // Datagrams are passed in and out through memory BIOs: an empty one reads as -1 with the
    // retry flag set, so OpenSSL wants more input rather than seeing the end of the stream
    SSL_set_bio(ssl, BIO_new(BIO_s_mem()), BIO_new(BIO_s_mem()));
+
+   // A memory BIO can't tell OpenSSL the MTU, so it would fall back to its minimum (small
+   // records): set it, and don't let OpenSSL query it (which also keeps it through SSL_clear)
+   SSL_set_options(ssl, SSL_OP_NO_QUERY_MTU);
+   DTLS_set_link_mtu(ssl, (long)factory->mMtu);
    return ssl;
 }
 
@@ -166,6 +173,14 @@ DtlsSocket::handleTimeout()
    if(mHandshakeCompleted || mHandshakeFailed)
       return;
 
+   if(serverHandshakeTimeLeft() <= std::chrono::steady_clock::duration::zero())
+   {
+      mHandshakeFailed = true;
+      mSocketContext->handshakeFailed("DTLS handshake not completed in time");
+      scheduleTimer();  // clears the timer
+      return;
+   }
+
    BIO_reset(mInBio);
    BIO_reset(mOutBio);
 
@@ -205,14 +220,44 @@ DtlsSocket::handlePacketAfterHandshake()
 void
 DtlsSocket::writeOutput()
 {
-   // If mOutBio is now nonzero-length, then we need to write the
-   // data to the network. TODO: warning, MTU issues!
+   // The memory BIO holds everything OpenSSL wrote - perhaps several datagrams, run together.  Send
+   // it as datagrams of whole DTLS records (RFC 6347 4.1.1: a datagram can hold several), each no
+   // larger than the MTU, which OpenSSL fits each record to.  A record is a 13 byte header -
+   // content type, version, epoch, sequence number, then its length - and that many bytes.
    unsigned char *outBioData;
    int outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
-   if(outBioLen)
+   const size_t len = outBioLen > 0 ? (size_t)outBioLen : 0;
+   const size_t mtu = mFactory->mMtu;
+   size_t datagramStart = 0;
+   size_t pos = 0;
+   while(pos + 13 <= len)
    {
-      mSocketContext->write(outBioData,outBioLen);
+      const size_t recordLen = 13 + ((size_t)outBioData[pos + 11] << 8 | outBioData[pos + 12]);
+      if(pos + recordLen > len)
+      {
+         break;  // can't happen: OpenSSL only writes whole records; the rest is sent as it is
+      }
+      if(pos > datagramStart && pos + recordLen - datagramStart > mtu)
+      {
+         mSocketContext->write(outBioData + datagramStart, (unsigned int)(pos - datagramStart));
+         datagramStart = pos;
+      }
+      pos += recordLen;
    }
+   if(len > datagramStart)
+   {
+      mSocketContext->write(outBioData + datagramStart, (unsigned int)(len - datagramStart));
+   }
+}
+
+std::chrono::steady_clock::duration
+DtlsSocket::serverHandshakeTimeLeft() const
+{
+   if(mSocketType != Server || mFactory->mServerHandshakeTimeout == 0)
+   {
+      return std::chrono::steady_clock::duration::max();
+   }
+   return std::chrono::seconds(mFactory->mServerHandshakeTimeout) - getAge();
 }
 
 void
@@ -231,6 +276,16 @@ DtlsSocket::scheduleTimer()
    if(!mHandshakeCompleted && !mHandshakeFailed && DTLSv1_get_timeout(mSsl, &tv) == 1)
    {
       unsigned int waitMs = (unsigned int)tv.tv_sec * 1000 + ((unsigned int)tv.tv_usec + 999) / 1000;
+      // A server socket's handshake fails when its time is up, if that's sooner
+      const std::chrono::steady_clock::duration timeLeft = serverHandshakeTimeLeft();
+      if(timeLeft != std::chrono::steady_clock::duration::max())
+      {
+         const long long timeLeftMs = std::chrono::duration_cast<std::chrono::milliseconds>(timeLeft).count() + 1;
+         if(timeLeftMs < (long long)waitMs)
+         {
+            waitMs = timeLeftMs > 0 ? (unsigned int)timeLeftMs : 1;
+         }
+      }
       mReadTimer = std::make_shared<DtlsSocketTimer>(0, this);
       mReadTimer->setLock(mSocketContext->timerLock());
       mFactory->mTimerContext->addTimer(mReadTimer, waitMs > 0 ? waitMs : 1);

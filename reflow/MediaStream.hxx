@@ -123,8 +123,10 @@ private:
    MediaStreamHandler& mMediaStreamHandler;
    bool mRtcpEnabled;
 
-   Flow* mRtpFlow;
-   Flow* mRtcpFlow;
+   // Null until created: activating the RTP flow can call onFlowReady before the constructor
+   // has set both
+   Flow* mRtpFlow = nullptr;
+   Flow* mRtcpFlow = nullptr;
 
    virtual void onFlowReady(unsigned int componentId);
    virtual void onFlowError(unsigned int componentId, unsigned int errorCode);

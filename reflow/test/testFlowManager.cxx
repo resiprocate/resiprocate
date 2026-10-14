@@ -49,6 +49,28 @@ check(const std::string& what, bool cond)
 static const asio::ip::address localhost = asio::ip::make_address("127.0.0.1");
 typedef std::vector<unsigned char> Datagram;
 
+// Counts the warnings reTurn's STUN message parser logs (eg. for a packet that isn't STUN), and
+// passes everything on to the normal log if one was asked for
+class StunWarningCounter : public resip::ExternalLogger
+{
+public:
+   explicit StunWarningCounter(bool log) : mLog(log) {}
+   bool operator()(resip::Log::Level level, const resip::Subsystem&, const resip::Data&, const char* file, int,
+                   const resip::Data&, const resip::Data&, const resip::Data&) override
+   {
+      if (level <= resip::Log::Warning && file && strstr(file, "StunMessage"))
+      {
+         ++mWarnings;
+      }
+      return mLog;
+   }
+   std::atomic<int> mWarnings{0};
+
+private:
+   bool mLog;
+};
+static StunWarningCounter* stunWarnings = nullptr;
+
 // Waits up to timeoutMs for cond to be true
 static bool
 waitFor(const std::function<bool()>& cond, int timeoutMs = 5000)
@@ -126,6 +148,21 @@ public:
    {
       std::lock_guard<std::mutex> lock(mPassedMutex);
       return std::any_of(mPassed.begin(), mPassed.end(), [](const Datagram& d) { return !d.empty() && d[0] >= 20 && d[0] <= 63; });
+   }
+
+   // The size of the largest DTLS datagram seen on the wire
+   size_t largestDtls()
+   {
+      std::lock_guard<std::mutex> lock(mPassedMutex);
+      size_t largest = 0;
+      for (const Datagram& d : mPassed)
+      {
+         if (!d.empty() && d[0] >= 20 && d[0] <= 63)
+         {
+            largest = std::max(largest, d.size());
+         }
+      }
+      return largest;
    }
 
    // Alters a byte of the payload of the next RTP packet from A to B
@@ -395,6 +432,10 @@ testDtls(FlowManager& managerA, FlowManager& managerB)
       check("dtls: SRTP from A reaches B, once the handshake is done", delivered(call.a, call.b, "dtls A to B"));
       check("dtls: SRTP from B reaches A", delivered(call.b, call.a, "dtls B to A"));
       check("dtls: the handshake went over the wire", call.relay.sawDtls());
+      check("dtls: DTLS packets aren't parsed as STUN (no STUN parser warnings)", stunWarnings->mWarnings == 0);
+      // With FlowManager's 4096 bit RSA certificate, the server's first flight is over 2KB
+      check("dtls: no DTLS datagram on the wire is larger than the MTU (1200 bytes)",
+            call.relay.largestDtls() > 0 && call.relay.largestDtls() <= dtls::DtlsFactory::DefaultMtu);
       check("dtls: the media is encrypted on the wire",
             !call.relay.sawInClear("dtls A to B") && !call.relay.sawInClear("dtls B to A"));
       checkOnlySrtpIsDelivered("dtls: ", call);
@@ -422,12 +463,147 @@ testDtls(FlowManager& managerA, FlowManager& managerB)
    }
 }
 
+// Keeps the timers it's given, never firing them
+class NoTimers : public dtls::DtlsTimerContext
+{
+public:
+   void addTimer(std::shared_ptr<dtls::DtlsTimer> timer, unsigned int) override { mTimers.push_back(std::move(timer)); }
+private:
+   std::vector<std::shared_ptr<dtls::DtlsTimer>> mTimers;
+};
+
+// A peer, on its own UDP port, that completes the DTLS cookie exchange with a flow - so the flow
+// starts a server handshake with it - then goes quiet, holding one of the flow's places for DTLS
+class StalledDtlsPeer
+{
+public:
+   StalledDtlsPeer(dtls::DtlsFactory& factory, unsigned short flowPort) :
+      mSocket(mIo, asio::ip::udp::endpoint(localhost, 0)),
+      mFlow(localhost, flowPort)
+   {
+      mSocket.non_blocking(true);
+      mDtls.reset(factory.createClient(std::unique_ptr<dtls::DtlsSocketContext>(new Context(mSocket, mFlow))));
+   }
+
+   // Whether the flow started a handshake: the ClientHello is answered with a HelloVerifyRequest,
+   // and the ClientHello with its cookie with the flow's first flight - which isn't answered
+   bool stall()
+   {
+      mDtls->startClient();
+      Datagram verifyRequest = receive();
+      if (verifyRequest.empty())
+      {
+         return false;
+      }
+      mDtls->handlePacketMaybe(verifyRequest.data(), verifyRequest.size());
+      return !receive().empty();
+   }
+
+private:
+   // Sends what the DtlsSocket writes from the peer's UDP socket, to the flow
+   class Context : public dtls::DtlsSocketContext
+   {
+   public:
+      Context(asio::ip::udp::socket& socket, const asio::ip::udp::endpoint& to) : mSocket(socket), mTo(to) {}
+      void write(const unsigned char* data, unsigned int len) override
+      {
+         asio::error_code ec;
+         mSocket.send_to(asio::buffer(data, len), mTo, 0, ec);
+      }
+      void handshakeCompleted() override {}
+      void handshakeFailed(const char*) override {}
+   private:
+      asio::ip::udp::socket& mSocket;
+      const asio::ip::udp::endpoint mTo;
+   };
+
+   // What arrives within 2 seconds
+   Datagram receive()
+   {
+      const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+      unsigned char buffer[2048];
+      asio::ip::udp::endpoint from;
+      for (;;)
+      {
+         asio::error_code ec;
+         const size_t size = mSocket.receive_from(asio::buffer(buffer), from, 0, ec);
+         if (!ec)
+         {
+            return Datagram(buffer, buffer + size);
+         }
+         if (std::chrono::steady_clock::now() >= deadline)
+         {
+            return Datagram();
+         }
+         std::this_thread::sleep_for(std::chrono::milliseconds(5));
+      }
+   }
+
+   asio::io_context mIo;
+   asio::ip::udp::socket mSocket;
+   asio::ip::udp::endpoint mFlow;
+   std::unique_ptr<dtls::DtlsSocket> mDtls;
+};
+
+// A flow allows only so many DTLS associations: peers that start handshakes and go quiet must not
+// be able to keep the real peer out
+static void
+testDtlsStalledHandshakes(FlowManager& managerA, FlowManager& managerB)
+{
+   std::cerr << "-- DTLS-SRTP, with stalled handshakes" << std::endl;
+   char fingerprintA[dtls::DtlsSocket::FingerprintSize];
+   char fingerprintB[dtls::DtlsSocket::FingerprintSize];
+   managerA.getDtlsFactory()->getMyCertFingerprint(fingerprintA);
+   managerB.getDtlsFactory()->getMyCertFingerprint(fingerprintB);
+
+   X509* cert = nullptr;
+   EVP_PKEY* key = nullptr;
+   FlowManager::createCert(resip::Data("stalled@example.com"), 1, 2048, cert, key);
+   const int defaultGrace = Flow::dtlsHandshakeEvictionGrace;
+   Flow::dtlsHandshakeEvictionGrace = 2;
+   {
+      dtls::DtlsFactory stalledFactory(std::unique_ptr<dtls::DtlsTimerContext>(new NoTimers), cert, key);
+      Call call(managerA, managerB, 46160, 46162);
+      check("stalled: both flows are ready", call.connect());
+      call.a.flow().setRemoteSDPFingerprint("sha-256", fingerprintB);
+      call.b.flow().setRemoteSDPFingerprint("sha-256", fingerprintA);
+
+      // As many as B allows
+      const unsigned short bPort = call.b.flow().getLocalTuple().getPort();
+      std::vector<std::unique_ptr<StalledDtlsPeer>> stalled;
+      int started = 0;
+      for (int i = 0; i < 8; ++i)
+      {
+         stalled.emplace_back(new StalledDtlsPeer(stalledFactory, bPort));
+         started += stalled.back()->stall() ? 1 : 0;
+      }
+      check("stalled: 8 peers start handshakes with B, then go quiet", started == 8);
+
+      stalled.emplace_back(new StalledDtlsPeer(stalledFactory, bPort));
+      check("stalled: while those are recent (within the grace period), another peer isn't let in", !stalled.back()->stall());
+
+      // Beyond the grace period, a stalled handshake makes way for A
+      std::this_thread::sleep_for(std::chrono::milliseconds(2200));
+      call.a.flow().startDtlsClient("127.0.0.1", call.relay.portFacingA());
+      check("stalled: A's handshake takes a stalled one's place, and SRTP from A reaches B",
+            delivered(call.a, call.b, "stalled A to B"));
+      check("stalled: SRTP from B reaches A", delivered(call.b, call.a, "stalled B to A"));
+   }
+   Flow::dtlsHandshakeEvictionGrace = defaultGrace;
+   X509_free(cert);
+   EVP_PKEY_free(key);
+}
+
 #endif // USE_SSL
 
 int
 main(int argc, char** argv)
 {
-   resip::Log::initialize(resip::Log::Cout, argc > 1 ? resip::Log::toLevel(resip::Data(argv[1])) : resip::Log::None, "testFlowManager");
+   // Warnings are always logged, to count the STUN parser's; they're only shown with a log level
+   static StunWarningCounter counter(argc > 1);
+   stunWarnings = &counter;
+   resip::Log::initialize(resip::Log::Cout, argc > 1 ? resip::Log::toLevel(resip::Data(argv[1])) : resip::Log::Warning,
+                          "testFlowManager", counter);
 
    try
    {
@@ -445,6 +621,7 @@ main(int argc, char** argv)
       if (managerA.getDtlsFactory() && managerB.getDtlsFactory())
       {
          testDtls(managerA, managerB);
+         testDtlsStalledHandshakes(managerA, managerB);
       }
 #endif
    }

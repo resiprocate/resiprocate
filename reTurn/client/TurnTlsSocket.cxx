@@ -100,6 +100,11 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
             mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
             mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
          }
+         // As the async client: only a failed TCP connect moves on to the next address.  A
+         // handshake that fails (eg. the certificate isn't for the name) would fail with the
+         // others too - and the handshake has no timeout, so trying one that accepts the TCP
+         // connection but never answers would block.
+         return errorCode;
       }
       ++endpoint_iterator;
    }

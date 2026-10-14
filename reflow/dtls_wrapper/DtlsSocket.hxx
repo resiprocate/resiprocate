@@ -7,6 +7,7 @@
 #ifndef DtlsSocket_hxx
 #define DtlsSocket_hxx
 
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -130,6 +131,9 @@ class DtlsSocket
       // returns true if the DTLS handshake has failed
       bool handshakeFailed() const { return mHandshakeFailed; }
 
+      // How long since the socket was created - for a server socket, since the peer's ClientHello
+      std::chrono::steady_clock::duration getAge() const { return std::chrono::steady_clock::now() - mCreated; }
+
       DtlsSocketContext* getSocketContext() { return mSocketContext.get(); }
 
    private:
@@ -176,6 +180,11 @@ class DtlsSocket
       SocketType mSocketType;
       bool mHandshakeCompleted;
       bool mHandshakeFailed;
+      std::chrono::steady_clock::time_point mCreated;
+
+      // How long a server socket's handshake has left before it fails (DtlsFactory::
+      // setServerHandshakeTimeout), or duration::max() if there's no limit
+      std::chrono::steady_clock::duration serverHandshakeTimeLeft() const;
       std::string mCookiePeer;  // the peer of a socket created by DtlsListener, for the cookie callbacks
 };
 

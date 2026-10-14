@@ -197,6 +197,9 @@ static const std::string toPeerA = "to peer A";
 static const std::string fromPeerA = "from peer A";
 static const std::string toPeerB = "to peer B";
 static const std::string fromPeerB = "from peer B";
+// Sent by a peer straight to a UDP client with an allocation, not through the server.  Its first
+// byte (0x31) is neither STUN (0-3) nor TURN ChannelData (64-127).
+static const std::string directPayload = "1 not through the server";
 
 // Whether the sync client receives data from the peer on peerPort
 static bool
@@ -214,7 +217,7 @@ syncReceives(TurnSocket& client, const std::string& expected, unsigned short pee
 // (setActiveDestination binds it, which also gives 127.0.0.1 permission), and in Send and Data
 // indications to peer B, which has no channel
 static void
-testSyncRelay(const std::string& what, TurnSocket& client)
+testSyncRelay(const std::string& what, TurnSocket& client, bool udp)
 {
    Peer peerA;
    Peer peerB;
@@ -224,6 +227,12 @@ testSyncRelay(const std::string& what, TurnSocket& client)
    check((what + "a channel is bound to peer A").c_str(), !client.setActiveDestination(localhost, peerA.port()));
    check((what + "sends to peer A, over the channel").c_str(), !client.send(toPeerA.data(), (unsigned int)toPeerA.size()));
    check((what + "peer A gets the data, from the relay address").c_str(), peerA.receive(from) == toPeerA && from == relay);
+   if (udp)
+   {
+      // Skipped by the client, which then gets what the server relays.  (The reflexive address is
+      // the client's own, as all is on 127.0.0.1.)
+      peerA.sendTo(directPayload, asio::ip::udp::endpoint(client.getReflexiveTuple().getAddress(), client.getReflexiveTuple().getPort()));
+   }
    peerA.sendTo(fromPeerA, relay);
    check((what + "peer A's answer is relayed to the client, over the channel").c_str(), syncReceives(client, fromPeerA, peerA.port()));
 
@@ -264,7 +273,7 @@ testSyncClient(const std::string& name, TurnSocket& client, const char* host, un
                                   StunMessage::PropsNone, TurnSocket::UnspecifiedToken, StunTuple::UDP));
    check((what + "a relay address is allocated").c_str(),
          client.getRelayTuple().getAddress() == localhost && client.getRelayTuple().getPort() != 0);
-   testSyncRelay(what, client);
+   testSyncRelay(what, client, name == "UDP");
    check((what + "the allocation is refreshed").c_str(), !client.refreshAllocation());
    check((what + "the allocation is released").c_str(), !client.destroyAllocation());
 }
@@ -284,6 +293,10 @@ public:
    std::atomic<int> mFromPeerA{0};
    std::atomic<int> mToPeerB{0};
    std::atomic<int> mFromPeerB{0};
+   // UDP: peer A also sends straight to the client, not through the server - which the client,
+   // having an allocation, mustn't pass on
+   bool mSendDirect = false;
+   std::atomic<bool> mDirectPassedOn{false};
    std::atomic<int> mRefreshed{0};
    std::atomic<int> mReleased{0};
    StunTuple mReflexive;
@@ -326,6 +339,11 @@ public:
       mRelay = relayTuple;
       mAllocated = 1;
       // Binds a channel to peer A, which also gives 127.0.0.1 permission
+      if (mSendDirect)
+      {
+         // The reflexive address is the client's own, as all is on 127.0.0.1
+         mPeerA.sendTo(directPayload, asio::ip::udp::endpoint(mReflexive.getAddress(), mReflexive.getPort()));
+      }
       mSocket->setActiveDestination(localhost, mPeerA.port());
    }
    void onAllocationFailure(unsigned int, const asio::error_code&) override { mAllocated = -1; }
@@ -361,6 +379,11 @@ public:
    void onReceiveSuccess(unsigned int, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data) override
    {
       const std::string received(data->data(), data->size());
+      if (received == directPayload)
+      {
+         mDirectPassedOn = true;
+         return;
+      }
       if (address == localhost && port == mPeerA.port() && mFromPeerA == 0)
       {
          mFromPeerA = received == fromPeerA ? 1 : -1;
@@ -428,6 +451,7 @@ testAsyncClient(const std::string& name, const char* host, unsigned short port, 
 {
    std::string what = "async " + name + ": ";
    AsyncHandler handler;
+   handler.mSendDirect = name == "UDP";
    runAsyncClient(handler, host, port, "1234", makeSocket);
    check((what + "connects").c_str(), handler.mConnected == 1);
    check((what + "STUN bind").c_str(), handler.mBound == 1 && handler.mReflexive.getAddress() == localhost);
@@ -437,6 +461,11 @@ testAsyncClient(const std::string& name, const char* host, unsigned short port, 
    check((what + "peer A's answer is relayed to the client").c_str(), handler.mFromPeerA == 1);
    check((what + "peer B gets data from the client, from the relay address").c_str(), handler.mToPeerB == 1);
    check((what + "peer B's answer is relayed to the client").c_str(), handler.mFromPeerB == 1);
+   if (handler.mSendDirect)
+   {
+      check((what + "with an allocation, data sent straight to the client, not through the server, isn't passed on").c_str(),
+            !handler.mDirectPassedOn);
+   }
    check((what + "the allocation is refreshed").c_str(), handler.mRefreshed == 1);
    check((what + "the allocation is released").c_str(), handler.mReleased == 1);
 }
@@ -452,10 +481,101 @@ testAsyncWrongPassword(const std::string& name, const char* host, unsigned short
    check((what + "the allocation is refused").c_str(), handler.mAllocated == -1);
 }
 
+// Collects what an async client used as a plain socket - no allocation - passes on
+class BareHandler : public TurnAsyncSocketHandler
+{
+public:
+   std::atomic<bool> mConnected{false};
+   std::mutex mMutex;
+   std::vector<std::string> mReceived;
+
+   void onConnectSuccess(unsigned int, const asio::ip::address&, unsigned short) override { mConnected = true; }
+   void onConnectFailure(unsigned int, const asio::error_code&) override {}
+   void onSharedSecretSuccess(unsigned int, const char*, unsigned int, const char*, unsigned int) override {}
+   void onSharedSecretFailure(unsigned int, const asio::error_code&) override {}
+   void onBindSuccess(unsigned int, const StunTuple&, const StunTuple&) override {}
+   void onBindFailure(unsigned int, const asio::error_code&, const StunTuple&) override {}
+   void onAllocationSuccess(unsigned int, const StunTuple&, const StunTuple&, unsigned int, unsigned int, uint64_t) override {}
+   void onAllocationFailure(unsigned int, const asio::error_code&) override {}
+   void onRefreshSuccess(unsigned int, unsigned int) override {}
+   void onRefreshFailure(unsigned int, const asio::error_code&) override {}
+   void onSetActiveDestinationSuccess(unsigned int) override {}
+   void onSetActiveDestinationFailure(unsigned int, const asio::error_code&) override {}
+   void onClearActiveDestinationSuccess(unsigned int) override {}
+   void onClearActiveDestinationFailure(unsigned int, const asio::error_code&) override {}
+   void onChannelBindRequestSent(unsigned int, unsigned short) override {}
+   void onChannelBindSuccess(unsigned int, unsigned short) override {}
+   void onChannelBindFailure(unsigned int, const asio::error_code&) override {}
+   void onReceiveSuccess(unsigned int, const asio::ip::address&, unsigned short, const std::shared_ptr<DataBuffer>& data) override
+   {
+      std::lock_guard<std::mutex> lock(mMutex);
+      mReceived.push_back(std::string(data->data(), data->size()));
+   }
+   void onReceiveFailure(unsigned int, const asio::error_code&) override {}
+   void onSendSuccess(unsigned int) override {}
+   void onSendFailure(unsigned int, const asio::error_code&) override {}
+   void onIncomingBindRequestProcessed(unsigned int, const StunTuple&) override {}
+};
+
+// An async client without an allocation is a plain socket (as reflow's flows use it without TURN):
+// whatever a peer sends it is passed on as it is - by its first byte (RFC 7983), something that
+// isn't valid STUN (0-3), DTLS (20-63), what would be TURN ChannelData with an allocation
+// (64-127), RTP (128-191), and the rest
+static void
+testAsyncPlainSocket()
+{
+   asio::io_context io;
+   BareHandler handler;
+   Peer peer;
+   std::shared_ptr<TurnAsyncSocket> socket(std::make_shared<TurnAsyncUdpSocket>(io, &handler, localhost, 0));
+   socket->connect("127.0.0.1", peer.port());
+   const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+   while (!handler.mConnected && std::chrono::steady_clock::now() < deadline)
+   {
+      io.run_for(std::chrono::milliseconds(10));
+   }
+
+   // The peer learns the client's address from what it sends
+   const std::string hello = "hello";
+   socket->send(hello.data(), hello.size());
+   asio::ip::udp::endpoint client;
+   std::string received;
+   for (int i = 0; i < 200 && received.empty(); ++i)
+   {
+      io.run_for(std::chrono::milliseconds(10));
+      received = peer.receive(client, std::chrono::milliseconds(0));
+   }
+   check("async plain socket: sends to the peer as it is, without TURN framing", received == hello);
+
+   std::vector<std::string> sent;
+   for (unsigned char firstByte : { 0x00, 0x02, 0x10, 0x16, 0x3F, 0x40, 0x7F, 0x80, 0xBF, 0xC0, 0xFF })
+   {
+      sent.push_back(std::string(1, (char)firstByte) + " plain socket data");
+      peer.sendTo(sent.back(), client);
+   }
+   for (int i = 0; i < 300; ++i)
+   {
+      io.run_for(std::chrono::milliseconds(10));
+      std::lock_guard<std::mutex> lock(handler.mMutex);
+      if (handler.mReceived.size() >= sent.size()) break;
+   }
+   {
+      std::lock_guard<std::mutex> lock(handler.mMutex);
+      check("async plain socket: whatever the peer sends is passed on as it is, whatever its first byte",
+            handler.mReceived == sent);
+   }
+
+   socket->disableTurnAsyncHandler();
+   socket->close();
+   socket.reset();
+   io.run_for(std::chrono::milliseconds(100));
+}
+
 static void
 testUdpAndTcp()
 {
    cerr << "-- UDP" << endl;
+   testAsyncPlainSocket();
    {
       TurnUdpSocket client(localhost, 0);
       testSyncClient("UDP", client, "127.0.0.1", turnPort);
@@ -809,10 +929,9 @@ main(int argc, char** argv)
            writeConfig(noTls12Config, noTls12TurnPort, noTls12TlsPort,
                        "OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2, SSL_OP_NO_SSLv3, SSL_OP_NO_COMPRESSION, SSL_OP_NO_TLSv1_2\n") &&
            writeConfig(idleConfig, idleTurnPort, idleTlsPort,
-                       "TcpConnectionIdleTimeout = 1\nAllocationPortRangeMin = 60000\nAllocationPortRangeMax = 60999\n") &&
+                       "TcpConnectionIdleTimeout = 1\n") &&
            writeConfig(limitsConfig, limitsTurnPort, limitsTlsPort,
-                       "TcpConnectionIdleTimeout = 0\nMaxTcpConnectionsPerIp = 4\nMaxAllocationsPerUser = 2\n"
-                       "AllocationPortRangeMin = 61000\nAllocationPortRangeMax = 61999\n");
+                       "TcpConnectionIdleTimeout = 0\nMaxTcpConnectionsPerIp = 4\nMaxAllocationsPerUser = 2\n");
    check("certificates, users and config files written", ready);
 
    if (ready)

@@ -47,6 +47,11 @@ public:
 
    static int maxReceiveFifoDuration;
    static int maxReceiveFifoSize;
+   /// Seconds after which a server DTLS handshake still in progress gives up its place, when a
+   /// flow already has as many DTLS associations as it allows, to a new peer that has completed
+   /// the cookie exchange: a real handshake takes a few round trips; one that hasn't finished by
+   /// then has stalled (eg. to hold the place)
+   static int dtlsHandshakeEvictionGrace;
 
    enum FlowState
    {

@@ -33,6 +33,7 @@ using namespace std;
 
 int Flow::maxReceiveFifoDuration = 10; // seconds
 int Flow::maxReceiveFifoSize = 100 * maxReceiveFifoDuration; // 1000 = 1 message every 10 ms for 10 seconds - appropriate for RTP
+int Flow::dtlsHandshakeEvictionGrace = 5; // seconds
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
@@ -956,6 +957,7 @@ Flow::acceptDtlsSocketServer(const StunTuple& endpoint, const unsigned char* dat
       return 0;
    }
 
+   std::map<reTurn::StunTuple, dtls::DtlsSocket*>::iterator evict = mDtlsSockets.end();
    if(mDtlsSockets.size() >= MaxDtlsSockets)
    {
       // Make room by dropping the sockets that will never carry media: those whose handshake
@@ -981,12 +983,28 @@ Flow::acceptDtlsSocketServer(const StunTuple& endpoint, const unsigned char* dat
       }
       if(mDtlsSockets.size() >= MaxDtlsSockets)
       {
-         if(!mDtlsSocketLimitLogged)
+         // Still full: the oldest server handshake that has been in progress for longer than a
+         // real one takes (dtlsHandshakeEvictionGrace) - stalled, perhaps to hold its place - makes
+         // way, once the new endpoint has completed the cookie exchange
+         for(std::map<reTurn::StunTuple, dtls::DtlsSocket*>::iterator it = mDtlsSockets.begin(); it != mDtlsSockets.end(); ++it)
          {
-            WarningLog(LOG_PREFIX << "Already " << mDtlsSockets.size() << " DTLS sockets, ignoring DTLS from new endpoints, eg. " << endpoint);
-            mDtlsSocketLimitLogged = true;
+            dtls::DtlsSocket* socket = it->second;
+            if(socket->getSocketType() == DtlsSocket::Server && !socket->handshakeCompleted() && !socket->handshakeFailed() &&
+               socket->getAge() > std::chrono::seconds(dtlsHandshakeEvictionGrace) &&
+               (evict == mDtlsSockets.end() || socket->getAge() > evict->second->getAge()))
+            {
+               evict = it;
+            }
          }
-         return 0;
+         if(evict == mDtlsSockets.end())
+         {
+            if(!mDtlsSocketLimitLogged)
+            {
+               WarningLog(LOG_PREFIX << "Already " << mDtlsSockets.size() << " DTLS sockets, ignoring DTLS from new endpoints, eg. " << endpoint);
+               mDtlsSocketLimitLogged = true;
+            }
+            return 0;
+         }
       }
    }
 
@@ -1011,6 +1029,13 @@ Flow::acceptDtlsSocketServer(const StunTuple& endpoint, const unsigned char* dat
    }
    if(dtlsSocket)
    {
+      if(evict != mDtlsSockets.end())
+      {
+         WarningLog(LOG_PREFIX << "Dropping the DTLS socket for " << evict->first << ", whose handshake has been in progress for "
+                    << std::chrono::duration_cast<std::chrono::seconds>(evict->second->getAge()).count() << " seconds, to make room for " << endpoint);
+         delete evict->second;
+         mDtlsSockets.erase(evict);
+      }
       InfoLog(LOG_PREFIX << "Created DTLS Server socket for " << endpoint);
       mDtlsSockets[endpoint] = dtlsSocket;
    }

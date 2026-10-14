@@ -47,16 +47,40 @@ check(const char* what, bool cond)
    if (!cond) ++failures;
 }
 
+static void
+check(const std::string& what, bool cond)
+{
+   check(what.c_str(), cond);
+}
+
 typedef std::vector<unsigned char> Datagram;
 
 class PipeContext : public DtlsSocketContext
 {
 public:
-   void write(const unsigned char* data, unsigned int len) override { mOut.push_back(Datagram(data, data + len)); }
+   void write(const unsigned char* data, unsigned int len) override
+   {
+      mOut.push_back(Datagram(data, data + len));
+      mLargest = std::max(mLargest, (size_t)len);
+      mWritten += len;
+      ++mDatagrams;
+      // The DTLS records in it: a 13 byte header, its last 2 bytes the record's length
+      for (size_t pos = 0; pos + 13 <= len; )
+      {
+         const size_t recordLen = 13 + ((size_t)data[pos + 11] << 8 | data[pos + 12]);
+         mLargestRecord = std::max(mLargestRecord, recordLen);
+         pos += recordLen;
+      }
+   }
    void handshakeCompleted() override { mCompleted = true; }
    void handshakeFailed(const char*) override { mFailed = true; }
 
    std::deque<Datagram> mOut;
+   // Of every datagram written
+   size_t mLargest = 0;
+   size_t mWritten = 0;
+   size_t mDatagrams = 0;
+   size_t mLargestRecord = 0;
    bool mCompleted = false;
    bool mFailed = false;
 };
@@ -591,49 +615,102 @@ main(int, char**)
          firing.join();
          check("timer lock: the timer runs once the owner releases it", fired);
       }
-   }
 
-   // M. FlowManager's timers are freed once they have fired, and its destructor cancels the
-   //    ones still pending on its io thread, rather than waiting for them to fire (OpenSSL backs
-   //    off to 60 seconds), and frees them too
-   {
-      struct CountedTimer : public DtlsTimer
+      // M. FlowManager's timers are freed once they have fired, and its destructor cancels the
+      //    ones still pending on its io thread, rather than waiting for them to fire (OpenSSL backs
+      //    off to 60 seconds), and frees them too
       {
-         CountedTimer() : DtlsTimer(0) { ++live(); }
-         ~CountedTimer() override { --live(); }
-         void expired() override { ++fired(); }
-         static std::atomic<int>& live() { static std::atomic<int> count(0); return count; }
-         static std::atomic<int>& fired() { static std::atomic<int> count(0); return count; }
-      };
-      std::chrono::steady_clock::time_point start;
-      {
-         flowmanager::FlowManager flowManager;
-         flowManager.initializeDtlsFactory("shutdown@example.com");
-         DtlsFactory* factory = flowManager.getDtlsFactory();
-         check("shutdown: FlowManager's DTLS factory was created", factory != nullptr);
-         if (factory)
+         struct CountedTimer : public DtlsTimer
          {
-            factory->getTimerContext().addTimer(std::make_shared<CountedTimer>(), 50);
-            for (int i = 0; i < 100 && CountedTimer::fired() == 0; ++i)
+            CountedTimer() : DtlsTimer(0) { ++live(); }
+            ~CountedTimer() override { --live(); }
+            void expired() override { ++fired(); }
+            static std::atomic<int>& live() { static std::atomic<int> count(0); return count; }
+            static std::atomic<int>& fired() { static std::atomic<int> count(0); return count; }
+         };
+         std::chrono::steady_clock::time_point start;
+         {
+            flowmanager::FlowManager flowManager;
+            flowManager.initializeDtlsFactory("shutdown@example.com");
+            DtlsFactory* factory = flowManager.getDtlsFactory();
+            check("shutdown: FlowManager's DTLS factory was created", factory != nullptr);
+            if (factory)
             {
-               std::this_thread::sleep_for(std::chrono::milliseconds(20));
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            check("timers: a timer fires on FlowManager's io thread, and is freed then",
+               factory->getTimerContext().addTimer(std::make_shared<CountedTimer>(), 50);
+               for (int i = 0; i < 100 && CountedTimer::fired() == 0; ++i)
+               {
+                  std::this_thread::sleep_for(std::chrono::milliseconds(20));
+               }
+               std::this_thread::sleep_for(std::chrono::milliseconds(50));
+               check("timers: a timer fires on FlowManager's io thread, and is freed then",
                   CountedTimer::fired() == 1 && CountedTimer::live() == 0);
 
-            // A socket destroyed mid-handshake leaves its retransmission timer pending
-            std::unique_ptr<DtlsSocket> client(factory->createClient(std::unique_ptr<DtlsSocketContext>(new PipeContext)));
-            client->startClient();
-            client.reset();
-            factory->getTimerContext().addTimer(std::make_shared<CountedTimer>(), 3000);
+               // A socket destroyed mid-handshake leaves its retransmission timer pending
+               std::unique_ptr<DtlsSocket> client(factory->createClient(std::unique_ptr<DtlsSocketContext>(new PipeContext)));
+               client->startClient();
+               client.reset();
+               factory->getTimerContext().addTimer(std::make_shared<CountedTimer>(), 3000);
+            }
+            start = std::chrono::steady_clock::now();
          }
-         start = std::chrono::steady_clock::now();
-      }
-      const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-      check("shutdown: FlowManager's destructor doesn't wait for the pending DTLS timers", seconds < 0.5);
-      check("shutdown: the pending timers are freed without firing",
+         const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+         check("shutdown: FlowManager's destructor doesn't wait for the pending DTLS timers", seconds < 0.5);
+         check("shutdown: the pending timers are freed without firing",
             CountedTimer::live() == 0 && CountedTimer::fired() == 1);
+      }
+
+      // N. Datagrams are no larger than the factory's MTU (1200 bytes by default), so a flight -
+      //    the server's first carries its certificate - doesn't depend on IP fragmentation
+      for (unsigned int mtu : { DtlsFactory::DefaultMtu, 600u })
+      {
+         DtlsFactory mtuClientFactory(std::unique_ptr<DtlsTimerContext>(new CollectingTimerContext), clientCert, clientKey);
+         DtlsFactory mtuServerFactory(std::unique_ptr<DtlsTimerContext>(new CollectingTimerContext), serverCert, serverKey);
+         mtuClientFactory.setMtu(mtu);
+         mtuServerFactory.setMtu(mtu);
+         Pair pair(mtuClientFactory, mtuServerFactory);
+         pair.run();
+         const std::string what = "mtu " + std::to_string(mtu) + ": ";
+         check(what + "the handshake completes", pair.completed());
+         check(what + "no datagram is larger than the MTU",
+               pair.mClientContext->mLargest <= mtu && pair.mServerContext->mLargest <= mtu);
+         check(what + "the server's flights, larger than the MTU, are split into several datagrams",
+               pair.mServerContext->mWritten > mtu && pair.mServerContext->mDatagrams > 1);
+         // Without the MTU set, OpenSSL can't learn it from a memory BIO, and cuts its records to
+         // its minimum (256 bytes, less overhead)
+         check(what + "OpenSSL's records are sized to the MTU, not its minimum",
+               pair.mServerContext->mLargestRecord > 256 && pair.mServerContext->mLargestRecord <= mtu);
+         int tagLength = 0;
+         check(what + "SRTP works", srtpRoundTrip(*pair.mClient, *pair.mServer, tagLength));
+      }
+
+      // O. A server handshake not completed within the factory's server handshake timeout fails
+      //    (rather than retransmitting for several minutes); a client's isn't limited by it
+      {
+         ManualTimerContext* clientTimers = new ManualTimerContext;
+         ManualTimerContext* serverTimers = new ManualTimerContext;
+         DtlsFactory timedClientFactory(std::unique_ptr<DtlsTimerContext>(clientTimers), clientCert, clientKey);
+         DtlsFactory timedServerFactory(std::unique_ptr<DtlsTimerContext>(serverTimers), serverCert, serverKey);
+         timedClientFactory.setServerHandshakeTimeout(1);
+         timedServerFactory.setServerHandshakeTimeout(1);
+         Pair pair(timedClientFactory, timedServerFactory);
+         pair.mClient->startClient();
+         // The server gets the ClientHello, but its answer is lost, and the client goes quiet
+         Datagram hello = pair.mClientContext->mOut.front();
+         pair.mClientContext->mOut.clear();
+         pair.mServer->handlePacketMaybe(hello.data(), hello.size());
+         pair.mServerContext->mOut.clear();
+         check("server timeout: the server's retransmission timer is set, for no later than its time is up",
+               serverTimers->mTimers.size() == 1 && serverTimers->mLastWaitMs <= 1001);
+
+         std::this_thread::sleep_for(std::chrono::milliseconds(1100));
+         serverTimers->fireAll();
+         check("server timeout: once its time is up, the server's handshake fails", pair.mServerContext->mFailed);
+         check("server timeout: and it stops retransmitting", pair.mServerContext->mOut.empty() && serverTimers->mTimers.empty());
+
+         clientTimers->fireAll();
+         check("server timeout: the client, though as old, retransmits rather than failing",
+               !pair.mClientContext->mFailed && pair.mClientContext->mOut.size() == 1 && clientTimers->mTimers.size() == 1);
+      }
    }
 
    X509_free(clientCert);

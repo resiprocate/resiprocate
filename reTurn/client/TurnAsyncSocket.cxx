@@ -470,80 +470,77 @@ void
 TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    RecursiveLock lock(mHandlerMutex);
-   if(data->size() > 4)
-   {
-      // Stun Message has first two bits as 00 
-      if((((*data)[0]) & 0xC0) == 0)
-      {
-         StunMessage* stunMsg = new StunMessage(mLocalBinding, 
-                                                //StunTuple(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort()), 
-                                                StunTuple(mLocalBinding.getTransportType(), address, port), 
-                                                &(*data)[0], (unsigned int)data->size());
-         if(stunMsg->isValid())
-         {
-            handleStunMessage(*stunMsg);
-            delete stunMsg;
-            return;
-         }
-         delete stunMsg;
-
-         // Not a stun message so assume normal data
-         RecursiveLock lock(mHandlerMutex);
-         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(),
-                                                      address, 
-                                                      port, 
-                                                      data);
-      }
-      else if(mHaveAllocation) // If we have an allocation then this is a Turn Channel Data Message
-      {
-         // Get Channel number
-         unsigned short channelNumber;
-         memcpy(&channelNumber, &(*data)[0], 2);
-         channelNumber = ntohs(channelNumber);
-
-         if(mLocalBinding.getTransportType() == StunTuple::UDP)
-         {
-            // Check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
-            unsigned short dataLen;
-            memcpy(&dataLen, &(*data)[2], 2);
-            dataLen = ntohs(dataLen);
-
-            if(data->size() < (unsigned int)dataLen+4)
-            {
-               WarningLog(<< "ChannelData message size=" << dataLen+4 << " too large for UDP packet size=" << data->size() <<".  Dropping.");
-               return;
-            }
-         }
-
-         RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
-         if(remotePeer)
-         {
-            data->offset(4);  // move buffer start past framing for callback
-            RecursiveLock lock(mHandlerMutex);
-            if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(),
-                                                      remotePeer->getPeerTuple().getAddress(), 
-                                                      remotePeer->getPeerTuple().getPort(), 
-                                                      data);
-         }
-         else
-         {
-            WarningLog(<< "TurnAsyncSocket::handleReceivedData: receive channel data for non-existing channel - discarding!");
-         }
-      }
-      else
-      {
-         RecursiveLock lock(mHandlerMutex);
-         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(),
-                                                   address, 
-                                                   port, 
-                                                   data);
-      }
-   }
-   else  // size <= 4
+   if(data->size() <= 4)
    {
       WarningLog(<< "TurnAsyncSocket::handleReceivedData: not enough data received (" << data->size() << " bytes) for stun or channel data message - discarding!");
-      RecursiveLock lock(mHandlerMutex);
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), asio::error_code(reTurn::FrameError, asio::error::misc_category));
+      return;
+   }
+
+   // What a packet is, by its first byte (RFC 7983): 0-3 STUN, 64-127 TURN ChannelData (channel
+   // numbers 0x4000-0x7FFF), and the rest the application's data - eg. DTLS (20-63), RTP (128-191)
+   const unsigned char firstByte = (*data)[0];
+   if(firstByte <= 3)
+   {
+      StunMessage stunMsg(mLocalBinding,
+                          StunTuple(mLocalBinding.getTransportType(), address, port),
+                          &(*data)[0], (unsigned int)data->size());
+      if(stunMsg.isValid())
+      {
+         handleStunMessage(stunMsg);
+         return;
+      }
+   }
+   else if(mHaveAllocation && (firstByte & 0xC0) == 0x40)
+   {
+      handleChannelData(data);
+      return;
+   }
+
+   if(mHaveAllocation)
+   {
+      // Everything the TURN server sends is STUN or ChannelData: peers' data comes through it
+      DebugLog(<< "TurnAsyncSocket::handleReceivedData: neither STUN nor channel data received from " << address.to_string() << ":" << port << " while allocated - discarding");
+      return;
+   }
+
+   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(), address, port, data);
+}
+
+void
+TurnAsyncSocket::handleChannelData(const std::shared_ptr<DataBuffer>& data)
+{
+   // Get Channel number
+   unsigned short channelNumber;
+   memcpy(&channelNumber, &(*data)[0], 2);
+   channelNumber = ntohs(channelNumber);
+
+   if(mLocalBinding.getTransportType() == StunTuple::UDP)
+   {
+      // Check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
+      unsigned short dataLen;
+      memcpy(&dataLen, &(*data)[2], 2);
+      dataLen = ntohs(dataLen);
+
+      if(data->size() < (unsigned int)dataLen+4)
+      {
+         WarningLog(<< "ChannelData message size=" << dataLen+4 << " too large for UDP packet size=" << data->size() <<".  Dropping.");
+         return;
+      }
+   }
+
+   RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
+   if(remotePeer)
+   {
+      data->offset(4);  // move buffer start past framing for callback
+      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(),
+                                                   remotePeer->getPeerTuple().getAddress(),
+                                                   remotePeer->getPeerTuple().getPort(),
+                                                   data);
+   }
+   else
+   {
+      WarningLog(<< "TurnAsyncSocket::handleReceivedData: receive channel data for non-existing channel - discarding!");
    }
 }
 
@@ -1497,7 +1494,7 @@ TurnAsyncSocket::setOnBeforeSocketClosedFp(AsyncSocketBase::BeforeClosedHandler 
 
 /* ====================================================================
 
- Copyright (c) 2023-2024, SIP Specturm, Inc. http://sipspectrum.com
+ Copyright (c) 2023-2026, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

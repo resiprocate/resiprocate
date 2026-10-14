@@ -60,6 +60,20 @@ class DtlsFactory
      // Changes the default DTLS Cipher Suites supported
      void setCipherSuites(const char *cipherSuites);
 
+     // The largest UDP payload DTLS sends, for sockets created from now on: OpenSSL fits its
+     // records to it, and they're sent in datagrams no larger, so a handshake flight doesn't
+     // depend on IP fragmentation.  The default, 1200, leaves room for IPv6 and TURN framing.
+     static const unsigned int DefaultMtu = 1200;
+     void setMtu(unsigned int mtu) { mMtu = mtu; }
+     unsigned int getMtu() const { return mMtu; }
+
+     // Seconds a server socket's handshake may take, from its creation, before it fails - rather
+     // than when OpenSSL stops retransmitting (after several minutes), so a peer that starts a handshake
+     // and goes quiet doesn't hold the socket that long.  0 leaves it to OpenSSL.  Client sockets,
+     // which we start towards the peer the SDP names, are left to OpenSSL.
+     static const unsigned int DefaultServerHandshakeTimeout = 30;
+     void setServerHandshakeTimeout(unsigned int seconds) { mServerHandshakeTimeout = seconds; }
+
      // Examines the first few bits of a packet to determine its type: rtp, dtls, stun or unknown
      static PacketType demuxPacket(const unsigned char *buf, size_t len);
      
@@ -79,6 +93,8 @@ private:
      std::unique_ptr<DtlsTimerContext> mTimerContext;
      X509 *mCert;
      unsigned char mCookieSecret[32];
+     unsigned int mMtu = DefaultMtu;
+     unsigned int mServerHandshakeTimeout = DefaultServerHandshakeTimeout;
 };
 
 }

@@ -638,22 +638,38 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
 
       if(readSize > 4)
       {
-         // Stun Message has first two bits as 00 
-         if((mReadBuffer[0] & 0xC0) == 0)
+         // What it is, by its first byte (RFC 7983): 0-3 STUN, 64-127 TURN ChannelData (channel
+         // numbers 0x4000-0x7FFF).  Everything the TURN server sends is one or the other - peers'
+         // data comes through it - so anything else (eg. sent straight to us) is skipped.
+         const unsigned char firstByte = (unsigned char)mReadBuffer[0];
+         if(firstByte <= 3)
          {
             // StunMessage
             StunMessage* stunMsg = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[0], readSize);
-            unsigned int tempsize = size;
-            errorCode = handleStunMessage(*stunMsg, buffer, tempsize, sourceAddress, sourcePort);
-            if(!errorCode && tempsize == 0)  // Signifies that a Stun/Turn request was received and there is nothing to return to receive caller
+            if(!stunMsg->isValid())
             {
+               DebugLog(<< "TurnSocket::receive: discarding a packet that isn't valid STUN");
                done = false;
             }
             else
             {
-               size = tempsize;
+               unsigned int tempsize = size;
+               errorCode = handleStunMessage(*stunMsg, buffer, tempsize, sourceAddress, sourcePort);
+               if(!errorCode && tempsize == 0)  // Signifies that a Stun/Turn request was received and there is nothing to return to receive caller
+               {
+                  done = false;
+               }
+               else
+               {
+                  size = tempsize;
+               }
             }
             delete stunMsg;
+         }
+         else if((firstByte & 0xC0) != 0x40)
+         {
+            DebugLog(<< "TurnSocket::receive: discarding a packet that is neither STUN nor channel data");
+            done = false;
          }
          else // Channel Data Message
          {
@@ -1009,8 +1025,15 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
 
       if(readsize > 4)
       {
-         // Stun Message has first two bits as 00 
-         if((mReadBuffer[0] & 0xC0) == 0)
+         // What it is, by its first byte (RFC 7983): 0-3 STUN, 64-127 TURN ChannelData (with an
+         // allocation).  Anything else isn't for us here (eg. sent straight to us): skip it.
+         const unsigned char firstByte = (unsigned char)mReadBuffer[0];
+         if(firstByte > 3 && !(mHaveAllocation && (firstByte & 0xC0) == 0x40))
+         {
+            DebugLog(<< "TurnSocket: discarding a packet that is neither STUN nor channel data, while waiting for a response");
+            continue;  // read next message
+         }
+         if(firstByte <= 3)
          {
             StunMessage* response = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[0], readsize);
 

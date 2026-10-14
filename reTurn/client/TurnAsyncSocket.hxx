@@ -114,6 +114,7 @@ public:
 protected:
 
    void handleReceivedData(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
+   void handleChannelData(const std::shared_ptr<DataBuffer>& data);
 
    asio::io_context& mIOService;
    TurnAsyncSocketHandler* mTurnAsyncSocketHandler;
@@ -269,7 +270,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2023-2024, SIP Specturm, Inc. http://sipspectrum.com
+ Copyright (c) 2023-2026, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
