@@ -61,14 +61,14 @@ public:
    void write(const unsigned char* data, unsigned int len) override
    {
       mOut.push_back(Datagram(data, data + len));
-      mLargest = std::max(mLargest, (size_t)len);
+      mLargest = (std::max)(mLargest, (size_t)len);
       mWritten += len;
       ++mDatagrams;
       // The DTLS records in it: a 13 byte header, its last 2 bytes the record's length
       for (size_t pos = 0; pos + 13 <= len; )
       {
          const size_t recordLen = 13 + ((size_t)data[pos + 11] << 8 | data[pos + 12]);
-         mLargestRecord = std::max(mLargestRecord, recordLen);
+         mLargestRecord = (std::max)(mLargestRecord, recordLen);
          pos += recordLen;
       }
    }

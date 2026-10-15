@@ -255,7 +255,7 @@ DtlsSocket::serverHandshakeTimeLeft() const
 {
    if(mSocketType != Server || mFactory->mServerHandshakeTimeout == 0)
    {
-      return std::chrono::steady_clock::duration::max();
+      return (std::chrono::steady_clock::duration::max)();  // (parenthesized: Windows' max macro)
    }
    return std::chrono::seconds(mFactory->mServerHandshakeTimeout) - getAge();
 }
@@ -278,7 +278,7 @@ DtlsSocket::scheduleTimer()
       unsigned int waitMs = (unsigned int)tv.tv_sec * 1000 + ((unsigned int)tv.tv_usec + 999) / 1000;
       // A server socket's handshake fails when its time is up, if that's sooner
       const std::chrono::steady_clock::duration timeLeft = serverHandshakeTimeLeft();
-      if(timeLeft != std::chrono::steady_clock::duration::max())
+      if(timeLeft != (std::chrono::steady_clock::duration::max)())
       {
          const long long timeLeftMs = std::chrono::duration_cast<std::chrono::milliseconds>(timeLeft).count() + 1;
          if(timeLeftMs < (long long)waitMs)
