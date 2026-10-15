@@ -33,7 +33,11 @@
 #include <resip/dum/KeepAliveManager.hxx>
 #include <resip/dum/AppDialogSet.hxx>
 #if defined(USE_SSL)
+#ifdef WIN32
+#include <resip/stack/ssl/WinSecurity.hxx>
+#else
 #include <resip/stack/ssl/Security.hxx>
+#endif
 #endif
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Random.hxx>
@@ -53,7 +57,11 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mConversationManager(conversationManager),
    mProfile(profile),
 #if defined(USE_SSL)
+#ifdef WIN32
+   mSecurity(new WinSecurity(mProfile->certPath())),
+#else
    mSecurity(new Security(mProfile->certPath())),
+#endif
 #else
    mSecurity(0),
 #endif
@@ -869,7 +877,7 @@ UserAgent::onFailure(ClientPublicationHandle h, const SipMessage& status)
 
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2016, SIP Spectrum, Inc.
+ Copyright (c) 2016-2026, SIP Spectrum, Inc. https://www.sipspectrum.com
 
  All rights reserved.
 
