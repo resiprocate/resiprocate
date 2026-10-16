@@ -159,7 +159,7 @@ public:
       {
          if (!d.empty() && d[0] >= 20 && d[0] <= 63)
          {
-            largest = std::max(largest, d.size());
+            largest = (std::max)(largest, d.size());
          }
       }
       return largest;

@@ -88,12 +88,41 @@ signalHandler(int signo)
    finished = true;
 }
 
+class TestUASipMessageLoggingHandler : public Transport::SipMessageLoggingHandler
+{
+public:
+   virtual ~TestUASipMessageLoggingHandler() {}
+   virtual void outboundMessage(const Tuple& source, const Tuple& destination, const SipMessage& msg)
+   {
+      InfoLog(<< "\r\n*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*\r\n"
+         << "OUTBOUND: Src=" << source << ", Dst=" << destination << "\r\n\r\n"
+         << msg
+         << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
+   }
+   virtual void outboundRetransmit(const Tuple& source, const Tuple& destination, const SendData& data)
+   {
+      InfoLog(<< "\r\n*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*\r\n"
+         << "OUTBOUND(retransmit): Src=" << source << ", Dst=" << destination << "\r\n\r\n"
+         << data.data
+         << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
+   }
+   virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage& msg)
+   {
+      InfoLog(<< "\r\n*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*\r\n"
+         << "INBOUND: Src=" << source << ", Dst=" << destination << "\r\n\r\n"
+         << msg
+         << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
+   }
+};
+
 class MyUserAgent : public UserAgent
 {
 public:
    MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
       UserAgent(conversationManager, profile) {}
-    
+   
+   resip::SipStack& getSipStack() { return UserAgent::getSipStack(); };
+
    void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override
    {
       InfoLog(LOG_PREFIX << "onApplicationTimeout: id=" << id
@@ -1162,7 +1191,7 @@ main (int argc, char** argv)
    unsigned short sipPort = 0;
    unsigned short tlsPort = 0;
    unsigned short mediaPortStart = 17384;
-   Data tlsDomain = DnsUtil::getLocalHostName();
+   Data tlsDomain;
    NameAddr outboundProxy;
    Data logLevel("INFO");
    std::vector<unsigned int> codecIds = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */,
@@ -1624,6 +1653,8 @@ main (int argc, char** argv)
       SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(myConversationManager.getMediaStackAdapter());
       mediaStackAdapter.buildSessionCapabilities(address, codecIds, g_conversationProfile->sessionCaps());
 
+      ua.getSipStack().addTransportSipMessageLoggingHandler(std::make_shared<TestUASipMessageLoggingHandler>());
+
       // Generate InstanceId appropriate for testing only.  Should be UUID that persists 
       // across machine re-starts and is unique to this application instance.  The one used 
       // here is only as unique as the hostname and the actual SIP listening port.  If someone runs two 
@@ -1690,7 +1721,7 @@ main (int argc, char** argv)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021-2026, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
