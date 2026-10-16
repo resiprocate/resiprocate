@@ -51,7 +51,9 @@ static const int WaitForPause = 1100;
 static const int WaitForEndOfTest = 100;
 static const int WaitForEndOfSeq = 100;
 static const int Seconds = 1000;
-// How late after its nominal Timer A/E interval a retransmission may arrive.
+// How late after its nominal interval a retransmission may arrive: the doubling
+// T1 interval of Timers A and E, or of Timer G for a response, capped at T2
+// for all but Timer A.
 // The proxy's timers and TFM's event handling both add delay, more so on a
 // loaded CI machine.  This was 100 ms, which retransmissions measurably
 // overran on Windows CI.  Keep it below T1, the shortest retransmission
@@ -3963,17 +3965,17 @@ class TestHolder : public ReproFixture
       (
          derek->invite(*jason),
          optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         derek->expect(INVITE/407,from(proxy),600,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),1100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),2100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T1+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),2*resip::Timer::T1+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),4*resip::Timer::T1+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
          WaitForEndOfTest
       );
       
@@ -4048,13 +4050,13 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               jason->expect(INVITE,contact(derek),600,jason->noAction()), // <- original
-               jason->expect(INVITE,contact(derek),600,jason->noAction()), // <- first retransmission
-               jason->expect(INVITE,contact(derek),1100,jason->noAction()),
-               jason->expect(INVITE,contact(derek),2100,jason->noAction()),
-               jason->expect(INVITE,contact(derek),4100,jason->noAction()),
-               jason->expect(INVITE,contact(derek),8100,jason->noAction()),
-               optional(jason->expect(INVITE,contact(derek),16100,jason->noAction())), // <- might get sent, depending on timing
+               jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()), // <- original
+               jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()), // <- first retransmission
+               jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction())), // <- might get sent, depending on timing
                derek->expect(INVITE/408,from(proxy),21000,derek->ack())
             )
          ),
@@ -7775,14 +7777,14 @@ class TestHolder : public ReproFixture
                jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction()))
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()))
             )
          ),
          WaitForEndOfTest
@@ -7813,14 +7815,14 @@ class TestHolder : public ReproFixture
                jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction()))
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()))
             )
          ),
          WaitForEndOfTest
@@ -7851,14 +7853,14 @@ class TestHolder : public ReproFixture
                jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction()))
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()))
             )
          ),
          WaitForEndOfTest
@@ -7881,14 +7883,14 @@ class TestHolder : public ReproFixture
          jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction())),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction())),
          WaitForEndOfTest
       );
       ExecuteSequences();
@@ -7909,14 +7911,14 @@ class TestHolder : public ReproFixture
          jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction())),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction())),
          WaitForEndOfTest
       );
       ExecuteSequences();
@@ -7937,14 +7939,14 @@ class TestHolder : public ReproFixture
          jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction())),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction())),
          WaitForEndOfTest
       );
       ExecuteSequences();
@@ -7965,14 +7967,14 @@ class TestHolder : public ReproFixture
          jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction())),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction())),
          WaitForEndOfTest
       );
       ExecuteSequences();
@@ -8753,14 +8755,14 @@ class TestHolder : public ReproFixture
          jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction())),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction())),
          WaitForEndOfTest
       );
       ExecuteSequences();

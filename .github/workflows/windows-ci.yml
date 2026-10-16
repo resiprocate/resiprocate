@@ -45,3 +45,16 @@ jobs:
           --test-dir ${{ github.workspace }}/_build
           --build-config Debug
           --output-on-failure
+
+      # The TFM suites log in detail to resiprocate.log in their working
+      # directories (the source tree, under ctest).  Keep those logs when a run
+      # fails, since a timing failure may not reproduce anywhere else.
+      - name: "Upload TFM logs"
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfm-logs-windows
+          path: |
+            ${{ github.workspace }}/tfm/repro/resiprocate.log
+            ${{ github.workspace }}/tfm/tfdum/resiprocate.log
+          if-no-files-found: ignore
