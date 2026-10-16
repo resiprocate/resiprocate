@@ -19,8 +19,8 @@ typedef enum
 typedef enum 
 { 
    NoSSL = 0,
-   SSLv23 = 1, 
-   TLSv1 = 2 
+   SSLv23 = 1,  // dynamic version negotiation - negotiates the highest version both ends support
+   TLSv1 = 2    // pinned to TLSv1
 } SSLType;
 
 typedef enum

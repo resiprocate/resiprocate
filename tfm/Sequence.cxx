@@ -336,10 +336,13 @@ void SequenceClass::cancelTimeout()
       InfoLog(<< "SequenceClass::cancelTimeout(" << mTimerId << ") " << this);
       if(!getSequenceSet()->mEventFifo.cancel(mTimerId))
       {
-         // Race condition; it is likely that the timer is sitting, unprocessed, 
-         // in our message queue, right as we satisfy the expect that the timer
-         // was waiting for. It would be nice to figure out a way to fix this.
-         resip_assert(0);
+         // The timer has already fired: its timeout event is queued behind
+         // the event that just satisfied the expect it was guarding.  The
+         // expect won, so that timeout is stale.  Disarming below makes
+         // isCurrentTimeout() false for it, and SequenceSet drops it instead
+         // of failing the test on whatever expect is current by then.
+         InfoLog(<< "SequenceClass::cancelTimeout(" << mTimerId
+                 << ") timer already fired; its timeout event will be ignored");
       }
       mTimerId = -7;
    }
@@ -357,20 +360,31 @@ void SequenceClass::scheduleTimeout()
    else
    {
       TestEndPoint::ExpectBase* f = mExpects.front();
+      ++mTimeoutGeneration;
       if (f->isOptional())
       {
-         mTimerId = getSequenceSet()->enqueue(std::make_shared<OptionalTimeoutEvent>(*this, f), 
-                                              f->getTimeout());
+         mTimerId = getSequenceSet()->enqueue(
+            std::make_shared<OptionalTimeoutEvent>(*this, f, mTimeoutGeneration),
+            f->getTimeout());
          InfoLog(<< "SequenceClass::scheduleTimeout(" << mTimerId << ") optional");
       }
       else
       {
-         mTimerId = getSequenceSet()->enqueue(std::make_shared<TimeoutEvent>(*this), 
-                                              f->getTimeout());
+         mTimerId = getSequenceSet()->enqueue(
+            std::make_shared<TimeoutEvent>(*this, mTimeoutGeneration),
+            f->getTimeout());
          InfoLog(<< "SequenceClass::scheduleTimeout(" << mTimerId << ") for " << *f << " with timeout "<< f->getTimeout());
       }
    }
-}   
+}
+
+bool
+SequenceClass::isCurrentTimeout(unsigned int generation) const
+{
+   // Disarmed (cancelled, or an optional timeout already consumed), or
+   // re-armed since: either way the event is not for the timeout now armed.
+   return mTimerId != -7 && generation == mTimeoutGeneration;
+}
 
 // execute the starting Action
 // (called only from Execute)
@@ -519,9 +533,10 @@ SequenceClass::displaceRight(const Box& box)
    return mBox;
 }
 
-TimeoutEvent::TimeoutEvent(SequenceClass& sequence)
+TimeoutEvent::TimeoutEvent(SequenceClass& sequence, unsigned int generation)
    : Event(0),
-     mSequence(sequence)
+     mSequence(sequence),
+     mGeneration(generation)
 {
 }
 
@@ -533,6 +548,12 @@ SequenceClass&
 TimeoutEvent::getSequence()
 {
    return mSequence;
+}
+
+unsigned int
+TimeoutEvent::getGeneration() const
+{
+   return mGeneration;
 }
 
 resip::Data 
@@ -558,10 +579,12 @@ TimeoutEvent::briefString() const
 }
 
 OptionalTimeoutEvent::OptionalTimeoutEvent(SequenceClass& sequence,
-                                           TestEndPoint::ExpectBase* expect)
+                                           TestEndPoint::ExpectBase* expect,
+                                           unsigned int generation)
    : Event(0),
      mSequence(sequence),
-     mExpect(expect)
+     mExpect(expect),
+     mGeneration(generation)
 {
 }
 
@@ -579,6 +602,12 @@ TestEndPoint::ExpectBase*
 OptionalTimeoutEvent::getExpect() const
 {
    return mExpect;
+}
+
+unsigned int
+OptionalTimeoutEvent::getGeneration() const
+{
+   return mGeneration;
 }
 
 resip::Data 
@@ -657,8 +686,8 @@ SequenceClass::setSequenceSet(std::shared_ptr<SequenceSet> set)
 #include "SeqDefns.hxx"
 #include "SubDefns.hxx"
 
-// Copyright 2005 Purplecomm, Inc.
 /*
+  Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
   Copyright (c) 2005, PurpleComm, Inc. 
   All rights reserved.
 

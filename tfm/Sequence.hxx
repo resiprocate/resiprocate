@@ -71,6 +71,10 @@ class SequenceClass : public AsciiGraphic
 
       void fail(const resip::Data& message);
 
+      // Whether a TimeoutEvent or OptionalTimeoutEvent stamped with this
+      // generation is for the timeout currently armed.  See cancelTimeout().
+      bool isCurrentTimeout(unsigned int generation) const;
+
       void prettyPrint(EncodeStream& str, bool& previousActive, int ind = 5) const;
 
       virtual void render(AsciiGraphic::CharRaster &craster) const;
@@ -122,6 +126,9 @@ class SequenceClass : public AsciiGraphic
       ActionBase* mAfterAction;
       bool mTimingOut;
       resip::ValueFifo<std::shared_ptr<Event>>::TimerId mTimerId;
+      // Counts the timeouts armed by scheduleTimeout(); each timeout event
+      // carries the count it was armed with.
+      unsigned int mTimeoutGeneration = 0;
 
       friend EncodeStream& operator<<(EncodeStream& s, const SequenceClass& sequence);
 };
@@ -136,25 +143,29 @@ operator<(const SequenceClass& lhs, const SequenceClass& rhs);
 class TimeoutEvent : public Event
 {
    public:
-      TimeoutEvent(SequenceClass& sequence);
+      TimeoutEvent(SequenceClass& sequence, unsigned int generation);
       virtual ~TimeoutEvent();
       SequenceClass& getSequence();
-      
+      unsigned int getGeneration() const;
+
       virtual resip::Data toString() const;
       virtual resip::Data briefString() const;
 
    private:
       SequenceClass& mSequence;
+      unsigned int mGeneration;
 };
 
 // treat as the event, but don't trigger expect actions
 class OptionalTimeoutEvent : public Event
 {
    public:
-      OptionalTimeoutEvent(SequenceClass& sequence, TestEndPoint::ExpectBase* expect);
+      OptionalTimeoutEvent(SequenceClass& sequence, TestEndPoint::ExpectBase* expect,
+                           unsigned int generation);
       virtual ~OptionalTimeoutEvent();
       SequenceClass& getSequence() const;
       TestEndPoint::ExpectBase* getExpect() const;
+      unsigned int getGeneration() const;
 
       virtual resip::Data toString() const;
       virtual resip::Data briefString() const;
@@ -162,6 +173,7 @@ class OptionalTimeoutEvent : public Event
    private:
       SequenceClass& mSequence;
       TestEndPoint::ExpectBase* mExpect;
+      unsigned int mGeneration;
 };
 
 class SequenceDoneEvent : public Event
@@ -200,9 +212,9 @@ do                                                                              
 
 #endif
 
-// Copyright 2005 Purplecomm, Inc.
 /*
-  Copyright (c) 2005, PurpleComm, Inc. 
+  Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
+  Copyright (c) 2005, PurpleComm, Inc.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without modification,

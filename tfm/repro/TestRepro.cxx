@@ -130,7 +130,7 @@ TestRepro::TestRepro(const resip::Data& name,
                            nwInterface,
                            resip::Data::Empty,
                            resip::Data::Empty,
-                           resip::SecurityTypes::TLSv1,
+                           resip::SecurityTypes::SSLv23,
                            0);
       NameAddr rr;
       rr.uri().host() = "127.0.0.1";
@@ -149,7 +149,7 @@ TestRepro::TestRepro(const resip::Data& name,
                            nwInterface,
                            resip::Data::Empty,
                            resip::Data::Empty,
-                           resip::SecurityTypes::TLSv1,
+                           resip::SecurityTypes::SSLv23,
                            0);
       NameAddr rr;
       rr.uri().host() = "127.0.0.1";
@@ -170,7 +170,7 @@ TestRepro::TestRepro(const resip::Data& name,
                            "0.0.0.0",// multihomed
                            resip::Data::Empty,
                            resip::Data::Empty,
-                           resip::SecurityTypes::TLSv1,
+                           resip::SecurityTypes::SSLv23,
                            0);
       NameAddr rr;
       rr.uri().host() = "127.0.0.1";
@@ -186,16 +186,18 @@ TestRepro::TestRepro(const resip::Data& name,
    std::list<resip::Data> localhost;
    localhost.push_back("localhost");
    
+   // SSLv23 negotiates the highest version both ends support.  TLSv1 pins
+   // exactly TLS 1.0, which OpenSSL 3 refuses at its default security level.
    try
    {
-      Transport *t = mStack->addTransport(TLS, 
-                           5061, 
+      Transport *t = mStack->addTransport(TLS,
+                           5061,
                            V4, 
                            StunDisabled, 
                            nwInterface, 
                            "localhost",
                            resip::Data::Empty,
-                           resip::SecurityTypes::TLSv1,
+                           resip::SecurityTypes::SSLv23,
                            0);
       NameAddr rr;
       rr.uri().host() = "localhost";

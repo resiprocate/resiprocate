@@ -115,8 +115,11 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
       else if (isEqualNoCase(mContact.uri().param(p_transport), Tuple::toData(TLS)))
       {
          InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << nwIf);
-         mTransport = new TlsTransport(mIncoming, mContact.uri().port(), version, nwIf, 
-                                       *mSecurity, resip::Data::Empty, SecurityTypes::TLSv1, 0, resip::Compression::Disabled, 0);
+         // SSLv23 negotiates the highest version both ends support.  TLSv1
+         // pins exactly TLS 1.0, which OpenSSL 3 refuses at its default
+         // security level.
+         mTransport = new TlsTransport(mIncoming, mContact.uri().port(), version, nwIf,
+                                       *mSecurity, resip::Data::Empty, SecurityTypes::SSLv23, 0, resip::Compression::Disabled, 0);
       }
 #endif
       else
@@ -4698,8 +4701,8 @@ TestSipEndPoint::MakeSdp(const Data& user,
 }
 #endif
 
-// Copyright 2005 Purplecomm, Inc.
 /*
+  Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
   Copyright (c) 2005, PurpleComm, Inc. 
   All rights reserved.
 

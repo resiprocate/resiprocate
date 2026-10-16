@@ -1283,10 +1283,13 @@ class DumTestCase : public DumFixture
              david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
              uas.expect(Invite_OfferRequired, dumFrom(proxy), 2000, uas.provideOffer(*standardOffer)),
-             david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
-             david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
-             david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
-             david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+             // The unacknowledged 200 is sent at 0 s and retransmitted at 2, 6,
+             // 14, 22 and 30 s (T1 2 s doubling, capped at T2 8 s), then DUM
+             // gives up when WaitForAck (Timer::TH) fires at 32 s: main() sets
+             // T1 directly rather than through Timer::resetT1(), so TH keeps
+             // its 64 * 500 ms default.  This expected 10 while a leftover
+             // Retransmit200 timer from the initial INVITE's 200 drove a second
+             // retransmission chain; DUM now ignores that stale timer.
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
@@ -5355,6 +5358,9 @@ int main(int argc, char** argv)
 
    initNetwork();
    bool interactive = false;
+   // The exit status is what ctest reports, so it must reflect the results:
+   // a test that fails without crashing would otherwise pass in CI.
+   bool success = true;
    try
    {
       CommandLineParser args(argc, argv);
@@ -5415,17 +5421,25 @@ int main(int argc, char** argv)
             CPPUNIT_NS :: XmlOutputter xmloutputter (&collectedresults, testResult);
             xmloutputter.write ();
             testResult.close();
+            success = collectedresults.wasSuccessful();
          }
          DebugLog(<< "Finished");
       }
       else
       {
+         reportAssertsToStderr();
          DumFixture::initialize(argc, argv);
-      
+
          CppUnit::TextTestRunner runner;
 
+         // Name each test as it starts, in place of the default progress dots,
+         // so a test that asserts or hangs can be identified from the ctest
+         // output.
+         CPTextTestProgressListener progress;
+         runner.eventManager().addListener(&progress);
+
          runner.addTest( CppUnit::TestFactoryRegistry::getRegistry().makeTest() );
-         runner.run();
+         success = runner.run("", false, true, false);
          DebugLog(<< "Finished: waiting for all transactions to die.");
       
          sleepSeconds(32);
@@ -5446,5 +5460,5 @@ int main(int argc, char** argv)
       std::cin >>ch;
    }
 
-   return 0;
+   return success ? 0 : 1;
 }

@@ -12,6 +12,19 @@ using namespace std;
 using resip::Data;
 using resip::DataStream;
 
+static bool
+isStaleTimeout(const std::shared_ptr<Event>& event)
+{
+   if (const auto timeout = std::dynamic_pointer_cast<TimeoutEvent>(event))
+   {
+      return !timeout->getSequence().isCurrentTimeout(timeout->getGeneration());
+   }
+   if (const auto timeout = std::dynamic_pointer_cast<OptionalTimeoutEvent>(event))
+   {
+      return !timeout->getSequence().isCurrentTimeout(timeout->getGeneration());
+   }
+   return false;
+}
 
 SequenceSet::SequenceSet()
    : mSequences(),
@@ -227,7 +240,17 @@ SequenceSet::handle(std::shared_ptr<Event> event)
          
    DebugLog(<< "handle_event::dequeue(" << event << ") " << event->briefString());
    //CerrLog(<< "Dequeued: " << event->briefString());
-         
+
+   // A timeout whose timer fired just as the event satisfying its expect
+   // arrived: that event was handled first and the expect won, so this is
+   // stale (see SequenceClass::cancelTimeout()).  Handling it would fail the
+   // test on whichever expect is current by now.
+   if (isStaleTimeout(event))
+   {
+      InfoLog(<< "Ignoring stale " << event->briefString());
+      return;
+   }
+
    const auto action = std::dynamic_pointer_cast<ExpectActionEvent>(event);
    if (action)
    {
@@ -379,8 +402,10 @@ operator<<(EncodeStream& str, const SequenceSet& sset)
    str.flush();
    return str;
 }
+
 /*
-  Copyright (c) 2005, PurpleComm, Inc. 
+  Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
+  Copyright (c) 2005, PurpleComm, Inc.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without modification,

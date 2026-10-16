@@ -26,6 +26,7 @@
 #include "tfm/predicates/ExpectUtils.hxx"
 #include "tfm/CppTestSelector.hxx"
 #include "tfm/CPTextTestProgressListener.hxx"
+#include "tfm/TfmHelper.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -50,6 +51,13 @@ static const int WaitForPause = 1100;
 static const int WaitForEndOfTest = 100;
 static const int WaitForEndOfSeq = 100;
 static const int Seconds = 1000;
+// How late after its nominal Timer A/E interval a retransmission may arrive.
+// The proxy's timers and TFM's event handling both add delay, more so on a
+// loaded CI machine.  This was 100 ms, which retransmissions measurably
+// overran on Windows CI.  Keep it below T1, the shortest retransmission
+// interval, so that a missing retransmission still fails the test: the next
+// one arrives at least a full interval later.
+static const int RetransmitSlack = 250;
 
 // If defined test which are labeled with BUGTEST or BADTESTS will
 // be run.
@@ -7582,16 +7590,16 @@ class TestHolder : public ReproFixture
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->reflect(*derek)),
                  optional(jason->expect(INVITE/100,from(proxy), WaitFor100, jason->noAction())),
                  jason->expect(INVITE/480,from(proxy),WaitForResponse,jason->ack()),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -7617,16 +7625,16 @@ class TestHolder : public ReproFixture
          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->reflect(*derek,MESSAGE)),
                  jason->expect(MESSAGE/480,from(proxy),WaitForResponse,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -7651,16 +7659,16 @@ class TestHolder : public ReproFixture
          derek->invite(*jason),
          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->reflect(*derek,ACK)),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -7685,16 +7693,16 @@ class TestHolder : public ReproFixture
          derek->invite(*jason),
          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(makeMessage,jason->ok())),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -7719,16 +7727,16 @@ class TestHolder : public ReproFixture
          derek->invite(*jason),
          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(makeAck,jason->ok())),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -7764,9 +7772,9 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
@@ -7802,9 +7810,9 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
@@ -7840,9 +7848,9 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
                jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
@@ -7870,9 +7878,9 @@ class TestHolder : public ReproFixture
       (
          derek->message(*jason,"ping"),
          jason->expect(MESSAGE,contact(derek),WaitForCommand,jason->reflect(*derek,ACK)),
-         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
@@ -7898,9 +7906,9 @@ class TestHolder : public ReproFixture
       (
          derek->message(*jason,"ping"),
          jason->expect(MESSAGE,contact(derek),WaitForCommand,condition(makeInvite,jason->ok())),
-         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
@@ -7926,9 +7934,9 @@ class TestHolder : public ReproFixture
       (
          derek->message(*jason,"ping"),
          jason->expect(MESSAGE,contact(derek),WaitForCommand,condition(makeInfo,jason->ok())),
-         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
@@ -7954,9 +7962,9 @@ class TestHolder : public ReproFixture
       (
          derek->message(*jason,"ping"),
          jason->expect(MESSAGE,contact(derek),WaitForCommand,condition(makeAck,jason->ok())),
-         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
@@ -8516,16 +8524,16 @@ class TestHolder : public ReproFixture
          derek->invite(*jason),
          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(removeTo,jason->ring())),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -8742,9 +8750,9 @@ class TestHolder : public ReproFixture
       (
          derek->message(*jason,"ping"),
          jason->expect(MESSAGE,contact(derek),WaitForCommand,condition(removeTo,jason->send100())),
-         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
          jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
@@ -11105,6 +11113,9 @@ int main(int argc, char** argv)
 
    initNetwork();
    bool interactive = false;
+   // The exit status is what ctest reports, so it must reflect the results:
+   // a test that fails without crashing would otherwise pass in CI.
+   bool success = true;
    try
    {
       CommandLineParser args(argc, argv);
@@ -11149,19 +11160,27 @@ int main(int argc, char** argv)
             CPPUNIT_NS :: XmlOutputter xmloutputter (&collectedresults, testResult);
             xmloutputter.write ();
             testResult.close();
+            success = collectedresults.wasSuccessful();
          }
 
          DebugLog(<< "Finished");
       }
       else
       {
+         reportAssertsToStderr();
          TestHolder::createStatic();
          ReproFixture::initialize(args);
-      
+
          CppUnit::TextTestRunner runner;
 
+         // Name each test as it starts, in place of the default progress dots,
+         // so a test that asserts or hangs can be identified from the ctest
+         // output.
+         CPTextTestProgressListener progress;
+         runner.eventManager().addListener(&progress);
+
          runner.addTest( MyTestCase::suite() );
-         runner.run();
+         success = runner.run("", false, true, false);
          DebugLog(<< "Finished: waiting for all transactions to die.");
       
          sleepSeconds(32);
@@ -11182,12 +11201,12 @@ int main(int argc, char** argv)
       std::cin >>ch;
    }
 
-   return 0;
+   return success ? 0 : 1;
 }
 
-// Copyright 2005 Purplecomm, Inc.
 /*
-  Copyright (c) 2005, PurpleComm, Inc. 
+  Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
+  Copyright (c) 2005, PurpleComm, Inc.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without modification,

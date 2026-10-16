@@ -91,7 +91,12 @@ ReproFixture::initialize(CommandLineParser& args)
 #else
    // enable for TLS testing
 #ifdef USE_SSL
-   security = new resip::Security(getenv("PWD"));
+   // Read the certificates from the working directory.  ctest runs the suite
+   // in tfm/repro, where they are kept, and a post-build step copies them
+   // next to the binary for running it from there, e.g. under a debugger.
+   // getenv("PWD") is the directory of the shell that started the run, not
+   // the working directory, and is usually unset on Windows.
+   security = new resip::Security(".");
 #endif
    proxy = new TestRepro("proxy", "localhost", args, "127.0.0.1", security);
    jason = makeReproUser(*proxy, "jason", "localhost",UDP, security);
@@ -270,9 +275,9 @@ ReproFixture::makePserver(int argc, char** argv)
 #endif
 
 
-// Copyright 2005 Purplecomm, Inc.
 /*
-  Copyright (c) 2005, PurpleComm, Inc. 
+  Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
+  Copyright (c) 2005, PurpleComm, Inc.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without modification,
