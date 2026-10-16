@@ -176,7 +176,7 @@ BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT
  * Note:
  *
  * When DynamicTLS/SSLv23 mode is selected OpenSSL will allow a dynamic
- * choice of SSL/TLS versions on each connection.  Define flags like 
+ * choice of SSL/TLS versions on each connection.  Set flags like 
  * SSL_OP_NO_SSLv2 and SSL_OP_NO_SSLv3 in order to disable older protocols.
  * 
  * An application must change these flags before creating the 

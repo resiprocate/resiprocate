@@ -32,7 +32,7 @@ typedef enum
 typedef enum 
 { 
    NoSSL = 0,
-   DynamicTLS = 1, // dynamic version negotiation - negotiates the highest version both ends supports
+   DynamicTLS = 1, // dynamic version negotiation - negotiates the highest version supported by both sides
    SSLv23 = 1,     // left in place for legacy reasons - same as Dynamic despite naming
    TLSv1 = 2       // pinned to TLSv1 (1.0 only)
 } SSLType;

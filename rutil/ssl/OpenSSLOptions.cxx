@@ -39,14 +39,14 @@ parseOpenSSLCTXOption(const Data& optionName)
 #endif
    if(optionName == "SSL_OP_COOKIE_EXCHANGE")
    {
-      // Turn on Cookie Exchange (on relevant for servers)
+      // Turn on DTLS cookie exchange (RFC 4347 section 4.2.1); only relevant for DTLS servers
       return SSL_OP_COOKIE_EXCHANGE;
    }
 #if defined SSL_OP_CRYPTOPRO_TLSEXT_BUG
    if(optionName == "SSL_OP_CRYPTOPRO_TLSEXT_BUG")
    {
-      // Make server add server - hello extension from early version of
-      // cryptopro draft, when GOST ciphersuite is negotiated.Required for
+      // Make server add server-hello extension from early version of
+      // cryptopro draft, when GOST ciphersuite is negotiated. Required for
       // interoperability with CryptoPro CSP 3.x
       return SSL_OP_CRYPTOPRO_TLSEXT_BUG;
    }
@@ -54,10 +54,10 @@ parseOpenSSLCTXOption(const Data& optionName)
    if(optionName == "SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS")
    {
       // Disable SSL 3.0/TLS 1.0 CBC vulnerability workaround that was added
-      // in OpenSSL 0.9.6d.Usually(depending on the application protocol)
-      // the workaround is not needed.Unfortunately some broken SSL / TLS
+      // in OpenSSL 0.9.6d.Usually (depending on the application protocol)
+      // the workaround is not needed.Unfortunately some broken SSL/TLS
       // implementations cannot handle it at all, which is why we include it
-      // in SSL_OP_ALL.Added in 0.9.6e
+      // in SSL_OP_ALL. Added in 0.9.6e
       return SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
    }
    if(optionName == "SSL_OP_EPHEMERAL_RSA")
@@ -133,7 +133,7 @@ parseOpenSSLCTXOption(const Data& optionName)
    }
    if(optionName == "SSL_OP_NO_TICKET")
    {
-      // DTLS option: Don't use RFC4507 ticket extension
+      // Don't use stateless session tickets (RFC 4507/5077) for session resumption
       return SSL_OP_NO_TICKET;
    }
    if(optionName == "SSL_OP_NO_TLSv1")
@@ -202,7 +202,7 @@ parseOpenSSLCTXOption(const Data& optionName)
    {
       // If set, a server will allow a client to issue an SSLv3.0 version
       // number as latest version supported in the premaster secret, even when
-      // TLSv1.0 (version 3.1) was announced in the client hello.Normally
+      // TLSv1.0 (version 3.1) was announced in the client hello. Normally
       // this is forbidden to prevent version rollback attacks.
       return SSL_OP_TLS_ROLLBACK_BUG;
    }
@@ -281,7 +281,7 @@ parseOpenSSLCTXOption(const Data& optionName)
    if (optionName == "SSL_OP_NO_ANTI_REPLAY")
    {
       // Switches off automatic TLSv1.3 anti-replay protection for early data.
-      // This is a server - side option only(no effect on the client).
+      // This is a server-side option only (no effect on the client).
       return SSL_OP_NO_ANTI_REPLAY;
    }
 #endif
