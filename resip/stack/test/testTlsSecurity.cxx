@@ -156,7 +156,7 @@ connect(Security& security, TlsTransport& server, Fifo<TransactionMessage>& serv
    // when the server asks for one
    Fifo<TransactionMessage> clientFifo;
    TlsTransport client(clientFifo, clientPort, V4, "127.0.0.1", security, "client.test",
-                       SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                       SecurityTypes::DynamicTLS, nullptr, Compression::Disabled, 0,
                        SecurityTypes::None, false, clientCertFile, clientKeyFile);
 
    const Tuple dest("127.0.0.1", serverPort, V4, TLS, targetDomain);
@@ -194,7 +194,7 @@ testReload(Security& security, X509* caCert, EVP_PKEY* caKey)
       // new connection
       Fifo<TransactionMessage> serverFifo;
       TlsTransport server(serverFifo, serverPort, V4, "127.0.0.1", security, "reload.test",
-                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::DynamicTLS, nullptr, Compression::Disabled, 0,
                           SecurityTypes::Optional, false, serverCertFile, serverKeyFile);
       server.setPeerCertificateVerificationCallback(SecurityTypes::OpenSSL,
                                                     (void*)&countingVerifyCallback,
@@ -325,7 +325,7 @@ testSessionResumption(Security& security, X509* caCert, EVP_PKEY* caKey)
       const int serverPort = resipTestPort(5281);
       Fifo<TransactionMessage> serverFifo;
       TlsTransport server(serverFifo, serverPort, V4, "127.0.0.1", security, "resume.test",
-                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::DynamicTLS, nullptr, Compression::Disabled, 0,
                           SecurityTypes::Optional, false, resumeCertFile, resumeKeyFile);
 
       // TLS 1.2, so the session ticket arrives during the handshake and is
@@ -380,11 +380,11 @@ testCertificateWithoutNames(Security& security, X509* caCert, EVP_PKEY* caKey)
       const int clientPort = resipTestPort(5292);
       Fifo<TransactionMessage> serverFifo;
       TlsTransport server(serverFifo, serverPort, V4, "127.0.0.1", security, "noname.test",
-                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::DynamicTLS, nullptr, Compression::Disabled, 0,
                           SecurityTypes::None, false, nonameCertFile, nonameKeyFile);
       Fifo<TransactionMessage> clientFifo;
       TlsTransport client(clientFifo, clientPort, V4, "127.0.0.1", security, Data::Empty,
-                          SecurityTypes::SSLv23);
+                          SecurityTypes::DynamicTLS);
 
       // No target domain, so there's no name the server's certificate could match
       const Tuple dest("127.0.0.1", serverPort, V4, TLS);
@@ -430,11 +430,11 @@ testRootAddedAfterTransports(X509* caCert, EVP_PKEY* caKey)
       const int clientPort = resipTestPort(5294);
       Fifo<TransactionMessage> serverFifo;
       TlsTransport server(serverFifo, serverPort, V4, "127.0.0.1", security, "late.test",
-                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::DynamicTLS, nullptr, Compression::Disabled, 0,
                           SecurityTypes::Optional, false, lateServerCertFile, lateServerKeyFile);
       Fifo<TransactionMessage> clientFifo;
       TlsTransport client(clientFifo, clientPort, V4, "127.0.0.1", security, "client.test",
-                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::DynamicTLS, nullptr, Compression::Disabled, 0,
                           SecurityTypes::None, false, lateClientCertFile, lateClientKeyFile);
 
       security.addRootCertPEM(toPem(caCert));
@@ -534,11 +534,11 @@ testStaleErrorOnQueue(X509* caCert, EVP_PKEY* caKey)
       const int clientPort = resipTestPort(5296);
       Fifo<TransactionMessage> serverFifo;
       TlsTransport server(serverFifo, serverPort, V4, "127.0.0.1", security, "queue.test",
-                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::DynamicTLS, nullptr, Compression::Disabled, 0,
                           SecurityTypes::None, false, queueServerCertFile, queueServerKeyFile);
       Fifo<TransactionMessage> clientFifo;
       TlsTransport client(clientFifo, clientPort, V4, "127.0.0.1", security, Data::Empty,
-                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::DynamicTLS, nullptr, Compression::Disabled, 0,
                           SecurityTypes::None, false, Data::Empty, Data::Empty);
 
       const Tuple dest("127.0.0.1", serverPort, V4, TLS, "queue.test");

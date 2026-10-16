@@ -175,14 +175,12 @@ BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT
 /**
  * Note:
  *
- * When SSLv23 mode is selected and the options flags SSL_OP_NO_SSLv2
- * and SSL_OP_NO_SSLv3 are set, SSLv23_method() will allow a dynamic
- * choice of TLS v1.0, v1.1 or v1.2 on each connection.
- *
- * If SSL_OP_NO_SSLv3 is removed (by an application changing the value
- * of BaseSecurity::OpenSSLCTXSetOptions before instantiating
- * resip::Security) then using SSLv23_method() will allow a dynamic
- * choice of SSL v3.0 or any of the TLS versions on each connection.
+ * When DynamicTLS/SSLv23 mode is selected OpenSSL will allow a dynamic
+ * choice of SSL/TLS versions on each connection.  Define flags like 
+ * SSL_OP_NO_SSLv2 and SSL_OP_NO_SSLv3 in order to disable older protocols.
+ * 
+ * An application must change these flags before creating the 
+ * SSL_CTX object / Security object instance.
  */
 long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
 long BaseSecurity::OpenSSLCTXClearOptions = 0;
@@ -2834,13 +2832,13 @@ BaseSecurity::matchHostName(const Data& certificateName, const Data& domainName)
 SecurityTypes::SSLType
 BaseSecurity::parseSSLType(const Data& typeName)
 {
-   if(typeName == "TLSv1")
+   if(isEqualNoCase(typeName, "TLSv1"))
    {
       return SecurityTypes::TLSv1;
    }
-   if(typeName == "SSLv23")
+   if(isEqualNoCase(typeName, "SSLv23") || isEqualNoCase(typeName, "DynamicTLS"))
    {
-      return SecurityTypes::SSLv23;
+      return SecurityTypes::DynamicTLS;
    }
    Data error = "Not a recognized SSL type: " + typeName;
    throw invalid_argument(error.c_str());

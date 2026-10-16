@@ -75,7 +75,7 @@ public:
                         binds to all interfaces
      @param sipDomainname TLS Domain name - only used if protocol 
                       is TLS
-     @param sslType  SSLv23 vs TLSv1 - only use if protocol is TLS
+     @param sslType  DynamicTLS vs TLSv1 - only use if protocol is TLS
    */
    void addTransport( resip::TransportType protocol,
                       int port, 
@@ -84,7 +84,7 @@ public:
                       const resip::Data& ipInterface = resip::Data::Empty, 
                       const resip::Data& sipDomainname = resip::Data::Empty, // TLS only
                       const resip::Data& privateKeyPassPhrase = resip::Data::Empty,
-                      resip::SecurityTypes::SSLType sslType = resip::SecurityTypes::SSLv23,
+                      resip::SecurityTypes::SSLType sslType = resip::SecurityTypes::DynamicTLS,
                       unsigned transportFlags = 0,
                       const resip::Data& certificateFilename = resip::Data::Empty,
                       const resip::Data& privateKeyFilename = resip::Data::Empty,
@@ -246,7 +246,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

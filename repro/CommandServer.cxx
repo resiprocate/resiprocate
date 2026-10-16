@@ -5,6 +5,9 @@
 #include <resip/stack/Symbols.hxx>
 #include <resip/stack/Tuple.hxx>
 #include <resip/stack/SipStack.hxx>
+#if defined(USE_SSL)
+#include <resip/stack/ssl/Security.hxx>
+#endif
 #include <rutil/GeneralCongestionManager.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/DnsUtil.hxx>
@@ -420,7 +423,7 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
    uint32_t rcvBufLen = 0;
    bool stunEnabled = false;
    Data sipDomainname;
-   SecurityTypes::SSLType sslType = SecurityTypes::SSLv23;
+   SecurityTypes::SSLType sslType = SecurityTypes::DynamicTLS;
    uint32_t transportFlags = 0;
    Data certificateFilename;
    Data privateKeyFilename;
@@ -518,10 +521,16 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
                {
                   if(xml.firstChild())
                   {
-                     if(isEqualNoCase(xml.getValue(), "SSLv23"))
+#if defined(USE_SSL)
+                     try
                      {
-                         sslType = SecurityTypes::SSLv23;
+                        sslType = BaseSecurity::parseSSLType(xml.getValue());
                      }
+                     catch (invalid_argument& e)
+                     {
+                        WarningLog(<< e.what());
+                     }
+#endif
                      xml.parent();
                   }
                }
@@ -661,7 +670,7 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
       {
          transportInfoText += ", domain=" + sipDomainname;
       }
-      transportInfoText += ", ssltype=" + Data((sslType == SecurityTypes::TLSv1 ? "TLSv1" : "SSLv23"));
+      transportInfoText += ", ssltype=" + Data((sslType == SecurityTypes::TLSv1 ? "TLSv1" : "DynamicTLS"));
       if(!certificateFilename.empty())
       {
          transportInfoText += ", cert=" + certificateFilename;
@@ -866,7 +875,7 @@ CommandServer::xmlToMap(std::map<Data, Data>& m, std::set<Data> keys, resip::XML
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2010-2026 SIP Spectrum, Inc.  All rights reserved.
  * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
  * Copyright (c) 2022 Software Freedom Institute LLC https://softwarefreedom.institute
  *

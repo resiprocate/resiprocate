@@ -115,11 +115,8 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
       else if (isEqualNoCase(mContact.uri().param(p_transport), Tuple::toData(TLS)))
       {
          InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << nwIf);
-         // SSLv23 negotiates the highest version both ends support.  TLSv1
-         // pins exactly TLS 1.0, which OpenSSL 3 refuses at its default
-         // security level.
          mTransport = new TlsTransport(mIncoming, mContact.uri().port(), version, nwIf,
-                                       *mSecurity, resip::Data::Empty, SecurityTypes::SSLv23, 0, resip::Compression::Disabled, 0);
+                                       *mSecurity, resip::Data::Empty, SecurityTypes::DynamicTLS, 0, resip::Compression::Disabled, 0);
       }
 #endif
       else

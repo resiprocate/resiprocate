@@ -355,7 +355,7 @@ class SipStack : public FdSetIOObserver
                                       certificates.  Note:  For now this parameter is not used
                                       we are loading PKCS7 keys, so a pass phrase is not required.
 
-         @param sslType               Version of the TLS specification to use:  SSLv23 or TLSv1
+         @param sslType               Version of the TLS specification to use:  DynamicTLS or TLSv1
 
          @param transportFlags        Bit-mask of TransportFlags to control transport behavior.
                                       All flags default to "off" (0) to preserve traditional behavior.
@@ -394,7 +394,7 @@ class SipStack : public FdSetIOObserver
                               const Data& ipInterface = Data::Empty,
                               const Data& sipDomainname = Data::Empty, // only used for TLS based stuff
                               const Data& privateKeyPassPhrase = Data::Empty,
-                              SecurityTypes::SSLType sslType = SecurityTypes::SSLv23,
+                              SecurityTypes::SSLType sslType = SecurityTypes::DynamicTLS,
                               unsigned transportFlags = 0,
                               const Data& certificateFilename = "", 
                               const Data& privateKeyFilename = "",
@@ -1289,6 +1289,7 @@ SipStack::sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026, SIP Spectrum, Inc. http://sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

@@ -739,7 +739,7 @@ RendTu::addTransportVec( resip::TransportType proto, resip::IpVersion vers,
       resip::Transport* tran = mStack.addTransport( proto, portBase+idx, 
          vers, stun, ipInterface, 
          /*tlsDomain*/resip::Data::Empty, /*tlsKey*/resip::Data::Empty,
-         /*tlsType*/resip::SecurityTypes::SSLv23,
+         /*tlsType*/resip::SecurityTypes::DynamicTLS,
          transportFlags);
       mTransports.push_back(tran);
    }

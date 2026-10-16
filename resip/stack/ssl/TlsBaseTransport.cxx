@@ -59,8 +59,8 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
    {
       switch(sslType)
       {
-      case SecurityTypes::SSLv23:
-         DebugLog(<<"Using SecurityTypes::SSLv23");
+      case SecurityTypes::DynamicTLS:
+         DebugLog(<<"Using SecurityTypes::DynamicTLS");
          break;
       case SecurityTypes::TLSv1:
          DebugLog(<<"Using SecurityTypes::TLSv1");
@@ -82,6 +82,7 @@ TlsBaseTransport::createDomainCtx()
    {
       if(mSslType == SecurityTypes::TLSv1)
       {
+         // Lock TLS to version 1.0 - won't support 1.1, 1.2, 1.3, etc.
          SSL_CTX_set_min_proto_version(ctx, TLS1_VERSION);
          SSL_CTX_set_max_proto_version(ctx, TLS1_VERSION);
       }
@@ -167,14 +168,14 @@ TlsBaseTransport::getCtx()
       DebugLog(<<"Using TlsDomain-transport SSL_CTX");
       ctx = mDomainCtx;
    }
-   else if(mSslType == SecurityTypes::SSLv23)
+   else if(mSslType == SecurityTypes::DynamicTLS)
    {
-      DebugLog(<<"Using SecurityTypes::SSLv23 (dynamic version negotiation)");
+      DebugLog(<<"Using SecurityTypes::DynamicTLS (dynamic version negotiation)");
       ctx = mSecurity->getSslCtx();
    }
    else
    {
-      DebugLog(<<"Using SecurityTypes::TLSv1 (pinned to TLSv1)");
+      DebugLog(<<"Using SecurityTypes::TLSv1 (pinned to TLSv1; 1.0 only)");
       ctx = mSecurity->getTlsCtx();
    }
    return ctx;

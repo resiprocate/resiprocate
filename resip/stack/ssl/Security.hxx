@@ -223,11 +223,11 @@ class BaseSecurity
        * Adding more non-static fields like mTlsCtx for subsequent
        * versions (e.g. for OpenSSL TLSv1_1_method()) breaks ABI
        * compatability and is therefore difficult to backport onto
-       * release branches.  Better to use SSLv23_method and use OpenSSL
+       * release branches.  Better to use DynamicTLS and use OpenSSL
        * options flags to specify the exact protocol versions to support.
        */
-      SSL_CTX*       mTlsCtx;
-      SSL_CTX*       mSslCtx;
+      SSL_CTX*       mTlsCtx;  // Context locked to TLSv1 (1.0 only)
+      SSL_CTX*       mSslCtx;  // Context that supports Dynamic TLS version negotiation
       static void dumpAsn(const char*, Data);
 
       CipherList mCipherList;

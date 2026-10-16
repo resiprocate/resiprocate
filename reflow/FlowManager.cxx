@@ -63,7 +63,7 @@ private:
 FlowManager::FlowManager()
 #ifdef USE_SSL
    : 
-   mSslContext(asio::ssl::context::sslv23),
+   mSslContext(asio::ssl::context::sslv23), // Generic SSL/TLS - despite the sslv23 name, this uses dynamic negotiation to select the best protocol version
    mClientCert(0),
    mClientKey(0),
    mDtlsFactory(0),

@@ -78,7 +78,7 @@
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #include "resip/stack/ssl/Security.hxx"
-#define DEFAULT_TLS_METHOD SecurityTypes::SSLv23
+#define DEFAULT_TLS_METHOD SecurityTypes::DynamicTLS
 #endif
 
 #if defined(USE_MYSQL)

@@ -52,7 +52,7 @@ main(int argc, char** argv)
       cerr << "  /AddTransport type=<UDP|TCP|etc.> port=<value> [ipVersion=<V4|V6>]" << endl;
       cerr << "                [interface=<ipaddress>] [rruri=<AUTO|sip:host:port>]" << endl;
       cerr << "                [udprcvbuflen=<value>] [stun=<YES|NO>] [flags=<uint>]" << endl;
-      cerr << "                [domain=<tlsdomainname>] [ssltype=<SSLv23|TLSv1>]" << endl;
+      cerr << "                [domain=<tlsdomainname>] [ssltype=<DynamicTLS|TLSv1>]" << endl;
       cerr << "                [certfile=<filename>] [keyfile=<filename>]" << endl;
       cerr << "                [tlscvm=<NONE|OPT|MAN>] [tlsuseemail=<YES|NO>]" << endl;
       cerr << "                - adds a new transport to the stack." << endl;
@@ -246,6 +246,7 @@ main(int argc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. http://sipspectrum.com
  * Copyright (c) 2000-2012
  * 
  * Redistribution and use in source and binary forms, with or without

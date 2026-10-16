@@ -99,14 +99,14 @@ main(int, char**)
 
       Fifo<TransactionMessage> serverFifo;
       TlsTransport server(serverFifo, serverPort, V4, "127.0.0.1", security, serverDomain,
-                          SecurityTypes::SSLv23, nullptr, Compression::Disabled, 0,
+                          SecurityTypes::DynamicTLS, nullptr, Compression::Disabled, 0,
                           SecurityTypes::None, false, certFile, keyFile);
 
       // No domain, so the client presents no certificate and verifies the server
       // against the root added above
       Fifo<TransactionMessage> clientFifo;
       TlsTransport client(clientFifo, clientPort, V4, "127.0.0.1", security, Data::Empty,
-                          SecurityTypes::SSLv23);
+                          SecurityTypes::DynamicTLS);
 
       // The target domain is what the client sends as its SNI
       const Tuple dest("127.0.0.1", serverPort, V4, TLS, serverDomain);
@@ -136,7 +136,7 @@ main(int, char**)
       const int ipClientPort = resipTestPort(5172);
       Fifo<TransactionMessage> ipClientFifo;
       TlsTransport ipClient(ipClientFifo, ipClientPort, V4, "127.0.0.1", security, Data::Empty,
-                            SecurityTypes::SSLv23);
+                            SecurityTypes::DynamicTLS);
       const Tuple ipDest("127.0.0.1", serverPort, V4, TLS, "127.0.0.1");
       ipClient.send(ipClient.makeSendData(ipDest, makeRequest("127.0.0.1", ipClientPort, serverPort), "tid3"));
       std::unique_ptr<SipMessage> byIp = receive(ipClient, ipClientFifo, server, serverFifo);

@@ -117,6 +117,7 @@ main(int argc, const char** argv)
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
    assert(Security::parseSSLType("TLSv1") == SecurityTypes::TLSv1);
    assert(Security::parseSSLType("SSLv23") == SecurityTypes::SSLv23);
+   assert(Security::parseSSLType("DynamicTLS") == SecurityTypes::DynamicTLS);
    try
    {
 #ifndef WIN32
@@ -159,6 +160,7 @@ main(int argc, const char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. http://sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
