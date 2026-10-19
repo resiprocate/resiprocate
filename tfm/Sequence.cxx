@@ -355,7 +355,20 @@ void SequenceClass::scheduleTimeout()
       // schedule sequence done event
       InfoLog(<< "Queuing Sequence done: hangAroundTime: " <<mHangAroundTimeMs);
       mTimingOut = true;
-      getSequenceSet()->enqueue(std::make_shared<SequenceDoneEvent>(this), mHangAroundTimeMs);
+      if (mHangAroundTimeMs == 0)
+      {
+         // Done now, so that completes before any event already queued.  As a
+         // 0 ms timer it would be handled after them: ValueFifo queues an
+         // expired timer behind waiting events.  The event that finishes a
+         // branch of an And can arrive together with the next one its parent
+         // expects (the last ACK and the 487 in testTimerCForked), and the
+         // parent, still waiting for the branch, would fail it as unexpected.
+         getSequenceSet()->enqueueNext(std::make_shared<SequenceDoneEvent>(this));
+      }
+      else
+      {
+         getSequenceSet()->enqueue(std::make_shared<SequenceDoneEvent>(this), mHangAroundTimeMs);
+      }
    }
    else
    {

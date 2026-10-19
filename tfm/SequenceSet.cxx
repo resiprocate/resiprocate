@@ -71,6 +71,7 @@ SequenceSet::clear()
       mActiveSet.clear();
 
       mEventFifo.clear();
+      mNextEvents.clear();
    }
 }
      
@@ -86,6 +87,25 @@ SequenceSet::enqueue(std::shared_ptr<Event> event, int delay)
 {
    InfoLog(<< "SequenceClass::enqueue " << event->briefString() << " with delay " << delay);
    return mEventFifo.addDelayMs(event, delay);
+}
+
+void
+SequenceSet::enqueueNext(std::shared_ptr<Event> event)
+{
+   DebugLog(<< "SequenceSet::enqueueNext(" << &*event << ") " << event->briefString());
+   mNextEvents.push_back(event);
+}
+
+std::shared_ptr<Event>
+SequenceSet::nextEvent()
+{
+   if (!mNextEvents.empty())
+   {
+      std::shared_ptr<Event> event = mNextEvents.front();
+      mNextEvents.pop_front();
+      return event;
+   }
+   return mEventFifo.getNext();
 }
 
 bool 
@@ -188,7 +208,7 @@ SequenceSet::loop()
    while (!mActiveSet.empty() && !mFailed)
    {
       DebugLog(<<"Looking for event...");
-      handle(mEventFifo.getNext());
+      handle(nextEvent());
       DebugLog(<<"Found and handled an event.");
    }
    

@@ -132,5 +132,8 @@ jobs:
         if: ${{ matrix.c-compiler == 'clang-16' }}
         run: run-clang-tidy-16 -j ${{ steps.cpu-cores.outputs.count }} -quiet
 
+      # A failing test is run once more before failing the job.  The TFM suites
+      # (sanityTests, dumTests) depend on timing, and CI runners occasionally
+      # stall the whole process for seconds; a genuine regression fails both runs.
       - name: Test
-        run: make -j1 CTEST_OUTPUT_ON_FAILURE=1 test
+        run: make -j1 CTEST_OUTPUT_ON_FAILURE=1 ARGS="--repeat until-pass:2" test

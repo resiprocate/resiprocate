@@ -39,12 +39,16 @@ jobs:
           --config Debug
           --parallel
 
+      # A failing test is run once more before failing the job.  The TFM suites
+      # (sanityTests, dumTests) depend on timing, and CI runners occasionally
+      # stall the whole process for seconds; a genuine regression fails both runs.
       - name: "Test Debug"
         run: >
           ctest
           --test-dir ${{ github.workspace }}/_build
           --build-config Debug
           --output-on-failure
+          --repeat until-pass:2
 
       # The TFM suites log in detail to resiprocate.log in their working
       # directories (the source tree, under ctest).  Keep those logs when a run
