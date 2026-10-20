@@ -80,15 +80,13 @@ class DumTestCase : public DumFixture
 {
    CPPUNIT_TEST_SUITE( DumTestCase ); 
 
-#if 0
-      // this test relies on a really long sleep, so don't run it unless you wanna wait:
-      CPPUNIT_TEST(testSessionTimerUasRefresher);
-#else
+      CPPUNIT_TEST(testSessionTimerExpirationUasRefresher);
+      // TODO SLG - add more SessionTimer tests - UAC refresher, UAS refresher, UAC no refresher, UAS no refresher, etc.
       CPPUNIT_TEST(testUASEarlyUpdateNoPrack);
 
       CPPUNIT_TEST(testDialogEventUacBasic);
       CPPUNIT_TEST(testDialogEventUasBasic);
-      //CPPUNIT_TEST(testDialogEventUacTwoBranchesProvisional);  // test has commented out code and will cause onStaleCallTimeout to fire later in the middle of another test - commenting out until fixed
+      CPPUNIT_TEST(testDialogEventUacTwoBranchesProvisional);
       CPPUNIT_TEST(testDialogEvent302Uac);
       CPPUNIT_TEST(testDialogEvent302Uas);
       CPPUNIT_TEST(testDialogEventReferUas);
@@ -139,7 +137,7 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testUASPrack2ndOfferInNoAnswerReliableWaitingPrack);
       CPPUNIT_TEST(testUASPrack2ndOfferInOfferReliableProvidedAnswer);
 
-      //CPPUNIT_TEST(testReinviteWithByeSentAfterMissedAck);  // comment above indicates test case needs handling for retransmissions
+      CPPUNIT_TEST(testReinviteWithByeSentAfterMissedAck);
 
       CPPUNIT_TEST(testOutOfDialogReferNoReferSubWithoutReferSubHeader);
       CPPUNIT_TEST(testOutOfDialogRefer);
@@ -177,8 +175,8 @@ class DumTestCase : public DumFixture
 
       CPPUNIT_TEST(testRegisterBasicWithMethodsParam);
       CPPUNIT_TEST(testRegisterBasicWithoutMethodsParam);
-      // CPPUNIT_TEST(testRegisterBasicWithRinstance);  // An instance id is set in DumUserAgent::makeProfile - so rinstance won't be used
-      // CPPUNIT_TEST(testServiceRoute); //could be correct; see draft-rosenberg-sip-route-construct-02.txt. Desired behaviour needs to be determined.
+      CPPUNIT_TEST(testRegisterBasicWithRinstance);
+      CPPUNIT_TEST(testServiceRoute);
       
       CPPUNIT_TEST(testStaleNonceHandling);
       CPPUNIT_TEST(testSubscribe);
@@ -191,13 +189,12 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testIMMergedRequestArrivedWithin32Seconds);
       CPPUNIT_TEST(testIMMergedRequestArrivedMoreThan32SecondsApart);
       CPPUNIT_TEST(testInDialogSubscribeSuccess);
-      CPPUNIT_TEST(testUASSubscribeCreatingDialogFromInvite);   // Works on Windows. Uncomment once works under Linux.
+      CPPUNIT_TEST(testUASSubscribeCreatingDialogFromInvite);
       CPPUNIT_TEST(testInDialogSubscribeWithoutEventHandler);
       CPPUNIT_TEST(testOutOfDialogSubscribeWithoutEventHandler);
       CPPUNIT_TEST(testReInviteRemoveVideo);
       CPPUNIT_TEST(testByesCrossedOnTheWire);  
       CPPUNIT_TEST(testReinviteNo200);  // Requires record routing
-#endif
 
       CPPUNIT_TEST_SUITE_END(); 
 
@@ -238,9 +235,10 @@ class DumTestCase : public DumFixture
             {
                switch(m)
                {
+                  default:
                   case None:
                      resip_assert(0);
-                     return "Broken";                     
+                     return "Broken";
                   case Uac:
                      return "uac";
                   case Uas:
@@ -257,9 +255,9 @@ class DumTestCase : public DumFixture
       };
       
 
-      void testSessionTimerUasRefresher()
+      void testSessionTimerExpirationUasRefresher()
       {
-         InfoLog(<< "testSessionTimerUasRefresher");
+         InfoLog(<< "testSessionTimerExpirationUasRefresher");
 
          jason->getProfile()->addSupportedOptionTag(Token(Symbols::Timer));
          
@@ -270,21 +268,18 @@ class DumTestCase : public DumFixture
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             condition(SessionTimerControl(SessionTimerControl::Uas, 90), sheila->answer(answer))),
-             jason->expect(Invite_NewClientSession, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
+             // sheila (uas) is the refresher but never refreshes, so jason (non-refresher) expires the session at
+             // SE - min(32, SE/3) = 60 seconds after connecting.  DumUserAgent::onSessionExpired doesn't end the
+             // session itself, so end it here.
+             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, 70 * Seconds, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
              WaitForEndOfSeq);
          ExecuteSequences();
-         
-         sleepSeconds(90);
-
-         Seq(sheila->reInvite("jason", answer),
-             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardOffer)),
-             sheila->expect(INVITE/200, from(jason->getInstanceId()), WaitForResponse, sheila->ack()),
-             WaitForEndOfSeq);
-         
-         ExecuteSequences();         
          
          //jason->getProfile()->removeSupportedOptionTag(Token(Symbols::Timer));
          jason->getProfile()->clearSupportedOptionTags();
@@ -606,15 +601,16 @@ class DumTestCase : public DumFixture
          DialogEventPred* pDi2 = new DialogEventPred(di2);
          DialogEventPred* pDi2a = new DialogEventPred(di2a);
 //         DialogEventPred* pDi3 = new DialogEventPred(di3);
-//         DialogEventPred* pDi4 = new DialogEventPred(di4);
-//         DialogEventPred* pDi4a = new DialogEventPred(di4a);
+         DialogEventPred* pDi4 = new DialogEventPred(di4);
+         DialogEventPred* pDi4a = new DialogEventPred(di4a);
 
          InviteHelper ih1(inviteMsg);
 
          Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
-                            chain(save(sheilasRing, sheila->ring()), 
+                            chain(sheila->send100(),  // DumUserAgent learns the AppDialogSet that cancelInvite() needs from onTrying
+                                  save(sheilasRing, sheila->ring()),
                                   new DialogEventInfoRemoteTagUpdater(&di2, sheilasRing),
                                   new DialogEventInfoRemoteTagUpdater(&di3, sheilasRing),
                                   new DialogEventInfoRemoteTagUpdater(&di4, sheilasRing),
@@ -628,14 +624,20 @@ class DumTestCase : public DumFixture
              jason->expect(Invite_NewClientSession, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              uac.expect(DialogEvent_Early, *pDi2a, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->noAction()),
-             //jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             //uac.expect(DialogEvent_Confirmed, *pDi3, WaitForCommand, uac.noAction()),
-             //And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
-             //    Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->bye()))),
-             //And(
-             //   Sub(jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
-             //   Sub(uac.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::RemoteBye, WaitForCommand, uac.noAction())),
-             //   Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         // Cancel the call so that no early dialogs are left behind to fire onStaleCallTimeout during a later test.
+         // Cancelling the dialog set terminates the dialog event state for both early dialogs at once.  Sheila's 487
+         // carries the first branch's To tag, so only that dialog terminates immediately - the second branch's
+         // dialog terminates when its Cancelled timer (Timer::TH = 32s) fires.
+         Seq(jason->cancelInvite(),
+             And(Sub(sheila->expect(CANCEL, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::LocalCancel, WaitForCommand, uac.noAction())),
+                 Sub(uac.expect(DialogEvent_Terminated, *pDi4a, InviteSessionHandler::LocalCancel, WaitForCommand, uac.noAction())),
+                 Sub(jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, CallTimeout, uac.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
       }
@@ -1466,8 +1468,11 @@ class DumTestCase : public DumFixture
       void testRegisterBasicWithoutRinstance()
       {
          WarningLog(<< "testRegisterBasicWithoutRinstance");
-         
-         // disable the rinstance.
+
+         // disable the rinstance.  DumUserAgent::makeProfile sets an instance id, which on its own stops
+         // ClientRegistration from adding rinstance - so clear it, otherwise this test passes regardless.
+         Data instanceId = derek->getProfile()->getInstanceId();
+         derek->getProfile()->setInstanceId(Data::Empty);
          derek->getProfile()->setRinstanceEnabled(false);
          TestClientRegistration clientReg(derek);
 
@@ -1483,12 +1488,17 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
 
          derek->getProfile()->setRinstanceEnabled(true);
+         derek->getProfile()->setInstanceId(instanceId);
       };
 
       void testRegisterBasicWithRinstance()
       {
          WarningLog(<< "testRegisterBasicWithRinstance");
-         
+
+         // DumUserAgent::makeProfile sets an instance id, and ClientRegistration only falls back to rinstance when
+         // there is no instance id - so clear it for this test.
+         Data instanceId = derek->getProfile()->getInstanceId();
+         derek->getProfile()->setInstanceId(Data::Empty);
          TestClientRegistration clientReg(derek);
 
          Seq(derek->registerUa(),
@@ -1509,6 +1519,7 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
+         derek->getProfile()->setInstanceId(instanceId);
       };
 
       void testRegisterBasicWithMethodsParam()
@@ -2594,15 +2605,13 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
       }
 
-#if 0
-      void testReinviteWithByeSentAfterMissedAck() // not quite work, how to
-                                                   // handle retransmissions?
+      void testReinviteWithByeSentAfterMissedAck()
       {
          WarningLog(<< "testReinviteWithByeSentAfterMissedAck");
 
          TestClientRegistration regDerek(derek);
          Seq(derek->registerUa(),
-             derek->expect(Register_Success, dumFrom(proxy), WaitForRegistration, derek->noAction()),
+             derek->expect(Register_Success, regDerek, dumFrom(proxy), WaitForRegistration, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -2617,8 +2626,9 @@ class DumTestCase : public DumFixture
          contactDerek.host() = derek->getIp();
          contactDerek.port() = derek->getPort();
 
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          Seq(derek->invite(NameAddr(david->getAddressOfRecord()), standardOffer),
-             david->expect(INVITE, from(contactDerek), WaitForCommand, chain(david->ring(), david->answer())),
+             david->expect(INVITE, from(contactDerek), WaitForCommand, chain(david->ring(), david->answer(answer))),
 
              And(Sub(derek->expect(Invite_NewClientSession, uacDerek, *TestEndPoint::AlwaysTruePred, WaitForCommand, derek->noAction()),
                      uacDerek.expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacDerek.noAction()),
@@ -2628,14 +2638,26 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         Seq(david->reInvite(contactDerek),
+         // The re-INVITE carries an offer, so derek answers in the 200 and is Connected while waiting for the ACK -
+         // when it never arrives DUM ends the session with a BYE.  (An offerless re-INVITE would instead leave derek
+         // in ReceivedReinviteSentOffer, where a missing ACK is treated as a rejected offer and the call stays up -
+         // see testReinviteNo200.)
+         // The unacknowledged 200 is sent at 0 s and retransmitted at 2, 6, 14, 22 and 30 s (T1 2 s doubling, capped
+         // at T2 8 s), then WaitForAck (Timer::TH) fires at 32 s and DUM sends the BYE.
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         Seq(david->reInvite("derek", offer),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
              david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
              And(Sub(optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
-                     david->expect(INVITE/200, from(contactDerek), WaitForCommand, david->noAction()), // retransmitted 200s
-                     david->expect(BYE, from(contactDerek), WaitForPause, david->ok())),
-                 Sub(uacDerek.expect(Invite_OfferRequired, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacDerek.provideOffer(*standardOffer)),
-                     uacDerek.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacDerek.noAction()))),
+                     david->expect(INVITE/200, from(proxy), WaitForCommand, david->noAction()),
+                     david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+                     david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+                     david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+                     david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+                     david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+                     david->expect(BYE, from(proxy), CallTimeout, david->ok())),
+                 Sub(uacDerek.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacDerek.provideAnswer(*standardAnswer)),
+                     uacDerek.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, CallTimeout, uacDerek.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -2649,9 +2671,7 @@ class DumTestCase : public DumFixture
              david->expect(REGISTER/200, from(proxy), WaitForRegistration, david->noAction()),
              WaitForEndOfTest);
          ExecuteSequences();
-
       }
-#endif
 
       void testBlindTransferRejected()
       {
@@ -3105,8 +3125,10 @@ class DumTestCase : public DumFixture
          
          ExecuteSequences();
 
+         // RFC 3608: the service route is not used for REGISTER, so the refresh goes to the registrar.  Its 200 has no
+         // Service-Route, which clears the stored service route - so the PUBLISH below goes to sipEndPoint directly.
          Seq(regDuane.requestRefresh(),
-             serviceEndPoint->expect(REGISTER, from(duane->getInstanceId()), WaitForCommand, serviceEndPoint->send200ToRegister()),
+             sipEndPoint->expect(REGISTER, from(duane->getInstanceId()), WaitForCommand, sipEndPoint->send200ToRegister()),
              regDuane.expect(Register_Success, *TestEndPoint::AlwaysTruePred, WaitForRegistration, regDuane.noAction()),
              WaitForEndOfSeq);
 
@@ -5258,7 +5280,7 @@ class DumTestCase : public DumFixture
              optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
              scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
              david->expect(PRACK/406, alwaysMatches(), WaitForCommand, david->noAction()),
-             david->expect(INVITE/406, alwaysMatches(), WaitForCommand, david->noAction()),
+             david->expect(INVITE/406, alwaysMatches(), WaitForCommand, david->ack()),  // ACK it, or the 406 is retransmitted into later tests
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -5297,7 +5319,7 @@ class DumTestCase : public DumFixture
              optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
              scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
              david->expect(PRACK/406, alwaysMatches(), WaitForCommand, david->noAction()),
-             david->expect(INVITE/406, alwaysMatches(), WaitForCommand, david->noAction()),
+             david->expect(INVITE/406, alwaysMatches(), WaitForCommand, david->ack()),  // ACK it, or the 406 is retransmitted into later tests
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -5364,6 +5386,7 @@ int main(int argc, char** argv)
    try
    {
       CommandLineParser args(argc, argv);
+      //_unlink("resiprocate.log");
       Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
 
       Log::setLevel(Log::Crit, Subsystem::CONTENTS);

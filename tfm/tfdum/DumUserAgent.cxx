@@ -1694,11 +1694,19 @@ findMatchingDialogToReplace(DumUserAgent* dua)
    return new DumUserAgent::FindMatchingDialogToReplace(*dua);
 }
 
-bool 
+bool
 DumUserAgent::HasRinstance::isMatch(const std::shared_ptr<resip::SipMessage>& message) const
 {
-   // assume there is only one contact.
-   return message->header(h_Contacts).begin()->uri().exists(p_rinstance);
+   // A 200 to a REGISTER lists every binding for the AOR - including any left behind by another UA or an earlier
+   // test - so look for ours amongst all of them.
+   for (const auto& contact : message->header(h_Contacts))
+   {
+      if (contact.uri().exists(p_rinstance))
+      {
+         return true;
+      }
+   }
+   return false;
 }
 
 DumUserAgent::HasRinstance*
@@ -1716,7 +1724,15 @@ DumUserAgent::HasRinstance::toString() const
 bool
 DumUserAgent::NoRinstance::isMatch(const std::shared_ptr<resip::SipMessage>& message) const
 {
-   return !message->header(h_Contacts).begin()->uri().exists(p_rinstance);
+   // See HasRinstance - check every binding, not just the first
+   for (const auto& contact : message->header(h_Contacts))
+   {
+      if (contact.uri().exists(p_rinstance))
+      {
+         return false;
+      }
+   }
+   return true;
 }
 
 Data
