@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <asio.hpp>
 
 #include <rutil/DigestStream.hxx>
@@ -164,7 +165,33 @@ try
    r << username << ":example.org:" << password;
    resip::Data password_ha1 = r.getBin();
    reqltcMessage.calculateHmacKeyForHa1(hmacKey, password_ha1);
-   assert(reqltcMessage.checkMessageIntegrity(hmacKey));  
+   assert(reqltcMessage.checkMessageIntegrity(hmacKey));
+
+   // Malformed messages: parse from an exactly sized heap buffer so an
+   // over-read past the end of the message is caught by ASan
+   {
+      // XOR-MAPPED-ADDRESS with an IPv4 length (8) but the IPv6 family
+      const unsigned char badFamily[] =
+        "\x01\x01\x00\x0c"
+        "\x21\x12\xa4\x42"
+        "\xb7\xe7\xa7\x01\xbc\x34\xd6\x86\xfa\x87\xdf\xae"
+        "\x00\x20\x00\x08"
+          "\x00\x02\xa1\x47\xe1\x12\xa6\x43";
+      std::vector<char> buf(badFamily, badFamily + sizeof(badFamily) - 1);
+      StunMessage msg(local, remote, buf.data(), (unsigned int)buf.size());
+      assert(!msg.isValid());
+   }
+   {
+      // 2 bytes after the header, too short for an attribute header
+      const unsigned char shortAttr[] =
+        "\x00\x01\x00\x02"
+        "\x21\x12\xa4\x42"
+        "\xb7\xe7\xa7\x01\xbc\x34\xd6\x86\xfa\x87\xdf\xae"
+        "\x00\x20";
+      std::vector<char> buf(shortAttr, shortAttr + sizeof(shortAttr) - 1);
+      StunMessage msg(local, remote, buf.data(), (unsigned int)buf.size());
+      assert(!msg.isValid());
+   }
 
    InfoLog(<< "All tests passed!");
    return 0;

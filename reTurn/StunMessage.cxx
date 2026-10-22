@@ -397,7 +397,7 @@ StunMessage::stunParseAtrAddress(char* body, unsigned int hdrLen, StunAtrAddress
    memcpy(&nport, body, 2); body += 2;
    result.port = ntohs(nport);
 
-   if (result.family == IPv4Family)
+   if (result.family == IPv4Family && hdrLen == 8)
    {
       uint32_t naddr;
       memcpy(&naddr, body, sizeof(uint32_t)); body += sizeof(uint32_t);
@@ -405,7 +405,7 @@ StunMessage::stunParseAtrAddress(char* body, unsigned int hdrLen, StunAtrAddress
       // Note:  addr.ipv4 is stored in host byte order
       return true;
    }
-   else if (result.family == IPv6Family)
+   else if (result.family == IPv6Family && hdrLen == 20)
    {
       memcpy(&result.addr.ipv6, body, sizeof(result.addr.ipv6)); body += sizeof(result.addr.ipv6);
       // Note:  addr.ipv6 is stored in host byte order
@@ -574,7 +574,11 @@ StunMessage::stunParseMessage(char* buf, unsigned int bufLen)
 
    while (size > 0)
    {
-      // !jf! should check that there are enough bytes left in the buffer
+      if (size < sizeof(StunAtrHdr))
+      {
+         WarningLog(<< "Bad message, " << size << " bytes left is too short for an attribute header");
+         return false;
+      }
 
       StunAtrHdr* attr = reinterpret_cast<StunAtrHdr*>(body);
 
