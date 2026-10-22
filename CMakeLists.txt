@@ -337,7 +337,8 @@ endif()
 # ares
 if(WITH_C_ARES)
    # Don't use built-in ares
-   pkg_check_modules(cares libcares REQUIRED IMPORTED_TARGET)
+   # 1.11 added ares_set_servers_ports_csv() and ares_get_servers_ports()
+   pkg_check_modules(cares libcares>=1.11 REQUIRED IMPORTED_TARGET)
 
    set(USE_CARES true)
    add_definitions(-DUSE_CARES)

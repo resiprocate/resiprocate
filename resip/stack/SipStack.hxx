@@ -86,6 +86,10 @@ class FdPollGrp;
           is sent out.  On some OS's you cannot set QOS until the socket
           is successfully connected.  To enable this behavior call:
                   Connection::setEnablePostConnectSocketFuncCall();
+          DNS sockets get one call each.  With c-ares it comes before
+          the socket connects, and the setting above adds a second call
+          once it is connected; the bundled ares makes its one call
+          after connecting.
 
        mCompression
           Compression configuration object required for
@@ -195,6 +199,10 @@ class SipStack : public FdSetIOObserver
                             On some OS's you cannot set QOS until the socket is successfully
                             connected.  To enable this behavior call:
                             Connection::setEnablePostConnectSocketFuncCall();
+                            DNS sockets get one call each.  With c-ares it comes
+                            before the socket connects, and the setting above adds a
+                            second call once it is connected; the bundled ares makes
+                            its one call after connecting.
 
           @param compression Compression configuration object required for
                              SigComp. If set to 0, then SigComp compression

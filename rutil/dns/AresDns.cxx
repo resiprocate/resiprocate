@@ -20,6 +20,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/FdPoll.hxx"
+#include "rutil/TransportType.hxx"
 
 #if !defined(WIN32)
 #if !defined(__CYGWIN__)
@@ -261,6 +262,165 @@ AresDnsPollItem::sockstate_cb(void* data, ares_socket_t sock, int read, int writ
    }
 }
 
+// The name servers a channel uses, IPv4 and IPv6 with their ports, as a
+// comma separated list.  Empty if they cannot be read.
+static Data
+caresServers(ares_channel channel)
+{
+#if ARES_VERSION >= 0x011800
+   // ares_get_servers_csv() was added in c-ares 1.24, which deprecated
+   // ares_get_servers_ports()
+   char* csv = ares_get_servers_csv(channel);
+   if (!csv)
+   {
+      return Data::Empty;
+   }
+   Data servers(csv);
+   ares_free_string(csv);
+   return servers;
+#else
+   Data servers;
+   struct ares_addr_port_node* head = 0;
+   if (ares_get_servers_ports(channel, &head) != ARES_SUCCESS)
+   {
+      return servers;
+   }
+   for (struct ares_addr_port_node* node = head; node; node = node->next)
+   {
+      if (!servers.empty())
+      {
+         servers += ",";
+      }
+      if (node->family == AF_INET6)
+      {
+#if defined(USE_IPV6)
+         in6_addr addr6;
+         memcpy(&addr6, &node->addr.addr6, sizeof(addr6));
+         servers += "[" + DnsUtil::inet_ntop(addr6) + "]";
+#else
+         // DnsUtil formats no IPv6 here; dropIpv6Servers() only needs to
+         // see that this one is IPv6
+         servers += "[IPv6]";
+#endif
+      }
+      else
+      {
+         servers += DnsUtil::inet_ntop(node->addr.addr4);
+      }
+      servers += ":" + Data(node->udp_port);
+   }
+   ares_free_data(head);
+   return servers;
+#endif
+}
+
+// Replaces the channel's name servers.  A port of 0 keeps the default, 53.
+// Without USE_IPV6, IPv6 name servers are ignored, as the bundled ares does;
+// if that leaves none, the channel keeps the ones c-ares found.
+static int
+setCaresServers(ares_channel channel, const std::vector<GenericIPAddress>& nameservers)
+{
+   // host[:port], with an IPv6 address in brackets when it has a port
+   Data csv;
+   for (size_t i = 0; i < nameservers.size(); ++i)
+   {
+      const bool v4 = nameservers[i].isVersion4();
+#if defined(USE_IPV6)
+      const Data address = v4 ? DnsUtil::inet_ntop(nameservers[i].v4Address.sin_addr)
+                              : DnsUtil::inet_ntop(nameservers[i].v6Address.sin6_addr);
+#else
+      if (!v4)
+      {
+         WarningLog (<< "Ignoring non-IPv4 additional name server (IPv6 support was not enabled)");
+         continue;
+      }
+      const Data address = DnsUtil::inet_ntop(nameservers[i].v4Address.sin_addr);
+#endif
+      const unsigned short port = ntohs(v4 ? nameservers[i].v4Address.sin_port
+                                           : nameservers[i].v6Address.sin6_port);
+      if (!csv.empty())
+      {
+         csv += ",";
+      }
+      if (port == 0)
+      {
+         csv += address;
+      }
+      else
+      {
+         csv += (v4 ? address : "[" + address + "]") + ":" + Data(port);
+      }
+   }
+   if (csv.empty())
+   {
+      return ARES_SUCCESS;
+   }
+   return ares_set_servers_ports_csv(channel, csv.c_str());
+}
+
+#if !defined(USE_IPV6)
+// This build does no IPv6, so the resolver uses IPv4 name servers only, as the
+// bundled ares does: drop any IPv6 ones c-ares found in the system
+// configuration.  If none are left, use 127.0.0.1, c-ares's own default.
+static int
+dropIpv6Servers(ares_channel channel)
+{
+   const std::string servers(caresServers(channel).c_str());
+   std::string ipv4;
+   bool dropped = false;
+   for (size_t start = 0; start < servers.size(); )
+   {
+      size_t end = servers.find(',', start);
+      if (end == std::string::npos)
+      {
+         end = servers.size();
+      }
+      const std::string server = servers.substr(start, end - start);
+      start = end + 1;
+      // "[addr]:port", or a bare address with more than one ':', is IPv6
+      const size_t firstColon = server.find(':');
+      if (server.empty() || server[0] == '[' ||
+          (firstColon != std::string::npos && server.find(':', firstColon + 1) != std::string::npos))
+      {
+         dropped = dropped || !server.empty();
+         continue;
+      }
+      ipv4 += (ipv4.empty() ? "" : ",") + server;
+   }
+   if (!dropped)
+   {
+      return ARES_SUCCESS;
+   }
+   InfoLog(<< "DNS initialization: ignoring IPv6 name servers (IPv6 support was not enabled)");
+   return ares_set_servers_ports_csv(channel, ipv4.empty() ? "127.0.0.1" : ipv4.c_str());
+}
+#endif
+
+// The socket function is called as for SIP TCP connections: before the
+// socket connects, and again once it is connected if
+// ExternalDns::setEnablePostConnectSocketFuncCall() is on.
+int
+AresDns::caresSocketConfigure(Socket s, int type, void* data)
+{
+   AresDns* ares = static_cast<AresDns*>(data);
+   if (ares->mSocketFunc)
+   {
+      ares->mSocketFunc(s, type == SOCK_STREAM ? TCP : UDP, __FILE__, __LINE__);
+   }
+   return ARES_SUCCESS;
+}
+
+int
+AresDns::caresSocketConnected(Socket s, int type, void* data)
+{
+   AresDns* ares = static_cast<AresDns*>(data);
+   if (ares->mSocketFunc && getEnablePostConnectSocketFuncCall())
+   {
+      ares->mSocketFunc(s, type == SOCK_STREAM ? TCP : UDP, __FILE__, __LINE__);
+   }
+   return ARES_SUCCESS;
+}
+
 #endif
 
 /**********************************************************************
@@ -399,13 +559,13 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       optmask |= ARES_OPT_FLAGS;
       opt.flags |= ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3;
    }
+#endif
+
    if ((features & ExternalDns::ReturnAllResults))
    {
       optmask |= ARES_OPT_FLAGS;
       opt.flags |= ARES_FLAG_NOCHECKRESP;
    }
-
-#endif
 
 #if defined(USE_CARES)
    // In c-ares, we can actually set the timeout and retries via the API
@@ -431,21 +591,35 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
    }
 #endif
 
-   if (additionalNameservers.empty())
-   {
 #if defined(USE_ARES)
-      status = ares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
-#elif defined(USE_CARES)
-      // TODO: Does the socket function matter?
-      status = ares_init_options(channel, &opt, optmask);
+#if !defined(USE_IPV6)
+   // This build does no IPv6: use only the IPv4 name servers, and if none are
+   // left, the ones ares finds itself
+   std::vector<in_addr> ipv4Nameservers;
+   for (size_t i = 0; i < additionalNameservers.size(); i++)
+   {
+      if (additionalNameservers[i].isVersion4())
+      {
+         ipv4Nameservers.push_back(additionalNameservers[i].v4Address.sin_addr);
+      }
+      else
+      {
+         WarningLog (<< "Ignoring non-IPv4 additional name server (IPv6 support was not enabled)");
+      }
+   }
+   if (ipv4Nameservers.empty())
+#else
+   if (additionalNameservers.empty())
 #endif
+   {
+      status = ares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
    }
    else
    {
       optmask |= ARES_OPT_SERVERS;
-      opt.nservers = (int)additionalNameservers.size();
 
-#if defined(USE_IPV6) && defined(USE_ARES)
+#if defined(USE_IPV6)
+      opt.nservers = (int)additionalNameservers.size();
       // With contrib/ares, you can configure IPv6 addresses for the
       // nameservers themselves.
       opt.servers = new multiFamilyAddr[additionalNameservers.size()];
@@ -463,36 +637,37 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          }
       }
 #else
-      // If we're only supporting IPv4 or we are using c-ares, we can't
-      // support additional nameservers that are IPv6 right now.
-      opt.servers = new in_addr[additionalNameservers.size()];
-      for (size_t i =0; i < additionalNameservers.size(); i++)
+      opt.nservers = (int)ipv4Nameservers.size();
+      opt.servers = new in_addr[ipv4Nameservers.size()];
+      for (size_t i = 0; i < ipv4Nameservers.size(); i++)
       {
-         if(additionalNameservers[i].isVersion4())
-         {
-            opt.servers[i] = additionalNameservers[i].v4Address.sin_addr;
-         }
-         else
-         {
-#if defined(USE_CARES)
-           WarningLog (<< "Ignoring non-IPv4 additional name server (not yet supported with c-ares)");
-#elif defined(USE_ARES)
-           WarningLog (<< "Ignoring non-IPv4 additional name server (IPv6 support was not enabled)");
-#endif
-         }
+         opt.servers[i] = ipv4Nameservers[i];
       }
 #endif
 
-#if defined(USE_ARES)
       status = ares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
-#elif defined(USE_CARES)
-      // TODO: Does the socket function matter?
-      status = ares_init_options(channel, &opt, optmask);
-#endif
 
       delete [] opt.servers;
       opt.servers = 0;
    }
+#elif defined(USE_CARES)
+   status = ares_init_options(channel, &opt, optmask);
+   if (status == ARES_SUCCESS && !additionalNameservers.empty())
+   {
+      status = setCaresServers(*channel, additionalNameservers);
+   }
+#if !defined(USE_IPV6)
+   if (status == ARES_SUCCESS)
+   {
+      status = dropIpv6Servers(*channel);
+   }
+#endif
+   if (status == ARES_SUCCESS && socketfunc)
+   {
+      ares_set_socket_configure_callback(*channel, &AresDns::caresSocketConfigure, this);
+      ares_set_socket_callback(*channel, &AresDns::caresSocketConnected, this);
+   }
+#endif
    if (status != ARES_SUCCESS)
    {
       ErrLog (<< "Failed to initialize DNS library (status=" << status << ")");
@@ -543,23 +718,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          InfoLog(<< "DNS initialization: using c-ares v"
                  << ::ares_version(NULL));
 
-         // Ask for the current configuration so we can print the servers found
-         struct ares_options options;
-         std::memset(&options, 0, sizeof(options));
-         int ignored;
-         if(ares_save_options(*channel, &options, &ignored) == ARES_SUCCESS)
-         {
-            InfoLog(<< "DNS initialization: found "
-                    << options.nservers << " name servers");
-
-            // Log them all
-            for (int i = 0; i < options.nservers; ++i)
-            {
-               InfoLog(<< " name server: "
-                       << DnsUtil::inet_ntop(options.servers[i]));
-            }
-            ares_destroy_options(&options);
-         }
+         InfoLog(<< "DNS initialization: name servers " << caresServers(*channel));
       }
 #endif
 
@@ -625,46 +784,12 @@ bool AresDns::checkDnsChange()
    }
 #elif defined(USE_CARES)
    {
-      // Get the options, including the server list, from the old and the
-      // current (i.e. just read) configuration.
-      struct ares_options old;
-      struct ares_options updated;
-      std::memset(&old, 0, sizeof(old));
-      std::memset(&updated, 0, sizeof(updated));
-      int ignored;
-
-      // Can we get the configuration?
-      if(ares_save_options(mChannel, &old, &ignored) != ARES_SUCCESS
-         || ares_save_options(channel, &updated, &ignored) != ARES_SUCCESS)
-      {
-         // It failed, so call it different
-         bRet = true;
-      }
-      else
-      {
-         // Compare the two lists.  Are they different sizes?
-         if(old.nservers != updated.nservers)
-         {
-            // Yes, so they're different
-            bRet = true;
-         }
-         else
-         {
-            // Compare them one-by-one
-            for (int i = 0; i < old.nservers; ++i)
-            {
-               if (old.servers[i].s_addr != updated.servers[i].s_addr)
-               {
-                  bRet = true;
-                  break;
-               }
-            }
-         }
-
-         // Free any ares_options contents we have created.
-         ares_destroy_options(&old);
-         ares_destroy_options(&updated);
-      }
+      // Compare the server lists, IPv4 and IPv6 with their ports, of the old
+      // and the current (i.e. just read) configuration.  If either cannot be
+      // read, call it different.
+      const Data old = caresServers(mChannel);
+      const Data updated = caresServers(channel);
+      bRet = old.empty() || updated.empty() || old != updated;
 
       // Destroy the secondary configuration we read
       ares_destroy(channel);

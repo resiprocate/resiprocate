@@ -770,6 +770,11 @@ static int open_tcp_socket(ares_channel channel, struct server_state* server)
       }
    }
 
+   if (channel->socket_function)
+   {
+      channel->socket_function(s, 0, __FILE__, __LINE__);
+   }
+
    server->tcp_socket = s;
    return 0;
 }

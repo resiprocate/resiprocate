@@ -30,12 +30,19 @@ class ExternalDns
 
       //returns Success, BuildMismatch, otherwise ExternalDns specific 
       //error message can be pulled from errorMessage
-      enum InitResult 
+      enum InitResult
       {
          Success = 0,
          BuildMismatch = 4777
-      };      
-      
+      };
+
+      // When enabled, a resolver that can tell when its sockets are connected
+      // (c-ares) calls the socket function a second time, once connected, as
+      // SIP TCP connections do.  Set through
+      // Connection::setEnablePostConnectSocketFuncCall().
+      static void setEnablePostConnectSocketFuncCall(bool enabled = true);
+      static bool getEnablePostConnectSocketFuncCall();
+
 
       //
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
@@ -146,6 +153,7 @@ class ExternalDnsHandler
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. http://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

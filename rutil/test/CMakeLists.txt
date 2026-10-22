@@ -12,6 +12,7 @@ function(test)
    endif()
 endfunction()
 
+test(testAresDns testAresDns.cxx)
 test(testCompat testCompat.cxx)
 test(testCoders testCoders.cxx)
 test(testCondition testCondition.cxx)

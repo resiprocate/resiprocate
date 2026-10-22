@@ -11,6 +11,7 @@
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "rutil/IntrusiveListElement.hxx"
+#include "rutil/dns/ExternalDns.hxx"
 
 namespace resip
 {
@@ -102,7 +103,12 @@ class Connection : public ConnectionBase,
 
       bool mFirstWriteAfterConnectedPending;
       static volatile bool mEnablePostConnectSocketFuncCall;
-      static void setEnablePostConnectSocketFuncCall(bool enabled = true) { mEnablePostConnectSocketFuncCall = enabled; }
+      // also covers the DNS resolver's sockets (see ExternalDns)
+      static void setEnablePostConnectSocketFuncCall(bool enabled = true)
+      {
+         mEnablePostConnectSocketFuncCall = enabled;
+         ExternalDns::setEnablePostConnectSocketFuncCall(enabled);
+      }
       bool isServer()const;
    protected:
       /// pure virtual, but need concrete Connection for book-ends of lists
