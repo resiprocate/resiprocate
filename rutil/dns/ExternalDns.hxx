@@ -58,7 +58,7 @@ class ExternalDns
       //redefine FD_SETSIZE befor each inclusion of winsock2.h, so make sure
       //external libraries have been properly configured      
       // MUST not be called when pollGrp (below) is active
-      // uses only in tests now
+      // Only needed when no FdPollGrp is set (e.g. resip/stack/test/testDns)
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size) = 0;
       virtual void process(fd_set& read, fd_set& write) = 0;
 

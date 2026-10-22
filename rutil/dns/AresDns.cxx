@@ -161,7 +161,7 @@ namespace resip
 class AresDnsPollItem : public FdPollItemBase
 {
   public:
-   AresDnsPollItem(FdPollGrp *grp, int fd, FdPollEventMask mask,
+   AresDnsPollItem(FdPollGrp *grp, Socket fd, FdPollEventMask mask,
       ares_channel channel)
      : FdPollItemBase(grp, fd, mask), mChannel(channel), mMask(mask)
    {
@@ -186,7 +186,10 @@ class AresDnsPollItem : public FdPollItemBase
       if (mMask != mask)
       {
          mMask = mask;
-         mPollGrp->modPollItem(mPollHandle, mMask);
+         if(mPollGrp)
+         {
+            mPollGrp->modPollItem(mPollHandle, mMask);
+         }
       }
    }
 
@@ -196,7 +199,7 @@ class AresDnsPollItem : public FdPollItemBase
    static void sockstate_cb(void* data, ares_socket_t sock, int read, int write);
 };
 
-};
+}
 
 void
 AresDnsPollItem::processPollEvent(FdPollEventMask mask)
@@ -305,16 +308,13 @@ AresDns::init(int dnsTimeout, int dnsTries, unsigned int features)
         &mChannel,
         dnsTimeout,
         dnsTries,
-        mPollGrp);
+        true /* useStateFunc */);
 
     if (ret != Success)
         return ret;
 
-   if ( mPollGrp )
-   {
-      // Ensure map starts empty, since init may be called more than once
-      clearPollItems();
-   }
+    // Ensure map starts empty, since init may be called more than once
+    clearPollItems();
 
 #if defined(WIN32) && defined(USE_ARES)
     // For windows OSs it is uncommon to run a local DNS server.  Therefor if there
@@ -413,6 +413,8 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
 
    if ( useStateFunc )
    {
+      // Always track c-ares sockets, so that a FdPollGrp set after init()
+      // (see setPollGrp) still picks them up.
       opt.sock_state_cb = AresDnsPollItem::sockstate_cb;
       opt.sock_state_cb_data = this;
       optmask |= ARES_OPT_SOCK_STATE_CB;
@@ -517,7 +519,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          (*channel)->tries = tries;
       }
 
-      if ( useStateFunc )
+      if ( useStateFunc && mPollGrp )
       {
          // tell ares to let us know when things change
          ares_process_set_poll_cb(*channel, AresDnsPollItem::socket_poll_cb, this);
@@ -677,6 +679,7 @@ AresDns::~AresDns()
 #elif defined(USE_CARES)
    ares_destroy(mChannel);
 #endif
+   clearPollItems();
 }
 
 bool AresDns::hostFileLookup(const char* target, in_addr &addr)
@@ -761,10 +764,11 @@ AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 void
 AresDns::processTimers()
 {
-   resip_assert( mPollGrp!=0 );
 #ifdef USE_CARES
+   // Process timeouts only; socket events arrive via AresDnsPollItem
    ares_process_fd(mChannel, ARES_SOCKET_BAD, ARES_SOCKET_BAD);
 #else
+   resip_assert( mPollGrp!=0 );
    time_t timeSecs;
    time(&timeSecs);
    ares_process_poll(mChannel, /*server*/-1, /*rd*/-1, /*wr*/-1, timeSecs);

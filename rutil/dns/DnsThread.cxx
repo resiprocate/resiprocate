@@ -12,7 +12,6 @@ DnsThread::DnsThread(DnsStub& dns) :
    mDnsStub(dns)
 {
    // ?bwc? Allow creator to specify the FdPollGrp?
-   // .bwc. Should use an FdSet based poll group if we're using cares.
    mPollGrp.reset(FdPollGrp::create());
    mDnsStub.setPollGrp(mPollGrp.get());
 }

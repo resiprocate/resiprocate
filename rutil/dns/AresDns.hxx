@@ -84,9 +84,8 @@ class AresDns : public ExternalDns
       volatile static bool mHostFileLookupOnlyMode;
 
       FdPollGrp*	mPollGrp;
-      typedef HashMap<int, AresDnsPollItem*> PollItemsMap;
+      typedef HashMap<Socket, AresDnsPollItem*> PollItemsMap;
       PollItemsMap mPollItems;
-
 };
 
 }

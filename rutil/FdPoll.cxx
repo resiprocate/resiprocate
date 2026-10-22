@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "rutil/FdPoll.hxx"
-#include "rutil/FdSetIOObserver.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/BaseException.hxx"
 
@@ -899,7 +898,7 @@ FdPollImplEpoll::processFdSet(FdSet& fdset)
    int fd = getEPollFd();
    if (fd !=- 1 && fdset.readyToRead(fd))
    {
-      epollWait(0);
+      return epollWait(0);
    }
    return false;
 }

@@ -67,8 +67,6 @@ class FdPollItemBase : public FdPollItemIf
       FdPollItemHandle  mPollHandle;
 };
 
-class FdSetIOObserver;
-
 class FdPollGrp
 {
    public:
