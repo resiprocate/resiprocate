@@ -284,6 +284,10 @@ RRCache::getTTL(const RROverlay& overlay)
       {
          free(name);
          pPos += len;
+         if (pPos + 20 > overlay.data() + overlay.dataLength())
+         {
+            return -1;
+         }
          pPos += 16; // skip four 32 bit entities.
          return DNS__32BIT(pPos);
       }
