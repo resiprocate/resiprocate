@@ -891,11 +891,33 @@ AresDns::getTimeTillNextProcessMS()
 void
 AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 {
+#if defined(USE_CARES)
+   // ares_fds() is deprecated.  c-ares reports every socket it opens, and
+   // what it waits for, through sock_state_cb (see AresDnsPollItem), which
+   // is installed with or without a FdPollGrp.
+   for (PollItemsMap::const_iterator i = mPollItems.begin(); i != mPollItems.end(); ++i)
+   {
+      const Socket fd = i->first;
+      if (i->second->mMask & FPEM_Read)
+      {
+         FD_SET(fd, &read);
+      }
+      if (i->second->mMask & FPEM_Write)
+      {
+         FD_SET(fd, &write);
+      }
+      if ((int)fd + 1 > size)
+      {
+         size = (int)fd + 1;
+      }
+   }
+#else
    int newsize = ares_fds(mChannel, &read, &write);
    if ( newsize > size )
    {
       size = newsize;
    }
+#endif
 }
 
 void
@@ -927,7 +949,37 @@ AresDns::buildFdSet(FdSet& fdset)
 void
 AresDns::process(fd_set& read, fd_set& write)
 {
+#if defined(USE_CARES)
+   // ares_process() is deprecated: hand each ready socket to
+   // ares_process_fd(), then let it handle timeouts.  Collect the sockets
+   // first, since processing one can close others and change mPollItems.
+   std::vector<std::pair<Socket, FdPollEventMask> > ready;
+   for (PollItemsMap::const_iterator i = mPollItems.begin(); i != mPollItems.end(); ++i)
+   {
+      FdPollEventMask mask = 0;
+      if (FD_ISSET(i->first, &read))
+      {
+         mask |= FPEM_Read;
+      }
+      if (FD_ISSET(i->first, &write))
+      {
+         mask |= FPEM_Write;
+      }
+      if (mask)
+      {
+         ready.push_back(std::make_pair(i->first, mask));
+      }
+   }
+   for (size_t i = 0; i < ready.size(); ++i)
+   {
+      ares_process_fd(mChannel,
+                      (ready[i].second & FPEM_Read) ? ready[i].first : ARES_SOCKET_BAD,
+                      (ready[i].second & FPEM_Write) ? ready[i].first : ARES_SOCKET_BAD);
+   }
+   ares_process_fd(mChannel, ARES_SOCKET_BAD, ARES_SOCKET_BAD);
+#else
    ares_process(mChannel, &read, &write);
+#endif
 }
 
 char*
@@ -943,9 +995,37 @@ AresDns::errorMessage(long errorCode)
    return errorString;
 }
 
+#if defined(USE_CARES) && ARES_VERSION >= 0x011c00
+// ares_query_dnsrec() gives the reply parsed; DnsStub parses the raw reply
+// itself, so write it back out, as c-ares's own ares_query() does.  The
+// callback runs for every query, failures included.
+static void
+resip_AresDns_caresDnsrecCallback(void* arg, ares_status_t status, size_t timeouts,
+                                  const ares_dns_record_t* dnsrec)
+{
+   unsigned char* abuf = 0;
+   size_t alen = 0;
+   if (dnsrec)
+   {
+      ares_status_t writeStatus = ares_dns_write(dnsrec, &abuf, &alen);
+      if (writeStatus != ARES_SUCCESS)
+      {
+         status = writeStatus;
+      }
+   }
+   resip_AresDns_caresCallback(arg, (int)status, (int)timeouts, abuf, (int)alen);
+   ares_free_string(abuf);
+}
+#endif
+
 void
 AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData)
 {
+#if defined(USE_CARES) && ARES_VERSION >= 0x011c00
+   // ares_query() was deprecated in c-ares 1.28, which added ares_query_dnsrec()
+   ares_query_dnsrec(mChannel, target, ARES_CLASS_IN, (ares_dns_rec_type_t)type,
+                     resip_AresDns_caresDnsrecCallback, new Payload(handler, userData), 0);
+#else
    ares_query(mChannel, target, C_IN, type,
 #if defined(USE_ARES)
               resip_AresDns_aresCallback,
@@ -953,6 +1033,7 @@ AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* han
               resip_AresDns_caresCallback,
 #endif
               new Payload(handler, userData));
+#endif
 }
 
 void
