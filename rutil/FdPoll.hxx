@@ -5,6 +5,7 @@
 
 /* The Makefile system may define the following:
  * HAVE_EPOLL: system call epoll() is available
+ * HAVE_POLL: system call poll() is available (Windows uses WSAPoll())
  *
  * An implementation based upon FdSet (and select()) is always available.
  *

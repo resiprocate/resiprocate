@@ -54,6 +54,22 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+// If PollGrp is not passed in, then EventStackThread isn't being used and the
+// application is most likely implementing a select/process loop to drive the
+// stack.  The poll implementation (WSAPoll on Windows, poll() where there is
+// no epoll) does not support the select/process loop, so use fdset instead.
+static FdPollGrp*
+createDefaultPollGrp()
+{
+   FdPollGrp* pollGrp = FdPollGrp::create();
+   if (pollGrp->getImplType() == FdPollGrp::PollImpl)
+   {
+      delete pollGrp;
+      pollGrp = FdPollGrp::create("fdset");
+   }
+   return pollGrp;
+}
+
 SipStack::SipStack(const SipStackOptions& options) :
         mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
                 TransactionController::MaxTUFifoSize),
@@ -76,15 +92,7 @@ SipStack::SipStack(Security* pSecurity,
                    Compression *compression,
                    FdPollGrp *pollGrp,
                    bool useDnsVip) :
-#ifdef WIN32
-   // If PollGrp is not passed in, then EventStackThead isn't being used and application
-   // is most likely implementing a select/process loop to drive the stack - in this case
-   // we want windows to default to fdset implementation, since the Poll implementation on
-   // windows does not support the select/process loop
-   mPollGrp(pollGrp?pollGrp:FdPollGrp::create("fdset")),
-#else
-   mPollGrp(pollGrp?pollGrp:FdPollGrp::create()),
-#endif
+   mPollGrp(pollGrp?pollGrp:createDefaultPollGrp()),
    mPollGrpIsMine(!pollGrp),
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
@@ -158,15 +166,7 @@ SipStack::init(const SipStackOptions& options)
    }
    else
    {
-#ifdef WIN32
-      // If PollGrp is not passed in, then EventStackThead isn't being used and application
-      // is most likely implementing a select/process loop to drive the stack - in this case
-      // we want windows to default to fdset implementation, since the Poll implementation on
-      // windows does not support the select/process loop
-      mPollGrp = FdPollGrp::create("fdset");
-#else
-      mPollGrp = FdPollGrp::create();
-#endif
+      mPollGrp = createDefaultPollGrp();
       mPollGrpIsMine=true;
    }
 
@@ -1352,6 +1352,7 @@ SipStack::invokeAfterSocketCreationFunc(TransportType type)
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. http://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

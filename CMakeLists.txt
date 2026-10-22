@@ -1032,6 +1032,10 @@ check_include_files(sys/epoll.h HAVE_EPOLL)
 include(CheckSymbolExists)
 check_symbol_exists(SOCK_CLOEXEC "sys/socket.h" HAVE_SOCK_CLOEXEC)
 
+# poll(), used by FdPollGrp where epoll is not available (Windows uses
+# WSAPoll instead, see rutil/FdPoll.hxx)
+check_symbol_exists(poll "poll.h" HAVE_POLL)
+
 # HAVE_LIBDL from autotools obsolete,
 # now we use CMAKE_DL_LIBS to include the library
 # when necessary

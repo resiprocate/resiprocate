@@ -10,6 +10,9 @@
 #ifdef RESIP_POLL_IMPL_EPOLL
 #  include <sys/epoll.h>
 #endif
+#if defined(RESIP_POLL_IMPL_POLL) && !defined(WIN32)
+#  include <poll.h>
+#endif
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
@@ -235,7 +238,7 @@ FdPollImplFdSet::modPollItem(const FdPollItemHandle handle, FdPollEventMask newM
    resip_assert(info.mItemObj);
    info.mEvMask = newMask;
 
-   if(info.mSocketFd != INVALID_SOCKET && info.mSocketFd)
+   if(info.mSocketFd != INVALID_SOCKET)
    {
       killCache(info.mSocketFd);
       if(info.mEvMask & FPEM_Read)  mSelectSet.setRead(info.mSocketFd);
@@ -482,19 +485,20 @@ FdPollImplPoll::~FdPollImplPoll()
 }
 
 static inline unsigned short
-CvtSysToUsrMask(unsigned long sysMask)
+CvtPollToUsrMask(unsigned long sysMask)
 {
    unsigned usrMask = 0;
    if(sysMask & POLLIN)  usrMask |= FPEM_Read;
    if(sysMask & POLLOUT) usrMask |= FPEM_Write;
-   if(sysMask & (POLLERR|POLLHUP)) usrMask |= FPEM_Error|FPEM_Read|FPEM_Write;
+   // POLLNVAL: the socket was closed while still in the set
+   if(sysMask & (POLLERR|POLLHUP|POLLNVAL)) usrMask |= FPEM_Error|FPEM_Read|FPEM_Write;
    // NOTE: above, fake read and write if error to encourage
    // apps to actually do something about it
    return usrMask;
 }
 
 static inline unsigned long
-CvtUsrToSysMask(unsigned short usrMask)
+CvtUsrToPollMask(unsigned short usrMask)
 {
    unsigned long sysMask = 0;
    if(usrMask & FPEM_Read)  sysMask |= POLLIN;
@@ -517,7 +521,7 @@ FdPollImplPoll::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *it
 
    pollfd pollFD;
    pollFD.fd = fd;
-   pollFD.events = (short)CvtUsrToSysMask(newMask);
+   pollFD.events = (short)CvtUsrToPollMask(newMask);
    mPollFdCache.push_back(pollFD);
 
    return IMPL_POLL_FdToHandle(fd);
@@ -536,9 +540,9 @@ FdPollImplPoll::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMa
       resip_assert(info.mSocketFd!=INVALID_SOCKET);
       resip_assert(info.mItemObj);
 
-      if(info.mSocketFd != INVALID_SOCKET && info.mSocketFd)
+      if(info.mSocketFd != INVALID_SOCKET)
       {
-         mPollFdCache[info.mFdPollCacheIndex].events = (short)CvtUsrToSysMask(newMask);
+         mPollFdCache[info.mFdPollCacheIndex].events = (short)CvtUsrToPollMask(newMask);
       }
    }
 }
@@ -623,7 +627,7 @@ FdPollImplPoll::waitAndProcess(int ms)
    // Process poll result now
    {  // Scope for Lock
       RecursiveLock lock(mMutex);
-      for (unsigned short index = 0; index < mPollFds.size() && numReadyFDs > 0; index++) 
+      for (size_t index = 0; index < mPollFds.size() && numReadyFDs > 0; index++) 
       {
          int revents = pollFDArray[index].revents;
          if (revents)
@@ -635,7 +639,7 @@ FdPollImplPoll::waitAndProcess(int ms)
             if(it != mItems.end())
             {
                FdPollItemIf* pdPollItem = it->second.mItemObj;
-               processItem(pdPollItem, CvtSysToUsrMask(revents));
+               processItem(pdPollItem, CvtPollToUsrMask(revents));
                didsomething = true;
             }
          }
@@ -1012,6 +1016,7 @@ FdPollGrp::getImplList()
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005 Jacob Butcher
  *
  * Redistribution and use in source and binary forms, with or without
