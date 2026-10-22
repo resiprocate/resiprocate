@@ -137,3 +137,22 @@ jobs:
       # stall the whole process for seconds; a genuine regression fails both runs.
       - name: Test
         run: make -j1 CTEST_OUTPUT_ON_FAILURE=1 ARGS="--repeat until-pass:2" test
+
+      # The TFM suites log in detail to resiprocate.log in their working
+      # directories (the source tree, under ctest).  Keep those logs when a run
+      # fails, since a timing failure may not reproduce anywhere else.  Each run
+      # moves the previous log to resiprocate.log.old, which holds the first
+      # attempt when ctest has rerun a failed suite.  The paths are relative to
+      # the workspace: in a container job, github.workspace is the host's path.
+      # Each matrix entry needs its own artifact name.
+      - name: Upload TFM logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfm-logs-linux-${{ matrix.c-compiler }}
+          path: |
+            tfm/repro/resiprocate.log
+            tfm/repro/resiprocate.log.old
+            tfm/tfdum/resiprocate.log
+            tfm/tfdum/resiprocate.log.old
+          if-no-files-found: ignore

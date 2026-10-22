@@ -11,6 +11,7 @@
 *.ilk
 *.idb
 *.log
+*.log.old
 *.cache
 /Makefile
 /Makefile.in

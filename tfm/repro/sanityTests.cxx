@@ -3,6 +3,7 @@
 #endif
 
 #include <ctype.h>
+#include <cstdio>
 
 #include <cppunit/TextTestRunner.h>
 #include <cppunit/TextTestResult.h>
@@ -11121,6 +11122,15 @@ int main(int argc, char** argv)
    try
    {
       CommandLineParser args(argc, argv);
+      // Start each run with a new log: Log opens resiprocate.log for appending,
+      // so it would otherwise grow by every run.  Keep the previous run as
+      // resiprocate.log.old; when ctest reruns a failed suite, the first
+      // attempt's log is still there.
+      if (isEqualNoCase(args.mLogType, "file"))
+      {
+         std::remove("resiprocate.log.old");
+         std::rename("resiprocate.log", "resiprocate.log.old");
+      }
       Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
       resip::Timer::T100 = 0;
       

@@ -52,7 +52,9 @@ jobs:
 
       # The TFM suites log in detail to resiprocate.log in their working
       # directories (the source tree, under ctest).  Keep those logs when a run
-      # fails, since a timing failure may not reproduce anywhere else.
+      # fails, since a timing failure may not reproduce anywhere else.  Each run
+      # moves the previous log to resiprocate.log.old, which holds the first
+      # attempt when ctest has rerun a failed suite.
       - name: "Upload TFM logs"
         if: failure()
         uses: actions/upload-artifact@v4
@@ -60,5 +62,7 @@ jobs:
           name: tfm-logs-windows
           path: |
             ${{ github.workspace }}/tfm/repro/resiprocate.log
+            ${{ github.workspace }}/tfm/repro/resiprocate.log.old
             ${{ github.workspace }}/tfm/tfdum/resiprocate.log
+            ${{ github.workspace }}/tfm/tfdum/resiprocate.log.old
           if-no-files-found: ignore
