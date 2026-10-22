@@ -27,15 +27,19 @@
 #include "rutil/dns/QueryTypes.hxx"
 
 // Drives AresDns through every FdPollGrp implementation, and through the
-// legacy FdSet loop, without needing a network.  Each arrangement makes two
+// legacy FdSet loop, without needing a network.  Each arrangement makes three
 // lookups:
 //
 // - one to 127.0.0.1, which refuses it at once (or answers it, if a resolver
-//   listens there).  Either way the socket becomes ready, so with c-ares the
-//   lookup must finish well inside the 5 second resolver timeout.  If the
-//   resolver's socket never reached the poll group, it would wait out that
-//   timeout.  Only one query is in flight: a second send on the same socket
-//   would consume the refusal before the poll group saw it.
+//   listens there).  Either way the socket becomes ready, so the lookup must
+//   finish well inside the 5 second resolver timeout.  If the resolver's
+//   socket never reached the poll group, or the resolver left a refused
+//   query to time out, it would wait out that timeout.  Only one query is in
+//   flight: a second send on the same socket would consume the refusal
+//   before the poll group saw it.
+//
+// - one to 127.0.0.1 and then 127.0.0.2, both refusing, so the resolver must
+//   move on to the second server at once as well.
 //
 // - one to 192.0.2.1 (TEST-NET-1), which never answers, so the lookup can only
 //   finish through the resolver timeout that processTimers() drives.
@@ -108,20 +112,15 @@ class CountingSink : public DnsResultSink
 struct Server
 {
    const char* address;
-   int timeoutSec;       // resolver timeout, one try
-   uint64_t withinMs;    // the lookup must complete inside this
+   const char* nextAddress;   // a second name server, or 0
+   int timeoutSec;            // resolver timeout, one try
+   uint64_t withinMs;         // the lookup must complete inside this
    const char* proves;
 };
 
-#if defined(USE_CARES)
-static const Server Refusing = { "127.0.0.1", 5, 2500, "socket event reaches the resolver" };
-#else
-// The bundled ares sees the refusal (handle_error() closes the socket) but
-// leaves the query to time out rather than failing it, so here only
-// completion can be checked.
-static const Server Refusing = { "127.0.0.1", 1, 10000, "refused lookup completes" };
-#endif
-static const Server Silent = { "192.0.2.1", 1, 10000, "resolver timeout fires" };
+static const Server Refusing = { "127.0.0.1", 0, 5, 2500, "socket event reaches the resolver" };
+static const Server FailingOver = { "127.0.0.1", "127.0.0.2", 5, 2500, "refused server fails over to the next" };
+static const Server Silent = { "192.0.2.1", 0, 1, 10000, "resolver timeout fires" };
 
 // Longest any lookup is waited for before it is counted as lost.
 static const uint64_t GiveUpMs = 15000;
@@ -146,6 +145,10 @@ run(const string& impl, Arrangement arrangement, const Server& server)
       case NoGroup:        scenario = "no group, FdSet loop"; break;
    }
    scenario += string(", ") + server.address;
+   if (server.nextAddress)
+   {
+      scenario += string(" then ") + server.nextAddress;
+   }
 
    // a name of its own, so the stub's cache never answers for this lookup
    string name;
@@ -157,12 +160,16 @@ run(const string& impl, Arrangement arrangement, const Server& server)
    name += ".invalid";
 
    DnsStub::NameserverList servers;
-   sockaddr_in addr;
-   memset(&addr, 0, sizeof(addr));
-   addr.sin_family = AF_INET;
-   addr.sin_port = htons(53);
-   inet_pton(AF_INET, server.address, &addr.sin_addr);
-   servers.push_back(GenericIPAddress(addr));
+   const char* addresses[] = { server.address, server.nextAddress };
+   for (size_t i = 0; i < 2 && addresses[i]; ++i)
+   {
+      sockaddr_in addr;
+      memset(&addr, 0, sizeof(addr));
+      addr.sin_family = AF_INET;
+      addr.sin_port = htons(53);
+      inet_pton(AF_INET, addresses[i], &addr.sin_addr);
+      servers.push_back(GenericIPAddress(addr));
+   }
    DnsStub::setDnsTimeoutAndTries(server.timeoutSec, 1);
 
    const int before = openDescriptors();
@@ -236,6 +243,7 @@ static void
 runAll(const string& impl, Arrangement arrangement)
 {
    run(impl, arrangement, Refusing);
+   run(impl, arrangement, FailingOver);
    run(impl, arrangement, Silent);
 }
 
@@ -261,13 +269,7 @@ main()
          continue;
       }
       runAll(impl, GroupAtInit);
-#if defined(USE_CARES)
       runAll(impl, GroupAfterInit);
-#else
-      // The bundled ares only installs its poll callback when a group exists
-      // at init(); DnsStub always passes its group to the constructor.
-      cerr << "skip " << impl << ", group set after init (bundled ares)" << endl;
-#endif
    }
 
    runAll("", DnsThreadGroup);

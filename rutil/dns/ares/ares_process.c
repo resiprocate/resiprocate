@@ -46,6 +46,18 @@ static int getErrno() { return WSAGetLastError(); }
 static int getErrno() { return errno; }
 #endif
 
+/* A read that would block is not a server error.  When handle_error() moves
+ * a query on, the new server's socket can reuse the descriptor number of the
+ * one just closed, and so look ready to a select() or poll that ran before. */
+static int would_block(void)
+{
+#ifdef WIN32
+   return getErrno() == WSAEWOULDBLOCK;
+#else
+   return getErrno() == EAGAIN || getErrno() == EWOULDBLOCK || getErrno() == EINTR;
+#endif
+}
+
 static void write_tcp_data_core(ares_channel channel, int server_idx,
 			   time_t now);
 static void write_tcp_data(ares_channel channel,
@@ -292,6 +304,8 @@ static void read_tcp_data(ares_channel channel, int server_idx, fd_set* read_fds
             server->tcp_lenbuf + server->tcp_lenbuf_pos,
             2 - server->tcp_lenbuf_pos);
 #endif
+         if (count < 0 && would_block())
+            continue;
          if (count <= 0)
          {
             handle_error(channel, i, now);
@@ -328,6 +342,8 @@ static void read_tcp_data(ares_channel channel, int server_idx, fd_set* read_fds
             server->tcp_length - server->tcp_buffer_pos);
 #endif
 
+         if (count < 0 && would_block())
+            continue;
          if (count <= 0)
          {
             handle_error(channel, i, now);
@@ -393,6 +409,9 @@ static void read_udp_packets(ares_channel channel, int server_idx,
          case WSAECONNRESET: // got an ICMP error on a previous send
             break;
          }
+#else
+         if (count < 0 && would_block())
+            continue;
 #endif
          handle_error(channel, i, now);
       }
@@ -501,7 +520,7 @@ static void process_answer(ares_channel channel, unsigned char* abuf,
 
 static void handle_error(ares_channel channel, int whichserver, time_t now)
 {
-   struct query* query;
+   struct query* query, * next;
 
    /* Reset communications with this server. */
    //fprintf(stderr,"kennard:ares:handle_error: ...\n");
@@ -511,17 +530,16 @@ static void handle_error(ares_channel channel, int whichserver, time_t now)
    /* Tell all queries talking to this server to move on and not try
     * this server again.
     */
-   for (query = channel->queries; query != 0; query = query->next)
+   for (query = channel->queries; query != 0; query = next)
    {
-      resip_assert(query != 0);
-      resip_assert(channel->queries != 0);
-
+      /* next_server() can end the query and free it.  Queries it adds
+       * through the callback go on the head of the list, so next stays
+       * valid. */
+      next = query->next;
       if (query->server == whichserver)
       {
          query->skip_server[whichserver] = 1;
-#if 0 // !cj! - this seem to corrput memory when it is called 
          next_server(channel, query, now);
-#endif
       }
    }
 }

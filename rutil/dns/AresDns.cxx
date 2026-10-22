@@ -57,7 +57,8 @@ class AresDnsPollItem : public FdPollItemBase
    AresDnsPollItem(FdPollGrp *grp, int fd, int using_tcp, AresDns& aresObj,
      ares_channel chan, int server_idx)
      : FdPollItemBase(grp, fd, FPEM_Read), mAres(aresObj),
-       mChannel(chan), mFd(fd), mUsingTcp(using_tcp), mServerIdx(server_idx)
+       mChannel(chan), mFd(fd), mUsingTcp(using_tcp), mServerIdx(server_idx),
+       mMask(FPEM_Read)
    {
    }
 
@@ -72,7 +73,15 @@ class AresDnsPollItem : public FdPollItemBase
       mPollGrp = grp;
       if(mPollGrp)
       {
-         mPollHandle = mPollGrp->addPollItem(mFd, FPEM_Read, this);
+         mPollHandle = mPollGrp->addPollItem(mFd, mMask, this);
+      }
+   }
+   void updateMask(FdPollEventMask mask)
+   {
+      mMask = mask;
+      if(mPollGrp)
+      {
+         mPollGrp->modPollItem(mPollHandle, mMask);
       }
    }
 
@@ -81,6 +90,7 @@ class AresDnsPollItem : public FdPollItemBase
    int mFd;
    int mUsingTcp;
    int mServerIdx;
+   FdPollEventMask mMask;
 
    static void socket_poll_cb(void *cb_data,
                               ares_channel channel, int server_idx,
@@ -142,12 +152,12 @@ AresDnsPollItem::socket_poll_cb(void *cb_data,
    case ARES_POLLACTION_WRITEON:
       resip_assert( olditem );
       resip_assert( it != ares->mPollItems.end() );
-      grp->modPollItem(olditem->mPollHandle, FPEM_Read|FPEM_Write);
+      olditem->updateMask(FPEM_Read|FPEM_Write);
       break;
    case ARES_POLLACTION_WRITEOFF:
       resip_assert( olditem );
       resip_assert( it != ares->mPollItems.end() );
-      grp->modPollItem(olditem->mPollHandle, FPEM_Read);
+      olditem->updateMask(FPEM_Read);
       break;
    default:
       resip_assert( 0 );
@@ -519,9 +529,11 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          (*channel)->tries = tries;
       }
 
-      if ( useStateFunc && mPollGrp )
+      if ( useStateFunc )
       {
-         // tell ares to let us know when things change
+         // tell ares to let us know when things change; installed even
+         // without a group, so that a FdPollGrp set after init() (see
+         // setPollGrp) still picks up the sockets
          ares_process_set_poll_cb(*channel, AresDnsPollItem::socket_poll_cb, this);
       }
 
@@ -877,6 +889,7 @@ AresDns::dnsRRTypeToString(int rrtype)
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. http://www.sipspectrum.com
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
