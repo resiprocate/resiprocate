@@ -26,7 +26,7 @@ class AresDns : public ExternalDns
 {
    friend class AresDnsPollItem;
    public:
-      AresDns() : mChannel(0), mSocketFunc(0), mFeatures(0), mPollGrp(NULL) { }
+      AresDns() : mChannel(0), mSocketFunc(0), mFeatures(0), mPollGrp(NULL), mDestroying(false) { }
       virtual ~AresDns();
 
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
@@ -79,7 +79,15 @@ class AresDns : public ExternalDns
       static int caresSocketConfigure(Socket s, int type, void* data);
       static int caresSocketConnected(Socket s, int type, void* data);
 
-      typedef std::pair<ExternalDnsHandler*, void*> Payload;
+      // What each query's callback is given: its handler and the handler's
+      // data, and the AresDns that made the query
+      struct Payload
+      {
+         Payload(ExternalDnsHandler* h, void* d, AresDns* o) : handler(h), userData(d), owner(o) {}
+         ExternalDnsHandler* handler;
+         void* userData;
+         AresDns* owner;
+      };
       static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
       static ExternalDnsHandler* getHandler(void* arg);
       struct ares_channeldata* mChannel;
@@ -91,6 +99,10 @@ class AresDns : public ExternalDns
       FdPollGrp*	mPollGrp;
       typedef HashMap<Socket, AresDnsPollItem*> PollItemsMap;
       PollItemsMap mPollItems;
+
+      // set by ~AresDns, so that the queries its channel fails with
+      // ARES_EDESTRUCTION are not reported
+      bool mDestroying;
 };
 
 }

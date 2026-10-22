@@ -518,14 +518,9 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
 {
    if(*channel)
    {
-#if defined(USE_ARES)
-      // Sends ARES_EDESTRUCTION to callbacks so that all requests in progress fail
+      // Fails all requests in progress with ARES_EDESTRUCTION, which their
+      // handlers are told about (see resip_AresDns_aresCallback)
       ares_destroy(*channel);
-#elif defined(USE_CARES)
-      // Callbacks will be supressed by looking for the ARES_EDESTRUCTION
-      // sentinel status
-      ares_destroy(*channel);
-#endif
       *channel = 0;
    }
 
@@ -811,11 +806,11 @@ bool AresDns::checkDnsChange()
 
 AresDns::~AresDns()
 {
-#if defined(USE_ARES)
-   ares_destroy_suppress_callbacks(mChannel);
-#elif defined(USE_CARES)
+   // Fails the queries in flight with ARES_EDESTRUCTION; with mDestroying set
+   // the callback frees their payloads without reporting them (see
+   // resip_AresDns_aresCallback)
+   mDestroying = true;
    ares_destroy(mChannel);
-#endif
    clearPollItems();
 }
 
@@ -856,16 +851,13 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
 ExternalDnsHandler*
 AresDns::getHandler(void* arg)
 {
-   Payload* p = reinterpret_cast<Payload*>(arg);
-   ExternalDnsHandler *thisp = reinterpret_cast<ExternalDnsHandler*>(p->first);
-   return thisp;
+   return reinterpret_cast<Payload*>(arg)->handler;
 }
 
 ExternalDnsRawResult
 AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
 {
-   Payload* p = reinterpret_cast<Payload*>(arg);
-   void* userArg = reinterpret_cast<void*>(p->second);
+   void* userArg = reinterpret_cast<Payload*>(arg)->userData;
 
    if (status != ARES_SUCCESS)
    {
@@ -1024,7 +1016,7 @@ AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* han
 #if defined(USE_CARES) && ARES_VERSION >= 0x011c00
    // ares_query() was deprecated in c-ares 1.28, which added ares_query_dnsrec()
    ares_query_dnsrec(mChannel, target, ARES_CLASS_IN, (ares_dns_rec_type_t)type,
-                     resip_AresDns_caresDnsrecCallback, new Payload(handler, userData), 0);
+                     resip_AresDns_caresDnsrecCallback, new Payload(handler, userData, this), 0);
 #else
    ares_query(mChannel, target, C_IN, type,
 #if defined(USE_ARES)
@@ -1032,23 +1024,27 @@ AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* han
 #elif defined(USE_CARES)
               resip_AresDns_caresCallback,
 #endif
-              new Payload(handler, userData));
+              new Payload(handler, userData, this));
 #endif
 }
 
 void
 resip_AresDns_aresCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
-#if defined(USE_CARES)
-   // If this is destruction, skip it.  We do this here for completeness.
-   if(status == ARES_EDESTRUCTION)
+   resip::AresDns::Payload* p = reinterpret_cast<resip::AresDns::Payload*>(arg);
+
+   // A destroyed channel fails its queries with ARES_EDESTRUCTION.  When the
+   // AresDns itself is being destroyed, its user (DnsStub) has already let go
+   // of them, so only the payload is freed.  When init() replaces the channel
+   // (the DNS servers were reloaded), they are still wanted, so the failure
+   // is reported like any other, as the bundled ares does.
+   if (status == ARES_EDESTRUCTION && p->owner->mDestroying)
    {
+      delete p;
       return;
    }
-#endif
 
-   resip::AresDns::getHandler(arg)->handleDnsRaw(resip::AresDns::makeRawResult(arg, status, abuf, alen));
-   resip::AresDns::Payload* p = reinterpret_cast<resip::AresDns::Payload*>(arg);
+   p->handler->handleDnsRaw(resip::AresDns::makeRawResult(arg, status, abuf, alen));
    delete p;
 }
 

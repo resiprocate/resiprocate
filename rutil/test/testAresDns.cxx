@@ -256,6 +256,55 @@ checksDnsChange()
 #endif
 }
 
+class CountingHandler : public ExternalDnsHandler
+{
+   public:
+      CountingHandler() : mResults(0), mLastError(0) {}
+
+      void handleDnsRaw(ExternalDnsRawResult res) override
+      {
+         ++mResults;
+         mLastError = res.errorCode();
+      }
+
+      int mResults;
+      long mLastError;
+};
+
+// When the DNS servers are reloaded and have changed, init() replaces the
+// resolver's channel.  A lookup still in flight must then be reported as
+// failed, or whoever is waiting on it (a DnsStub query, a SIP transaction)
+// waits until its own timeout.  When the resolver itself is destroyed, its
+// user has already let go of its lookups, so they must not be reported.
+static void
+reportsLookupsCutShort()
+{
+   DnsStub::NameserverList silent, other;
+   silent.push_back(nameserver("192.0.2.1"));
+   other.push_back(nameserver("192.0.2.2"));
+   const unsigned short typeA = 1;
+
+   {
+      AresDns dns;
+      dns.init(silent, 0, 5, 1, 0);
+      CountingHandler handler;
+      dns.lookup("reload-in-flight.invalid", typeA, &handler, 0);
+      dns.changeNameServers(other);
+      dns.init(5, 1, 0);      // what DnsStub does when reloaded servers changed
+      check(handler.mResults == 1 && handler.mLastError != 0,
+            "a lookup in flight when the DNS servers are reloaded is reported as failed (" +
+            to_string(handler.mResults) + " results)");
+   }
+
+   CountingHandler handler;
+   {
+      AresDns dns;
+      dns.init(silent, 0, 5, 1, 0);
+      dns.lookup("destroyed-in-flight.invalid", typeA, &handler, 0);
+   }
+   check(handler.mResults == 0, "a lookup in flight when the resolver is destroyed is not reported");
+}
+
 #if defined(USE_CARES)
 // Answers every query on a loopback UDP port: REFUSED, with one A record
 // (127.0.0.9), or truncated, which sends the resolver to TCP.
@@ -408,6 +457,7 @@ main()
    callsSocketFunction();
    usesIpv6Nameserver();
    checksDnsChange();
+   reportsLookupsCutShort();
 #if defined(USE_CARES)
    callsSocketFunctionForTcp();
    honoursReturnAllResults();
