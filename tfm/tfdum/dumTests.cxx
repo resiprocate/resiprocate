@@ -3,8 +3,6 @@
 
 #include <signal.h>
 
-#include <boost/bind.hpp>
-
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/TextOutputter.h>
@@ -32,11 +30,10 @@
 
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/HeaderFieldValue.hxx"
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "resip/stack/MessageWaitingContents.hxx"
 #include "resip/stack/PlainContents.hxx"
 
-#include "resip/stack/Pidf.hxx"
 
 #include "resip/dum/DialogEventStateManager.hxx"
 
@@ -50,6 +47,8 @@
 #include "tfm/TfmHelper.hxx"
 #include "tfm/CheckPrivacy.hxx"
 
+#include <functional>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 #define TEST_RESULT_FILE "./testResult.xml"
@@ -61,9 +60,9 @@ static const int WaitFor100 = 1000;
 static const int WaitFor180 = 1000;
 static const int WaitFor487 = 1000;
 static const int WaitForAck = 1000;  //immediate ACK for 4xx and CANCEL; not ACK for 200
-static const int WaitForCommand = 1000;
+static const int WaitForCommand = 2000;
 static const int WaitForResponse = 1000;
-static const int WaitForRegistration = 5000;
+static const int WaitForRegistration = 8000;
 static const int PauseTime = 100;
 static const int WaitForPause = 1100;
 static const int WaitForEndOfTest = 1000;
@@ -80,13 +79,14 @@ static NameAddr localhost;
 class DumTestCase : public DumFixture
 {
    CPPUNIT_TEST_SUITE( DumTestCase ); 
-#if 0
-      // this test relies on a really long sleep, so don't run it unless you wanna wait:
-      CPPUNIT_TEST(testSessionTimerUasRefresher);
-#else
+
+      CPPUNIT_TEST(testSessionTimerExpirationUasRefresher);
+      // TODO SLG - add more SessionTimer tests - UAC refresher, UAS refresher, UAC no refresher, UAS no refresher, etc.
+      CPPUNIT_TEST(testUASEarlyUpdateNoPrack);
+
       CPPUNIT_TEST(testDialogEventUacBasic);
       CPPUNIT_TEST(testDialogEventUasBasic);
-      //CPPUNIT_TEST(testDialogEventUacTwoBranchesProvisional);  // test has commented out code and will cause onStaleCallTimeout to fire later in the middle of another test - commenting out until fixed
+      CPPUNIT_TEST(testDialogEventUacTwoBranchesProvisional);
       CPPUNIT_TEST(testDialogEvent302Uac);
       CPPUNIT_TEST(testDialogEvent302Uas);
       CPPUNIT_TEST(testDialogEventReferUas);
@@ -137,7 +137,7 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testUASPrack2ndOfferInNoAnswerReliableWaitingPrack);
       CPPUNIT_TEST(testUASPrack2ndOfferInOfferReliableProvidedAnswer);
 
-      //CPPUNIT_TEST(testReinviteWithByeSentAfterMissedAck);  // comment above indicates test case needs handling for retransmissions
+      CPPUNIT_TEST(testReinviteWithByeSentAfterMissedAck);
 
       CPPUNIT_TEST(testOutOfDialogReferNoReferSubWithoutReferSubHeader);
       CPPUNIT_TEST(testOutOfDialogRefer);
@@ -175,8 +175,8 @@ class DumTestCase : public DumFixture
 
       CPPUNIT_TEST(testRegisterBasicWithMethodsParam);
       CPPUNIT_TEST(testRegisterBasicWithoutMethodsParam);
-      // CPPUNIT_TEST(testRegisterBasicWithRinstance);  // An instance id is set in DumUserAgent::makeProfile - so rinstance won't be used
-      // CPPUNIT_TEST(testServiceRoute); //could be correct; see draft-rosenberg-sip-route-construct-02.txt. Desired behaviour needs to be determined.
+      CPPUNIT_TEST(testRegisterBasicWithRinstance);
+      CPPUNIT_TEST(testServiceRoute);
       
       CPPUNIT_TEST(testStaleNonceHandling);
       CPPUNIT_TEST(testSubscribe);
@@ -189,13 +189,13 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testIMMergedRequestArrivedWithin32Seconds);
       CPPUNIT_TEST(testIMMergedRequestArrivedMoreThan32SecondsApart);
       CPPUNIT_TEST(testInDialogSubscribeSuccess);
-      CPPUNIT_TEST(testUASSubscribeCreatingDialogFromInvite);   // Works on Windows. Uncomment once works under Linux.
+      CPPUNIT_TEST(testUASSubscribeCreatingDialogFromInvite);
       CPPUNIT_TEST(testInDialogSubscribeWithoutEventHandler);
       CPPUNIT_TEST(testOutOfDialogSubscribeWithoutEventHandler);
       CPPUNIT_TEST(testReInviteRemoveVideo);
       CPPUNIT_TEST(testByesCrossedOnTheWire);  
       CPPUNIT_TEST(testReinviteNo200);  // Requires record routing
-#endif
+
       CPPUNIT_TEST_SUITE_END(); 
 
    public:
@@ -220,7 +220,7 @@ class DumTestCase : public DumFixture
             {
             }
                
-            boost::shared_ptr<resip::SipMessage> operator()(boost::shared_ptr<resip::SipMessage> msg)
+            std::shared_ptr<resip::SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg)
             {
                msg->header(h_MinSE).value() = mMinExpires;
                msg->header(h_SessionExpires).value() = mSessionExpires;
@@ -235,9 +235,10 @@ class DumTestCase : public DumFixture
             {
                switch(m)
                {
+                  default:
                   case None:
                      resip_assert(0);
-                     return "Broken";                     
+                     return "Broken";
                   case Uac:
                      return "uac";
                   case Uas:
@@ -246,7 +247,7 @@ class DumTestCase : public DumFixture
             }
             
          private:
-            //boost::shared_ptr<resip::SipMessage> mSource;
+            //std::shared_ptr<resip::SipMessage> mSource;
             //bool mStale;            
             Mode mMode;
             int mSessionExpires;
@@ -254,34 +255,31 @@ class DumTestCase : public DumFixture
       };
       
 
-      void testSessionTimerUasRefresher()
+      void testSessionTimerExpirationUasRefresher()
       {
-         InfoLog(<< "testSessionTimerUasRefresher");
+         InfoLog(<< "testSessionTimerExpirationUasRefresher");
 
          jason->getProfile()->addSupportedOptionTag(Token(Symbols::Timer));
          
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             condition(SessionTimerControl(SessionTimerControl::Uas, 90), sheila->answer(answer))),
-             jason->expect(Invite_NewClientSession, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
+             // sheila (uas) is the refresher but never refreshes, so jason (non-refresher) expires the session at
+             // SE - min(32, SE/3) = 60 seconds after connecting.  DumUserAgent::onSessionExpired doesn't end the
+             // session itself, so end it here.
+             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, 70 * Seconds, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
              WaitForEndOfSeq);
          ExecuteSequences();
-         
-         sleepSeconds(90);
-
-         Seq(sheila->reInvite("jason", answer),
-             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardOffer)),
-             sheila->expect(INVITE/200, from(jason->getInstanceId()), WaitForResponse, sheila->ack()),
-             WaitForEndOfSeq);
-         
-         ExecuteSequences();         
          
          //jason->getProfile()->removeSupportedOptionTag(Token(Symbols::Timer));
          jason->getProfile()->clearSupportedOptionTags();
@@ -311,12 +309,12 @@ class DumTestCase : public DumFixture
       {
          public:
             DialogEventInfoRemoteTagUpdater(TestDialogEventInfo* toUpdate,
-                                        const boost::shared_ptr<resip::SipMessage>& updatedMsg) :
+                                        const std::shared_ptr<resip::SipMessage>& updatedMsg) :
                mToUpdate(toUpdate),
                mUpdatedMsg(updatedMsg)
             {
             }
-            virtual void operator()(boost::shared_ptr<Event> event)
+            virtual void operator()(std::shared_ptr<Event> event)
             {
                mToUpdate->mDialogId = DialogId(mUpdatedMsg->header(h_CallID).value(),
                                                mUpdatedMsg->header(h_From).param(p_tag),
@@ -325,16 +323,16 @@ class DumTestCase : public DumFixture
             virtual resip::Data toString() const { return "DialogEventInfoRemoteTagUpdater";}
       private:
          TestDialogEventInfo* mToUpdate;
-         const boost::shared_ptr<resip::SipMessage>& mUpdatedMsg;
+         const std::shared_ptr<resip::SipMessage>& mUpdatedMsg;
       };
 
       class InviteHelper
       {
       public:
-         InviteHelper(SharedPtr<SipMessage> invite) : mInvite(invite) {}
-         SharedPtr<SipMessage> getInvite() const { return mInvite; }
+         InviteHelper(std::shared_ptr<SipMessage> invite) : mInvite(invite) {}
+         std::shared_ptr<SipMessage> getInvite() const noexcept { return mInvite; }
       private:
-         SharedPtr<SipMessage> mInvite;
+         std::shared_ptr<SipMessage> mInvite;
       };
 
       void testDialogEventUacBasic()
@@ -351,15 +349,15 @@ class DumTestCase : public DumFixture
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
-         SharedPtr<SipMessage> inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
+         auto inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
 
          TestDialogEventInfo di1;
          di1.mDialogEventId = "*";
          di1.mDirection = DialogEventInfo::Initiator;
          di1.mInviteSession = InviteSessionHandle::NotValid();
-         di1.mLocalOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         di1.mLocalOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          // the following are properties that get generated AFTER the initial INVITE is made by DUM...
          di1.mDialogId = DialogId(DialogSetId(*inviteMsg), Data::Empty);
          di1.mLocalIdentity = inviteMsg->header(h_From);
@@ -368,18 +366,18 @@ class DumTestCase : public DumFixture
 
          // this gets updated with the correct remote tag after sheila answers...
          TestDialogEventInfo di2(di1);
-         di2.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di2.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di2.mState = DialogEventInfo::Early;
 
          TestDialogEventInfo di3(di2);
-         di3.mRemoteOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
-         di3.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di3.mRemoteOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
+         di3.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di3.mState = DialogEventInfo::Confirmed;
 
          TestDialogEventInfo di4(di3);
          di4.mState = DialogEventInfo::Terminated;
 
-         boost::shared_ptr<SipMessage> sheilasRing;
+         std::shared_ptr<SipMessage> sheilasRing;
 
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
@@ -389,7 +387,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(save(sheilasRing, sheila->ring()), 
@@ -425,15 +423,15 @@ class DumTestCase : public DumFixture
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
-         SharedPtr<SipMessage> inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
+         auto inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
 
          TestDialogEventInfo di1;
          di1.mDialogEventId = "*";
          di1.mDirection = DialogEventInfo::Initiator;
          di1.mInviteSession = InviteSessionHandle::NotValid();
-         di1.mLocalOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         di1.mLocalOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          // the following are properties that get generated AFTER the initial INVITE is made by DUM...
          di1.mDialogId = DialogId(DialogSetId(*inviteMsg), Data::Empty);
          di1.mLocalIdentity = inviteMsg->header(h_From);
@@ -442,7 +440,7 @@ class DumTestCase : public DumFixture
 
          // this gets updated with the correct remote tag after sheila answers...
          TestDialogEventInfo di2(di1);
-         di2.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di2.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di2.mState = DialogEventInfo::Terminated;
 
          // !jjg! leaks
@@ -451,7 +449,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->send100(),sheila->send500())),
              And(Sub(uac.expect(DialogEvent_Terminated, *pDi2, InviteSessionHandler::Error, WaitForCommand, uac.noAction()),
@@ -473,15 +471,15 @@ class DumTestCase : public DumFixture
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent testDialogEvt(jason);
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
-         SharedPtr<SipMessage> inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
+         auto inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
 
          TestDialogEventInfo di1;
          di1.mDialogEventId = "*";
          di1.mDirection = DialogEventInfo::Initiator;
          di1.mInviteSession = InviteSessionHandle::NotValid();
-         di1.mLocalOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         di1.mLocalOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          // the following are properties that get generated AFTER the initial INVITE is made by DUM...
          di1.mDialogId = DialogId(DialogSetId(*inviteMsg), Data::Empty);
          di1.mLocalIdentity = inviteMsg->header(h_From);
@@ -490,18 +488,18 @@ class DumTestCase : public DumFixture
 
          // this gets updated with the correct remote tag after sheila answers...
          TestDialogEventInfo di2(di1);
-         di2.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di2.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di2.mState = DialogEventInfo::Early;
 
          TestDialogEventInfo di3(di2);
-         di3.mRemoteOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
-         di3.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di3.mRemoteOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
+         di3.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di3.mState = DialogEventInfo::Confirmed;
 
          TestDialogEventInfo di4(di3);
          di4.mState = DialogEventInfo::Terminated;
 
-         boost::shared_ptr<SipMessage> sheilasRing;
+         std::shared_ptr<SipMessage> sheilasRing;
 
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
@@ -511,7 +509,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, testDialogEvt.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(sheila->send100(),
@@ -555,15 +553,15 @@ class DumTestCase : public DumFixture
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
-         SharedPtr<SipMessage> inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
+         auto inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
 
          TestDialogEventInfo di1;
          di1.mDialogEventId = "*";
          di1.mDirection = DialogEventInfo::Initiator;
          di1.mInviteSession = InviteSessionHandle::NotValid();
-         di1.mLocalOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         di1.mLocalOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          // the following are properties that get generated AFTER the initial INVITE is made by DUM...
          di1.mDialogId = DialogId(DialogSetId(*inviteMsg), Data::Empty);
          di1.mLocalIdentity = inviteMsg->header(h_From);
@@ -572,21 +570,21 @@ class DumTestCase : public DumFixture
 
          // this gets updated with the correct remote tag after sheila answers...
          TestDialogEventInfo di2(di1);
-         di2.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di2.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di2.mState = DialogEventInfo::Early;
 
          TestDialogEventInfo di2a(di1);
-         di2a.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di2a.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di2a.mState = DialogEventInfo::Early;
 
          TestDialogEventInfo di3(di2);
-         di3.mRemoteOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
-         di3.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di3.mRemoteOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
+         di3.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di3.mState = DialogEventInfo::Confirmed;
 
          TestDialogEventInfo di3a(di2a);
-         di3a.mRemoteOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
-         di3a.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di3a.mRemoteOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
+         di3a.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di3a.mState = DialogEventInfo::Confirmed;
 
          TestDialogEventInfo di4(di3);
@@ -595,23 +593,24 @@ class DumTestCase : public DumFixture
          TestDialogEventInfo di4a(di3a);
          di4a.mState = DialogEventInfo::Terminated;
 
-         boost::shared_ptr<SipMessage> sheilasRing;
-         boost::shared_ptr<SipMessage> sheilasSecondRing;
+         std::shared_ptr<SipMessage> sheilasRing;
+         std::shared_ptr<SipMessage> sheilasSecondRing;
 
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
          DialogEventPred* pDi2 = new DialogEventPred(di2);
          DialogEventPred* pDi2a = new DialogEventPred(di2a);
 //         DialogEventPred* pDi3 = new DialogEventPred(di3);
-//         DialogEventPred* pDi4 = new DialogEventPred(di4);
-//         DialogEventPred* pDi4a = new DialogEventPred(di4a);
+         DialogEventPred* pDi4 = new DialogEventPred(di4);
+         DialogEventPred* pDi4a = new DialogEventPred(di4a);
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
-                            chain(save(sheilasRing, sheila->ring()), 
+                            chain(sheila->send100(),  // DumUserAgent learns the AppDialogSet that cancelInvite() needs from onTrying
+                                  save(sheilasRing, sheila->ring()),
                                   new DialogEventInfoRemoteTagUpdater(&di2, sheilasRing),
                                   new DialogEventInfoRemoteTagUpdater(&di3, sheilasRing),
                                   new DialogEventInfoRemoteTagUpdater(&di4, sheilasRing),
@@ -625,14 +624,20 @@ class DumTestCase : public DumFixture
              jason->expect(Invite_NewClientSession, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              uac.expect(DialogEvent_Early, *pDi2a, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->noAction()),
-             //jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             //uac.expect(DialogEvent_Confirmed, *pDi3, WaitForCommand, uac.noAction()),
-             //And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
-             //    Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->bye()))),
-             //And(
-             //   Sub(jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
-             //   Sub(uac.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::RemoteBye, WaitForCommand, uac.noAction())),
-             //   Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         // Cancel the call so that no early dialogs are left behind to fire onStaleCallTimeout during a later test.
+         // Cancelling the dialog set terminates the dialog event state for both early dialogs at once.  Sheila's 487
+         // carries the first branch's To tag, so only that dialog terminates immediately - the second branch's
+         // dialog terminates when its Cancelled timer (Timer::TH = 32s) fires.
+         Seq(jason->cancelInvite(),
+             And(Sub(sheila->expect(CANCEL, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::LocalCancel, WaitForCommand, uac.noAction())),
+                 Sub(uac.expect(DialogEvent_Terminated, *pDi4a, InviteSessionHandler::LocalCancel, WaitForCommand, uac.noAction())),
+                 Sub(jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, CallTimeout, uac.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
       }
@@ -651,15 +656,15 @@ class DumTestCase : public DumFixture
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
-         SharedPtr<SipMessage> inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
+         auto inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
 
          TestDialogEventInfo di1;
          di1.mDialogEventId = "*";
          di1.mDirection = DialogEventInfo::Initiator;
          di1.mInviteSession = InviteSessionHandle::NotValid();
-         di1.mLocalOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         di1.mLocalOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          // the following are properties that get generated AFTER the initial INVITE is made by DUM...
          di1.mDialogId = DialogId(DialogSetId(*inviteMsg), Data::Empty);
          di1.mLocalIdentity = inviteMsg->header(h_From);
@@ -678,12 +683,12 @@ class DumTestCase : public DumFixture
          // this gets updated with the correct remote tag after sheila answers...
          TestDialogEventInfo di3(di1);
          di3.mState = DialogEventInfo::Terminated;
-         di3.mRemoteTarget = std::auto_ptr<Uri>(new Uri("sip:derek@localhost"));
+         di3.mRemoteTarget = std::unique_ptr<Uri>(new Uri("sip:derek@localhost"));
 
          TestDialogEventInfo di4(di2);
          di4.mState = DialogEventInfo::Terminated;
 
-         boost::shared_ptr<SipMessage> sheilasRedirect;
+         std::shared_ptr<SipMessage> sheilasRedirect;
 
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
@@ -698,7 +703,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->send302(derek->getAor().uri())),
              And(Sub(uac.expect(DialogEvent_Terminated, *pDi3, InviteSessionHandler::Rejected, WaitForCommand, uac.noAction()),
@@ -727,9 +732,9 @@ class DumTestCase : public DumFixture
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent testDialogEvt(jason);
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
-         SharedPtr<SipMessage> inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
+         auto inviteMsg = jason->getDum().makeInviteSession(sheila->getContact(), standardOffer);
 
          Uri contactDerek = derek->getAor().uri();
          contactDerek.host() = derek->getIp();
@@ -739,7 +744,7 @@ class DumTestCase : public DumFixture
          di1.mDialogEventId = "*";
          di1.mDirection = DialogEventInfo::Initiator;
          di1.mInviteSession = InviteSessionHandle::NotValid();
-         di1.mLocalOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         di1.mLocalOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          // the following are properties that get generated AFTER the initial INVITE is made by DUM...
          di1.mDialogId = DialogId(DialogSetId(*inviteMsg), Data::Empty);
          di1.mLocalIdentity = inviteMsg->header(h_From);
@@ -748,32 +753,32 @@ class DumTestCase : public DumFixture
 
          // this gets updated with the correct remote tag after sheila answers...
          TestDialogEventInfo di2(di1);
-         di2.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di2.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di2.mState = DialogEventInfo::Early;
 
          TestDialogEventInfo di3(di2);
-         di3.mRemoteOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
-         di3.mRemoteTarget = std::auto_ptr<Uri>(new Uri(sheila->getContact().uri()));
+         di3.mRemoteOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
+         di3.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di3.mState = DialogEventInfo::Confirmed;
 
          TestDialogEventInfo di4(di3);
          di4.mState = DialogEventInfo::Terminated;
 
-         boost::shared_ptr<SipMessage> inviteFromRefer;
+         std::shared_ptr<SipMessage> inviteFromRefer;
 
          TestDialogEventInfo di5;
          di5.mDialogEventId = "*";
          di5.mDirection = DialogEventInfo::Initiator;
          di5.mInviteSession = InviteSessionHandle::NotValid();
-         di5.mLocalOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         di5.mLocalOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          // the following are properties that get generated AFTER the initial INVITE is made by DUM...
          di5.mDialogId = DialogId("*", "*", "*");
          di5.mLocalIdentity = inviteMsg->header(h_From);
          di5.mLocalTarget = inviteMsg->header(h_Contacts).front().uri();
          di5.mRemoteIdentity = NameAddr(contactDerek);
-         di5.mReferredBy = std::auto_ptr<NameAddr>(new NameAddr(di1.mRemoteIdentity));
+         di5.mReferredBy = std::unique_ptr<NameAddr>(new NameAddr(di1.mRemoteIdentity));
 
-         boost::shared_ptr<SipMessage> sheilasRing;
+         std::shared_ptr<SipMessage> sheilasRing;
 
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
@@ -789,7 +794,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, testDialogEvt.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(save(sheilasRing, sheila->ring()), 
@@ -858,13 +863,13 @@ class DumTestCase : public DumFixture
          di1.mDialogEventId = "*";
          di1.mDirection = DialogEventInfo::Recipient;
          di1.mInviteSession = InviteSessionHandle::NotValid();
-         //di1.mLocalOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         //di1.mLocalOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          // the following are properties that get generated AFTER the initial INVITE is made by DUM...
          di1.mDialogId = DialogId("*", "*", "*");
          di1.mLocalIdentity = jason->getAor();
          di1.mLocalTarget = Uri("sip:anyone@anywhere.com");
          di1.mRemoteIdentity = derek->getAor();
-         di1.mRemoteTarget = std::auto_ptr<Uri>(new Uri(derekContact));
+         di1.mRemoteTarget = std::unique_ptr<Uri>(new Uri(derekContact));
          DialogEventPred* pDi1 = new DialogEventPred(di1);
 
          TestDialogEventInfo di1a(di1);
@@ -882,10 +887,10 @@ class DumTestCase : public DumFixture
          di3.mDialogId = DialogId("*", "*", "*");
          di3.mLocalIdentity = jason->getAor();
          di3.mLocalTarget = Uri("sip:anyone@anywhere.com");
-         di3.mRemoteTarget = std::auto_ptr<Uri>(new Uri(scottContact));
+         di3.mRemoteTarget = std::unique_ptr<Uri>(new Uri(scottContact));
          di3.mRemoteIdentity = scott->getAor();
-         di3.mReplacesId = std::auto_ptr<DialogId>(new DialogId("*", "*", "*"));
-         di3.mReferredBy = std::auto_ptr<NameAddr>(new NameAddr(derek->getProfile()->getDefaultFrom()));
+         di3.mReplacesId = std::unique_ptr<DialogId>(new DialogId("*", "*", "*"));
+         di3.mReferredBy = std::unique_ptr<NameAddr>(new NameAddr(derek->getProfile()->getDefaultFrom()));
          DialogEventPred* pDi3 = new DialogEventPred(di3);
 
          TestDialogEventInfo di4(di3);
@@ -1014,12 +1019,12 @@ class DumTestCase : public DumFixture
       {
          public:
             ExpectedDialogEventInfoBuilderUas(TestDialogEventInfo* toUpdate,
-                                              const boost::shared_ptr<resip::SipMessage>& updatedMsg) :
+                                              const std::shared_ptr<resip::SipMessage>& updatedMsg) :
                mToUpdate(toUpdate),
                mUpdatedMsg(updatedMsg)
             {
             }
-            virtual void operator()(boost::shared_ptr<Event> event)
+            virtual void operator()(std::shared_ptr<Event> event)
             {
                resip_assert(0);
             }
@@ -1032,14 +1037,14 @@ class DumTestCase : public DumFixture
                mToUpdate->mLocalIdentity = mUpdatedMsg->header(h_To);
                if (!mToUpdate->hasRemoteTarget())
                {
-                  mToUpdate->mRemoteTarget = std::auto_ptr<Uri>(new Uri(mUpdatedMsg->header(h_Contacts).front().uri()));
+                  mToUpdate->mRemoteTarget = std::unique_ptr<Uri>(new Uri(mUpdatedMsg->header(h_Contacts).front().uri()));
                }
                mToUpdate->mRemoteIdentity = mUpdatedMsg->header(h_From);
             }
             virtual resip::Data toString() const { return "ExpectedDialogEventInfoBuilderUas";}
       private:
          TestDialogEventInfo* mToUpdate;
-         const boost::shared_ptr<resip::SipMessage>& mUpdatedMsg;
+         const std::shared_ptr<resip::SipMessage>& mUpdatedMsg;
       };
 
       void testDialogEventUasBasic()
@@ -1063,14 +1068,14 @@ class DumTestCase : public DumFixture
          TestSipEndPoint* sheila = sipEndPoint;
          TestServerInviteSession uac(jason);
          TestDialogEvent testDialogEvt(jason);
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          TestDialogEventInfo di1;
          di1.mDialogEventId = "*";
          di1.mDirection = DialogEventInfo::Initiator;
          di1.mInviteSession = InviteSessionHandle::NotValid();
-         di1.mRemoteOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         di1.mRemoteOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          di1.mLocalTarget = Uri("sip:anyone@anywhere.com");
 
          TestDialogEventInfo di2(di1);
@@ -1078,12 +1083,12 @@ class DumTestCase : public DumFixture
 
          TestDialogEventInfo di3(di2);
          di3.mState = DialogEventInfo::Confirmed;
-         di3.mLocalOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
+         di3.mLocalOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
 
          TestDialogEventInfo di4(di3);
          di4.mState = DialogEventInfo::Terminated;
 
-         boost::shared_ptr<SipMessage> sheilasInvite;
+         std::shared_ptr<SipMessage> sheilasInvite;
 
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
@@ -1136,14 +1141,14 @@ class DumTestCase : public DumFixture
          TestSipEndPoint* sheila = sipEndPoint;
          TestServerInviteSession uac(jason);
          TestDialogEvent testDialogEvt(jason);
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          TestDialogEventInfo di1;
          di1.mDialogEventId = "*";
          di1.mDirection = DialogEventInfo::Recipient;
          di1.mInviteSession = InviteSessionHandle::NotValid();
-         di1.mRemoteOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         di1.mRemoteOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          di1.mLocalTarget = Uri("sip:anyone@anywhere.com");
 
          Uri contactDerek = derek->getAor().uri();
@@ -1152,14 +1157,14 @@ class DumTestCase : public DumFixture
 
          TestDialogEventInfo di2(di1);
          di2.mState = DialogEventInfo::Terminated;
-         di2.mRemoteTarget = std::auto_ptr<Uri>(new Uri(contactDerek));
+         di2.mRemoteTarget = std::unique_ptr<Uri>(new Uri(contactDerek));
 
-         //di3.mLocalOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
+         //di3.mLocalOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardAnswer->clone()));
 
          resip::NameAddrs redirContacts;
          redirContacts.push_back(NameAddr(contactDerek));
 
-         boost::shared_ptr<SipMessage> sheilasInvite;
+         std::shared_ptr<SipMessage> sheilasInvite;
 
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
@@ -1203,14 +1208,14 @@ class DumTestCase : public DumFixture
          TestSipEndPoint* sheila = sipEndPoint;
          TestServerInviteSession uac(jason);
          TestDialogEvent testDialogEvt(jason);
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          TestDialogEventInfo di1;
          di1.mDialogEventId = "*";
          di1.mDirection = DialogEventInfo::Initiator;
          di1.mInviteSession = InviteSessionHandle::NotValid();
-         di1.mRemoteOfferAnswer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+         di1.mRemoteOfferAnswer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
          di1.mLocalTarget = Uri("sip:anyone@anywhere.com");
 
          TestDialogEventInfo di2(di1);
@@ -1222,7 +1227,7 @@ class DumTestCase : public DumFixture
          TestDialogEventInfo di4(di3);
          di4.mState = DialogEventInfo::Terminated;
 
-         boost::shared_ptr<SipMessage> sheilasInvite;
+         std::shared_ptr<SipMessage> sheilasInvite;
 
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
@@ -1259,7 +1264,7 @@ class DumTestCase : public DumFixture
          TestClientRegistration clientReg(derek);
          TestServerInviteSession uas(derek);
 
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          Uri contactDerek = derek->getAor().uri();
          contactDerek.host() = derek->getIp();
          contactDerek.port() = derek->getPort();
@@ -1280,10 +1285,13 @@ class DumTestCase : public DumFixture
              david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
              uas.expect(Invite_OfferRequired, dumFrom(proxy), 2000, uas.provideOffer(*standardOffer)),
-             david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
-             david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
-             david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
-             david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+             // The unacknowledged 200 is sent at 0 s and retransmitted at 2, 6,
+             // 14, 22 and 30 s (T1 2 s doubling, capped at T2 8 s), then DUM
+             // gives up when WaitForAck (Timer::TH) fires at 32 s: main() sets
+             // T1 directly rather than through Timer::resetT1(), so TH keeps
+             // its 64 * 500 ms default.  This expected 10 while a leftover
+             // Retransmit200 timer from the initial INVITE's 200 drove a second
+             // retransmission chain; DUM now ignores that stale timer.
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
@@ -1360,7 +1368,7 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
 
          TestClientInviteSession invDerek(derek);
-         boost::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
          
          //!dcm! TODO need to rationalize aor/nameaddr...use SipElement. Possibly
          //SipElement will have conversion operators
@@ -1460,8 +1468,11 @@ class DumTestCase : public DumFixture
       void testRegisterBasicWithoutRinstance()
       {
          WarningLog(<< "testRegisterBasicWithoutRinstance");
-         
-         // disable the rinstance.
+
+         // disable the rinstance.  DumUserAgent::makeProfile sets an instance id, which on its own stops
+         // ClientRegistration from adding rinstance - so clear it, otherwise this test passes regardless.
+         Data instanceId = derek->getProfile()->getInstanceId();
+         derek->getProfile()->setInstanceId(Data::Empty);
          derek->getProfile()->setRinstanceEnabled(false);
          TestClientRegistration clientReg(derek);
 
@@ -1477,12 +1488,17 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
 
          derek->getProfile()->setRinstanceEnabled(true);
+         derek->getProfile()->setInstanceId(instanceId);
       };
 
       void testRegisterBasicWithRinstance()
       {
          WarningLog(<< "testRegisterBasicWithRinstance");
-         
+
+         // DumUserAgent::makeProfile sets an instance id, and ClientRegistration only falls back to rinstance when
+         // there is no instance id - so clear it for this test.
+         Data instanceId = derek->getProfile()->getInstanceId();
+         derek->getProfile()->setInstanceId(Data::Empty);
          TestClientRegistration clientReg(derek);
 
          Seq(derek->registerUa(),
@@ -1503,6 +1519,7 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
+         derek->getProfile()->setInstanceId(instanceId);
       };
 
       void testRegisterBasicWithMethodsParam()
@@ -1552,7 +1569,7 @@ class DumTestCase : public DumFixture
          //Uri aor;
          //aor = proxy->getUri();
          //aor.user() = "derek";         
-         //resip::SharedPtr<MasterProfile> prof = DumUserAgent::makeProfile(aor, "derek");
+         //auto prof = DumUserAgent::makeProfile(aor, "derek");
          //DumUserAgent derek(prof, proxy);
          
          Seq( derek->registerUa(),
@@ -1580,7 +1597,7 @@ class DumTestCase : public DumFixture
                   "Message-Account: sip:derek@mail.sipfoundry.org\r\n"
                   "Voice-Message: 2/8 (0/2)\r\n");
          HeaderFieldValue hfv(txt.begin(), txt.size());
-         boost::shared_ptr<Contents> mwc = boost::shared_ptr<Contents>(new MessageWaitingContents(hfv, Mime("application", "simple-message-summary")));
+         std::shared_ptr<resip::Contents> mwc = std::make_shared<MessageWaitingContents>(hfv, Mime("application", "simple-message-summary"));
 
          TestClientSubscription clientSub(derek);
 
@@ -1666,8 +1683,7 @@ class DumTestCase : public DumFixture
                   "Message-Account: sip:derek@mail.sipfoundry.org\r\n"
                   "Voice-Message: 2/8 (0/2)\r\n");
          HeaderFieldValue hfv(txt.begin(), txt.size());
-         boost::shared_ptr<resip::Contents> mwc = 
-            boost::shared_ptr<resip::Contents>(new MessageWaitingContents(hfv, Mime("application", "simple-message-summary")));
+         std::shared_ptr<resip::Contents> mwc = std::make_shared<MessageWaitingContents>(hfv, Mime("application", "simple-message-summary"));
 
          TestClientSubscription clientSub(jason);
          TestServerSubscription serverSub(derek);
@@ -1700,8 +1716,8 @@ class DumTestCase : public DumFixture
 
          TestClientInviteSession uac(hiss);
 
-         boost::shared_ptr<SipMessage> privInvite;
-         boost::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SipMessage> privInvite;
+         std::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
          
          Seq(hiss->invite(sipEndPoint->getContact(), standardOffer),
              sipEndPoint->expect(INVITE, from(hiss->getInstanceId()), WaitForCommand, 
@@ -2092,8 +2108,7 @@ class DumTestCase : public DumFixture
                   "Message-Account: sip:derek@mail.sipfoundry.org\r\n"
                   "Voice-Message: 2/8 (0/2)\r\n");
          HeaderFieldValue hfv(txt.begin(), txt.size());
-         boost::shared_ptr<Contents> mwc = 
-            boost::shared_ptr<Contents>(new MessageWaitingContents(hfv, Mime("application", "simple-message-summary")));
+         std::shared_ptr<Contents> mwc = std::make_shared<MessageWaitingContents>(hfv, Mime("application", "simple-message-summary"));
 
          TestClientSubscription clientSub(jason);
          TestServerSubscription serverSub(derek);
@@ -2134,8 +2149,7 @@ class DumTestCase : public DumFixture
                   "Message-Account: sip:derek@mail.sipfoundry.org\r\n"
                   "Voice-Message: 2/8 (0/2)\r\n");
          HeaderFieldValue hfv(txt.begin(), txt.size());
-         boost::shared_ptr<Contents> mwc = 
-            boost::shared_ptr<Contents>(new MessageWaitingContents(hfv, Mime("application", "simple-message-summary")));
+         std::shared_ptr<Contents> mwc = std::make_shared<MessageWaitingContents>(hfv, Mime("application", "simple-message-summary"));
 
          TestServerSubscription srvSubJason(jason);
          TestClientSubscription clientSubDerek(derek);
@@ -2167,12 +2181,8 @@ class DumTestCase : public DumFixture
       void testPublishBasic()
       {
          WarningLog(<< "testPublishBasic");
-         Pidf* pidf = new Pidf;
-         boost::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getAor().uri());
+
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);
 
          Uri contact = derek->getAor().uri();
          contact.host() = derek->getIp();
@@ -2204,12 +2214,7 @@ class DumTestCase : public DumFixture
          contact.host() = derek->getIp();
          contact.port() = derek->getPort();
 
-         Pidf* pidf = new Pidf;
-         boost::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getAor().uri()));
-         pidf->getTuples().front().id = derek->getAor().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getAor().uri());
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);
          
          Seq(derek->publish(NameAddr(david->getContact()), *body, Data("presence"), 100),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send401()),
@@ -2241,22 +2246,8 @@ class DumTestCase : public DumFixture
          contact.host() = derek->getIp();
          contact.port() = derek->getPort();
 
-         //!dcm! -- should be auto_ptr, move generation to utility function;
-         //wheere content doesn't matter, should have static bodies in fixture
-         Pidf* pidf = new Pidf;
-         boost::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getProfile()->getDefaultFrom().uri());
-         
-         Pidf* pidf2 = new Pidf;
-         boost::shared_ptr<resip::Contents> body2(pidf2);
-         pidf2->setSimpleStatus(false, "offline", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf2->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf2->getTuples().front().attributes["displayName"] = "displayName";
-         pidf2->setEntity(derek->getProfile()->getDefaultFrom().uri());
-
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);  // online
+         std::unique_ptr<GenericPidfContents> body2 = DumFixture::makePidf(derek, false); // offline
 
          Seq(derek->publish(NameAddr(david->getContact()), *body, Data("presence"), 100),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send401()),
@@ -2283,7 +2274,7 @@ class DumTestCase : public DumFixture
       class ReUseNonce
       {
          public:
-            ReUseNonce(boost::shared_ptr<resip::SipMessage> source, bool stale = false) :
+            ReUseNonce(std::shared_ptr<resip::SipMessage> source, bool stale = false) :
                mSource(source),
                mStale(stale)
             {
@@ -2291,7 +2282,7 @@ class DumTestCase : public DumFixture
                resip_assert(mSource->header(h_WWWAuthenticates).size() == 1);
             }
                
-            boost::shared_ptr<resip::SipMessage> operator()(boost::shared_ptr<resip::SipMessage> msg)
+            std::shared_ptr<resip::SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg)
             {
                resip_assert(msg->header(h_StatusLine).responseCode() == 401 || msg->header(h_StatusLine).responseCode() == 407);
                resip_assert(msg->header(h_WWWAuthenticates).size() == 1);
@@ -2305,7 +2296,7 @@ class DumTestCase : public DumFixture
                return msg;;               
             }
          private:
-            boost::shared_ptr<resip::SipMessage> mSource;
+            std::shared_ptr<resip::SipMessage> mSource;
             bool mStale;            
       };
       
@@ -2315,14 +2306,9 @@ class DumTestCase : public DumFixture
 
          TestClientPublication clientPubDerek(derek);
 
-         Pidf* pidf = new Pidf;
-         boost::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getProfile()->getDefaultFrom().uri());
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);  // online
 
-         boost::shared_ptr<resip::SipMessage> nonceSource;
+         std::shared_ptr<resip::SipMessage> nonceSource;
          
          Seq(derek->publish(NameAddr(david->getContact()), *body, Data("presence"), 100),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, save(nonceSource, david->send401())),
@@ -2331,13 +2317,8 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         Pidf* pidf2 = new Pidf;
-         boost::shared_ptr<resip::Contents> body2(pidf2);
-         pidf2->setSimpleStatus(false, "offline", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf2->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf2->getTuples().front().attributes["displayName"] = "displayName";
-         pidf2->setEntity(derek->getProfile()->getDefaultFrom().uri());
-         
+         std::unique_ptr<GenericPidfContents> body2 = DumFixture::makePidf(derek, false);  // offline
+
          WarningLog(<< "testStaleNonceHandling, second phase");
          Seq(clientPubDerek.update(body2.get()),
              david->expect(PUBLISH, matchNonceCount(2), WaitForResponse, 
@@ -2350,7 +2331,7 @@ class DumTestCase : public DumFixture
              clientPubDerek.expect(ClientPublication_Remove, *TestEndPoint::AlwaysTruePred, 
                                    WaitForResponse, clientPubDerek.noAction()),
              WaitForEndOfTest);
-         ExecuteSequences();         
+         ExecuteSequences();
       }
 
       void testLucentAuthIssue()
@@ -2359,13 +2340,8 @@ class DumTestCase : public DumFixture
 
          TestClientPublication clientPubDerek(derek);
 
-         Pidf* pidf = new Pidf;
-         boost::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getProfile()->getDefaultFrom().uri());
-         
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);  // online
+
          Seq(derek->publish(NameAddr(david->getContact()), *body, Data("presence"), 100),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send401()),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send200ToPublish()),
@@ -2373,14 +2349,9 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         Pidf* pidf2 = new Pidf;
-         boost::shared_ptr<resip::Contents> body2(pidf2);
-         pidf2->setSimpleStatus(false, "offline", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf2->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf2->getTuples().front().attributes["displayName"] = "displayName";
-         pidf2->setEntity(derek->getProfile()->getDefaultFrom().uri());
-         
-         boost::shared_ptr<resip::SipMessage> nonceSource;
+         std::unique_ptr<GenericPidfContents> body2 = DumFixture::makePidf(derek, false);  // offline
+
+         std::shared_ptr<resip::SipMessage> nonceSource;
          
          //re-use nonce
          Seq(clientPubDerek.update(body2.get()),
@@ -2418,13 +2389,8 @@ class DumTestCase : public DumFixture
          contact.host() = derek->getIp();
          contact.port() = derek->getPort();
 
-         Pidf* pidf = new Pidf;
-         boost::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getProfile()->getDefaultFrom().uri());
-         
+         std::unique_ptr<GenericPidfContents> body = DumFixture::makePidf(derek);  // online
+
          Seq(derek->publish(NameAddr(david->getContact()), *body, Data("presence"), 100),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send401()),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send423Or200ToPublish(200)),
@@ -2433,12 +2399,8 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         Pidf* pidf2 = new Pidf;
-         boost::shared_ptr<resip::Contents> body2(pidf2);
-         pidf2->setSimpleStatus(false, "offline", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf2->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf2->getTuples().front().attributes["displayName"] = "displayName";
-         pidf2->setEntity(derek->getProfile()->getDefaultFrom().uri());
+         std::unique_ptr<GenericPidfContents> body2 = DumFixture::makePidf(derek, false);  // offline
+
          Seq(clientPubDerek.update(body2.get()),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send401()),
              david->expect(PUBLISH, hasMessageBodyMatch(), WaitForResponse, david->send200ToPublish()),
@@ -2643,15 +2605,13 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
       }
 
-#if 0
-      void testReinviteWithByeSentAfterMissedAck() // not quite work, how to
-                                                   // handle retransmissions?
+      void testReinviteWithByeSentAfterMissedAck()
       {
          WarningLog(<< "testReinviteWithByeSentAfterMissedAck");
 
          TestClientRegistration regDerek(derek);
          Seq(derek->registerUa(),
-             derek->expect(Register_Success, dumFrom(proxy), WaitForRegistration, derek->noAction()),
+             derek->expect(Register_Success, regDerek, dumFrom(proxy), WaitForRegistration, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -2666,8 +2626,9 @@ class DumTestCase : public DumFixture
          contactDerek.host() = derek->getIp();
          contactDerek.port() = derek->getPort();
 
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          Seq(derek->invite(NameAddr(david->getAddressOfRecord()), standardOffer),
-             david->expect(INVITE, from(contactDerek), WaitForCommand, chain(david->ring(), david->answer())),
+             david->expect(INVITE, from(contactDerek), WaitForCommand, chain(david->ring(), david->answer(answer))),
 
              And(Sub(derek->expect(Invite_NewClientSession, uacDerek, *TestEndPoint::AlwaysTruePred, WaitForCommand, derek->noAction()),
                      uacDerek.expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacDerek.noAction()),
@@ -2677,14 +2638,26 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         Seq(david->reInvite(contactDerek),
+         // The re-INVITE carries an offer, so derek answers in the 200 and is Connected while waiting for the ACK -
+         // when it never arrives DUM ends the session with a BYE.  (An offerless re-INVITE would instead leave derek
+         // in ReceivedReinviteSentOffer, where a missing ACK is treated as a rejected offer and the call stays up -
+         // see testReinviteNo200.)
+         // The unacknowledged 200 is sent at 0 s and retransmitted at 2, 6, 14, 22 and 30 s (T1 2 s doubling, capped
+         // at T2 8 s), then WaitForAck (Timer::TH) fires at 32 s and DUM sends the BYE.
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         Seq(david->reInvite("derek", offer),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
              david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
              And(Sub(optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
-                     david->expect(INVITE/200, from(contactDerek), WaitForCommand, david->noAction()), // retransmitted 200s
-                     david->expect(BYE, from(contactDerek), WaitForPause, david->ok())),
-                 Sub(uacDerek.expect(Invite_OfferRequired, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacDerek.provideOffer(*standardOffer)),
-                     uacDerek.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacDerek.noAction()))),
+                     david->expect(INVITE/200, from(proxy), WaitForCommand, david->noAction()),
+                     david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+                     david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+                     david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+                     david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+                     david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
+                     david->expect(BYE, from(proxy), CallTimeout, david->ok())),
+                 Sub(uacDerek.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacDerek.provideAnswer(*standardAnswer)),
+                     uacDerek.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, CallTimeout, uacDerek.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -2698,9 +2671,7 @@ class DumTestCase : public DumFixture
              david->expect(REGISTER/200, from(proxy), WaitForRegistration, david->noAction()),
              WaitForEndOfTest);
          ExecuteSequences();
-
       }
-#endif
 
       void testBlindTransferRejected()
       {
@@ -2709,7 +2680,7 @@ class DumTestCase : public DumFixture
          Uri aorBob;
          aorBob = proxy->getUri();
          aorBob.user() = "bob";
-         resip::SharedPtr<MasterProfile> profBob = DumUserAgent::makeProfile(aorBob, "bob");
+         auto profBob = DumUserAgent::makeProfile(aorBob, "bob");
          DumUserAgent bob(profBob, proxy);
          bob.init();
 //         bob.run();
@@ -2717,7 +2688,7 @@ class DumTestCase : public DumFixture
          Uri aorSean;
          aorSean = proxy->getUri();
          aorSean.user() = "sean";
-         resip::SharedPtr<MasterProfile> profSean = DumUserAgent::makeProfile(aorSean, "sean");
+         auto profSean = DumUserAgent::makeProfile(aorSean, "sean");
          DumUserAgent sean(profSean, proxy);
          sean.init();
 //         sean.run();
@@ -2725,7 +2696,7 @@ class DumTestCase : public DumFixture
          Uri aorAlan;
          aorAlan = proxy->getUri();
          aorAlan.user() = "alan";
-         resip::SharedPtr<MasterProfile> profAlan = DumUserAgent::makeProfile(aorAlan, "alan");
+         auto profAlan = DumUserAgent::makeProfile(aorAlan, "alan");
          DumUserAgent alan(profAlan, proxy);
          alan.init();
 //         alan.run();
@@ -2927,7 +2898,7 @@ class DumTestCase : public DumFixture
 
          TestClientInviteSession invDerek(derek);
          TestClientSubscription clientSubDerek(derek);
-         boost::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
 
          // derek calls david
          Seq(derek->invite(NameAddr(david->getAddressOfRecord()), standardOffer),
@@ -3095,7 +3066,7 @@ class DumTestCase : public DumFixture
             {
             }
                
-            boost::shared_ptr<resip::SipMessage> operator()(boost::shared_ptr<resip::SipMessage> msg)
+            std::shared_ptr<resip::SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg)
             {
                msg->header(h_ServiceRoutes) = mServiceRoute;
                return msg;
@@ -3128,7 +3099,7 @@ class DumTestCase : public DumFixture
          
          TestClientPublication clientPub(duane);
          
-         auto_ptr<Pidf> pidf = makePidf(duane);
+         std::unique_ptr<GenericPidfContents> pidf = makePidf(duane);
          
          Seq(duane->publish(NameAddr(sipEndPoint->getContact()), *pidf, Data("presence"), 100),
              serviceEndPoint->expect(PUBLISH, from(duane->getInstanceId()), WaitForResponse, serviceEndPoint->send401()),
@@ -3154,8 +3125,10 @@ class DumTestCase : public DumFixture
          
          ExecuteSequences();
 
+         // RFC 3608: the service route is not used for REGISTER, so the refresh goes to the registrar.  Its 200 has no
+         // Service-Route, which clears the stored service route - so the PUBLISH below goes to sipEndPoint directly.
          Seq(regDuane.requestRefresh(),
-             serviceEndPoint->expect(REGISTER, from(duane->getInstanceId()), WaitForCommand, serviceEndPoint->send200ToRegister()),
+             sipEndPoint->expect(REGISTER, from(duane->getInstanceId()), WaitForCommand, sipEndPoint->send200ToRegister()),
              regDuane.expect(Register_Success, *TestEndPoint::AlwaysTruePred, WaitForRegistration, regDuane.noAction()),
              WaitForEndOfSeq);
 
@@ -3202,7 +3175,7 @@ class DumTestCase : public DumFixture
          ClientPagerMessageHandle h = derek->makePagerMessage(jason->getAor());
          TestClientPagerMessage clientPager(derek, h);
          TestServerPagerMessage srvPager(jason);
-         std::auto_ptr<Contents> contents = std::auto_ptr<Contents>(new PlainContents("hello"));
+         std::unique_ptr<Contents> contents(new PlainContents("hello"));
 
          Seq(clientPager.page(contents),
              jason->expect(ServerPagerMessage_MessageArrived, srvPager, dumFrom(derek), WaitForCommand, srvPager.accept()),
@@ -3227,7 +3200,7 @@ class DumTestCase : public DumFixture
             {
             }
                
-            boost::shared_ptr<resip::SipMessage> operator()(boost::shared_ptr<resip::SipMessage> msg)
+            std::shared_ptr<resip::SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg)
             {
                msg->header(h_CallId).value() = mCallId;
                msg->header(h_From).param(p_tag) = mTag;
@@ -3352,7 +3325,7 @@ class DumTestCase : public DumFixture
             {
             }
                
-            boost::shared_ptr<resip::SipMessage> operator()(boost::shared_ptr<resip::SipMessage> msg)
+            std::shared_ptr<resip::SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg)
             {
                msg->header(h_Vias).front().remove(p_branch);
                return msg;
@@ -3364,12 +3337,7 @@ class DumTestCase : public DumFixture
       {
          WarningLog(<< "test401WithoutBranchId");
 
-         Pidf* pidf = new Pidf;
-         boost::shared_ptr<resip::Contents> body(pidf);
-         pidf->setSimpleStatus(true, "online", Data::from(derek->getProfile()->getDefaultFrom().uri()));
-         pidf->getTuples().front().id = derek->getProfile()->getDefaultFrom().uri().getAor();
-         pidf->getTuples().front().attributes["displayName"] = "displayName";
-         pidf->setEntity(derek->getAor().uri());
+         std::unique_ptr<GenericPidfContents> body = makePidf(derek);
 
          Uri contact = derek->getAor().uri();
          contact.host() = derek->getIp();
@@ -3410,7 +3378,7 @@ class DumTestCase : public DumFixture
 
          TestClientInviteSession invDerek(derek);
          TestClientSubscription clientSubDerek(derek);
-         boost::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
 
          // derek calls david
          Seq(derek->invite(NameAddr(david->getAddressOfRecord()), standardOffer),
@@ -3922,7 +3890,7 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
 
          TestClientInviteSession invDerek(derek);
-         boost::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(derek->invite(NameAddr(david->getAddressOfRecord()), standardOffer),
              david->expect(INVITE, from(proxy), WaitForCommand*10, chain(david->ring(), david->answer(ans))),
@@ -3984,7 +3952,7 @@ class DumTestCase : public DumFixture
 
          TestClientInviteSession invDerek(derek);
 
-         boost::shared_ptr<SipMessage> invMsg;
+         std::shared_ptr<SipMessage> invMsg;
          TestServerSubscription serv(derek);
 
          Seq(
@@ -4036,7 +4004,7 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
 
          TestClientInviteSession invDerek(derek);
-         boost::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> ans(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(derek->invite(NameAddr(david->getAddressOfRecord()), standardOffer),
              david->expect(INVITE, from(proxy), WaitForCommand*10, chain(david->ring(), david->answer(ans))),
@@ -4093,7 +4061,7 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
@@ -4115,8 +4083,8 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
 
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
@@ -4140,8 +4108,10 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
+         // Note:  This test was modified on Dec 18, 2017 to take into account that it is not legal to send a 2nd offer in a
+         // subsequent 180rel.  DUM was modified to just ignore the SDP and not call onOffer.
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
@@ -4149,7 +4119,7 @@ class DumTestCase : public DumFixture
              uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->reliableProvisional(answer, 2))),
              jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             //uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
              sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->answer())),
              And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
@@ -4165,7 +4135,7 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
@@ -4189,7 +4159,7 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
@@ -4215,7 +4185,7 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
@@ -4244,7 +4214,7 @@ class DumTestCase : public DumFixture
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
@@ -4269,7 +4239,7 @@ class DumTestCase : public DumFixture
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
@@ -4294,9 +4264,9 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
-         boost::shared_ptr<resip::SipMessage> prov;
+         std::shared_ptr<resip::SipMessage> prov;
 
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, save(prov, sheila->reliableProvisional(answer, 1))),
@@ -4321,9 +4291,9 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Required);
          TestSipEndPoint* sheila = sipEndPoint;
          TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
-         boost::shared_ptr<resip::SipMessage> prov;
+         std::shared_ptr<resip::SipMessage> prov;
 
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->send420(Token(Symbols::C100rel))),
@@ -4353,7 +4323,7 @@ class DumTestCase : public DumFixture
 
          TestClientInviteSession invDerek(derek);
 
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(derek->invite(NameAddr(david->getAddressOfRecord()), standardOffer),
              And(Sub(david->expect(INVITE, contact(NameAddr(derekContact)), WaitForCommand, chain(david->ring(), david->answer(answer))),
@@ -4587,7 +4557,7 @@ class DumTestCase : public DumFixture
          TestClientInviteSession uac(jason);
          TestServerInviteSession uas(scott);
          
-         boost::shared_ptr<SdpContents> prackOffer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> prackOffer(static_cast<SdpContents*>(standardOffer->clone()));
 
          Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
              scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
@@ -4744,7 +4714,7 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         boost::shared_ptr<SdpContents> prackOffer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> prackOffer(static_cast<SdpContents*>(standardOffer->clone()));
 
          TestClientInviteSession uac(jason);
          TestServerInviteSession uas(scott);
@@ -4957,7 +4927,7 @@ class DumTestCase : public DumFixture
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
-             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, 150000 + WaitForCommand, uac.noAction()),  // Wait 2.5 mins + 1000ms buffer time
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, 150000 + WaitForCommand, uac.noAction()),  // Wait 2.5 mins + 2000ms buffer time
              scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
              And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
@@ -5016,8 +4986,8 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration regScott(scott);
 
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(scott->registerUa(),
              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
@@ -5059,8 +5029,8 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration regScott(scott);
 
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(scott->registerUa(),
              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
@@ -5106,8 +5076,8 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration regScott(scott);
 
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(scott->registerUa(),
              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
@@ -5155,8 +5125,8 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration regScott(scott);
 
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(scott->registerUa(),
              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
@@ -5202,15 +5172,15 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration regScott(scott);
 
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(scott->registerUa(),
              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         int retransInterval = resip::Timer::T1;
+         int retransInterval = resip::Timer::T1;  // Set to 2000
 
          TestServerInviteSession uas(scott);
          
@@ -5244,8 +5214,8 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration regScott(scott);
 
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(scott->registerUa(),
              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
@@ -5288,8 +5258,8 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration regScott(scott);
 
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(scott->registerUa(),
              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
@@ -5310,7 +5280,7 @@ class DumTestCase : public DumFixture
              optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
              scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
              david->expect(PRACK/406, alwaysMatches(), WaitForCommand, david->noAction()),
-             david->expect(INVITE/406, alwaysMatches(), WaitForCommand, david->noAction()),
+             david->expect(INVITE/406, alwaysMatches(), WaitForCommand, david->ack()),  // ACK it, or the 406 is retransmitted into later tests
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -5327,8 +5297,8 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration regScott(scott);
 
-         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
 
          Seq(scott->registerUa(),
              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
@@ -5349,12 +5319,49 @@ class DumTestCase : public DumFixture
              optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
              scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
              david->expect(PRACK/406, alwaysMatches(), WaitForCommand, david->noAction()),
-             david->expect(INVITE/406, alwaysMatches(), WaitForCommand, david->noAction()),
+             david->expect(INVITE/406, alwaysMatches(), WaitForCommand, david->ack()),  // ACK it, or the 406 is retransmitted into later tests
              WaitForEndOfSeq);
          ExecuteSequences();
 
          scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASEarlyUpdateNoPrack()
+      {
+          InfoLog(<< "testUASEarlyUpdateNoPrack");
+
+          scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+
+          TestClientRegistration regScott(scott);
+
+          Seq(scott->registerUa(),
+              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+              WaitForEndOfSeq);
+          ExecuteSequences();
+
+          TestServerInviteSession uas(scott);
+          std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+
+          Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeNone),
+              optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+              david->expect(INVITE / 407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+              optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+              scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+              scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(180, false))),  // provisional no answer
+              david->expect(INVITE / 180, from(scott->getInstanceId()), WaitForCommand, david->update(scott->getAor().uri().user())),
+              optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+              david->expect(UPDATE / 407, from(proxy), WaitForCommand, david->digestRespond()),
+              optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+              david->expect(UPDATE / 200, from(proxy), WaitForCommand, uas.accept()),
+              scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+              david->expect(INVITE / 200, from(proxy), WaitForResponse, chain(david->ack(), david->bye())),
+              scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+              david->expect(BYE / 200, from(proxy), WaitForCommand, david->noAction()),
+              WaitForEndOfSeq);
+
+          ExecuteSequences();
       }
 };
 
@@ -5373,9 +5380,13 @@ int main(int argc, char** argv)
 
    initNetwork();
    bool interactive = false;
+   // The exit status is what ctest reports, so it must reflect the results:
+   // a test that fails without crashing would otherwise pass in CI.
+   bool success = true;
    try
    {
       CommandLineParser args(argc, argv);
+      //_unlink("resiprocate.log");
       Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
 
       Log::setLevel(Log::Crit, Subsystem::CONTENTS);
@@ -5433,17 +5444,25 @@ int main(int argc, char** argv)
             CPPUNIT_NS :: XmlOutputter xmloutputter (&collectedresults, testResult);
             xmloutputter.write ();
             testResult.close();
+            success = collectedresults.wasSuccessful();
          }
          DebugLog(<< "Finished");
       }
       else
       {
+         reportAssertsToStderr();
          DumFixture::initialize(argc, argv);
-      
+
          CppUnit::TextTestRunner runner;
 
+         // Name each test as it starts, in place of the default progress dots,
+         // so a test that asserts or hangs can be identified from the ctest
+         // output.
+         CPTextTestProgressListener progress;
+         runner.eventManager().addListener(&progress);
+
          runner.addTest( CppUnit::TestFactoryRegistry::getRegistry().makeTest() );
-         runner.run();
+         success = runner.run("", false, true, false);
          DebugLog(<< "Finished: waiting for all transactions to die.");
       
          sleepSeconds(32);
@@ -5464,5 +5483,5 @@ int main(int argc, char** argv)
       std::cin >>ch;
    }
 
-   return 0;
+   return success ? 0 : 1;
 }

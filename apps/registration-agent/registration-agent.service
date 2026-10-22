@@ -1,0 +1,14 @@
+
+[Unit]
+Description=Registration Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/sbin/registrationAgent /etc/registrationAgent/registrationAgent.config --Daemonize=false
+ExecReload=/bin/kill -HUP ${MAINPID}
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+

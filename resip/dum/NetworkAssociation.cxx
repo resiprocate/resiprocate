@@ -24,6 +24,7 @@ NetworkAssociation::update(const SipMessage& msg, int keepAliveInterval, bool ta
          mTarget = source;
          mTarget.onlyUseExistingConnection = true;  // Ensure that keepalives never open up a new connection
          mTargetSupportsOutbound = targetSupportsOutbound;
+         mKeepAliveInterval = keepAliveInterval;
          mDum->mKeepAliveManager->add(mTarget, keepAliveInterval, targetSupportsOutbound);
          return true;
       }

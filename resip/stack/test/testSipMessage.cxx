@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <utility>
 
 #include "rutil/DataStream.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -31,6 +32,100 @@ main(int argc, char** argv)
    initNetwork();
 
    {
+      // Test Diversion header, RFC5806
+      Data txt("INVITE sip:00911206930000@10.52.83.198:5060;user=phone;transport=udp SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP 10.60.65.26:5061;branch=z9hG4bKUcrpwaklwomdpdwau0\r\n"
+         "Max-Forwards: 69\r\n"
+         "Contact: sip:09582369046@10.60.65.26:5061\r\n"
+         "To: \"00911206930000\"<sip:00911206930000@10.52.83.198;user=phone>\r\n"
+         "From: \"09582369046\"<sip:09582369046@10.60.65.26;user=phone>;tag=ucBE764F78\r\n"
+         "Call-ID: 9090F9658A51DB0A00@ngn.ttl.in\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Session-Expires: 1350\r\n"
+         "Allow: INVITE, ACK, OPTIONS, BYE, CANCEL, UPDATE, REGISTER, INFO, PRACK, SUBSCRIBE, NOTIFY, MESSAGE\r\n"
+         "Content-Type: application/sdp\r\n"
+         "Supported: 100rel, timer\r\n"
+         "P-Asserted-Identity: <sip:09582369046@10.60.65.26;user=phone> \r\n"
+         "Diversion: <sip:WeSellPizza@p2.isp.com>;reason=time-of-day;privacy=full\r\n"
+         "Diversion: <tel:+19195551002>;reason=user-busy;screen=\"yes\";privacy=\"off\"\r\n"
+         "Content-Length: 192\r\n"
+         "\r\n"
+         "v=0\r\n"
+         "o=UTSTARCOM 812795211 4223640993 IN IP4 10.60.66.10\r\n"
+         "s=-\r\n"
+         "c=IN IP4 10.60.66.10\r\n"
+         "t=0 0\r\n"
+         "m=audio 30618 RTP/AVP 8 0 18 101\r\n"
+         "a=sendrecv\r\n"
+         "a=rtpmap:101 telephone-event/8000\r\n"
+         "a=fmtp:101 0-15\r\n"
+         "\r\n");
+
+      unique_ptr<SipMessage> msg(SipMessage::make(txt, true /* isExternal */));
+
+      NameAddr& diversion1 = msg->header(h_Diversions).front();
+      assert(diversion1.uri().user() == "WeSellPizza");
+      assert(diversion1.uri().host() == "p2.isp.com");
+      assert(diversion1.exists(p_reason));
+      assert(diversion1.param(p_reason) == "time-of-day");
+      assert(diversion1.exists(p_privacy));
+      assert(diversion1.param(p_privacy) == "full");
+      NameAddr& diversion2 = msg->header(h_Diversions).back();
+      assert(diversion2.uri().user() == "+19195551002");
+      assert(diversion2.uri().host() == "");
+      assert(diversion2.exists(p_reason));
+      assert(diversion2.param(p_reason) == "user-busy");
+      assert(diversion2.exists(p_screen));
+      assert(diversion2.param(p_screen) == "yes");
+      assert(diversion2.exists(p_privacy));
+      assert(diversion2.param(p_privacy) == "off");
+   }
+
+   {
+      // Test tolerance of illegal embedded headers.  See first History-Info header where the ;'s are not legally escaped as
+      // specified in RFC3261.
+      Data txt("INVITE sip:00911206930000@10.52.83.198:5060;user=phone;transport=udp SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP 10.60.65.26:5061;branch=z9hG4bKUcrpwaklwomdpdwau0\r\n"
+         "Max-Forwards: 69\r\n"
+         "Contact: sip:09582369046@10.60.65.26:5061\r\n"
+         "To: \"00911206930000\"<sip:00911206930000@10.52.83.198;user=phone>\r\n"
+         "From: \"09582369046\"<sip:09582369046@10.60.65.26;user=phone>;tag=ucBE764F78\r\n"
+         "Call-ID: 9090F9658A51DB0A00@ngn.ttl.in\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Session-Expires: 1350\r\n"
+         "Allow: INVITE, ACK, OPTIONS, BYE, CANCEL, UPDATE, REGISTER, INFO, PRACK, SUBSCRIBE, NOTIFY, MESSAGE\r\n"
+         "Content-Type: application/sdp\r\n"
+         "Supported: 100rel, timer\r\n"
+         "P-Asserted-Identity: <sip:09582369046@10.60.65.26;user=phone> \r\n"
+         "History-Info: <sip:917053949033@68.53.60.10:5060?Reason=SIP;cause=302>;index=1\r\n"   // <-- technically the ;'s following the ? (and before the >) should be encoded as %3B
+         "History-Info: <sip:00911206930000@68.53.60.10:5060>;index=1.1\r\n"
+         "Content-Length: 190\r\n"
+         "\r\n"
+         "v=0\r\n"
+         "o=UTSTARCOM 812795211 4223640993 IN IP4 10.60.66.10\r\n"
+         "s=-\r\n"
+         "c=IN IP4 10.60.66.10\r\n"
+         "t=0 0\r\n"
+         "m=audio 30618 RTP/AVP 8 0 18 101\r\n"
+         "a=sendrecv\r\n"
+         "a=rtpmap:101 telephone-event/8000\r\n"
+         "a=fmtp:101 0-15\r\n"
+         "\r\n");
+
+      unique_ptr<SipMessage> msg(SipMessage::make(txt, true /* isExternal */));
+
+      NameAddr& historyInfo = msg->header(h_HistoryInfos).front();
+      assert(historyInfo.uri().user() == "917053949033");
+      assert(historyInfo.uri().hasEmbedded() == true);
+      SipMessage& embedded = historyInfo.uri().embedded();
+      assert(embedded.header(h_Reasons).size() == 1);
+      assert(embedded.header(h_Reasons).front().value() == "SIP");
+      assert(embedded.header(h_Reasons).front().param(p_cause) == 302);
+      assert(historyInfo.param(p_index) == "1");
+      assert(msg->header(h_HistoryInfos).back().uri().user() == "00911206930000");
+   }
+
+   {
       // This test excercises a now fixed use-after-free bug when adding multi-headers to a list that has been copied, and then
       // one of the headers is accessed (but not necessarily parsed).  
       Data txt("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
@@ -46,7 +141,7 @@ main(int argc, char** argv)
          "Content-Length: 0\r\n"
          "\r\n");
 
-      auto_ptr<SipMessage> msg(SipMessage::make(txt, true /* isExternal */));
+      unique_ptr<SipMessage> msg(SipMessage::make(txt, true /* isExternal */));
 
       SipMessage response;
       Helper::makeResponse(response, *msg, 200);
@@ -81,7 +176,7 @@ main(int argc, char** argv)
             "\r\n"
             );
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       assert(msg.get());   
       resipCerr << Inserter(msg->header(h_WWWAuthenticates)) << endl;
 
@@ -108,7 +203,7 @@ main(int argc, char** argv)
          "Content-Disposition: attachment; filename=\"smime.p7s\"; handling=required\r\n"
          "0\202\004\201\327\006	*\206H\206\367\001\007\002\201\240\202\004\201\3100\202\004\201\304\002\001\0011\0130	\006\005+\003\002\032\005\000\201\260\013\006	\201\252\206\201\310\206\367\001\007\001\201\240\202\003\201\376\201\260\202\003\201\372\201\260\202\002\201\343\201\240\003\002\001\002\002\007\201\322\000\002\000\201\327\003\201\313\201\260\006	\201\252\206\201\310\206\367\001\001\005\005\000\201\260\201\360\201\261\013\201\260	\006\003\201\325\004\006\023\002\201\325\201\323\201\261\023\201\260\021\006\003\201\325\004\010\023r\201\303\201\341\201\354\201\351\201\346\201\357\201\362\201\356\201\351\201\341\201\261\021\201\260\006\003U\004\007\023\010San Jose1\201\260\014\006\003\201\325\004\023\005\201\363\201\351\201\360\201\351\201\364\201\261\201\251\201\260\201\247\006\003\201\325\004\013\023\201\240\201\323\201\351\201\360\201\351\201\364\201\240\201\324\201\345\201\363\201\364\201\240\201\303\201\345\201\362\201\364\201\351\201\346\201\351\201\343\201\341\201\364\201\345\201\240\201\301\201\365\201\364\201\350\201\357\201\362\201\351\201\364\201\371\201\260\036\027\201\260\201\264\201\260\201\270\201\262\201\265\201\260\201\262\201\261\201\270\201\264\201\270\201\332\027\201\260\201\267\201\260\201\270\201\262\201\265\201\260\201\262\201\261\201\270\201\264\201\270\201\332\201\260\201\345\201\261\013\201\260	\006\003\201\325\004\006\023\002\201\325\201\323\201\261\023\201\260\021\006\003\201\325\004\010\023\201\303\201\341\201\354\201\351\201\346\201\357\201\362\201\356\201\351\201\341\201\261\021\201\260\006\003U\004\007\023\010San Jose1\201\260\014\006\003\201\325\004\005\201\363\201\351\201\360\201\351\201\364\201\261\036\201\260\034\006\003\201\325\004\003\024\025\201\364\201\357\201\346\201\365\201\300\201\365\201\341\201\256\201\356\201\364\201\364\201\256\201\363\201\351\201\360\201\351\201\364\201\256\201\356\201\345\201\364\201\260\201\237\201\260\006	\201\252\206\201\310\206\367\001\001\001\005\000\003\201\215\000\201\260\201\211\002\201\201\000\201\331\201\322\201\267\201\345\201\263\201\337\201\201\365\201\246\201\317\201\337\201\314\201\343\201\350\201\370\201\332\201\372\201\366\201\356\227\201\260\010\201\304\201\326\005\201\253\014\201\316\201\335\201\362\201\253\201\336\036\201\326\201\247\201\365\201\321\201\342\201\312\201\336\201\310\030\201\310\034\201\325\201\274\201\255\201\336\201\372\201\306\201\277\201\303\201\364\201\343\201\355\201\240\201\323\201\374\201\347\201\240\004\201\363\205\316\230\205\320\205\261\205\255\211\205\205\261\205\276\205\333\205\277\205\350\205\274\205\361\021\201\260\201\255\201\265\201\276\201\373\203\201\267\201\356\201\355\201\256\201\337\201\262\201\244\201\305\033\023\000\201\266\206\021\201\303\201\252\201\265\201\364\001\201\246\201\251\030\201\372\235\201\325\201\273\037\201\251\201\332\201\354\201\331\201\371\201\263\201\261\201\347\236\201\322\201\376\201\274\201\332\201\377\002\003\001\000\001\201\243\202\001\201\247\201\260\202\001\201\243\201\260\201\332\006\003\201\325\035\021\004\201\323\201\260\201\321\206\031\201\363\201\351\201\360\201\272\201\364\201\357\201\346\201\365\201\300\201\365\201\341\201\256\201\356\201\364\201\364\201\256\201\363\201\351\201\360\201\351\201\364\201\256\201\356\201\345\201\364\206\030\201\351\201\355\201\272\201\364\201\357\201\346\201\365\201\300\201\365\201\341\201\256\201\356\201\364\201\364\201\256\201\363\201\351\201\360\201\351\201\364\201\256\201\356\201\345\201\364\206\032\201\360\201\362\201\345\201\363\201\272\201\364\201\357\201\346\201\365\201\300\201\365\201\341\201\256\201\356\201\364\201\364\201\256\201\363\201\351\201\360\201\351\201\364\201\256\201\356\201\345\201\364\201\260	\006\003\201\325\035\023\004\002\201\260\000\201\260\035\006\003\201\325\035\004\026\004\024	\026\201\307\201\306l\201\242\234\013\201\261\034\237\201\247\201\262\035\201\254B\201\357\201\324\201\2660\201\232\006\003U\035#\004\201\2220\201\217\200\024kF\027\024\201\352\224v%\200Tn\023T\201\332\201\241\201\343T\024\201\241\201\266\201\241t\201\244r0p1\0130	\006\003U\004\006\023\002US1\0230\021\006\003U\004\010\023California1\0210\006\003U\004\007\023\010San Jose1\201\260\014\006\003\201\325\004\023\005\201\363\201\351\201\360\201\351\201\364\201\261\201\251\201\260\201\247\006\003\201\325\004\013\023\201\240\201\323\201\351\201\360\201\351\201\364\201\240\201\324\201\345\201\363\201\364\201\240\201\303\201\345\201\362\201\364\201\351\201\346\201\351\201\343\201\341\201\364\201\345\201\240\201\301\201\365\201\364\201\350\201\357\201\362\201\351\201\364\201\371\202\001\000\201\260\006	\201\252\206\201\310\206\367\001\001\005\005\000\003\201\201\000\201\241\201\311\201\336\226\201\321\201\365\201\256\201\256\005\201\245\215\310\215\320\215\260\024\201\351\201\301\201\377\201\270\201\337\201\260\201\306\203\201\241\201\307\203\355\032\201\246\003\201\334\201\264\010\201\321\000\201\261\201\255\201\261\201\366\201\304\201\346\201\270\201\313\226\210\201\363\014\201\256\201\277\201\302\201\240\201\361\201\366\201\352\201\344\201\255\201\327\201\263\236\201\355\201\272\010\236\201\277\201\245\201\267\201\316\201\300\201\311\201\357\201\336\201\277\201\360\201\366\201\302\201\262\201\373\201\261\201\351\201\345\201\243\201\330\201\325\201\271\201\277\201\264\234\201\363\007\021\201\247\201\314\201\265\201\243\201\242\201\253\201\353\201\266\201\313\201\341\201\341\201\340\201\316\232\205\244\205\324\205\267\205\363\205\351\205\257\205\373\205\267\010\201\362\201\240\201\273\201\324\201\265\211\264\030\201\372\201\356\201\326\201\323\201\261\202\001\201\241\201\260\202\001\035\002\001\001\201\260\201\373\201\260\201\360\201\261\013\201\260	\006\003\201\325\004\006\023\002\201\325\201\323\201\261\023\201\260\021\006\003\201\325\004\010\023\201\303\201\341\201\354\201\351\201\346\201\357\201\362\201\356\201\351\201\341\201\261\021\201\260\006\003U\004\007\023\010San Jose1\201\260\014\006\003\201\325\004\023\005\201\363\201\351\201\360\201\351\201\364\201\261\201\251\201\260\201\247\006\003\201\325\004\013\023\201\240\201\323\201\351\201\360\201\351\201\364\201\240\201\324\201\345\201\363\201\364\201\240\201\303\201\345\201\362\201\364\201\351\201\346\201\351\201\343\201\341\201\364\201\345\201\240\201\301\201\365\201\364\201\350\201\357\201\362\201\351\201\364\201\371\002\007\201\322\000\002\000\201\327\003\201\313\201\260	\006\005\201\253\003\002\032\005\000\201\260\006	\201\252\206\201\310\206\367\001\001\001\005\000\004\201\200\201\246\201\255\202\350\202\242\202\261\207\227\033\027\201\375	\201\332\201\267\201\246\201\375\031\201\326\201\255\001\201\271\201\333\201\306\201\351\201\367\201\344\031\201\356\233\201\353\031\003\201\336	\003\201\353\201\260\201\323\201\267\026\022\201\307\233\201\316\201\362\201\304\201\256\201\247\201\243\201\256\201\261\211\202\243\202\324\202\314\027\222\027\222\034\230\201\240\201\323\037\201\345\034\220\201\372\201\261\201\377\201\333\201\310\201\343\201\300\201\335\201\310	\236\201\274\201\315\201\301\201\352\202\201\261\201\324\201\347\222\203\333\203\316\203\336\203\360<\211\236\203\276[\203\301\003\010\201\373rR\236\201\322\027\201\242\201\374b\027d:\225(\030\225\217\032\202\025\201\373\226\201\255\201\255\201\304\201\346\201\353\201\262\201\362\201\311\201\323\201\347\201\346\201\327\201\311\201\351\201\362\201\362\201\317\201\312\201\255\201\255" );
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       // !ah! deleted resipCerr output that was messing up terminals 
    }
 
@@ -123,7 +218,7 @@ main(int argc, char** argv)
          empty.header(h_Vias).push_back(Via());
          resipCerr << empty.brief() << endl;
       }
-      catch (SipMessage::Exception& e)
+      catch (SipMessage::Exception&)
       {}
    }
    
@@ -140,7 +235,7 @@ main(int argc, char** argv)
                "Content-Length: 0\r\n"
                "\r\n");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       msg->header(h_Routes).pop_back();
       resipCerr << *msg << endl;
    }
@@ -173,10 +268,8 @@ main(int argc, char** argv)
                "a=rtpmap:8 PCMA/8000\r\n"
                "a=rtpmap:102 iLBC/8000\r\n");
       
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
-
-      sdp->session().media().front();
       
       SdpContents osdp;
       osdp.session().version() = 0;
@@ -239,14 +332,14 @@ main(int argc, char** argv)
          "Contact: <sip:64.124.66.32:5060>\r\n"
          "Content-Length: 0\r\n\r\n";
 
-      auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
+      unique_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
 
       try
       {
          resipCerr << "transport=" << message1->header(h_Vias).front().transport() << endl;
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
       }
    }
@@ -265,10 +358,10 @@ main(int argc, char** argv)
 
       try
       {
-         auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
+         unique_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
          if (message1->header(h_StatusLine).statusCode() == 407){;}
       }
-      catch (BaseException& e)
+      catch (BaseException&)
       {
          assert(false);
       }
@@ -345,7 +438,7 @@ main(int argc, char** argv)
                   "------YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC--\r\n"
          );
 
-      std::auto_ptr<SipMessage> msg(SipMessage::make(txt));
+      std::unique_ptr<SipMessage> msg(SipMessage::make(txt));
       
       SipMessage msg1;
       msg1.setContents(msg->getContents());
@@ -370,7 +463,7 @@ main(int argc, char** argv)
                    "Content-Length: 0\r\n"
                    "\r\n");
 
-      auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
+      unique_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
 
 
       Data txt2 = ("NOTIFY sip:fluffy@212.157.205.40 SIP/2.0\r\n"
@@ -440,7 +533,7 @@ main(int argc, char** argv)
                    "------YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC--\r\n"
          );
 
-      auto_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
+      unique_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
 
       SipMessage message3;
       UnknownHeaderType h_Foo("foo");
@@ -464,7 +557,26 @@ main(int argc, char** argv)
       PlainContents pc("here is some plain ol' contents");
       message3.setContents(&pc);
 
+      SecurityAttributes* attr = new SecurityAttributes();
+      attr->setIdentity("identity");
+      attr->setIdentityStrength(SecurityAttributes::From);
+      attr->setEncrypted();
+      attr->setEncryptionPerformed(true);
+      attr->setOutgoingEncryptionLevel(SecurityAttributes::SignAndEncrypt);
+      attr->setSignatureStatus(SignatureSelfSigned);
+      attr->setSigner("signer");
+      message2->setSecurityAttributes(unique_ptr<SecurityAttributes>(attr));
+
       message3 = *message2;
+
+      // Assert SecurityAttributes copied
+      assert(message3.getSecurityAttributes()->getIdentity() == message2->getSecurityAttributes()->getIdentity());
+      assert(message3.getSecurityAttributes()->getIdentityStrength() == message2->getSecurityAttributes()->getIdentityStrength());
+      assert(message3.getSecurityAttributes()->isEncrypted() == message2->getSecurityAttributes()->isEncrypted());
+      assert(message3.getSecurityAttributes()->encryptionPerformed() == message2->getSecurityAttributes()->encryptionPerformed());
+      assert(message3.getSecurityAttributes()->getOutgoingEncryptionLevel() == message2->getSecurityAttributes()->getOutgoingEncryptionLevel());
+      assert(message3.getSecurityAttributes()->getSignatureStatus() == message2->getSecurityAttributes()->getSignatureStatus());
+      assert(message3.getSecurityAttributes()->getSigner() == message2->getSecurityAttributes()->getSigner());
 
       // cause some parsing
       assert(!message2->header(h_To).exists(p_tag));
@@ -508,7 +620,7 @@ main(int argc, char** argv)
                    "\r\n");
       try
       {
-         auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+         unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
          assert(message->exists(h_WWWAuthenticates));
          assert(message->header(h_WWWAuthenticates).size() == 1);
          assert(message->header(h_WWWAuthenticates).front().scheme() == "Basic");
@@ -588,7 +700,7 @@ main(int argc, char** argv)
          "------YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC--\r\n"
          );
       
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       InfoLog (<< "msg->header(h_ContentLength).value() == " << msg->header(h_ContentLength).value());
       assert( msg->header(h_ContentLength).value() == 1929 );
    }
@@ -609,13 +721,46 @@ main(int argc, char** argv)
           "\r\n"
           "1234" );
 
-       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));  
+       unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
        assert( msg->exists(h_ContentDisposition)  );
        msg->header(h_ContentDisposition);
        assert( msg->header(h_ContentLength).value() == 4 );
     }
-   {
+    {
+       resipCerr << "test single header validation\n";
+
+       Data txt(
+          "UPDATE sip:bob@biloxi.com SIP/2.0\r\n"
+          "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+          "To: Bob <sip:bob@biloxi.com>;tag=73b1cb2b\r\n"
+          "From: Alice <sip:alice@atlanta.com>;tag=A76BD40B-11F7\r\n"
+          "Call-ID: a84b4c76e66710\r\n"
+          "CSeq: 51 UPDATE\r\n"
+          "Max-Forwards: 69\r\n"
+          "Contact: <sip:alice@pc33.atlanta.com>;+sip.src\r\n"
+          "Require: siprec\r\n"
+          "Content-Disposition: session;handling=required,recording-session\r\n"
+          "Content-Type: application/rs-metadata\r\n"
+          "Content-Length: 4\r\n"
+          "\r\n"
+          "test"
+       );
+
+       std::unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+
+#ifdef PEDANTIC_STACK
+       assert(msg->isInvalid());
+#else
+       assert(!msg->isInvalid());
+#endif
+       assert(msg->exists(h_ContentDisposition));
+       assert(msg->header(h_ContentDisposition).value() == "session");
+       assert(msg->header(h_ContentLength).value() == 4);
+
+       resipCerr << "msg->header(h_ContentDisposition).value() == " << msg->header(h_ContentDisposition).value() << '\n';
+    }
+    {
       // exercise header remove
       const char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "Allow-Events: foo\r\n"
@@ -639,7 +784,7 @@ main(int argc, char** argv)
                    "Unknown: biefoo\r\n"
                    "\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       // note message has not been parsed
 
       message->remove(h_AllowEvents);
@@ -692,7 +837,7 @@ main(int argc, char** argv)
                    "Unknown: biefoo\r\n"
                    "\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       message->header(h_AllowEvents).front().value();
       message->header(h_Unsupporteds).empty();
@@ -759,7 +904,7 @@ main(int argc, char** argv)
                    "Content-Length: 0\r\n"
                    "\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       assert(message->exists(h_Unsupporteds));
       resipCerr << message->header(h_AllowEvents).size() << endl;
       resipCerr << message->header(h_Vias).size() << endl;
@@ -787,7 +932,7 @@ main(int argc, char** argv)
                    CRLF);
      TestSupport::prettyPrint(txt,strlen(txt));
 
-     auto_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
+     unique_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
      try
      {
         response->header(h_CSeq).method();
@@ -809,7 +954,7 @@ main(int argc, char** argv)
                    CRLF);
      TestSupport::prettyPrint(txt,strlen(txt));
 
-     auto_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
+     unique_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
      try
      {
         const SipMessage& constSip(*response);
@@ -832,7 +977,7 @@ main(int argc, char** argv)
                    CRLF);
      TestSupport::prettyPrint(txt,strlen(txt));
 
-     auto_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
+     unique_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
      assert(response->exists(h_AllowEvents));
      assert(response->header(h_AllowEvents).size() == 0);
 
@@ -849,7 +994,7 @@ main(int argc, char** argv)
                     CRLF);
      TestSupport::prettyPrint(txt2,strlen(txt2));
 
-     auto_ptr<SipMessage> r2(TestSupport::makeMessage(txt2,true));
+     unique_ptr<SipMessage> r2(TestSupport::makeMessage(txt2,true));
      assert(r2->exists(h_AllowEvents));
      assert(r2->header(h_AllowEvents).size() == 0);
 
@@ -864,7 +1009,7 @@ main(int argc, char** argv)
                    "Allow-Events: " CRLF
                    CRLF);
 
-     auto_ptr<SipMessage> r3(TestSupport::makeMessage(txt3,false));
+     unique_ptr<SipMessage> r3(TestSupport::makeMessage(txt3,false));
      assert(r3->exists(h_AllowEvents));
      assert(r3->header(h_AllowEvents).size() == 2);
      assert(r3->header(h_AllowEvents).front().value() == "foo");
@@ -882,7 +1027,7 @@ main(int argc, char** argv)
                     "Allow-Events: " CRLF
                     CRLF);
 
-     auto_ptr<SipMessage> r4(TestSupport::makeMessage(txt4,true));
+     unique_ptr<SipMessage> r4(TestSupport::makeMessage(txt4,true));
      assert(r4->exists(h_AllowEvents) );
 
      resipCerr << r4->header(h_AllowEvents).size() << endl;
@@ -903,7 +1048,7 @@ main(int argc, char** argv)
                     "Allow-Events: " CRLF
                     CRLF);
 
-     auto_ptr<SipMessage> r5(TestSupport::makeMessage(txt5,true));
+     unique_ptr<SipMessage> r5(TestSupport::makeMessage(txt5,true));
      assert(r5->exists(h_AllowEvents) );
      assert(r5->header(h_AllowEvents).size() == 0);
    }
@@ -926,7 +1071,7 @@ main(int argc, char** argv)
                    "Content-Length: 0\r\n"
                    "\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       assert(message->header(h_ContentDisposition) < message->header(h_ContentEncoding));
       assert(message->header(h_ContentType) < message->header(h_Accepts).front());
@@ -953,7 +1098,7 @@ main(int argc, char** argv)
                    "Content-Length: 0\r\n"
                    "\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       assert(message->header(h_ProxyAuthorizations).size() == 2);
       assert(message->header(h_ProxyAuthorizations).front().param(p_realm) == "atlanta.com");
@@ -976,7 +1121,7 @@ main(int argc, char** argv)
                    "Content-Length: 0\r\n"
                    "\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       resipCerr << *message << endl;
 
       assert(message->header(h_Vias).front().param(UnknownParameterType("stid")) == "489573115");
@@ -997,7 +1142,7 @@ main(int argc, char** argv)
                    "Content-Length:0\r\n\r\n");
       
   
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       resipCerr << *message << endl;
       message->header(h_Vias).front();
       message->header(h_From);
@@ -1018,7 +1163,7 @@ main(int argc, char** argv)
                    "Record-Route: <sip:proxy@host2.sipdragon.sipit.net:5060;lr>\r\n"
                    "Content-Length:0\r\n\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       assert(message.get());
       for (Vias::iterator i = message->header(h_Vias).begin();
            i != message->header(h_Vias).end(); i++)
@@ -1041,7 +1186,7 @@ main(int argc, char** argv)
                    "Content-Length:0\r\n\r\n");
       
    
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       resipCerr << *message << endl;
       message->header(h_Vias).front();
       message->header(h_From);
@@ -1063,7 +1208,7 @@ main(int argc, char** argv)
                    "User-Agent: Windows RTC/1.0\r\n"
                    "Content-Length: 0\r\n"
                    "\r\n");
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       resipCerr << message->header(h_Contacts).front().param(UnknownParameterType("xmethods")) << endl;
       resipCerr << *message << endl;
    }
@@ -1202,17 +1347,17 @@ main(int argc, char** argv)
                 "\r\n");
       
       
-      auto_ptr<SipMessage> msg1(TestSupport::makeMessage(txt1));
-      auto_ptr<SipMessage> msg2(TestSupport::makeMessage(txt2));
-      auto_ptr<SipMessage> msg3(TestSupport::makeMessage(txt3));
-      auto_ptr<SipMessage> msg4(TestSupport::makeMessage(txt4));
-      auto_ptr<SipMessage> msg5(TestSupport::makeMessage(txt5));
-      auto_ptr<SipMessage> msg6(TestSupport::makeMessage(txt6));
-      auto_ptr<SipMessage> msg7(TestSupport::makeMessage(txt7));
-      auto_ptr<SipMessage> msg8(TestSupport::makeMessage(txt8));
-      auto_ptr<SipMessage> msg9(TestSupport::makeMessage(txt9));
-      auto_ptr<SipMessage> msg10(TestSupport::makeMessage(txt10));
-      auto_ptr<SipMessage> msg11(TestSupport::makeMessage(txt11));
+      unique_ptr<SipMessage> msg1(TestSupport::makeMessage(txt1));
+      unique_ptr<SipMessage> msg2(TestSupport::makeMessage(txt2));
+      unique_ptr<SipMessage> msg3(TestSupport::makeMessage(txt3));
+      unique_ptr<SipMessage> msg4(TestSupport::makeMessage(txt4));
+      unique_ptr<SipMessage> msg5(TestSupport::makeMessage(txt5));
+      unique_ptr<SipMessage> msg6(TestSupport::makeMessage(txt6));
+      unique_ptr<SipMessage> msg7(TestSupport::makeMessage(txt7));
+      unique_ptr<SipMessage> msg8(TestSupport::makeMessage(txt8));
+      unique_ptr<SipMessage> msg9(TestSupport::makeMessage(txt9));
+      unique_ptr<SipMessage> msg10(TestSupport::makeMessage(txt10));
+      unique_ptr<SipMessage> msg11(TestSupport::makeMessage(txt11));
 
       assert(msg1->getTransactionId() == msg1->getTransactionId());
       resipCerr << "msg2=" << msg2->getTransactionId() << endl;
@@ -1305,8 +1450,8 @@ main(int argc, char** argv)
       inv.header(h_CSeq).sequence() = 14;
       inv.header(h_CSeq).method() = INVITE;
 
-      auto_ptr<Contents> pc(new PlainContents("here is some plain ol' contents"));
-      inv.setContents(pc);
+      unique_ptr<Contents> pc(new PlainContents("here is some plain ol' contents"));
+      inv.setContents(std::move(pc));
 
       resipCerr << inv.header(h_ContentType).type() << endl;
       assert(inv.header(h_ContentType).type() == "text");
@@ -1359,7 +1504,7 @@ main(int argc, char** argv)
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       assert(msg->exists(h_ContentType));
       assert(msg->exists(h_ContentLength));
@@ -1384,7 +1529,7 @@ main(int argc, char** argv)
 
       SipMessage msg;
       assert(msg.getContents() == 0);
-      auto_ptr<Contents> old = msg.releaseContents();
+      unique_ptr<Contents> old = msg.releaseContents();
       assert(old.get() == 0);
       assert(msg.getContents() == 0);
    }
@@ -1409,10 +1554,10 @@ main(int argc, char** argv)
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       assert(msg->exists(h_ContentType));
-      auto_ptr<Contents> abody = msg->releaseContents();
+      unique_ptr<Contents> abody = msg->releaseContents();
       Contents* body = abody.release();
 
       assert(body != 0);
@@ -1450,7 +1595,7 @@ main(int argc, char** argv)
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       assert(!msg->header(UnknownHeaderType("Foobie-Blech")).empty());
       assert(msg->header(UnknownHeaderType("Foobie-Blech")).front().value() == "it is not a glass paperweight");
@@ -1490,7 +1635,7 @@ main(int argc, char** argv)
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       msg->header(UnknownHeaderType("Foobie-Blech")).empty();
       //assert(!msg->header(UnknownHeaderType("Foobie-Blech")).empty());
@@ -1516,7 +1661,7 @@ main(int argc, char** argv)
           "Content-Length: 0\r\n"
           "\r\n");
       
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       resipCerr << msg->header(h_Contacts).front().param(p_expires) << endl;
       assert(msg->header(h_Contacts).front().param(p_expires) == 63);
    }
@@ -1537,7 +1682,7 @@ main(int argc, char** argv)
                     "Contact: <sip:bob@192.0.2.4>;expires=\"Sat, 01 Dec 2040 16:00:00 GMT\";foo=bar\r\n"
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
+      unique_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
       resipCerr << message1->header(h_Contacts).front().param(p_expires) << endl;
       assert(message1->header(h_Contacts).front().param(p_expires) == 3600);
       assert(message1->header(h_Contacts).front().param(UnknownParameterType("foo")) == "bar");
@@ -1560,8 +1705,8 @@ main(int argc, char** argv)
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 7200\r\n"
                     "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
-      auto_ptr<SipMessage> r(Helper::makeResponse(*message1, 100));
+      unique_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
+      unique_ptr<SipMessage> r(Helper::makeResponse(*message1, 100));
       r->encode(resipCerr);
 
       const char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
@@ -1578,7 +1723,7 @@ main(int argc, char** argv)
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 2700\r\n"
                     "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
+      unique_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
 
       // copy over everything
       message1->header(h_RequestLine) = message2->header(h_RequestLine);
@@ -1626,7 +1771,7 @@ main(int argc, char** argv)
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 7200\r\n"
                     "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
+      unique_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
 
       // parse it
       message1->header(h_RequestLine).getMethod();
@@ -1668,7 +1813,7 @@ main(int argc, char** argv)
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 2700\r\n"
                     "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
+      unique_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
 
       assert(message2->header(h_RequestLine).getMethod() == REGISTER);
       assert(message2->header(h_To).uri().user() == "speedy");
@@ -1736,7 +1881,7 @@ main(int argc, char** argv)
                    "Contact: <sip:qoq@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       
       SipMessage copy(*message);
       copy.encode(resipCerr);
@@ -1775,7 +1920,7 @@ main(int argc, char** argv)
                    "Contact: <sip:qoq@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       resipCerr << "Encode from unparsed: " << endl;
       message->encode(resipCerr);
@@ -1834,7 +1979,7 @@ main(int argc, char** argv)
                    "Contact: <sip:bob@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       
       message->encode(resipCerr);
       
@@ -1856,7 +2001,7 @@ main(int argc, char** argv)
                    "Contact: <sip:bob@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
           
       Data v = message->header(h_CallId).value();
       resipCerr << "Call-ID is " << v << endl;
@@ -1880,7 +2025,7 @@ main(int argc, char** argv)
                    "Contact: <sip:bob@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       
       assert(message->getRawHeader(Headers::From));
       assert(&message->header(h_From));
@@ -1909,7 +2054,7 @@ main(int argc, char** argv)
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: 353245\r\n\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       assert(message->isRequest());
       assert(message->isResponse() == false);
@@ -1970,9 +2115,10 @@ main(int argc, char** argv)
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: 353245\r\n\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
-      assert(message->header(h_MaxForwards).value() == 8);
+      H_MaxForwards::Type& max_forwards = message->header(h_MaxForwards); // creates ParserContainer, must be outside assert()
+      assert(max_forwards.value() == 8);
       message->getRawHeader(Headers::MaxForwards)->getParserContainer()->encode(Headers::getHeaderName(Headers::MaxForwards), resipCerr) << endl;
    }
 
@@ -1987,7 +2133,7 @@ main(int argc, char** argv)
                    "Via: SIP/2.0/UDP squamish.gloo.net:5060;branch=z9hG4bKff5c491951e40f08\r\n"
                    "Content-Length: 0\r\n\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       assert(message->header(h_To).uri().host() == "localhost");
    }
@@ -1995,8 +2141,8 @@ main(int argc, char** argv)
       NameAddr me;
       me.uri().host() = "localhost";
       me.uri().port() = 5070;
-      //auto_ptr<SipMessage> msg(Helper::makeRegister(me, me));
-      auto_ptr<SipMessage> msg(Helper::makeRegister(me, me, me));
+      //unique_ptr<SipMessage> msg(Helper::makeRegister(me, me));
+      unique_ptr<SipMessage> msg(Helper::makeRegister(me, me, me));
       resipCerr << "encoded=" << *msg << endl;
    }
    {
@@ -2010,9 +2156,9 @@ main(int argc, char** argv)
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: 353245\r\n\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       message->header(h_RequestLine).uri();
-      auto_ptr<SipMessage> copy(new SipMessage(*message));
+      unique_ptr<SipMessage> copy(new SipMessage(*message));
       assert(message->header(h_RequestLine).getMethod() == copy->header(h_RequestLine).getMethod());
    }
    {
@@ -2029,7 +2175,7 @@ main(int argc, char** argv)
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: 353245\r\n\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       assert(message->header(h_SecurityClients).front().value() == "ipsec-ike");
       assert(message->header(h_SecurityClients).front().param(p_dAlg) == "md5");
       assert(message->header(h_SecurityClients).front().param(p_q) == 100);
@@ -2075,14 +2221,14 @@ main(int argc, char** argv)
                    "Max-Forwards: 8\r\n"
                    "Contact: sip:user@host.company.com\r\n"
                    "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
-                   "Security-Client: ipsec-ike;d-alg=md5;q=0.1\r\n"
-                   "Security-Server: tls;q=0.2;d-qop=verify\r\n"
-                   "Security-Verify: tls;q=0.2;d-ver=\"0000000000000000000000000000abcd\"\r\n"
                    "CSeq: 8 REGISTER\r\n"
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
-                   "Expires: 353245\r\n\r\n");
+                   "Expires: 353245\r\n"
+                   "Security-Client: ipsec-ike;d-alg=md5;q=0.1\r\n"
+                   "Security-Server: tls;q=0.2;d-qop=verify\r\n"
+                   "Security-Verify: tls;q=0.2;d-ver=\"0000000000000000000000000000abcd\"\r\n\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       
       {
          Token sec;
@@ -2106,7 +2252,7 @@ main(int argc, char** argv)
          message->header(h_SecurityVerifies).push_back(sec);
       }
 
-      auto_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
+      unique_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
 
       Data msgEncoded;
       {
@@ -2145,7 +2291,7 @@ main(int argc, char** argv)
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       assert(msg->exists(h_Accepts));
       assert(msg->header(h_Accepts).empty());
@@ -2179,7 +2325,7 @@ main(int argc, char** argv)
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       assert(msg->exists(h_Accepts));
       assert(msg->header(h_Accepts).empty());
@@ -2232,7 +2378,7 @@ main(int argc, char** argv)
          ds << "a=rtpmap:101 telephone-event/8000\r\n";
       }
 
-      auto_ptr<SipMessage> testMsg(TestSupport::makeMessage(invBuf));
+      unique_ptr<SipMessage> testMsg(TestSupport::makeMessage(invBuf));
       assert(testMsg->header(h_RequestLine).isWellFormed());
       assert(testMsg->header(h_RequestLine).method() == INVITE);
       assert(testMsg->header(h_RequestLine).getSipVersion() == "SIP/2.0");
@@ -2262,7 +2408,7 @@ main(int argc, char** argv)
          "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36\r\n"
          "\r\n" );
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       assert(msg->header(h_RequestLine).unknownMethodName() == "GET");
       assert(msg->header(h_RequestLine).uri().path() == "/");
@@ -2285,7 +2431,7 @@ main(int argc, char** argv)
          "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36\r\n"
          "\r\n" );
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       assert(msg->header(h_RequestLine).unknownMethodName() == "GET");
       Uri& uri = msg->header(h_RequestLine).uri();
@@ -2294,6 +2440,72 @@ main(int argc, char** argv)
       assert(uri.param(UnknownParameterType("p2")) == Data("456"));
 
       assert( msg->header(h_ContentLength).value() == 0 );
+   }
+
+   {
+		   Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+		   "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+		   "To: Bob <sip:bob@biloxi.com>\r\n"
+		   "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+		   "Call-ID: a84b4c76e66710\r\n"
+		   "CSeq: 314159 INVITE\r\n"
+		   "Max-Forwards: 70\r\n"
+		   "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+		   "P-Access-Network-Info: 3GPP-GERAN;cgi-3gpp=24008;network-provided;x-roaming-status=home, 3GPP-E-UTRAN-FDD;local-time-zone=\"2019-12-11T14:34:36+01:00\";utran-cell-id-3gpp=2400827261b04603\r\n"
+		   "Contact: <sip:192.168.2.15:5100>\r\n"
+		   "Content-Length: 0\r\n"
+		   "\r\n");
+
+       unique_ptr<SipMessage> msg (TestSupport::makeMessage (txt));
+       assert( msg->header(resip::h_PAccessNetworkInfos).size() == 2);
+       msg->header (resip::h_PAccessNetworkInfos).pop_back ();
+       assert( msg->header(resip::h_PAccessNetworkInfos).size() == 1);
+       msg->header (resip::h_PAccessNetworkInfos).push_back (resip::Token("3GPP-E-UTRAN-FDD;local-time-zone=\"2019-12-11T14:34:36+01:00\";utran-cell-id-3gpp=2400827261b04603"));
+       assert( msg->header(resip::h_PAccessNetworkInfos).size() == 2);
+   }
+
+
+   // Test ParserContainer<T>::getByIndex
+   {
+      // Build a message with three Identity headers to exercise getByIndex
+      // on the ParserContainer<IdentityCategory> backing h_Identities.
+      Data txt =
+         "INVITE sip:alice@example.com SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP host.example.com;branch=z9hG4bK-idx\r\n"
+         "From: <sip:+15551112222@example.com>;tag=t1\r\n"
+         "To: <sip:alice@example.com>\r\n"
+         "Call-ID: getbyindex@host.example.com\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Max-Forwards: 70\r\n"
+         "Identity: tokenA;info=<https://cert.example.org/a.pem>;alg=ES256;ppt=shaken\r\n"
+         "Identity: tokenB;info=<https://cert.example.org/b.pem>;alg=ES256;ppt=div\r\n"
+         "Identity: tokenC;info=<https://cert.example.org/c.pem>;alg=ES256\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n";
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      assert(msg->exists(h_Identities));
+      auto& ids = msg->header(h_Identities);
+      assert(ids.size() == 3);
+
+      // In-range non-const: correct element returned
+      assert(ids.getByIndex(0) != nullptr);
+      assert(ids.getByIndex(0)->value() == "tokenA");
+      assert(ids.getByIndex(1) != nullptr);
+      assert(ids.getByIndex(1)->value() == "tokenB");
+      assert(ids.getByIndex(2) != nullptr);
+      assert(ids.getByIndex(2)->value() == "tokenC");
+
+      // Out-of-range: nullptr
+      assert(ids.getByIndex(3) == nullptr);
+      assert(ids.getByIndex(999) == nullptr);
+
+      // Const overload: same results
+      const auto& constIds = ids;
+      assert(constIds.getByIndex(0) != nullptr);
+      assert(constIds.getByIndex(0)->value() == "tokenA");
+      assert(constIds.getByIndex(2) != nullptr);
+      assert(constIds.getByIndex(2)->value() == "tokenC");
+      assert(constIds.getByIndex(3) == nullptr);
    }
 
    resipCerr << "\nTEST OK" << endl;
@@ -2305,6 +2517,7 @@ main(int argc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

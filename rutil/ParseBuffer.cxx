@@ -1,3 +1,5 @@
+#include <ctype.h>
+
 #include "rutil/ResipAssert.h"
 
 #include "rutil/Logger.hxx"
@@ -48,9 +50,12 @@ ParseBuffer::ParseBuffer(const ParseBuffer& rhs)
 ParseBuffer& 
 ParseBuffer::operator=(const ParseBuffer& rhs)
 {
-   mBuff = rhs.mBuff;
-   mPosition = rhs.mPosition;
-   mEnd = rhs.mEnd;
+   if (&rhs != this)
+   {
+      mBuff = rhs.mBuff;
+      mPosition = rhs.mPosition;
+      mEnd = rhs.mEnd;
+   }
 
    return *this;
 }
@@ -247,7 +252,9 @@ ParseBuffer::skipToChars(const char* cs)
 
    const char* rpos;
    const char* cpos;
-   while (mPosition < mEnd)
+   // Checking mPosition >= mEnd - l +1 is unnecessary because there won't be
+   // enough bytes left to find [cs].
+   while (mPosition < mEnd - l + 1)
    {
       rpos = mPosition;
       cpos = cs;
@@ -262,6 +269,8 @@ ParseBuffer::skipToChars(const char* cs)
       return CurrentPosition(*this);
      skip: ;
    }
+   // Advance to the end since we didn't find a match.
+   mPosition = mEnd;
    return CurrentPosition(*this);
 }
 
@@ -583,7 +592,7 @@ ParseBuffer::dataUnescaped(Data& dataToUse, const char* start) const
   copy:
    if ((size_t)(mPosition-start) > dataToUse.mCapacity)
    {
-      dataToUse.resize(mPosition-start, false);
+      dataToUse.resize((Data::size_type)(mPosition-start), false);
    }
 
    char* target = dataToUse.mBuf;
@@ -632,7 +641,7 @@ ParseBuffer::dataUnescaped(Data& dataToUse, const char* start) const
       }
    }
    *target = 0;
-   dataToUse.mSize = target - dataToUse.mBuf;   
+   dataToUse.mSize = (Data::size_type)(target - dataToUse.mBuf);
 }
 
 Data
@@ -644,7 +653,7 @@ ParseBuffer::data(const char* start) const
       fail(__FILE__, __LINE__,"Bad anchor position");
    }
 
-   Data data(start, mPosition - start);
+   Data data(start, (Data::size_type)(mPosition - start));
    return data;
 }
 
@@ -656,10 +665,10 @@ ParseBuffer::integer()
       fail(__FILE__, __LINE__,"Expected a digit, got eof ");
    }
 
-   int signum = 1;
+   bool negative = false;
    if (*mPosition == '-')
    {
-      signum = -1;
+      negative = true;
       ++mPosition;
       assertNotEof();
    }
@@ -669,36 +678,51 @@ ParseBuffer::integer()
       assertNotEof();
    }
 
-   if (!isdigit(*mPosition))
+   if (!isdigit(static_cast< unsigned char >(*mPosition)))
    {
-       Data msg("Expected a digit, got: ");
-       msg += Data(mPosition, (mEnd - mPosition));
+      Data msg("Expected a digit, got: ");
+      msg += Data(mPosition, (Data::size_type)(mEnd - mPosition));
       fail(__FILE__, __LINE__,msg);
    }
-   
-   int num = 0;
-   int last=0;
-   while (!eof() && isdigit(*mPosition))
+
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4146)
+#endif
+   // The absolute value limit depending on the detected sign
+   const unsigned int absoluteLimit = negative ? -(unsigned int)INT_MIN : INT_MAX;
+   // maximum value for full number except last digit
+   const unsigned int border = absoluteLimit / 10;
+   // value the last digit must not exceed
+   const unsigned int digitLimit = absoluteLimit % 10;
+
+   unsigned int num = 0;
+   while (!eof() && isdigit(static_cast< unsigned char >(*mPosition)))
    {
-      last=num;
-      num = num*10 + (*mPosition-'0');
-      if(last > num)
-      {
+      const unsigned int c = *mPosition++ - '0';
+      if (num > border || (num == border && c > digitLimit)) {
          fail(__FILE__, __LINE__,"Overflow detected.");
       }
-      ++mPosition;
-   }
-   
-   return signum*num;
+      num *= 10;
+      num += c;
+    }
+    if (negative)
+    {
+        num = -num;
+    }
+    return num;
+#ifdef _MSC_VER
+#pragma warning( pop ) 
+#endif
 }
 
-UInt8
+uint8_t
 ParseBuffer::uInt8()
 {
    const char* begin=mPosition;
-   UInt8 num = 0;
-   UInt8 last = 0;
-   while (!eof() && isdigit(*mPosition))
+   uint8_t num = 0;
+   uint8_t last = 0;
+   while (!eof() && isdigit(static_cast< unsigned char >(*mPosition)))
    {
       last = num;
       num = num*10 + (*mPosition-'0');
@@ -718,12 +742,12 @@ ParseBuffer::uInt8()
 
 
 //!dcm! -- merge these, ask about length checks
-UInt32
+uint32_t
 ParseBuffer::uInt32()
 {
    const char* begin=mPosition;
-   UInt32 num = 0;
-   while (!eof() && isdigit(*mPosition))
+   uint32_t num = 0;
+   while (!eof() && isdigit(static_cast< unsigned char >(*mPosition)))
    {
       num = num*10 + (*mPosition-'0');
       ++mPosition;
@@ -759,12 +783,12 @@ ParseBuffer::uInt32()
    return num;
 }
 
-UInt64
+uint64_t
 ParseBuffer::uInt64()
 {
    const char* begin=mPosition;
-   UInt64 num = 0;
-   while (!eof() && isdigit(*mPosition))
+   uint64_t num = 0;
+   while (!eof() && isdigit(static_cast< unsigned char >(*mPosition)))
    {
       num = num*10 + (*mPosition-'0');
       ++mPosition;
@@ -832,7 +856,7 @@ ParseBuffer::floatVal()
    catch (ParseException&)
    {
       Data msg("Expected a floating point value, got: ");
-      msg += Data(s, mPosition - s);
+      msg += Data(s, (Data::size_type)(mPosition - s));
       fail(__FILE__, __LINE__,msg);
       return 0.0;
    }
@@ -857,12 +881,12 @@ ParseBuffer::qVal()
          return 0;
       }
       
-      if (*mPosition == '.')
+      if (!eof() && *mPosition == '.')
       {
          skipChar();
          
          int i = 100;
-         while(!eof() && isdigit(*mPosition) && i)
+         while(!eof() && isdigit(static_cast< unsigned char >(*mPosition)) && i)
          {
             num += (*mPosition-'0') * i;
             i /= 10;
@@ -874,7 +898,7 @@ ParseBuffer::qVal()
    catch (ParseException&)
    {
       Data msg("Expected a floating point value, got: ");
-      msg += Data(s, mPosition - s);
+      msg += Data(s, (Data::size_type)(mPosition - s));
       fail(__FILE__, __LINE__,msg);
       return 0;
    }
@@ -932,8 +956,8 @@ escapeAndAnnotate(const char* buffer,
             continue;
          }
       }
-      
-      if (iscntrl(c) || (c >= 0x7F))
+
+      if (iscntrl(static_cast< unsigned char >(c)) || (c >= 0x7F))
       {
          ret +='*'; // indicates unprintable character
          continue;
@@ -964,7 +988,7 @@ ParseBuffer::fail(const char* file, unsigned int line, const Data& detail) const
 
        ds << "in context: " << mErrorContext
           << std::endl
-          << escapeAndAnnotate(mBuff, mEnd - mBuff, mPosition);
+          << escapeAndAnnotate(mBuff, (Data::size_type)(mEnd - mBuff), mPosition);
           
        ds.flush();
    }

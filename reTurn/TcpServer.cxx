@@ -1,5 +1,5 @@
 #include "TcpServer.hxx"
-#include <boost/bind.hpp>
+#include <functional>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
@@ -8,10 +8,10 @@
 
 namespace reTurn {
 
-TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
+TcpServer::TcpServer(asio::io_context& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : mIOService(ioService),
   mAcceptor(ioService),
-  mConnectionManager(),
+  mConnectionManager(requestHandler.getTurnManager()),
   mNewConnection(new TcpConnection(ioService, mConnectionManager, requestHandler)),
   mRequestHandler(requestHandler)
 {
@@ -38,7 +38,7 @@ TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler
 void 
 TcpServer::start()
 {
-   mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+   mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), std::bind(&TcpServer::handleAccept, this, std::placeholders::_1));
 }
 
 void 
@@ -46,10 +46,20 @@ TcpServer::handleAccept(const asio::error_code& e)
 {
    if (!e)
    {
-      mConnectionManager.start(mNewConnection);
+      // Started if its client's address doesn't already have too many connections
+      asio::error_code ec;
+      const asio::ip::address remoteAddress = ((TcpConnection*)mNewConnection.get())->socket().remote_endpoint(ec).address();
+      if(!ec)
+      {
+         mConnectionManager.start(mNewConnection, remoteAddress);
+      }
+      else
+      {
+         mNewConnection->stop();  // eg. the client has gone already
+      }
 
       mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler));
-      mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+      mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), std::bind(&TcpServer::handleAccept, this, std::placeholders::_1));
    }
    else
    {
@@ -58,7 +68,7 @@ TcpServer::handleAccept(const asio::error_code& e)
       {
          // Retry if too many open files (ie. out of socket descriptors)
          mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler));
-         mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+         mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), std::bind(&TcpServer::handleAccept, this, std::placeholders::_1));
       }
    }
 }
@@ -68,6 +78,7 @@ TcpServer::handleAccept(const asio::error_code& e)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

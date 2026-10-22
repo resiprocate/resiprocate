@@ -14,7 +14,7 @@ class RROverlay;
 class DnsCnameRecord : public DnsResourceRecord
 {
    public:
-      class CnameException : public BaseException
+      class CnameException final : public BaseException
       {
          public:
             CnameException(const Data& msg, const Data& file, const int line)
@@ -22,21 +22,23 @@ class DnsCnameRecord : public DnsResourceRecord
             {
             }
             
-            const char* name() const { return "CnameException"; }
+            const char* name() const noexcept override { return "CnameException"; }
       };
 
       DnsCnameRecord(const RROverlay&);
-      ~DnsCnameRecord() {}
+      virtual ~DnsCnameRecord() {}
 
       // accessors.
-      const Data& cname() const { return mCname; }
-      const Data& name() const { return mName; }
-      bool isSameValue(const Data&) const;
-      EncodeStream& dump(EncodeStream& strm) const;
+      virtual const Data& cname() const { return mCname; }
+      virtual const Data& name() const { return mName; }
+      virtual int ttl() const { return mTTL; }
+      virtual bool isSameValue(const Data&) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
       
    private:
       Data mCname;
       Data mName;
+      int mTTL;
 };
 
 }

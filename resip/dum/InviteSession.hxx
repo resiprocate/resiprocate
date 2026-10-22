@@ -7,7 +7,9 @@
 #include "resip/dum/DialogUsageManager.hxx"
 
 #include <map>
+#include <memory>
 #include <queue>
+#include <utility>
 
 namespace resip
 {
@@ -22,6 +24,12 @@ class SdpContents;
 class InviteSession : public DialogUsage
 {
    public:
+      InviteSession(const InviteSession&) = delete;
+      InviteSession(InviteSession&&) = delete;
+
+      InviteSession& operator=(const InviteSession&) = delete;
+      InviteSession& operator=(InviteSession&&) = delete;
+
       /** Called to set the offer that will be used in the next message that
           sends an offer. If possible, this will synchronously send the
           appropriate request or response. In some cases, the UAS might have to
@@ -29,7 +37,7 @@ class InviteSession : public DialogUsage
       virtual void provideOffer(const Contents& offer);
       virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative);
 
-      /** Similar to provideOffer - called to set the answer to be signalled to
+      /** Similar to provideOffer - called to set the answer to be signaled to
           the peer. May result in message being sent synchronously depending on
           the state. */
       virtual void provideAnswer(const Contents& answer);
@@ -62,27 +70,32 @@ class InviteSession : public DialogUsage
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end(const Data& userReason);
+      virtual void end(const ParserContainer<Token>& endReasons);
       virtual void end(EndReason reason);
-      virtual void end(); // reason == NotSpecified ; same as above - required for BaseUsage pure virtual
+      virtual void end() override; // reason == NotSpecified ; same as above - required for BaseUsage pure virtual
 
       /** Rejects an offer at the SIP level.  Can also be used to 
           send a 488 to a reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);
+      virtual void reject(int statusCode, const Contents* contents, WarningCategory *warning = 0);
 
       /** will send a reINVITE (current offerAnswer) or UPDATE with new Contact header */
+      /** currently only supported when in the Connected state, UAC_Early states are allowed by RFC but not yet supported */
       virtual void targetRefresh(const NameAddr& localUri);
 
       // Following methods are for sending requests within a dialog
 
       /** sends a refer request */
       virtual void refer(const NameAddr& referTo, bool referSub = true);
-      virtual void refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> contents, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, const NameAddr& referredBy, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, std::unique_ptr<resip::Contents> contents, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, const NameAddr& referredBy, std::unique_ptr<resip::Contents> contents, bool referSub = true);
 
       /** sends a refer request with a replaces header */
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub = true);
-      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, std::auto_ptr<resip::Contents> contents, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, std::unique_ptr<resip::Contents> contents, bool referSub = true);
       virtual void refer(const NameAddr& referTo, const CallId& replaces, bool referSub = true);
-      virtual void refer(const NameAddr& referTo, const CallId& replaces, std::auto_ptr<resip::Contents> contents, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, const CallId& replaces, std::unique_ptr<resip::Contents> contents, bool referSub = true);
 
       /** sends an info request */
       virtual void info(const Contents& contents);
@@ -107,9 +120,9 @@ class InviteSession : public DialogUsage
 
       /** gets the last NIT request that was sent by the session
 
-          @warning Can return a NULL SharedPtr if none was sent
+          @warning Can return a NULL std::shared_ptr if none was sent
        */
-      const SharedPtr<SipMessage> getLastSentNITRequest() const;
+      std::shared_ptr<SipMessage> getLastSentNITRequest() const;
 
       /**
        * Provide asynchronous method access by using command
@@ -119,9 +132,12 @@ class InviteSession : public DialogUsage
       virtual void provideAnswerCommand(const Contents& answer);
       /** Asynchronously makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void endCommand(EndReason reason = NotSpecified);
-      /** Asynchronously rejects an offer at the SIP level.  Can also be used to 
+      virtual void endCommand(const Data& userReason);
+      virtual void endCommand(const resip::ParserContainer<resip::Token>& endReasons);
+      /** Asynchronously rejects an offer at the SIP level.  Can also be used to
           send a 488 to a reINVITE or UPDATE */
       virtual void rejectCommand(int statusCode, WarningCategory *warning = 0);
+      virtual void rejectCommand(int statusCode, const Contents* contents, WarningCategory *warning = 0);
       virtual void referCommand(const NameAddr& referTo, bool referSub = true);
       virtual void referCommand(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub = true);
       virtual void infoCommand(const Contents& contents);
@@ -152,12 +168,14 @@ class InviteSession : public DialogUsage
       const SdpContents& getProposedRemoteSdp() const;
 
       bool isConnected() const;
+      bool isSessionModificationInFlight() const;  // we have sent an UPDATE/OPTIONS/reINVITE that hasn't been answered yet
       bool isTerminated() const;
       bool isEarly() const;     // UAC Early states
       bool isAccepted() const;  // UAS States after accept is called
 
       Tokens& getPeerSupportedMethods() { return mPeerSupportedMethods; }
       Tokens& getPeerSupportedOptionTags() { return mPeerSupportedOptionTags; }
+      Tokens& getPeerRequiresOptionsTags() { return mPeerRequiresOptionTags; }
       Mimes&  getPeerSupportedMimeTypes() { return mPeerSupportedMimeTypes; }
       Tokens& getPeerSupportedEncodings() { return mPeerSupportedEncodings; }
       Tokens& getPeerSupportedLanguages() { return mPeerSupportedLanguages; }
@@ -165,7 +183,7 @@ class InviteSession : public DialogUsage
       Data&   getPeerUserAgent() { return mPeerUserAgent; }
       NameAddrs& getPeerPAssertedIdentities() { return mPeerPAssertedIdentities; }
 
-    virtual EncodeStream& dump(EncodeStream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const override;
       InviteSessionHandle getSessionHandle();
 
    protected:
@@ -181,6 +199,8 @@ class InviteSession : public DialogUsage
          SentReinviteNoOffer,       // Sent a reINVITE with no offer (requestOffer)
          SentReinviteAnswered,      // Sent a reINVITE no offer and received a 200-offer
          SentReinviteNoOfferGlare,  // Got a 491
+         SentOptions,               // Sent an OPTIONS
+         SentOptionsGlare,          // Got a 491
          ReceivedUpdate,            // Received an UPDATE
          ReceivedReinvite,          // Received a reINVITE
          ReceivedReinviteNoOffer,   // Received a reINVITE with no offer
@@ -272,6 +292,9 @@ class InviteSession : public DialogUsage
          On200Update,
          OnPrack, // UAS
          On200Prack, // UAC
+         OnOptions,
+         On200Options,
+         On491Options,
          Unknown
       } Event;
 
@@ -283,11 +306,11 @@ class InviteSession : public DialogUsage
 
       InviteSession(DialogUsageManager& dum, Dialog& dialog);
       virtual ~InviteSession();
-      virtual void onReadyToSend(SipMessage& msg);
+      virtual void onReadyToSend(SipMessage& msg) override;
       virtual void flowTerminated();
 
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
+      void dispatch(const SipMessage& msg) override;
+      void dispatch(const DumTimeout& timer) override;
 
       // Utility methods (one for each State)
       void dispatchConnected(const SipMessage& msg);
@@ -296,6 +319,7 @@ class InviteSession : public DialogUsage
       void dispatchSentReinviteNoOffer(const SipMessage& msg);
       void dispatchSentReinviteAnswered(const SipMessage& msg);
       void dispatchGlare(const SipMessage& msg);
+      void dispatchSentOptions(const SipMessage& msg);
       void dispatchReinviteNoOfferGlare(const SipMessage& msg);
       void dispatchReceivedUpdateOrReinvite(const SipMessage& msg);
       void dispatchReceivedReinviteSentOffer(const SipMessage& msg);
@@ -308,6 +332,14 @@ class InviteSession : public DialogUsage
       void dispatchBye(const SipMessage& msg);
       void dispatchInfo(const SipMessage& msg);
       void dispatchMessage(const SipMessage& msg);
+      void dispatchOptions(const SipMessage& msg);
+
+      // True iff the supplied message is an ACK, a 2xx (INVITE) retransmission
+      // is currently outstanding (mInvite200 / mCurrentRetransmit200), and the
+      // ACK acknowledges that 2xx.  Correlates on the CSeq sequence number
+      // (RFC 3261 13.2.2.4); robust under re-INVITE glare and a peer that
+      // re-uses the in-dialog CSeq.
+      bool isAckForCurrent200(const SipMessage& ack) const;
 
       void startRetransmit200Timer();
       void start491Timer();
@@ -315,6 +347,8 @@ class InviteSession : public DialogUsage
 
       void setSessionTimerHeaders(SipMessage& msg);
       void sessionRefresh();
+      void checkDeferredSessionExpiration();
+      bool expireSessionAfterFailedModification();
       void setSessionTimerPreferences();
       void startSessionTimer();
       void handleSessionTimerResponse(const SipMessage& msg);
@@ -323,19 +357,20 @@ class InviteSession : public DialogUsage
       static Data toData(State state);
       void transition(State target);
 
-      std::auto_ptr<Contents> getOfferAnswer(const SipMessage& msg);
+      std::unique_ptr<Contents> getOfferAnswer(const SipMessage& msg);
       bool isReliable(const SipMessage& msg) const;
-      static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer);
-      static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer, const Contents* alternative);
+      static std::unique_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer);
+      static std::unique_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer, const Contents* alternative);
       static void setOfferAnswer(SipMessage& msg, const Contents& offerAnswer, const Contents* alternative = 0);
       static void setOfferAnswer(SipMessage& msg, const Contents* offerAnswer);
       void provideProposedOffer();
 
       void storePeerCapabilities(const SipMessage& msg);
       bool updateMethodSupported() const;
+      bool sessionTimerSupportedLocalAndPeer() const;
 
-      void sendAck(const Contents *answer=0);
-      SharedPtr<SipMessage> sendBye();
+      std::shared_ptr<SipMessage> sendAck(const Contents *answer=0);
+      std::shared_ptr<SipMessage> sendBye();
 
       const Data& getEndReasonString(InviteSession::EndReason reason);
 
@@ -345,12 +380,14 @@ class InviteSession : public DialogUsage
 
       Tokens mPeerSupportedMethods;
       Tokens mPeerSupportedOptionTags;
+      Tokens mPeerRequiresOptionTags;
       Mimes  mPeerSupportedMimeTypes;
       Tokens mPeerSupportedEncodings;
       Tokens mPeerSupportedLanguages;
       Tokens mPeerAllowedEvents;
       Data   mPeerUserAgent;
       NameAddrs mPeerPAssertedIdentities;
+      bool mPeerSupportsSessionTimer;
 
       Event toEvent(const SipMessage& msg, const Contents* offeranswer);
       
@@ -358,16 +395,16 @@ class InviteSession : public DialogUsage
       NitState mNitState;
       NitState mServerNitState;
 
-      std::auto_ptr<Contents> mCurrentLocalOfferAnswer;    // This gets set with mProposedLocalOfferAnswer after we receive an SDP answer from the remote end or when we send and SDP answer to the remote end
-      std::auto_ptr<Contents> mProposedLocalOfferAnswer;   // This get set when we send an offer to the remote end
+      std::unique_ptr<Contents> mCurrentLocalOfferAnswer;    // This gets set with mProposedLocalOfferAnswer after we receive an SDP answer from the remote end or when we send and SDP answer to the remote end
+      std::unique_ptr<Contents> mProposedLocalOfferAnswer;   // This get set when we send an offer to the remote end
 
-      std::auto_ptr<Contents> mCurrentRemoteOfferAnswer;   // This gets set with mProposedRemoteOfferAnswer after we send an SDP answer, or when we receive an SDP answer from the remote end
-      std::auto_ptr<Contents> mProposedRemoteOfferAnswer;  // This gets set when we receive an offer from the remote end
+      std::unique_ptr<Contents> mCurrentRemoteOfferAnswer;   // This gets set with mProposedRemoteOfferAnswer after we send an SDP answer, or when we receive an SDP answer from the remote end
+      std::unique_ptr<Contents> mProposedRemoteOfferAnswer;  // This gets set when we receive an offer from the remote end
 
-      SharedPtr<SipMessage> mLastLocalSessionModification;  // last UPDATE or reINVITE sent
-      SharedPtr<SipMessage> mLastRemoteSessionModification; // last UPDATE or reINVITE received
-      SharedPtr<SipMessage> mInvite200;                     // 200 OK for reINVITE for retransmissions
-      SharedPtr<SipMessage> mLastNitResponse;
+      std::shared_ptr<SipMessage> mLastLocalSessionModification;  // last UPDATE or reINVITE sent
+      std::shared_ptr<SipMessage> mLastRemoteSessionModification; // last UPDATE or reINVITE received
+      std::shared_ptr<SipMessage> mInvite200;                     // 200 OK for reINVITE for retransmissions
+      std::shared_ptr<SipMessage> mLastNitResponse;
 
       SipMessage  mLastReferNoSubRequest;
       
@@ -375,27 +412,29 @@ class InviteSession : public DialogUsage
       unsigned int mStaleReInviteTimerSeq;
 
       // Session Timer settings
-      UInt32 mSessionInterval;
-      UInt32 mMinSE;
+      uint32_t mSessionInterval;
+      uint32_t mMinSE;
       bool mSessionRefresher;
-      unsigned int  mSessionTimerSeq;
-      bool mSessionRefreshReInvite;      
+      unsigned int mSessionRefreshTimerSeq;
+      unsigned int mSessionExpirationTimerSeq;
+      bool mSessionRefreshReInvite;
+      bool mSessionExpirationPending;  // Session-Expiration timer fired while a session modification was in flight
 
       class QueuedNIT
       {
       public:
-         QueuedNIT(SharedPtr<SipMessage> NIT, bool referSub=false)
+         QueuedNIT(std::shared_ptr<SipMessage> NIT, bool referSub=false)
             : mNIT(NIT), mReferSubscription(referSub) {}
-         SharedPtr<SipMessage>& getNIT() { return mNIT; }
+         std::shared_ptr<SipMessage>& getNIT() { return mNIT; }
          bool referSubscription() { return mReferSubscription; }
       private:
-         SharedPtr<SipMessage> mNIT;
+          std::shared_ptr<SipMessage> mNIT;
          bool mReferSubscription;
       };
       std::queue<QueuedNIT*> mNITQueue;
       void nitComplete();
       bool mReferSub;
-      SharedPtr<SipMessage> mLastSentNITRequest;
+      std::shared_ptr<SipMessage> mLastSentNITRequest;
 
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
       DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE or PRACK
@@ -404,18 +443,15 @@ class InviteSession : public DialogUsage
 
       // Used when a user-specified EndReason is needed
       Data mUserEndReason;
+      ParserContainer<Token> mUserEndReasons;  // This is used if set, otherwise mUserEndReason is used, if set
 
       // Used to respond to 2xx retransmissions.
-      typedef HashMap<Data, SharedPtr<SipMessage> > AckMap;
+      typedef HashMap<Data, std::shared_ptr<SipMessage>> AckMap;
       AckMap mAcks;
       
    private:
       friend class Dialog;
       friend class DialogUsageManager;
-
-      // disabled
-      InviteSession(const InviteSession&);
-      InviteSession& operator=(const InviteSession&);
 
       // Utility methods for handling particular methods
       void dispatchOthers(const SipMessage& msg);
@@ -431,6 +467,7 @@ class InviteSession : public DialogUsage
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

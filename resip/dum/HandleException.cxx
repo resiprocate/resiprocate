@@ -2,13 +2,13 @@
 
 using namespace resip;
 
-HandleException::HandleException(const Data& msg,const Data& file,int line)
+HandleException::HandleException(const Data& msg, const Data& file, const int line)
    : BaseException(msg, file, line)
 {
 }
 
 const char*
-HandleException::name() const
+HandleException::name() const noexcept
 {
    return "HandleException";
 }

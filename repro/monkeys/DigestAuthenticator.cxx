@@ -16,7 +16,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/UserInfoMessage.hxx"
 #include "repro/UserStore.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -29,7 +29,8 @@ using namespace std;
 
 DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
                                          Dispatcher* authRequestDispatcher,
-                                         const Data& staticRealm) :
+                                         const Data& staticRealm,
+                                         const std::vector<resip::DigestType>& challengeDigestTypes) :
    Processor("DigestAuthenticator"),
    mAuthRequestDispatcher(authRequestDispatcher),
    mStaticRealm(staticRealm),
@@ -37,7 +38,9 @@ DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
    mHttpHostname(config.getConfigData("HttpHostname", "")),
    mHttpPort(config.getConfigInt("HttpPort", 5080)),
    mUseAuthInt(!config.getConfigBool("DisableAuthInt", false)),
-   mRejectBadNonces(config.getConfigBool("RejectBadNonces", false))
+   mRejectBadNonces(config.getConfigBool("RejectBadNonces", false)),
+   mAllowInDialogImpersonationWithinRealm(config.getConfigBool("AllowInDialogImpersonationWithinRealm", false)),
+   mChallengeDigestTypes(challengeDigestTypes)
 {
 }
 
@@ -90,7 +93,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
          sipMessage->header(h_From).isAllContacts() )
       {
          InfoLog(<<"Malformed From header: cannot get realm to challenge with. Rejecting.");
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                          (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
          return SkipAllChains;         
       }
@@ -156,7 +159,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
       {
          case Helper::Failed:
             InfoLog (<< "Authentication failed for " << user << " at realm " << realm << ". Sending 403");
-            rc.sendResponse(*auto_ptr<SipMessage>
+            rc.sendResponse(*unique_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed")));
             return SkipAllChains;
         
@@ -173,12 +176,27 @@ DigestAuthenticator::process(repro::RequestContext &rc)
             {
                InfoLog(<<"From header is malformed in"
                               " digest response.");
-               rc.sendResponse(*auto_ptr<SipMessage>
+               rc.sendResponse(*unique_ptr<SipMessage>
                                (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
                return SkipAllChains;               
             }
-            
-            if (authorizedForThisIdentity(user, realm, sipMessage->header(h_From).uri()))
+
+            // The mAllowInDialogImpersonationWithinRealm setting allows a request to be authorized
+            // using a digest user that is different from the user specified in the From header. This
+            // applies to mid-dialog requests only. This is necessary to properly support call forwarding
+            // scenarios.Consider this scenario:
+            //  -User A calls User B
+            //  -User B sends a 302 redierct to redirect A to User C
+            //  -User A resends INVITE to User C.  This INVITE still has User B in the To header.
+            //  -Sometime during the call between A and C, User C decides to put the call on hold.
+            // This results in a reINVITE from C to A, however User B is in From header. If this setting
+            // set to false, then the DigestAuthenticator will return a 403 (forged request) because
+            // the auth info provided is for User C, yet the From header is User B (ie: authorizedForThisIdentity
+            // will return false).
+            if ((mAllowInDialogImpersonationWithinRealm &&
+                 sipMessage->header(h_To).exists(p_tag) &&             // to_tag is present - this is an in-dialog request
+                 sipMessage->header(h_From).uri().host() == realm) ||  // request is From a user in our realm/domain
+                authorizedForThisIdentity(user, realm, sipMessage->header(h_From).uri()))
             {
                rc.setDigestIdentity(user);
 
@@ -247,13 +265,14 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                }            
             
 #if defined(USE_SSL)
+               // TODO !SLG!  RFC4474 has been deprecated by RFC8224 (Authenticated Identity Management).  We should remove/adjust this code.
                if(!mNoIdentityHeaders)
                {
                   static Data http("http://" + mHttpHostname + ":" + Data(mHttpPort) + "/cert?domain=");
                   // .bwc. Leave pre-existing Identity headers alone.
-                  if(!sipMessage->exists(h_Identity))
+                  if(!sipMessage->exists(h_Identities))
                   {
-                     sipMessage->header(h_Identity).value() = Data::Empty;  // This is a signal to have the TransportSelector fill in the identity header
+                     sipMessage->header(h_Identities).push_back(IdentityCategory(Data::Empty));  // This is a signal to have the TransportSelector fill in the identity header
                      if(sipMessage->exists(h_IdentityInfo))
                      {
                         InfoLog(<<"Somebody sent us a"
@@ -279,7 +298,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                // !rwm! The user is trying to forge a request.  Respond with a 403
                InfoLog (<< "User: " << user << " at realm: " << realm << 
                            " trying to forge request from: " << sipMessage->header(h_From).uri());
-               rc.sendResponse(*auto_ptr<SipMessage>
+               rc.sendResponse(*unique_ptr<SipMessage>
                                (Helper::makeResponse(*sipMessage, 403)));
                return SkipAllChains;               
             }
@@ -295,7 +314,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
             InfoLog (<< "Authentication nonce badly formed for " << user);
             if(mRejectBadNonces)
             {
-               rc.sendResponse(*auto_ptr<SipMessage>
+               rc.sendResponse(*unique_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Where on earth did you get that nonce?")));
             }
             else
@@ -354,7 +373,8 @@ DigestAuthenticator::challengeRequest(repro::RequestContext &rc, bool stale)
    Data realm = getRealm(rc);
 
    SipMessage *challenge = Helper::makeProxyChallenge(sipMessage, realm, 
-                                                      mUseAuthInt /*auth-int*/, stale);
+                                                      mUseAuthInt /*auth-int*/, stale,
+                                                      mChallengeDigestTypes);
    rc.sendResponse(*challenge);
    delete challenge;
 }
@@ -411,7 +431,7 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
 Processor::processor_action_t
 DigestAuthenticator::requestUserAuthInfo(RequestContext &rc, const Auth& auth, UserInfoMessage *userInfo)
 {
-   std::auto_ptr<ApplicationMessage> app(userInfo);
+   std::unique_ptr<ApplicationMessage> app(userInfo);
    mAuthRequestDispatcher->post(app);
    return WaitingForEvent;
 }
@@ -441,6 +461,7 @@ DigestAuthenticator::isMyRealm(RequestContext &rc, const resip::Data& realm)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

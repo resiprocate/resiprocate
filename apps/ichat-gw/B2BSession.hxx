@@ -2,11 +2,12 @@
 #define B2BSession_hxx
 
 #include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
 #include <resip/dum/DialogSetHandler.hxx>
 #include <resip/dum/AppDialogSet.hxx>
+
+#include <memory>
 
 namespace gateway
 {
@@ -53,7 +54,7 @@ public:
 protected:
    friend class Server;
 
-   virtual resip::SharedPtr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage& msg); 
+   virtual std::shared_ptr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage& msg); 
 
    // Invite Session Handler /////////////////////////////////////////////////////
    virtual void onNewSession(resip::ClientInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);

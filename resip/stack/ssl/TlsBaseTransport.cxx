@@ -42,7 +42,11 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
    mSslType(sslType),
    mDomainCtx(0),
    mClientVerificationMode(cvm),
-   mUseEmailAsSIP(useEmailAsSIP)
+   mUseEmailAsSIP(useEmailAsSIP),
+   mCertificateFilename(certificateFilename),
+   mPrivateKeyFilename(privateKeyFilename),
+   mPrivateKeyPassPhrase(privateKeyPassPhrase),
+   mReloadCertificate(false)
 {
    setTlsDomain(sipDomain);   
    mTuple.setType(transportType);
@@ -55,18 +59,78 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
    {
       switch(sslType)
       {
-      case SecurityTypes::SSLv23:
-         DebugLog(<<"Using SSLv23_method");
-         mDomainCtx = mSecurity->createDomainCtx(SSLv23_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+      case SecurityTypes::DynamicTLS:
+         DebugLog(<<"Using SecurityTypes::DynamicTLS");
          break;
       case SecurityTypes::TLSv1:
-         DebugLog(<<"Using TLSv1_method");
-         mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+         DebugLog(<<"Using SecurityTypes::TLSv1");
          break;
       default:
          throw invalid_argument("Unrecognised SecurityTypes::SSLType value");
       }
+      mDomainCtx = createDomainCtx();
    }
+}
+
+SSL_CTX*
+TlsBaseTransport::createDomainCtx()
+{
+   // Built from the members rather than the constructor's arguments: the
+   // SSL_CTX keeps a pointer to the passphrase, and a reload needs them anyway
+   SSL_CTX* ctx = mSecurity->createDomainCtx(TLS_method(), tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
+   if(ctx)
+   {
+      if(mSslType == SecurityTypes::TLSv1)
+      {
+         // Lock TLS to version 1.0 - won't support 1.1, 1.2, 1.3, etc.
+         SSL_CTX_set_min_proto_version(ctx, TLS1_VERSION);
+         SSL_CTX_set_max_proto_version(ctx, TLS1_VERSION);
+      }
+      if(mCertVerifyCallback)
+      {
+         SSL_CTX_set_cert_verify_callback(ctx, mCertVerifyCallback, mCertVerifyCallbackArg);
+      }
+   }
+   return ctx;
+}
+
+void
+TlsBaseTransport::reloadDomainCtx()
+{
+   if(!mDomainCtx)
+   {
+      // No domain, so this transport uses Security's shared SSL_CTX and has
+      // no certificate of its own to reload
+      return;
+   }
+
+   DebugLog(<<"TlsBaseTransport::reloadDomainCtx, re-reading certificate and private key for domain " << tlsDomain());
+   SSL_CTX* ctx = nullptr;
+   try
+   {
+      ctx = createDomainCtx();
+   }
+   catch(BaseException& e)
+   {
+      ErrLog(<<"Failed to reload the certificate/private key for domain " << tlsDomain() << ", still using the previous ones: " << e);
+      return;
+   }
+   catch(...)
+   {
+      ErrLog(<<"Failed to reload the certificate/private key for domain " << tlsDomain() << ", still using the previous ones");
+      return;
+   }
+   if(!ctx)
+   {
+      ErrLog(<<"Failed to reload the certificate/private key for domain " << tlsDomain() << ", still using the previous ones");
+      return;
+   }
+
+   // Connections set up with the old SSL_CTX hold their own reference to it,
+   // so it is only destroyed once the last of them has closed
+   SSL_CTX_free(mDomainCtx);
+   mDomainCtx = ctx;
+   InfoLog(<<"Reloaded the certificate and private key for domain " << tlsDomain());
 }
 
 
@@ -78,21 +142,43 @@ TlsBaseTransport::~TlsBaseTransport()
    }
 }
 
-SSL_CTX* 
-TlsBaseTransport::getCtx() const 
-{ 
+void
+TlsBaseTransport::onReload()
+{
+   DebugLog(<<"TlsBaseTransport::onReload, setting mReloadCertificate for domain " << tlsDomain());
+   mReloadCertificate = true;
+}
+
+SSL_CTX*
+TlsBaseTransport::getCtx()
+{
+   // FIXME: would be better to do this in a method called asynchronously after onReload
+   // as doing it here may slow down the connection.
+   // HUP is only likely to happen once per day for log reloads so the impact of doing it
+   // here is negligible
+   // exchange() so that a reload requested while this one runs isn't lost
+   if(mReloadCertificate.exchange(false))
+   {
+      reloadDomainCtx();
+   }
+
+   SSL_CTX *ctx = NULL;
    if(mDomainCtx)
    {
       DebugLog(<<"Using TlsDomain-transport SSL_CTX");
-      return mDomainCtx;
+      ctx = mDomainCtx;
    }
-   else if(mSslType == SecurityTypes::SSLv23)
+   else if(mSslType == SecurityTypes::DynamicTLS)
    {
-      DebugLog(<<"Using SSLv23_method");
-      return mSecurity->getSslCtx();
+      DebugLog(<<"Using SecurityTypes::DynamicTLS (dynamic version negotiation)");
+      ctx = mSecurity->getSslCtx();
    }
-   DebugLog(<<"Using TLSv1_method");
-   return mSecurity->getTlsCtx();
+   else
+   {
+      DebugLog(<<"Using SecurityTypes::TLSv1 (pinned to TLSv1; 1.0 only)");
+      ctx = mSecurity->getTlsCtx();
+   }
+   return ctx;
 }
 
 bool
@@ -108,8 +194,9 @@ TlsBaseTransport::setPeerCertificateVerificationCallback(
 
    // For full details of this callback see:
    // https://www.openssl.org/docs/ssl/SSL_CTX_set_cert_verify_callback.html
-   SSL_CTX_set_cert_verify_callback(getCtx(),
-      (int (*)(X509_STORE_CTX *,void *))func, arg);
+   mCertVerifyCallback = (int (*)(X509_STORE_CTX *,void *))func;
+   mCertVerifyCallbackArg = arg;
+   SSL_CTX_set_cert_verify_callback(getCtx(), mCertVerifyCallback, mCertVerifyCallbackArg);
 
    return true;
 }
@@ -117,7 +204,7 @@ TlsBaseTransport::setPeerCertificateVerificationCallback(
 Connection* 
 TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
-   resip_assert(this);
+   resip_assert_not_null(this);
    Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
                                         tlsDomain(), mSslType, mCompression );
    return conn;
@@ -128,8 +215,9 @@ TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

@@ -1,5 +1,7 @@
 #if !defined(REPROVERSION_HXX)
-#define REPROVERSION_HXX 
+#define REPROVERSION_HXX
+
+#include <string>
 
 namespace repro 
 {

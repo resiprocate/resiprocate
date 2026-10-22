@@ -2,6 +2,7 @@
 #define RESIP_XMLCURSOR_HXX 
 
 #include <iosfwd>
+#include <memory>
 #include <vector>
 
 #include "rutil/ParseBuffer.hxx"
@@ -135,7 +136,7 @@ class XMLCursor
       void parseNextRootChild();
 
 
-      Node* mRoot;
+      std::unique_ptr<Node> mRoot;
       Node* mCursor;
 
       //bool isEmpty;

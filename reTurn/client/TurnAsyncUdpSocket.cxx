@@ -1,4 +1,5 @@
 #include "TurnAsyncUdpSocket.hxx"
+#include "rutil/Lock.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32) && !defined(__GNUC__)
@@ -6,6 +7,7 @@
 #endif
 
 using namespace std;
+using namespace resip;
 
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 )
@@ -13,7 +15,7 @@ using namespace std;
 
 namespace reTurn {
 
-TurnAsyncUdpSocket::TurnAsyncUdpSocket(asio::io_service& ioService,
+TurnAsyncUdpSocket::TurnAsyncUdpSocket(asio::io_context& ioService,
                                        TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                        const asio::ip::address& address, 
                                        unsigned short port) : 
@@ -21,24 +23,28 @@ TurnAsyncUdpSocket::TurnAsyncUdpSocket(asio::io_service& ioService,
    AsyncUdpSocketBase(ioService)
 {
    mLocalBinding.setTransportType(StunTuple::UDP);
-   bind(address, port);
+   mBindError = bind(address, port);
 }
 
 void 
 TurnAsyncUdpSocket::onConnectSuccess()
 {
-   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
+   {
+      RecursiveLock lock(mHandlerMutex);
+      if (mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
+   }
    turnReceive();
 }
 
 void 
 TurnAsyncUdpSocket::onConnectFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectFailure(getSocketDescriptor(), e);
 }
 
 void 
-TurnAsyncUdpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncUdpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    handleReceivedData(address, port, data);
    turnReceive();
@@ -53,6 +59,7 @@ TurnAsyncUdpSocket::onReceiveFailure(const asio::error_code& e)
    }
    else
    {
+      RecursiveLock lock(mHandlerMutex);
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
    }
 }
@@ -60,12 +67,14 @@ TurnAsyncUdpSocket::onReceiveFailure(const asio::error_code& e)
 void 
 TurnAsyncUdpSocket::onSendSuccess()
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendSuccess(getSocketDescriptor());
 }
  
 void 
 TurnAsyncUdpSocket::onSendFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendFailure(getSocketDescriptor(), e);
 }
 
@@ -74,6 +83,7 @@ TurnAsyncUdpSocket::onSendFailure(const asio::error_code& e)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

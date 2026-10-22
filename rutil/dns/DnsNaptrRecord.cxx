@@ -104,6 +104,7 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
    }
    mName = name;
    free(name);
+   mTTL = overlay.ttl();
 
    mOrder = DNS__16BIT(overlay.data());
    mPreference = DNS__16BIT(overlay.data() + 2);
@@ -155,7 +156,7 @@ bool DnsNaptrRecord::isSameValue(const Data& value) const
 EncodeStream&
 DnsNaptrRecord::dump(EncodeStream& strm) const
 {
-   strm << mName << " (NAPTR)--> o=" << mOrder << " p=" << mPreference << " s=" << mService;
+   strm << mName << " (NAPTR)--> o=" << mOrder << " p=" << mPreference << " s=" << mService << " ttl=" << mTTL;
    return strm;
 }
 

@@ -10,7 +10,6 @@
 
 #include "TlsConnection.hxx"
 #include <vector>
-#include <boost/bind.hpp>
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
 #include <rutil/Logger.hxx>
@@ -23,7 +22,7 @@ using namespace resip;
 
 namespace reTurn {
 
-TlsConnection::TlsConnection(asio::io_service& ioService,
+TlsConnection::TlsConnection(asio::io_context& ioService,
                              ConnectionManager& manager, 
                              RequestHandler& handler, 
                              asio::ssl::context& context)
@@ -49,12 +48,13 @@ TlsConnection::start()
 {
    DebugLog(<< "TlsConnection started.");
 
-   doHandshake();
+   doHandshake(mRequestHandler.getConfig().mTlsHandshakeTimeout);
 }
 
 void 
 TlsConnection::stop()
 {
+  stopIdleTimer();
   asio::error_code ec;
   //mSocket.shutdown(ec);  // !slg! note: this fn gives a stack overflow since ASIO 1.0.0 for some reason
   mSocket.lowest_layer().close(ec);
@@ -77,6 +77,9 @@ TlsConnection::onServerHandshakeSuccess()
    asio::error_code ec;
    mLocalAddress = mSocket.lowest_layer().local_endpoint().address();
    mLocalPort = mSocket.lowest_layer().local_endpoint().port();
+   // Closed if it goes TcpConnectionIdleTimeout without receiving anything while it carries no
+   // allocation
+   startIdleTimer(mRequestHandler.getConfig().mTcpConnectionIdleTimeout, [this]() { return !mTurnAllocationManager.empty(); });
    doFramedReceive();
 }
  
@@ -88,8 +91,9 @@ TlsConnection::onServerHandshakeFailure(const asio::error_code& e)
 }
 
 void 
-TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
+   noteReceived();
    if (data->size() > 4)
    {
       /*
@@ -129,8 +133,8 @@ TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
             default:
                break;
             }
-#define RESPONSE_BUFFER_SIZE 1024
-            boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+            constexpr size_t RESPONSE_BUFFER_SIZE = 1024;
+            const auto buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
             unsigned int responseSize;
             responseSize = response.stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
             buffer->truncate(responseSize);  // set size to real size
@@ -197,6 +201,7 @@ TlsConnection::onSendFailure(const asio::error_code& error)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

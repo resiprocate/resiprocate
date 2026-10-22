@@ -1,11 +1,7 @@
 #if !defined(RESIP_MESSAGESILO_REQUEST_PROCESSOR_HXX)
 #define RESIP_MESSAGESILO_REQUEST_PROCESSOR_HXX 
 
-#ifdef WIN32
-#include <pcreposix.h>
-#else
-#include <regex.h>
-#endif
+#include <regex>
 
 #include "repro/AsyncProcessor.hxx"
 #include "repro/ProxyConfig.hxx"
@@ -18,7 +14,7 @@ class MessageSilo: public AsyncProcessor,
                    public RegistrarHandler
 {
 public:
-   MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher);
+   MessageSilo(ProxyConfig& config, resip::Dispatcher* asyncDispatcher);
    virtual ~MessageSilo();
 
    virtual processor_action_t process(RequestContext &);
@@ -33,8 +29,8 @@ public:
 
 private:
    SiloStore& mSiloStore;
-   regex_t *mDestFilterRegex;
-   regex_t *mMimeTypeFilterRegex;
+   std::regex *mDestFilterRegex;
+   std::regex *mMimeTypeFilterRegex;
    unsigned long mExpirationTime;
    bool mAddDateHeader;
    unsigned long mMaxContentLength;

@@ -13,10 +13,10 @@ class PublicationCreator: public BaseCreator
    public:
       PublicationCreator(DialogUsageManager& dum, 
                          const NameAddr& targetDocument, 
-                         SharedPtr<UserProfile> userProfile,
+                         std::shared_ptr<UserProfile> userProfile,
                          const Contents& body, 
                          const Data& eventType, 
-                         UInt32 expireSeconds );
+                         uint32_t expireSeconds );
 };
  
 }

@@ -1,8 +1,9 @@
 #if !defined(RESIP_SERVEROUTOFDIALOGREQ_HXX)
 #define RESIP_SERVEROUTOFDIALOGREQ_HXX
 
-#include "rutil/SharedPtr.hxx"
 #include "resip/dum/NonDialogUsage.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -11,21 +12,28 @@ class ServerOutOfDialogReq : public NonDialogUsage
 {
    public:
       typedef Handle<ServerOutOfDialogReq> ServerOutOfDialogReqHandle;
+
+      ServerOutOfDialogReq(const ServerOutOfDialogReq&) = delete;
+      ServerOutOfDialogReq(ServerOutOfDialogReq&&) = delete;
+
+      ServerOutOfDialogReq& operator=(const ServerOutOfDialogReq&) = delete;
+      ServerOutOfDialogReq& operator=(ServerOutOfDialogReq&&) = delete;
+
       ServerOutOfDialogReqHandle getHandle();
 
-      SharedPtr<SipMessage> accept(int statusCode = 200);
-      SharedPtr<SipMessage> reject(int statusCode);
+      std::shared_ptr<SipMessage> accept(int statusCode = 200);
+      std::shared_ptr<SipMessage> reject(int statusCode);
 
-      virtual void end();
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
+      void end() override;
+      void dispatch(const SipMessage& msg) override;
+      void dispatch(const DumTimeout& timer) override;
 
 	  // Return Options response based on current MasterProfile settings - application may need to add SDP Contents before
 	  // sending
-      virtual SharedPtr<SipMessage> answerOptions();
-	  virtual void send(SharedPtr<SipMessage> msg);
+      virtual std::shared_ptr<SipMessage> answerOptions();
+      void send(std::shared_ptr<SipMessage> msg) override;
 
-      virtual EncodeStream& dump(EncodeStream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const override;
 
    protected:
       virtual ~ServerOutOfDialogReq();
@@ -35,11 +43,7 @@ class ServerOutOfDialogReq : public NonDialogUsage
       ServerOutOfDialogReq(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& req);
       
       SipMessage mRequest;
-	  SharedPtr<SipMessage> mResponse;
-
-      // disabled
-      ServerOutOfDialogReq(const ServerOutOfDialogReq&);
-      ServerOutOfDialogReq& operator=(const ServerOutOfDialogReq&);
+      std::shared_ptr<SipMessage> mResponse;
 };
  
 }

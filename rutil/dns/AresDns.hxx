@@ -38,6 +38,7 @@ class AresDns : public ExternalDns
                        AfterSocketCreationFuncPtr socketfunc, unsigned int features=0,
                        ares_channeldata** channel = 0, int timeout=0, int tries=0, bool useStateFunc=false);
 
+      virtual void changeNameServers(const std::vector<GenericIPAddress>& additional);
       virtual bool checkDnsChange();
 
       virtual unsigned int getTimeTillNextProcessMS();
@@ -64,6 +65,8 @@ class AresDns : public ExternalDns
 
       friend void ::resip_AresDns_aresCallback(void *arg, int status, unsigned char* abuf, int alen);
       friend void ::resip_AresDns_caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
+
+      static const char* dnsRRTypeToString(int rrtype);
 
       // used for epoll() interface to ares lib
       // time_t mNow;

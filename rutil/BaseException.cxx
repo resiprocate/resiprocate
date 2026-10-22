@@ -6,7 +6,6 @@
 #include "rutil/Logger.hxx"
 
 using namespace resip;
-using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
@@ -22,9 +21,6 @@ BaseException::BaseException( const Data& msg,
 #endif
 }
 
-BaseException::~BaseException() throw()
-{}
-
 #ifndef RESIP_USE_STL_STREAMS
 EncodeStream& resip::operator<<(EncodeStream& strm, const BaseException& e)
 {
@@ -33,7 +29,7 @@ EncodeStream& resip::operator<<(EncodeStream& strm, const BaseException& e)
 }
 #endif
 
-ostream& resip::operator<<(ostream& strm, const BaseException& e)
+std::ostream& resip::operator<<(std::ostream& strm, const BaseException& e)
 {
    strm << e.name() << " " << e.message << " @ " << e.fileName << ":" << e.lineNumber;
    return strm;

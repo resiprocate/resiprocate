@@ -1,5 +1,8 @@
 #if !defined(RESIP_MSG_HEADER_SCANNER_HXX)
 #define RESIP_MSG_HEADER_SCANNER_HXX
+
+#include <stdlib.h>
+
 namespace resip 
 {
 
@@ -53,7 +56,7 @@ class MsgHeaderScanner
       
    public:
       enum { MaxNumCharsChunkOverflow = 5 };
-      static char* allocateBuffer(int size);
+      static char* allocateBuffer(size_t size);
       
       enum TextPropBitMaskEnum 
       {

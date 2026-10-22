@@ -125,8 +125,6 @@ defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
 defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
 
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
-
-defineHeader(Identity, "Identity", StringCategory, "RFC 4474");
 // explicitly declare to avoid h_AllowEventss, ugh
 extern H_AllowEventss h_AllowEvents;
 
@@ -156,7 +154,7 @@ defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488");
 defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
 defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
 
-defineHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 3455");
+defineMultiHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 7315"); // section 5.4.
 defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455");
 defineHeader(PChargingFunctionAddresses, "P-Charging-Function-Addresses", Token, "RFC 3455");
 
@@ -175,7 +173,7 @@ typedef ParserContainer<GenericUri> GenericUris;
 defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261");
 defineMultiHeader(AlertInfo, "Alert-Info", GenericUri, "RFC 3261");
 defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC 3261");
-defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474");
+defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474");      // deprecated by RFC8224
 
 //====================
 // NameAddr:
@@ -207,6 +205,7 @@ defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
 defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
 defineMultiHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
 defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244");
+defineMultiHeader(Diversion, "Diversion", NameAddr, "RFC 5806");
 
 //====================
 // StringCategory:
@@ -308,6 +307,14 @@ defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", TokenOrQuotedStringCategory, "RFC 3455");
 defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
 
+//============================
+// IdentityCategory
+//============================
+typedef ParserContainer<IdentityCategory> IdentityCategories;
+defineMultiHeader(Identity, "Identity", IdentityCategory, "RFC 8224");  // Originally defined in RFC 4474 as a single header, but later modified by RFC8224 to be a multiheader
+// explicitly declare to avoid h_Identitys
+extern H_Identitys h_Identities;
+
 //====================
 // special first line accessors
 //====================
@@ -327,6 +334,7 @@ extern StatusLineType h_StatusLine;
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

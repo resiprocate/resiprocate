@@ -3,6 +3,8 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#else
+#define GPERF_SIZE_TYPE size_t
 #endif
 
 
@@ -16,11 +18,31 @@
 #  undef __OPTIMIZE__ // weird intel bug with ntohs and htons macros
 #endif
 
+/**
+   Lambda capture default that also captures 'this'.
+
+   A plain '[=]' capture-default implicitly captures 'this', which is deprecated
+   in C++20, while spelling it '[=, this]' is a C++20 extension that warns under
+   earlier standards.  RESIP_LAMBDA_CAPTURE_ALL_AND_THIS expands to whichever
+   form is well-formed and warning-free for the language version in use, so the
+   same source compiles cleanly from C++11 through C++20 and later.  (_MSVC_LANG
+   is checked because MSVC reports the real standard there rather than in
+   __cplusplus unless /Zc:__cplusplus is set.)
+
+   Usage:  [RESIP_LAMBDA_CAPTURE_ALL_AND_THIS]() { ...uses this and locals... }
+*/
+#if __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+#  define RESIP_LAMBDA_CAPTURE_ALL_AND_THIS =, this
+#else
+#  define RESIP_LAMBDA_CAPTURE_ALL_AND_THIS =
+#endif
+
 //#if defined(HAVE_SYS_INT_TYPES_H)
 //#include <sys/int_types.h>
 //#endif
 
 #include <cstring>
+#include <string>
 
 #ifndef WIN32
 #  include <netdb.h>
@@ -36,15 +58,12 @@
 #endif
 
 #ifdef WIN32
-// !cj! TODO would be nice to remove this 
-#  ifndef __GNUC__
-#    pragma warning(disable : 4996)
-#  endif
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #  include <windows.h>
 #  include <winsock2.h>
+#  include <cstdint>
 #undef WIN32_LEAN_AND_MEAN
 #  include <errno.h>
 #  include <io.h>
@@ -52,7 +71,7 @@
 #include "wince/WceCompat.hxx"
 #endif // UNDER_CE
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER < 1900
 #include <stdio.h>
 #ifndef snprintf
 #define snprintf c99_snprintf
@@ -133,24 +152,6 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 #  define T_A 1
 #endif
 
-// Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
-// If you've included either SDK then these will be defined.
-// We could also check that __MACTYPES__ is not defined
-#if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
-typedef unsigned char  UInt8;
-typedef unsigned short UInt16;
-typedef unsigned int   UInt32;
-typedef char           Int8;
-typedef short          Int16;
-typedef int            Int32;
-#else
-// On Apple platforms, MacTypes.h should provide the types:
-#include <MacTypes.h>
-typedef SInt8          Int8;
-typedef SInt16         Int16;
-typedef SInt32         Int32;
-#endif
-
 #if defined( TARGET_OS_IPHONE )
 // TARGET_OS_IPHONE can be 0 or 1, so must also check the value
 #if TARGET_OS_IPHONE
@@ -158,13 +159,6 @@ typedef SInt32         Int32;
 #endif
 #endif
 
-#if defined( WIN32 )
-  typedef signed __int64   Int64;
-  typedef unsigned __int64 UInt64;
-#else
-  typedef signed long long   Int64;
-  typedef unsigned long long UInt64;
-#endif
 //typedef struct { unsigned char octet[16]; }  UInt128;
 
 namespace resip
@@ -172,10 +166,10 @@ namespace resip
 
 #if defined(WIN32) || defined(__QNX__)
 #ifndef strcasecmp
-#  define strcasecmp(a,b)    stricmp(a,b)
+#  define strcasecmp(a,b)    _stricmp(a,b)
 #endif
 #ifndef strncasecmp
-#  define strncasecmp(a,b,c) strnicmp(a,b,c)
+#  define strncasecmp(a,b,c) _strnicmp(a,b,c)
 #endif
 #endif
 
@@ -187,14 +181,24 @@ template<typename _Tp>
 inline const _Tp&
 resipMin(const _Tp& __a, const _Tp& __b)
 {
-   if (__b < __a) return __b; return __a;
+   if (__b < __a)
+   {
+      return __b;
+   }
+
+   return __a;
 }
 
 template<typename _Tp>
 inline const _Tp&
 resipMax(const _Tp& __a, const _Tp& __b) 
 {
-   if (__a < __b) return __b; return __a;
+   if (__a < __b)
+   {
+      return __b;
+   }
+
+   return __a;
 }
 
 template<typename _Tp1, typename _Tp2>
@@ -212,45 +216,71 @@ resipIntDiv(const _Tp1& __a, const _Tp2& __b)
 
 #if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN) || defined( __BIG_ENDIAN__ ) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || defined(RESIP_BIG_ENDIAN)
 
-inline UInt64
-ntoh64(const UInt64 input)
+inline uint64_t
+ntoh64(const uint64_t input)
 {
    return input;
 }
 
-inline UInt64
-hton64(const UInt64 input)
+inline uint64_t
+hton64(const uint64_t input)
 {
    return input;
 }
 
 #else
 
-inline UInt64
-ntoh64(const UInt64 input)
+inline uint64_t
+ntoh64(const uint64_t input)
 {
-   UInt64 rval;
-   UInt8 *data = (UInt8 *)&rval;
+   uint64_t rval;
+   uint8_t *data = (uint8_t *)&rval;
 
-   data[0] = (UInt8)((input >> 56) & 0xFF);
-   data[1] = (UInt8)((input >> 48) & 0xFF);
-   data[2] = (UInt8)((input >> 40) & 0xFF);
-   data[3] = (UInt8)((input >> 32) & 0xFF);
-   data[4] = (UInt8)((input >> 24) & 0xFF);
-   data[5] = (UInt8)((input >> 16) & 0xFF);
-   data[6] = (UInt8)((input >> 8) & 0xFF);
-   data[7] = (UInt8)((input >> 0) & 0xFF);
+   data[0] = (uint8_t)((input >> 56) & 0xFF);
+   data[1] = (uint8_t)((input >> 48) & 0xFF);
+   data[2] = (uint8_t)((input >> 40) & 0xFF);
+   data[3] = (uint8_t)((input >> 32) & 0xFF);
+   data[4] = (uint8_t)((input >> 24) & 0xFF);
+   data[5] = (uint8_t)((input >> 16) & 0xFF);
+   data[6] = (uint8_t)((input >> 8) & 0xFF);
+   data[7] = (uint8_t)((input >> 0) & 0xFF);
 
    return rval;
 }
 
-inline UInt64
-hton64(const UInt64 input)
+inline uint64_t
+hton64(const uint64_t input)
 {
    return (ntoh64(input));
 }
 
 #endif
+
+#ifndef _MSC_VER
+// strerror_r has two incompatible signatures depending on feature-test macros
+// and the platform's libc. The GNU variant returns char* (the message, which
+// may not be 'buf'); the XSI/POSIX variant returns int (0 on success) and
+// writes the message into 'buf'. Let overload resolution pick the right one.
+inline const char* strErrorResult(char* result, char* /*buf*/)
+{
+   return result;                                   // GNU variant
+}
+inline const char* strErrorResult(int result, char* buf)
+{
+   return (result == 0) ? buf : "Unknown error";    // XSI/POSIX variant
+}
+#endif
+
+inline std::string strError(int err)
+{
+   char buf[256];
+#ifdef _MSC_VER
+   strerror_s(buf, sizeof(buf), err);
+   return buf;
+#else
+   return strErrorResult(strerror_r(err, buf, sizeof(buf)), buf);
+#endif
+}
 
 }
 
@@ -286,6 +316,10 @@ hton64(const UInt64 input)
 // #undef USE_IPV6
 #endif
 #endif
+#endif
+
+#ifndef IPPROTO_SCTP
+#define IPPROTO_SCTP 132
 #endif
 
 // !bwc! Some poking around seems to indicate that icc supports gcc's function 

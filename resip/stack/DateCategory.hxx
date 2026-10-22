@@ -19,7 +19,8 @@ enum DayOfWeek {
    Wed,
    Thu,
    Fri,
-   Sat
+   Sat,
+   NA
 };
 
 extern Data DayOfWeekData[];
@@ -47,7 +48,7 @@ enum Month {
 class DateCategory : public ParserCategory
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      static constexpr CommaHandlingMode commaHandling = NoCommaTokenizing;
 
       DateCategory();
       DateCategory(time_t datetime);

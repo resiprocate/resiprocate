@@ -1,3 +1,18 @@
-     </div>
+    </main>
+    <footer>
+      <span>REPRO SIP PROXY</span>
+      <a href="https://github.com/resiprocate/resiprocate/wiki/About-Repro"
+         target="_blank" rel="noopener noreferrer">www.resiprocate.org</a>
+    </footer>
+    <script>
+      // Highlight the menu entry for the page currently being viewed.
+      (function () {
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('nav.menu a');
+        for (var i = 0; i < links.length; i++) {
+          if (links[i].getAttribute('href') === page) { links[i].className = 'on'; }
+        }
+      })();
+    </script>
   </body>
 </html>

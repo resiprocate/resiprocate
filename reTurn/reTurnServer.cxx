@@ -4,14 +4,12 @@
 
 #include <iostream>
 #include <csignal>
+#include <memory>
 #include <string>
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <boost/lexical_cast.hpp>
 #include <rutil/Data.hxx>
 #include "reTurnServer.hxx"
 #include "TcpServer.hxx"
@@ -25,11 +23,13 @@
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
 
+#include <functional>
+
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 #if defined(_WIN32)
 
-boost::function0<void> console_ctrl_function;
+std::function<void()> console_ctrl_function;
 
 BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 {
@@ -53,14 +53,6 @@ int main(int argc, char* argv[])
    return proc.main(argc, argv);
 }
 
-reTurn::ReTurnServerProcess::ReTurnServerProcess()
-{
-}
-
-reTurn::ReTurnServerProcess::~ReTurnServerProcess()
-{
-}
-
 int
 reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 {
@@ -74,13 +66,16 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
    {
       reTurnConfig.parseConfig(argc, argv, defaultConfig);
    }
-   catch(std::exception& e)
+   catch(const std::exception& e)
    {
       ErrLog(<< "Exception parsing configuration: " << e.what());
       exit(-1);
    }
 
-   setPidFile(reTurnConfig.mPidFile);
+   if(!reTurnConfig.mPidFile.empty() && checkPosixProcessControl("PidFile"))
+   {
+      setPidFile(reTurnConfig.mPidFile);
+   }
    if(isAlreadyRunning())
    {
       std::cerr << "Already running, will not start two instances.  Please stop existing process and/or delete PID file.";
@@ -91,7 +86,7 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
    }
 
    // Daemonize if necessary
-   if(reTurnConfig.mDaemonize)
+   if(reTurnConfig.mDaemonize && checkPosixProcessControl("Daemonize"))
    {
       daemonize();
    }
@@ -99,26 +94,29 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
    try
    {
       // Initialize Logging
-      resip::Log::initialize(reTurnConfig.mLoggingType, reTurnConfig.mLoggingLevel, "reTurnServer", reTurnConfig.mLoggingFilename.c_str(), 0, reTurnConfig.mSyslogFacility);
-      resip::GenericLogImpl::MaxLineCount = reTurnConfig.mLoggingFileMaxLineCount;
+      resip::Log::initialize(reTurnConfig, argv[0]);
 
-      // Initialize server.
-      asio::io_service ioService;                                // The one and only ioService for the stunServer
+      // Initialize server.  The io_context is destroyed first at shutdown (see below), so it's
+      // held by a pointer.
+      std::unique_ptr<asio::io_context> ioContext(new asio::io_context);
+      asio::io_context& ioService = *ioContext;                  // The one and only ioService for the stunServer
       reTurn::TurnManager turnManager(ioService, reTurnConfig);  // The one and only Turn Manager
 
-      boost::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
-      boost::shared_ptr<reTurn::TcpServer> tcpTurnServer;
+      std::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
+      std::shared_ptr<reTurn::TcpServer> tcpTurnServer;
 #ifdef USE_SSL
-      boost::shared_ptr<reTurn::TlsServer> tlsTurnServer;
+      std::shared_ptr<reTurn::TlsServer> tlsTurnServer;
 #endif
-      boost::shared_ptr<reTurn::UdpServer> a1p2StunUdpServer;
-      boost::shared_ptr<reTurn::UdpServer> a2p1StunUdpServer;
-      boost::shared_ptr<reTurn::UdpServer> a2p2StunUdpServer;
+      std::shared_ptr<reTurn::UdpServer> a1p2StunUdpServer;
+      std::shared_ptr<reTurn::UdpServer> a2p1StunUdpServer;
+      std::shared_ptr<reTurn::UdpServer> a2p2StunUdpServer;
 
 #ifdef USE_IPV6
-      boost::shared_ptr<reTurn::UdpServer> udpV6TurnServer;
-      boost::shared_ptr<reTurn::TcpServer> tcpV6TurnServer;
-      boost::shared_ptr<reTurn::TlsServer> tlsV6TurnServer;
+      std::shared_ptr<reTurn::UdpServer> udpV6TurnServer;
+      std::shared_ptr<reTurn::TcpServer> tcpV6TurnServer;
+#ifdef USE_SSL
+      std::shared_ptr<reTurn::TlsServer> tlsV6TurnServer;
+#endif
 #endif
 
       // The one and only RequestHandler - if altStunPort is non-zero, then assume RFC3489 support is enabled and pass settings to request handler
@@ -128,29 +126,31 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
          reTurnConfig.mAltStunPort != 0 ? &reTurnConfig.mAltStunAddress : 0, 
          reTurnConfig.mAltStunPort != 0 ? &reTurnConfig.mAltStunPort : 0); 
 
-      udpTurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort));
-      tcpTurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort));
+      udpTurnServer = std::make_shared<reTurn::UdpServer>(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort);
+      tcpTurnServer = std::make_shared<reTurn::TcpServer>(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort);
 #ifdef USE_SSL
       if(reTurnConfig.mTlsTurnPort != 0)
       {
-         tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTlsTurnPort));
+         tlsTurnServer = std::make_shared<reTurn::TlsServer>(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTlsTurnPort);
       }
 #endif
 
 #ifdef USE_IPV6
-      udpV6TurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort));
-      tcpV6TurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort));
+      udpV6TurnServer = std::make_shared<reTurn::UdpServer>(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort);
+      tcpV6TurnServer = std::make_shared<reTurn::TcpServer>(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort);
+#ifdef USE_SSL
       if(reTurnConfig.mTlsTurnPort != 0)
       {
-         tlsV6TurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTlsTurnPort));
+         tlsV6TurnServer = std::make_shared<reTurn::TlsServer>(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTlsTurnPort);
       }
+#endif
 #endif
 
       if(reTurnConfig.mAltStunPort != 0) // if alt stun port is non-zero, then RFC3489 support is enabled
       {
-         a1p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mAltStunPort));
-         a2p1StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mAltStunAddress, reTurnConfig.mTurnPort));
-         a2p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mAltStunAddress, reTurnConfig.mAltStunPort));
+         a1p2StunUdpServer = std::make_shared<reTurn::UdpServer>(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mAltStunPort);
+         a2p1StunUdpServer = std::make_shared<reTurn::UdpServer>(ioService, requestHandler, reTurnConfig.mAltStunAddress, reTurnConfig.mTurnPort);
+         a2p2StunUdpServer = std::make_shared<reTurn::UdpServer>(ioService, requestHandler, reTurnConfig.mAltStunAddress, reTurnConfig.mAltStunPort);
          udpTurnServer->setAlternateUdpServers(a1p2StunUdpServer.get(), a2p1StunUdpServer.get(), a2p2StunUdpServer.get());
          a1p2StunUdpServer->setAlternateUdpServers(udpTurnServer.get(), a2p2StunUdpServer.get(), a2p1StunUdpServer.get());
          a2p1StunUdpServer->setAlternateUdpServers(a2p2StunUdpServer.get(), udpTurnServer.get(), a1p2StunUdpServer.get());
@@ -181,18 +181,18 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 #endif
 
       // Drop privileges (can do this now that sockets are bound)
-      if(!reTurnConfig.mRunAsUser.empty())
+      if(!reTurnConfig.mRunAsUser.empty() && checkPosixProcessControl("RunAsUser/RunAsGroup"))
       {
          InfoLog( << "Trying to drop privileges, configured uid = " << reTurnConfig.mRunAsUser << " gid = " << reTurnConfig.mRunAsGroup);
          dropPrivileges(reTurnConfig.mRunAsUser, reTurnConfig.mRunAsGroup);
       }
 
-      ReTurnUserFileScanner userFileScanner(ioService, reTurnConfig);
-      userFileScanner.start();
+      std::unique_ptr<ReTurnUserFileScanner> userFileScanner(new ReTurnUserFileScanner(ioService, reTurnConfig));
+      userFileScanner->start();
 
 #ifdef _WIN32
       // Set console control handler to allow server to be stopped.
-      console_ctrl_function = boost::bind(&asio::io_service::stop, &ioService);
+      console_ctrl_function = [&ioService] { ioService.stop(); };
       SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
 #else
       // Block all signals for background thread.
@@ -203,9 +203,8 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 #endif
 
       // Run the ioService until stopped.
-      // Create a pool of threads to run all of the io_services.
-      boost::shared_ptr<asio::thread> thread(new asio::thread(
-         boost::bind(&asio::io_service::run, &ioService)));
+      // Create a pool of threads to run all of the io_contexts.
+      asio::thread thread([&ioService] { ioService.run(); });
 
 #ifndef _WIN32
       // Restore previous signals.
@@ -224,9 +223,30 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 #endif
 
       // Wait for thread to exit
-      thread->join();
+      thread.join();
+
+      // Shut down in order: first what uses the io_context, then the io_context itself.  Its
+      // pending handlers keep servers, connections and their allocations alive, and those use the
+      // TurnManager and RequestHandler - so they must go while those still exist.
+      userFileScanner.reset();
+      udpTurnServer.reset();
+      tcpTurnServer.reset();
+#ifdef USE_SSL
+      tlsTurnServer.reset();
+#endif
+      a1p2StunUdpServer.reset();
+      a2p1StunUdpServer.reset();
+      a2p2StunUdpServer.reset();
+#ifdef USE_IPV6
+      udpV6TurnServer.reset();
+      tcpV6TurnServer.reset();
+#ifdef USE_SSL
+      tlsV6TurnServer.reset();
+#endif
+#endif
+      ioContext.reset();
    }
-   catch (std::exception& e)
+   catch (const std::exception& e)
    {
       ErrLog(<< "exception: " << e.what());
    }
@@ -237,6 +257,7 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

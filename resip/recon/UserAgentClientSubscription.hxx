@@ -45,7 +45,6 @@ class UserAgentClientSubscription : public resip::AppDialogSet
       void notifyReceived(const resip::Data& notifyData);
 
       UserAgent &mUserAgent;
-      resip::DialogUsageManager &mDum;
       SubscriptionHandle mSubscriptionHandle;
       size_t mLastNotifyHash;
       bool mEnded;

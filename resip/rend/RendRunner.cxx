@@ -209,16 +209,16 @@ RendRunner::setArgs(const char *appName, int argc, char **argv)
 int
 RendRunner::doSimpleAction(RendSimpleAction act) 
 {
-   switch ( act ) 
-   {
-   default:
+   //switch ( act ) 
+   //{
+   //default:
       if ( mSketch ) 
       {
          return mSketch->doSimpleAction(act);
       }
       return -1;
-   }
-   return -1;
+   //}
+   //return -1;
 }
 
 void

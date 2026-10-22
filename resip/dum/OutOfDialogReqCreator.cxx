@@ -1,11 +1,13 @@
 #include "OutOfDialogReqCreator.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 OutOfDialogReqCreator::OutOfDialogReqCreator(DialogUsageManager& dum, 
                                              MethodTypes method, 
                                              const NameAddr& target, 
-                                             SharedPtr<UserProfile> userProfile)
+                                             std::shared_ptr<UserProfile> userProfile)
    : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, method);

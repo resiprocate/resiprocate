@@ -2,6 +2,9 @@
 #ifndef TestTimerContext_hxx
 #define TestTimerContext_hxx
 
+#include <memory>
+
+#include "rutil/Socket.hxx"
 #include "rutil/Timer.hxx"
 
 namespace dtls {
@@ -9,12 +12,13 @@ namespace dtls {
 class TestTimerContext: public DtlsTimerContext{
   public:
      TestTimerContext();
-     void addTimer(DtlsTimer *timer, unsigned int seq);
-     UInt64 getRemainingTime();
+     void addTimer(std::shared_ptr<DtlsTimer> timer, unsigned int lifetime) override;
+     uint64_t getRemainingTime();
      void updateTimer();
-     
-     DtlsTimer *mTimer;
-     UInt64 mExpiryTime;
+     int select(resip::FdSet& fdSet);
+
+     std::shared_ptr<DtlsTimer> mTimer;
+     uint64_t mExpiryTime;
 };
 
 }
@@ -23,7 +27,8 @@ class TestTimerContext: public DtlsTimerContext{
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

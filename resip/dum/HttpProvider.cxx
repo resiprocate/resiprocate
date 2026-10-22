@@ -1,16 +1,18 @@
 #include "HttpProvider.hxx"
 #include "rutil/Lock.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 HttpProvider* HttpProvider::mInstance = 0;
-std::auto_ptr<HttpProviderFactory> HttpProvider::mFactory;
+std::unique_ptr<HttpProviderFactory> HttpProvider::mFactory;
 Mutex HttpProvider::mMutex;      
 
 void 
-HttpProvider::setFactory(std::auto_ptr<HttpProviderFactory> fact)
+HttpProvider::setFactory(std::unique_ptr<HttpProviderFactory> fact) noexcept
 {
-   mFactory = fact;
+   mFactory = std::move(fact);
 }
 
 HttpProvider* 
@@ -21,7 +23,7 @@ HttpProvider::instance()
       Lock lock(mMutex);
       if (mInstance == 0)
       {
-         mInstance = mFactory.get()->createHttpProvider();
+         mInstance = mFactory->createHttpProvider();
       }
    }
    return mInstance;   

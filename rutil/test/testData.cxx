@@ -1,6 +1,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Log.hxx"
+#include "rutil/compat.hxx"
 #include "assert.h"
 #include <iostream>
 #include <limits>
@@ -266,6 +267,12 @@ class TestData
             assert(input == "ABCD123ABCDa");
          }
          
+         {
+            // construct a Data object with binary zero in content
+            const char rawInput[] = {'I', 'P', '4', '\0'};
+            const Data input(rawInput, sizeof(rawInput));
+            assert(input != "IP4");
+         }
          
          {
             const char* s = "a";
@@ -908,6 +915,21 @@ class TestData
          }
 
          {
+            Data v("Some Text");
+            assert(v.prefixNoCase("some"));
+            assert(v.prefixNoCase("SOME"));
+            assert(v.prefixNoCase("some "));
+            assert(v.prefixNoCase("SoMe "));
+            assert(!v.prefixNoCase("ome "));
+            assert(!v.prefixNoCase("some more text"));
+
+            assert(v.prefixNoCase(Data::Empty));
+            assert(v.prefixNoCase("some text"));
+            assert(v.prefixNoCase(v));
+            assert(!v.prefixNoCase("some text "));
+         }
+
+         {
             Data v("some text");
             assert(v.postfix("text"));
             assert(v.postfix(" text"));
@@ -918,6 +940,21 @@ class TestData
             assert(v.postfix("some text"));
             assert(v.postfix(v));
             assert(!v.postfix(" some text"));
+         }
+
+         {
+            Data v("Some Text");
+            assert(v.postfixNoCase("text"));
+            assert(v.postfixNoCase("TEXT"));
+            assert(v.postfixNoCase(" text"));
+            assert(v.postfixNoCase(" tExT"));
+            assert(!v.postfixNoCase("tex"));
+            assert(!v.postfixNoCase("more some text"));
+
+            assert(v.postfixNoCase(Data::Empty));
+            assert(v.postfixNoCase("some text"));
+            assert(v.postfixNoCase(v));
+            assert(!v.postfixNoCase(" some text"));
          }
 
          {
@@ -1112,9 +1149,9 @@ class TestData
          }
 
          {
-            assert(Data(UInt64(0)) == "0");
-            assert(Data(UInt64(1)) == "1");
-            assert(Data(UInt64(18446744073709551615ULL)) == "18446744073709551615");  // 2^64 - 1
+            assert(Data(uint64_t(0)) == "0");
+            assert(Data(uint64_t(1)) == "1");
+            assert(Data(uint64_t(18446744073709551615ULL)) == "18446744073709551615");  // 2^64 - 1
          }
 
          {
@@ -1156,7 +1193,14 @@ class TestData
             assert(empt1 == "");
             assert("sdf" != empt1);
             assert(Data("SAfdsaf") != empt1);
+#ifndef WIN32
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wself-assign-overloaded"
+#endif
             empt = empt;
+#ifndef WIN32
+#pragma clang diagnostic pop
+#endif
             empt = empt1;
             empt = "sdfasf";
          }
@@ -1294,7 +1338,7 @@ class TestData
             assert(c == "S");
          }         
          {
-            Data d((UInt64)235235);
+            Data d((uint64_t)235235);
             assert(d == "235235");
          }
  
@@ -1334,6 +1378,35 @@ class TestData
             assert(  Data("1234567" ).base64encode() == d7 );
          }
          
+         {
+            // RFC 4648 Base64 test vectors
+            const unsigned char rawInput1[] = { 0x14, 0xfb, 0x9c, 0x03, 0xd9, 0x7e };
+            const unsigned char rawInput2[] = { 0x14, 0xfb, 0x9c, 0x03, 0xd9 };
+            const unsigned char rawInput3[] = { 0x14, 0xfb, 0x9c, 0x03 };
+
+            struct TestVector {
+               Data plaintext;
+               Data encoded;
+            } testVectors[] = {
+               {Data(rawInput1, sizeof(rawInput1)), "FPucA9l+"},
+               {Data(rawInput2, sizeof(rawInput2)), "FPucA9k="},
+               {Data(rawInput3, sizeof(rawInput3)), "FPucAw=="},
+               {"", ""},
+               {"f", "Zg=="},
+               {"fo", "Zm8="},
+               {"foo", "Zm9v"},
+               {"foob", "Zm9vYg=="},
+               {"fooba", "Zm9vYmE="},
+               {"foobar", "Zm9vYmFy"},
+            };
+
+            for (unsigned i = 0, n = sizeof(testVectors) / sizeof(testVectors[0]); i < n; ++i) {
+               const TestVector& entry = testVectors[i];
+               assert( entry.encoded.base64decode() == entry.plaintext );
+               assert( entry.plaintext.base64encode() == entry.encoded );
+            }
+         }
+
          for(int i=0; i<4; ++i)
          {
             const char* buf1="5d7a9b7c02034b5b";
@@ -1356,32 +1429,32 @@ class TestData
             Data u4(Data::Share, ubuf4+3, 16-i);
 
             // All of these point to the same data, but aligned differently.
-            assert(d1.hash()==d2.hash());
-            assert(d1.hash()==d3.hash());
-            assert(d1.hash()==d4.hash());
+            assert(d1.hash() == d2.hash());
+            assert(d1.hash() == d3.hash());
+            assert(d1.hash() == d4.hash());
 
-            assert(d1.hash()!=u1.hash());
-            assert(d1.hash()!=u2.hash());
-            assert(d1.hash()!=u3.hash());
-            assert(d1.hash()!=u4.hash());
+            assert(d1.hash() != u1.hash());
+            assert(d1.hash() != u2.hash());
+            assert(d1.hash() != u3.hash());
+            assert(d1.hash() != u4.hash());
 
-            assert(d1.caseInsensitivehash()==d2.caseInsensitivehash());
-            assert(d1.caseInsensitivehash()==d3.caseInsensitivehash());
-            assert(d1.caseInsensitivehash()==d4.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == d2.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == d3.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == d4.caseInsensitivehash());
 
-            assert(d1.caseInsensitivehash()==u1.caseInsensitivehash());
-            assert(d1.caseInsensitivehash()==u2.caseInsensitivehash());
-            assert(d1.caseInsensitivehash()==u3.caseInsensitivehash());
-            assert(d1.caseInsensitivehash()==u4.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == u1.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == u2.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == u3.caseInsensitivehash());
+            assert(d1.caseInsensitivehash() == u4.caseInsensitivehash());
 
-            assert(d1.caseInsensitiveTokenHash()==d2.caseInsensitiveTokenHash());
-            assert(d1.caseInsensitiveTokenHash()==d3.caseInsensitiveTokenHash());
-            assert(d1.caseInsensitiveTokenHash()==d4.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == d2.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == d3.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == d4.caseInsensitiveTokenHash());
 
-            assert(d1.caseInsensitiveTokenHash()==u1.caseInsensitiveTokenHash());
-            assert(d1.caseInsensitiveTokenHash()==u2.caseInsensitiveTokenHash());
-            assert(d1.caseInsensitiveTokenHash()==u3.caseInsensitiveTokenHash());
-            assert(d1.caseInsensitiveTokenHash()==u4.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == u1.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == u2.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == u3.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash() == u4.caseInsensitiveTokenHash());
 
             assert(d1.caseInsensitiveTokenCompare(d1));
             assert(d1.caseInsensitiveTokenCompare(d2));
@@ -1455,6 +1528,269 @@ class TestData
             assert(u4.caseInsensitiveTokenCompare(u3));
             assert(u4.caseInsensitiveTokenCompare(u4));
          }
+
+         {
+            std::string str1 = "resip";
+            Data d1(str1);
+
+            assert(d1 == str1);
+            assert(str1 == d1);
+            assert(d1.toString() == str1);
+         }
+
+         {
+            std::string str1 = "resip";
+            Data d1 = str1;
+
+            assert(d1 == str1);
+            assert(str1 == d1);
+            assert(d1.toString() == str1);
+         }
+
+
+         {
+            std::string str1 = "resip";
+            Data d1 = "resipr";
+            assert(d1 != str1);
+            assert(str1 != d1);
+            assert(d1.toString() != str1);
+
+            Data d2(std::string("resipr"));
+            assert(d2 != str1);
+            assert(str1 != d2);
+            assert(d2.toString() != str1);
+         }
+
+         {
+            Data d1("resip");
+            std::string str1 = d1;
+            assert(str1 == d1);
+            assert(d1 == str1);
+         }
+
+         {
+            Data d1("resip");
+            std::string str1(d1);
+            assert(str1 == d1);
+            assert(d1 == str1);
+         }
+
+         {
+            Data d1("resip");
+            std::string str1 = d1;
+
+            Data d2("resip2");
+            assert(str1 != d2);
+            assert(d2 != str1);
+         }
+
+         {
+            Data d1("resip");
+            std::string str1(d1);
+
+            Data d2("resip2");
+            assert(str1 != d2);
+            assert(d2 != str1);
+         }
+
+         {
+            Data data("abc");
+            std::string strA = "abc";
+            std::string strB = "abcd";
+
+            // Test `<`
+            assert((data < strB) == true);
+            assert((data < strA) == false);
+
+            assert((strB < data) == false);
+            assert((strA < data) == false);
+
+            // Test `>`
+            assert((data > strB) == false);
+            assert((data > strA) == false);
+
+            assert((strB > data) == true);
+            assert((strA > data) == false);
+
+            // Test `<=`
+            assert((data <= strB) == true);
+            assert((data <= strA) == true);
+
+            assert((strB <= data) == false);
+            assert((strA <= data) == true);
+
+            // Test `>=`
+            assert((data >= strB) == false);
+            assert((data >= strA) == true);
+
+            assert((strB >= data) == true);
+            assert((strA >= data) == true);
+         }
+
+
+#if RESIP_HAVE_STRING_VIEW
+
+         {
+            std::string_view sv1 = "resip";
+            Data d1(sv1);
+
+            assert(d1 == sv1);
+            assert(sv1 == d1);
+            assert(d1.toStringView() == sv1);
+         }
+
+         {
+            std::string_view sv1 = "resip";
+            Data d1 = sv1;
+
+            assert(d1 == sv1);
+            assert(sv1 == d1);
+            assert(d1.toStringView() == sv1);
+         }
+
+
+         {
+            std::string_view sv1 = "resip";
+            Data d1 = "resipr";
+            assert(d1 != sv1);
+            assert(sv1 != d1);
+            assert(d1.toStringView() != sv1);
+
+
+            Data d2(std::string_view("resipr"));
+            assert(d2 != sv1);
+            assert(sv1 != d2);
+            assert(d2.toStringView() != sv1);
+         }
+
+         {
+            Data d1("resip");
+            std::string_view str1 = d1;
+            assert(str1 == d1);
+            assert(d1 == str1);
+         }
+
+         {
+            Data d1("resip");
+            std::string_view str1(d1);
+            assert(str1 == d1);
+            assert(d1 == str1);
+         }
+
+         {
+            Data d1("resip");
+            std::string_view str1 = d1;
+
+            Data d2("resip2");
+            assert(str1 != d2);
+            assert(d2 != str1);
+         }
+
+         {
+            Data d1("resip");
+            std::string_view str1(d1);
+
+            Data d2("resip2");
+            assert(str1 != d2);
+            assert(d2 != str1);
+         }
+
+         {
+            Data data("abc");
+            std::string_view viewA = "abc";
+            std::string_view viewB = "abcd";
+
+            // Test `<`
+            assert((data < viewB) == true);
+            assert((data < viewA) == false);
+
+            assert((viewB < data) == false);
+            assert((viewA < data) == false);
+
+            // Test `>`
+            assert((data > viewB) == false);
+            assert((data > viewA) == false);
+
+            assert((viewB > data) == true);
+            assert((viewA > data) == false);
+
+            // Test `<=`
+            assert((data <= viewB) == true);
+            assert((data <= viewA) == true);
+
+            assert((viewB <= data) == false);
+            assert((viewA <= data) == true);
+
+            // Test `>=`
+            assert((data >= viewB) == false);
+            assert((data >= viewA) == true);
+
+            assert((viewB >= data) == true);
+            assert((viewA >= data) == true);
+         }
+#endif
+
+         {
+            assert(Data::npos == std::string::npos);
+
+#if RESIP_HAVE_STRING_VIEW
+            assert(Data::npos == std::string_view::npos);
+#endif
+         }
+
+         // Move semantics (Data move constructor / move assignment).  These
+         // delegate to takeBuf(): the target releases any buffer it owns, steals
+         // the source's heap buffer (or copies a local-buffer source), and the
+         // moved-from Data is left valid and empty.
+         {
+            // Move-construct from a heap-allocated Data: the buffer is stolen
+            // (same pointer, no copy) and the source is reset to its local buffer.
+            Data heap("this string is intentionally longer than the local buffer so it heap-allocates");
+            assert(heap.mBuf != heap.mPreBuffer);      // heap-allocated
+            const char* stolen = heap.mBuf;
+            Data moved(std::move(heap));
+            assert(moved.mBuf == stolen);              // buffer stolen, not copied
+            assert(moved == "this string is intentionally longer than the local buffer so it heap-allocates");
+            assert(heap.mBuf == heap.mPreBuffer);      // source reset to local buffer
+            assert(heap.size() == 0);                  // source valid and empty
+         }
+
+         {
+            // Move-assign into a Data that already owns a heap buffer.  The old
+            // hand-rolled operator= overwrote the pointer and leaked that buffer;
+            // takeBuf() releases it first.
+            Data target("target initially owns its own heap-allocated buffer with padding padding");
+            assert(target.mBuf != target.mPreBuffer);
+            Data source("brand new source value that also lives on the heap for good measure indeed");
+            assert(source.mBuf != source.mPreBuffer);
+            const char* stolen = source.mBuf;
+            target = std::move(source);
+            assert(target.mBuf == stolen);
+            assert(target == "brand new source value that also lives on the heap for good measure indeed");
+            assert(source.mBuf == source.mPreBuffer);
+            assert(source.size() == 0);
+         }
+
+         {
+            // Move from a short Data that uses its local buffer: the value is
+            // copied into the target's local buffer, and the source left empty.
+            Data shortData("short");
+            assert(shortData.mBuf == shortData.mPreBuffer);   // local buffer
+            Data moved(std::move(shortData));
+            assert(moved == "short");
+            assert(moved.mBuf == moved.mPreBuffer);
+            assert(shortData.size() == 0);
+         }
+
+         {
+            // Self move-assignment must be a safe no-op.  The reference alias
+            // keeps the compiler from diagnosing an obvious self-move.
+            Data d("some value");
+            Data& dref = d;
+            d = std::move(dref);
+            assert(d == "some value");
+         }
+
          std::cerr << "All OK" << endl;
          return 0;
       }
@@ -1470,6 +1806,7 @@ main()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

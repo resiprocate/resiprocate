@@ -1,4 +1,4 @@
-
+#include <ctype.h>
 
 #include "resip/stack/BasicNonceHelper.hxx"
 #include "rutil/Logger.hxx"
@@ -25,7 +25,7 @@ using namespace resip;
 BasicNonceHelper::BasicNonceHelper() 
 {
   //privateKey = Data("asdfklsadflkj");
-  privateKey = Random::getRandomHex(24);
+  privateKey = Random::getCryptoRandomHex(24);
 }
 
 BasicNonceHelper::~BasicNonceHelper() 
@@ -59,7 +59,7 @@ NonceHelper::Nonce
 BasicNonceHelper::parseNonce(const Data& nonce) 
 {
    ParseBuffer pb(nonce.data(), nonce.size());
-   if (!pb.eof() && !isdigit(*pb.position()))
+   if (!pb.eof() && !isdigit(static_cast< unsigned char >(*pb.position())))
    {
       DebugLog(<< "Invalid nonce; expected timestamp.");
       return BasicNonceHelper::Nonce(0);

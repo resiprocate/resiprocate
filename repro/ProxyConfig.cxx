@@ -29,58 +29,6 @@ ProxyConfig::~ProxyConfig()
    mStore=0;
 }
 
-bool 
-ProxyConfig::getConfigValue(const resip::Data& name, resip::Uri &value)
-{
-   Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
-   if(it != mConfigValues.end())
-   {
-      try
-      {
-         if(!it->second.empty())
-         {
-            NameAddr tempNameAddr(it->second);
-            value = tempNameAddr.uri();
-            return true;
-         }
-         else
-         {
-            value = Uri();  // return an empty Uri
-            return true;
-         }
-      }
-      catch(resip::BaseException& e)
-      {
-         // Try adding sip: to value to see if it will be valid
-         try
-         {
-            NameAddr tempNameAddr(Data("sip:" + it->second));
-            value = tempNameAddr.uri();
-            return true;
-         }
-         catch(resip::BaseException&)
-         {
-            cerr << "Invalid Uri setting:  " << name << " = " << it->second << ": " << e << endl;
-            return false;
-         }
-      }  
-   }
-   // Not found
-   return false;
-}
-
-resip::Uri 
-ProxyConfig::getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty)
-{
-   Uri ret(defaultValue);
-   if(getConfigValue(name, ret) && ret.host().empty() && useDefaultIfEmpty)
-   {
-      return defaultValue;
-   }
-   return ret;
-}
-
 void
 ProxyConfig::printHelpText(int argc, char **argv)
 {

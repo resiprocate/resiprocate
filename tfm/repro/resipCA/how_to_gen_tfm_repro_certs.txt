@@ -1,0 +1,26 @@
+From: https://sockettools.com/kb/creating-certificate-using-openssl/
+
+From a command prompt at the resipCA directory, with openssl.exe in your path, or adjust commands below appropriately.
+
+# Create root cert private key
+openssl genrsa -out resipCA.key 2048
+
+# Create root cert
+openssl req -x509 -new -nodes -key resipCA.key -sha256 -days 3650 -out root_cert_resipCA.pem -config localhost.cnf -extensions v3_ca -subj "/CN=resipCA"
+
+# Generate the key for the domain cert
+openssl genrsa -out domain_key_localhost.pem 2048
+
+# Generate the domain cert certificate request
+openssl req -new -key domain_key_localhost.pem -out domain_cert_localhost.csr -config localhost.cnf -extensions v3_req
+
+# Generate the domain cert from the certificate request
+openssl x509 -req -in domain_cert_localhost.csr -CA root_cert_resipCA.pem -CAkey resipCA.key -CAcreateserial -out domain_cert_localhost.pem -days 3650 -sha256 -extfile localhost.cnf -extensions v3_req
+
+# Copy the following 3 files back to the tfm/repro directory:
+root_cert_resipCA.pem
+domain_key_localhost.pem
+domain_cert_localhost.pem
+
+
+

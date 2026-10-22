@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <iostream>
+#include <set>
 
 #include "TestSupport.hxx"
 #include "resip/stack/UnknownParameterType.hxx"
@@ -26,102 +27,117 @@ main(int argc, char* argv[])
    Log::Level l = Log::Debug;
    Log::initialize(Log::Cerr, l, argv[0]);
    initNetwork();
-   
+
+   {
+      const char* problem_uri = "sip:p66640t1741689630m63140c193s3@10.106.171.88:5094;+g.3gpp.accesstype=\"cellular\";+sip.instance=\"<urn:gsma:imei:35548888-144050-0>\";+g.3gpp.icsi-ref=\"urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel\"";
+
+      try
+      {
+         NameAddr contact(problem_uri);
+         //cout << Data::from(problem_uri) << endl;
+         assert(contact.param(p_Instance) == Data("<urn:gsma:imei:35548888-144050-0>"));
+         assert(contact.param(UnknownParameterType("+g.3gpp.accesstype")) == Data("cellular"));
+         assert(contact.param(UnknownParameterType("+g.3gpp.icsi-ref")) == Data("urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel"));
+      }
+      catch (ParseException e)
+      {
+         cout << e.getMessage();
+         return -1;
+      }
+   }
+
    {
       Uri uri("sip:speedy_AT_home.com@whistler.gloo.net:5062");
       uri.scheme() = Symbols::Pres;
       assert(Data::from(uri) == "pres:speedy_AT_home.com@whistler.gloo.net:5062");
    }
+
    {
-       const char * a = "alice";
-       const char * e = "example.com";
+      const char* a = "alice";
+      const char* e = "example.com";
 
-       NameAddr alice;
-       alice.uri().user() = a;
-       alice.uri().host() = e;
+      NameAddr alice;
+      alice.uri().user() = a;
+      alice.uri().host() = e;
 
-       NameAddr realm;
-       realm.uri().host() = e;
+      NameAddr realm;
+      realm.uri().host() = e;
 
-       NameAddr aliceContact;
-       aliceContact.uri().user() = a;
-       aliceContact.uri().host() = "127.1.0.1";
-       aliceContact.uri().port() = 32678;
+      NameAddr aliceContact;
+      aliceContact.uri().user() = a;
+      aliceContact.uri().host() = "127.1.0.1";
+      aliceContact.uri().port() = 32678;
 
+      unique_ptr<SipMessage> msg(Helper::makeRegister(alice, alice, aliceContact));
 
-       
-       auto_ptr<SipMessage> msg(Helper::makeRegister(alice,alice,aliceContact));
+      cout << *msg << endl;
 
-       cout << *msg << endl;
+      // Make the data
+      NameAddr original(aliceContact);
+      original.uri().param(UnknownParameterType("x")) = Data("\"1\"");
 
-       // Make the data
-       NameAddr original(aliceContact);
-       original.uri().param(UnknownParameterType("x")) = Data("\"1\"");
+      Uri tmp = original.uri();
+      Data buf;
+      DataStream oldNA(buf);
+      oldNA << Symbols::LA_QUOTE;
+      oldNA << original.uri().scheme();
+      oldNA << Symbols::COLON;
+      oldNA << original.uri().getAor();
+      oldNA << Symbols::RA_QUOTE;
+      oldNA.flush();
 
-       Uri tmp = original.uri();
-       Data buf;
-       DataStream oldNA(buf);
-       oldNA << Symbols::LA_QUOTE;
-       oldNA << original.uri().scheme();
-       oldNA << Symbols::COLON;
-       oldNA << original.uri().getAor();
-       oldNA << Symbols::RA_QUOTE;
-       oldNA.flush();
+      NameAddr modified;
+      modified.uri() = tmp; // copy parameters;
+      modified.uri().host() = e;
+      modified.uri().port() = 65530;
+      modified.uri().user() = "alphabet-soup";
 
-       NameAddr modified;
-       modified.uri() = tmp; // copy parameters;
-       modified.uri().host() = e;
-       modified.uri().port() = 65530;
-       modified.uri().user() = "alphabet-soup";
+      Data gruuData(Data::from(modified.uri()));
+      msg->header(h_Contacts).back().param(p_pubGruu) = gruuData;
 
-       Data gruuData ( Data::from(modified.uri())) ;
-       msg->header(h_Contacts).back().param(p_pubGruu) = gruuData;
+      cout << *msg << endl;
 
+      Uri s1("sip:alice@example.com;gr=\"foo@example.com\"");
+      Uri s2("sip:alice@example.com;gr=\"foo@example.com\"");
+      assert(s1.param(p_gr) == Data("foo@example.com"));
+      assert(s2.param(p_gr) == Data("foo@example.com"));
+      cout << s1 << endl;
+      cout << s2 << endl;
+      cout << endl;
+      Uri s3("sip:alice@example.com");
+      s3.param(UnknownParameterType("foo")) = Data("value");
+      Uri s4("sip:alice@example.com");
+      s4.param(UnknownParameterType("foo")) = Data("\"value\"");
+      cout << "s3's param =" << s3.param(UnknownParameterType("foo")) << endl;
+      cout << "s4's param =" << s4.param(UnknownParameterType("foo")) << endl;
+      cout << "s3 = " << s3 << endl;
+      cout << "s4 = " << s4 << endl;
+      Uri s5(s4);
+      cout << "s5 = " << s5 << endl;
+      Data s5d(Data::from(s5));
+      cout << "s5d = " << s5d << endl;
 
-       cout << *msg << endl;
+      Uri s6("sip:bob@example.com");
+      s6.host();
 
-       Uri s1("sip:alice@example.com;gr=\"foo@example.com\"");
-       Uri s2("sip:alice@example.com;gr=\"foo@example.com\"");
-       assert(s1.param(p_gr) == Data("foo@example.com"));
-       assert(s2.param(p_gr) == Data("foo@example.com"));
-       cout << s1 << endl;
-       cout << s2 << endl;
-       cout << endl;
-       Uri s3("sip:alice@example.com");
-       s3.param(UnknownParameterType("foo")) = Data("value");
-       Uri s4("sip:alice@example.com");
-       s4.param(UnknownParameterType("foo")) = Data("\"value\"");
-       cout << "s3's param =" << s3.param(UnknownParameterType("foo")) << endl;
-       cout << "s4's param =" << s4.param(UnknownParameterType("foo")) << endl;
-       cout << "s3 = " << s3 << endl;
-       cout << "s4 = " << s4 << endl;
-       Uri s5(s4);
-       cout << "s5 = " << s5 << endl;
-       Data s5d(Data::from(s5));
-       cout << "s5d = " << s5d << endl;
+      Uri s7("sip:testproxy.example.com");
+      assert(s7.user().empty());
+      s7.user() = "test";
+      assert(!s7.user().empty());
+      s7.user().clear();
+      assert(s7.user().empty());
 
-       Uri s6("sip:bob@example.com");
-       s6.host();
+      NameAddr na1;
+      na1.uri().user() = "alice";
+      na1.uri().host() = "example.com";
 
-       Uri s7("sip:testproxy.example.com");
-	   assert (s7.user().empty());
-	   s7.user() = "test";
-	   assert (!s7.user().empty());
-	   s7.user().clear();
-	   assert (s7.user().empty());
-
-       NameAddr na1;
-       na1.uri().user() = "alice";
-       na1.uri().host() = "example.com";
-
-       Data q("\"");
-       na1.param(UnknownParameterType("foo")) = Data(q + Data::from(s6) +q);
-       NameAddr na2(na1);
-       cout << "na1=" << na1 << endl;
-       cout << "na2=" << na2 << endl;
-       
+      Data q("\"");
+      na1.param(UnknownParameterType("foo")) = Data(q + Data::from(s6) + q);
+      NameAddr na2(na1);
+      cout << "na1=" << na1 << endl;
+      cout << "na2=" << na2 << endl;
    }
-   //assert(0);
+
    {
       // Test order irrelevance of known parameters
       Uri sip1("sip:user@domain;ttl=15;method=foo");
@@ -233,7 +249,7 @@ main(int argc, char* argv[])
          Uri("noscheme@foo.com:1202");
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
       }
    }
@@ -475,7 +491,392 @@ main(int argc, char* argv[])
       assert (sip1 == sip2);
       assert (sip2 == sip1);
    }
+
+   // Test significant URI params.
+   // user/ttl/method/maddr/transport in one URI only should never match.
+   {
+      Uri uri1("sip:bob@example.com;user=phone");
+      Uri uri2("sip:bob@example.com");
+      assert(uri1 != uri2);
+   }
+
+   {
+      Uri uri1("sip:bob@example.com;ttl=60");
+      Uri uri2("sip:bob@example.com");
+      assert(uri1 != uri2);
+   }
+
+   {
+      Uri uri1("sip:bob@example.com;method=INVITE");
+      Uri uri2("sip:bob@example.com");
+      assert(uri1 != uri2);
+   }
+
+   {
+      Uri uri1("sip:carol@example.com;maddr=192.168.1.1");
+      Uri uri2("sip:carol@example.com");
+      assert(uri1 != uri2);
+   }
+
+   // Other parameters in one URI only should be ignored.
+   {
+      Uri uri1("sip:dave@example.com;lr");
+      Uri uri2("sip:dave@example.com");
+      assert(uri1 == uri2);
+   }
+
+   {
+      Uri uri1("sip:eve@example.com;test=123");
+      Uri uri2("sip:eve@example.com");
+      assert(uri1 == uri2);
+   }
    
+   // Test known `gr` URI parameter.
+   {
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      assert(sip1 == sip2);  // Ignored when appearing in only one URI.
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr=urn:uuid:123");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:321");
+      assert(sip1 != sip2);  // Considered when appearing in both URIs.
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr=urn:uuid:123");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;gr");
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr");
+      Uri sip2("sip:janet@example.com;gr");
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:janet@example.com;gr");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      assert(sip1 != sip2);
+   }
+
+   // Test known `rinstance` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;rinstance=a3f7b2c1");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;rinstance=a3f7b2c1");
+      Uri sip2("sip:alice@example.com;rinstance=a3f7b2c1");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;rinstance=a3f7b2c1");
+      Uri sip2("sip:alice@example.com;rinstance=d4e8f9a0");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test known `ob` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;ob");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ob");
+      Uri sip2("sip:alice@example.com;ob");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   // Test known `comp` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;comp=sigcomp");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;comp=sigcomp");
+      Uri sip2("sip:alice@example.com;comp=sigcomp");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;comp=other");
+      Uri sip2("sip:alice@example.com;comp=sigcomp");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test known `ext` URI parameter. 
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;ext=123");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ext=123");
+      Uri sip2("sip:alice@example.com;ext=123");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ext=123");
+      Uri sip2("sip:alice@example.com;ext=456");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test known `duration` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;duration=30");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;duration=30");
+      Uri sip2("sip:alice@example.com;duration=30");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;duration=30");
+      Uri sip2("sip:alice@example.com;duration=60");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test `ws-src-ip` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;ws-src-ip=192.168.1.1");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ws-src-ip=192.168.1.1");
+      Uri sip2("sip:alice@example.com;ws-src-ip=192.168.1.1");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ws-src-ip=192.168.1.1");
+      Uri sip2("sip:alice@example.com;ws-src-ip=192.168.1.2");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test `ws-src-port` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;ws-src-port=8080");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ws-src-port=8080");
+      Uri sip2("sip:alice@example.com;ws-src-port=8080");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;ws-src-port=8080");
+      Uri sip2("sip:alice@example.com;ws-src-port=9090");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test `sigcomp-id` URI parameter.
+   {
+      Uri sip1("sip:alice@example.com");
+      Uri sip2("sip:alice@example.com;sigcomp-id=urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E128");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;sigcomp-id=urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E128");
+      Uri sip2("sip:alice@example.com;sigcomp-id=urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E128");
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      Uri sip1("sip:alice@example.com;sigcomp-id=urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E128");
+      Uri sip2("sip:alice@example.com;sigcomp-id=urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E129");
+
+      assert(sip1 < sip2);
+      assert((sip2 < sip1) == false);
+      assert(sip1 != sip2);
+   }
+
+   // Test parameters ordering.
+   {
+      // Known significant parameter single URI.
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;ttl=5");
+
+      assert(sip1 != sip2);
+      assert((sip1 < sip2) == false);
+      assert(sip2 < sip1);
+   }
+
+   {
+      // Known significant parameter both URIs.
+      Uri sip1("sip:janet@example.com;ttl=5");
+      Uri sip2("sip:janet@example.com;ttl=5");
+      Uri sip3("sip:janet@example.com;ttl=17");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+
+      assert(sip2 < sip3);
+      assert((sip3 < sip2) == false);
+      assert(sip2 != sip3);
+   }
+
+   {
+      // Known parameter single URI.
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      // Known parameter both URIs.
+      Uri sip1("sip:janet@example.com;gr=urn:uuid:123");
+      Uri sip2("sip:janet@example.com;gr=urn:uuid:123");
+      Uri sip3("sip:janet@example.com;gr=urn:uuid:321");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+
+      assert(sip2 < sip3);
+      assert((sip3 < sip2) == false);
+      assert(sip2 != sip3);
+   }
+
+   {
+      // Unknown parameter single URI.
+      Uri sip1("sip:janet@example.com");
+      Uri sip2("sip:janet@example.com;test=135");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+   }
+
+   {
+      // Unknown parameter both URIs.
+      Uri sip1("sip:janet@example.com;test=135");
+      Uri sip2("sip:janet@example.com;test=135");
+      Uri sip3("sip:janet@example.com;test=531");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+
+      assert(sip2 < sip3);
+      assert((sip3 < sip2) == false);
+      assert(sip2 != sip3);
+   }
+
+   {
+      // Mixed params.
+      Uri sip1("sip:janet@example.com;ttl=5;gr=urn:uuid:123");
+      Uri sip2("sip:janet@example.com;ttl=5;gr=urn:uuid:123;test=135");
+      Uri sip3("sip:janet@example.com;ttl=17;gr=urn:uuid:123;test=135");
+
+      assert((sip1 < sip2) == false);
+      assert((sip2 < sip1) == false);
+      assert(sip1 == sip2);
+
+      assert(sip1 < sip3);
+      assert((sip3 < sip1) == false);
+      assert(sip1 != sip3);
+
+      assert(sip2 < sip3);
+      assert((sip3 < sip2) == false);
+      assert(sip2 != sip3);
+   }
+
 
    // tests from 3261 19.1.4
    {
@@ -670,6 +1071,59 @@ main(int argc, char* argv[])
       Uri::setUriUserEncoding('#', true);
    }
 
+   // An already-escaped '#' (%23) in the user part must be preserved on the
+   // wire even when '#' encoding is disabled; it must not be unquoted to a bare
+   // '#' (which is invalid in the RFC 3261 user part and rejected by strict
+   // parsers downstream).
+   {
+      Uri::setUriUserEncoding('#', false);
+
+      // user() still exposes the decoded value
+      Uri uri = Uri("sip:1234%2300442031111111@lvdx.com");
+      assert(uri.user() == "1234#00442031111111");
+      assert(Data::from(uri) == "sip:1234%2300442031111111@lvdx.com");
+
+      // ... and it survives a host retarget (which re-serializes the URI)
+      uri.host() = "pn.internal";
+      assert(Data::from(uri) == "sip:1234%2300442031111111@pn.internal");
+
+      // a literal '#' input still passes through as a literal '#'
+      Uri literalUri = Uri("sip:1234#00442031111111@lvdx.com");
+      literalUri.host() = "pn.internal";
+      assert(Data::from(literalUri) == "sip:1234#00442031111111@pn.internal");
+
+      // modifying the user part after parse abandons the as-received bytes and
+      // falls back to table-based escaping ('#' disabled -> bare '#')
+      Uri modified = Uri("sip:1234%2300442031111111@lvdx.com");
+      modified.user() = "5678#99";
+      assert(Data::from(modified) == "sip:5678#99@lvdx.com");
+
+      // the preserved bytes survive a copy and an assignment
+      Uri copied = uri;
+      assert(Data::from(copied) == "sip:1234%2300442031111111@pn.internal");
+      Uri assigned;
+      assigned = uri;
+      assert(Data::from(assigned) == "sip:1234%2300442031111111@pn.internal");
+
+      // a URI derived via getAorAsUri (e.g. used to build an on-wire Route)
+      // also preserves the escaping
+      Uri aorUri = Uri("sip:1234%2300442031111111@lvdx.com").getAorAsUri();
+      assert(Data::from(aorUri) == "sip:1234%2300442031111111@lvdx.com");
+
+      // an escaped user part followed by a password: the raw capture must cover
+      // only the user part (up to the colon), not the password
+      Uri withPassword = Uri("sip:1234%2300:secret@lvdx.com");
+      withPassword.host() = "pn.internal";
+      assert(Data::from(withPassword) == "sip:1234%2300:secret@pn.internal");
+
+      Uri::setUriUserEncoding('#', true);
+
+      // the raw form is emitted byte-for-byte: a lowercase escape stays
+      // lowercase, and an escaped otherwise-safe character stays escaped
+      // rather than being canonicalised by the encoding table
+      assert(Data::from(Uri("sip:12%2a34@lvdx.com")) == "sip:12%2a34@lvdx.com");
+   }
+
    {
       Uri uri = Uri("sip:1234#00442031111111;phone-context=+89@lvdx.com");
       assert(uri.userIsTelephoneSubscriber());
@@ -701,12 +1155,308 @@ main(int argc, char* argv[])
    }
 
    {
+      const char rawInput[] = {':'};
+      const Data input(Data::Share, rawInput, sizeof(rawInput));
+      Uri uri = Uri(input);
+   }
+
+   {
+      const char rawInput[] = {':', '@'};
+      const Data input(Data::Share, rawInput, sizeof(rawInput));
+      Uri uri = Uri(input);
+   }
+
+   {
       Uri uri = Uri("/;p1=123;p2=456");
       assert(uri.path() == "/");
       assert(uri.param(UnknownParameterType("p1")) == Data("123"));
       assert(uri.param(UnknownParameterType("p2")) == Data("456"));
       assert(Data::from(uri) == "/;p1=123;p2=456");
    }
+
+   // Test NameAddr operator== with All Contacts NameAddr
+   {
+      NameAddr defaultNameAddr;
+      NameAddr allContactsNameAddr;
+      allContactsNameAddr.setAllContacts();
+      assert(!(defaultNameAddr == allContactsNameAddr));
+   }
+
+   // ---------------------------------------------------------------------
+   // urn: scheme support (RFC 8141), stored as an opaque NID:NSS blob with
+   // its own ABNF distinct from sip:/sips: (RFC 3261) and tel: (RFC 3966).
+   // ---------------------------------------------------------------------
+
+   // Basic parse without angle brackets (as in a Request-URI).
+   {
+      Uri uri("urn:service:sos");
+      assert(uri.scheme() == "urn");
+      assert(uri.user() == "service:sos");
+      assert(uri.host().empty());
+      assert(uri.port() == 0);
+      assert(uri.password().empty());
+   }
+
+   // Round-trip: ':' must not be escaped (unlike the sip:/sips: table).
+   {
+      Uri uri("urn:service:sos");
+      assert(Data::from(uri) == "urn:service:sos");
+   }
+
+   // Same urn: inside a NameAddr with angle brackets and a tag (as in a
+   // real To/From): must parse (isWellFormed()) without confusing the
+   // tag's ';' with part of the URI.
+   {
+      NameAddr na("<urn:service:sos>;tag=abc123");
+      assert(na.isWellFormed());
+      assert(na.uri().scheme() == "urn");
+      assert(na.uri().user() == "service:sos");
+      assert(na.param(p_tag) == "abc123");
+      assert(Data::from(na.uri()) == "urn:service:sos");
+   }
+
+   // ';' is a valid sub-delim inside a urn: NSS (RFC 8141) and must NOT
+   // be treated as a delimiter (unlike tel:, RFC 3966). Must be preserved
+   // as-is, even with several ';' in a row.
+   {
+      NameAddr na("<urn:example:a;b;c>;tag=xyz");
+      assert(na.isWellFormed());
+      assert(na.uri().user() == "example:a;b;c");
+      assert(Data::from(na.uri()) == "urn:example:a;b;c");
+   }
+
+   // Regression test: a bare (unbracketed) urn: directly followed by a
+   // NameAddr parameter must NOT swallow it into the URI's user part --
+   // the ';' must be recognized as the tag separator, not NSS content.
+   // (RFC 3261 sec 20 allows omitting "<...>" here because urn:service:sos
+   // itself contains none of ',', '?', ';'.)
+   {
+      NameAddr na("urn:service:sos;tag=abc123");
+      assert(na.isWellFormed());
+      assert(na.uri().scheme() == "urn");
+      assert(na.uri().user() == "service:sos");
+      assert(na.param(p_tag) == "abc123");
+   }
+
+   // Regression test: a urn: Request-URI (no angle brackets -- Request-URIs
+   // are never bracketed) whose NSS legitimately contains ';' must NOT be
+   // truncated at the first one -- there are no NameAddr parameters that
+   // can follow a Request-URI, so ';'/'?'/',' are just NSS content here.
+   {
+      const Data msgText(
+         "INVITE urn:example:a;b;c SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP host.example.com;branch=z9hG4bK1234\r\n"
+         "Max-Forwards: 70\r\n"
+         "To: <urn:example:a;b;c>\r\n"
+         "From: <sip:caller@example.com>;tag=1234\r\n"
+         "Call-ID: urntest124@example.com\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n");
+      unique_ptr<SipMessage> msg(SipMessage::make(msgText));
+      assert(msg.get());
+      assert(msg->header(h_RequestLine).uri().user() == "example:a;b;c");
+   }
+
+   // A full Request-Line with urn: (no angle brackets) must parse too.
+   {
+      const Data msgText(
+         "INVITE urn:service:sos SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP host.example.com;branch=z9hG4bK1234\r\n"
+         "Max-Forwards: 70\r\n"
+         "To: <urn:service:sos>\r\n"
+         "From: <sip:caller@example.com>;tag=1234\r\n"
+         "Call-ID: urntest123@example.com\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n");
+      unique_ptr<SipMessage> msg(SipMessage::make(msgText));
+      assert(msg.get());
+      assert(msg->header(h_RequestLine).uri().scheme() == "urn");
+      assert(msg->header(h_RequestLine).uri().user() == "service:sos");
+      assert(msg->header(h_To).uri().scheme() == "urn");
+      assert(msg->header(h_To).uri().user() == "service:sos");
+   }
+
+   // %XX decoding in the NSS, same as for sip:/sips: user: internal value
+   // is decoded, and re-encoding restores the original escaping.
+   {
+      NameAddr na("<urn:example:a%20b>"); // %20 = space
+      assert(na.isWellFormed());
+      assert(na.uri().user() == "example:a b");
+      assert(Data::from(na.uri()) == "urn:example:a%20b");
+   }
+   {
+      NameAddr na("<urn:example:a%23b>"); // %23 = '#'
+      assert(na.isWellFormed());
+      assert(na.uri().user() == "example:a#b");
+      assert(Data::from(na.uri()) == "urn:example:a%23b");
+   }
+
+   // Programmatic construction: only space must be escaped (not pchar,
+   // no structural role). ':', '@', ';' and the rest of sub-delims must
+   // not (RFC 8141 pchar), and neither must '?'/'#' -- although not
+   // pchar, they mark rq-components/fragment in a real URN and escaping
+   // them would break round-trip (see the next two blocks).
+   {
+      Uri uri;
+      uri.scheme() = "urn";
+      uri.user() = Data("a b#c?d:e@f;g");
+      assert(Data::from(uri) == "urn:a%20b#c?d:e@f;g");
+   }
+
+   // Round-trip of a real r-component (RFC 8141: "?+"), no pct-encoding:
+   // must come back unchanged, '?' and '+' unescaped.
+   {
+      Uri uri("urn:example:nss?+rcomponent");
+      assert(uri.user() == "example:nss?+rcomponent");
+      assert(Data::from(uri) == "urn:example:nss?+rcomponent");
+   }
+
+   // Round-trip of a real fragment (RFC 8141: '#'): must come back
+   // unchanged, '#' unescaped.
+   {
+      Uri uri("urn:example:nss#fragment");
+      assert(uri.user() == "example:nss#fragment");
+      assert(Data::from(uri) == "urn:example:nss#fragment");
+   }
+
+   // Critical distinction: an ESCAPED '#' ("%23", '#' as NSS data) and a
+   // LITERAL '#' (the real fragment separator) decode to the same
+   // logical value via user() ("example:a#b" either way), but must
+   // re-serialize each in its original form -- otherwise a received
+   // '%23' would silently turn into a real fragment separator on
+   // re-transmission, changing the URN's structural meaning.
+   {
+      Uri uriEscaped("urn:example:a%23b");
+      Uri uriLiteral("urn:example:a#b");
+      assert(uriEscaped.user() == "example:a#b");
+      assert(uriLiteral.user() == "example:a#b");
+      assert(Data::from(uriEscaped) == "urn:example:a%23b");
+      assert(Data::from(uriLiteral) == "urn:example:a#b");
+   }
+
+   // getAor()/getAorNoPort()/getAOR(bool) must canonicalize via
+   // getUrnEncodingTable(), not dump mUser raw -- consistent with how
+   // this AOR path canonicalizes sip:/sips: user (see getAorInternal()).
+   {
+      Uri uri("urn:service:sos");
+      assert(uri.getAor() == "service:sos");
+      assert(uri.getAorNoPort() == "service:sos");
+      assert(uri.getAOR(false) == "urn:service:sos");
+
+      Uri uriSpace;
+      uriSpace.scheme() = "urn";
+      uriSpace.user() = Data("a b");
+      assert(uriSpace.getAor() == "a%20b");
+   }
+
+   // host()/port()/password()/param() on a urn: must not throw and must
+   // behave like tel: (defaults, no host semantics).
+   {
+      Uri uri("urn:service:sos");
+      bool threw = false;
+      try
+      {
+         Data h = uri.host();
+         int p = uri.port();
+         Data pw = uri.password();
+         bool hasTransport = uri.exists(p_transport);
+         (void)h; (void)p; (void)pw; (void)hasTransport;
+      }
+      catch (const BaseException&)
+      {
+         threw = true;
+      }
+      assert(!threw);
+      assert(uri.host().empty());
+      assert(uri.port() == 0);
+      assert(uri.password().empty());
+      assert(!uri.exists(p_transport));
+   }
+
+   // operator==: NID is case-insensitive, NSS is case-sensitive (RFC
+   // 8141), same NSS case rule as the sip:/sips: user part.
+   {
+      // Same NSS, NID differs only in case -> equal (NID case-insensitive).
+      Uri uri1("urn:EXAMPLE:abc");
+      Uri uri2("urn:example:abc");
+      assert(uri1 == uri2);
+
+      // Same NID, NSS differs only in case -> not equal (NSS case-sensitive).
+      Uri uri3("urn:example:ABC");
+      Uri uri4("urn:example:abc");
+      assert(!(uri3 == uri4));
+
+      Uri uri5("urn:example:ABC");
+      Uri uri6("urn:example:ABC");
+      assert(uri5 == uri6);
+   }
+
+   // Regression test: operator<, the hash function and getAor() must all
+   // agree with operator== on NID case-insensitivity -- otherwise
+   // std::set<Uri>/HashMap<Uri,...> and registration/auth keys would
+   // treat two "equal" urn: Uris as distinct.
+   {
+      Uri uri1("urn:EXAMPLE:abc");
+      Uri uri2("urn:example:abc");
+      assert(uri1 == uri2);
+      assert(!(uri1 < uri2) && !(uri2 < uri1));
+      assert(std::hash<Uri>()(uri1) == std::hash<Uri>()(uri2));
+      assert(uri1.getAor() == uri2.getAor());
+
+      std::set<Uri> uriSet;
+      uriSet.insert(uri1);
+      uriSet.insert(uri2);
+      assert(uriSet.size() == 1);
+   }
+
+   // Malformed urn: NID/NSS must be rejected with a ParseException instead
+   // of silently reaching the application as if it were well-formed
+   // (RFC 8141 sec 2 NID grammar, sec 5.1 "urn" NID prohibition).
+   {
+      const char* badUrns[] = {
+         "urn:",                                // no NID at all
+         "urn:a",                                // no NID:NSS separator
+         "urn:a:nss",                             // NID too short (1 char)
+         "urn:-ab:nss",                           // NID starts with '-'
+         "urn:ab-:nss",                           // NID ends with '-'
+         "urn:a_b:nss",                           // '_' not allowed in NID
+         "urn:abcdefghijklmnopqrstuvwxyz01234567:nss", // NID > 32 chars
+         "urn:example:",                          // empty NSS
+         "urn:urn:nss",                           // NID must not be "urn"
+         "urn:URN:nss",                           // ...case-insensitively
+      };
+      for (const char* bad : badUrns)
+      {
+         bool threw = false;
+         try
+         {
+            Uri uri(bad);
+            uri.checkParsed();
+         }
+         catch (ParseException&)
+         {
+            threw = true;
+         }
+         assert(threw);
+      }
+   }
+
+   // No regression: sip: and tel: must behave exactly as before
+   // (their own escaping table still applies, not the new urn: one).
+   {
+      Uri uri("sip:alice@example.com:5060");
+      assert(Data::from(uri) == "sip:alice@example.com:5060");
+      assert(uri.host() == "example.com");
+      assert(uri.port() == 5060);
+   }
+   {
+      Uri uri("tel:+34911234567");
+      assert(Data::from(uri) == "tel:+34911234567");
+      assert(uri.host().empty());
+   }
+
    cerr << endl << "All OK" << endl;
    return 0;
 }

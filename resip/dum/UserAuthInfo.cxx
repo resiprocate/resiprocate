@@ -8,6 +8,8 @@
 using namespace resip;
 using namespace std;
 
+constexpr const char* ServerErrorStatusText = "Server Error.";
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 UserAuthInfo::UserAuthInfo(const Data& user,
@@ -17,7 +19,9 @@ UserAuthInfo::UserAuthInfo(const Data& user,
    DumFeatureMessage(transactionId),
    mMode(mode),
    mUser(user),
-   mRealm(realm)
+   mRealm(realm),
+   mErrorCode(503),
+   mErrorStatusText(ServerErrorStatusText)
 {
 }
 
@@ -29,7 +33,9 @@ UserAuthInfo::UserAuthInfo(const Data& user,
    mMode(RetrievedA1),
    mUser(user),
    mRealm(realm),
-   mA1(a1)
+   mA1(a1),
+   mErrorCode(503),
+   mErrorStatusText(ServerErrorStatusText)
 {
 }
 
@@ -40,7 +46,9 @@ UserAuthInfo::UserAuthInfo( const resip::Data& user,
    DumFeatureMessage(transactionId),
    mMode(RetrievedA1),
    mUser(user),
-   mRealm(realm)
+   mRealm(realm),
+   mErrorCode(503),
+   mErrorStatusText(ServerErrorStatusText)
 {
    mTu = transactionUser;
 }
@@ -73,26 +81,31 @@ UserAuthInfo::getUser() const
    return mUser;
 }
 
+const void UserAuthInfo::getErrorInfo(int32_t& errorCode, resip::Data& errorStatusText) const
+{
+   errorCode = mErrorCode;
+   errorStatusText = mErrorStatusText;
+}
+
 void 
-UserAuthInfo::setMode(InfoMode mode)
+UserAuthInfo::setMode(InfoMode mode, int32_t errorCode /* = 0 */, const resip::Data & statusText /* = resip::Data::Empty */)
 {
    mMode = mode;
+
+   if (mode == InfoMode::Error)
+   {
+      if (errorCode > 0 && !statusText.empty())
+      {
+         mErrorCode = errorCode;
+         mErrorStatusText = statusText;
+      }
+   }
 }
       
 void 
 UserAuthInfo::setA1(const resip::Data& a1)
 {
    mA1 = a1;
-}
-
-Data 
-UserAuthInfo::brief() const
-{  
-   Data buffer;
-   DataStream strm(buffer);
-   strm << "UserAuthInfo " << mUser << " @ " << mRealm << " A1=" << mA1;
-   strm.flush();
-   return buffer;
 }
 
 resip::Message* 
@@ -104,7 +117,7 @@ UserAuthInfo::clone() const
 EncodeStream& 
 UserAuthInfo::encode(EncodeStream& strm) const
 {
-   strm << brief();
+   strm << "UserAuthInfo " << mUser << " @ " << mRealm << " A1=" << mA1;
    return strm;
 }
 

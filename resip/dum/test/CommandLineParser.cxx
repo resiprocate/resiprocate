@@ -43,7 +43,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* inputTarget = 0;
    char* passPhrase = 0;
    char* certPath = 0;
+#ifndef WIN32
    Data basePath(getenv("HOME"));
+#endif
 
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
@@ -111,8 +113,12 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mTarget = toUri(inputTarget, "target"); // was dest
    if (passPhrase) mPassPhrase = passPhrase;
    if (certPath) mCertPath = certPath;
+#ifndef WIN32
    else mCertPath = basePath + "/.sipCerts";
-   
+#else
+   else mCertPath = ".";
+#endif
+
    // pubList for publish targets
 
    // Free the option parsing context.
@@ -145,25 +151,29 @@ CommandLineParser::toUri(const char* input, const char* description)
    return uri;
 }
 
-std::vector<resip::Uri> 
+std::vector<resip::Uri>
 CommandLineParser::toUriVector(const char* input, const char* description)
 {
-   std::vector<Uri> uris; 
+   std::vector<Uri> uris;
    if (input)
    {
       char buffer[2048];
-      strcpy(buffer, input);
-
-      for (char* token = strtok(buffer, ","); token != 0; token = strtok(0, ","))
+      snprintf(buffer, sizeof(buffer), "%s", input);
+      char* context = nullptr;
+#ifdef _MSC_VER
+      for (char* token = strtok_s(buffer, ",", &context); token != nullptr; token = strtok_s(nullptr, ",", &context))
+#else
+      for (char* token = strtok_r(buffer, ",", &context); token != nullptr; token = strtok_r(nullptr, ",", &context))
+#endif
       {
          try
          {
             uris.push_back(Uri(token));
-         } 
+         }
          catch (ParseException& e)
          {
-            InfoLog (<< "Caught: " << e);
-            WarningLog (<< "Can't parse " << description << " : " << token);
+            InfoLog(<< "Caught: " << e);
+            WarningLog(<< "Can't parse " << description << " : " << token);
             exit(-1);
          }
       }

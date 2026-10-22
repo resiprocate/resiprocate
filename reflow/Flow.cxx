@@ -6,7 +6,6 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/function.hpp>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -19,6 +18,10 @@
 #include "MediaStream.hxx"
 #include "FlowDtlsSocketContext.hxx"
 
+#include <memory>
+#include <sstream>
+#include <vector>
+
 using namespace flowmanager;
 using namespace resip;
 
@@ -28,88 +31,91 @@ using namespace dtls;
 
 using namespace std;
 
-#define MAX_RECEIVE_FIFO_DURATION 10 // seconds
-#define MAX_RECEIVE_FIFO_SIZE (100 * MAX_RECEIVE_FIFO_DURATION)  // 1000 = 1 message every 10 ms for 10 seconds - appropriate for RTP
+int Flow::maxReceiveFifoDuration = 10; // seconds
+int Flow::maxReceiveFifoSize = 100 * maxReceiveFifoDuration; // 1000 = 1 message every 10 ms for 10 seconds - appropriate for RTP
+int Flow::dtlsHandshakeEvictionGrace = 5; // seconds
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
-const char* srtp_error_string(err_status_t error)
+#define LOG_PREFIX << mLocalBinding << " ComponentId=" << mComponentId << ", CallId=" << (mFlowContext ? mFlowContext->getSipCallId() : "") << ": "
+
+const char* srtp_error_string(srtp_err_status_t error)
 {
    switch(error)
    {
-   case err_status_ok:  
+   case srtp_err_status_ok:
       return "nothing to report";
       break;
-   case err_status_fail:
+   case srtp_err_status_fail:
       return "unspecified failure";
       break;
-   case err_status_bad_param:
+   case srtp_err_status_bad_param:
       return "unsupported parameter";
       break;
-   case err_status_alloc_fail:
+   case srtp_err_status_alloc_fail:
       return "couldn't allocate memory";
       break;
-   case err_status_dealloc_fail:
+   case srtp_err_status_dealloc_fail:
       return "couldn't deallocate properly";
       break;
-   case err_status_init_fail:
+   case srtp_err_status_init_fail:
       return "couldn't initialize";
       break;
-   case err_status_terminus:
+   case srtp_err_status_terminus:
       return "can't process as much data as requested";
       break;
-   case err_status_auth_fail:
+   case srtp_err_status_auth_fail:
       return "authentication failure";
       break;
-   case err_status_cipher_fail:
+   case srtp_err_status_cipher_fail:
       return "cipher failure";
       break;
-   case err_status_replay_fail:
+   case srtp_err_status_replay_fail:
       return "replay check failed (bad index)";
       break;
-   case err_status_replay_old:
+   case srtp_err_status_replay_old:
       return "replay check failed (index too old)";
       break;
-   case err_status_algo_fail:
+   case srtp_err_status_algo_fail:
       return "algorithm failed test routine";
       break;
-   case err_status_no_such_op:
+   case srtp_err_status_no_such_op:
       return "unsupported operation";
       break;
-   case err_status_no_ctx:
+   case srtp_err_status_no_ctx:
       return "no appropriate context found";
       break;
-   case err_status_cant_check:
+   case srtp_err_status_cant_check:
       return "unable to perform desired validation";
       break;
-   case err_status_key_expired:
+   case srtp_err_status_key_expired:
       return "can't use key any more";
       break;
-   case err_status_socket_err:
+   case srtp_err_status_socket_err:
       return "error in use of socket";
       break;
-   case err_status_signal_err:
+   case srtp_err_status_signal_err:
       return "error in use POSIX signals";
       break;
-   case err_status_nonce_bad:
+   case srtp_err_status_nonce_bad:
       return "nonce check failed";
       break;
-   case err_status_read_fail:
+   case srtp_err_status_read_fail:
       return "couldn't read data";
       break;
-   case err_status_write_fail:
+   case srtp_err_status_write_fail:
       return "couldn't write data";
       break;
-   case err_status_parse_err:
+   case srtp_err_status_parse_err:
       return "error pasring data";
       break;
-   case err_status_encode_err:
+   case srtp_err_status_encode_err:
       return "error encoding data";
       break;
-   case err_status_semaphore_err:
+   case srtp_err_status_semaphore_err:
       return "error while using semaphores";
       break;
-   case err_status_pfkey_err:
+   case srtp_err_status_pfkey_err:
       return "error while using pfkey";
       break;
    default:
@@ -117,13 +123,16 @@ const char* srtp_error_string(err_status_t error)
    }
 }
 
-Flow::Flow(asio::io_service& ioService,
+Flow::Flow(asio::io_context& ioService,
 #ifdef USE_SSL
            asio::ssl::context& sslContext,
 #endif
            unsigned int componentId,
            const StunTuple& localBinding, 
-           MediaStream& mediaStream) 
+           MediaStream& mediaStream,
+           bool forceCOMedia,
+           std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
+           std::shared_ptr<FlowContext> context)
   : mIOService(ioService),
 #ifdef USE_SSL
     mSslContext(sslContext),
@@ -131,29 +140,42 @@ Flow::Flow(asio::io_service& ioService,
     mComponentId(componentId),
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
+    mForceCOMedia(forceCOMedia),
+    mRtcpEventLoggingHandler(rtcpEventLoggingHandler),
+    mFlowContext(context),
+    mPrivatePeer(false),
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
+    mSharedMutex(std::make_shared<resip::Mutex>()),
+    mMutex(*mSharedMutex),
+    mActiveDestinationPort(0),
     mFlowState(Unconnected),
-    mReceivedDataFifo(MAX_RECEIVE_FIFO_DURATION,MAX_RECEIVE_FIFO_SIZE)
+    mReceivedDataFifo(maxReceiveFifoDuration, maxReceiveFifoSize)
 {
-   InfoLog(<< "Flow: flow created for " << mLocalBinding << "  ComponentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow created");
+
+   if(componentId != RTCP_COMPONENT_ID && mRtcpEventLoggingHandler.get())
+   {
+      ErrLog(LOG_PREFIX << "attempting to set an RTCPEventLoggingHandler for non-RTCP flow");
+      mRtcpEventLoggingHandler.reset();
+   }
 
    switch(mLocalBinding.getTransportType())
    {
    case StunTuple::UDP:
-      mTurnSocket.reset(new TurnAsyncUdpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
+      mTurnSocket = std::make_shared<TurnAsyncUdpSocket>(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort());
       break;
    case StunTuple::TCP:
-      mTurnSocket.reset(new TurnAsyncTcpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
+      mTurnSocket = std::make_shared<TurnAsyncTcpSocket>(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort());
       break;
 #ifdef USE_SSL
    case StunTuple::TLS:
-      mTurnSocket.reset(new TurnAsyncTlsSocket(mIOService, 
+      mTurnSocket = std::make_shared<TurnAsyncTlsSocket>(mIOService, 
                                                mSslContext, 
-                                               false, // validateServerCertificateHostname - TODO - make this configurable
+                                               mMediaStream.mValidateTlsServerHostname,  // check the server certificate is for its host name
                                                this, 
                                                mLocalBinding.getAddress(), 
-                                               mLocalBinding.getPort()));
+                                               mLocalBinding.getPort());
 #endif
       break;
    default:
@@ -161,7 +183,7 @@ Flow::Flow(asio::io_service& ioService,
       resip_assert(false);
    }
 
-   if(mTurnSocket.get() && 
+   if (mTurnSocket && 
       mMediaStream.mNatTraversalMode != MediaStream::NoNatTraversal && 
       !mMediaStream.mStunUsername.empty() && 
       !mMediaStream.mStunPassword.empty())
@@ -172,8 +194,7 @@ Flow::Flow(asio::io_service& ioService,
 
 Flow::~Flow() 
 {
-   InfoLog(<< "Flow: flow destroyed for " << mLocalBinding << "  ComponentId=" << mComponentId);
-
+   InfoLog(LOG_PREFIX << "Flow destroyed");
 
 #ifdef USE_SSL
    // Cleanup DtlsSockets
@@ -188,7 +209,7 @@ Flow::~Flow()
  #endif //USE_SSL
 
    // Cleanup TurnSocket
-   if(mTurnSocket.get())
+   if (mTurnSocket)
    {
       mTurnSocket->disableTurnAsyncHandler();
       mTurnSocket->close();  
@@ -196,18 +217,28 @@ Flow::~Flow()
 }
 
 void 
-Flow::activateFlow(UInt64 reservationToken)
+Flow::activateFlow(uint64_t reservationToken)
 {
    mReservationToken = reservationToken;
    activateFlow(StunMessage::PropsNone);
 }
 
 void 
-Flow::activateFlow(UInt8 allocationProps)
+Flow::activateFlow(uint8_t allocationProps)
 {
    mAllocationProps = allocationProps;
 
-   if(mTurnSocket.get())
+   if (mTurnSocket && mTurnSocket->getBindError())
+   {
+      // Eg. another socket has the local port: the flow can't work - its socket would send from a
+      // port the OS picks - so it's not made ready, and the application is told
+      const asio::error_code& e = mTurnSocket->getBindError();
+      ErrLog(LOG_PREFIX << "Unable to bind to the local address and port, error=" << e.value() << "(" << e.message() << ")");
+      mMediaStream.onFlowError(mComponentId, e.value());
+      return;
+   }
+
+   if (mTurnSocket)
    {
       if(mMediaStream.mNatTraversalMode != MediaStream::NoNatTraversal &&
          !mMediaStream.mNatTraversalServerHostname.empty())
@@ -233,14 +264,7 @@ Flow::getSelectSocketDescriptor()
 unsigned int 
 Flow::getSocketDescriptor()
 {
-   if(mTurnSocket.get() != 0)
-   {
-      return mTurnSocket->getSocketDescriptor();
-   }
-   else
-   {
-      return 0;
-   }
+   return mTurnSocket ? mTurnSocket->getSocketDescriptor() : 0;
 }
 
 // Turn Send Methods
@@ -290,12 +314,18 @@ Flow::rawSendTo(const asio::ip::address& address, unsigned short port, const cha
 bool
 Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address& address, unsigned short port)
 {
+   if(mRtcpEventLoggingHandler.get())
+   {
+      Data _buf(Data::Share, buffer, size);
+      StunTuple dest(mLocalBinding.getTransportType(), address, port);
+      mRtcpEventLoggingHandler->outboundEvent(mFlowContext, mLocalBinding, dest, _buf);
+   }
    if(mMediaStream.mSRTPSessionOutCreated)
    {
-      err_status_t status = mMediaStream.srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
-      if(status != err_status_ok)
+      srtp_err_status_t status = mMediaStream.srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
+      if(status != srtp_err_status_ok)
       {
-         ErrLog(<< "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")  ComponentId=" << mComponentId);
+         ErrLog(LOG_PREFIX << "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
          onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
          return false;
       }
@@ -305,26 +335,25 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
    {
       Lock lock(mMutex);
       DtlsSocket* dtlsSocket = getDtlsSocket(StunTuple(mLocalBinding.getTransportType(), address, port));
-      if(dtlsSocket)
+      if(dtlsSocket && ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->isSrtpInitialized())
       {
-         if(((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->isSrtpInitialized())
+         srtp_err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
+         if(status != srtp_err_status_ok)
          {
-            err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
-            if(status != err_status_ok)
-            {
-               ErrLog(<< "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")  ComponentId=" << mComponentId);
-               onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
-               return false;
-            }
-         }
-         else
-         {
-            //WarningLog(<< "Unable to send packet yet - handshake is not completed yet, ComponentId=" << mComponentId);
-            onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::InvalidState, asio::error::misc_category));
+            ErrLog(LOG_PREFIX << "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
+            onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
             return false;
          }
       }
-   }   
+      else if(dtlsSocket || !mRemoteSDPFingerprint.empty())
+      {
+         // DTLS-SRTP (negotiated, as the remote SDP fingerprint is set, or under way with this
+         // endpoint): nothing is sent in the clear - not before the handshake has set up SRTP,
+         // nor to an endpoint without one
+         onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::InvalidState, asio::error::misc_category));
+         return false;
+      }
+   }
 #endif //USE_SSL
    
    return true;
@@ -339,7 +368,7 @@ Flow::receiveFrom(const asio::ip::address& address, unsigned short port, char* b
    bool done = false;
    asio::error_code errorCode;
 
-   UInt64 startTime = Timer::getTimeMs();
+   uint64_t startTime = Timer::getTimeMs();
    unsigned int recvTimeout;
    while(!done)
    {
@@ -389,15 +418,15 @@ Flow::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::
    if(timeout == 0 && mReceivedDataFifo.empty())
    {
       // timeout
-      InfoLog(<< "Receive timeout (timeout==0 and fifo empty)!");
+      DebugLog(LOG_PREFIX << "Receive timeout (timeout==0 and fifo empty)!");
       return asio::error_code(flowmanager::ReceiveTimeout, asio::error::misc_category);
    }
    if(mReceivedDataFifo.empty())
    {
-      WarningLog(<< "Receive called when there is no data available!  ComponentId=" << mComponentId);
+      WarningLog(LOG_PREFIX << "Receive called when there is no data available!");
    }
 
-   ReceivedData* receivedData = mReceivedDataFifo.getNext(timeout);   
+   ReceivedData* receivedData = mReceivedDataFifo.getNext(timeout);
    if(receivedData)
    {
       mFakeSelectSocketDescriptor.receive();
@@ -407,7 +436,7 @@ Flow::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::
    else
    {
       // timeout
-      InfoLog(<< "Receive timeout!  ComponentId=" << mComponentId);
+      DebugLog(LOG_PREFIX << "Receive timeout!");
       errorCode = asio::error_code(flowmanager::ReceiveTimeout, asio::error::misc_category);
    }
    return errorCode;
@@ -418,16 +447,17 @@ asio::error_code
 Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receivedData, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    asio::error_code errorCode;
-   unsigned int receivedsize = receivedData->mData->size();
+   unsigned int receivedsize = (unsigned int)receivedData->mData->size();
 
-   // SRTP Unprotect (if required)
+   // SRTP Unprotect (if required): a packet that isn't authentic SRTP - altered, forged, or plain
+   // RTP - isn't passed on
    if(mMediaStream.mSRTPSessionInCreated)
    {
-      err_status_t status = mMediaStream.srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
-      if(status != err_status_ok)
+      srtp_err_status_t status = mMediaStream.srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
+      if(status != srtp_err_status_ok)
       {
-         ErrLog(<< "Unable to SRTP unprotect the packet (componentid=" << mComponentId << "), error code=" << status << "(" << srtp_error_string(status) << ")");
-         //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
+         ErrLog(LOG_PREFIX << "Unable to SRTP unprotect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
+         errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
       }
    }
 #ifdef USE_SSL
@@ -435,22 +465,21 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
    {
       Lock lock(mMutex);
       DtlsSocket* dtlsSocket = getDtlsSocket(StunTuple(mLocalBinding.getTransportType(), receivedData->mAddress, receivedData->mPort));
-      if(dtlsSocket)
+      if(dtlsSocket && ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->isSrtpInitialized())
       {
-         if(((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->isSrtpInitialized())
+         srtp_err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
+         if(status != srtp_err_status_ok)
          {
-            err_status_t status = ((FlowDtlsSocketContext*)dtlsSocket->getSocketContext())->srtpUnprotect((void*)receivedData->mData->data(), (int*)&receivedsize, mComponentId == RTCP_COMPONENT_ID);
-            if(status != err_status_ok)
-            {
-               ErrLog(<< "Unable to SRTP unprotect the packet (componentid=" << mComponentId << "), error code=" << status << "(" << srtp_error_string(status) << ")");
-               //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
-            }
+            ErrLog(LOG_PREFIX << "Unable to SRTP unprotect the packet, error code=" << status << "(" << srtp_error_string(status) << ")");
+            errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
          }
-         else
-         {
-            //WarningLog(<< "Unable to send packet yet - handshake is not completed yet, ComponentId=" << mComponentId);
-            errorCode = asio::error_code(flowmanager::InvalidState, asio::error::misc_category);
-         }
+      }
+      else if(dtlsSocket || !mRemoteSDPFingerprint.empty())
+      {
+         // DTLS-SRTP (negotiated, as the remote SDP fingerprint is set, or under way with this
+         // endpoint): only SRTP from an endpoint whose handshake has set it up is passed on
+         DebugLog(LOG_PREFIX << "Discarding media from " << receivedData->mAddress.to_string() << ":" << receivedData->mPort << ", which has no DTLS-SRTP association");
+         errorCode = asio::error_code(flowmanager::InvalidState, asio::error::misc_category);
       }
    }
 #endif //USE_SSL
@@ -465,7 +494,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
       else
       {
          // Receive buffer too small
-         InfoLog(<< "Receive buffer too small for data size=" << receivedsize << "  ComponentId=" << mComponentId);
+         InfoLog(LOG_PREFIX << "Receive buffer too small for data size=" << receivedsize);
          errorCode = asio::error_code(flowmanager::BufferTooSmall, asio::error::misc_category);
       }
       if(sourceAddress)
@@ -476,6 +505,12 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
       {
          *sourcePort = receivedData->mPort;
       }
+      if(mRtcpEventLoggingHandler.get())
+      {
+         Data _buf(Data::Share, buffer, size);
+         StunTuple _source(mLocalBinding.getTransportType(), *sourceAddress, *sourcePort);
+         mRtcpEventLoggingHandler->inboundEvent(mFlowContext, _source, mLocalBinding, _buf);
+      }
    }
    return errorCode;
 }
@@ -483,21 +518,47 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
 void 
 Flow::setActiveDestination(const char* address, unsigned short port)
 {
-   if(mTurnSocket.get())
+   if (mTurnSocket)
    {
+      asio::ip::address peerAddress = asio::ip::make_address(address);
+
+      {
+         Lock lock(mMutex);
+         // If no changes, then no-op
+         if (peerAddress == mActiveDestinationAddress && port == mActiveDestinationPort)
+         {
+            return;
+         }
+
+         mActiveDestinationAddress = peerAddress;
+         mActiveDestinationPort = port;
+      }
+
+      if(peerAddress.is_v4())
+      {
+         asio::ip::address_v4::bytes_type _bytes = peerAddress.to_v4().to_bytes();
+
+         mPrivatePeer = _bytes[0] == 10 ||
+            (_bytes[0] == 172 && (_bytes[1] & 0xf0) == 16) ||
+            (_bytes[0] == 192 && _bytes[1] == 168);
+      }
+
       if(mMediaStream.mNatTraversalMode != MediaStream::TurnAllocation)
-      {         
+      {
+         InfoLog(LOG_PREFIX <<"Connecting socket to remote peer " << address << ":" << port << (mPrivatePeer ? " [PRIVATE]" : ""));
          changeFlowState(Connecting);
          mTurnSocket->connect(address, port);
       }
       else
       {
-         mTurnSocket->setActiveDestination(asio::ip::address::from_string(address), port);
-
+         InfoLog(LOG_PREFIX <<"Setting TURN destination to remote peer " << address << ":" << port << (mPrivatePeer ? " [PRIVATE]" : ""));
+         mTurnSocket->setActiveDestination(peerAddress, port);
       }
    }
    else
-      WarningLog(<<"No TURN Socket, can't send media to destination");
+   {
+      WarningLog(LOG_PREFIX << "No TURN Socket, can't send media to destination");
+   }
 }
 
 #ifdef USE_SSL
@@ -505,27 +566,23 @@ void
 Flow::startDtlsClient(const char* address, unsigned short port)
 {
    Lock lock(mMutex);
-   createDtlsSocketClient(StunTuple(mLocalBinding.getTransportType(), asio::ip::address::from_string(address), port));
+   createDtlsSocketClient(StunTuple(mLocalBinding.getTransportType(), asio::ip::make_address(address), port));
 }
 #endif 
 
 void 
-Flow::setRemoteSDPFingerprint(const resip::Data& fingerprint)
+Flow::setRemoteSDPFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint)
 {
    Lock lock(mMutex);
+   mRemoteSDPFingerprintHashFunction = hashFunction;
    mRemoteSDPFingerprint = fingerprint;
 
 #ifdef USE_SSL
-   // Check all existing DtlsSockets and tear down those that don't match
+   // Check all existing DtlsSockets: set up SRTP for those that match, and tear it down for those that don't
    std::map<reTurn::StunTuple, dtls::DtlsSocket*>::iterator it;
    for(it = mDtlsSockets.begin(); it != mDtlsSockets.end(); it++)
    {
-      if(it->second->handshakeCompleted() && 
-         !it->second->checkFingerprint(fingerprint.c_str(), fingerprint.size()))
-      {
-         InfoLog(<< "Marking Dtls socket bad with non-matching fingerprint!");
-         ((FlowDtlsSocketContext*)it->second->getSocketContext())->fingerprintMismatch();
-      }
+      ((FlowDtlsSocketContext*)it->second->getSocketContext())->checkRemoteFingerprint(hashFunction, fingerprint);
    }
 #endif //USE_SSL
 }
@@ -546,7 +603,7 @@ Flow::getLocalTuple()
 StunTuple
 Flow::getSessionTuple()
 {
-   resip_assert(mFlowState == Ready);
+   //resip_assert(mFlowState == Ready);  setActiveDestination can get called mid-call and send state back to Connecting, exposing a tight race condition...
    Lock lock(mMutex);
 
    if(mMediaStream.mNatTraversalMode == MediaStream::TurnAllocation)
@@ -563,7 +620,7 @@ Flow::getSessionTuple()
 StunTuple
 Flow::getRelayTuple() 
 { 
-   resip_assert(mFlowState == Ready);
+   //resip_assert(mFlowState == Ready);  setActiveDestination can get called mid-call and send state back to Connecting, exposing a tight race condition...
    Lock lock(mMutex);
    return mRelayTuple; 
 }  
@@ -571,15 +628,15 @@ Flow::getRelayTuple()
 StunTuple
 Flow::getReflexiveTuple() 
 { 
-   resip_assert(mFlowState == Ready);
+   //resip_assert(mFlowState == Ready);  setActiveDestination can get called mid-call and send state back to Connecting, exposing a tight race condition...
    Lock lock(mMutex);
    return mReflexiveTuple; 
 } 
 
-UInt64 
+uint64_t 
 Flow::getReservationToken()
 {
-   resip_assert(mFlowState == Ready);
+   //resip_assert(mFlowState == Ready);  setActiveDestination can get called mid-call and send state back to Connecting, exposing a tight race condition...
    Lock lock(mMutex);
    return mReservationToken; 
 }
@@ -587,7 +644,7 @@ Flow::getReservationToken()
 void 
 Flow::onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port)
 {
-   InfoLog(<< "Flow::onConnectSuccess: socketDesc=" << socketDesc << ", address=" << address.to_string() << ", port=" << port << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onConnectSuccess: socketDesc=" << socketDesc << ", address=" << address.to_string() << ", port=" << port);
 
    // Start candidate discovery
    switch(mMediaStream.mNatTraversalMode)
@@ -623,28 +680,27 @@ Flow::onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address
 void 
 Flow::onConnectFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onConnectFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ", componentId=" << mComponentId);
+   WarningLog(LOG_PREFIX << "Flow::onConnectFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
    changeFlowState(Unconnected);
    mMediaStream.onFlowError(mComponentId, e.value());  // TODO define different error code?
 }
 
-
 void 
 Flow::onSharedSecretSuccess(unsigned int socketDesc, const char* username, unsigned int usernameSize, const char* password, unsigned int passwordSize)
 {
-   InfoLog(<< "Flow::onSharedSecretSuccess: socketDesc=" << socketDesc << ", username=" << username << ", password=" << password << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onSharedSecretSuccess: socketDesc=" << socketDesc << ", username=" << username << ", password=" << password);
 }
 
 void 
 Flow::onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onSharedSecretFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onSharedSecretFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
 }
 
 void 
 Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple)
 {
-   InfoLog(<< "Flow::onBindingSuccess: socketDesc=" << socketDesc << ", reflexive=" << reflexiveTuple << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onBindingSuccess: socketDesc=" << socketDesc << ", reflexive=" << reflexiveTuple);
    {
       Lock lock(mMutex);
       mReflexiveTuple = reflexiveTuple;
@@ -652,24 +708,24 @@ Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, co
    changeFlowState(Ready);
    mMediaStream.onFlowReady(mComponentId);
 }
+
 void 
 Flow::onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple)
 {
-   WarningLog(<< "Flow::onBindingFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onBindingFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
    changeFlowState(Connected);
    mMediaStream.onFlowError(mComponentId, e.value());  // TODO define different error code?
 }
 
 void 
-Flow::onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
+Flow::onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, uint64_t reservationToken)
 {
-   InfoLog(<< "Flow::onAllocationSuccess: socketDesc=" << socketDesc << 
-      ", reflexive=" << reflexiveTuple << 
+   InfoLog(LOG_PREFIX << "Flow::onAllocationSuccess: socketDesc=" << socketDesc <<
+      ", reflexive=" << reflexiveTuple <<
       ", relay=" << relayTuple <<
       ", lifetime=" << lifetime <<
-      ", bandwidth=" << bandwidth << 
-      ", reservationToken=" << reservationToken <<
-      ", componentId=" << mComponentId);
+      ", bandwidth=" << bandwidth <<
+      ", reservationToken=" << reservationToken);
    {
       Lock lock(mMutex);
       mReflexiveTuple = reflexiveTuple; 
@@ -683,7 +739,7 @@ Flow::onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTup
 void 
 Flow::onAllocationFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onAllocationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onAllocationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
    changeFlowState(Connected);
    mMediaStream.onFlowError(mComponentId, e.value());  // TODO define different error code?
 }
@@ -691,7 +747,7 @@ Flow::onAllocationFailure(unsigned int socketDesc, const asio::error_code& e)
 void 
 Flow::onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime)
 {
-   InfoLog(<< "Flow::onRefreshSuccess: socketDesc=" << socketDesc << ", lifetime=" << lifetime << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onRefreshSuccess: socketDesc=" << socketDesc << ", lifetime=" << lifetime);
    if(lifetime == 0)
    {
       changeFlowState(Connected);
@@ -701,49 +757,49 @@ Flow::onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime)
 void 
 Flow::onRefreshFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onRefreshFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onRefreshFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
 }
 
 void 
 Flow::onSetActiveDestinationSuccess(unsigned int socketDesc)
 {
-   InfoLog(<< "Flow::onSetActiveDestinationSuccess: socketDesc=" << socketDesc << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onSetActiveDestinationSuccess: socketDesc=" << socketDesc);
 }
 
 void 
 Flow::onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onSetActiveDestinationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onSetActiveDestinationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
 }
 
 void 
 Flow::onClearActiveDestinationSuccess(unsigned int socketDesc)
 {
-   InfoLog(<< "Flow::onClearActiveDestinationSuccess: socketDesc=" << socketDesc << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onClearActiveDestinationSuccess: socketDesc=" << socketDesc);
 }
 
 void 
 Flow::onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onClearActiveDestinationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onClearActiveDestinationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
 }
 
 void 
 Flow::onChannelBindRequestSent(unsigned int socketDesc, unsigned short channelNumber)
 {
-   InfoLog(<< "Flow::onChannelBindRequestSent: socketDesc=" << socketDesc << ", channelNumber=" << channelNumber << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onChannelBindRequestSent: socketDesc=" << socketDesc << ", channelNumber=" << channelNumber);
 }
 
 void 
 Flow::onChannelBindSuccess(unsigned int socketDesc, unsigned short channelNumber)
 {
-   InfoLog(<< "Flow::onChannelBindSuccess: socketDesc=" << socketDesc << ", channelNumber=" << channelNumber << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::onChannelBindSuccess: socketDesc=" << socketDesc << ", channelNumber=" << channelNumber);
 }
 
 void 
 Flow::onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onChannelBindFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   WarningLog(LOG_PREFIX << "Flow::onChannelBindFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
 }
 
 void 
@@ -759,36 +815,46 @@ Flow::onSendFailure(unsigned int socketDesc, const asio::error_code& e)
    {
       // Note:  if setActiveDestination is called it can take some time to "connect" the socket to the destination
       //        and send requests during this time, will be discarded - this can be considered normal
-      InfoLog(<< "Flow::onSendFailure: socketDesc=" << socketDesc << " socket is not in correct state to send yet, componentId=" << mComponentId );
+      InfoLog(LOG_PREFIX << "Flow::onSendFailure: socketDesc=" << socketDesc << " socket is not in correct state to send yet, state=" << flowStateToString(mFlowState));
    }
    else
    {
-      WarningLog(<< "Flow::onSendFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+      WarningLog(LOG_PREFIX << "Flow::onSendFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
    }
 }
 
 void 
-Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data)
+Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<reTurn::DataBuffer>& data)
 {
-   DebugLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
+   StackLog(LOG_PREFIX << "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size());
+
+   if(address != mTurnSocket->getConnectedAddress() || port != mTurnSocket->getConnectedPort())
+   {
+      if(mForceCOMedia && isReady() && mPrivatePeer)
+      {
+         DebugLog(<<"Peer with private IP " << mTurnSocket->getConnectedAddress() << ":" << mTurnSocket->getConnectedPort()
+                  << " appears to be sending from " << address << ":" << port);
+         setActiveDestination(address.to_string().c_str(), port);
+      }
+   }
 
 #ifdef USE_SSL
    // Check if packet is a dtls packet - if so then process it
    // Note:  Stun messaging should be picked off by the reTurn library - so we only need to tell the difference between DTLS and SRTP here
-   if(DtlsFactory::demuxPacket((const unsigned char*) data->data(), data->size()) == DtlsFactory::dtls)
+   if(DtlsFactory::demuxPacket((const unsigned char*) data->data(), (unsigned int)data->size()) == DtlsFactory::dtls)
    {
       Lock lock(mMutex);
 
       StunTuple endpoint(mLocalBinding.getTransportType(), address, port);
       DtlsSocket* dtlsSocket = getDtlsSocket(endpoint);
-      if(!dtlsSocket)
+      if(dtlsSocket)
+      {
+         dtlsSocket->handlePacketMaybe((const unsigned char*) data->data(), data->size());
+      }
+      else
       {
          // If don't have a socket already for this endpoint and we are receiving data, then assume we are the server side of the DTLS connection
-         dtlsSocket = createDtlsSocketServer(endpoint);
-      }
-      if(dtlsSocket)
-      { 
-         dtlsSocket->handlePacketMaybe((const unsigned char*) data->data(), data->size());
+         acceptDtlsSocketServer(endpoint, (const unsigned char*) data->data(), data->size());
       }
 
       // Packet was a DTLS packet - do not queue for app
@@ -796,9 +862,11 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
    }
 #endif 
 
-   if(!mReceivedDataFifo.add(new ReceivedData(address, port, data), ReceivedDataFifo::EnforceTimeDepth))
+   ReceivedData* receivedData = new ReceivedData(address, port, data);
+   if(!mReceivedDataFifo.add(receivedData, ReceivedDataFifo::EnforceTimeDepth))
    {
-      WarningLog(<< "Flow::onReceiveSuccess: TimeLimitFifo is full - discarding data!  componentId=" << mComponentId);
+      WarningLog(LOG_PREFIX << "Flow::onReceiveSuccess: TimeLimitFifo is full (countDepth=" << mReceivedDataFifo.getCountDepth() << ", timeDepth=" << mReceivedDataFifo.getTimeDepth() << ") - discarding data!  socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size());
+      delete receivedData;
    }
    else
    {
@@ -806,30 +874,35 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
    }
 }
 
-void 
+void
 Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
-
    // Make sure we keep receiving if we get an ICMP error on a UDP socket
-   if(e.value() == asio::error::connection_reset && mLocalBinding.getTransportType() == StunTuple::UDP)
+   if (mLocalBinding.getTransportType() == StunTuple::UDP &&
+      (e.value() == asio::error::connection_reset ||
+       e.value() == asio::error::connection_refused))
    {
+      DebugLog(LOG_PREFIX << "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
       resip_assert(mTurnSocket.get());
       mTurnSocket->turnReceive();
+   }
+   else
+   {
+      WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")");
    }
 }
 
 void 
 Flow::onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple)
 {
-   InfoLog(<< "Flow::onIncomingBindRequestProcessed: socketDesc=" << socketDesc << ", sourceTuple=" << sourceTuple );
+   InfoLog(LOG_PREFIX << "Flow::onIncomingBindRequestProcessed: socketDesc=" << socketDesc << ", sourceTuple=" << sourceTuple);
    // TODO - handle
 }
 
 void 
 Flow::changeFlowState(FlowState newState)
 {
-   InfoLog(<< "Flow::changeState: oldState=" << flowStateToString(mFlowState) << ", newState=" << flowStateToString(newState) << ", componentId=" << mComponentId);
+   InfoLog(LOG_PREFIX << "Flow::changeState: oldState=" << flowStateToString(mFlowState) << ", newState=" << flowStateToString(newState));
    mFlowState = newState;
 }
 
@@ -876,9 +949,9 @@ Flow::createDtlsSocketClient(const StunTuple& endpoint)
    DtlsSocket* dtlsSocket = getDtlsSocket(endpoint);
    if(!dtlsSocket && mMediaStream.mDtlsFactory)
    {
-      InfoLog(<< "Creating DTLS Client socket, componentId=" << mComponentId);
-      std::auto_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
-      dtlsSocket = mMediaStream.mDtlsFactory->createClient(socketContext);
+      InfoLog(LOG_PREFIX << "Creating DTLS Client socket");
+      std::unique_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
+      dtlsSocket = mMediaStream.mDtlsFactory->createClient(std::move(socketContext));
       dtlsSocket->startClient();
       mDtlsSockets[endpoint] = dtlsSocket;
    }
@@ -886,18 +959,96 @@ Flow::createDtlsSocketClient(const StunTuple& endpoint)
    return dtlsSocket;
 }
 
-DtlsSocket* 
-Flow::createDtlsSocketServer(const StunTuple& endpoint)
+DtlsSocket*
+Flow::acceptDtlsSocketServer(const StunTuple& endpoint, const unsigned char* data, size_t len)
 {
-   DtlsSocket* dtlsSocket = getDtlsSocket(endpoint);
-   if(!dtlsSocket && mMediaStream.mDtlsFactory)
+   if(!mMediaStream.mDtlsFactory)
    {
-      InfoLog(<< "Creating DTLS Server socket, componentId=" << mComponentId);
-      std::auto_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
-      dtlsSocket = mMediaStream.mDtlsFactory->createServer(socketContext);
-      mDtlsSockets[endpoint] = dtlsSocket;
+      return 0;
    }
 
+   std::map<reTurn::StunTuple, dtls::DtlsSocket*>::iterator evict = mDtlsSockets.end();
+   if(mDtlsSockets.size() >= MaxDtlsSockets)
+   {
+      // Make room by dropping the sockets that will never carry media: those whose handshake
+      // failed, and those whose handshake completed but have no SRTP although the remote SDP
+      // fingerprint is known - their certificate didn't match it (eg. forks that lost, or a
+      // peer that was rejected), or SRTP couldn't be set up.  The socket carrying SRTP, and ones
+      // still handshaking or waiting for the SDP fingerprint, are kept.
+      for(std::map<reTurn::StunTuple, dtls::DtlsSocket*>::iterator it = mDtlsSockets.begin(); it != mDtlsSockets.end();)
+      {
+         dtls::DtlsSocket* socket = it->second;
+         const bool rejected = socket->handshakeCompleted() && !mRemoteSDPFingerprint.empty() &&
+                               !((FlowDtlsSocketContext*)socket->getSocketContext())->isSrtpInitialized();
+         if(socket->handshakeFailed() || rejected)
+         {
+            DebugLog(LOG_PREFIX << "Dropping DTLS socket for " << it->first << " (" << (rejected ? "no SRTP" : "handshake failed") << ") to make room");
+            delete it->second;
+            it = mDtlsSockets.erase(it);
+         }
+         else
+         {
+            ++it;
+         }
+      }
+      if(mDtlsSockets.size() >= MaxDtlsSockets)
+      {
+         // Still full: the oldest server handshake that has been in progress for longer than a
+         // real one takes (dtlsHandshakeEvictionGrace) - stalled, perhaps to hold its place - makes
+         // way, once the new endpoint has completed the cookie exchange
+         for(std::map<reTurn::StunTuple, dtls::DtlsSocket*>::iterator it = mDtlsSockets.begin(); it != mDtlsSockets.end(); ++it)
+         {
+            dtls::DtlsSocket* socket = it->second;
+            if(socket->getSocketType() == DtlsSocket::Server && !socket->handshakeCompleted() && !socket->handshakeFailed() &&
+               socket->getAge() > std::chrono::seconds(dtlsHandshakeEvictionGrace) &&
+               (evict == mDtlsSockets.end() || socket->getAge() > evict->second->getAge()))
+            {
+               evict = it;
+            }
+         }
+         if(evict == mDtlsSockets.end())
+         {
+            if(!mDtlsSocketLimitLogged)
+            {
+               WarningLog(LOG_PREFIX << "Already " << mDtlsSockets.size() << " DTLS sockets, ignoring DTLS from new endpoints, eg. " << endpoint);
+               mDtlsSocketLimitLogged = true;
+            }
+            return 0;
+         }
+      }
+   }
+
+   if(!mDtlsListener)
+   {
+      mDtlsListener = mMediaStream.mDtlsFactory->createListener();
+   }
+
+   // The cookie is bound to the endpoint's address and port
+   std::ostringstream peer;
+   peer << endpoint.getAddress().to_string() << ":" << endpoint.getPort();
+
+   std::vector<unsigned char> response;
+   DtlsSocket* dtlsSocket = mDtlsListener->handlePacket(data, len, peer.str(), response, [this, &endpoint]()
+   {
+      return std::unique_ptr<DtlsSocketContext>(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
+   });
+   if(!response.empty())
+   {
+      // A HelloVerifyRequest, carrying the cookie
+      rawSendTo(endpoint.getAddress(), endpoint.getPort(), (const char*)response.data(), (unsigned int)response.size());
+   }
+   if(dtlsSocket)
+   {
+      if(evict != mDtlsSockets.end())
+      {
+         WarningLog(LOG_PREFIX << "Dropping the DTLS socket for " << evict->first << ", whose handshake has been in progress for "
+                    << std::chrono::duration_cast<std::chrono::seconds>(evict->second->getAge()).count() << " seconds, to make room for " << endpoint);
+         delete evict->second;
+         mDtlsSockets.erase(evict);
+      }
+      InfoLog(LOG_PREFIX << "Created DTLS Server socket for " << endpoint);
+      mDtlsSockets[endpoint] = dtlsSocket;
+   }
    return dtlsSocket;
 }
 
@@ -905,6 +1056,7 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
 
 /* ====================================================================
 
+ Copyright (c) 2007-2026, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -1,4 +1,4 @@
-#include <resiprocate/MacSecurity.hxx>
+#include <resip/stack/ssl/MacSecurity.hxx>
 
 #include <sys/types.h>
 #include <openssl/e_os2.h>

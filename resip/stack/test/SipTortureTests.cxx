@@ -65,7 +65,7 @@ test1()
       tassert_reset();
       tassert(msg);
 
-      auto_ptr<SipMessage> message(msg);
+      unique_ptr<SipMessage> message(msg);
 
       tassert(message->isRequest());
       tassert(message->isResponse() == false);
@@ -153,7 +153,7 @@ test1()
                    "CSeq: 8 INVITE\r\n"
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       tassert_reset();
       
@@ -233,7 +233,7 @@ test3()
                    "m=video 3227 RTP/AVP 31 \r\n"
                    "a=rtpmap:31 LPC \r\n\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       
       tassert(message->isRequest());
@@ -300,7 +300,7 @@ test4()
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: Sat, 01 Dec 2040 16:00:00 GMT\r\n\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       tassert_reset();
       
@@ -392,7 +392,7 @@ test5()
                    "a=rtpmap:31 LPC "
                    "\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       tassert_reset();
 
@@ -466,7 +466,7 @@ void test6()
                    "<audio> <pcmu port=\"443\"/> </audio> \r\n"
                    "\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       tassert_reset();
 
@@ -524,7 +524,7 @@ void test7()
                    "a=rtpmap:31 LPC \r\n"
                    "\r\n");
 
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       tassert_reset();
 
@@ -603,7 +603,7 @@ void test8()
                 "m=video 3227 RTP/AVP 31\r\n"
                 "a=rtpmap:31 LPC\r\n");
 
-   auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+   unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
    tassert_reset();
    tassert(message->isRequest());
    tassert(!message->isResponse());
@@ -627,7 +627,7 @@ void test9()
                 "CSeq: 8 REGISTER\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Authorization: Super-PGP foo=ajsohdaosdh0asyhdaind08yasdknasd09asidhas0d8\r\n\r\n");
-   auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+   unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
    tassert_reset();
    tassert(message->isRequest());
    tassert(!message->isResponse());
@@ -672,7 +672,7 @@ void test10()
    tassert_reset();
    try
    {
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       tassert(0);
    }
    catch (ParseException& e)
@@ -700,7 +700,7 @@ void test11()
                 "m=video 3227 RTP/AVP 31\r\n"
                 "a=rtpmap:31 LPC\r\n"
                 "\r\n");
-   auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+   unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
    tassert_reset();
    tassert(message->isRequest());
    tassert(!message->isResponse());
@@ -740,7 +740,7 @@ void test12()
    tassert_reset();
    try
    {
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
    }
    catch (ParseException& e)
    {
@@ -779,7 +779,7 @@ void test13()
    tassert_reset();
    try
    {
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+       unique_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
        tassert(message->header(h_UserAgent).value() == "Lame Agent"); 
        message->header(h_UserAgent).value() = "Foo";
@@ -814,7 +814,7 @@ void test14()
    tassert_reset();
    try
    {
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       
       tassert(  msg->header(h_Contacts).size() == 3 );
       
@@ -905,7 +905,7 @@ void test15()
    tassert_reset();
    try
    {
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       
    }
    catch (ParseException& e)

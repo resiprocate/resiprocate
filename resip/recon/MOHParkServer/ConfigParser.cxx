@@ -378,7 +378,7 @@ ConfigParser::assignNameAddr(const Data& settingName, const Data& settingValue, 
    {
       try
       {
-         NameAddr tempNameAddr(Data("sip:" + settingValue));
+         NameAddr tempNameAddr(settingValue);
          nameAddr = tempNameAddr;
       }
       catch (resip::BaseException& e)

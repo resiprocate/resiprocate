@@ -7,23 +7,37 @@
 #ifndef DTLS_Timer_hxx
 #define DTLS_Timer_hxx
 
+#include <memory>
+#include <mutex>
+
 namespace dtls
 {
 
+// A timer is shared by its owner, which can invalidate it, and the DtlsTimerContext it's added
+// to, which fires it when it expires: it's freed when both have let it go, whether it fired,
+// was invalidated, or was dropped unfired (eg. cancelled at shutdown).
 class DtlsTimer
 {
    public:
-      DtlsTimer(unsigned int seq); 
+      DtlsTimer(unsigned int seq);
       virtual ~DtlsTimer();
-      
+
       virtual void expired()=0;
+      // Calls expired(), unless the timer has been invalidated
       virtual void fire();
       unsigned int getSeq() { return mSeq; }
-      //invalid could call though to context and call an external cancel
+      // The owner no longer wants the timer to fire
       void invalidate() { mValid = false; }
+
+      // The lock the timer's owner holds while it uses what the timer acts on, and while it
+      // invalidates the timer: fire() takes it too, so a timer firing on another thread neither
+      // races the owner nor runs for an owner that has invalidated it meanwhile.  Shared, so it
+      // outlives the owner while the timer is pending.
+      void setLock(std::shared_ptr<std::mutex> lock) { mLock = std::move(lock); }
    private:
       unsigned int mSeq;
-      bool mValid;            
+      bool mValid;
+      std::shared_ptr<std::mutex> mLock;
 };
 
 
@@ -31,9 +45,11 @@ class DtlsTimerContext
 {     
    public:
       virtual ~DtlsTimerContext() {}
-      virtual void addTimer(DtlsTimer* timer, unsigned int waitMs)=0;
-      //could add cancel here
+      // Fires timer after waitMs, keeping its reference until then (or until it drops the timer
+      // unfired)
+      virtual void addTimer(std::shared_ptr<DtlsTimer> timer, unsigned int waitMs)=0;
    protected:
+      // The caller must hold a reference to timer: firing it can release the owner's
       void fire(DtlsTimer *timer);
 };
    
@@ -45,7 +61,8 @@ class DtlsTimerContext
 #endif
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2007-2026, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

@@ -7,6 +7,7 @@
 #include <WS2tcpip.h>
 #else
 #include <sys/fcntl.h>
+#include <unistd.h>
 #endif
 
 #include "IPCThread.hxx"
@@ -81,7 +82,7 @@ IPCThread::createIPCSocket(const std::string& printableAddr, unsigned int port)
       return INVALID_SOCKET;
    }
 
-   memset(anonv4, 0, sizeof(anonv4));
+   memset(anonv4, 0, sizeof(mLocalSockaddr));
    anonv4->sin_family = AF_INET;
    anonv4->sin_port = htons(port);
    if (printableAddr.empty())

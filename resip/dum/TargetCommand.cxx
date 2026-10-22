@@ -2,31 +2,27 @@
 #include "resip/dum/TargetCommand.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 using namespace resip;
 using namespace std;
 
 
 TargetCommand::TargetCommand(Target& target,
-                             auto_ptr<Message> message)
+    unique_ptr<Message> message)
    : mTarget(target),
-     mMessage(message)
-{
-}
-
-TargetCommand::TargetCommand(const TargetCommand& from)
-   : mTarget(from.mTarget),
-     mMessage(from.mMessage)
+     mMessage(std::move(message))
 {
 }
 
 void TargetCommand::executeCommand()
 {
-   mTarget.post(mMessage);
+   mTarget.post(std::move(mMessage));
 }
 
 Message* TargetCommand::clone() const
 {
-   return new TargetCommand(*this);
+   return new TargetCommand(mTarget, std::move(mMessage)); // !bw! this destructive clone is actually a move, which may not be right
 }
 
 EncodeStream&
@@ -39,8 +35,4 @@ EncodeStream&
 TargetCommand::encodeBrief(EncodeStream& strm) const
 {
    return strm;
-}
-
-TargetCommand::Target::~Target()
-{
 }

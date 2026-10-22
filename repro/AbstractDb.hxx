@@ -4,6 +4,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 #include "resip/stack/Message.hxx"
+#include <set>
 #include <vector>
 
 namespace resip
@@ -31,6 +32,13 @@ class AbstractDb
             resip::Data name;
             resip::Data email;
             resip::Data forwardAddress;
+      };
+
+      class TlsPeerIdentityRecord
+      {
+         public:
+            resip::Data peerName;
+            resip::Data authorizedIdentity;
       };
 
       class RouteRecord
@@ -89,7 +97,7 @@ class AbstractDb
          public:
             resip::Data mDestUri;
             resip::Data mSourceUri;
-            UInt64 mOriginalSentTime;
+            uint64_t mOriginalSentTime;
             resip::Data mTid;
             resip::Data mMimeType;
             resip::Data mMessageBody;
@@ -112,6 +120,14 @@ class AbstractDb
       virtual resip::Data getUserAuthInfo(const Key& key) const;
       virtual Key firstUserKey();// return empty if no more
       virtual Key nextUserKey(); // return empty if no more 
+
+      // functions for TlsPeerIdentity Records
+      virtual bool addTlsPeerIdentity(const Key& key, const TlsPeerIdentityRecord& rec);
+      virtual void eraseTlsPeerIdentity(const Key& key);
+      virtual TlsPeerIdentityRecord getTlsPeerIdentity(const Key& key) const;
+      virtual bool isAuthorized(const std::set<resip::Data>& peerNames, const std::set<resip::Data>& identities) const;
+      virtual Key firstTlsPeerIdentityKey();// return empty if no more
+      virtual Key nextTlsPeerIdentityKey(); // return empty if no more
          
       // functions for Route Records
       virtual bool addRoute(const Key& key, const RouteRecord& rec);
@@ -157,7 +173,7 @@ class AbstractDb
       virtual bool addToSilo(const Key& key, const SiloRecord& rec);
       virtual bool getSiloRecords(const Key& skey, SiloRecordList& recordList); 
       virtual void eraseSiloRecord(const Key& key);
-      virtual void cleanupExpiredSiloRecords(UInt64 now, unsigned long expirationTime);
+      virtual void cleanupExpiredSiloRecords(uint64_t now, unsigned long expirationTime);
 
    protected:
       typedef enum 
@@ -169,6 +185,7 @@ class AbstractDb
          StaticRegTable,
          FilterTable,
          SiloTable,
+         TlsPeerIdentityTable,
          MaxTable  // This one MUST be last 
       } Table;
 

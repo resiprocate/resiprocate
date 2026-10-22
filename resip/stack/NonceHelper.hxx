@@ -14,12 +14,12 @@ class NonceHelper
       class Nonce 
       {
          private:
-            UInt64 creationTime;
+            uint64_t creationTime;
 
          public:
-            Nonce(UInt64 creationTime);
+            Nonce(uint64_t creationTime);
             virtual ~Nonce();
-            UInt64 getCreationTime() { return creationTime; };
+            uint64_t getCreationTime() { return creationTime; };
       };
 
       virtual ~NonceHelper()=0;

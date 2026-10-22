@@ -18,6 +18,21 @@ InterruptableStackThread::~InterruptableStackThread()
    //InfoLog (<< "InterruptableStackThread::~InterruptableStackThread()");
 }
 
+/*
+ * InterruptableStackThread uses the deprecated SipStack API calls,
+ * buildFdSet(fdset) and process(fdset).
+ *
+ * To avoid using these calls, use EventStackThread or call the
+ * new SipStack::process(unsigned int) directly.
+ */
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
+
 void
 InterruptableStackThread::thread()
 {
@@ -49,6 +64,12 @@ InterruptableStackThread::thread()
    }
    InfoLog (<< "Shutting down stack thread");
 }
+
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#else
+#pragma warning(pop)
+#endif
 
 void
 InterruptableStackThread::shutdown()

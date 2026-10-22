@@ -40,9 +40,9 @@ openssl req -new  -config openssl.cnf -reqexts cj_req \
         -sha256 -key ${ADDR}_key.pem \
         -out ${ADDR}.csr -days ${DAYS} <<EOF
 US
-California
+CA
 San Jose
-sipit
+SIPit
 
 ${ADDR}
 
@@ -56,12 +56,12 @@ openssl ca -extensions cj_cert -config openssl.cnf \
     -md sha256 -batch -notext -out ${ADDR}_cert.pem \
     -startdate 990101000000Z \
     -enddate 000101000000Z \
-     -infiles ${ADDR}.csr
+    -infiles ${ADDR}.csr
 else
 openssl ca -extensions cj_cert -config openssl.cnf \
     -passin pass:password -policy policy_anything \
     -md sha256 -days ${DAYS} -batch -notext -out ${ADDR}_cert.pem \
-     -infiles ${ADDR}.csr
+    -infiles ${ADDR}.csr
 fi
 
 openssl pkcs12 -passin pass:password \

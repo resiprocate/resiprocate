@@ -2,8 +2,37 @@
 #define RESIP_MD5STREAM_HXX 
 
 #include <iostream>
+#include "rutil/compat.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/vmd5.hxx"
+
+#pragma warning(1: 4996) // Move deprecated warnings back to level 1
+
+/**
+ * @file  MD5Stream.hxx
+ * @brief DEPRECATED - Use DigestStream.hxx instead.
+ * * @deprecated This class is being phased out in favor of the unified DigestStream
+ * architecture. MD5Stream is now a legacy wrapper and may be
+ * removed in future releases.
+ * * ### Transition Guide
+ * The new DigestStream class replaces specialized stream types with a
+ * parameter-based approach, providing support for
+ * modern hash algorithms (SHA-256, SHA-512, SHA-512/256).
+ * * #### Old Usage:
+ * @code
+ * resip::MD5Stream md5;
+ * md5 << "data";
+ * resip::Data hash = md5.getHex();
+ * @endcode
+ * * #### New Usage:
+ * @code
+ * #include "rutil/DigestStream.hxx"
+ * // Defaults to MD5, or specify DigestType explicitly
+ * resip::DigestStream ds(resip::MD5);
+ * ds << "data";
+ * resip::Data hash = ds.getHex();
+ * @endcode
+ */
 
 namespace resip
 {
@@ -20,12 +49,14 @@ class MD5Buffer : public std::streambuf
        */
       Data getHex();
       Data getBin();
+      size_t bytesTaken();
    protected:
       virtual int sync();
       virtual int overflow(int c = -1);
    private:
       char mBuf[64];
       MD5Context mContext;
+      size_t mLen;
 };
 
 /** 
@@ -35,7 +66,7 @@ class MD5Buffer : public std::streambuf
 class MD5Stream : private MD5Buffer, public std::ostream
 {
    public:
-      MD5Stream();
+      RESIP_DEPRECATED(MD5Stream());
       ~MD5Stream();
       /** Calls flush() on itself and returns the MD5 data in hex format.
           @returns the MD5 hexadecimal representation of the data written to the
@@ -43,6 +74,7 @@ class MD5Stream : private MD5Buffer, public std::ostream
        */
       Data getHex();
       Data getBin();
+      size_t bytesTaken();
    private:
       //MD5Buffer mStreambuf;
 };

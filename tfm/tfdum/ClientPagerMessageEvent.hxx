@@ -33,7 +33,7 @@ class ClientPagerMessageEvent : public DumEvent
       }
 
       ClientPagerMessageEvent(DumUserAgent* dua, Type type, resip::ClientPagerMessageHandle h, const resip::SipMessage& msg, 
-                              std::auto_ptr<resip::Contents> constents)
+                              std::unique_ptr<resip::Contents> constents)
          : DumEvent(dua, msg),
            mType(type),
            mHandle(h)

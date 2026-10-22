@@ -101,11 +101,11 @@ Transceiver::send(const Resolver& target,
 SipMessage*
 Transceiver::receive(int waitMs)
 {
-   UInt64 startTime = Timer::getTimeMs();
+   uint64_t startTime = Timer::getTimeMs();
 
-   UInt64 currentTime = Timer::getTimeMs();
+   uint64_t currentTime = Timer::getTimeMs();
    
-   while( UInt64(waitMs) > currentTime - startTime)
+   while( uint64_t(waitMs) > currentTime - startTime)
    {
       int timeLeft = waitMs - (currentTime - startTime);
       if (!mReceived.messageAvailable())

@@ -31,11 +31,11 @@ nearTo(int t1, int t2, int tol )
 }
 
 void 
-CheckContacts::operator()(boost::shared_ptr<Event> event)
+CheckContacts::operator()(std::shared_ptr<Event> event)
 {
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
    resip_assert(sipEvent);
-   boost::shared_ptr<SipMessage> msg = sipEvent->getMessage();
+   std::shared_ptr<SipMessage> msg = sipEvent->getMessage();
 
    set<NameAddr> msgContacts;
    for (NameAddrs::iterator it = msg->header(h_Contacts).begin();

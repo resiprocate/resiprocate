@@ -5,18 +5,29 @@
 #include "config.h"
 #endif
 
-#include <asio.hpp>
+// !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO includes since inlined shared_from_this has 
+// a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
+#include <memory>
+
+namespace asio
+{
+   class io_context;
+   typedef io_context io_service;
 #ifdef USE_SSL
-#include <asio/ssl.hpp>
+   namespace ssl
+   {
+      class context;
+   }
 #endif
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp/srtp.h>
-#endif
+}
+
+#include "Srtp2Helper.hxx"
 
 #include "dtls_wrapper/DtlsFactory.hxx"
+#include "FlowContext.hxx"
 #include "Flow.hxx"
+#include "RTCPEventLoggingHandler.hxx"
+#include "rutil/MediaConstants.hxx"
 
 using namespace reTurn;
 
@@ -53,13 +64,7 @@ public:
       TurnAllocation
    };
 
-   enum SrtpCryptoSuite
-   {
-      SRTP_AES_CM_128_HMAC_SHA1_32,
-      SRTP_AES_CM_128_HMAC_SHA1_80
-   };
-
-   MediaStream(asio::io_service& ioService,
+   MediaStream(asio::io_context& ioService,
                asio::ssl::context& sslContext,
                MediaStreamHandler& mediaStreamHandler,
                const StunTuple& localRtpBinding, 
@@ -69,15 +74,19 @@ public:
                const char* natTraversalServerHostname = 0, 
                unsigned short natTraversalServerPort = 0, 
                const char* stunUsername = 0,
-               const char* stunPassword = 0); 
+               const char* stunPassword = 0,
+               bool forceCOMedia = false,
+               std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = nullptr,
+               std::shared_ptr<FlowContext> context = nullptr,
+               bool validateTlsServerHostname = true);  // for TURN over TLS: see FlowManager::setValidateTlsServerHostname
    virtual ~MediaStream();
 
    Flow* getRtpFlow() { return mRtpFlow; }
    Flow* getRtcpFlow() { return mRtcpFlow; }
 
    // SRTP methods - should be called before sending or receiving on RTP or RTCP flows
-   bool createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
-   bool createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
+   bool createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, size_t keyLen);
+   bool createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, size_t keyLen);
 
 protected:
    friend class Flow;
@@ -87,8 +96,8 @@ protected:
    volatile bool mSRTPSessionInCreated;
    volatile bool mSRTPSessionOutCreated;
    resip::Mutex mMutex;
-   SrtpCryptoSuite mCryptoSuiteIn;
-   SrtpCryptoSuite mCryptoSuiteOut;
+   resip::MediaConstants::SrtpCryptoSuite mCryptoSuiteIn;
+   resip::MediaConstants::SrtpCryptoSuite mCryptoSuiteOut;
    uint8_t mSRTPMasterKeyIn[SRTP_MASTER_KEY_LEN];
    uint8_t mSRTPMasterKeyOut[SRTP_MASTER_KEY_LEN];
    srtp_policy_t mSRTPPolicyIn;
@@ -96,8 +105,8 @@ protected:
    srtp_t mSRTPSessionIn;
    srtp_t mSRTPSessionOut;
 
-   err_status_t srtpProtect(void* data, int* size, bool rtcp);
-   err_status_t srtpUnprotect(void* data, int* size, bool rtcp);
+   srtp_err_status_t srtpProtect(void* data, int* size, bool rtcp);
+   srtp_err_status_t srtpUnprotect(void* data, int* size, bool rtcp);
   
    // Nat Traversal Members
    NatTraversalMode mNatTraversalMode;
@@ -105,6 +114,8 @@ protected:
    unsigned short mNatTraversalServerPort;
    resip::Data mStunUsername;
    resip::Data mStunPassword;
+   bool mForceCOMedia;
+   bool mValidateTlsServerHostname;
 
 private:
    // Note: these member variables are set at creation time and never changed, thus
@@ -112,8 +123,10 @@ private:
    MediaStreamHandler& mMediaStreamHandler;
    bool mRtcpEnabled;
 
-   Flow* mRtpFlow;
-   Flow* mRtcpFlow;
+   // Null until created: activating the RTP flow can call onFlowReady before the constructor
+   // has set both
+   Flow* mRtpFlow = nullptr;
+   Flow* mRtcpFlow = nullptr;
 
    virtual void onFlowReady(unsigned int componentId);
    virtual void onFlowError(unsigned int componentId, unsigned int errorCode);
@@ -126,6 +139,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

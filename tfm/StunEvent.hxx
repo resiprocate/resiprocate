@@ -6,7 +6,7 @@
 
 #include "tfm/StunServer.hxx"
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 

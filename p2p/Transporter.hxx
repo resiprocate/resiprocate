@@ -47,10 +47,10 @@ class Transporter
       void addListener(resip::TransportType transport,
                        resip::GenericIPAddress &address);
    
-      void send(NodeId nodeId, std::auto_ptr<p2p::Message> msg);
-      void send(FlowId flowId, std::auto_ptr<resip::Data> data);
+      void send(NodeId nodeId, std::unique_ptr<p2p::Message> msg);
+      void send(FlowId flowId, std::unique_ptr<resip::Data> data);
    
-      void collectCandidates(UInt64 tid, NodeId nodeId,
+      void collectCandidates(uint64_t tid, NodeId nodeId,
                              unsigned short appId = RELOAD_APPLICATION_ID);
    
       void connect(resip::GenericIPAddress &);
@@ -69,10 +69,10 @@ class Transporter
       virtual void addListenerImpl(resip::TransportType transport,
                            resip::GenericIPAddress &address) = 0;
    
-      virtual void sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg) = 0;
-      virtual void sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data) = 0;
+      virtual void sendImpl(NodeId nodeId, std::unique_ptr<p2p::Message> msg) = 0;
+      virtual void sendImpl(FlowId flowId, std::unique_ptr<resip::Data> data) = 0;
    
-      virtual void collectCandidatesImpl(UInt64 tid, NodeId, unsigned short appId) = 0;
+      virtual void collectCandidatesImpl(uint64_t tid, NodeId, unsigned short appId) = 0;
 
       virtual void connectImpl(resip::GenericIPAddress &) = 0;
    

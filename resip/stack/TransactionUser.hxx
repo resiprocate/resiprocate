@@ -6,9 +6,11 @@
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/CongestionManager.hxx"
+#include "resip/stack/DomainMatcher.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/stack/MessageFilterRule.hxx"
 
+#include <memory>
 
 namespace resip
 {
@@ -98,6 +100,11 @@ class TransactionUser
       void removeDomain(const Data& domain);
 
       /**
+         @brief Replaces the default DomainMatcher
+      */
+      void setDomainMatcher(std::shared_ptr<DomainMatcher> domainMatcher) noexcept;
+
+      /**
          @brief Return the name of this TransactionUser. Used in encode().
          @return The name of this TransactionUser, as a Data.
       */
@@ -162,9 +169,9 @@ class TransactionUser
 
       const TimeLimitFifo<Message>* getFifo() { return(&mFifo); } const
       
-      virtual UInt16 getExpectedWait() const
+      virtual uint16_t getExpectedWait() const
       {
-         return (UInt16)mFifo.expectedWaitTimeMilliSec();
+         return (uint16_t)mFifo.expectedWaitTimeMilliSec();
       }
       
       // .bwc. This specifies whether the TU can cope with dropped responses
@@ -253,8 +260,7 @@ class TransactionUser
 
    private:
       MessageFilterRuleList mRuleList;
-      typedef std::set<Data> DomainList;
-      DomainList mDomainList;
+      std::shared_ptr<DomainMatcher> mDomainMatcher;
       bool mRegisteredForTransactionTermination;
       bool mRegisteredForConnectionTermination;
       bool mRegisteredForKeepAlivePongs;

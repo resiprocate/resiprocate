@@ -8,10 +8,10 @@
 #include "rutil/Mutex.hxx"
 
 #include <iostream>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
-std::ostream& operator<<(std::ostream& strm, const StunMessage& msg);
-std::ostream& operator<<(std::ostream& strm, const StunAtrAddress4& adr);
+std::ostream& operator<<(std::ostream& strm, const resip::StunMessage& msg);
+std::ostream& operator<<(std::ostream& strm, const resip::StunAtrAddress4& adr);
 
 #define STUN_SUCCESS   0
 #define STUN_ERROR    -1
@@ -30,8 +30,8 @@ struct StunRequestContext
    }
 
    resip::Data data;
-   StunMessage msg;
-   StunAddress4 from;
+   resip::StunMessage msg;
+   resip::StunAddress4 from;
    bool recvAltIp;
    bool recvAltPort;
 };
@@ -50,10 +50,10 @@ struct StunResponseContext
       secondary.addr = 0;
    }
 
-   StunMessage msg;
-   StunAddress4 dest;
-   StunAtrString hmacPassword;
-   StunAddress4 secondary;
+   resip::StunMessage msg;
+   resip::StunAddress4 dest;
+   resip::StunAtrString hmacPassword;
+   resip::StunAddress4 secondary;
    bool changePort;
    bool changeIp;
 };
@@ -63,15 +63,15 @@ class StunSink
    public:
       virtual ~StunSink() {}
       
-      virtual void onBindingRequest(boost::shared_ptr<StunRequestContext> request) = 0;
+      virtual void onBindingRequest(std::shared_ptr<StunRequestContext> request) = 0;
 
-      virtual void onAllocateRequest(boost::shared_ptr<StunRequestContext> request) = 0;
+      virtual void onAllocateRequest(std::shared_ptr<StunRequestContext> request) = 0;
 
-      virtual void onSendRequest(boost::shared_ptr<StunRequestContext> request) = 0;
+      virtual void onSendRequest(std::shared_ptr<StunRequestContext> request) = 0;
 
-      virtual void onSetActiveDestinationRequest(boost::shared_ptr<StunRequestContext> request) = 0;
+      virtual void onSetActiveDestinationRequest(std::shared_ptr<StunRequestContext> request) = 0;
 
-      virtual void onUnknownRequest(boost::shared_ptr<StunRequestContext> request) = 0;
+      virtual void onUnknownRequest(std::shared_ptr<StunRequestContext> request) = 0;
 
       virtual void onParseMessageFailed() = 0;
 
@@ -105,37 +105,37 @@ class StunServer
 
       void process(resip::FdSet& fdset);
 
-      void sendStunResponse(boost::shared_ptr<StunRequestContext> request);
+      void sendStunResponse(std::shared_ptr<StunRequestContext> request);
 
-      void sendStunResponse(boost::shared_ptr<StunRequestContext> request, const resip::Uri& mappedAddr);
+      void sendStunResponse(std::shared_ptr<StunRequestContext> request, const resip::Uri& mappedAddr);
 
-      void sendTurnAllocateResponse(boost::shared_ptr<StunRequestContext> request, int iPort = 8000);
+      void sendTurnAllocateResponse(std::shared_ptr<StunRequestContext> request, int iPort = 8000);
 
-      void sendTurnAllocateErrorResponse(boost::shared_ptr<StunRequestContext> request, int code);
+      void sendTurnAllocateErrorResponse(std::shared_ptr<StunRequestContext> request, int code);
 
       //void
-      //sendTurnAllocateErrorResponse300(boost::shared_ptr<StunRequestContext>
+      //sendTurnAllocateErrorResponse300(std::shared_ptr<StunRequestContext>
       //request, const resip::Uri& altAddr);
-      void sendTurnAllocateErrorResponse300(boost::shared_ptr<StunRequestContext> request, const resip::Data& ip, int port);
+      void sendTurnAllocateErrorResponse300(std::shared_ptr<StunRequestContext> request, const resip::Data& ip, int port);
 
-      void sendTurnSendResponse(boost::shared_ptr<StunRequestContext> request);
+      void sendTurnSendResponse(std::shared_ptr<StunRequestContext> request);
 
-      void sendTurnSetActiveDestinationResponse(boost::shared_ptr<StunRequestContext> request);
+      void sendTurnSetActiveDestinationResponse(std::shared_ptr<StunRequestContext> request);
 
    private:
-      void sendTurnResponse(boost::shared_ptr<StunRequestContext> request, UInt16 messageType);
+      void sendTurnResponse(std::shared_ptr<StunRequestContext> request, uint16_t messageType);
 
-      bool createResponse(boost::shared_ptr<StunRequestContext> request, boost::shared_ptr<StunResponseContext> response);
+      bool createResponse(std::shared_ptr<StunRequestContext> request, std::shared_ptr<StunResponseContext> response);
 
-      void send(boost::shared_ptr<StunResponseContext> response, boost::shared_ptr<StunRequestContext> request);
+      void send(std::shared_ptr<StunResponseContext> response, std::shared_ptr<StunRequestContext> request);
 
       resip::Data getReason(int code);
 
    private:
       resip::Mutex mMutexLock;
-      StunAddress4 mPrimary;
-      StunAddress4 mSecondary;
-      StunServerInfo mInfo;
+      resip::StunAddress4 mPrimary;
+      resip::StunAddress4 mSecondary;
+      resip::StunServerInfo mInfo;
 
       StunSink* mEventSink;
 };

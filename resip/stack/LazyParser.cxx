@@ -55,7 +55,7 @@ LazyParser::~LazyParser()
 LazyParser&
 LazyParser::operator=(const LazyParser& rhs)
 {
-   resip_assert( &rhs != 0 );
+   resip_assert_not_null( &rhs );
    
    if (this != &rhs)
    {
@@ -131,7 +131,7 @@ resip::operator<<(std::ostream &s, const LazyParser& lp)
 	lp.encode(s);
 #else
 	//this should only be called for things like cout,cerr, or other streams not supporting
-	//other stream encoders, aka MD5Stream
+	//other stream encoders, aka DigestStream
 	Data data;
 	DataStream stream(data);
 

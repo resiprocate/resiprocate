@@ -4,7 +4,6 @@
 static const char* const resipRWMutex_hxx_Version =
    "$Id: RWMutex.hxx,v 1.3 2003/06/02 20:52:32 ryker Exp $";
 
-#include "Lockable.hxx"
 #include "Mutex.hxx"
 #include "Condition.hxx"
 
@@ -26,7 +25,7 @@ namespace resip
       until the write-lock is aquired and released. This prevents the "writer
       starvation" problem.
 */
-class RWMutex : public Lockable
+class RWMutex
 {
     public:
       RWMutex();

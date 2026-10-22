@@ -2,15 +2,17 @@
 #include "config.h"
 #endif
 
+#include <ctype.h>
 #include <set>
 
 #include "resip/stack/Embedded.hxx"
 #include "resip/stack/Helper.hxx"
-#include "resip/stack/NameAddr.hxx" 
+#include "resip/stack/NameAddr.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "resip/stack/UnknownParameter.hxx"
 #include "resip/stack/Uri.hxx"
+#include "rutil/compat.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
@@ -28,6 +30,7 @@ static bool initAllTables()
    Uri::getPasswordEncodingTable();
    Uri::getLocalNumberTable();
    Uri::getGlobalNumberTable();
+   Uri::getUrnEncodingTable();
    return true;
 }
 
@@ -37,23 +40,29 @@ Uri::Uri(PoolBase* pool)
    : ParserCategory(pool),
      mScheme(Data::Share, Symbols::DefaultSipScheme),
      mPort(0),
-     mHostCanonicalized(false)
+     mHostCanonicalized(false),
+     mIsBetweenAngleQuotes(false),
+     mIsBareAddrSpec(false)
 {
 }
 
 Uri::Uri(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool) :
    ParserCategory(hfv, type, pool),
    mPort(0),
-   mHostCanonicalized(false)
+   mHostCanonicalized(false),
+   mIsBetweenAngleQuotes(false),
+   mIsBareAddrSpec(false)
 {}
 
 
 static const Data parseContext("Uri constructor");
 Uri::Uri(const Data& data)
-   : ParserCategory(), 
+   : ParserCategory(),
      mScheme(Symbols::DefaultSipScheme),
      mPort(0),
-     mHostCanonicalized(false)
+     mHostCanonicalized(false),
+     mIsBetweenAngleQuotes(false),
+     mIsBareAddrSpec(false)
 {
    HeaderFieldValue hfv(data.data(), data.size());
    // must copy because parse creates overlays
@@ -75,8 +84,11 @@ Uri::Uri(const Uri& rhs,
      mPath(rhs.mPath),
      mHostCanonicalized(rhs.mHostCanonicalized),
      mCanonicalHost(rhs.mCanonicalHost),
+     mIsBetweenAngleQuotes(rhs.mIsBetweenAngleQuotes),
+     mIsBareAddrSpec(rhs.mIsBareAddrSpec),
      mEmbeddedHeadersText(rhs.mEmbeddedHeadersText.get() ? new Data(*rhs.mEmbeddedHeadersText) : 0),
-     mEmbeddedHeaders(rhs.mEmbeddedHeaders.get() ? new SipMessage(*rhs.mEmbeddedHeaders) : 0)
+     mEmbeddedHeaders(rhs.mEmbeddedHeaders.get() ? new SipMessage(*rhs.mEmbeddedHeaders) : 0),
+     mUserRaw(rhs.mUserRaw ? new Data(*rhs.mUserRaw) : nullptr)
 {}
 
 
@@ -255,6 +267,12 @@ Uri::isEnumSearchable() const
    checkParsed();
    int digits = 0;
 
+   if(mScheme != Symbols::Tel)
+   {
+      StackLog(<< "not a tel Uri");
+      return false;
+   }
+
    if(mUser.size() < 4)
    {
       StackLog(<< "user part of Uri empty or too short for E.164");
@@ -272,7 +290,7 @@ Uri::isEnumSearchable() const
    // count the digits (skip the leading `+')
    for(const char* i=user().begin() + 1; i!= user().end(); i++)
    {
-      if (isdigit(*i))
+      if (isdigit(static_cast< unsigned char >(*i)))
       {
          digits++;
       }
@@ -306,7 +324,7 @@ Uri::getEnumLookups(const std::vector<Data>& suffixes) const
       // skip the leading +
       for (const char* i=user().end()-1 ; i!= user().begin(); --i)
       {
-         if (isdigit(*i))
+         if (isdigit(static_cast< unsigned char >(*i)))
          {
             prefix += *i;
             prefix += Symbols::DOT;
@@ -348,6 +366,14 @@ Uri::operator=(const Uri& rhs)
       mHostCanonicalized = rhs.mHostCanonicalized;
       mCanonicalHost = rhs.mCanonicalHost;
       mUser = rhs.mUser;
+      if (rhs.mUserRaw)
+      {
+         mUserRaw.reset(new Data(*rhs.mUserRaw));
+      }
+      else
+      {
+         mUserRaw.reset();
+      }
       mUserParameters = rhs.mUserParameters;
       mPort = rhs.mPort;
       mPassword = rhs.mPassword;
@@ -406,7 +432,108 @@ class OrderUnknownParameters
       bool notUsed;
 };
 
-bool 
+bool Uri::compareUriParametersEqual(Parameter* param1, Parameter* param2)
+{
+   if (!param1 || !param2)
+   {
+      return false;
+   }
+
+   switch (param1->getType()) {
+      case ParameterTypes::user:
+      case ParameterTypes::method:
+      case ParameterTypes::maddr:
+      case ParameterTypes::transport:
+      case ParameterTypes::rinstance:
+      case ParameterTypes::comp:
+      case ParameterTypes::extension:
+      case ParameterTypes::wsSrcIp:
+      case ParameterTypes::sigcompId:
+         return isEqualNoCase(dynamic_cast<DataParameter*>(param1)->value(),
+                              dynamic_cast<DataParameter*>(param2)->value());
+
+      case ParameterTypes::ttl:
+      case ParameterTypes::duration:
+      case ParameterTypes::wsSrcPort:
+         return dynamic_cast<UInt32Parameter*>(param1)->value() ==
+                dynamic_cast<UInt32Parameter*>(param2)->value();
+
+      case ParameterTypes::gr:
+         return isEqualNoCase(dynamic_cast<ExistsOrDataParameter*>(param1)->value(),
+                              dynamic_cast<ExistsOrDataParameter*>(param2)->value());
+
+      case ParameterTypes::lr:
+      case ParameterTypes::ob:
+         // Exists parameters are equal.
+         return true;
+
+      default:
+         // Other parameters are not considered.
+         // Parameters may be added accordingly to RFCs.
+         return true;
+   }
+}
+
+bool Uri::compareUriParametersLessThan(Parameter* param1, Parameter* param2)
+{
+   if (!param1 || !param2)
+   {
+      return false;
+   }
+
+   switch (param1->getType()) {
+      case ParameterTypes::user:
+      case ParameterTypes::method:
+      case ParameterTypes::maddr:
+      case ParameterTypes::transport:
+      case ParameterTypes::rinstance:
+      case ParameterTypes::comp:
+      case ParameterTypes::extension:
+      case ParameterTypes::wsSrcIp:
+      case ParameterTypes::sigcompId:
+         return isLessThanNoCase(dynamic_cast<DataParameter*>(param1)->value(),
+                                 dynamic_cast<DataParameter*>(param2)->value());
+
+      case ParameterTypes::ttl:
+      case ParameterTypes::duration:
+      case ParameterTypes::wsSrcPort:
+         return dynamic_cast<UInt32Parameter*>(param1)->value() <
+                dynamic_cast<UInt32Parameter*>(param2)->value();
+
+      case ParameterTypes::gr:
+         return isLessThanNoCase(dynamic_cast<ExistsOrDataParameter*>(param1)->value(),
+                                 dynamic_cast<ExistsOrDataParameter*>(param2)->value());
+
+      case ParameterTypes::lr:
+      case ParameterTypes::ob:
+         // Exists parameters are equal.
+         return false;
+
+      default:
+         // Other parameters are not considered.
+         // Parameters may be added accordingly to RFCs.
+         return false;
+   }
+}
+
+bool Uri::isSignificantUriParameter(const ParameterTypes::Type type) noexcept
+{
+   return type == ParameterTypes::user ||
+          type == ParameterTypes::ttl ||
+          type == ParameterTypes::method ||
+          type == ParameterTypes::maddr ||
+          type == ParameterTypes::transport;
+}
+
+bool Uri::isUserRelevant() const
+{
+   checkParsed();
+   return isEqualNoCase(mScheme, Symbols::Sip) ||
+          isEqualNoCase(mScheme, Symbols::Sips) ||
+          isEqualNoCase(mScheme, Symbols::Tel);
+}
+
+bool
 Uri::operator==(const Uri& other) const
 {
    checkParsed();
@@ -445,8 +572,33 @@ Uri::operator==(const Uri& other) const
       }
    }
    
+   // Case-sensitive user comparison for:
+   // - sip:/sips: per RFC 3261 sec 19.1.4.
+   // - urn: because the NID (case-insensitive per RFC 8141) is already
+   //   normalized to lowercase by Uri::parse() (see comment there), so a
+   //   plain compare here is correct: NID case differences have already
+   //   been folded away, and NSS case is preserved and compared as-is.
+   //   Known deviation: mUser also holds any rq-components/fragment
+   //   (see the comment in Uri::parse()'s urn branch), which RFC 8141
+   //   sec 3.1 explicitly excludes from URN equivalence -- so here
+   //   "urn:example:nss?+rcomponent" != "urn:example:nss", where the RFC
+   //   would consider them equivalent. Acceptable for SIP routing
+   //   purposes (this is the same granularity used to compare the
+   //   sip:/sips: user part above), but not a strict RFC 8141 comparison.
+   // Every other scheme defaults to case-insensitive.
+   bool userEqual;
+   if (isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips) ||
+       isEqualNoCase(mScheme, Symbols::Urn))
+   {
+      userEqual = (mUser == other.mUser);
+   }
+   else
+   {
+      userEqual = isEqualNoCase(mUser, other.mUser);
+   }
+
    if (isEqualNoCase(mScheme, other.mScheme) &&
-       ((isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips)) ? mUser == other.mUser : isEqualNoCase(mUser, other.mUser)) &&
+       userEqual &&
        isEqualNoCase(mUserParameters,other.mUserParameters) &&
        mPassword == other.mPassword &&
        mPort == other.mPort &&
@@ -457,80 +609,12 @@ Uri::operator==(const Uri& other) const
       {
          Parameter* otherParam = other.getParameterByEnum((*it)->getType());
 
-         switch ((*it)->getType())
+         if (Uri::isSignificantUriParameter((*it)->getType()) || otherParam)
          {
-            case ParameterTypes::user:
+            if (!Uri::compareUriParametersEqual(*it, otherParam))
             {
-               if (!(otherParam &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(otherParam)->value())))
-               {
-                  return false;
-               }
+               return false;
             }
-            break;
-            case ParameterTypes::ttl:
-            {
-               if (!(otherParam &&
-                     (dynamic_cast<UInt32Parameter*>(*it)->value() ==
-                      dynamic_cast<UInt32Parameter*>(otherParam)->value())))
-               {
-                  return false;
-               }
-               break;
-            }
-            case ParameterTypes::method:
-            {
-               // this should possibly be case sensitive, but is allowed to be
-               // case insensitive for robustness.  
-               
-               if (otherParam)
-               {
-                  DataParameter* dp1 = dynamic_cast<DataParameter*>(*it);
-                  DataParameter* dp2 = dynamic_cast<DataParameter*>(otherParam);
-                  (void)dp1;
-                  (void)dp2;
-                  // ?bwc? It looks like we're just assuming the dynamic_cast 
-                  // will succeed everywhere else; why are we bothering to 
-                  // assert()?
-                  resip_assert(dp1);
-                  resip_assert(dp2);
-               }
-               if (!(otherParam &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(otherParam)->value())))
-               {
-                  return false;
-               }
-               break;
-            }
-            case ParameterTypes::maddr:
-            {               
-               if (!(otherParam &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(otherParam)->value())))
-               {
-                  return false;
-               }
-            }
-            break;
-            case ParameterTypes::transport:
-            {
-               if (!(otherParam &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(otherParam)->value())))
-               {
-                  return false;
-               }
-            }
-            break;
-            // the parameters that follow don't affect comparison if only present
-            // in one of the URI's
-            case ParameterTypes::lr:
-               break;
-            default:
-               break;
-               //treat as unknown parameter?
          }
       }         
 
@@ -538,67 +622,13 @@ Uri::operator==(const Uri& other) const
       for (ParameterList::const_iterator it = other.mParameters.begin(); it != other.mParameters.end(); ++it)
       {
          Parameter* param = getParameterByEnum((*it)->getType());
-         switch ((*it)->getType())
+
+         if (Uri::isSignificantUriParameter((*it)->getType()) || param)
          {
-            case ParameterTypes::user:
+            if (!Uri::compareUriParametersEqual(*it, param))
             {
-               if (!(param &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(param)->value())))
-               {
-                  return false;
-               }
+               return false;
             }
-            break;
-            case ParameterTypes::ttl:
-            {
-               if (!(param &&
-                     (dynamic_cast<UInt32Parameter*>(*it)->value() == 
-                      dynamic_cast<UInt32Parameter*>(param)->value())))
-               {
-                  return false;
-               }
-               break;
-            }
-            case ParameterTypes::method:
-            {
-               // this should possilby be case sensitive, but is allowed to be
-               // case insensitive for robustness.  
-               if (!(param &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(param)->value())))
-               {
-                  return false;
-               }
-            }
-            break;
-            case ParameterTypes::maddr:
-            {               
-               if (!(param &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(param)->value())))
-               {
-                  return false;
-               }
-            }
-            break;
-            case ParameterTypes::transport:
-            {
-               if (!(param &&
-                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                   dynamic_cast<DataParameter*>(param)->value())))
-               {
-                  return false;
-               }
-            }
-            break;
-            // the parameters that follow don't affect comparison if only present
-            // in one of the URI's
-            case ParameterTypes::lr:
-               break;
-            default:
-               break;
-               //treat as unknown parameter?
          }
       }
    }
@@ -738,7 +768,109 @@ Uri::operator<(const Uri& other) const
       return false;
    }
 
-   return mPort < other.mPort;
+   if (mPort < other.mPort)
+   {
+      return true;
+   }
+
+   if (mPort > other.mPort)
+   {
+      return false;
+   }
+
+   for (ParameterList::const_iterator it = mParameters.begin(); it != mParameters.end(); ++it)
+      {
+         Parameter* otherParam = other.getParameterByEnum((*it)->getType());
+
+         if (otherParam)
+         {
+            if (Uri::compareUriParametersLessThan(*it, otherParam)) {
+               return true;
+            }
+
+            if (Uri::compareUriParametersLessThan(otherParam, *it)) {
+               return false;
+            }
+         }
+         else if (Uri::isSignificantUriParameter((*it)->getType()))
+         {
+            return true;  // Significant URI params should not be ignored.
+         }
+      }
+
+   // Sort unknown parameters from both URIs by their name using comparator class.
+   OrderUnknownParameters orderUnknown;
+
+#if defined(__SUNPRO_CC) || defined(WIN32) || defined(__sun__)
+   // The Solaris Forte STL implementation does not support the
+   // notion of a list.sort() function taking a BinaryPredicate.
+   // The hacky workaround is to load the Parameter pointers into
+   // an STL set which does support an ordering function.
+
+   typedef std::set<Parameter*, OrderUnknownParameters> ParameterSet;
+   ParameterSet thisUriParamList, otherUriParamList;
+
+   for (ParameterList::const_iterator i = mUnknownParameters.begin();
+        i != mUnknownParameters.end(); ++i)
+   {
+      thisUriParamList.insert(*i);
+   }
+   for (ParameterList::const_iterator i = other.mUnknownParameters.begin();
+        i != other.mUnknownParameters.end(); ++i)
+   {
+      otherUriParamList.insert(*i);
+   }
+#else
+   ParameterList thisUriParamList = mUnknownParameters;
+   ParameterList otherUriParamList = other.mUnknownParameters;
+
+   sort(thisUriParamList.begin(), thisUriParamList.end(), orderUnknown);
+   sort(otherUriParamList.begin(), otherUriParamList.end(), orderUnknown);
+#endif
+
+   auto thisUriParam = thisUriParamList.begin();
+   auto otherUriParam = otherUriParamList.begin();
+
+   // Iterate through unknown parameters of both URIs.
+   // Advance iterators to compare values of parameters with matching names.
+   while(thisUriParam != thisUriParamList.end() && otherUriParam != otherUriParamList.end())
+   {
+      if (orderUnknown(*thisUriParam, *otherUriParam))
+      {
+         // this < other param name.
+         ++thisUriParam;
+      }
+      else if (orderUnknown(*otherUriParam, *thisUriParam))
+      {
+         // other < this param name.
+         ++otherUriParam;
+      }
+      else
+      {
+         // this == other param name.
+         // Unknown parameter names are the same. Compare their values.
+         const Data& thisParamValue = dynamic_cast<UnknownParameter*>(*thisUriParam)->value();
+         const Data& otherParamValue = dynamic_cast<UnknownParameter*>(*otherUriParam)->value();
+
+         if (isLessThanNoCase(thisParamValue,
+                              otherParamValue))
+         {
+            return true;
+         }
+
+         if (isLessThanNoCase(otherParamValue,
+                              thisParamValue))
+         {
+            return false;
+         }
+
+         // Move iterators to the next position.
+         ++thisUriParam;
+         ++otherUriParam;
+      }
+   }
+
+   return false;
 }
 
 bool
@@ -782,18 +914,25 @@ Uri::aorEqual(const resip::Uri& rhs) const
 void 
 Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
 {
+   // The AOR is an identity/lookup key, so the user part is intentionally
+   // emitted in canonical (table-escaped) form and is NOT preserved verbatim
+   // the way encodeParsed()/getAorAsUri() preserve the sender's mUserRaw.
+   // Canonicalizing here keeps the key stable regardless of how a sender
+   // escaped it (e.g. "%23" vs a literal '#'), which matters because
+   // getAorNoPort() feeds auth key comparisons (DigestAuthenticator, etc.)
+   // and the registration DB is keyed on this form. Do not change this to
+   // preserve mUserRaw without auditing those key/identity paths.
    checkParsed();
    // canonicalize host
 
    addPort = addPort && mPort!=0;
 
-   bool hostIsIpV6Address = false;
+   bool hostIsIpV6Address = DnsUtil::isIpV6Address(mHost);
    if(!mHostCanonicalized)
    {
-      if (DnsUtil::isIpV6Address(mHost))
+      if (hostIsIpV6Address)
       {
          mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
-         hostIsIpV6Address = true;
       }
       else
       {
@@ -820,7 +959,14 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
 #ifdef HANDLE_CHARACTER_ESCAPING
       {
          oDataStream str(aor);
-         mUser.escapeToStream(str, getUserEncodingTable()); 
+         if (isEqualNoCase(mScheme, Symbols::Urn))
+         {
+            mUser.escapeToStream(str, getUrnEncodingTable());
+         }
+         else
+         {
+            mUser.escapeToStream(str, getUserEncodingTable());
+         }
       }
 #else
       aor += mUser;
@@ -934,6 +1080,7 @@ Uri::setUserAsTelephoneSubscriber(const Token& telephoneSubscriber)
    mUser.clear();
    oDataStream str(mUser);
    str << telephoneSubscriber;
+   mUserRaw.reset();
 }
 
 Data
@@ -958,8 +1105,14 @@ Uri::getAorAsUri(TransportType transportTypeToRemoveDefaultPort) const
    //.dcm. -- tel conversion?
    checkParsed();
    Uri ret;
-   ret.scheme() = mScheme;   
+   ret.scheme() = mScheme;
    ret.user() = mUser;
+   // Carry the as-received user bytes so a derived URI that reaches the wire
+   // (e.g. a Route built from the AOR) preserves the sender's escaping too.
+   if (mUserRaw)
+   {
+      ret.mUserRaw.reset(new Data(*mUserRaw));
+   }
    ret.host() = mHost;
 
    // Remove any default ports (if required)
@@ -987,11 +1140,46 @@ Uri::getAorAsUri(TransportType transportTypeToRemoveDefaultPort) const
    return ret;
 }
 
+#ifdef HANDLE_CHARACTER_ESCAPING
+// Decodes [start, pb.position()) into `user`, capturing the as-received
+// bytes into `userRaw` (only if a '%' escape is present) so encodeParsed()
+// can re-emit them verbatim instead of losing the sender's original
+// escaping. Shared by the sip:/sips: and urn: user-parsing below -- both
+// need the exact same "scan for '%', then dataUnescaped" dance.
+static void
+decodeUserPreservingEscapes(ParseBuffer& pb, const char* start,
+                             Data& user, std::unique_ptr<Data>& userRaw)
+{
+   const char* userEnd = pb.position();
+   bool userHasEscape = false;
+   for (const char* p = start; p < userEnd; ++p)
+   {
+      if (*p == Symbols::PERCENT[0])
+      {
+         userHasEscape = true;
+         break;
+      }
+   }
+   pb.dataUnescaped(user, start);
+   // Capture the as-received bytes only after the decode succeeds -- it can
+   // throw on a malformed escape, and userRaw must never hold bytes that
+   // fail to decode, so the encode-path re-decode cannot throw. userRaw
+   // then always decodes back to the user just produced.
+   if (userHasEscape)
+   {
+      userRaw.reset(new Data(start, (Data::size_type)(userEnd - start)));
+   }
+}
+#endif
+
 void
 Uri::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
    const char* start = pb.position();
+
+   // Cleared up front so a path that sets no user part leaves no stale raw.
+   mUserRaw.reset();
 
    // Relative URLs (typically HTTP) start with a slash.  These
    // are seen when parsing the WebSocket handshake.
@@ -1014,6 +1202,120 @@ Uri::parse(ParseBuffer& pb)
    pb.data(mScheme, start);
    pb.skipChar(Symbols::COLON[0]);
    mScheme.schemeLowercase();
+
+   // NID:NSS plus any rq-components ("?+"/"?=") and fragment ("#") is
+   // captured as one opaque blob in mUser; no mUserParameters equivalent
+   // (RFC 8141 has none).
+   if (mScheme==Symbols::Urn)
+   {
+      const char* anchor = pb.position();
+      if (mIsBetweenAngleQuotes)
+      {
+         // Inside "<...>" the only terminator is '>' (SIP requires angle
+         // brackets exactly to avoid ';'/'?'/',' clashing with NameAddr
+         // params -- RFC 3261 sec 20 -- so within brackets those chars are
+         // legal NSS content and must not be treated as delimiters).
+         static std::bitset<256> delimiter=Data::toBitset("\r\n\t >");
+         pb.skipToOneOf(delimiter);
+      }
+      else if (mIsBareAddrSpec)
+      {
+         // Bare (unbracketed) URI inside a header value (e.g. To/From
+         // without "<...>"), flagged by NameAddr::parse(): stop at
+         // ';'/'?'/',' too, since NameAddr parameters (";tag=...") may
+         // follow directly and RFC 8141 gives no way to tell them apart
+         // from NSS content here. Per RFC 3261 sec 20, a producer whose
+         // NSS needs these characters must use "<...>" instead, where the
+         // permissive rule above still applies.
+         static std::bitset<256> delimiter=Data::toBitset("\r\n\t ;?,");
+         pb.skipToOneOf(delimiter);
+      }
+      else
+      {
+         // Every other context: a Request-URI (RequestLine, never
+         // bracketed but with nothing that can follow except whitespace
+         // then SIP-Version), a standalone Uri built directly from a
+         // string, or any other direct caller. ';'/'?'/',' here are legal
+         // NSS content, same as the bracketed case above.
+         pb.skipToOneOf(ParseBuffer::Whitespace);
+      }
+#ifdef HANDLE_CHARACTER_ESCAPING
+      // Decode %XX so user() returns the logical value, as for sip:/sips:.
+      // But '#'/'?' are structural when unescaped (fragment/rq-components),
+      // so a received "%23"/"%3F" (escaped data) and a literal "#"/"?"
+      // (real separator) must not collapse to the same mUser and then
+      // re-encode with the wrong form -- decodeUserPreservingEscapes()
+      // keeps the as-received bytes in mUserRaw for that case.
+      decodeUserPreservingEscapes(pb, anchor, mUser, mUserRaw);
+#else
+      pb.data(mUser, anchor);
+#endif
+      // RFC 8141 sec 2: NID = alphanum *(alphanum/"-") alphanum, 2-32
+      // chars, and the NSS must be non-empty; sec 5.1: the NID must not be
+      // "urn" itself (nonsensical/reserved). Reject anything else here so
+      // a malformed urn: fails to parse instead of silently reaching the
+      // application (e.g. DUM) looking like a well-formed one.
+      const Data::size_type sep = mUser.find(Symbols::COLON);
+      if (sep == Data::npos)
+      {
+         pb.fail(__FILE__, __LINE__, "urn: missing NID:NSS separator.");
+      }
+      if (sep < 2 || sep > 32)
+      {
+         pb.fail(__FILE__, __LINE__, "urn: NID must be 2-32 characters.");
+      }
+      for (Data::size_type i = 0; i < sep; ++i)
+      {
+         const unsigned char c = (unsigned char)mUser[i];
+         // Explicit ASCII range, not isalnum(): RFC 8141's NID ABNF is
+         // ASCII-only, but isalnum() follows the process-wide C locale,
+         // so a non-C locale (common in embedded/softswitch apps that
+         // call setlocale() for logging/i18n) would accept 8-bit
+         // characters here that RFC 8141 does not allow.
+         const bool isAsciiAlnum = (c >= '0' && c <= '9') ||
+                                   (c >= 'A' && c <= 'Z') ||
+                                   (c >= 'a' && c <= 'z');
+         if (!isAsciiAlnum && !(c == '-' && i > 0 && i < sep - 1))
+         {
+            pb.fail(__FILE__, __LINE__, "urn: NID has an invalid character.");
+         }
+      }
+      if (sep + 1 >= mUser.size())
+      {
+         pb.fail(__FILE__, __LINE__, "urn: NSS must not be empty.");
+      }
+      if (isEqualNoCase(mUser.substr(0, sep), Symbols::Urn))
+      {
+         pb.fail(__FILE__, __LINE__, "urn: NID must not be \"urn\".");
+      }
+
+      // RFC 8141 sec 2.2: the NID is case-insensitive. Normalize it to
+      // lowercase here, the same way schemeLowercase() already normalizes
+      // the scheme, so operator==, operator<, the hash function and
+      // getAorInternal() all agree on urn: equality without needing a
+      // urn-specific comparator.
+      // NB: this only runs at parse() time, so a hand-built Uri (user()
+      // set directly) is not validated/normalized -- same accepted
+      // limitation as the scheme case-sensitivity noted on
+      // getAorInternal()/encodeParsed().
+      {
+         Data nid(mUser.substr(0, sep));
+         nid.lowercase();
+         mUser = nid + mUser.substr(sep);
+      }
+      // mUserRaw is deliberately left untouched (still the exact bytes
+      // received): the validation above runs on the decoded mUser, so a
+      // NID could in principle hide a gratuitous, unnecessary %-escape
+      // (e.g. "urn:EX%41MPLE:nss") that isn't reflected at the same byte
+      // offset in mUserRaw -- rewriting mUserRaw's NID prefix in place,
+      // like above, would silently corrupt it in that case. Leaving it
+      // untouched is simpler and always correct: encodeParsed()'s
+      // decodedUserRaw==mUser check already re-decodes mUserRaw and falls
+      // back to escaping mUser fresh whenever they no longer match (e.g.
+      // because of this normalization step here), which is exactly the
+      // desired outcome whenever the NID's original casing has changed.
+      return;
+   }
 
    if (mScheme==Symbols::Tel)
    {
@@ -1072,7 +1374,10 @@ Uri::parse(ParseBuffer& pb)
       if(atSign)
       {
 #ifdef HANDLE_CHARACTER_ESCAPING
-         pb.dataUnescaped(mUser, start);
+         // The range dataUnescaped decodes here is exactly [start, position),
+         // i.e. up to ':' before a password, else '@' -- decodeUserPreservingEscapes()
+         // scans it for an escape and keeps the as-received bytes in mUserRaw.
+         decodeUserPreservingEscapes(pb, start, mUser, mUserRaw);
 #else
          pb.data(mUser, start);
 #endif
@@ -1083,6 +1388,11 @@ Uri::parse(ParseBuffer& pb)
    else
    {
       pb.reset(start);
+   }
+
+   if (pb.eof())
+   {
+      return;
    }
 
    mHostCanonicalized=false;
@@ -1126,7 +1436,23 @@ Uri::parse(ParseBuffer& pb)
    if (!pb.eof() && *pb.position() == Symbols::QUESTION[0])
    {
       const char* anchor = pb.position();
-      pb.skipToOneOf(">;", ParseBuffer::Whitespace);
+
+      if (mIsBetweenAngleQuotes)
+      {
+         // Embedded headers will either end at the angle bracket (when Uri is in a NameAddr that uses angle 
+         // brackets) or at a semi-colon (when Uri is in a NameAddr that doesn't use angle brackets and has 
+         // NameAddr parameters following the embedded headers), or in Whitespace.
+         // We used to just look for either of the 3 terminators, however to be more tolerant of endpoints 
+         // that do not properly escape ;'s in the embedded headers, we relax the rules, only when the uri
+         // falls between angle quotes/brackets - in this case we will allow non-escaped semi-colons by only
+         // looking for > and whitespace as a terminator.
+         pb.skipToOneOf(">", ParseBuffer::Whitespace);
+      }
+      else
+      {
+         pb.skipToOneOf(">;", ParseBuffer::Whitespace);
+      }
+
       if(!mEmbeddedHeadersText.get()) mEmbeddedHeadersText.reset(new Data);
       pb.data(*mEmbeddedHeadersText, anchor);
    }
@@ -1160,6 +1486,11 @@ void Uri::setUriPasswordEncoding(unsigned char c, bool encode)
    getPasswordEncodingTable()[c] = encode;
 }
 
+void Uri::setUriUrnEncoding(unsigned char c, bool encode)
+{
+   getUrnEncodingTable()[c] = encode;
+}
+
 // should not encode user parameters unless its a tel?
 EncodeStream& 
 Uri::encodeParsed(EncodeStream& str) const
@@ -1173,7 +1504,38 @@ Uri::encodeParsed(EncodeStream& str) const
    if (!mUser.empty())
    {
 #ifdef HANDLE_CHARACTER_ESCAPING
-      mUser.escapeToStream(str, getUserEncodingTable()); 
+      // urn: uses its own table (doesn't escape ':', '@', ';', '?', '#',
+      // sub-delims -- RFC 8141); every other scheme uses the sip:/sips:
+      // user table.
+      const EncodingTable& table = isEqualNoCase(mScheme, Symbols::Urn)
+         ? getUrnEncodingTable() : getUserEncodingTable();
+      if (mUserRaw)
+      {
+         // Emit the as-received bytes verbatim while they still decode (via the
+         // same dataUnescaped as parse) to the current mUser, so the sender's
+         // escaping (e.g. %23) survives regardless of the encoding table; a
+         // post-parse edit breaks the match and falls back to table escaping.
+         // Cost: re-decodes and compares on the encode path for every
+         // %-containing user part (inline Data buffer avoids a heap alloc for
+         // short values; unescaped users skip this branch).
+         Data decodedUserRaw;
+         ParseBuffer pb(mUserRaw->data(), mUserRaw->size());
+         const char* anchor = pb.position();
+         pb.skipToEnd();
+         pb.dataUnescaped(decodedUserRaw, anchor);
+         if (decodedUserRaw == mUser)
+         {
+            str << *mUserRaw;
+         }
+         else
+         {
+            mUser.escapeToStream(str, table);
+         }
+      }
+      else
+      {
+         mUser.escapeToStream(str, table);
+      }
 #else
       str << mUser;
 #endif
@@ -1285,13 +1647,13 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
 
       if (isEqualNoCase(bodyData, headerName))
       {
-         mEmbeddedHeaders->setBody(decodedContents, len); 
+         mEmbeddedHeaders->setBody(decodedContents, len);
       }
       else
       {
          DebugLog(<< "Uri::parseEmbeddedHeaders(" << headerName << ", " << Data(decodedContents, len) << ")");
-         mEmbeddedHeaders->addHeader(Headers::getType(headerName.data(), (int)headerName.size()),
-                                     headerName.data(), (int)headerName.size(),
+         mEmbeddedHeaders->addHeader(Headers::getType(headerName.data(), headerName.size()),
+                                     headerName.data(), static_cast<uint32_t>(headerName.size()),
                                      decodedContents, len);
       }
    }

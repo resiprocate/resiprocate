@@ -22,13 +22,13 @@ class NetNs
    
    public:
 
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
       public:
          Exception(const Data& message, const Data& fileName, int lineNumber) :
-             BaseException(message, fileName, lineNumber){};
+             BaseException(message, fileName, lineNumber){}
 
-         virtual const char* name() const {return("NetNs::Exception");};
+         const char* name() const noexcept override { return("NetNs::Exception"); }
       };
 
       virtual ~NetNs();

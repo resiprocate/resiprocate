@@ -9,20 +9,20 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 MediaEvent::MediaEvent(ConversationManager& conversationManager, 
-                       ConversationHandle conversationHandle, 
-                       int connectionId, 
-                       MediaEventType eventType) : 
+                       ParticipantHandle partHandle, 
+                       MediaEventType eventType,
+                       MediaDirection direction) :
    mConversationManager(conversationManager),
-   mConversationHandle(conversationHandle),
-   mConnectionId(connectionId),
-   mEventType(eventType)
+   mParticipantHandle(partHandle),
+   mEventType(eventType),
+   mDirection(direction)
 {
 }
 
 void 
 MediaEvent::executeCommand()
 {
-   mConversationManager.notifyMediaEvent(mConversationHandle, mConnectionId, mEventType);
+   mConversationManager.notifyMediaEvent(mParticipantHandle, mEventType, mDirection);
 }
 
 resip::Message* 
@@ -35,7 +35,7 @@ MediaEvent::clone() const
 EncodeStream& 
 MediaEvent::encode(EncodeStream& strm) const
 {
-   strm << " MediaEvent: conversationHandle=" << mConversationHandle << ", connectionId=" << mConnectionId << ", event=" << mEventType;
+   strm << " MediaEvent: participantHandle=" << mParticipantHandle << ", event=" << mEventType << ", direction=" << (mDirection == DIRECTION_IN ? "IN" : "OUT");
    return strm;
 }
 
@@ -48,6 +48,8 @@ MediaEvent::encodeBrief(EncodeStream& strm) const
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

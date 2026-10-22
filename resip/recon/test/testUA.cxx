@@ -38,15 +38,17 @@ int _kbhit() {
 }
 #endif
 
+#include "../SipXMediaStackAdapter.hxx"
 #include "../UserAgent.hxx"
 #include "../ReconSubsystem.hxx"
 
 #include <os/OsSysLog.h>
 
 // Test Prompts for cache testing
-#include "playback_prompt.h"
-#include "record_prompt.h"
+#include "media/samples/cache/playback_prompt.h"
+#include "media/samples/cache/record_prompt.h"
 
+#include <resip/stack/PlainContents.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
@@ -54,16 +56,30 @@ int _kbhit() {
 #include <rutil/Time.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include <resip/recon/LocalParticipant.hxx>
+#include <resip/recon/RemoteIMPagerParticipant.hxx>
+#include <resip/recon/RemoteIMSessionParticipant.hxx>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
+//#define TESTUA_LOGFULLMESSAGES
+#ifdef TESTUA_LOGFULLMESSAGES
+  #define LOG_PREFIX << "[@@@@@@@@@@@]"    // Make it easier to see testUA output in console
+  #define OUTPUTMSG msg
+#else
+  #define LOG_PREFIX
+  #define OUTPUTMSG msg.brief()
+#endif
+
+
 static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then testUA will automatically answer incoming calls by adding to lowest numbered conversation
-SharedPtr<ConversationProfile> conversationProfile;
+std::shared_ptr<ConversationProfile> g_conversationProfile;
 
 static void
 signalHandler(int signo)
@@ -72,25 +88,56 @@ signalHandler(int signo)
    finished = true;
 }
 
+class TestUASipMessageLoggingHandler : public Transport::SipMessageLoggingHandler
+{
+public:
+   virtual ~TestUASipMessageLoggingHandler() {}
+   virtual void outboundMessage(const Tuple& source, const Tuple& destination, const SipMessage& msg)
+   {
+      InfoLog(<< "\r\n*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*\r\n"
+         << "OUTBOUND: Src=" << source << ", Dst=" << destination << "\r\n\r\n"
+         << msg
+         << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
+   }
+   virtual void outboundRetransmit(const Tuple& source, const Tuple& destination, const SendData& data)
+   {
+      InfoLog(<< "\r\n*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*\r\n"
+         << "OUTBOUND(retransmit): Src=" << source << ", Dst=" << destination << "\r\n\r\n"
+         << data.data
+         << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
+   }
+   virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage& msg)
+   {
+      InfoLog(<< "\r\n*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*\r\n"
+         << "INBOUND: Src=" << source << ", Dst=" << destination << "\r\n\r\n"
+         << msg
+         << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
+   }
+};
+
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
+   MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
       UserAgent(conversationManager, profile) {}
+   
+   resip::SipStack& getSipStack() { return UserAgent::getSipStack(); };
 
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+   void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override
    {
-      InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+      InfoLog(LOG_PREFIX << "onApplicationTimeout: id=" << id
+              << " dur=" << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
+              << "ms seq=" << seq);
    }
 
-   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode)
+   void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode) override
    {
-      InfoLog(<< "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
+      InfoLog(LOG_PREFIX << "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
    }
 
-   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
+   void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData) override
    {
-      InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
+      InfoLog(LOG_PREFIX << "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
 };
 
@@ -98,25 +145,28 @@ class MyConversationManager : public ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled)
-      : ConversationManager(localAudioEnabled),
+   MyConversationManager(bool localAudioEnabled, bool multipleMediaInterfaces, bool defaultAutoHoldModeToDisabled)
+      : ConversationManager(nullptr),
         mLocalAudioEnabled(localAudioEnabled)
-   { 
-   };
+   {
+      setMediaStackAdapter(make_shared<SipXMediaStackAdapter>(*this, localAudioEnabled, multipleMediaInterfaces ? SipXMediaStackAdapter::MediaInterfaceMode::sipXConversationMediaInterfaceMode : SipXMediaStackAdapter::MediaInterfaceMode::sipXGlobalMediaInterfaceMode));
+      mDefaultAutoHoldMode = defaultAutoHoldModeToDisabled ? ConversationManager::AutoHoldDisabled : ConversationManager::AutoHoldEnabled;
+   }
 
    virtual void startup()
    {      
       if(mLocalAudioEnabled)
       {
          // Create initial local participant and conversation  
-         addParticipant(createConversation(), createLocalParticipant());
+         ConversationHandle initialConversation = createConversation(mDefaultAutoHoldMode);
+         addParticipant(initialConversation, createLocalParticipant());
          resip::Uri uri("tone:dialtone;duration=1000");
-         createMediaResourceParticipant(mConversationHandles.front(), uri);
+         createMediaResourceParticipant(initialConversation, uri);
       }
       else
       {
          // If no local audio - just create a starter conversation
-         createConversation();
+         createConversation(mDefaultAutoHoldMode);
       }
    
       // Load 2 items into cache for testing
@@ -132,80 +182,104 @@ public:
       }      
    }
 
-   
-   virtual ConversationHandle createConversation()
+   void onConversationDestroyed(ConversationHandle convHandle) override
    {
-      ConversationHandle convHandle = ConversationManager::createConversation();
-      mConversationHandles.push_back(convHandle);
-      return convHandle;
+      InfoLog(LOG_PREFIX << "onConversationDestroyed: handle=" << convHandle);
    }
 
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic)
+   void onParticipantDestroyed(ParticipantHandle partHandle) override
    {
-      ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode);
-      mRemoteParticipantHandles.push_back(partHandle);
-      return partHandle;
+      // Should never get called if version of onParticipantDestroyed below is implemented
+      assert(false);
    }
 
-   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl)
+   void onParticipantDestroyed(ParticipantHandle partHandle, ParticipantType partType) override
    {
-      ParticipantHandle partHandle = ConversationManager::createMediaResourceParticipant(convHandle, mediaUrl);
-      mMediaParticipantHandles.push_back(partHandle);
-      return partHandle;
+      InfoLog(LOG_PREFIX << "onParticipantDestroyed: handle=" << partHandle << ", type=" << ConversationManager::participantTypeToString(partType));
    }
 
-   virtual ParticipantHandle createLocalParticipant()
+   void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) override
    {
-      ParticipantHandle partHandle = ConversationManager::createLocalParticipant();
-      mLocalParticipantHandles.push_back(partHandle);
-      return partHandle;
+      InfoLog(LOG_PREFIX << "onDtmfEvent: handle=" << partHandle << " tone=" << dtmf << " dur=" << duration << " up=" << up);
    }
 
-   virtual void onConversationDestroyed(ConversationHandle convHandle)
+   void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
    {
-      InfoLog(<< "onConversationDestroyed: handle=" << convHandle);
-      mConversationHandles.remove(convHandle);
-   }
-
-   virtual void onParticipantDestroyed(ParticipantHandle partHandle)
-   {
-      InfoLog(<< "onParticipantDestroyed: handle=" << partHandle);
-      // Remove from whatever list it is in
-      mRemoteParticipantHandles.remove(partHandle);
-      mLocalParticipantHandles.remove(partHandle);
-      mMediaParticipantHandles.remove(partHandle);
-   }
-
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up)
-   {
-      InfoLog(<< "onDtmfEvent: handle=" << partHandle << " tone=" << dtmf << " dur=" << duration << " up=" << up);
-   }
-
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
-   {
-      InfoLog(<< "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << msg.brief());
-      mRemoteParticipantHandles.push_back(partHandle);
+      InfoLog(LOG_PREFIX << "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << OUTPUTMSG);
       if(autoAnswerEnabled)
       {
-         // If there are no conversations, then create one
-         if(mConversationHandles.empty())
+         // If there are no conversations, then create one, otherwise use first in set
+         ConversationHandle convHandle = 0;
+         const set<ConversationHandle> conversationHandles = getConversationHandles();
+         if (getConversationHandles().empty())
          {
-            ConversationHandle convHandle = createConversation();
-            // ensure a local participant is in the conversation - create one if one doesn't exist
-            if(mLocalParticipantHandles.empty())
-            {
-               createLocalParticipant();
-            }
-            addParticipant(convHandle, mLocalParticipantHandles.front());
+            convHandle = createConversation(mDefaultAutoHoldMode);
          }
-         addParticipant(mConversationHandles.front(), partHandle);
+         else
+         {
+            convHandle = *conversationHandles.begin();
+         }
+
+         if (mLocalAudioEnabled)
+         {
+            ParticipantHandle localPartHandle = 0;
+            const set<ParticipantHandle> participantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Local);
+            // If no local participant then create one, otherwise use first in set
+            if (participantHandles.empty())
+            {
+               localPartHandle = createLocalParticipant();
+            }
+            else
+            {
+               localPartHandle = *participantHandles.begin();
+            } 
+            // Add local participant to conversation
+            addParticipant(convHandle, localPartHandle);
+         }
+
+         // Add new incoming participant to conversation, and answer call
+         addParticipant(convHandle, partHandle);
          answerParticipant(partHandle);
       }
    }
 
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
+   void onIncomingIMPagerParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, ConversationProfile& conversationProfile) override
    {
-      InfoLog(<< "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onIncomingIMPagerParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
+      if (autoAnswerEnabled)
+      {
+         answerParticipant(partHandle);  // sends a 200 OK response
+      }
+   }
+
+   void onIncomingIMSessionParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
+   {
+      InfoLog(LOG_PREFIX << "onIncomingIMSessionParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << OUTPUTMSG);
+      if (autoAnswerEnabled)
+      {
+         answerParticipant(partHandle);  // sends a 200 OK response
+      }
+   }
+
+   bool onReceiveIMFromParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg) override
+   {
+      InfoLog(LOG_PREFIX << "onReceiveIMFromParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
+      PlainContents* plainContents = dynamic_cast<PlainContents*>(msg.getContents());
+      if (plainContents)
+      {
+         InfoLog(LOG_PREFIX << "onReceiveIMFromParticipant: handle=" << partHandle << " IM Text=" << plainContents->text());
+      }
+      return true;
+   }
+   
+   void onParticipantSendIMFailure(ParticipantHandle partHandle, const SipMessage& msg, std::unique_ptr<Contents> contents) override
+   {
+      InfoLog(LOG_PREFIX << "onParticipantSendIMFailure: handle=" << partHandle << " msg=" << OUTPUTMSG);
+   }
+
+   void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile) override
+   {
+      InfoLog(LOG_PREFIX << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
       /*
       if(mConvHandles.empty())
       {
@@ -213,97 +287,125 @@ public:
          addParticipant(convHandle, partHandle);
       }*/
    }
-    
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
+
+   void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode) override
    {
-      InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
-   }
-    
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
-   {
-      InfoLog(<< "onParticipantProceeding: handle=" << partHandle << " msg=" << msg.brief());
+      // Should never get called if version of onParticipantTerminated below is implemented
+      assert(false);
    }
 
-   virtual void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
-                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle)
+   void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode, const resip::Data& reason) override
    {
-      InfoLog(<< "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
+      InfoLog(LOG_PREFIX << "onParticipantTerminated: handle=" << partHandle << ", statusCode=" << statusCode << ", reason=" << reason);
+   }
+    
+   void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg) override
+   {
+      InfoLog(LOG_PREFIX << "onParticipantProceeding: handle=" << partHandle << " msg=" << OUTPUTMSG);
+   }
+
+   void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
+                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle) override
+   {
+      InfoLog(LOG_PREFIX << "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
               << " origConvHandle=" << origConvHandle << " origPartHandle=" << origPartHandle);
-      mConversationHandles.push_back(relatedConvHandle);
-      mRemoteParticipantHandles.push_back(relatedPartHandle);
    }
 
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg)
+   void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg) override
    {
-      InfoLog(<< "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onParticipantAlerting: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
     
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
+   void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg) override
    {
-      InfoLog(<< "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onParticipantConnected: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
 
-   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle)
+   void onParticipantRedirectSuccess(ParticipantHandle partHandle) override
    {
-      InfoLog(<< "onParticipantRedirectSuccess: handle=" << partHandle);
+      InfoLog(LOG_PREFIX << "onParticipantRedirectSuccess: handle=" << partHandle);
    }
 
-   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
+   void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode) override
    {
-      InfoLog(<< "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
+      InfoLog(LOG_PREFIX << "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
+   }
+
+   void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override
+   {
+      InfoLog(LOG_PREFIX << "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+   }
+
+   void onApplicationTimer(unsigned int timerId, unsigned int sequenceId, unsigned int timerData2) override
+   {
+      InfoLog(LOG_PREFIX << "onApplicationTimer: timerId=" << timerId << " sequenceId=" << sequenceId);
    }
 
    void displayInfo()
    {
       Data output;
 
-      if(!mConversationHandles.empty())
+      const set<ConversationHandle> conversations = getConversationHandles();
+      if(!conversations.empty())
       {
          output = "Active conversation handles: ";
-         std::list<ConversationHandle>::iterator it;
-         for(it = mConversationHandles.begin(); it != mConversationHandles.end(); it++)
+         set<ConversationHandle>::const_iterator it;
+         for(it = conversations.begin(); it != conversations.end(); it++)
          {
             output += Data(*it) + " ";
          }
-         InfoLog(<< output);
+         InfoLog(LOG_PREFIX << output);
       }
-      if(!mLocalParticipantHandles.empty())
+      const set<ParticipantHandle> localParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Local);
+      if(!localParticipantHandles.empty())
       {
          output = "Local Participant handles: ";
-         std::list<ParticipantHandle>::iterator it;
-         for(it = mLocalParticipantHandles.begin(); it != mLocalParticipantHandles.end(); it++)
+         std::set<ParticipantHandle>::iterator it;
+         for(it = localParticipantHandles.begin(); it != localParticipantHandles.end(); it++)
          {
             output += Data(*it) + " ";
          }
-         InfoLog(<< output);
+         InfoLog(LOG_PREFIX << output);
       }
-      if(!mRemoteParticipantHandles.empty())
+      const set<ParticipantHandle> remoteParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Remote);
+      if(!remoteParticipantHandles.empty())
       {
          output = "Remote Participant handles: ";
-         std::list<ParticipantHandle>::iterator it;
-         for(it = mRemoteParticipantHandles.begin(); it != mRemoteParticipantHandles.end(); it++)
+         std::set<ParticipantHandle>::iterator it;
+         for(it = remoteParticipantHandles.begin(); it != remoteParticipantHandles.end(); it++)
          {
             output += Data(*it) + " ";
          }
-         InfoLog(<< output);
+         InfoLog(LOG_PREFIX << output);
       }
-      if(!mMediaParticipantHandles.empty())
+      set<ParticipantHandle> remoteIMParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_RemoteIMPager);
+      const set<ParticipantHandle> remoteIMSessionParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_RemoteIMSession);
+      remoteIMParticipantHandles.insert(remoteIMSessionParticipantHandles.begin(), remoteIMSessionParticipantHandles.end());  // merge the two lists
+      if (!remoteIMParticipantHandles.empty())
+      {
+         output = "Remote IM Participant handles: ";
+         std::set<ParticipantHandle>::iterator it;
+         for (it = remoteIMParticipantHandles.begin(); it != remoteIMParticipantHandles.end(); it++)
+         {
+            output += Data(*it) + " ";
+         }
+         InfoLog(LOG_PREFIX << output);
+      }
+      const set<ParticipantHandle> mediaParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_MediaResource);
+      if(!mediaParticipantHandles.empty())
       {
          output = "Media Participant handles: ";
-         std::list<ParticipantHandle>::iterator it;
-         for(it = mMediaParticipantHandles.begin(); it != mMediaParticipantHandles.end(); it++)
+         std::set<ParticipantHandle>::iterator it;
+         for(it = mediaParticipantHandles.begin(); it != mediaParticipantHandles.end(); it++)
          {
             output += Data(*it) + " ";
          }
-         InfoLog(<< output);
+         InfoLog(LOG_PREFIX << output);
       }
    }
 
-   std::list<ConversationHandle> mConversationHandles;
-   std::list<ParticipantHandle> mLocalParticipantHandles;
-   std::list<ParticipantHandle> mRemoteParticipantHandles;
-   std::list<ParticipantHandle> mMediaParticipantHandles;
    bool mLocalAudioEnabled;
+   ConversationManager::AutoHoldMode mDefaultAutoHoldMode;
 };
 
 void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
@@ -331,15 +433,31 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
    }
 
+   SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(myConversationManager.getMediaStackAdapter());
+
    // Process commands
-   if(isEqualNoCase(command, "quit") || isEqualNoCase(command, "q") || isEqualNoCase(command, "exit"))
+   if(isEqualNoCase(command, "quit") || isEqualNoCase(command, "q") || isEqualNoCase(command, "exit") || isEqualNoCase(command, "x"))
    {
       finished=true;
       return;
    }   
    if(isEqualNoCase(command, "createconv") || isEqualNoCase(command, "cc"))
    {
-      myConversationManager.createConversation();
+      ConversationManager::AutoHoldMode autoHoldMode = myConversationManager.mDefaultAutoHoldMode;
+      if (arg[0] == "n") autoHoldMode = ConversationManager::AutoHoldDisabled;
+      else if (arg[0] == "y") autoHoldMode = ConversationManager::AutoHoldEnabled;
+      else if (arg[0] == "b") autoHoldMode = ConversationManager::AutoHoldBroadcastOnly;
+      myConversationManager.createConversation(autoHoldMode);
+      return;
+   }
+   if (isEqualNoCase(command, "createsharedconv") || isEqualNoCase(command, "csc"))
+   {
+      unsigned long handle = arg[0].convertUnsignedLong();
+      ConversationManager::AutoHoldMode autoHoldMode = myConversationManager.mDefaultAutoHoldMode;
+      if (arg[1] == "n") autoHoldMode = ConversationManager::AutoHoldDisabled;
+      else if (arg[0] == "y") autoHoldMode = ConversationManager::AutoHoldEnabled;
+      else if (arg[1] == "b") autoHoldMode = ConversationManager::AutoHoldBroadcastOnly;
+      mediaStackAdapter.createSharedMediaInterfaceConversation(handle, autoHoldMode);
       return;
    }
    if(isEqualNoCase(command, "destroyconv") || isEqualNoCase(command, "dc"))
@@ -377,12 +495,16 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    if(isEqualNoCase(command, "createremote") || isEqualNoCase(command, "crp"))
    {
       unsigned long handle = arg[0].convertUnsignedLong();
-      ConversationManager::ParticipantForkSelectMode mode = ConversationManager::ForkSelectAutomatic;
       if(handle != 0 && !arg[1].empty())
       {
+         ConversationManager::ParticipantForkSelectMode mode = ConversationManager::ForkSelectAutomaticEx;
          if(!arg[2].empty() && isEqualNoCase(arg[2], "manual"))
          {
             mode = ConversationManager::ForkSelectManual;
+         }
+         else if (!arg[2].empty() && isEqualNoCase(arg[2], "auto"))
+         {
+            mode = ConversationManager::ForkSelectAutomatic;
          }
          try
          {
@@ -398,7 +520,60 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
       else
       {
-         InfoLog( << "Invalid command format: <'createremote'|'crp'> <convHandle> <destURI> [<'manual'>] (last arg is fork select mode, 'auto' is default).");
+         InfoLog( << "Invalid command format: <'createremote'|'crp'> <convHandle> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default).");
+      }
+      return;
+   }
+   if (isEqualNoCase(command, "createremoteimpager") || isEqualNoCase(command, "crip"))
+   {
+      if (!arg[0].empty())
+      {
+         try
+         {
+            NameAddr dest(arg[0]);
+            myConversationManager.createRemoteIMPagerParticipant(dest);
+         }
+         catch (...)
+         {
+            NameAddr dest(uri);
+            dest.uri().user() = arg[0];
+            myConversationManager.createRemoteIMPagerParticipant(dest);
+         }
+      }
+      else
+      {
+         InfoLog(<< "Invalid command format: <'createremoteim'|'crip'> <destURI>");
+      }
+      return;
+   }
+   if (isEqualNoCase(command, "createremoteimsession") || isEqualNoCase(command, "cris"))
+   {
+      if (!arg[0].empty())
+      {
+         ConversationManager::ParticipantForkSelectMode mode = ConversationManager::ForkSelectAutomaticEx;
+         if (!arg[1].empty() && isEqualNoCase(arg[1], "manual"))
+         {
+            mode = ConversationManager::ForkSelectManual;
+         }
+         else if (!arg[1].empty() && isEqualNoCase(arg[1], "auto"))
+         {
+            mode = ConversationManager::ForkSelectAutomatic;
+         }
+         try
+         {
+            NameAddr dest(arg[0]);
+            myConversationManager.createRemoteIMSessionParticipant(dest, mode);
+         }
+         catch (...)
+         {
+            NameAddr dest(uri);
+            dest.uri().user() = arg[0];
+            myConversationManager.createRemoteIMSessionParticipant(dest, mode);
+         }
+      }
+      else
+      {
+         InfoLog(<< "Invalid command format: <'createremoteimsession'|'cris'> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default).");
       }
       return;
    }
@@ -505,7 +680,8 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    }
    if(isEqualNoCase(command, "bridgematrix") || isEqualNoCase(command, "bm"))
    {
-      myConversationManager.outputBridgeMatrix();
+      unsigned long convHandle = arg[0].convertUnsignedLong();
+      myConversationManager.outputBridgeMatrix(convHandle);
       return;
    }   
    if(isEqualNoCase(command, "alert") || isEqualNoCase(command, "al"))
@@ -591,45 +767,60 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
       return;
    }
+   if (isEqualNoCase(command, "sendIM") || isEqualNoCase(command, "si"))
+   {
+      unsigned long partHandle = arg[0].convertUnsignedLong();
+      Data plaintext = arg[1];
+      if (partHandle != 0 && !plaintext.empty())
+      {
+         std::unique_ptr<PlainContents> plainContents(new PlainContents(plaintext));
+         myConversationManager.sendIMToParticipant(partHandle, std::move(plainContents));
+      }
+      else
+      {
+         InfoLog(<< "Invalid command format: <'sendIM'|'si'> <partHandle> <plaintext>");
+      }
+      return;
+   }
    if(isEqualNoCase(command, "volume") || isEqualNoCase(command, "sv"))
    {
       unsigned long volume = arg[0].convertUnsignedLong();
-      myConversationManager.setSpeakerVolume(volume);
+      mediaStackAdapter.setSpeakerVolume(volume);
       InfoLog( << "Speaker volume set to " << volume);
       return;
    }
    if(isEqualNoCase(command, "gain") || isEqualNoCase(command, "sg"))
    {
       unsigned long gain = arg[0].convertUnsignedLong();
-      myConversationManager.setMicrophoneGain(gain);
+      mediaStackAdapter.setMicrophoneGain(gain);
       InfoLog( << "Microphone gain set to " << gain);
       return;
    }
    if(isEqualNoCase(command, "mute") || isEqualNoCase(command, "mm"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.muteMicrophone(enable);
+      mediaStackAdapter.muteMicrophone(enable);
       InfoLog( << "Microphone mute " << (enable ? "enabled" : "disabled"));
       return;
    }
    if(isEqualNoCase(command, "echocanel") || isEqualNoCase(command, "aec"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.enableEchoCancel(enable);
+      mediaStackAdapter.enableEchoCancel(enable);
       InfoLog( << "Echo cancellation " << (enable ? "enabled" : "disabled"));
       return;
    }
    if(isEqualNoCase(command, "autogain") || isEqualNoCase(command, "agc"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.enableAutoGainControl(enable);
+      mediaStackAdapter.enableAutoGainControl(enable);
       InfoLog( << "Automatic gain control " << (enable ? "enabled" : "disabled"));
       return;
    }
    if(isEqualNoCase(command, "noisereduction") || isEqualNoCase(command, "nr"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.enableNoiseReduction(enable);
+      mediaStackAdapter.enableNoiseReduction(enable);
       return;
    }
    if(isEqualNoCase(command, "subscribe") || isEqualNoCase(command, "cs"))
@@ -681,7 +872,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    if(isEqualNoCase(command, "setcodecs") || isEqualNoCase(command, "sc"))
    {
       Data codecId;
-      std::list<unsigned int> idList;
+      std::vector<unsigned int> idList;
       ParseBuffer pb(arg[0]);
       pb.skipWhitespace();
       while(!pb.eof())
@@ -695,21 +886,13 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
             pb.skipChar(',');
          }
       }
-      unsigned int numCodecIds = idList.size();
+      unsigned int numCodecIds = (unsigned int)idList.size();
       if(numCodecIds > 0)
       {
-         unsigned int* codecIdArray = new unsigned int[numCodecIds];
-         unsigned int index = 0;
-         std::list<unsigned int>::iterator it = idList.begin();
-         for(;it != idList.end(); it++)
-         {
-            codecIdArray[index++] = (*it);
-         }
-         Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
+         Data ipAddress(g_conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
-         myConversationManager.buildSessionCapabilities(ipAddress, numCodecIds, codecIdArray, conversationProfile->sessionCaps());
-         delete [] codecIdArray;
+         mediaStackAdapter.buildSessionCapabilities(ipAddress, idList, g_conversationProfile->sessionCaps());
       }
       return;
    }
@@ -743,8 +926,8 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->secureMediaMode() = secureMediaMode;
-      conversationProfile->secureMediaRequired() = secureMediaRequired;      
+      g_conversationProfile->secureMediaMode() = secureMediaMode;
+      g_conversationProfile->secureMediaRequired() = secureMediaRequired;      
       InfoLog( << "Secure media mode set to: " << arg[0]);
       return;
    }
@@ -775,7 +958,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->natTraversalMode() = natTraversalMode;
+      g_conversationProfile->natTraversalMode() = natTraversalMode;
       InfoLog( << "NAT traversal mode set to: " << arg[0]);
       return;
    }
@@ -796,12 +979,12 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          pb.skipToOneOf(ParseBuffer::Whitespace);  // white space 
          Data port;
          pb.data(port, start);
-         natTraversalServerPort = port.convertUnsignedLong();
+         natTraversalServerPort = (unsigned short)port.convertUnsignedLong();
       }
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
-      conversationProfile->natTraversalServerPort() = natTraversalServerPort;
+      g_conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
+      g_conversationProfile->natTraversalServerPort() = natTraversalServerPort;
       InfoLog( << "NAT traversal STUN/TURN server set to: " << natTraversalServerHostname << ":" << natTraversalServerPort);
       return;
    }
@@ -809,7 +992,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    {
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->stunUsername() = arg[0];
+      g_conversationProfile->stunUsername() = arg[0];
       InfoLog( << "STUN/TURN user set to: " << arg[0]);
       return;
    }
@@ -817,7 +1000,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    {
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->stunPassword() = arg[0];
+      g_conversationProfile->stunPassword() = arg[0];
       InfoLog( << "STUN/TURN password set to: " << arg[0]);
       return;
    }
@@ -829,7 +1012,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 
       if(durationMs > 0)
       {
-         myUserAgent.startApplicationTimer(timerId, durationMs, seqNumber);
+         myUserAgent.startApplicationTimer(timerId, std::chrono::milliseconds(durationMs), seqNumber);
          InfoLog( << "Application Timer started for " << durationMs << "ms");
       }
       else
@@ -865,25 +1048,29 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 #endif
 
    InfoLog( << "Possible commands are: " << endl
-         << "  createConversation:      <'createconv'|'cc'>" << endl
+         << "  createConversation:      <'createconv'|'cc'> [<autoholdmode:'y'|'n'|'b'>]" << endl
+         << "  createSharedMediaInterfaceConversation: <'createsharedconv'|'csc'> <convHandle> [<autoholdmode:'y'|'n'|'b'>]" << endl
          << "  destroyConversation:     <'destroyconv'|'dc'> <convHandle>" << endl
          << "  joinConversation:        <'joinconv'|'jc'> <sourceConvHandle> <destConvHandle>" << endl
          << endl 
          << "  createLocalParticipant:  <'createlocal'|'clp'>" << endl
-         << "  createRemoteParticipant: <'createremote'|'crp'> <convHandle> <destURI> [<'manual'>] (last arg is fork select mode, 'auto' is default)" << endl 
-         << "  createMediaResourceParticipant: <'createmedia'|'cmp'> <convHandle> <mediaURL> [<durationMs>]" << endl 
+         << "  createRemoteParticipant: <'createremote'|'crp'> <convHandle> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default)" << endl 
+         << "  createRemoteIMPagerParticipant:   <'createremoteimpager'|'crip'> <convHandle> <destURI>" << endl
+         << "  createRemoteIMSessionParticipant: <'createremoteimsession'|'cris'> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default)" << endl
+         << "  createMediaResourceParticipant:   <'createmedia'|'cmp'> <convHandle> <mediaURL> [<durationMs>]" << endl
          << "  destroyParticipant:      <'destroypart'|'dp'> <parthandle>" << endl
          << endl 
          << "  addPartcipant:           <'addpart'|'ap'> <convHandle> <partHandle>" << endl
          << "  removePartcipant:        <'removepart'|'rp'> <convHandle> <partHandle>" << endl
          << "  moveParticipant:         <'movepart'|'mp'> <partHandle> <srcConvHandle> <dstConvHandle>" << endl
          << "  modifyParticipantContribution: <'partcontrib'|'pc'> <convHandle> <partHandle> <inputGain> <outputGain> (gain in percentage)" << endl
-         << "  outputBridgeMatrix:      <'bridgematrix'|'bm'>" << endl
+         << "  outputBridgeMatrix:      <'bridgematrix'|'bm'> [<convHandle>]" << endl
          << "  alertPartcipant:         <'alert'|'al'> <partHandle> [<'noearly'>] (last arg is early flag, enabled by default)" << endl
          << "  answerParticipant:       <'answer'|'an'> <partHandle>" << endl
          << "  rejectParticipant:       <'reject'|'rj'> <partHandle> [<statusCode>] (default status code is 486)" << endl
          << "  redirectPartcipant:      <'redirect'|'rd'> <partHandle> <destURI>" << endl
          << "  redirectToPartcipant:    <'redirectTo'|'rt'> <partHandle> <destPartHandle>" << endl
+         << "  sendIMToParticipant:     <'sendIM'|'si'> <partHandle> <plaintext>" << endl
          << endl 
          << "  setSpeakerVolume:        <'volume'|'sv'> <volume>" << endl
          << "  setMicrophoneGain:       <'gain'|'sg'> <gain>" << endl
@@ -906,7 +1093,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          << "  displayInfo:             <'info'|'i'>" << endl
          << "  logDnsCache:             <'dns'|'ld'>" << endl
          << "  clearDnsCache:           <'cleardns'|'cd'>" << endl
-         << "  exitProgram:             <'exit'|'quit'|'q'>");
+         << "  exitProgram:             <'exit'|'quit'|'q'|'x'>");
 }
 
 #define KBD_BUFFER_SIZE 256
@@ -983,6 +1170,8 @@ main (int argc, char** argv)
       exit( -1 );
    }
 
+   initNetwork();
+
    // Defaults
    bool registrationDisabled = false;
    bool keepAlivesDisabled = false;
@@ -997,14 +1186,18 @@ main (int argc, char** argv)
    Data stunUsername;
    Data stunPassword;
    bool localAudioEnabled = true;
-   unsigned short sipPort = 5062;
-   unsigned short tlsPort = 5063;
+   bool multipleMediaInterfaceModeEnabled = false;
+   bool defaultAutoHoldModeToDisabled = false;
+   unsigned short sipPort = 0;
+   unsigned short tlsPort = 0;
    unsigned short mediaPortStart = 17384;
-   Data tlsDomain = DnsUtil::getLocalHostName();
+   Data tlsDomain;
    NameAddr outboundProxy;
    Data logLevel("INFO");
-   unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
+   std::vector<unsigned int> codecIds = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */,
                                SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
+                               SdpCodec::SDP_CODEC_G729A /* 18 - g729 */,
+                               SdpCodec::SDP_CODEC_OPUS /* 147 - opus */,
                                SdpCodec::SDP_CODEC_SPEEX /* 96 - speex NB 8,000bps */,
                                SdpCodec::SDP_CODEC_SPEEX_15 /* 98 - speex NB 15,000bps */, 
                                SdpCodec::SDP_CODEC_SPEEX_24 /* 99 - speex NB 24,600bps */,
@@ -1015,7 +1208,6 @@ main (int argc, char** argv)
                                SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
                                //SdpCodec::SDP_CODEC_G722 /* 9 - G.722 */,
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
-   unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
 
    // Loop through command line arguments and process them
    for(int i = 1; i < argc; i++)
@@ -1053,7 +1245,9 @@ main (int argc, char** argv)
          cout << " -ns <server:port> - set the hostname and port of the NAT STUN/TURN server" << endl;
          cout << " -nu <username> - sets the STUN/TURN username to use for NAT server" << endl;
          cout << " -np <password> - sets the STUN/TURN password to use for NAT server" << endl;
-         cout << " -nl - no local audio support - removed local sound hardware requirement" << endl;
+         cout << " -nl - no local audio support - remove local sound hardware requirement" << endl;
+         cout << " -mm - multiple media interface mode - enable for media server mode" << endl;
+         cout << " -ad - default auto hold mode to disabled" << endl;
          cout << " -l <NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK> - logging level" << endl;
          cout << endl;
          cout << "Sample Command line:" << endl;
@@ -1075,6 +1269,14 @@ main (int argc, char** argv)
       else if(isEqualNoCase(commandName, "-nl"))
       {
          localAudioEnabled = false;
+      }
+      else if (isEqualNoCase(commandName, "-mm"))
+      {
+         multipleMediaInterfaceModeEnabled = true;
+      }
+      else if (isEqualNoCase(commandName, "-ad"))
+      {
+         defaultAutoHoldModeToDisabled = true;
       }
       else
       {
@@ -1184,7 +1386,7 @@ main (int argc, char** argv)
                pb.skipToOneOf(ParseBuffer::Whitespace);  // white space 
                Data port;
                pb.data(port, start);
-               natTraversalServerPort = port.convertUnsignedLong();
+               natTraversalServerPort = (unsigned short)port.convertUnsignedLong();
             }
          }
          else if(isEqualNoCase(commandName, "-nu"))
@@ -1245,8 +1447,6 @@ main (int argc, char** argv)
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
 
-   initNetwork();
-
    InfoLog( << "testUA settings:");
    InfoLog( << "  No Keepalives = " << (keepAlivesDisabled ? "true" : "false"));
    InfoLog( << "  Autoanswer = " << (autoAnswerEnabled ? "true" : "false"));
@@ -1268,6 +1468,8 @@ main (int argc, char** argv)
 #endif
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
+   InfoLog( << "  Multiple Media Interface Mode Enabled = " << (multipleMediaInterfaceModeEnabled ? "true" : "false"));
+   InfoLog( << "  Default Auto Hold Mode = " << (defaultAutoHoldModeToDisabled ? "disabled" : "enabled"));
    InfoLog( << "  Log Level = " << logLevel);
    
    InfoLog( << "type help or '?' for list of accepted commands." << endl);
@@ -1276,13 +1478,13 @@ main (int argc, char** argv)
    // Setup UserAgentMasterProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   auto profile = std::make_shared<UserAgentMasterProfile>();
 
    // Add transports
-   profile->addTransport(UDP, sipPort, V4, address);
-   profile->addTransport(TCP, sipPort, V4, address);
+   profile->addTransport(UDP, sipPort, V4, StunDisabled, address);
+   profile->addTransport(TCP, sipPort, V4, StunDisabled, address);
 #ifdef USE_SSL
-   profile->addTransport(TLS, tlsPort, V4, address, tlsDomain);
+   profile->addTransport(TLS, tlsPort, V4, StunDisabled, address, tlsDomain);
 #endif
 
    // The following settings are used to avoid a kernel panic seen on an ARM embedded platform.
@@ -1346,22 +1548,24 @@ main (int argc, char** argv)
 
    profile->clearSupportedMimeTypes();
    profile->addSupportedMimeType(INVITE, Mime("application", "sdp"));
-   profile->addSupportedMimeType(INVITE, Mime("multipart", "mixed"));  
-   profile->addSupportedMimeType(INVITE, Mime("multipart", "signed"));  
-   profile->addSupportedMimeType(INVITE, Mime("multipart", "alternative"));  
+   profile->addSupportedMimeType(INVITE, Mime("multipart", "mixed"));
+   profile->addSupportedMimeType(INVITE, Mime("multipart", "signed"));
+   profile->addSupportedMimeType(INVITE, Mime("multipart", "alternative"));
    profile->addSupportedMimeType(OPTIONS,Mime("application", "sdp"));
-   profile->addSupportedMimeType(OPTIONS,Mime("multipart", "mixed"));  
-   profile->addSupportedMimeType(OPTIONS, Mime("multipart", "signed"));  
-   profile->addSupportedMimeType(OPTIONS, Mime("multipart", "alternative"));  
-   profile->addSupportedMimeType(PRACK,  Mime("application", "sdp"));  
-   profile->addSupportedMimeType(PRACK,  Mime("multipart", "mixed"));  
-   profile->addSupportedMimeType(PRACK,  Mime("multipart", "signed"));  
-   profile->addSupportedMimeType(PRACK,  Mime("multipart", "alternative"));  
-   profile->addSupportedMimeType(UPDATE, Mime("application", "sdp"));  
-   profile->addSupportedMimeType(UPDATE, Mime("multipart", "mixed"));  
-   profile->addSupportedMimeType(UPDATE, Mime("multipart", "signed"));  
-   profile->addSupportedMimeType(UPDATE, Mime("multipart", "alternative"));  
-   profile->addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));  
+   profile->addSupportedMimeType(OPTIONS,Mime("multipart", "mixed"));
+   profile->addSupportedMimeType(OPTIONS, Mime("multipart", "signed"));
+   profile->addSupportedMimeType(OPTIONS, Mime("multipart", "alternative"));
+   profile->addSupportedMimeType(PRACK,  Mime("application", "sdp"));
+   profile->addSupportedMimeType(PRACK,  Mime("multipart", "mixed"));
+   profile->addSupportedMimeType(PRACK,  Mime("multipart", "signed"));
+   profile->addSupportedMimeType(PRACK,  Mime("multipart", "alternative"));
+   profile->addSupportedMimeType(UPDATE, Mime("application", "sdp"));
+   profile->addSupportedMimeType(UPDATE, Mime("multipart", "mixed"));
+   profile->addSupportedMimeType(UPDATE, Mime("multipart", "signed"));
+   profile->addSupportedMimeType(UPDATE, Mime("multipart", "alternative"));
+   profile->addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));
+   profile->addSupportedMimeType(MESSAGE, Mime("text", "plain"));
+   profile->addSupportedMimeType(MESSAGE, Mime("application", "im-iscomposing+xml"));
 
    profile->clearSupportedMethods();
    profile->addSupportedMethod(INVITE);
@@ -1369,13 +1573,13 @@ main (int argc, char** argv)
    profile->addSupportedMethod(CANCEL);
    profile->addSupportedMethod(OPTIONS);
    profile->addSupportedMethod(BYE);
-   profile->addSupportedMethod(REFER);    
-   profile->addSupportedMethod(NOTIFY);    
-   profile->addSupportedMethod(SUBSCRIBE); 
-   profile->addSupportedMethod(UPDATE);    
-   profile->addSupportedMethod(PRACK);     
-   //profile->addSupportedMethod(INFO);    
-   //profile->addSupportedMethod(MESSAGE);
+   profile->addSupportedMethod(REFER);
+   profile->addSupportedMethod(NOTIFY);
+   profile->addSupportedMethod(SUBSCRIBE);
+   profile->addSupportedMethod(UPDATE);
+   profile->addSupportedMethod(PRACK);
+   profile->addSupportedMethod(INFO);
+   profile->addSupportedMethod(MESSAGE);
 
    profile->clearSupportedOptionTags();
    profile->addSupportedOptionTag(Token(Symbols::Replaces));      
@@ -1415,87 +1619,65 @@ main (int argc, char** argv)
    // Setup ConversationProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   conversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(profile));
+   g_conversationProfile = std::make_shared<ConversationProfile>(profile);
    if(uri.uri().user() != "noreg" && !registrationDisabled)
    {
-      conversationProfile->setDefaultRegistrationTime(3600);
+      g_conversationProfile->setDefaultRegistrationTime(3600);
    }
    else
    {
-      conversationProfile->setDefaultRegistrationTime(0);
+      g_conversationProfile->setDefaultRegistrationTime(0);
    }
-   conversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
-   conversationProfile->setDefaultFrom(uri);
-   conversationProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
-
-#if 0  // Now auto-built 
-
-   // Create Session Capabilities and assign to coversation Profile
-   // Note:  port, sessionId and version will be replaced in actual offer/answer   int port = 16384;
-   // Build s=, o=, t=, and c= lines
-   SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, SdpContents::IP4, address);   // o=   
-   SdpContents::Session session(0, origin, "-" /* s= */);
-   session.connection() = SdpContents::Session::Connection(SdpContents::IP4, address);  // c=
-   session.addTime(SdpContents::Session::Time(0, 0));
-
-   // Build Codecs and media offering
-   SdpContents::Session::Medium medium("audio", port, 1, "RTP/AVP");
-   // For G.722, it is necessary to patch sipXmediaLib/src/mp/codecs/plgg722/plgg722.c
-   // #define USE_8K_SAMPLES G722_SAMPLE_RATE_8000
-   // and change sample rate from 16000 to 8000
-   // (tested against a Polycom device configured for G.722 8000)
-   // http://www.mail-archive.com/sipxtapi-dev@list.sipfoundry.org/msg02522.html
-   // A more generic solution is needed long term, as G.722 is peculiar and
-   // implementations are not consistent:
-   //  https://lists.cs.columbia.edu/pipermail/sip-implementors/2007-August/017292.html
-   //SdpContents::Session::Codec g722codec("G722", 8000);
-   //g722codec.payloadType() = 9;  /* RFC3551 */ ;
-   //medium.addCodec(g722codec);
-   SdpContents::Session::Codec g711ucodec("PCMU", 8000);
-   g711ucodec.payloadType() = 0;  /* RFC3551 */ ;
-   medium.addCodec(g711ucodec);
-   SdpContents::Session::Codec g711acodec("PCMA", 8000);
-   g711acodec.payloadType() = 8;  /* RFC3551 */ ;
-   medium.addCodec(g711acodec);
-   SdpContents::Session::Codec speexCodec("SPEEX", 8000);
-   speexCodec.payloadType() = 110;  
-   speexCodec.parameters() = Data("mode=3");
-   medium.addCodec(speexCodec);
-   SdpContents::Session::Codec gsmCodec("GSM", 8000);
-   gsmCodec.payloadType() = 3;  /* RFC3551 */ ;
-   medium.addCodec(gsmCodec);
-   medium.addAttribute("ptime", Data(20));  // 20 ms of speech per frame (note G711 has 10ms samples, so this is 2 samples per frame)
-   medium.addAttribute("sendrecv");
-
-   SdpContents::Session::Codec toneCodec("telephone-event", 8000);
-   toneCodec.payloadType() = 102;  
-   toneCodec.parameters() = Data("0-15");
-   medium.addCodec(toneCodec);
-   session.addMedium(medium);
-
-   conversationProfile->sessionCaps().session() = session;
-#endif
+   g_conversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
+   g_conversationProfile->setDefaultFrom(uri);
+   g_conversationProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
 
    // Setup NatTraversal Settings
-   conversationProfile->natTraversalMode() = natTraversalMode;
-   conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
-   conversationProfile->natTraversalServerPort() = natTraversalServerPort;
-   conversationProfile->stunUsername() = stunUsername;
-   conversationProfile->stunPassword() = stunPassword;
+   g_conversationProfile->natTraversalMode() = natTraversalMode;
+   g_conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
+   g_conversationProfile->natTraversalServerPort() = natTraversalServerPort;
+   g_conversationProfile->stunUsername() = stunUsername;
+   g_conversationProfile->stunPassword() = stunPassword;
 
    // Secure Media Settings
-   conversationProfile->secureMediaMode() = secureMediaMode;
-   conversationProfile->secureMediaRequired() = secureMediaRequired;
-   conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
+   g_conversationProfile->secureMediaMode() = secureMediaMode;
+   g_conversationProfile->secureMediaRequired() = secureMediaRequired;
+   g_conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
 
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
-      MyConversationManager myConversationManager(localAudioEnabled);
+      MyConversationManager myConversationManager(localAudioEnabled, multipleMediaInterfaceModeEnabled, defaultAutoHoldModeToDisabled);
       MyUserAgent ua(&myConversationManager, profile);
-      myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
-      ua.addConversationProfile(conversationProfile);
+      SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(myConversationManager.getMediaStackAdapter());
+      mediaStackAdapter.buildSessionCapabilities(address, codecIds, g_conversationProfile->sessionCaps());
+
+      ua.getSipStack().addTransportSipMessageLoggingHandler(std::make_shared<TestUASipMessageLoggingHandler>());
+
+      // Generate InstanceId appropriate for testing only.  Should be UUID that persists 
+      // across machine re-starts and is unique to this application instance.  The one used 
+      // here is only as unique as the hostname and the actual SIP listening port.  If someone runs two 
+      // instances of this application on the same host and SIP port for the same Aor, then things will 
+      // break.  See RFC5626 section 4.1
+      Data hostnameAndPort = DnsUtil::getLocalHostName() + Data(profile->getTransports().front().mActualPort);
+      Data instanceHash = hostnameAndPort.md5().uppercase();
+      assert(instanceHash.size() == 32);
+      Data instanceId(48, Data::Preallocate);
+      instanceId += "<urn:uuid:";
+      instanceId += instanceHash.substr(0, 8);
+      instanceId += "-";
+      instanceId += instanceHash.substr(8, 4);
+      instanceId += "-";
+      instanceId += instanceHash.substr(12, 4);
+      instanceId += "-";
+      instanceId += instanceHash.substr(16, 4);
+      instanceId += "-";
+      instanceId += instanceHash.substr(20, 12);
+      instanceId += ">";
+      g_conversationProfile->setInstanceId(instanceId);
+
+      ua.addConversationProfile(g_conversationProfile);
 
       //////////////////////////////////////////////////////////////////////////////
       // Startup and run...
@@ -1527,7 +1709,7 @@ main (int argc, char** argv)
 
       ua.shutdown();
    }
-   InfoLog(<< "testUA is shutdown.");
+   InfoLog(LOG_PREFIX << "testUA is shutdown.");
    OsSysLog::shutdown();
    sleepSeconds(2);
 
@@ -1539,6 +1721,7 @@ main (int argc, char** argv)
 
 /* ====================================================================
 
+ Copyright (c) 2021-2026, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

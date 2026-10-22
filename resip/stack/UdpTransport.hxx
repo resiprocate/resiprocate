@@ -7,6 +7,8 @@
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/Compression.hxx"
 
+#include <array>
+
 namespace osc { class Stack; }
 
 namespace resip
@@ -14,7 +16,7 @@ namespace resip
 class UdpTransport;
 
 /** Interface functor for external unrecognized datagram handling.
-  * User can catch datagram messages recevied that are not recognized by
+  * User can catch datagram messages received that are not recognized by
   * the stack.
   */
 class ExternalUnknownDatagramHandler {
@@ -25,7 +27,7 @@ public:
     * @param transport contains a pointer to the specific UdpTransport object that
     *                  received the unknown packet.
     * @param unknownDatagram contains the actual contents of unknown data received. */
-   virtual void operator()(UdpTransport* transport, const Tuple& source, std::auto_ptr<Data> unknownDatagram) = 0;
+   virtual void operator()(UdpTransport* transport, const Tuple& source, std::unique_ptr<Data> unknownDatagram) = 0;
 };
 
 /**
@@ -61,7 +63,7 @@ public:
                 IpVersion version,
                 StunSetting stun,
                 const Data& interfaceObj,
-                AfterSocketCreationFuncPtr socketFunc = 0,
+                AfterSocketCreationFuncPtr socketFunc = nullptr,
                 Compression &compression = Compression::Disabled,
                 unsigned transportFlags = 0);
    virtual  ~UdpTransport();
@@ -80,11 +82,45 @@ public:
    // virtual Socket getPollSocket() const;
    virtual void processPollEvent(FdPollEventMask mask);
 
-   static const int MaxBufferSize = 8192;
+   static constexpr int MaxMessageSize = 65535;
 
    // STUN client functionality
+   enum StunResult
+   {
+       StunResultUnknown,
+       StunResultSuccess,
+       StunResultNoResponse,
+       StunResultResponseParseFailed
+   };
+
+   /** Send a STUN Binding Request to @p dest for public-address discovery.
+
+       The request is unauthenticated, as is typical for public STUN servers.
+       The response is only accepted if it originates from @p dest and echoes
+       the request's transaction id, so spoofed or off-path responses are
+       rejected (RFC 5389/8489).
+
+       @note Short-term credential (MESSAGE-INTEGRITY) support is intentionally
+             not provided here: this is a SIP signaling transport, and STUN on
+             it is used only for unauthenticated public-address discovery.
+             Short-term authenticated Binding Requests belong to ICE
+             connectivity checks on the media/RTP path (see the reTurn client),
+             not the SIP transport.
+
+       @note Only one STUN test may be outstanding per transport at a time. Each
+             call replaces any in-flight request: the stored transaction id and
+             server address are overwritten, so a response to a prior request
+             will no longer be accepted, and stunResult() always reflects the
+             most recent call. This is sufficient for the UserAgent
+             public-address-discovery use case; it is not a general concurrent
+             STUN client. */
    bool stunSendTest(const Tuple& dest);
-   bool stunResult(Tuple& mappedAddress);
+
+   /** Return the result of the most recent stunSendTest(); on
+       StunResultSuccess, @p mappedAddress is filled with the discovered
+       public address. @see stunSendTest for the single-outstanding-request
+       restriction. */
+   StunResult stunResult(Tuple& mappedAddress);
 
    /// Installs a handler for the unknown datagrams arriving on the udp transport.
    void setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler);
@@ -92,8 +128,9 @@ public:
 protected:
 
    void processRxAll();
-   int processRxRecv(char*& buffer, Tuple& sender);
-   bool processRxParse(char *buffer, int len, Tuple& sender);
+   int processRxRecv(Tuple& sender);
+   void processRxParse(int len, const Tuple& sender);
+   void processRxParseSip(char* buffer, int len, const Tuple& sender);
    void processTxAll();
    void processTxOne(SendData *data);
    void updateEvents();
@@ -109,15 +146,26 @@ protected:
    unsigned mRxMsgCnt;
    unsigned mRxKeepaliveCnt;
    unsigned mRxTransactionCnt;
+   std::array<char, MaxMessageSize> mRxBuffer{};
 private:
-   char* mRxBuffer;
+#ifdef USE_SIGCOMP
+   std::array<char, MaxMessageSize> mRxUncompressedBuffer{};
+#endif
    MsgHeaderScanner mMsgHeaderScanner;
    mutable resip::Mutex  myMutex;
    Tuple mStunMappedAddress;
-   bool mStunSuccess;
+
+   StunResult mStunResult;
+   StunSetting mStunSetting;
+
+   // STUN client state for the outstanding Binding Request (guarded by myMutex).
+   // Used to authenticate responses by source address and transaction id.
+   bool mStunTxIdValid;                  // true while a request is outstanding
+   std::array<unsigned char, 16> mStunTxId;  // transaction id (incl. magic cookie) of the request
+   Tuple mStunServerTuple;               // address the request was sent to
+
    ExternalUnknownDatagramHandler* mExternalUnknownDatagramHandler;
    bool mInWritable;
-   bool mInActiveWrite;
 };
 
 }
@@ -127,6 +175,7 @@ private:
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

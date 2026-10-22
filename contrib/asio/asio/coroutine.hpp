@@ -2,7 +2,7 @@
 // coroutine.hpp
 // ~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -111,7 +111,7 @@ class coroutine_ref;
  *
  * @code yield
  * {
- *   mutable_buffers_1 b = buffer(*buffer_);
+ *   mutable_buffer b = buffer(*buffer_);
  *   socket_->async_read_some(b, *this);
  * } @endcode
  *
@@ -200,20 +200,20 @@ class coroutine_ref;
  * The @c fork pseudo-keyword is used when "forking" a coroutine, i.e. splitting
  * it into two (or more) copies. One use of @c fork is in a server, where a new
  * coroutine is created to handle each client connection:
- * 
+ *
  * @code reenter (this)
  * {
  *   do
  *   {
- *     socket_.reset(new tcp::socket(io_service_));
+ *     socket_.reset(new tcp::socket(my_context_));
  *     yield acceptor->async_accept(*socket_, *this);
  *     fork server(*this)();
  *   } while (is_parent());
  *   ... client-specific handling follows ...
  * } @endcode
- * 
+ *
  * The logical steps involved in a @c fork are:
- * 
+ *
  * @li @c fork saves the current state of the coroutine.
  * @li The statement creates a copy of the coroutine and either executes it
  *     immediately or schedules it for later execution.
@@ -227,7 +227,7 @@ class coroutine_ref;
  * Note that @c fork doesn't do the actual forking by itself. It is the
  * application's responsibility to create a clone of the coroutine and call it.
  * The clone can be called immediately, as above, or scheduled for delayed
- * execution using something like io_service::post().
+ * execution using something like asio::post().
  *
  * @par Alternate macro names
  *
@@ -258,7 +258,6 @@ private:
   int value_;
 };
 
-
 namespace detail {
 
 class coroutine_ref
@@ -266,6 +265,7 @@ class coroutine_ref
 public:
   coroutine_ref(coroutine& c) : value_(c.value_), modified_(false) {}
   coroutine_ref(coroutine* c) : value_(c->value_), modified_(false) {}
+  coroutine_ref(const coroutine_ref&) = default;
   ~coroutine_ref() { if (!modified_) value_ = -1; }
   operator int() const { return value_; }
   int& operator=(int v) { modified_ = true; return value_ = v; }
@@ -289,7 +289,7 @@ private:
       bail_out_of_coroutine: \
       break; \
     } \
-    else case 0:
+    else /* fall-through */ case 0:
 
 #define ASIO_CORO_YIELD_IMPL(n) \
   for (_coro_value = (n);;) \
@@ -301,12 +301,12 @@ private:
     else \
       switch (_coro_value ? 0 : 1) \
         for (;;) \
-          case -1: if (_coro_value) \
+          /* fall-through */ case -1: if (_coro_value) \
             goto terminate_coroutine; \
           else for (;;) \
-            case 1: if (_coro_value) \
+            /* fall-through */ case 1: if (_coro_value) \
               goto bail_out_of_coroutine; \
-            else case 0:
+            else /* fall-through */ case 0:
 
 #define ASIO_CORO_FORK_IMPL(n) \
   for (_coro_value = -(n);; _coro_value = (n)) \

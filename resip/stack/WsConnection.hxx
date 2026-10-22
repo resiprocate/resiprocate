@@ -7,23 +7,23 @@
 
 #include "resip/stack/TcpConnection.hxx"
 #include "resip/stack/WsConnectionBase.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
 
 namespace resip
 {
 
-class WsConnection :  public TcpConnection, public WsConnectionBase
+class WsConnection final
+   : public TcpConnection
+   , public WsConnectionBase
 {
    public:
+      WsConnection() = delete;
       WsConnection(Transport* transport,
                    const Tuple& who, Socket fd,
                    Compression &compression,
-                   SharedPtr<WsConnectionValidator> wsConnectionValidator,
+                   std::shared_ptr<WsConnectionValidator> wsConnectionValidator,
                    bool isServer);
-
-   private:
-      /// No default c'tor
-      WsConnection();
 };
 
 }

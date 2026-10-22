@@ -11,7 +11,7 @@ ConnectReq::ConnectReq()
 ConnectReq::ConnectReq(const DestinationId &dest, 
                        const resip::Data &frag, 
                        const resip::Data &password, 
-                       UInt16 application, 
+                       uint16_t application, 
                        const resip::Data &role, 
                        const std::vector<Candidate> &candidates) :
 	ConnectBase(frag, password, application, role, candidates)
@@ -27,7 +27,7 @@ ConnectAns::ConnectAns()
 ConnectAns::ConnectAns(Message *req, 
                        const resip::Data &frag, 
                        const resip::Data &password, 
-                       UInt16 application, 
+                       uint16_t application, 
                        const resip::Data &role, 
                        const std::vector<Candidate> &candidates) :
 	ConnectBase(frag, password, application, role, candidates)

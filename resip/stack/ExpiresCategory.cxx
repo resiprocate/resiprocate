@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <ctype.h>
+
 #include "resip/stack/ExpiresCategory.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -59,14 +61,14 @@ ExpiresCategory::clone(PoolBase* pool) const
    return new (pool) ExpiresCategory(*this, pool);
 }
 
-UInt32& 
+uint32_t& 
 ExpiresCategory::value() 
 {
    checkParsed(); 
    return mValue;
 }
 
-UInt32
+uint32_t
 ExpiresCategory::value() const 
 {
    checkParsed(); 
@@ -78,7 +80,7 @@ ExpiresCategory::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
    const char *p = pb.position();
-   if (!pb.eof() && isdigit(*p))
+   if (!pb.eof() && isdigit(static_cast< unsigned char >(*p)))
    {
      mValue = pb.uInt32();
    }

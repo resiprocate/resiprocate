@@ -1,0 +1,199 @@
+$ ../run-mib2c.sh 
++ SETS=applTable
+++ net-snmp-config --default-mibdirs
++ export MIBDIRS=/home/daniel/.snmp/mibs:/usr/share/snmp/mibs:/usr/share/snmp/mibs/iana:/usr/share/snmp/mibs/ietf:/var/lib/mibs/ietf/
++ MIBDIRS=/home/daniel/.snmp/mibs:/usr/share/snmp/mibs:/usr/share/snmp/mibs/iana:/usr/share/snmp/mibs/ietf:/var/lib/mibs/ietf/
++ export MIBS=+NETWORK-SERVICES-MIB
++ MIBS=+NETWORK-SERVICES-MIB
++ for SET in ${SETS}
++ mib2c -c mib2c.mfd.conf applTable
+Defaults for applTable...
+writing to -
+There are no defaults for applTable. Would you like to
+
+  1) Accept hard-coded defaults
+  2) Set defaults now [DEFAULT]
+
+Select your choice : 2
+
+
+Do you want to use an existing data structure for the USER context?
+This would be a structure used to track data for the entire table,
+(similar to a global variable) not individual rows.  (Many
+implementations won't need this, in which case the default is fine).
+
+
+  1) No, use netsnmp_data_list [DEFAULT]
+  2) Yes, use my own structure
+
+Select your choice : 1
+
+
+Do you want to use an existing data structure for the DATA context?
+The DATA context holds the data for each MIB column in a given row. By
+default, a new data structure will be created with an element for each
+column.  If you already have a structure that holds your data, select 2.
+
+  1) No, use generated [DEFAULT]
+  2) Yes, use my own structure
+
+Select your choice : 1
+
+
+Do you need to initialize elements in the 'generated' DATA
+context when a new instance is created (eg default values, or other structures
+you are going to add that might need initialization to the row request context?
+(The most common reasons you might need to do this is are if you want to keep
+some non-MIB data for every row, or some columns have default values.)
+
+  1) no, no initialization needed
+  2) yes, initilization is needed [DEFAULT]
+
+Select your choice : 2
+
+
+Do you plan on keeping all data in the format defined by the MIB? If so,
+no functions will be generated to map values. If some data will be
+stored in a different format, the mapping functions will be generated.
+If your MIB has integers with enumerations, mapping functions are more
+likely to be needed. (e.g. A TruthValue object will hold the value
+1 or 2, but a C boolean would be 1 or 0.)
+
+  1) All values will be stored as defined by the MIB [DEFAULT]
+  2) I need to map values to the format defined by the MIB.
+
+Select your choice : 1
+
+
+Which method would you like to use to gather data about available rows? 
+
+  1) container : [DEFAULT]  This access method uses a netsnmp_container
+     to store all row data in memory. This method is best for:
+         - Internal data (maintained by the agent)
+         - Access speed is important
+         - Sufficient memory exists to contain all rows
+
+  2) container-cached : This access method uses a netsnmp_container
+     to keep track of the indexes (and data, usually) for each 
+     row. This method is best for:
+         - External data (maintained by another process/the kernel)
+         - Access speed is important
+         - Sufficient memory exists to contain all indexes
+     
+  3) unsorted-external : This access method iterates over all of your data
+     to find the row with the appropriate index. This method is good for
+         - External data (maintained by another process/the kernel)
+         - Using less memory is much more important than access speed
+     
+Select your choice : 1
+
+
+When accessing your data, is your data TRANSIENT?
+
+  1) Yes. My data is TRANSIENT (e.g. a pointer to a static buffer that
+     my be overwritten during a request) and needs to be copied during
+     processing.
+
+  2) Yes. My data is SEMI-TRANSIENT (e.g. an allocated pointer to a
+     copy of the data).
+
+  3) No, my data is PERSISTENT (e.g. an allocated pointer to the actual
+     data, which is under the agent's control)
+  
+Select your choice [DEFAULT=1] : 1
+
+
+Do you want example code to be generated? This will generate example code
+for reading data from a text file.
+
+  1) generate example code [DEFAULT]
+  2) do not generate example code
+
+Select your choice : 2
+
+Is your table sparse? A sparse table is a table where some
+columns might not exist for all rows. Note that if your table
+contains a RowStaus column and it supports createAndWait, you
+will need sparse table support.
+
+  1) No, all columns always exist for every row [DEFAULT]
+  2) Yes, my table is sparse
+
+Select your choice : 1
+
+Do you want a makefile and AgentX subagent source file generated?
+This will let you test your table without having to link it into
+snmpd. (You can still link it in later.)
+
+  1) do not generate makefile/AgentX code [DEFAULT]
+  2) generate makefile/AgentX code
+
+Select your choice : 1
+
+writing to defaults/table-applTable.m2d
+Starting MFD code generation...
+writing to applTable.h
+| +-> Processing table applTable
+writing to defaults/node-applName.m2d
+writing to defaults/node-applDirectoryName.m2d
+writing to defaults/node-applVersion.m2d
+writing to defaults/node-applUptime.m2d
+writing to defaults/node-applOperStatus.m2d
+writing to defaults/node-applLastChange.m2d
+writing to defaults/node-applInboundAssociations.m2d
+writing to defaults/node-applOutboundAssociations.m2d
+writing to defaults/node-applAccumulatedInboundAssociations.m2d
+writing to defaults/node-applAccumulatedOutboundAssociations.m2d
+writing to defaults/node-applLastInboundActivity.m2d
+writing to defaults/node-applLastOutboundActivity.m2d
+writing to defaults/node-applRejectedInboundAssociations.m2d
+writing to defaults/node-applFailedOutboundAssociations.m2d
+writing to defaults/node-applDescription.m2d
+writing to defaults/node-applURL.m2d
+writing to defaults/node-applIndex.m2d
+writing to applTable.c
+writing to applTable_data_get.h
+writing to applTable_data_get.c
+| |   +-> Processing nonindex applName
+| |   +-> Processing nonindex applDirectoryName
+| |   +-> Processing nonindex applVersion
+| |   +-> Processing nonindex applUptime
+| |   +-> Processing nonindex applOperStatus
+| |   +-> Processing nonindex applLastChange
+| |   +-> Processing nonindex applInboundAssociations
+| |   +-> Processing nonindex applOutboundAssociations
+| |   +-> Processing nonindex applAccumulatedInboundAssociations
+| |   +-> Processing nonindex applAccumulatedOutboundAssociations
+| |   +-> Processing nonindex applLastInboundActivity
+| |   +-> Processing nonindex applLastOutboundActivity
+| |   +-> Processing nonindex applRejectedInboundAssociations
+| |   +-> Processing nonindex applFailedOutboundAssociations
+| |   +-> Processing nonindex applDescription
+| |   +-> Processing nonindex applURL
+writing to applTable_data_set.h
+writing to applTable_data_set.c
+writing to applTable_oids.h
+writing to applTable_enums.h
+writing to applTable_interface.h
+writing to applTable_interface.c
+writing to applTable_data_access.h
+writing to applTable_data_access.c
+writing to applTable-README-FIRST.txt
+writing to applTable-README-applTable.txt
+running indent on applTable_oids.h
+running indent on applTable_data_access.c
+running indent on applTable_data_get.h
+running indent on applTable.c
+running indent on applTable_data_get.c
+running indent on applTable_data_access.h
+running indent on applTable_data_set.c
+running indent on applTable_enums.h
+running indent on applTable_interface.h
+running indent on applTable.h
+running indent on applTable_data_set.h
+running indent on applTable_interface.c
++ mib2c -c mfd-makefile.m2m applTable
+writing to applTable_Makefile
++ mib2c -c subagent.m2c applTable
+writing to applTable_subagent.c
+running indent on applTable_subagent.c

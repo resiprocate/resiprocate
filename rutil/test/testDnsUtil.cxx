@@ -21,6 +21,19 @@ main(int argc, char* argv[])
    }
    
    {
+      const char rawInput[] = {'8'};
+      const Data addr(Data::Share, rawInput, sizeof(rawInput));
+      resipCerr << "!! "<< addr << endl;
+      assert(!DnsUtil::isIpV4Address(addr));
+   }
+
+   {
+      Data addr("0.0.0.0");
+      resipCerr << "!! "<< addr << endl;
+      assert(DnsUtil::isIpV4Address(addr));
+   }
+
+   {
       Data addr("1:1");
       resipCerr << "!! "<< addr << endl;
       assert(DnsUtil::isIpV6Address(addr));

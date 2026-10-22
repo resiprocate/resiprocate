@@ -117,6 +117,7 @@ min-se, Headers::MinSE
 refer-sub, Headers::ReferSub
 remote-party-id, Headers::RemotePartyId
 history-info, Headers::HistoryInfo
+diversion, Headers::Diversion
 p-access-network-info, Headers::PAccessNetworkInfo
 p-charging-vector, Headers::PChargingVector
 p-charging-function-addresses, Headers::PChargingFunctionAddresses

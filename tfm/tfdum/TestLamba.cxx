@@ -1,8 +1,8 @@
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
+
+#include <functional>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -18,7 +18,7 @@ class FakeUsage
       }
 };
 
-typedef boost::function<void (FakeUsage& f) > FakeUsageFunction;
+typedef std::function<void(FakeUsage& f)> FakeUsageFunction;
 
 int 
 main(int argc, char** argv)
@@ -27,11 +27,11 @@ main(int argc, char** argv)
    
 
 //      DeferCall<FakeUsage> d(bind(&FakeUsage::doSomething, _1, 7, "bob"));
-//      TestEndPoint.hxx:185:      typedef boost::function<bool (boost::shared_ptr<Event> e) > PredicateFn;
+//      TestEndPoint.hxx:185:      typedef std::function<bool(std::shared_ptr<Event> e)> PredicateFn;
 
    FakeUsageFunction d;
-//      boost::function<void, FakeUsage> d;
-   d = bind(&FakeUsage::doSomething, _1, 7, "bob");
+//      std::function<void, FakeUsage> d;
+   d = std::bind(&FakeUsage::doSomething, std::placeholders::_1, 7, "bob");
    InfoLog(<< "Call deferred");
    
    FakeUsage f;

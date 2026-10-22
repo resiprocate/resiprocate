@@ -5,18 +5,22 @@
 #ifdef USE_SSL
 
 #include <iostream>
+#ifdef WIN32
+#include <winsock2.h>  // struct timeval
+#else
+#include <sys/time.h>
+#endif
 #include "rutil/ResipAssert.h"
+#include <ctype.h>
 #include <string.h>
 
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
-#include "bf_dwrap.h"
+
+#include <utility>
+
 using namespace std;
 using namespace dtls;
-
-const int SRTP_MASTER_KEY_BASE64_LEN = SRTP_MASTER_KEY_LEN * 4 / 3;
-const int SRTP_MASTER_KEY_KEY_LEN = 16;
-const int SRTP_MASTER_KEY_SALT_LEN = 14;
 
 // Our local timers
 class dtls::DtlsSocketTimer : public DtlsTimer
@@ -40,61 +44,94 @@ int dummy_cb(int d, X509_STORE_CTX *x)
    return 1;
 }
 
-DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
-   mSocketContext(socketContext),
+DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
+   mSocketContext(std::move(socketContext)),
    mFactory(factory),
-   mReadTimer(0),
-   mSocketType(type), 
-   mHandshakeCompleted(false)
-{  
+   mSsl(newSsl(factory, type)),
+   mInBio(SSL_get_rbio(mSsl)),
+   mOutBio(SSL_get_wbio(mSsl)),
+   mSocketType(type),
+   mHandshakeCompleted(false),
+   mHandshakeFailed(false),
+   mCreated(std::chrono::steady_clock::now())
+{
+   mSocketContext->setDtlsSocket(this);
+}
+
+DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, SSL* acceptedSsl, const std::string& peer):
+   mSocketContext(std::move(socketContext)),
+   mFactory(factory),
+   mSsl(acceptedSsl),
+   mInBio(SSL_get_rbio(acceptedSsl)),
+   mOutBio(SSL_get_wbio(acceptedSsl)),
+   mSocketType(Server),
+   mHandshakeCompleted(false),
+   mHandshakeFailed(false),
+   mCreated(std::chrono::steady_clock::now()),
+   mCookiePeer(peer)
+{
    mSocketContext->setDtlsSocket(this);
 
+   // DTLSv1_listen left the SSL doing cookie exchange, so the cookie callbacks may still be
+   // asked to check one (eg. for a retransmitted ClientHello)
+   SSL_set_ex_data(mSsl, DtlsFactory::cookiePeerIndex(), &mCookiePeer);
+}
+
+SSL*
+DtlsSocket::newSsl(DtlsFactory* factory, SocketType type)
+{
    resip_assert(factory->mContext);
-   mSsl=SSL_new(factory->mContext);
-   resip_assert(mSsl!=0);
+   SSL* ssl=SSL_new(factory->mContext);
+   resip_assert(ssl!=0);
 
    switch(type)
    {
    case Client:
-      SSL_set_connect_state(mSsl);
+      SSL_set_connect_state(ssl);
       break;
    case Server:
-      SSL_set_accept_state(mSsl);
-      SSL_set_verify(mSsl,SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, dummy_cb);
+      SSL_set_accept_state(ssl);
+      SSL_set_verify(ssl,SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, dummy_cb);
       break;
    default:
       resip_assert(0);
    }
 
-   mInBio=BIO_new(BIO_f_dwrap());
-   BIO_push(mInBio,BIO_new(BIO_s_mem()));
+   // Datagrams are passed in and out through memory BIOs: an empty one reads as -1 with the
+   // retry flag set, so OpenSSL wants more input rather than seeing the end of the stream
+   SSL_set_bio(ssl, BIO_new(BIO_s_mem()), BIO_new(BIO_s_mem()));
 
-   mOutBio=BIO_new(BIO_f_dwrap());
-   BIO_push(mOutBio,BIO_new(BIO_s_mem()));
-
-   SSL_set_bio(mSsl,mInBio,mOutBio);
+   // A memory BIO can't tell OpenSSL the MTU, so it would fall back to its minimum (small
+   // records): set it, and don't let OpenSSL query it (which also keeps it through SSL_clear)
+   SSL_set_options(ssl, SSL_OP_NO_QUERY_MTU);
+   DTLS_set_link_mtu(ssl, (long)factory->mMtu);
+   return ssl;
 }
 
 DtlsSocket::~DtlsSocket()
 {
    if(mReadTimer) mReadTimer->invalidate();
 
-   // Properly shutdown the socket and free it - note: this also free's the BIO's
-   SSL_shutdown(mSsl);
+   // Free the SSL - note: this also free's the BIO's.  No SSL_shutdown(): the close_notify it
+   // writes would only go to the memory BIO freed here, never to the peer, and before the
+   // handshake has completed it just leaves an error on this thread's queue.
    SSL_free(mSsl);
 }
 
 void
 DtlsSocket::expired(DtlsSocketTimer* timer)
 {
-   forceRetransmit();
-   //delete timer;
+   // The timer has fired, so nothing will fire it again (the timer context still holds it while
+   // it fires)
+   if(timer == mReadTimer.get())
+   {
+      mReadTimer.reset();
+   }
 
-   //assert(timer == mReadTimer);   
-   //mReadTimer = 0;
+   handleTimeout();
 }
 
-void 
+void
 DtlsSocket::startClient()
 {
    resip_assert(mSocketType == Client);
@@ -103,7 +140,7 @@ DtlsSocket::startClient()
 }
 
 bool
-DtlsSocket::handlePacketMaybe(const unsigned char* bytes, unsigned int len)
+DtlsSocket::handlePacketMaybe(const unsigned char* bytes, size_t len)
 {
    DtlsFactory::PacketType pType=DtlsFactory::demuxPacket(bytes,len);
 
@@ -114,125 +151,280 @@ DtlsSocket::handlePacketMaybe(const unsigned char* bytes, unsigned int len)
    BIO_reset(mInBio);
    BIO_reset(mOutBio);
 
-   r=BIO_write(mInBio,bytes,len);
+   r=BIO_write(mInBio,bytes,(int)len);
    resip_assert(r==(int)len);  // Can't happen
 
    // Note: we must catch any below exceptions--if there are any
-   doHandshakeIteration();
+   if(mHandshakeCompleted)
+   {
+      handlePacketAfterHandshake();
+   }
+   else
+   {
+      doHandshakeIteration();
+   }
 
    return true;
 }
 
 void
-DtlsSocket::forceRetransmit()
+DtlsSocket::handleTimeout()
 {
+   if(mHandshakeCompleted || mHandshakeFailed)
+      return;
+
+   if(serverHandshakeTimeLeft() <= std::chrono::steady_clock::duration::zero())
+   {
+      mHandshakeFailed = true;
+      mSocketContext->handshakeFailed("DTLS handshake not completed in time");
+      scheduleTimer();  // clears the timer
+      return;
+   }
+
    BIO_reset(mInBio);
    BIO_reset(mOutBio);
-   BIO_ctrl(mInBio,BIO_CTRL_DGRAM_SET_RECV_TIMEOUT,0,0);
 
-   doHandshakeIteration();
+   // Retransmits the last flight if OpenSSL's timer has expired (doubling it each time), and
+   // fails once OpenSSL has retransmitted as many times as it allows
+   ERR_clear_error();
+   if(DTLSv1_handle_timeout(mSsl) < 0)
+   {
+      char errbuf[1024];
+      errbuf[0]=0;
+      ERR_error_string_n(ERR_peek_error(),errbuf,sizeof(errbuf));
+      mHandshakeFailed = true;
+      mSocketContext->handshakeFailed(errbuf[0] ? errbuf : "DTLS handshake timed out");
+      ERR_clear_error();
+   }
+
+   writeOutput();
+   scheduleTimer();
 }
 
 void
-DtlsSocket::doHandshakeIteration() 
+DtlsSocket::handlePacketAfterHandshake()
+{
+   // No application data is expected over DTLS-SRTP, but reading processes what the peer sends
+   // after the handshake: eg. its last flight again if it didn't get our final one, which OpenSSL
+   // answers by retransmitting ours
+   ERR_clear_error();
+   unsigned char buffer[2048];
+   while(SSL_read(mSsl, buffer, sizeof(buffer)) > 0)
+   {
+   }
+   ERR_clear_error();
+
+   writeOutput();
+}
+
+void
+DtlsSocket::writeOutput()
+{
+   // The memory BIO holds everything OpenSSL wrote - perhaps several datagrams, run together.  Send
+   // it as datagrams of whole DTLS records (RFC 6347 4.1.1: a datagram can hold several), each no
+   // larger than the MTU, which OpenSSL fits each record to.  A record is a 13 byte header -
+   // content type, version, epoch, sequence number, then its length - and that many bytes.
+   unsigned char *outBioData;
+   int outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
+   const size_t len = outBioLen > 0 ? (size_t)outBioLen : 0;
+   const size_t mtu = mFactory->mMtu;
+   size_t datagramStart = 0;
+   size_t pos = 0;
+   while(pos + 13 <= len)
+   {
+      const size_t recordLen = 13 + ((size_t)outBioData[pos + 11] << 8 | outBioData[pos + 12]);
+      if(pos + recordLen > len)
+      {
+         break;  // can't happen: OpenSSL only writes whole records; the rest is sent as it is
+      }
+      if(pos > datagramStart && pos + recordLen - datagramStart > mtu)
+      {
+         mSocketContext->write(outBioData + datagramStart, (unsigned int)(pos - datagramStart));
+         datagramStart = pos;
+      }
+      pos += recordLen;
+   }
+   if(len > datagramStart)
+   {
+      mSocketContext->write(outBioData + datagramStart, (unsigned int)(len - datagramStart));
+   }
+}
+
+std::chrono::steady_clock::duration
+DtlsSocket::serverHandshakeTimeLeft() const
+{
+   if(mSocketType != Server || mFactory->mServerHandshakeTimeout == 0)
+   {
+      return (std::chrono::steady_clock::duration::max)();  // (parenthesized: Windows' max macro)
+   }
+   return std::chrono::seconds(mFactory->mServerHandshakeTimeout) - getAge();
+}
+
+void
+DtlsSocket::scheduleTimer()
+{
+   // Replaces any timer set before: the timer context frees an invalidated timer when it's due
+   if(mReadTimer)
+   {
+      mReadTimer->invalidate();
+      mReadTimer.reset();
+   }
+
+   // OpenSSL runs the retransmission timer while the handshake is in progress (starting at 1
+   // second and doubling); fire ours when it expires
+   struct timeval tv;
+   if(!mHandshakeCompleted && !mHandshakeFailed && DTLSv1_get_timeout(mSsl, &tv) == 1)
+   {
+      unsigned int waitMs = (unsigned int)tv.tv_sec * 1000 + ((unsigned int)tv.tv_usec + 999) / 1000;
+      // A server socket's handshake fails when its time is up, if that's sooner
+      const std::chrono::steady_clock::duration timeLeft = serverHandshakeTimeLeft();
+      if(timeLeft != (std::chrono::steady_clock::duration::max)())
+      {
+         const long long timeLeftMs = std::chrono::duration_cast<std::chrono::milliseconds>(timeLeft).count() + 1;
+         if(timeLeftMs < (long long)waitMs)
+         {
+            waitMs = timeLeftMs > 0 ? (unsigned int)timeLeftMs : 1;
+         }
+      }
+      mReadTimer = std::make_shared<DtlsSocketTimer>(0, this);
+      mReadTimer->setLock(mSocketContext->timerLock());
+      mFactory->mTimerContext->addTimer(mReadTimer, waitMs > 0 ? waitMs : 1);
+   }
+}
+
+void
+DtlsSocket::doHandshakeIteration()
 {
    int r;
    char errbuf[1024];
    int sslerr;
 
-   if(mHandshakeCompleted)
+   if(mHandshakeCompleted || mHandshakeFailed)
       return;
 
+   // OpenSSL requires this thread's error queue to be empty before the call, since
+   // SSL_get_error() checks it first (the handshake state machine currently clears it
+   // itself, but that isn't documented)
+   ERR_clear_error();
    r=SSL_do_handshake(mSsl);
    errbuf[0]=0;
    ERR_error_string_n(ERR_peek_error(),errbuf,sizeof(errbuf));
-
-   // See what was written
-   int outBioLen;
-   unsigned char *outBioData;  
-   outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
 
    // Now handle handshake errors */
    switch(sslerr=SSL_get_error(mSsl,r))
    {
    case SSL_ERROR_NONE:
-      mHandshakeCompleted = true;       
+      mHandshakeCompleted = true;
       mSocketContext->handshakeCompleted();
-      if(mReadTimer) mReadTimer->invalidate();
-      mReadTimer = 0;
       break;
    case SSL_ERROR_WANT_READ:
-      // There are two cases here:
-      // (1) We didn't get enough data. In this case we leave the
-      //     timers alone and wait for more packets.
-      // (2) We did get a full flight and then handled it, but then
-      //     wrote some more message and now we need to flush them
-      //     to the network and now reset the timers
-      //
-      // If data was written then this means we got a complete
-      // something or a retransmit so we need to reset the timer
-      if(outBioLen)
-      {
-         if(mReadTimer) mReadTimer->invalidate();
-         mReadTimer=new DtlsSocketTimer(0,this);
-         mFactory->mTimerContext->addTimer(mReadTimer,getReadTimeout());
-      }
-
+      // Waiting for the peer's next flight (any we've just written goes out below)
       break;
    default:
       cerr << "SSL error " << sslerr << endl;
 
+      mHandshakeFailed = true;
       mSocketContext->handshakeFailed(errbuf);
+      // Don't leave this failure's errors on the queue: the next OpenSSL call on this thread
+      // that checks SSL_get_error() without clearing it first would take them as its own
+      ERR_clear_error();
       // Note: need to fall through to propagate alerts, if any
       break;
    }
 
-   // If mOutBio is now nonzero-length, then we need to write the
-   // data to the network. TODO: warning, MTU issues! 
-   if(outBioLen)
+   writeOutput();
+   scheduleTimer();
+}
+
+static bool
+equalsIgnoreCase(const char* a, const char* b)
+{
+   for(; *a && *b; a++, b++)
    {
-      //cerr << "Writing data: ";
-      //cerr.write((char*)outBioData, outBioLen);
-      //cerr << " length " << outBioLen << endl;
-      mSocketContext->write(outBioData,outBioLen);
+      if(tolower((unsigned char)*a) != tolower((unsigned char)*b))
+         return false;
    }
+   return *a == *b;
+}
+
+// The RFC 8122 hash function textual names we accept: those of the IANA registry,
+// less md2 and md5, which aren't safe to authenticate a certificate with
+static const EVP_MD*
+fingerprintDigest(const char* hashFunction)
+{
+   if(!hashFunction) return 0;
+   if(equalsIgnoreCase(hashFunction, "sha-1")) return EVP_sha1();
+   if(equalsIgnoreCase(hashFunction, "sha-224")) return EVP_sha224();
+   if(equalsIgnoreCase(hashFunction, "sha-256")) return EVP_sha256();
+   if(equalsIgnoreCase(hashFunction, "sha-384")) return EVP_sha384();
+   if(equalsIgnoreCase(hashFunction, "sha-512")) return EVP_sha512();
+   return 0;
 }
 
 bool
-DtlsSocket::getRemoteFingerprint(char *fprint)
+DtlsSocket::isFingerprintHashFunctionSupported(const char* hashFunction)
 {
-   X509 *x;
+   return fingerprintDigest(hashFunction) != 0;
+}
 
+bool
+DtlsSocket::getRemoteFingerprint(const char* hashFunction, char *fingerprint, size_t fingerprintSize)
+{
+   const EVP_MD* digest = fingerprintDigest(hashFunction);
+   if(!digest)
+      return false;
+
+   X509 *x;
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
    x=SSL_get_peer_certificate(mSsl);
+#else
+   x=SSL_get1_peer_certificate(mSsl);
+#endif
    if(!x) // No certificate
       return false;
 
-   computeFingerprint(x,fprint);
-
-   return true;
+   bool computed = computeFingerprint(x, digest, fingerprint, fingerprintSize);
+   X509_free(x);
+   return computed;
 }
 
 bool
-DtlsSocket::checkFingerprint(const char* fingerprint, unsigned int len)
+DtlsSocket::checkFingerprint(const char* hashFunction, const char* fingerprint)
 {
-   char fprint[100];
+   char fprint[EVP_MAX_MD_SIZE * 3];
 
-   if(getRemoteFingerprint(fprint)==false)
-      return false;
-
-   // used to be strncasecmp
-   if(strncmp(fprint,fingerprint,len)){
-      cerr << "Fingerprint mismatch, got " << fprint << "expecting " << fingerprint << endl;
-      return false;
-   }
-
-   return true;
+   // The whole fingerprint must match; its hex digits may be in either case (RFC 8122 section 5)
+   return fingerprint &&
+          getRemoteFingerprint(hashFunction, fprint, sizeof(fprint)) &&
+          equalsIgnoreCase(fprint, fingerprint);
 }
 
 void
 DtlsSocket::getMyCertFingerprint(char *fingerprint)
 {
    mFactory->getMyCertFingerprint(fingerprint);
+}
+
+// Maps the SRTP protection profile DTLS negotiated to libsrtp's - returns false if there
+// isn't one, or libsrtp doesn't support it (the AES-GCM profiles need libsrtp built with GCM)
+static bool
+negotiatedSrtpProfile(SRTP_PROTECTION_PROFILE* negotiated, srtp_profile_t& profile)
+{
+   if(!negotiated)
+      return false;
+
+   switch(negotiated->id)
+   {
+   case SRTP_AES128_CM_SHA1_80: profile = srtp_profile_aes128_cm_sha1_80; break;
+   case SRTP_AES128_CM_SHA1_32: profile = srtp_profile_aes128_cm_sha1_32; break;
+   case SRTP_AEAD_AES_128_GCM:  profile = srtp_profile_aead_aes_128_gcm;  break;
+   case SRTP_AEAD_AES_256_GCM:  profile = srtp_profile_aead_aes_256_gcm;  break;
+   default: return false;
+   }
+
+   srtp_crypto_policy_t policy;
+   return srtp_crypto_policy_set_from_profile_for_rtp(&policy, profile) == srtp_err_status_ok &&
+          srtp_crypto_policy_set_from_profile_for_rtcp(&policy, profile) == srtp_err_status_ok;
 }
 
 SrtpSessionKeys
@@ -242,21 +434,23 @@ DtlsSocket::getSrtpSessionKeys()
    resip_assert(mHandshakeCompleted);
 
    SrtpSessionKeys keys;
-   memset(&keys, 0x00, sizeof(keys));
-   keys.clientMasterKey = new unsigned char[SRTP_MASTER_KEY_KEY_LEN];
-   keys.clientMasterKeyLen = 0;
-   keys.clientMasterSalt = new unsigned char[SRTP_MASTER_KEY_SALT_LEN];
-   keys.clientMasterSaltLen = 0;
-   keys.serverMasterKey = new unsigned char[SRTP_MASTER_KEY_KEY_LEN];
-   keys.serverMasterKeyLen = 0;
-   keys.serverMasterSalt = new unsigned char[SRTP_MASTER_KEY_SALT_LEN];
-   keys.serverMasterSaltLen = 0;
 
-   unsigned char material[SRTP_MASTER_KEY_LEN << 1];
-   if (!SSL_export_keying_material(
+   srtp_profile_t profile;
+   if(!negotiatedSrtpProfile(getSrtpProfile(), profile))
+   {
+      return keys;
+   }
+   unsigned int keyLen = srtp_profile_get_master_key_length(profile);
+   unsigned int saltLen = srtp_profile_get_master_salt_length(profile);
+
+   // RFC 5764 section 4.2: client key, server key, client salt, server salt
+   unsigned char material[2 * SRTP_MAX_KEY_LEN];
+   size_t materialLen = 2 * (keyLen + saltLen);
+   if(materialLen > sizeof(material) ||
+      !SSL_export_keying_material(
       mSsl,
       material,
-      sizeof(material),
+      materialLen,
       "EXTRACTOR-dtls_srtp", 19, NULL, 0, 0))
    {
       return keys;
@@ -264,20 +458,17 @@ DtlsSocket::getSrtpSessionKeys()
 
    size_t offset = 0;
 
-   memcpy(keys.clientMasterKey, &material[offset], SRTP_MASTER_KEY_KEY_LEN);
-   offset += SRTP_MASTER_KEY_KEY_LEN;
-   memcpy(keys.serverMasterKey, &material[offset], SRTP_MASTER_KEY_KEY_LEN);
-   offset += SRTP_MASTER_KEY_KEY_LEN;
-   memcpy(keys.clientMasterSalt, &material[offset], SRTP_MASTER_KEY_SALT_LEN);
-   offset += SRTP_MASTER_KEY_SALT_LEN;
-   memcpy(keys.serverMasterSalt, &material[offset], SRTP_MASTER_KEY_SALT_LEN);
-   offset += SRTP_MASTER_KEY_SALT_LEN;
-   keys.clientMasterKeyLen = SRTP_MASTER_KEY_KEY_LEN;
-   keys.serverMasterKeyLen = SRTP_MASTER_KEY_KEY_LEN;
-   keys.clientMasterSaltLen = SRTP_MASTER_KEY_SALT_LEN;
-   keys.serverMasterSaltLen = SRTP_MASTER_KEY_SALT_LEN;
+   keys.clientMasterKey.assign(material + offset, material + offset + keyLen);
+   offset += keys.clientMasterKey.size();
+   keys.serverMasterKey.assign(material + offset, material + offset + keyLen);
+   offset += keys.serverMasterKey.size();
+   keys.clientMasterSalt.assign(material + offset, material + offset + saltLen);
+   offset += keys.clientMasterSalt.size();
+   keys.serverMasterSalt.assign(material + offset, material + offset + saltLen);
+   offset += keys.serverMasterSalt.size();
 
-   return keys;   
+   OPENSSL_cleanse(material, sizeof(material));
+   return keys;
 }
 
 SRTP_PROTECTION_PROFILE*
@@ -288,109 +479,77 @@ DtlsSocket::getSrtpProfile()
    return SSL_get_selected_srtp_profile(mSsl);
 }
 
-// Fingerprint is assumed to be long enough
 void
-DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint) 
+DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint)
 {
-   unsigned char md[EVP_MAX_MD_SIZE];
-   int r;
-   unsigned int i,n;
-
-   //r=X509_digest(cert,EVP_sha1(),md,&n);
-   r=X509_digest(cert,EVP_sha256(),md,&n);  // !slg! TODO - is sha1 vs sha256 supposed to come from DTLS handshake? fixing to to SHA-256 for compatibility with current web-rtc implementations
-   resip_assert(r==1);
-
-   for(i=0;i<n;i++)
-   {
-      sprintf(fingerprint,"%02X",md[i]);
-      fingerprint+=2;
-
-      if(i<(n-1))
-         *fingerprint++=':';
-      else
-         *fingerprint++=0;
-   }
+   bool computed = computeFingerprint(cert, EVP_sha256(), fingerprint, FingerprintSize);
+   resip_assert(computed);
 }
 
-//TODO: assert(0) into exception, as elsewhere
-void
+bool
+DtlsSocket::computeFingerprint(X509 *cert, const EVP_MD* digest, char *fingerprint, size_t fingerprintSize)
+{
+   unsigned char md[EVP_MAX_MD_SIZE];
+   unsigned int n;
+
+   if(X509_digest(cert,digest,md,&n) != 1 || n == 0 ||
+      fingerprintSize < n * 3)  // 2 hex digits and a colon (or the terminating null) per byte
+   {
+      return false;
+   }
+
+   static const char hex[] = "0123456789ABCDEF";
+   for(unsigned int i=0;i<n;i++)
+   {
+      *fingerprint++ = hex[md[i] >> 4];
+      *fingerprint++ = hex[md[i] & 0x0f];
+      *fingerprint++ = (i < n-1) ? ':' : 0;
+   }
+   return true;
+}
+
+// Fills in a policy for one direction's keys, from the negotiated profile
+static void
+initSrtpPolicy(srtp_policy_t& policy, srtp_profile_t profile, const std::vector<unsigned char>& key, const std::vector<unsigned char>& salt)
+{
+   memset(&policy, 0, sizeof(srtp_policy_t));
+   policy.window_size = 128;
+   policy.allow_repeat_tx = 1;
+
+   uint8_t* keyAndSalt = new uint8_t[SRTP_MAX_KEY_LEN];
+   memcpy(keyAndSalt, key.data(), key.size());
+   memcpy(keyAndSalt + key.size(), salt.data(), salt.size());
+   policy.key = keyAndSalt;
+
+   // Can't fail: negotiatedSrtpProfile has checked libsrtp supports the profile
+   srtp_crypto_policy_set_from_profile_for_rtp(&policy.rtp, profile);
+   srtp_crypto_policy_set_from_profile_for_rtcp(&policy.rtcp, profile);
+   policy.next = NULL;
+}
+
+bool
 DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy)
 {
    resip_assert(mHandshakeCompleted);
 
-   /* we assume that the default profile is in effect, for now */
-   srtp_profile_t profile = srtp_profile_aes128_cm_sha1_80;
-   int key_len = srtp_profile_get_master_key_length(profile);
-   int salt_len = srtp_profile_get_master_salt_length(profile);
+   srtp_profile_t profile;
+   if(!negotiatedSrtpProfile(getSrtpProfile(), profile))
+   {
+      return false;
+   }
 
-   /* get keys from srtp_key and initialize the inbound and outbound sessions */
-   uint8_t *client_master_key_and_salt=new uint8_t[SRTP_MAX_KEY_LEN];
-   uint8_t *server_master_key_and_salt=new uint8_t[SRTP_MAX_KEY_LEN];
+   SrtpSessionKeys srtp_key = getSrtpSessionKeys();
+   if(srtp_key.clientMasterKey.empty())
+   {
+      return false;
+   }
+
    srtp_policy_t client_policy;
-   memset(&client_policy, 0, sizeof(srtp_policy_t));
-   client_policy.window_size = 128;
-   client_policy.allow_repeat_tx = 1;
+   initSrtpPolicy(client_policy, profile, srtp_key.clientMasterKey, srtp_key.clientMasterSalt);
    srtp_policy_t server_policy;
-   memset(&server_policy, 0, sizeof(srtp_policy_t));
-   server_policy.window_size = 128;
-   server_policy.allow_repeat_tx = 1;
+   initSrtpPolicy(server_policy, profile, srtp_key.serverMasterKey, srtp_key.serverMasterSalt);
 
-   SrtpSessionKeys srtp_key = getSrtpSessionKeys();   
-   /* set client_write key */  
-   client_policy.key = client_master_key_and_salt;
-   if (srtp_key.clientMasterKeyLen != key_len)
-   {
-      cout << "error: unexpected client key length" << endl;
-      resip_assert(0);
-   }
-   if (srtp_key.clientMasterSaltLen != salt_len)
-   {
-      cout << "error: unexpected client salt length" << endl;
-      resip_assert(0);      
-   }
-
-   memcpy(client_master_key_and_salt, srtp_key.clientMasterKey, key_len);
-   memcpy(client_master_key_and_salt + key_len, srtp_key.clientMasterSalt, salt_len);
-
-   //cout << "client master key and salt: " << 
-   //   octet_string_hex_string(client_master_key_and_salt, key_len + salt_len) << endl;
-
-   /* initialize client SRTP policy from profile  */
-   err_status_t err = crypto_policy_set_from_profile_for_rtp(&client_policy.rtp, profile);   
-   if (err) resip_assert(0);
-
-   err = crypto_policy_set_from_profile_for_rtcp(&client_policy.rtcp, profile);
-   if (err) resip_assert(0);
-   client_policy.next = NULL;
-
-   /* set server_write key */
-   server_policy.key = server_master_key_and_salt;
-
-   if (srtp_key.serverMasterKeyLen != key_len)
-   {
-      cout << "error: unexpected server key length" << endl;
-      resip_assert(0);
-   }
-   if (srtp_key.serverMasterSaltLen != salt_len)
-   {
-      cout << "error: unexpected salt length" << endl;
-      resip_assert(0);      
-   }
-
-   memcpy(server_master_key_and_salt, srtp_key.serverMasterKey, key_len);
-   memcpy(server_master_key_and_salt + key_len, srtp_key.serverMasterSalt, salt_len);
-   //cout << "server master key and salt: " << 
-   //   octet_string_hex_string(server_master_key_and_salt, key_len + salt_len) << endl;
-
-   /* initialize server SRTP policy from profile  */
-   err = crypto_policy_set_from_profile_for_rtp(&server_policy.rtp, profile);
-   if (err) resip_assert(0);
-
-   err = crypto_policy_set_from_profile_for_rtcp(&server_policy.rtcp, profile);
-   if (err) resip_assert(0);
-   server_policy.next = NULL;
-
-   if (mSocketType == Client) 
+   if (mSocketType == Client)
    {
       client_policy.ssrc.type = ssrc_any_outbound;
       outboundPolicy = client_policy;
@@ -406,24 +565,90 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
       client_policy.ssrc.type = ssrc_any_inbound;
       inboundPolicy = client_policy;
    }
-   /* zeroize the input keys (but not the srtp session keys that are in use) */
-   //not done...not much of a security whole imho...the lifetime of these seems odd though
-   //    memset(client_master_key_and_salt, 0x00, SRTP_MAX_KEY_LEN);
-   //    memset(server_master_key_and_salt, 0x00, SRTP_MAX_KEY_LEN);
-   //    memset(&srtp_key, 0x00, sizeof(srtp_key));
+
+   OPENSSL_cleanse(srtp_key.clientMasterKey.data(), srtp_key.clientMasterKey.size());
+   OPENSSL_cleanse(srtp_key.serverMasterKey.data(), srtp_key.serverMasterKey.size());
+   OPENSSL_cleanse(srtp_key.clientMasterSalt.data(), srtp_key.clientMasterSalt.size());
+   OPENSSL_cleanse(srtp_key.serverMasterSalt.data(), srtp_key.serverMasterSalt.size());
+   return true;
 }
 
-// Wrapper for currently nonexistent OpenSSL fxn
-int
-DtlsSocket::getReadTimeout()
+DtlsListener::DtlsListener(DtlsFactory* factory) :
+   mFactory(factory),
+   mSsl(0)
 {
-   return 500;
+}
+
+DtlsListener::~DtlsListener()
+{
+   if(mSsl) SSL_free(mSsl);
+}
+
+DtlsSocket*
+DtlsListener::handlePacket(const unsigned char* bytes, size_t len, const std::string& peer,
+                           std::vector<unsigned char>& response,
+                           const std::function<std::unique_ptr<DtlsSocketContext>()>& makeContext)
+{
+   response.clear();
+   if(len == 0 || DtlsFactory::demuxPacket(bytes, len) != DtlsFactory::dtls)
+   {
+      return 0;
+   }
+
+   if(!mSsl)
+   {
+      mSsl = DtlsSocket::newSsl(mFactory, DtlsSocket::Server);
+      SSL_set_ex_data(mSsl, DtlsFactory::cookiePeerIndex(), &mPeer);
+   }
+   mPeer = peer;
+
+   BIO* inBio = SSL_get_rbio(mSsl);
+   BIO* outBio = SSL_get_wbio(mSsl);
+   BIO_reset(inBio);
+   BIO_reset(outBio);
+   int r = BIO_write(inBio, bytes, (int)len);
+   resip_assert(r == (int)len);  // Can't happen
+
+   // Answers a ClientHello without a valid cookie for peer with a HelloVerifyRequest, keeping
+   // nothing: returns 1 only for a ClientHello with a valid cookie
+   ERR_clear_error();
+   BIO_ADDR* address = BIO_ADDR_new();
+   r = DTLSv1_listen(mSsl, address);
+   BIO_ADDR_free(address);
+
+   unsigned char* out = 0;
+   long outLen = BIO_get_mem_data(outBio, &out);
+   if(outLen > 0)
+   {
+      response.assign(out, out + outLen);
+   }
+
+   if(r <= 0)
+   {
+      // Not a ClientHello with a valid cookie (r is 0), or one OpenSSL couldn't handle (r < 0,
+      // so start again with a fresh SSL).  Don't leave its errors for the next caller on this thread.
+      ERR_clear_error();
+      if(r < 0)
+      {
+         SSL_free(mSsl);
+         mSsl = 0;
+      }
+      return 0;
+   }
+
+   // The peer has proved it receives at its address: the SSL, holding its ClientHello, becomes
+   // the new server socket's, which carries on the handshake
+   DtlsSocket* socket = new DtlsSocket(makeContext(), mFactory, mSsl, peer);
+   mSsl = 0;
+   socket->doHandshakeIteration();
+   return socket;
 }
 
 #endif 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

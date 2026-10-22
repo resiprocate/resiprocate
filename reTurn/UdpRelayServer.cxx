@@ -1,4 +1,4 @@
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "UdpRelayServer.hxx"
 #include "StunMessage.hxx"
@@ -13,7 +13,7 @@ using namespace std;
 
 namespace reTurn {
 
-UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation)
+UdpRelayServer::UdpRelayServer(asio::io_context& ioService, TurnAllocation& turnAllocation)
 : AsyncUdpSocketBase(ioService),
   mTurnAllocation(turnAllocation),
   mStopping(false),
@@ -61,7 +61,7 @@ UdpRelayServer::stop()
 }
 
 void 
-UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    if(mStopping)
    {

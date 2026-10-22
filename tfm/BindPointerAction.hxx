@@ -2,7 +2,7 @@
 #define BindPointerAction_hxx
 
 #include "rutil/Data.hxx"
-#include <boost/function.hpp>
+#include <functional>
 #include "tfm/ActionBase.hxx"
 #include <XsLib/h/CXsRefPtr.h>
 
@@ -19,10 +19,9 @@ class BindPointerAction : public ActionBase
          {}
       virtual ~BindPointerAction() {}
 
-      virtual void operator()(boost::shared_ptr<Event> event)
+      virtual void operator()(std::shared_ptr<Event> event)
       {
-         boost::shared_ptr<E> e
-            = boost::dynamic_pointer_cast<E, Event>(event);
+         auto e = std::dynamic_pointer_cast<E, Event>(event);
 
          resip_assert(e.get());
 

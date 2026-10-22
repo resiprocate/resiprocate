@@ -21,6 +21,7 @@
 #include <rutil/ThreadIf.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
 // sipX includes
 #include <os/OsSysLog.h>
 
@@ -58,11 +59,11 @@ public:
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(Server& server, SharedPtr<UserAgentMasterProfile> profile, resip::AfterSocketCreationFuncPtr socketFunc) :
+   MyUserAgent(Server& server, std::shared_ptr<UserAgentMasterProfile> profile, resip::AfterSocketCreationFuncPtr socketFunc) :
       UserAgent(&server, profile, socketFunc),
       mServer(server) {}
 
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+   void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override
    {
       if(id == MAXPARKTIMEOUT)
       {
@@ -70,17 +71,19 @@ public:
       }
       else
       {
-         InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+         InfoLog(<< "onApplicationTimeout: id=" << id
+                 << " dur=" << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
+                 << " seq=" << seq);
       }
       
    }
 
-   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode)
+   void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode) override
    {
       InfoLog(<< "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
    }
 
-   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
+   void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData) override
    {
       InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
@@ -99,7 +102,8 @@ public:
                            const char* file,
                            int line,
                            const Data& message,
-                           const Data& messageWithHeaders)
+                           const Data& messageWithHeaders,
+                           const Data& instanceName)
    {
       // Log any warnings/errors to the screen and all MOHParkServer logging messages
       if(level <= Log::Warning || subsystem.getSubsystem() == AppSubsystem::MOHPARKSERVER.getSubsystem())
@@ -112,7 +116,7 @@ public:
 MOHParkServerLogger g_MOHParkServerLogger;
 
 Server::Server(ConfigParser& config) : 
-   ConversationManager(false /* local audio? */, ConversationManager::sipXConversationMediaInterfaceMode),
+   ConversationManager(nullptr),
    mConfig(config),
    mIsV6Avail(false),
    mMyUserAgent(0),
@@ -127,6 +131,8 @@ Server::Server(ConfigParser& config) :
       OsSysLog::initialize(0, "MOHParkServer");
       OsSysLog::setOutputFile(0, mConfig.mSipXLogFilename.c_str()) ;
    }
+
+   setMediaStackAdapter(make_shared<SipXMediaStackAdapter>(*this, false /* local audio? */, SipXMediaStackAdapter::sipXConversationMediaInterfaceMode));
 
    InfoLog( << "MOHParkServer settings:");
    ConfigParser::MOHSettingsMap::iterator itMOH = mConfig.mMOHSettingsMap.begin();
@@ -192,7 +198,7 @@ Server::Server(ConfigParser& config) :
    // Setup UserAgentMasterProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   auto profile = std::make_shared<UserAgentMasterProfile>();
 
    // Add transports
    try
@@ -208,27 +214,27 @@ Server::Server(ConfigParser& config) :
       }
       if(mConfig.mUdpPort != (unsigned short)-1)
       {
-         profile->addTransport(UDP, mConfig.mUdpPort, V4, mConfig.mAddress);
+         profile->addTransport(UDP, mConfig.mUdpPort, V4, StunDisabled, mConfig.mAddress);
          if(mIsV6Avail)
          {
-            profile->addTransport(UDP, mConfig.mUdpPort, V6, mConfig.mAddress);
+            profile->addTransport(UDP, mConfig.mUdpPort, V6, StunDisabled, mConfig.mAddress);
          }
       }
       if(mConfig.mTcpPort != (unsigned short)-1)
       {
-         profile->addTransport(TCP, mConfig.mTcpPort, V4, mConfig.mAddress);
+         profile->addTransport(TCP, mConfig.mTcpPort, V4, StunDisabled, mConfig.mAddress);
          if(mIsV6Avail)
          {
-            profile->addTransport(TCP, mConfig.mTcpPort, V6, mConfig.mAddress);
+            profile->addTransport(TCP, mConfig.mTcpPort, V6, StunDisabled, mConfig.mAddress);
          }
       }
 #ifdef USE_SSL
       if(mConfig.mTlsPort != (unsigned short)-1)
       {
-         profile->addTransport(TLS, mConfig.mTlsPort, V4, mConfig.mAddress, mConfig.mTlsDomain);
+         profile->addTransport(TLS, mConfig.mTlsPort, V4, StunDisabled, mConfig.mAddress, mConfig.mTlsDomain);
          if(mIsV6Avail)
          {
-            profile->addTransport(TLS, mConfig.mTlsPort, V6, mConfig.mAddress, mConfig.mTlsDomain);
+            profile->addTransport(TLS, mConfig.mTlsPort, V6, StunDisabled, mConfig.mAddress, mConfig.mTlsDomain);
          }
       }
 #endif
@@ -331,8 +337,7 @@ Server::Server(ConfigParser& config) :
    profile->rtpPortRangeMax() = mConfig.mMediaPortRangeStart + mConfig.mMediaPortRangeSize-1; 
 
    // Install Sdp Message Decorator
-   SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
-   profile->setOutboundDecorator(outboundDecorator);
+   profile->setOutboundDecorator(std::make_shared<SdpMessageDecorator>());
 
    mUserAgentMasterProfile = profile;
 
@@ -385,7 +390,7 @@ void
 Server::initializeResipLogging(unsigned int maxByteCount, const Data& level, const Data& resipFilename)
 {
    // Initialize loggers
-   GenericLogImpl::MaxByteCount = maxByteCount; 
+   Log::setMaxByteCount(maxByteCount); 
    Log::initialize("file", level.c_str(), "", resipFilename.c_str(), &g_MOHParkServerLogger);
 }
 
@@ -406,7 +411,7 @@ Server::startup()
    }
 
    // Create a ParkManager for each setting in map can call startup
-   assert(mParkManagerMap.empty());
+   resip_assert(mParkManagerMap.empty());
    ConfigParser::ParkSettingsMap::iterator itPark = mConfig.mParkSettingsMap.begin();
    for (; itPark != mConfig.mParkSettingsMap.end(); itPark++)
    {
@@ -450,8 +455,10 @@ Server::shutdown()
 void 
 Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
 {
-   unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
+   std::vector<unsigned int> codecIds = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */,
                                SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
+                               SdpCodec::SDP_CODEC_G729A /* 18 - g729 */,
+                               SdpCodec::SDP_CODEC_OPUS /* 147 - opus */,
                                SdpCodec::SDP_CODEC_SPEEX /* 96 - speex NB 8,000bps */,
                                SdpCodec::SDP_CODEC_SPEEX_15 /* 98 - speex NB 15,000bps */, 
                                SdpCodec::SDP_CODEC_SPEEX_24 /* 99 - speex NB 24,600bps */,
@@ -465,8 +472,7 @@ Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
                                SdpCodec::SDP_CODEC_SPEEX_5 /* 97 - speex NB 5,950bps */,
                                SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
-   unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
-   ConversationManager::buildSessionCapabilities(mConfig.mAddress, numCodecIds, codecIds, sessionCaps);
+   getMediaStackAdapter().buildSessionCapabilities(mConfig.mAddress, codecIds, sessionCaps);
 }
 
 void 
@@ -629,6 +635,12 @@ void
 Server::onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
 {
    InfoLog(<< "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
+}
+
+void
+Server::onParticipantRequestedHold(ParticipantHandle partHandle, bool held)
+{
+   InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
 }
 
 void 

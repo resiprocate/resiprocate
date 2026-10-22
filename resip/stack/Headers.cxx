@@ -11,11 +11,8 @@
 #include "resip/stack/HeaderHash.hxx"
 
 #include <iostream>
+
 using namespace std;
-
-//int strcasecmp(const char*, const char*);
-//int strncasecmp(const char*, const char*, int len);
-
 using namespace resip;
 
 Data Headers::HeaderNames[MAX_HEADERS+1];
@@ -141,8 +138,6 @@ defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903");
 defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
 defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
 
-defineHeader(Identity, "Identity", StringCategory, "RFC 4474");
-
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 // explicitly declare to avoid h_AllowEventss, ugh
 H_AllowEventss resip::h_AllowEvents;
@@ -172,7 +167,7 @@ defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488");
 defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
 defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
 
-defineHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 3455");
+defineMultiHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 7315"); // section 5.4.
 defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455");
 defineHeader(PChargingFunctionAddresses, "P-Charging-Function-Addresses", Token, "RFC 3455");
 
@@ -187,7 +182,7 @@ defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
 //====================
 // GenericUris:
 //====================
-defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474");
+defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474");   // deprecated by RFC8224
 
 typedef ParserContainer<GenericUri> GenericUris;
 defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261");
@@ -225,6 +220,7 @@ defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
 defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
 defineMultiHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
 defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244");
+defineMultiHeader(Diversion, "Diversion", NameAddr, "RFC 5806");
 
 //====================
 // String:
@@ -311,6 +307,14 @@ defineMultiHeader(Via, "Via", Via, "RFC 3261");
 defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", TokenOrQuotedStringCategory, "RFC 3455");
 defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
 
+//============================
+// IdentityCategory
+//============================
+defineMultiHeader(Identity, "Identity", IdentityCategory, "RFC 8224");  // Originally defined in RFC 4474 as a single header, but later modified by RFC8224 to be a multiheader
+// explicitly declare to avoid h_Identitys
+H_Identitys resip::h_Identities;
+
+
 //Enforces string encoding of extension headers
 Headers::Type                                                          
 H_RESIP_DO_NOT_USEs::getTypeNum() const {return Headers::RESIP_DO_NOT_USE;}                                                                               
@@ -344,7 +348,7 @@ RequestLineType resip::h_RequestLine;
 StatusLineType resip::h_StatusLine;
 
 Headers::Type
-Headers::getType(const char* name, int len)
+Headers::getType(const char* name, size_t len)
 {
    const struct headers* p;
    p = HeaderHash::in_word_set(name, len);
@@ -354,6 +358,7 @@ Headers::getType(const char* name, int len)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

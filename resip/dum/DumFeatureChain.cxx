@@ -1,11 +1,10 @@
-#include <vector>
-
-#include "rutil/SharedPtr.hxx"
 #include "resip/dum/TargetCommand.hxx"
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/DumFeatureChain.hxx"
 #include "resip/stack/Message.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#include <utility>
 
 using namespace resip;
 using namespace std;
@@ -24,11 +23,11 @@ class GuardFeature : public DumFeature
 };
 
 DumFeatureChain::DumFeatureChain(DialogUsageManager& dum,
-                                 const FeatureList& features,
+                                 FeatureList features,
                                  TargetCommand::Target& target)
-   :mFeatures(features)
+   : mFeatures(std::move(features))
 {
-   mFeatures.push_back(SharedPtr<DumFeature>(new GuardFeature(dum, target)));
+   mFeatures.emplace_back(std::make_shared<GuardFeature>(dum, target));
    for (FeatureList::size_type i = 0; i < mFeatures.size(); ++i)
    {
       mActiveFeatures.push_back(true);
@@ -65,10 +64,10 @@ DumFeatureChain::ProcessingResult DumFeatureChain::process(Message* msg)
                break;
          }
 
-         if (pres & DumFeature::EventDoneBit)
+         if (static_cast<unsigned int>(pres) & DumFeature::EventDoneBit)
          {
             delete msg;
-            int bits = pres;
+            unsigned int bits = pres;
             bits ^= DumFeature::EventDoneBit;
             bits |= DumFeature::EventTaken;
             pres = static_cast<DumFeature::ProcessingResult>(bits);
@@ -81,13 +80,13 @@ DumFeatureChain::ProcessingResult DumFeatureChain::process(Message* msg)
    while(!stop && feat != mFeatures.end());
 
 
-   int chainBits = 0;
-   if (pres & DumFeature::ChainDoneBit || feat == mFeatures.end())
+   unsigned int chainBits = 0;
+   if (static_cast<unsigned int>(pres) & DumFeature::ChainDoneBit || feat == mFeatures.end())
    {
       chainBits |= ChainDoneBit;
    }
 
-   if (pres & DumFeature::EventTakenBit)
+   if (static_cast<unsigned int>(pres) & DumFeature::EventTakenBit)
    {
       chainBits |= EventTakenBit;
    }

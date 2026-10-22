@@ -87,9 +87,9 @@ InMemoryRegistrationDatabase::lockRecord(const Uri& aor)
     mDatabase[aor];
   }
 
-  while (mLockedRecords.count(aor))
+  while (mLockedRecords.find(aor) != mLockedRecords.end())
   {
-    mRecordUnlocked.wait(mLockedRecordsMutex);
+    mRecordUnlocked.wait(g2);
   }
 
   mLockedRecords.insert(aor);
@@ -115,7 +115,7 @@ InMemoryRegistrationDatabase::unlockRecord(const Uri& aor)
   }
 
   mLockedRecords.erase(aor);
-  mRecordUnlocked.broadcast();
+  mRecordUnlocked.notify_all();
 }
 
 RegistrationPersistenceManager::update_status_t 
@@ -211,7 +211,7 @@ InMemoryRegistrationDatabase::getContacts(const Uri& aor, ContactList& container
 class RemoveIfExpired
 {
 protected:
-    UInt64 now;
+    uint64_t now;
 public:
     RemoveIfExpired()
     {

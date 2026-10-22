@@ -10,7 +10,7 @@ using namespace repro;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
-PresenceServer::PresenceServer(DialogUsageManager& dum, Dispatcher* userDispatcher, bool presenceUsesRegistrationState, 
+PresenceServer::PresenceServer(DialogUsageManager& dum, resip::Dispatcher* userDispatcher, bool presenceUsesRegistrationState, 
                                bool PresenceNotifyClosedStateForNonPublishedUsers) :
    mDum(dum), 
    mPresenceSubscriptionHandler(dum, userDispatcher, presenceUsesRegistrationState, PresenceNotifyClosedStateForNonPublishedUsers),

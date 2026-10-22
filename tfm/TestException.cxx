@@ -8,7 +8,7 @@ TestException::TestException(const resip::Data& msg,
 {
 }
 const char* 
-TestException::name() const 
+TestException::name() const noexcept
 {
    return "TestException";
 }

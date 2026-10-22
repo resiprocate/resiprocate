@@ -1,6 +1,8 @@
 #include "CppTestSelector.hxx"
+#include <ctype.h>
+#include <cstring>
 #include <iostream>
-#include <boost/algorithm/string.hpp>
+#include <regex>
 
 
 using namespace std;
@@ -14,7 +16,7 @@ CommandLineSelector::CommandLineSelector(int argc, char** argv) : mArgNumTimes(0
 	{
 		std::string userInput = argv[i];
 
-		if(isdigit(*userInput.c_str()))
+		if(isdigit(static_cast< unsigned char >(*userInput.c_str())))
 		{
 		   int res = atoi(userInput.c_str());
 
@@ -57,9 +59,9 @@ void CommandLineSelector::DisplayTestCases(std::vector<std::string>& names)
 void CommandLineSelector::DisplayTestCases2(std::vector<std::string>& names)
 {
    int i;
-   int off   = 0;
-   int off1  = 0;
-   int off2  = 0;
+   size_t off   = 0;
+   size_t off1  = 0;
+   size_t off2  = 0;
    const char *sep = "::";
    const char *indent0 = "  ";
    const char *indent1 = "    ";
@@ -109,7 +111,7 @@ void CommandLineSelector::ReadLineInput(std::vector<int> &result, int maxSelecti
       std::cout << "Enter a test number (or pattern) followed by number of repetitions: ";
       std::cin >> userInput;
       std::cin >> repeatStr;
-      if(isdigit(*userInput.c_str()))
+      if(isdigit(static_cast< unsigned char >(*userInput.c_str())))
       {
          res = atoi(userInput.c_str());
          if(res == maxSelection)  
@@ -162,17 +164,19 @@ void CommandLineSelector::GetUserSelection(std::vector<std::string>& names, std:
 
    size_t startFrom = 0;
 
-   if(boost::istarts_with(mPattern, L">="))
+   std::wstring prefix1 = L">=";
+   std::wstring prefix2 = L">";
+   if(std::equal(prefix1.begin(), prefix1.end(), mPattern.begin()))
    {
       string pattern = mPattern;
-      boost::algorithm::ireplace_all(pattern, ">=", "");
+      pattern = std::regex_replace(pattern, std::regex(">="), "");
 
       startFrom = atoi(pattern.c_str());
    }
-   else if(boost::istarts_with(mPattern, L">"))
+   else if(std::equal(prefix2.begin(), prefix2.end(), mPattern.begin()))
    {
       string pattern = mPattern;
-      boost::algorithm::ireplace_all(pattern, ">", "");
+      pattern = std::regex_replace(pattern, std::regex(">"), "");
 
       startFrom = atoi(pattern.c_str());
       if(startFrom > 0)
@@ -184,9 +188,9 @@ void CommandLineSelector::GetUserSelection(std::vector<std::string>& names, std:
    if(startFrom > 0 && startFrom < names.size())
    {
       // Match by > or >=
-      for(unsigned int i = startFrom; i < names.size(); i++)
+      for(size_t i = startFrom; i < names.size(); i++)
       {
-         result.push_back(i);
+         result.push_back((int)i);
       }
       return;
    }
@@ -201,7 +205,7 @@ void CommandLineSelector::GetUserSelection(std::vector<std::string>& names, std:
 
       bool topLevel = (name.find_first_of("::") == (name.find_last_of("::") - 1));
 
-      if(boost::contains(name, mPattern))
+      if(name.find(mPattern) != std::string::npos)
       {
          if(topLevel)
          {
@@ -254,7 +258,7 @@ void CppTestSelector::GetTestCases(CppUnit::Test *test, std::vector<std::string>
 // may throw memory exception 
 int CppTestSelector::SelectTests(CppUnit::Test *suite, CppUnit::TestRunner &testRunner, UISelector &uiSelector, int &numTimes)
 {
-	CppUnitVector<std::string>    testNames ;
+	std::vector<std::string> testNames;
 	std::vector<int>   selectedTests;
 	size_t i = 0;
 	numTimes = 1;

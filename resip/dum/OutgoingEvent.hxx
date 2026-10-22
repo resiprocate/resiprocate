@@ -1,10 +1,11 @@
 #if !defined(RESIP_OUTGOINGEVENT_HXX)
 #define RESIP_OUTGOINGEVENT_HXX
 
-#include "rutil/SharedPtr.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -12,23 +13,22 @@ namespace resip
 class OutgoingEvent : public Message
 {
    public:
-      //OutgoingEvent(std::auto_ptr<SipMessage> msg);
-      OutgoingEvent(SharedPtr<SipMessage> msg);
+      //OutgoingEvent(std::unique_ptr<SipMessage> msg);
+      explicit OutgoingEvent(std::shared_ptr<SipMessage> msg);
       OutgoingEvent(const OutgoingEvent&);
-      ~OutgoingEvent();
 
-      SharedPtr<SipMessage> message();
+      std::shared_ptr<SipMessage> message() const noexcept;
       const Data& getTransactionId() const { return mMessage->getTransactionId(); }
 
       //void releaseMessage();
 
-      virtual Message* clone() const;
-      virtual EncodeStream& encode(EncodeStream& strm) const;
-      virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
+      Message* clone() const override;
+      EncodeStream& encode(EncodeStream& strm) const override;
+      EncodeStream& encodeBrief(EncodeStream& strm) const override;
       
    private:
-      //mutable std::auto_ptr<SipMessage> mMessage;
-      SharedPtr<SipMessage> mMessage;
+      //mutable std::unique_ptr<SipMessage> mMessage;
+      std::shared_ptr<SipMessage> mMessage;
 };
 
 }

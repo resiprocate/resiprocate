@@ -1,0 +1,67 @@
+
+If you use the helper scripts build/debian.sh or build/fedora.sh
+they will automatically check if you have ccache and distcc
+on your system and enable both of them.
+
+ccache improves performance even if you only have a single system to
+build on.
+
+For our scripts to work, please install both of them together, even
+if you only need one of them:
+
+Debian/Ubuntu:
+
+   $ sudo apt install ccache distcc distcc-pump
+
+Fedora/Red Hat/RPM-based systems:
+
+   $ sudo dnf install ccache distcc
+
+On each host that will participate in a distcc build you need to install
+the distcc package and the same compiler used on the primary workstation.
+For example, if you are using GNU C/C++ locally, you need to install that
+on every distcc host.  If you use CLang locally, you need to install that
+on every distcc host too.
+
+If you are using the regular distcc TCP connection over a LAN or VPN,
+on each of the participating build servers, run the distccd daemon,
+for example:
+
+   $ distccd --daemon
+
+If you are going to use distcc over SSH then do not start the daemon,
+the client starts it for you.
+
+On the workstation where you are starting the build, you can setup
+the distcc configuration in an environment variable or configuration
+file.  Here is a simple example with the environment variable:
+
+   $ export DISTCC_HOSTS='localhost/2 --localslots_cpp=5 192.168.1.105/63'
+
+The above command includes the following:
+
+  localhost/2            - use up to 2 cores on the local CPU
+    --localslots_cpp=5   - use up to 5 cores for C preprocessor locally
+  192.168.1.105/63       - use up to 63 cores on server 192.168.1.105
+
+If you want to use SSH instead of TCP, use this environment variable instead:
+
+   $ export DISTCC_HOSTS='localhost/2 --localslots_cpp=5 @192.168.1.105/63'
+
+With the environment configured, you can now run the configure and compile.
+For example, on a Debian/Ubuntu host:
+
+   $ ssh 192.168.1.105 distccd --daemon
+   $ export DISTCC_HOSTS='localhost/2 --localslots_cpp=5 192.168.1.105/63'
+   $ build/debian.sh
+   $ make clean
+   $ make -j70
+
+On a Fedora/Red Hat host:
+
+   $ ssh 192.168.1.105 distccd --daemon
+   $ export DISTCC_HOSTS='localhost/2 --localslots_cpp=5 192.168.1.105/63'
+   $ build/fedora.sh
+   $ make clean
+   $ make -j70
+

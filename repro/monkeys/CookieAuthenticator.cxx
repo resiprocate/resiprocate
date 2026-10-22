@@ -18,7 +18,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/UserInfoMessage.hxx"
 #include "repro/UserStore.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -72,7 +72,7 @@ CookieAuthenticator::process(repro::RequestContext &rc)
          sipMessage->header(h_From).isAllContacts() )
       {
          InfoLog(<<"Malformed From header: cannot verify against cookie. Rejecting.");
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                          (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
          return SkipAllChains;
       }
@@ -100,13 +100,13 @@ CookieAuthenticator::process(repro::RequestContext &rc)
                return Continue;
             }
          }
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                            (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
          return SkipAllChains;
       }
       else
       {
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                            (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
          return SkipAllChains;
       }

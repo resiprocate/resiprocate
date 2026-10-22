@@ -11,6 +11,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "parser.h"
 
 
@@ -31,7 +32,7 @@ static char *camelback(char *name)
 
     for(j=0;j<strlen(name);j++){
       if(leading){
-        buf[i++]=toupper(name[j]);
+        buf[i++]=toupper((unsigned char)name[j]);
         leading=0;
       }
       else{
@@ -53,7 +54,7 @@ char *name2namespace(char *name)
 
     p=tmp;
     while(*p){
-      if(!isalnum(*p))
+      if(!isalnum((unsigned char)*p))
         *p='_';
       p++;
     }

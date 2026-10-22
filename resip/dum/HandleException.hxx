@@ -6,11 +6,11 @@
 namespace resip
 {
 
-class HandleException : public BaseException
+class HandleException final : public BaseException
 {
    public:
       HandleException(const Data& msg, const Data& file, int line);
-      virtual const char* name() const;
+      const char* name() const noexcept override;
 };
 
 }

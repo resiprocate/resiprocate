@@ -12,8 +12,9 @@ TimeAccumulate::TimeMap TimeAccumulate::mTimes;
 void
 TimeAccumulate::dump()
 {
-   Lock lock(mMutex);
    WarningLog(<< "Accumulated times -------------------------:");
+
+   Lock lock(mMutex);
    for (TimeMap::const_iterator i = TimeAccumulate::mTimes.begin();
         i != TimeAccumulate::mTimes.end(); i++)
    {

@@ -14,13 +14,36 @@ class WsFrameExtractor
 {
    public:
 
+      // frame opcodes (RFC 6455 section 5.2)
+      static const uint8_t OpContinuation = 0x0;
+      static const uint8_t OpText = 0x1;
+      static const uint8_t OpBinary = 0x2;
+      static const uint8_t OpClose = 0x8;
+      static const uint8_t OpPing = 0x9;
+      static const uint8_t OpPong = 0xA;
+
+      // A Close, Ping or Pong frame.  These are never returned by processBytes():
+      // a peer may send one at any time, even between the fragments of a message,
+      // and its payload is not SIP.
+      struct ControlFrame
+      {
+         uint8_t opcode;
+         Data payload;
+      };
+
       WsFrameExtractor(Data::size_type maxMessage);
       ~WsFrameExtractor();
-      std::auto_ptr<Data> processBytes(UInt8 *input, Data::size_type len, bool& dropConnection);
+      std::unique_ptr<Data> processBytes(uint8_t *input, Data::size_type len, bool& dropConnection);
+      // the control frames received so far, in the order they arrived
+      bool popControlFrame(ControlFrame& frame);
 
    private:
 
       static const int mMaxHeaderLen;
+      // an upper bound on the number of frames a single message may be
+      // fragmented into, to stop a peer consuming unbounded memory by
+      // sending an endless run of tiny (or empty) continuation frames
+      static const size_t mMaxFrames;
 
       Data::size_type mMaxMessage;
 
@@ -32,17 +55,26 @@ class WsFrameExtractor
 
       bool mHaveHeader;
       int mHeaderLen;
-      UInt8 *mWsHeader;
+      uint8_t *mWsHeader;
+
+      std::queue<ControlFrame> mControlFrames;
+      // set once a Close frame has arrived: nothing the peer sends after it is processed
+      bool mClosed;
 
       bool mFinalFrame;
       bool mMasked;
-      UInt8 mWsMaskKey[4];
-      Data::size_type mPayloadLength;
+      uint8_t mOpcode;
+      uint8_t mWsMaskKey[4];
+      // the payload length as it appears on the wire: it is a 64 bit
+      // field, so it must be validated against mMaxMessage before it is
+      // used for anything (see processBytes)
+      uint64_t mPayloadLength;
 
-      UInt8 *mPayload;
+      uint8_t *mPayload;
       Data::size_type mPayloadPos;
 
       int parseHeader();
+      bool isControlFrame() const;
       void joinFrames();
 
 };
@@ -53,6 +85,7 @@ class WsFrameExtractor
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

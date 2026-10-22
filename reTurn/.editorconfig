@@ -1,0 +1,5 @@
+[*]
+indent_style=space
+
+[*.{hxx,cxx,hpp,cpp,h,c}]
+indent_size=3

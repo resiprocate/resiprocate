@@ -1,0 +1,75 @@
+Considering a switch from resip-ares to cares
+=============================================
+
+Summary of resip-ares changes since bringing in from original ares 1.1.1 release back in 2003:
+----------------------------------------------------------------------------------------------
+-IPV6 support added
+-Windows/Cygwin/WindowsCE support added
+-MacOS support added
+-EPOLL support added
+-Android support added
+-After socket creation hooks added, presumably to support QOS tagging
+-ares_expand_name fixes - mostly taken from c-ares project
+-Added feature: try DNS servers on different network when 'No such name' (reply-code of 3) is received. (Windows)  
+
+Assuming that c-ares has already handled things like: supporting various OS's and IPv6 support, so the following seems to be the only things left of potential concern :
+-After socket creation hooks added, presumably to support QOS tagging  (This may already be supported in c-ares, but it doesn't integrate with the resip hooks that are in place)
+-Added feature: try DNS servers on different network when 'No such name' (reply-code of 3) is received. (Windows)
+
+Note:  The majority of the differences in how resip interacts with resip-ares vs c-ares are in the AresDns.cxx, just look for USE_CARES define.
+
+
+
+Detailed Change list since bringing in from original ares 1.1.1 release back in 2003:
+-------------------------------------------------------------------------------------
+2003-06-04 Initial Revision public release 1.1.1
+2003-09-13 Support building on Windows
+2003-09-15 ares_init support for Windows
+2003-10-28 Cygwin build support
+2004-06-16 Improved ares_init windows support
+2004-09-07 Add IPv6 Support
+2005-02-07 Add ability to find hosts file on windows
+
+2005-08-21 moved from b-directory-reorg
+2005-08-22 IPv6 fixes
+2005-10-25 IPv6 fixes
+2006-01-04 Fixes for Windows CE support
+2006-01-23 Changes to allow after socket creation callback - likely to support QOS
+2006-02-17 ares_expand_name fixes 
+2006-03-02 fix dns query over TCP on windows
+2007-01-26 Add ares_init support for MacOS
+2007-08-07 Added feature: try DNS servers on different network when 'No such name' (reply-code of 3) is received. (Windows)
+2008-01-11 Fix memory corruption in ares_init
+2010-09-20 Fix the Mac ares init code to work on iPhone/iOS SDK. In this platform SCDynamicStoreCreate doesn't exist, so fallback to the normal no servers case. 
+2010-11-01 set ares dns sockets non-blocking
+2010-12-06 Add EPOLL support
+2010-12-23 ares static code analysis fixes, memory leak and NULL pointer fixed for boundary cases
+2012-02-10 IPv6 fix
+
+2012-04-47 moved from contrib
+2013-07-17 Minor defines for building on Android
+2013-08-01 DNS Server discovery on Android
+2013-09-10 Fix potential crash when using epoll
+2013-09-14 Better memory management in ares_init for windows
+2013-11-13 ares_init cleanup
+2014-03-01 Fix for Windows DNS Server use.  Ignore Link Local DNS Server entries
+2015-06-24 Fix crash on ares_destroy_internal on Android if no network available
+2015-12-18 Resip DNS can assert and/or fail to function properly if we switch from DNS over UDP to DNS over TCP, which
+           can occur when the DNS result is greater than 512 bytes - this is related to resips use of poll callback interface
+2016-04-15 Fix windows compilation warnings with inet_addr use
+2017-06-06 Prevent buffer overlow in ares_parse_a_reply (CVE-2017-9454)
+2017-06-07 Fix memory leak in PTR reply parser
+2017-06-26 Fix heap overflow in ares_mkquery like c-ares does
+2022-11-18 resolve errors when symbols redefined in arpa/nameser_compat.h
+2024-09-25 update ares_expand_name with some changes cherry picked from c-ares version from earlier this year.  Contains a number of name parsing fixes.
+
+
+
+
+
+
+
+
+
+
+

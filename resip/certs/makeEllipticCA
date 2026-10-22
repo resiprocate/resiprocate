@@ -1,0 +1,142 @@
+#!/bin/sh
+#set -x
+
+rm -rf demoEllipticCA
+
+mkdir demoEllipticCA 
+mkdir demoEllipticCA/certs 
+mkdir demoEllipticCA/crl 
+mkdir demoEllipticCA/newcerts
+mkdir demoEllipticCA/private
+echo "01" > demoEllipticCA/serial
+hexdump -n 4 -e '4/1 "%04u"' /dev/random > demoEllipticCA/serial
+touch demoEllipticCA/index.txt
+	    
+# You may need to modify this for where your default file is
+# you can find where yours in by typing "openssl ca"
+for D in $OPENSSLDIR /etc/ssl /usr/local/ssl /sw/etc/ssl /sw/share/ssl /System/Library/OpenSSL /opt/local/etc/openssl; do
+	CONF=$D/openssl.cnf
+	[ -f ${CONF} ] && break
+done
+
+if [ ! -f $CONF  ]; then
+    echo "Can not find file $CONF - set your OPENSSLDIR variable"
+    exit 
+fi 
+cp $CONF openssl.cnf
+
+cat >> openssl.cnf  <<EOF
+
+[ CA_EC_default ]
+
+dir		= ./demoEllipticCA	# Where everything is kept
+certs		= \$dir/certs		# Where the issued certs are kept
+crl_dir		= \$dir/crl		# Where the issued crl are kept
+database	= \$dir/index.txt	# database index file.
+#unique_subject	= no			# Set to 'no' to allow creation of
+					# several ctificates with same subject.
+new_certs_dir	= \$dir/newcerts	# default place for new certs.
+
+certificate	= \$dir/cacert.pem 	# The CA certificate
+serial		= \$dir/serial 		# The current serial number
+crlnumber	= \$dir/crlnumber	# the current crl number
+					# must be commented out to leave a V1 CRL
+crl		= \$dir/crl.pem 	# The current CRL
+private_key	= \$dir/private/cakey.pem # The private key
+RANDFILE	= \$dir/private/.rand	# private random number file
+
+x509_extensions	= usr_cert		# The extentions to add to the cert
+
+# Comment out the following two lines for the "traditional"
+# (and highly broken) format.
+name_opt 	= ca_default		# Subject Name options
+cert_opt 	= ca_default		# Certificate field options
+
+# Extension copying option: use with caution.
+# copy_extensions = copy
+
+# Extensions to add to a CRL. Note: Netscape communicator chokes on V2 CRLs
+# so this is commented out by default to leave a V1 CRL.
+# crlnumber must also be commented out to leave a V1 CRL.
+# crl_extensions	= crl_ext
+
+default_days	= 365			# how long to certify for
+default_crl_days= 30			# how long before next CRL
+default_md	= default		# use public key default MD
+preserve	= no			# keep passed DN ordering
+
+# A few difference way of specifying how similar the request should look
+# For type CA, the listed attributes must be the same, and the optional
+# and supplied fields are just that :-)
+policy		= policy_match
+
+[ cj_cert ]
+subjectAltName=\${ENV::ALTNAME}
+basicConstraints=CA:FALSE
+subjectKeyIdentifier=hash
+#authorityKeyIdentifier=keyid,issuer:always
+
+[ cj_req ]
+basicConstraints=CA:FALSE
+subjectAltName=\${ENV::ALTNAME}
+subjectKeyIdentifier=hash
+#authorityKeyIdentifier=keyid,issuer:always
+#keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+
+EOF
+
+cat > demoEllipticCA/private/cakey.pem <<EOF
+-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIHjME4GCSqGSIb3DQEFDTBBMCkGCSqGSIb3DQEFDDAcBAh3NqE8KpcNqAICCAAw
+DAYIKoZIhvcNAgkFADAUBggqhkiG9w0DBwQIYov3RMRoVUoEgZBqboZEkiQ1MjZ3
+RcWyMvUO2nWeYgR5ZqkryyT7Pp6zEFSLvSQmSftuJ9YeFuejr7aKdaICCRfxRImq
+LiXN3aaJnBguzZIbvOk4zSABbylNLPBCCeZ2U47b2xfLyLY2nwhbv3cDBvpRC4rA
+oLu5ZJ6Tm5FlVw+3qTCPkSxuShryYzHtQi8/xq3H7NbizTCb1tM=
+-----END ENCRYPTED PRIVATE KEY-----
+EOF
+
+cat > demoEllipticCA/cacert.pem <<EOF
+-----BEGIN CERTIFICATE-----
+MIICJTCCAcugAwIBAgIUdyxlCt/j88QfBvTthM2ocDFocCwwCgYIKoZIzj0EAwIw
+aDELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAkNBMREwDwYDVQQHDAhTYW4gSm9zZTEO
+MAwGA1UECgwFU0lQaXQxKTAnBgNVBAMMIFNJUGl0IFRlc3QgQ2VydGlmaWNhdGUg
+QXV0aG9yaXR5MB4XDTIxMTIxMzE5MzMxNloXDTMxMTIxMTE5MzMxNlowaDELMAkG
+A1UEBhMCVVMxCzAJBgNVBAgMAkNBMREwDwYDVQQHDAhTYW4gSm9zZTEOMAwGA1UE
+CgwFU0lQaXQxKTAnBgNVBAMMIFNJUGl0IFRlc3QgQ2VydGlmaWNhdGUgQXV0aG9y
+aXR5MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvbvakOOUnr/DOVjuxR3c/VUz
+YZS5u0Vm/HzZHXBqyeaG3hMNv5Wr3FYW0p2uGibAsMl7sWVZH16a8psEFTUBfKNT
+MFEwHQYDVR0OBBYEFMCdCaMOCzW+EI/6Zq55RxS9NsWcMB8GA1UdIwQYMBaAFMCd
+CaMOCzW+EI/6Zq55RxS9NsWcMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwID
+SAAwRQIhAJOHUbYPjjVULWdBfIb4PPxHNX1QQa235KKyfRPgdJKGAiBMfd0ugIhH
+zCpQ+y85dD5JsFWGgzr7hWDqSahOZw5McA==
+-----END CERTIFICATE-----
+
+EOF
+
+cat > prime256v1.pem <<EOF
+-----BEGIN EC PARAMETERS-----
+BggqhkjOPQMBBw==
+-----END EC PARAMETERS-----
+EOF
+
+# uncomment the following lines to generate your own key pair 
+#
+#openssl ecparam -name prime256v1 -out prime256v1.pem
+#openssl req -newkey ec:prime256v1.pem \
+#     -passin pass:password -passout pass:password \
+#     -sha256 -x509 -keyout demoEllipticCA/private/cakey.pem \
+#     -out demoEllipticCA/cacert.pem -days 3650 <<EOF
+#US
+#CA
+#San Jose
+#SIPit
+#
+#SIPit Test Certificate Authority
+# 
+#EOF
+# 
+#openssl crl2pkcs7 -nocrl -certfile demoEllipticCA/cacert.pem \
+#     -outform DER -out demoEllipticCA/cacert.p7c
+# 
+cp demoEllipticCA/cacert.pem root_cert_fluffyEllipticCA.pem
+

@@ -6,7 +6,8 @@
 #include "resip/stack/WsCookieContextFactory.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/Compression.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -23,15 +24,14 @@ class WsTransport : public TcpBaseTransport, public WsBaseTransport
                    int portNum,
                    IpVersion version,
                    const Data& interfaceObj,
-                   AfterSocketCreationFuncPtr socketFunc=0,
+                   AfterSocketCreationFuncPtr socketFunc = nullptr,
                    Compression &compression = Compression::Disabled,
                    unsigned transportFlags = 0,
-                   SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
-                   SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(new BasicWsCookieContextFactory()));
-      virtual  ~WsTransport();
+                   std::shared_ptr<WsConnectionValidator> = nullptr,
+                   std::shared_ptr<WsCookieContextFactory> = std::make_shared<BasicWsCookieContextFactory>());
 
    protected:
-      Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
+      Connection* createConnection(const Tuple& who, Socket fd, bool server = false) override;
 };
 
 }

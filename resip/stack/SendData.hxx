@@ -16,34 +16,38 @@ class SendData
       enum SendDataCommand
       {
          NoCommand,
+         // Close the connection.  On a WebSocket connection a Close frame is sent first
+         // (RFC 6455 section 5.5.1), with data as its payload: a status code, or nothing.
          CloseConnection,
-         EnableFlowTimer
+         EnableFlowTimer,
+         // Send data as a WebSocket Pong frame: the answer to a Ping, whose payload it echoes
+         SendWsPong
       };
 
-      SendData() : isAlreadyCompressed(false), command(NoCommand)
+      SendData() : isAlreadyEncoded(false), command(NoCommand)
       {}
 
       SendData(const Tuple& dest,
                const Data& pdata,
                const Data& tid,
                const Data& scid,
-               bool isCompressed = false): 
+               bool isEncoded = false):
          destination(dest),
          data(pdata),
          transactionId(tid),
          sigcompId(scid),
-         isAlreadyCompressed(isCompressed),
+         isAlreadyEncoded(isEncoded),
          command(NoCommand)
       {
       }
 
       // This interface is only used for stun responses
-      SendData(const Tuple& dest, char* buffer, int length) : 
+      SendData(const Tuple& dest, char* buffer, int length) :
          destination(dest),
          data(Data::Take, buffer, length),
          transactionId(Data::Empty),
          sigcompId(Data::Empty),
-         isAlreadyCompressed(false),
+         isAlreadyEncoded(false),
          command(NoCommand)
       {
       }
@@ -67,7 +71,10 @@ class SendData
       Data data;
       Data transactionId;
       Data sigcompId;
-      bool isAlreadyCompressed;
+      // data is already in its wire format (compressed with SigComp, or framed for a
+      // WebSocket) and is sent exactly as it is, including when a write that only
+      // partly went through is retried.  Formerly isAlreadyCompressed.
+      bool isAlreadyEncoded;
 
       // .bwc. Used for special commands: ie. to close connections, and enable flow timers
       SendDataCommand command;
@@ -80,6 +87,7 @@ class SendData
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

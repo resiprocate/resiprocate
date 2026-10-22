@@ -17,6 +17,7 @@
 #endif
 
 #include <stdio.h>
+#include <ctype.h>
 #include <memory>
 
 #include "rutil/compat.hxx"
@@ -113,80 +114,80 @@ DnsUtil::lookupARecords(const Data& host)
    }
 }
 
-// The following statics ensure we can initialize the static storage of
-// localHostName at runtime, instead of at global static initialization time.
-// Under windows, when building a DLL you cannot call initNetwork and 
-// other socket API's reliably from DLLMain, so we need to delay this call.
-// We use the gate bool to ensure we don't need to do a mutex check everytime
-// and we use a Mutex to ensure that multiple threads can invokve getLocalHostName
-// for the first time, at the same time.
-static Mutex getLocalHostNameInitializerMutex;
-static bool  getLocalHostNameInitializerGate = false;
-static Data localHostName;
 const Data&
 DnsUtil::getLocalHostName()
 {
-   if(!getLocalHostNameInitializerGate)
-   {
-      Lock lock(getLocalHostNameInitializerMutex);
-      char buffer[MAXHOSTNAMELEN + 1];
-      initNetwork();
-      // can't assume the name is NUL terminated when truncation occurs,
-      // so insert trailing NUL here
-      buffer[0] = buffer[MAXHOSTNAMELEN] = '\0';
-      if (gethostname(buffer,sizeof(buffer)-1) == -1)
-      {
-         int err = getErrno();
-         switch (err)
-         {
-// !RjS! This makes no sense for non-windows. The
-//       current hack (see the #define in .hxx) needs
-//       to be reworked.
-            case WSANOTINITIALISED:
-               CritLog( << "could not find local hostname because network not initialized:" << strerror(err) );
-               break;
-            default:
-               CritLog( << "could not find local hostname:" << strerror(err) );
-               break;
-         }
-         throw Exception("could not find local hostname",__FILE__,__LINE__);
-      }
-
-      struct addrinfo* result=0;
-      struct addrinfo hints;
-      memset(&hints, 0, sizeof(hints));
-      hints.ai_flags |= AI_CANONNAME;
-      hints.ai_family |= AF_UNSPEC;
-      int res = getaddrinfo(buffer, 0, &hints, &result);
-      if (!res) 
-      {
-         // !jf! this should really use the Data class 
-         if (strchr(result->ai_canonname, '.') != 0) 
-         {
-            strncpy(buffer, result->ai_canonname, sizeof(buffer));
-         }
-         else 
-         {
-            InfoLog( << "local hostname does not contain a domain part " << buffer);
-         }
-         freeaddrinfo(result);
-      }
-      else
-      {
-         InfoLog (<< "Couldn't determine local hostname. Error was: " << gai_strerror(res) << ". Returning empty string");
-      }
-   
-      localHostName = buffer;
-      getLocalHostNameInitializerGate = true;
-   }
+   // The function-local static ensures we can initialize the static storage of
+   // localHostName at runtime, instead of at global static initialization time.
+   // Under windows, when building a DLL you cannot call initNetwork and 
+   // other socket API's reliably from DLLMain, so we need to delay this call.
+   // We rely on C++11 thread-safe initialization guarantees for local statics
+   // to ensure that the localHostName is initialized in a thread-safe
+   // manner exactly once before use, even if the initial getLocalHostName() is
+   // invoked by multiple threads. Since localHostName is immutable, the returned
+   // variable reference can be safely read by multiple threads.
+   static const Data localHostName = lookupLocalHostName();
    return localHostName;
+}
+
+Data
+DnsUtil::lookupLocalHostName()
+{
+   char buffer[MAXHOSTNAMELEN + 1];
+   initNetwork();
+   // can't assume the name is NUL terminated when truncation occurs,
+   // so insert trailing NUL here
+   buffer[0] = buffer[MAXHOSTNAMELEN] = '\0';
+   if (gethostname(buffer,sizeof(buffer)-1) == -1)
+   {
+      int err = getErrno();
+      switch (err)
+      {
+         // !RjS! This makes no sense for non-windows. The
+         //       current hack (see the #define in .hxx) needs
+         //       to be reworked.
+         case WSANOTINITIALISED:
+            CritLog( << "could not find local hostname because network not initialized:" << strError(err) );
+            break;
+         default:
+            CritLog( << "could not find local hostname:" << strError(err) );
+            break;
+      }
+         throw Exception("could not find local hostname",__FILE__,__LINE__);
+   }
+
+   struct addrinfo* result=0;
+   struct addrinfo hints;
+   memset(&hints, 0, sizeof(hints));
+   hints.ai_flags |= AI_CANONNAME;
+   hints.ai_family |= AF_UNSPEC;
+   int res = getaddrinfo(buffer, 0, &hints, &result);
+   if (!res) 
+   {
+      // !jf! this should really use the Data class 
+      if (strchr(result->ai_canonname, '.') != 0) 
+      {
+         snprintf(buffer, sizeof(buffer), "%s", result->ai_canonname);
+      }
+      else 
+      {
+         InfoLog( << "local hostname does not contain a domain part " << buffer);
+      }
+      freeaddrinfo(result);
+   }
+   else
+   {
+      InfoLog (<< "Couldn't determine local hostname. Error was: " << gai_strerror(res) << ". Returning empty string");
+   }
+
+   return buffer;
 }
 
 Data
 DnsUtil::getLocalDomainName()
 {
    Data lhn(getLocalHostName());
-   size_t dpos = lhn.find(".");
+   Data::size_type dpos = lhn.find(".");
    if (dpos != Data::npos)
    {
       return lhn.substr(dpos+1);
@@ -207,7 +208,7 @@ DnsUtil::getLocalDomainName()
          {
             int err = getErrno();
             CritLog(<< "Couldn't find domainname: " << strerror(err));
-            throw Exception(strerror(err), __FILE__,__LINE__);
+            throw Exception(strError(err), __FILE__,__LINE__);
          }
       }
       DebugLog (<< "Found local domain name " << buffer);
@@ -300,7 +301,7 @@ DnsUtil::isIpV4Address(const Data& ipAddress)
 
       // .bwc. I have tried using std::bitset instead of the 0 <= *last <= 9
       // check, but it is slower.
-      while(*last >= '0' && *last <= '9' && last - first <= 3 && last != end)
+      while(last != end && *last >= '0' && *last <= '9' && last - first <= 3)
       {
          // Skip at most 3 decimals, without going past the end of the buffer.
          ++last;
@@ -349,7 +350,7 @@ DnsUtil::isIpV4Address(const Data& ipAddress)
 
       if(octets < 4)
       {
-         if(*last == '.')
+         if(last != end && *last == '.')
          {
             // Skip over the '.'
             ++last;
@@ -390,7 +391,7 @@ DnsUtil::isIpV6Address(const Data& ipAddress)
    }
 
    // first character must be a hex digit or colon
-   if (!isxdigit(*ipAddress.data()) &&
+   if (!isxdigit(static_cast< unsigned char >(*ipAddress.data())) &&
        *ipAddress.data() != ':')
    {
       return false;
@@ -643,7 +644,7 @@ const char *DnsUtil::inet_ntop(int af, const void* src, char* dst,
       // .bwc. inet_ntop4 seems to be implemented with sprintf on OS X.
       // This code is about 5-6 times faster. Linux has a well-optimized 
       // inet_ntop, however.
-      const UInt8* bytes=(const UInt8*)src;
+      const uint8_t* bytes=(const uint8_t*)src;
       Data dest(Data::Borrow, dst, sizeof("xxx.xxx.xxx.xxx."));
       dest.clear();
       dest.append(UInt8ToStr[bytes[0]].data(), UInt8ToStr[bytes[0]].size());
@@ -710,11 +711,7 @@ static const char fmt[] = "%u.%u.%u.%u";
 const char*
 inet_ntop4(const u_char *src, char *dst, size_t size)
 {
-#ifdef WIN32
-   if ( _snprintf(dst, size, fmt, src[0], src[1], src[2], src[3]) < 0)
-#else
-   if ( snprintf(dst, size, fmt, src[0], src[1], src[2], src[3]) < 0)
-#endif
+   if (snprintf(dst, size, fmt, src[0], src[1], src[2], src[3]) < 0)
    {
       errno = ENOSPC;
       dst[size-1] = 0;
@@ -801,7 +798,7 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
          tp += strlen(tp);
          break;
       }
-      tp += sprintf(tp, "%x", words[i]);
+      tp += snprintf(tp, sizeof(tmp) - (tp - tmp), "%x", words[i]);
    }
    /* Was it a trailing run of 0x00's? */
    if (best.base != -1 && (best.base + best.len) ==
@@ -816,7 +813,7 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
       errno = ENOSPC;
       return (NULL);
    }
-   strcpy(dst, tmp);
+   memcpy(dst, tmp, (size_t)(tp - tmp));
    return (dst);
 }
 

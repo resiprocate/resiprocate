@@ -13,7 +13,7 @@ Stun/Turn drafts:  RFC5389, and draft-ietf-behave-turn-15
 
 Current External Library Usage
 ------------------------------
-- currently uses OpenSSL, ASIO, BOOST and RUTIL
+- currently uses OpenSSL, ASIO and RUTIL
 - OpenSSL
        - Used for TLS support (optional)
        - libcrypto used for calculating message authentication code (mandatory
@@ -28,12 +28,7 @@ Current External Library Usage
        - StunMessage, TurnAllocation and RequestHandler use asio::ip:address to manipulate IPV6, 
          and IPV4 StunAddresses - easily changed
        - StunTuple uses asio::ip::address - easily changed
-- BOOST - 1.34.1
-        - Using BOOST in no-lib mode is fine
-        - BOOST::bind is used in server transports
-        - BOOST::crc_optimal is used for fingerprint CRC calculations
-        - BOOST::shared_ptr, array, enable_shared_from_this is used in server transports
-- RUTIL - Data class is used in StunMessage and StunAuth for strings and TurnData, SharedPtr is also used
+- RUTIL - Data class is used in StunMessage and StunAuth for strings and TurnData
 
 
 Feature                                Implemented  Tested  Notes
@@ -46,7 +41,7 @@ RFC5389 message parsing                yes          partly
 IPV6 message parsing support           yes          no 
 Short Term Credentials                 yes          yes     Implementation currently only accepts one hardcoded username/password
 Long Term Credentials                  mostly       yes     Implementation currently only accepts one hardcoded username/password
-Finger Print Insertion and Validation  yes          yes     Uses BOOST:crc_optimal
+Finger Print Insertion and Validation  yes          yes
 Checking for unknown attributes        yes          yes
 Bandwidth Check                        no           no
 Turn Allocation                        yes          yes     Only UDP Relay's are implemented
@@ -61,7 +56,7 @@ Don't Fragment Attribute               no           no      Server will reject r
 
 General TODO
 -------------
-- reduce library use - remove BOOST and/or rutil requirement - remove ASIO for client??
+- reduce library use - remove rutil requirement - remove ASIO for client??
 - allow multiple interfaces to be used for relay
 - per user allocation quota enforcement
 - cleanup stun message class so that there are accessors for all data members
@@ -175,7 +170,7 @@ onAllocationSuccess(unsigned int socketDesc,
                     const StunTuple& relayTuple, 
                     unsigned int lifetime, 
                     unsigned int bandwidth, 
-                    UInt64& reservationToken) = 0; 
+                    uint64_t& reservationToken) = 0; 
 onAllocationFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
 onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime) = 0;

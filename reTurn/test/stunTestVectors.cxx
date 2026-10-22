@@ -4,7 +4,7 @@
 #include <string>
 #include <asio.hpp>
 
-#include <rutil/MD5Stream.hxx>
+#include <rutil/DigestStream.hxx>
 
 #include "../StunTuple.hxx"
 #include "../StunMessage.hxx"
@@ -17,9 +17,10 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 int main(int argc, char* argv[])
+try
 {
-   StunTuple local(StunTuple::UDP, asio::ip::address::from_string("10.0.0.1"), 5000);
-   StunTuple remote(StunTuple::UDP, asio::ip::address::from_string("10.0.0.2"), 5001);
+   StunTuple local(StunTuple::UDP, asio::ip::make_address("10.0.0.1"), 5000);
+   StunTuple remote(StunTuple::UDP, asio::ip::make_address("10.0.0.2"), 5001);
 
    resip::Log::initialize(resip::Log::Cout, resip::Log::Info, "");
 
@@ -54,7 +55,7 @@ int main(int argc, char* argv[])
    assert(reqMessage.mHasUsername);
    assert(*reqMessage.mUsername == "evtj:h6vY");
    assert(reqMessage.mHasMessageIntegrity);
-   assert(reqMessage.checkMessageIntegrity("VOkJxbRl1RmTxUk/WvJxBt"));
+   assert(reqMessage.checkMessageIntegrity("VOkJxbRl1RmTxUk/WvJxBt"));  // Note:  expect this to fail if you build without OpenSSL
    assert(reqMessage.mHasFingerprint);
    assert(reqMessage.checkFingerprint());  
 
@@ -81,7 +82,7 @@ int main(int argc, char* argv[])
    assert(respv4Message.mHasXorMappedAddress);
    assert(respv4Message.mXorMappedAddress.family == StunMessage::IPv4Family);
    assert(respv4Message.mXorMappedAddress.port == 32853);
-   assert(respv4Message.mXorMappedAddress.addr.ipv4 == asio::ip::address::from_string("192.0.2.1").to_v4().to_ulong());
+   assert(respv4Message.mXorMappedAddress.addr.ipv4 == asio::ip::make_address("192.0.2.1").to_v4().to_uint());
    assert(respv4Message.mHasMessageIntegrity);
    assert(respv4Message.checkMessageIntegrity("VOkJxbRl1RmTxUk/WvJxBt"));
    assert(respv4Message.mHasFingerprint);
@@ -112,7 +113,7 @@ int main(int argc, char* argv[])
    assert(respv6Message.mHasXorMappedAddress);
    assert(respv6Message.mXorMappedAddress.family == StunMessage::IPv6Family);
    assert(respv6Message.mXorMappedAddress.port == 32853);
-   asio::ip::address_v6::bytes_type v6addr = asio::ip::address::from_string("2001:db8:1234:5678:11:2233:4455:6677").to_v6().to_bytes();
+   asio::ip::address_v6::bytes_type v6addr = asio::ip::make_address("2001:db8:1234:5678:11:2233:4455:6677").to_v6().to_bytes();
    assert(memcmp(&respv6Message.mXorMappedAddress.addr.ipv6, v6addr.data(), sizeof(respv6Message.mXorMappedAddress.addr.ipv6)) == 0);
    assert(respv6Message.mHasMessageIntegrity);
    assert(respv6Message.checkMessageIntegrity("VOkJxbRl1RmTxUk/WvJxBt"));
@@ -159,7 +160,7 @@ int main(int argc, char* argv[])
    reqltcMessage.calculateHmacKey(hmacKey, password);
    assert(reqltcMessage.checkMessageIntegrity(hmacKey));
 
-   resip::MD5Stream r;
+   resip::DigestStream r;
    r << username << ":example.org:" << password;
    resip::Data password_ha1 = r.getBin();
    reqltcMessage.calculateHmacKeyForHa1(hmacKey, password_ha1);
@@ -168,11 +169,21 @@ int main(int argc, char* argv[])
    InfoLog(<< "All tests passed!");
    return 0;
 }
+catch (const std::exception& e)
+{
+   ErrLog(<< "Unhandled exception: " << e.what());
+   return 1;
+}
+catch (...)
+{
+   ErrLog(<< "Unhandled exception");
+   return 1;
+}
 
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, SIP Spectrum, Inc.
+ Copyright (c) 2007-2026, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

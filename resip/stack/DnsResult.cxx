@@ -129,7 +129,7 @@ DnsResult::transition(Type t)
 void
 DnsResult::destroy()
 {
-   resip_assert(this);
+   resip_assert_not_null(this);
    //DebugLog (<< "DnsResult::destroy() " << *this);
    
    if (mType == Pending)
@@ -144,7 +144,7 @@ DnsResult::destroy()
 }
 
 bool
-DnsResult::blacklistLast(UInt64 expiry)
+DnsResult::blacklistLast(uint64_t expiry)
 {
    if(mHaveReturnedResults)
    {
@@ -162,7 +162,7 @@ DnsResult::blacklistLast(UInt64 expiry)
 }
 
 bool
-DnsResult::greylistLast(UInt64 expiry)
+DnsResult::greylistLast(uint64_t expiry)
 {
    if(mHaveReturnedResults)
    {
@@ -240,7 +240,7 @@ DnsResult::next()
 void
 DnsResult::whitelistLast()
 {
-    WhitelistCommand* command = new WhitelistCommand(mVip, mLastReturnedPath);
+    WhitelistCommand* command = new WhitelistCommand(mVip, mInterface.getMarkManager(), mLastReturnedPath, mLastResult);
     mDnsStub.queueCommand(command);
 }
 
@@ -253,6 +253,8 @@ DnsResult::WhitelistCommand::execute()
       DebugLog( << "Whitelisting " << i->domain << "(" << i->rrType << "): " << i->value);
       mVip.vip(i->domain, i->rrType, i->value);
    }
+   // Remove greylist (if present)
+   mMarkManager.unmark(mResult, TupleMarkManager::GREY);
 }
 
 void
@@ -268,6 +270,11 @@ DnsResult::lookup(const Uri& uri)
 void
 DnsResult::lookupInternalWithEnum(const Uri& uri)
 {
+   if ( mType == Destroyed )
+   {
+      destroy();
+      return;
+   }
    if (!mDnsStub.getEnumSuffixes().empty() && 
        uri.isEnumSearchable() &&
        mDnsStub.getEnumDomains().find(uri.host()) != mDnsStub.getEnumDomains().end())
@@ -278,7 +285,7 @@ DnsResult::lookupInternalWithEnum(const Uri& uri)
       resip_assert(enums.size() >= 1);
       if (!enums.empty())
       {
-         mDoingEnum = enums.size();
+         mDoingEnum = (int)enums.size();
          for(std::vector<Data>::iterator it = enums.begin(); it != enums.end(); it++)
          {
             InfoLog (<< "Doing ENUM lookup on " << *it);
@@ -351,6 +358,7 @@ DnsResult::lookupInternal(const Uri& uri)
                mTransport = DTLS;
                if (!mInterface.isSupportedProtocol(mTransport))
                {
+                  DebugLog(<<"transport " << toData(mTransport) << " not supported");
                   transition(Finished);
                   if (mHandler) mHandler->handle(this);
                   return;
@@ -373,6 +381,7 @@ DnsResult::lookupInternal(const Uri& uri)
                mHaveChosenTransport=true;
                if (!mInterface.isSupportedProtocol(mTransport))
                {
+                  DebugLog(<<"transport " << toData(mTransport) << " not supported");
                   transition(Finished);
                   if (mHandler) mHandler->handle(this);
                   return;
@@ -394,6 +403,7 @@ DnsResult::lookupInternal(const Uri& uri)
          {
             if (!mInterface.isSupportedProtocol(mTransport))
             {
+               DebugLog(<<"transport " << toData(mTransport) << " not supported");
                transition(Finished);
                if (mHandler) mHandler->handle(this);
                return;
@@ -457,6 +467,7 @@ DnsResult::lookupInternal(const Uri& uri)
             }
             else
             {
+               bool udpSupported = false;;
                if(mark!=TupleMarkManager::OK && (mInterface.isSupported(UDP, V4) ||
                                     mInterface.isSupported(UDP, V6)))
                {
@@ -464,10 +475,13 @@ DnsResult::lookupInternal(const Uri& uri)
                   mPort = getDefaultPort(mTransport,uri.port());
                   tuple=Tuple(mTarget,mPort,mTransport,mTarget);
                   mark=mInterface.getMarkManager().getMarkType(tuple);
+                  udpSupported = true;
                }
                
                if (!mInterface.getUdpOnlyOnNumeric())
                {
+                  bool allMarksNotOK = mark != TupleMarkManager::OK;
+                  bool tcpSupported = false;
                   if(mark!=TupleMarkManager::OK && (mInterface.isSupported(TCP, V4) ||
                            mInterface.isSupported(TCP, V6)))
                   {
@@ -480,6 +494,8 @@ DnsResult::lookupInternal(const Uri& uri)
                      DebugLog(<< "DnsResult netns: " << uri.netNs());
 #endif
                      mark=mInterface.getMarkManager().getMarkType(tuple);
+                     allMarksNotOK = mark != TupleMarkManager::OK;
+                     tcpSupported = true;
                   }
 
                   if(mark!=TupleMarkManager::OK && (mInterface.isSupported(TLS, V4) ||
@@ -489,6 +505,28 @@ DnsResult::lookupInternal(const Uri& uri)
                      mPort = getDefaultPort(mTransport,uri.port());
                      tuple=Tuple(mTarget,mPort,mTransport,mTarget);
                      mark=mInterface.getMarkManager().getMarkType(tuple);
+                     allMarksNotOK = mark != TupleMarkManager::OK;
+                  }
+
+                  // If all transports are grey or blacklisted, then just fallback to UDP, assuming it is available
+                  // or TCP if it is available.  We don't want to end up continually trying TCP or TLS because all
+                  // transports for this IP Address are greylisted.
+                  if (allMarksNotOK)
+                  {
+                     if (udpSupported && mTransport != UDP)
+                     {
+                        mTransport = UDP;
+                        mPort = getDefaultPort(mTransport, uri.port());
+                        tuple = Tuple(mTarget, mPort, mTransport, mTarget);
+                        mark = mInterface.getMarkManager().getMarkType(tuple);
+                     }
+                     else if (tcpSupported && mTransport != TCP)
+                     {
+                        mTransport = TCP;
+                        mPort = getDefaultPort(mTransport, uri.port());
+                        tuple = Tuple(mTarget, mPort, mTransport, mTarget, uri.netNs());
+                        mark = mInterface.getMarkManager().getMarkType(tuple);
+                     }
                   }
                }
             }
@@ -852,10 +890,10 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 {
    if (!mInterface.isSupported(mTransport, V4) && !mInterface.isSupported(mTransport, V6))
    {
+      StackLog(<< "DnsResult::onDnsResult(): A record, for unsupported transport: target=" << mTarget << ", status=" << result.status);
       return;
    }
-   StackLog (<< "Received dns result for: " << mTarget);
-   StackLog (<< "DnsResult::onDnsResult() " << result.status);
+   StackLog (<< "DnsResult::onDnsResult(): A record, target=" << mTarget << ", status=" << result.status);
    
    // This function assumes that the A query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -1010,12 +1048,12 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 {
 #ifdef USE_IPV6
-   StackLog (<< "Received AAAA result for: " << mTarget);
    if (!mInterface.isSupported(mTransport, V6))
    {
+      StackLog(<< "DnsResult::onDnsResult(): AAAA record, for unsupported transport: target=" << mTarget << ", status=" << result.status);
       return;
    }
-   StackLog (<< "DnsResult::onDnsResult() " << result.status);
+   StackLog(<< "DnsResult::onDnsResult(): AAAA record, target=" << mTarget << ", status=" << result.status);
    resip_assert(mInterface.isSupported(mTransport, V6));
 
    // This function assumes that the AAAA query that caused this callback
@@ -1062,10 +1100,10 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 
 void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
 {
-   StackLog (<< "Received SRV result for: " << mTarget);
    resip_assert(mSRVCount>=0);
    mSRVCount--;
-   StackLog (<< "DnsResult::onDnsResult() " << mSRVCount << " status=" << result.status);
+
+   StackLog(<< "DnsResult::onDnsResult(): SRV record, target=" << mTarget << ", numRemainingSRV=" << mSRVCount << ", status = " << result.status);
 
    // There could be multiple SRV queries outstanding, but there will be no
    // other DNS queries outstanding that might cause a callback into this
@@ -1082,6 +1120,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
       {
          SRV srv;
          srv.key = (*it).name();
+         srv.key.lowercase();
          srv.priority = (*it).priority();
          srv.weight = (*it).weight();
          srv.port = (*it).port();
@@ -1207,31 +1246,23 @@ static Data enumService2("sip+e2u");
 void
 DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result, int order)
 {
-   Lock l(mEnumDestinationsMutex);
-   resip_assert(mDoingEnum > 0);
+   DnsNaptrRecord best;
 
-   mDoingEnum--;
-
-   StackLog(<< "checking result of ENUM query, remaining queries outstanding = " << mDoingEnum);
-   
    if (result.status == 0)
    {
-      DnsNaptrRecord best;
-      best.order() = -1;
-
       for (vector<DnsNaptrRecord>::const_iterator i = result.records.begin(); i != result.records.end(); ++i)
       {
-         InfoLog (<< "service=" << i->service()
-                  << " order=" << i->order()
-                  << " flags="  << i->flags() 
-                  << " regexp substitution=" << i->regexp().replacement()
-                  << " replacement=" << i->replacement());
+         InfoLog(<< "service=" << i->service()
+            << " order=" << i->order()
+            << " flags=" << i->flags()
+            << " regexp substitution=" << i->regexp().replacement()
+            << " replacement=" << i->replacement());
 
-         if ( (isEqualNoCase(i->service(), enumService1) ||
-               isEqualNoCase(i->service(), enumService2) )  && // only E2U records
-              //i->flags().find("u") != Data::npos && // must be terminal record
-              i->replacement().empty() )
-               
+         if ((isEqualNoCase(i->service(), enumService1) ||
+            isEqualNoCase(i->service(), enumService2)) && // only E2U records
+            //i->flags().find("u") != Data::npos && // must be terminal record
+            i->replacement().empty())
+
          {
             if (best.order() == -1)
             {
@@ -1241,30 +1272,37 @@ DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result, int order)
             {
                best = *i;
             }
-            else if (i->order() == best.order() && 
-                     i->preference() < best.preference())
+            else if (i->order() == best.order() &&
+               i->preference() < best.preference())
             {
                best = *i;
             }
          }
       }
-      
-      if (best.order() != -1)
+   }
+
+   Lock l(mEnumDestinationsMutex);
+   resip_assert(mDoingEnum > 0);
+
+   mDoingEnum--;
+
+   StackLog(<< "DnsResult::onDnsResult(): ENUM NAPTR record, target=" << mTarget << ", numRemainingEnum=" << mDoingEnum << ", status = " << result.status);
+   
+   if (best.order() != -1)
+   {
+      InfoLog(<< "Found an enum result: " << best.regexp().replacement());
+      try
       {
-         InfoLog (<< "Found an enum result: " << best.regexp().replacement());
-         try
-         {
-            Uri rewrite(best.regexp().apply(Data::from(mInputUri)));
-            InfoLog (<< "Rewrote uri " << mInputUri << " -> " << rewrite);
-            mEnumDestinations[order] = rewrite;
-         }
-         catch (ParseException&  e )
-         {
-            ErrLog(<<"Caught exception: "<< e);
-            // we just don't add anything to mEnumDestinations...
-            // later, if mEnumDestinations is empty after all ENUM queries,
-            // it will fall back to mInputUri
-         }
+         Uri rewrite(best.regexp().apply(Data::from(mInputUri)));
+         InfoLog(<< "Rewrote uri " << mInputUri << " -> " << rewrite);
+         mEnumDestinations[order] = rewrite;
+      }
+      catch (ParseException& e)
+      {
+         ErrLog(<< "Caught exception: " << e);
+         // we just don't add anything to mEnumDestinations...
+         // later, if mEnumDestinations is empty after all ENUM queries,
+         // it will fall back to mInputUri
       }
    }
 
@@ -1335,7 +1373,7 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
          {
             if(preferredNAPTROrder == (*it).order)
             {
-               StackLog (<< "NAPTR record is supported and matches highes priority order. doing SRV query: " << (*it));
+               StackLog (<< "NAPTR record is supported and matches highest priority order. doing SRV query: " << (*it));
                mTopOrderedNAPTRs[(*it).replacement] = (*it);
                mSRVCount++;
                mDnsStub.lookup<RR_SRV>((*it).replacement, Protocol::Sip, this);
@@ -1404,8 +1442,7 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
 void 
 DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
 {
-   StackLog (<< "Received NAPTR result for: " << mInputUri << " target=" << mTarget);
-   StackLog (<< "DnsResult::onDnsResult() " << result.status);
+   StackLog(<< "DnsResult::onDnsResult(): NAPTR record, inputUri=" << mInputUri << ", target=" << mTarget << ", status=" << result.status);
 
    // This function assumes that the NAPTR query that caused this
    // callback is the ONLY outstanding query that might cause

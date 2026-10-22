@@ -127,14 +127,22 @@ Auth::parseAuthParameters(ParseBuffer& pb)
          Parameter* p=createParam(type, pb, terminators, getPool());
          if (!p)
          {
-            mUnknownParameters.push_back(new UnknownParameter(keyStart, 
-                                                              int((keyEnd - keyStart)), pb, 
-                                                              terminators));
+            UnknownParameter* unknownParam = new UnknownParameter(keyStart,
+                                                                  int((keyEnd - keyStart)),
+                                                                  pb,
+                                                                  terminators);
+
+            if(!addParameter(unknownParam))
+            {
+               freeParameter(unknownParam);
+            }
          }
          else
          {
-            // invoke the particular factory
-            mParameters.push_back(p);
+            if(!addParameter(p))
+            {
+               freeParameter(p);
+            }
          }
       }
       else

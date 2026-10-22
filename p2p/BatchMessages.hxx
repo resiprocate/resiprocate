@@ -16,7 +16,7 @@ class Message;
 class BatchMessages : public EventConsumerBase, public Event
 {
       BatchMessages(Dispatcher& dispatcher,
-                    std::vector<std::auto_ptr<Message> >& messages,
+                    std::vector<std::unique_ptr<Message>>& messages,
                     Postable<Event>& postable);
       virtual ~BatchMessages() = 0;
       

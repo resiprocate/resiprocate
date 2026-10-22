@@ -1,4 +1,4 @@
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "AsyncUdpSocketBase.hxx"
 #include "AsyncSocketBaseHandler.hxx"
@@ -11,21 +11,17 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_service& ioService) 
+AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_context& ioService) 
    : AsyncSocketBase(ioService),
      mSocket(ioService),
      mResolver(ioService)
 {
 }
 
-AsyncUdpSocketBase::~AsyncUdpSocketBase() 
-{
-}
-
 unsigned int 
 AsyncUdpSocketBase::getSocketDescriptor() 
 { 
-   return (unsigned int)mSocket.native(); 
+   return (unsigned int)mSocket.native_handle(); 
 }
 
 asio::error_code 
@@ -44,7 +40,7 @@ AsyncUdpSocketBase::bind(const asio::ip::address& address, unsigned short port)
       }
 #endif
 #endif
-      mSocket.set_option(asio::ip::udp::socket::reuse_address(true), errorCode);
+      setExclusiveAddressUse(mSocket);
       mSocket.set_option(asio::socket_base::receive_buffer_size(66560));
       //mSocket.set_option(asio::socket_base::send_buffer_size(66560));
       mSocket.bind(asio::ip::udp::endpoint(address, port), errorCode);
@@ -58,25 +54,21 @@ AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::udp::resolver::query query(address, service.c_str());
-#else
-   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
-#endif
-   mResolver.async_resolve(query,
-        boost::bind(&AsyncSocketBase::handleUdpResolve, shared_from_this(),
-                    asio::placeholders::error,
-                    asio::placeholders::iterator));
+   mResolver.async_resolve(mSocket.local_endpoint().protocol(), address, service.c_str(),
+        std::bind(&AsyncSocketBase::handleUdpResolve, shared_from_this(),
+                    std::placeholders::_1,
+                    std::placeholders::_2));
 }
 
 void 
 AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
-                                     asio::ip::udp::resolver::iterator endpoint_iterator)
+                                     const asio::ip::udp::resolver::results_type& endpoints)
 {
-   if (!ec)
+   if (!ec && !endpoints.empty())
    {
-      // Use the first endpoint in the list. 
+      // Use the first endpoint in the list.
       // Nothing to do for UDP except store the connected address/port
+      asio::ip::udp::resolver::results_type::const_iterator endpoint_iterator = endpoints.begin();
       mConnected = true;
       mConnectedAddress = endpoint_iterator->endpoint().address();
       mConnectedPort = endpoint_iterator->endpoint().port();
@@ -89,7 +81,7 @@ AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
    }
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncUdpSocketBase::getSenderEndpointAddress() 
 { 
    return mSenderEndpoint.address(); 
@@ -107,14 +99,14 @@ AsyncUdpSocketBase::transportSend(const StunTuple& destination, std::vector<asio
    //InfoLog(<< "AsyncUdpSocketBase::transportSend " << buffers.size() << " buffer(s) to " << destination << " - buf1 size=" << buffer_size(buffers.front()));
    mSocket.async_send_to(buffers, 
                          asio::ip::udp::endpoint(destination.getAddress(), destination.getPort()), 
-                         boost::bind(&AsyncUdpSocketBase::handleSend, shared_from_this(), asio::placeholders::error));
+                         std::bind(&AsyncUdpSocketBase::handleSend, shared_from_this(), std::placeholders::_1));
 }
 
 void 
 AsyncUdpSocketBase::transportReceive()
 {
    mSocket.async_receive_from(asio::buffer((void*)mReceiveBuffer->data(), RECEIVE_BUFFER_SIZE), mSenderEndpoint,
-               boost::bind(&AsyncUdpSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+               std::bind(&AsyncUdpSocketBase::handleReceive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void 
@@ -129,7 +121,7 @@ AsyncUdpSocketBase::transportClose()
 {
    if (mOnBeforeSocketCloseFp)
    {
-      mOnBeforeSocketCloseFp((unsigned int)mSocket.native());
+      mOnBeforeSocketCloseFp((unsigned int)mSocket.native_handle());
    }
 
    asio::error_code ec;
@@ -141,6 +133,7 @@ AsyncUdpSocketBase::transportClose()
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

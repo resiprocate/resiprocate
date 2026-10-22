@@ -7,7 +7,7 @@
 #include "repro/Registrar.hxx"
 #include "repro/ProcessorChain.hxx"
 #include "repro/Store.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
@@ -16,16 +16,20 @@
 #include "resip/stack/EventStackThread.hxx"
 #include "rutil/FdPoll.hxx"
 #include "rutil/CongestionManager.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "tfm/TestProxy.hxx"
 #include "tfm/repro/CommandLineParser.hxx"
 
 #include <memory>
 
+namespace repro
+{
+    class QValueTargetHandler;
+}
+
 class TfmProxyConfig : public repro::ProxyConfig
 {
 public:
-   TfmProxyConfig(repro::AbstractDb* db, const CommandLineParser& args);
+   TfmProxyConfig(repro::AbstractDb* db, const CommandLineParser& args, int timerC);
 };
 
 class TestRepro : public TestProxy
@@ -35,7 +39,8 @@ class TestRepro : public TestProxy
                 const resip::Data& host, 
                 const CommandLineParser& args, 
                 const resip::Data& nwInterface = resip::Data::Empty,
-                resip::Security* security=0);
+                resip::Security* security=0,
+                int timerC = 40);
       ~TestRepro();
 
       virtual void addUser(const resip::Data& userid, const resip::Uri& aor, const resip::Data& password);
@@ -49,21 +54,33 @@ class TestRepro : public TestProxy
                             int weight);
       virtual void deleteRoute(const resip::Data& matchingPattern, 
                                const resip::Data& method, 
-                               const resip::Data& event);
+                               const resip::Data& event,
+                               int priority);
       virtual bool addTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0, short mask = 0, short family=resip::V4);
       virtual void deleteTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0, short mask = 0, short family=resip::V4);
 
+      void setQValueTargetHandlerCancelGroups(bool enabled);
+
    private:
-      resip::FdPollGrp* mPollGrp;
+      repro::ProcessorChain &makeRequestProcessorChain(repro::ProcessorChain &chain,
+                                                       repro::ProxyConfig &config,
+                                                       resip::Dispatcher *authRequestDispatcher,
+                                                       resip::RegistrationPersistenceManager &regData,
+                                                       resip::SipStack *stack);
+      repro::ProcessorChain &makeResponseProcessorChain(repro::ProcessorChain &chain,
+                                                        resip::RegistrationPersistenceManager &regData);
+      repro::ProcessorChain &makeTargetProcessorChain(repro::ProcessorChain &chain, repro::ProxyConfig &config);
+
+      resip::FdPollGrp *mPollGrp;
       resip::EventThreadInterruptor* mInterruptor;
       resip::SipStack* mStack;
       resip::EventStackThread* mStackThread;
       
       repro::Registrar mRegistrar;
-      resip::SharedPtr<resip::MasterProfile> mProfile;
+      std::shared_ptr<resip::MasterProfile> mProfile;
       repro::AbstractDb* mDb;
       TfmProxyConfig mConfig;
-      repro::Dispatcher* mAuthRequestDispatcher;
+      resip::Dispatcher* mAuthRequestDispatcher;
       repro::ProcessorChain mRequestProcessors;
       repro::ProcessorChain mResponseProcessors;
       repro::ProcessorChain mTargetProcessors;
@@ -71,7 +88,9 @@ class TestRepro : public TestProxy
       repro::Proxy mProxy;
       resip::DialogUsageManager* mDum;
       resip::DumThread* mDumThread;
-      std::auto_ptr<resip::CongestionManager> mCongestionManager;
+      std::unique_ptr<resip::CongestionManager> mCongestionManager;
+
+      repro::QValueTargetHandler *mQValueTargetHandler = nullptr;
 };
 
 #endif

@@ -4,6 +4,8 @@
 #include "resip/dum/NonDialogUsage.hxx"
 #include "resip/stack/SipMessage.hxx"
 
+#include <memory>
+
 namespace resip
 {
 
@@ -11,12 +13,19 @@ class ServerPagerMessage : public NonDialogUsage
 {
    public:
       typedef Handle<ServerPagerMessage> ServerPagerMessageHandle;
+
+      ServerPagerMessage(const ServerPagerMessage&) = delete;
+      ServerPagerMessage(ServerPagerMessage&&) = delete;
+
+      ServerPagerMessage& operator=(const ServerPagerMessage&) = delete;
+      ServerPagerMessage& operator=(ServerPagerMessage&&) = delete;
+
       ServerPagerMessageHandle getHandle();
 
-      SharedPtr<SipMessage> accept(int statusCode = 200);
-      SharedPtr<SipMessage> reject(int statusCode);
+      std::shared_ptr<SipMessage> accept(int statusCode = 200);
+      std::shared_ptr<SipMessage> reject(int statusCode);
 
-      virtual void end();
+      void end() override;
 
       /**
        * Provide asynchronous method access by using command
@@ -25,11 +34,11 @@ class ServerPagerMessage : public NonDialogUsage
       void rejectCommand(int statusCode);
       void endCommand();
 
-      virtual void send(SharedPtr<SipMessage> msg);
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
+      void send(std::shared_ptr<SipMessage> msg) override;
+      void dispatch(const SipMessage& msg) override;
+      void dispatch(const DumTimeout& timer) override;
 
-      virtual EncodeStream& dump(EncodeStream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const override;
 
    protected:
       virtual ~ServerPagerMessage();
@@ -39,11 +48,7 @@ class ServerPagerMessage : public NonDialogUsage
       ServerPagerMessage(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& req);
       
       SipMessage mRequest;
-      SharedPtr<SipMessage> mResponse;
-
-      // disabled
-      ServerPagerMessage(const ServerPagerMessage&);
-      ServerPagerMessage& operator=(const ServerPagerMessage&);
+      std::shared_ptr<SipMessage> mResponse;
 };
  
 }

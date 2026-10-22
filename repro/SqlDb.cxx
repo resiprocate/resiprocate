@@ -21,8 +21,10 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-SqlDb::SqlDb() : mConnected(false)
+SqlDb::SqlDb(const resip::ConfigParse& config) : mConnected(false)
 {
+   mTlsPeerAuthorizationQuery = config.getConfigData("CustomTlsAuthQuery", "");
+   mTableNamePrefix = config.getConfigData("TableNamePrefix", "");
 }
 
 void 
@@ -31,10 +33,83 @@ SqlDb::eraseUser(const AbstractDb::Key& key )
    Data command;
    {
       DataStream ds(command);
-      ds << "DELETE FROM users ";
+      ds << "DELETE FROM " << tableName(UserTable) << " ";
       userWhereClauseToDataStream(key, ds);
    }
    query(command);
+}
+
+void
+SqlDb::eraseTlsPeerIdentity(const AbstractDb::Key& key )
+{
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "DELETE FROM " << tableName(TlsPeerIdentityTable) << " ";
+      tlsPeerIdentityWhereClauseToDataStream(key, ds);
+   }
+   query(command);
+}
+
+void
+SqlDb::setToData(const std::set<resip::Data>& items, resip::Data& result, const resip::Data& sep, const char quote) const
+{
+   DataStream ds(result);
+   std::set<resip::Data>::const_iterator it = items.begin();
+   while(it != items.end())
+   {
+      if(it != items.begin())
+      {
+         ds << sep;
+      }
+      if(quote != 0)
+      {
+         ds << quote << *it << quote;
+      }
+      else
+      {
+         ds << *it;
+      }
+      it++;
+   }
+}
+
+bool
+SqlDb::isAuthorized(const std::set<resip::Data>& peerNames, const std::set<resip::Data>& identities) const
+{
+   std::vector<Data> ret;
+
+   Data peerNameSet;
+   setToData(peerNames, peerNameSet);
+   StackLog(<<"peerNameSet = " << peerNameSet);
+
+   Data identitySet;
+   setToData(identities, identitySet);
+   StackLog(<<"identitySet = " << identitySet);
+
+   Data command;
+   if(mTlsPeerAuthorizationQuery.empty())
+   {
+      DataStream ds(command);
+      ds << "SELECT count(1) FROM " << tableName(TlsPeerIdentityTable) << " WHERE peerName IN (" << peerNameSet << ") AND ";
+      ds << "authorizedIdentity IN (" << identitySet << ");";
+   }
+   else
+   {
+      command = mTlsPeerAuthorizationQuery;
+      command.replace("$peerNames", peerNameSet);
+      command.replace("$identities", identitySet);
+   }
+
+   if(singleResultQuery(command, ret) != 0 || ret.size() == 0)
+   {
+      return false;
+   }
+   int count = ret.front().convertInt();
+
+   DebugLog( << "Count is " << count);
+
+   return count > 0;
 }
 
 void 
@@ -73,7 +148,8 @@ SqlDb::dbRollbackTransaction(const Table table)
    return query(command) == 0;
 }
 
-static const char usersavp[] = "usersavp";
+static const char userTable[] = "users";
+static const char tlsPeerIdentityTable[] = "tlsPeerIdentity";
 static const char routesavp[] = "routesavp";
 static const char aclsavp[] = "aclsavp";
 static const char configsavp[] = "configsavp";
@@ -81,42 +157,31 @@ static const char staticregsavp[] = "staticregsavp";
 static const char filtersavp[] = "filtersavp";
 static const char siloavp[] = "siloavp";
 
-const char*
+Data
 SqlDb::tableName(Table table) const
 {
    switch (table)
    {
       case UserTable:
-         resip_assert(false);  // usersavp is not used!
-         return usersavp;
+         return mTableNamePrefix + userTable;
+      case TlsPeerIdentityTable:
+         return mTableNamePrefix + tlsPeerIdentityTable;
       case RouteTable:
-         return routesavp;
+         return mTableNamePrefix + routesavp;
       case AclTable:
-         return aclsavp; 
+         return mTableNamePrefix + aclsavp;
       case ConfigTable:
-         return configsavp;
+         return mTableNamePrefix + configsavp;
       case StaticRegTable:
-         return staticregsavp;
+         return mTableNamePrefix + staticregsavp;
       case FilterTable:
-         return filtersavp;
+         return mTableNamePrefix + filtersavp;
       case SiloTable:
-         return siloavp;
+         return mTableNamePrefix + siloavp;
       default:
          resip_assert(0);
    }
    return 0;
-}
-
-void
-SqlDb::getUserAndDomainFromKey(const Key& key, Data& user, Data& domain) const
-{
-   ParseBuffer pb(key);
-   const char* start = pb.position();
-   pb.skipToOneOf("@");
-   pb.data(user, start);
-   const char* anchor = pb.skipChar();
-   pb.skipToEnd();
-   pb.data(domain, anchor);
 }
 
 /* ====================================================================

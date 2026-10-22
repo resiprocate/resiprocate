@@ -1,7 +1,10 @@
 #include <ctype.h>
 #include <iostream>
+#include <sstream>
+#include <vector>
 
 #include <rutil/Data.hxx>
+#include <rutil/DnsUtil.hxx>
 #include <rutil/Socket.hxx>
 #include <openssl/ssl.h>
 #include <openssl/srtp.h>
@@ -12,7 +15,6 @@
 #include "TestDtlsUdp.hxx"
 #include "CreateCert.hxx"
 
-using namespace std;
 using namespace dtls;
 using namespace resip;
 
@@ -26,12 +28,12 @@ int main(int argc,char **argv)
 
    assert(argc==2);
 
-   createCert(resip::Data("sip:server@example.com"),365,1024,serverCert,serverKey);
+   createCert(resip::Data("sip:server@example.com"),365,2048,serverCert,serverKey);
 
    TestTimerContext *ourTimer=new TestTimerContext();
-   DtlsFactory *serverFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(ourTimer),serverCert,serverKey);
+   std::unique_ptr<DtlsFactory> serverFactory(new DtlsFactory(std::unique_ptr<DtlsTimerContext>(ourTimer),serverCert,serverKey));
 
-   cout << "Created the factory\n";
+   std::cout << "Created the factory\n";
 
    Socket fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
    if ( fd == -1 )
@@ -49,11 +51,13 @@ int main(int argc,char **argv)
    int r=bind( fd,(struct sockaddr*)&myaddr, sizeof(myaddr));
    assert(r==0);
 
-   cout << "Made our UDP socket\n";
+   std::cout << "Made our UDP socket\n";
 
-   cout << "Entering wait loop\n";
+   std::cout << "Entering wait loop\n";
    TestDtlsUdpSocketContext *sockContext=0;
-   DtlsSocket *dtlsSocket;
+   std::unique_ptr<DtlsSocket> dtlsSocket;
+   // As reflow's Flow: the server socket is only created once the client completes the cookie exchange
+   std::unique_ptr<DtlsListener> listener = serverFactory->createListener();
 
    while(1)
    {
@@ -65,9 +69,7 @@ int main(int argc,char **argv)
 
       fdset.setRead(fd);
 
-      UInt64 towait=ourTimer->getRemainingTime();
-      // cerr << "Invoking select for time " << towait << endl;
-      int toread=fdset.selectMilliSeconds(towait);
+      int toread=ourTimer->select(fdset);
       ourTimer->updateTimer();
 
       if (toread >= 0) 
@@ -78,16 +80,30 @@ int main(int argc,char **argv)
             r=recvfrom(fd, (char*)buffer, sizeof(buffer), 0, (sockaddr *)&src,&srclen);
             assert(r>=0);
 
-            // The first packet initiates the association
-            if(!sockContext)
+            // The first ClientHello with a valid cookie initiates the association
+            if(!dtlsSocket)
             {
-               sockContext=new TestDtlsUdpSocketContext(fd,&src);
-
-               cout << "Made the socket context\n";          
-
-               dtlsSocket=serverFactory->createServer(std::auto_ptr<DtlsSocketContext>(sockContext));
-
-               cout << "Made the DTLS socket\n";
+               if(DtlsFactory::demuxPacket(buffer,r)==DtlsFactory::dtls)
+               {
+                  std::ostringstream peer;
+                  peer << DnsUtil::inet_ntop(src.sin_addr) << ":" << ntohs(src.sin_port);
+                  std::vector<unsigned char> response;
+                  dtlsSocket.reset(listener->handlePacket(buffer, r, peer.str(), response, [&]()
+                  {
+                     sockContext=new TestDtlsUdpSocketContext(fd,&src);
+                     return std::unique_ptr<DtlsSocketContext>(sockContext);
+                  }));
+                  if(!response.empty())
+                  {
+                     std::cout << "Sent a HelloVerifyRequest\n";
+                     sendto(fd, (const char*)response.data(), (int)response.size(), 0, (const sockaddr*)&src, sizeof(src));
+                  }
+                  if(dtlsSocket)
+                  {
+                     std::cout << "Made the DTLS socket, after the cookie exchange\n";
+                  }
+               }
+               continue;
             }
 
             switch(DtlsFactory::demuxPacket(buffer,r))
@@ -100,9 +116,10 @@ int main(int argc,char **argv)
                unsigned int buf2l;
 
                sockContext->recvRtpData(buffer,r,buf2,&buf2l,sizeof(buf2));
+               buf2[buf2l] = 0;
 
-               cout << "Read RTP data of length " << buf2l << endl;
-               cout << buf2 << endl;
+               std::cout << "Read RTP data of length " << buf2l << std::endl;
+               std::cout << buf2 << std::endl;
 
                for(unsigned int i=0;i<buf2l;i++)
                {
@@ -126,7 +143,8 @@ int main(int argc,char **argv)
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

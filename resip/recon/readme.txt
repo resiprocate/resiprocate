@@ -46,16 +46,33 @@ Some Existing Limitations with sipX media Integration
         second media participant will override the first and both media participants will 
         be destroyed when the second file has completed playing.
 
-2.  The newer Topology Graph interface is used in recon to get Bridge Mixing support.  The
-    following is a list of features that have either been deprecated or are not yet 
-    implemented in this interface.
-
-    a.  Streaming media from an http URL has been deperecated - thus http URLs are not 
-        supported in the createMediaParticipant interface.
-   
-    b.  When playing media tones and files, the local-only and remote-only flags have not 
-        yet been implemented, and will not currently work.
-
+2.  A new Multiple Media Interface Mode has been implemented to help with limitation #1
+    above.  This mode is more appropriate when using recon to implement a media server.
+    By default, this mode uses 1 sipXtapi media interface per conversation, as opposed
+	to a single global media interface.  If you use 
+	createSharedMediaInterfaceConversation method instead of createConversation then you
+    can specify that 2 (multiple) conversations can share the same media interface. This 
+    allows participants to be moved between any conversations that share the same media 
+    interface.  Using this mode, participants can only exist in multiple conversations 
+    at the same time if those conversations share the same media interface.
+    This means the limit of 7 participants is no longer global (#1 above), it now applies
+    to each media interface.  A separate media participant for each media 
+    interface can also exist.  This architecture/mode is appropriate for server
+    applications, such as multi-party conference servers (up to 7 participants 
+    per conference), music on hold servers and call park servers. 
+    API restrictions in this mode:
+    -joinConversation - restricted to functioning only if both source and 
+                        destination conversations share the same media inteface
+    -addParticipant - can only add a participant to multiple conversations if
+                      the conversations share the same media interface
+    -moveParticipant - for non-local participants, restricted to functioning 
+                       only if both source and destination conversations share
+                       the same media inteface
+    -alertParticipant - if you are using the EarlyFlag then the 
+                        RemoteParticipant must be added to a conversation
+                        before calling this
+    -answerParticipant - RemoteParticipant must be added to a conversation
+                         before calling this
 
 
 SRTP Implementation Notes
@@ -87,45 +104,20 @@ DTLS Implementation Notes:
 Setting up build environment:
 -----------------------------
 1.  Go to directory where you want to create build env.
-2.  svn checkout https://svn.resiprocate.org/rep/resiprocate/main resip
-3.  svn checkout https://scm.sipfoundry.org/rep/sipX/main sipXtapi
-4.  cd resip/contrib
-5.  svn checkout https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl openssl
+2.  git clone https://github.com/resiprocate/resiprocate.git resip
+3.  git clone https://github.com/sipXtapi/sipXtapi.git sipXtapi
+4.  Windows users will need to put OpenSSL binares in resip/contrib/openssl or resip/contrib/opensslx64
 
-Note:  sipXtapi SVN repository has recently changed locations from: 
-       https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi     to 
-       https://scm.sipfoundry.org/rep/sipX/main.  If you are migrating a local
-       check out use the following command, or TortoiseSVN, to update your local 
-       copy to the new location:
-       svn switch https://scm.sipfoundry.org/rep/sipX/main
 
-Note:  Ensure you use at least SVN revision 11413 of sipXtapi.
-
-/resip/                  <- https://svn.resiprocate.org/rep/resiprocate/main
-/resip/contrib/openssl   <- OpenSSL 1.0.1 or above
-/resip/contrib/boost     <- BOOST 1.34.1 or above (required in this location for Windows builds only)
-/sipXtapi                <- https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi
+/resip/                  <- https://github.com/resiprocate/resiprocate.git
+/resip/contrib/openssl   <- OpenSSL 1.0.1 or above (required here for Windows builds only)
+/sipXtapi                <- https://github.com/sipXtapi/sipXtapi.git
 
 Building recon on Windows
 -------------------------
 1.  Ensure the build environment is setup as indicated above.
-2.  Use the recon_8_0.sln Visual Studio 2005 or recon_10_0.sln Visual Studio 2010
-    solution file
-3.  Open the sipXmediaAdapterLib project settings and enable the following defines:
-    DISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY
-    ENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY
-    by removing the 'xx' characters from the Preprocessor defines.
-    You should do this for both Debug and Release project settings.
-4.  Open the sipXmediaAdapterLib and sipXmediaLib project settings and add the 
-    following define:  DISABLE_STREAM_PLAYER to the Preprocessor defines.
-    You should do this for both Debug and Release project settings.
-5.  Provide an include path to pcre for the sipXmediaLib projects by doing one 
-    of the following: 
-    - Modify your base Visual Studio settings for include paths - add an include 
-      path to \resip\contrib\pcre 
-    - Modify the Additional Include Directories settings of the sipXmediaAdapterLib, 
-      sipXmedaLib and sipXportLib projects to include: ";..\..\resip\contrib\pcre"     
-6.  Build solution.
+2.  Use the recon_17_0.sln Visual Studio 2022 or older versions present.
+3.  Build solution.
 
 
 Running on Windows
@@ -136,7 +128,7 @@ to run testUA.exe on another machine you will need the following:
 - codec_*.dll from sipXtapi/sipXmediaLib/bin directory
 - ca.pem file in working directory - contains acceptable root certificate authority (CA) 
   certificates for TURN over TLS 
-- VS 2003/2005 - C-runtime libaries present on the destination system
+- C-runtime libaries present on the destination system
 
 
 
@@ -195,54 +187,13 @@ Running testua on Generic Linux
 
 
 
-TODO List
----------
-In order for recon to appeal to the widest audience possible, some changes
-should be made in order to provide a better layer between the underlying
-media stack (currently sipXtapi) and the Conversation Manager.  The following
-task is required:
-
-Provide a media access API/thin layer so that sipX API's are not accessed directly
-from different areas in recon source code.  Currently sipX API's are accessed 
-in the following locations:
-
-    ConversationManager.cxx - contains main sipXmediaFactory and sipXmediaInterface - the interface into sipX library
-      - createMediaInterface
-      - setVolume
-      - setMicrophoneGain
-      - muteMicrophone
-      - enableEchoCancel
-      - enableAutoGainControl
-      - enableNoiseReduction
- 
-    BridgeMixer.cxx - API's to control the sipX bridge mixing matrix
-      - setMixWeightsForOutput
-      - setMixWeightsForInput
- 
-    MediaResourceParticipant.cxx - API's to play tones, files, media
-      - start/stopTone
-      - start/stopAudio
-      - playBuffer
-      - createPlayer (deprecated in latest sipX)
- 
-    RemoteParticipantDialogSet - API's to create local socket/connection
-      - create/deleteConnection
-      - getCapabilities
-      - getConnectionPortOnBridge
- 
-    RemoteParticipant.cxx - API's to start/stop RTP
-      - setConnectionDestination
-      - start/stopRtpSend
-      - start/stopRtpReceive
-      - isReceivingRtpAudio
-      - isSendingRtpAudio    
-
-
 License
 -------
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. http://www.sipspectrum.com 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

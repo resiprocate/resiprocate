@@ -180,7 +180,12 @@ struct GenericIPAddress
          }
       }
 
+      friend EncodeStream& operator<<(EncodeStream& strm, const GenericIPAddress& addr);
+
 };
+
+EncodeStream&
+operator<<(EncodeStream& ostrm, const GenericIPAddress& addr);
 
 }
 

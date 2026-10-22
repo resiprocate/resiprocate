@@ -55,7 +55,7 @@ CountBuffer::overflow(int c)
    return 0;
 }
 #else
-UInt64 CountBuffer::tellpbuf(void)
+uint64_t CountBuffer::tellpbuf(void)
 { 
    return mCount; 
 }

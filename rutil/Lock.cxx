@@ -1,65 +1,41 @@
 #include "rutil/Lock.hxx"
 
 
-using resip::Lock;
 using resip::ReadLock;
 using resip::WriteLock;
 using resip::PtrLock;
 
-using resip::LockType;
-using resip::Lockable;
+using resip::RWMutex;
 
 
-static inline void takeLock(Lockable& lockable, LockType lockType) {
-   switch ( lockType )
-    {
-       case resip::VOCAL_READLOCK:
-       {
-          lockable.readlock();
-          break;
-       }
-	    
-       case resip::VOCAL_WRITELOCK:
-       {
-          lockable.writelock();
-          break;
-       }
-       
-       default:
-       {
-          lockable.lock();
-          break;
-       }
-    }
-}
-
-Lock::Lock(Lockable & lockable, LockType lockType)
-   : myLockable(lockable)
+ReadLock::ReadLock(RWMutex & lockable)
+   : mLockable(lockable)
 {
-   takeLock(lockable, lockType);
+   lockable.readlock();
 }
 
-Lock::~Lock()
+ReadLock::~ReadLock()
 {
-    myLockable.unlock();
+   mLockable.unlock();
 }
 
-ReadLock::ReadLock(Lockable & lockable)
-   : Lock(lockable, VOCAL_READLOCK)
+WriteLock::WriteLock(RWMutex & lockable)
+   : mLockable(lockable)
 {
+   lockable.writelock();
 }
 
-WriteLock::WriteLock(Lockable & lockable)
-   : Lock(lockable, VOCAL_WRITELOCK)
+WriteLock::~WriteLock()
 {
+   mLockable.unlock();
 }
 
 
-PtrLock::PtrLock(Lockable* lockable, LockType lockType)
+PtrLock::PtrLock(Mutex* lockable)
    : myLockable(lockable)
 {
    if (lockable)
-      takeLock(*lockable, lockType);
+      lockable->lock();
 }
 
 PtrLock::~PtrLock()

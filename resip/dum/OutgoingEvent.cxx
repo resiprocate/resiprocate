@@ -1,10 +1,11 @@
 #include "resip/dum/OutgoingEvent.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-using namespace resip;
-using namespace std;
+#include <utility>
 
-OutgoingEvent::OutgoingEvent(SharedPtr<SipMessage> msg)
+using namespace resip;
+
+OutgoingEvent::OutgoingEvent(std::shared_ptr<SipMessage> msg)
    : mMessage(msg)
 {
 }
@@ -14,18 +15,14 @@ OutgoingEvent::OutgoingEvent(const OutgoingEvent& from)
 {
 }
 
-OutgoingEvent::~OutgoingEvent()
-{
-}
-
 Message*
 OutgoingEvent::clone() const
 {
    return new OutgoingEvent(*this);
 }
 
-SharedPtr<SipMessage>
-OutgoingEvent::message()
+std::shared_ptr<SipMessage>
+OutgoingEvent::message() const noexcept
 {
    return mMessage;
 }

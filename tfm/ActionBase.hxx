@@ -1,8 +1,9 @@
 #if !defined(TFM_ActionBase_hxx)
 #define TFM_ActionBase_hxx
 
-#include <boost/shared_ptr.hpp>
 #include "rutil/Data.hxx"
+
+#include <memory>
 
 class Event;
 
@@ -13,10 +14,10 @@ class ActionBase
       virtual ~ActionBase();
       void addNext(ActionBase* action);
       
-      virtual void exec(boost::shared_ptr<Event> event);
+      virtual void exec(std::shared_ptr<Event> event);
       virtual void exec();
       virtual resip::Data toString() const;
-      virtual void operator()(boost::shared_ptr<Event> event) = 0;
+      virtual void operator()(std::shared_ptr<Event> event) = 0;
       virtual void operator()() = 0;
    protected:
       ActionBase* mNext;

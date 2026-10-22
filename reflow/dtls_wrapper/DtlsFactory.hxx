@@ -12,10 +12,12 @@
 
 typedef struct x509_st X509;
 typedef struct ssl_ctx_st SSL_CTX;
+typedef struct ssl_st SSL;
 typedef struct evp_pkey_st EVP_PKEY;
 
 namespace dtls
 {
+class DtlsListener;
 class DtlsSocket;
 class DtlsSocketContext;
 class DtlsTimerContext;
@@ -27,17 +29,21 @@ class DtlsFactory
      enum PacketType { rtp, dtls, stun, unknown};
      
      // Creates a DTLS SSL Context and enables srtp extension, also sets the private and public key cert
-     DtlsFactory(std::auto_ptr<DtlsTimerContext> tc, X509 *cert, EVP_PKEY *privkey);
+     DtlsFactory(std::unique_ptr<DtlsTimerContext> tc, X509 *cert, EVP_PKEY *privkey);
 
      // Note: this orphans any DtlsSockets you were stupid enough
      // not to free
      ~DtlsFactory();
      
      // Creates a new DtlsSocket to be used as a client
-     DtlsSocket* createClient(std::auto_ptr<DtlsSocketContext> context);
+     DtlsSocket* createClient(std::unique_ptr<DtlsSocketContext> context);
 
      // Creates a new DtlsSocket to be used as a server
-     DtlsSocket* createServer(std::auto_ptr<DtlsSocketContext> context);
+     DtlsSocket* createServer(std::unique_ptr<DtlsSocketContext> context);
+
+     // Creates a DtlsListener, to create server DtlsSockets only for peers that complete a
+     // cookie exchange (see DtlsListener)
+     std::unique_ptr<DtlsListener> createListener();
 
      // Returns the fingerprint of the user cert that was passed into the constructor
      void getMyCertFingerprint(char *fingerprint);
@@ -54,14 +60,41 @@ class DtlsFactory
      // Changes the default DTLS Cipher Suites supported
      void setCipherSuites(const char *cipherSuites);
 
+     // The largest UDP payload DTLS sends, for sockets created from now on: OpenSSL fits its
+     // records to it, and they're sent in datagrams no larger, so a handshake flight doesn't
+     // depend on IP fragmentation.  The default, 1200, leaves room for IPv6 and TURN framing.
+     static const unsigned int DefaultMtu = 1200;
+     void setMtu(unsigned int mtu) { mMtu = mtu; }
+     unsigned int getMtu() const { return mMtu; }
+
+     // Seconds a server socket's handshake may take, from its creation, before it fails - rather
+     // than when OpenSSL stops retransmitting (after several minutes), so a peer that starts a handshake
+     // and goes quiet doesn't hold the socket that long.  0 leaves it to OpenSSL.  Client sockets,
+     // which we start towards the peer the SDP names, are left to OpenSSL.
+     static const unsigned int DefaultServerHandshakeTimeout = 30;
+     void setServerHandshakeTimeout(unsigned int seconds) { mServerHandshakeTimeout = seconds; }
+
      // Examines the first few bits of a packet to determine its type: rtp, dtls, stun or unknown
-     static PacketType demuxPacket(const unsigned char *buf, unsigned int len);
+     static PacketType demuxPacket(const unsigned char *buf, size_t len);
      
 private:
      friend class DtlsSocket;
+     friend class DtlsListener;
+
+     // DTLS cookies (RFC 6347 section 4.2.1): an HMAC of the peer's address under a random secret
+     static int generateCookie(SSL* ssl, unsigned char* cookie, unsigned int* cookieLen);
+     static int verifyCookie(SSL* ssl, const unsigned char* cookie, unsigned int cookieLen);
+     static bool computeCookie(SSL* ssl, unsigned char* cookie, unsigned int* cookieLen);
+
+     // The SSL ex_data index of the peer (const std::string*) a cookie is for
+     static int cookiePeerIndex();
+
      SSL_CTX* mContext;
-     std::auto_ptr<DtlsTimerContext> mTimerContext;
+     std::unique_ptr<DtlsTimerContext> mTimerContext;
      X509 *mCert;
+     unsigned char mCookieSecret[32];
+     unsigned int mMtu = DefaultMtu;
+     unsigned int mServerHandshakeTimeout = DefaultServerHandshakeTimeout;
 };
 
 }
@@ -70,7 +103,8 @@ private:
 #endif 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

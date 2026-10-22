@@ -2,7 +2,6 @@
 #define TURNALLOCATION_HXX
 
 #include <map>
-#include <boost/noncopyable.hpp>
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
@@ -15,6 +14,8 @@
 #include "DataBuffer.hxx"
 #include "ChannelManager.hxx"
 
+#include <memory>
+
 namespace reTurn {
 
 class TurnPermission;
@@ -24,8 +25,7 @@ class AsyncSocketBase;
 class UdpRelayServer;
 
 class TurnAllocation
-  : public AsyncSocketBaseHandler,
-    private boost::noncopyable
+  : public AsyncSocketBaseHandler
 {
 public:
    explicit TurnAllocation(TurnManager& turnManager,
@@ -36,12 +36,17 @@ public:
                            const StunAuth& clientAuth, 
                            const StunTuple& requestedTuple, 
                            unsigned int lifetime);
+   TurnAllocation(const TurnAllocation&) = delete;
+   TurnAllocation(TurnAllocation&&) = delete;
    ~TurnAllocation();
+
+   TurnAllocation& operator=(const TurnAllocation&) = delete;
+   TurnAllocation& operator=(TurnAllocation&&) = delete;
 
    bool startRelay();
    void stopRelay();
 
-   const TurnAllocationKey& getKey() { return mKey; }
+   const TurnAllocationKey& getKey() const noexcept { return mKey; }
    void  refresh(unsigned int lifetime);  // update expiration time
 
    // checks if the permission exists or not - also checks for expired
@@ -53,21 +58,21 @@ public:
 
    // this get's called when being notified that the socket that the allocation came from
    // has been destroyed
-   void onSocketDestroyed();
+   void onSocketDestroyed() override;
 
    // Used when framed data is received from client, to forward data to peer
-   void sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<DataBuffer>& data, bool isFramed);
+   void sendDataToPeer(unsigned short channelNumber, const std::shared_ptr<DataBuffer>& data, bool isFramed);
    // Used when Send Indication is received from client, to forward data to peer
-   void sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool isFramed);  
+   void sendDataToPeer(const StunTuple& peerAddress, const std::shared_ptr<DataBuffer>& data, bool isFramed);  
    // Used when Data is received from peer, to forward data to client
-   void sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data); 
+   void sendDataToClient(const StunTuple& peerAddress, const std::shared_ptr<DataBuffer>& data); 
 
    // Called when a ChannelBind Request is received
    bool addChannelBinding(const StunTuple& peerAddress, unsigned short channelNumber);
 
-   const StunTuple& getRequestedTuple() const { return mRequestedTuple; }
-   time_t getExpires() const { return mExpires; }
-   const StunAuth& getClientAuth() const { return mClientAuth; }
+   const StunTuple& getRequestedTuple() const noexcept { return mRequestedTuple; }
+   time_t getExpires() const noexcept { return mExpires; }
+   const StunAuth& getClientAuth() const noexcept { return mClientAuth; }
 
 private:
    TurnAllocationKey mKey;  // contains ClientLocalTuple and clientRemoteTuple
@@ -82,10 +87,10 @@ private:
 
    TurnManager& mTurnManager;
    TurnAllocationManager& mTurnAllocationManager;
-   asio::deadline_timer mAllocationTimer;
+   asio::steady_timer mAllocationTimer;
 
    AsyncSocketBase* mLocalTurnSocket;
-   boost::shared_ptr<UdpRelayServer> mUdpRelayServer;
+   std::shared_ptr<UdpRelayServer> mUdpRelayServer;
 
    ChannelManager mChannelManager;
 

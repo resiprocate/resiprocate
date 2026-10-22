@@ -29,14 +29,14 @@ main(int argc, char* argv[])
    
  #define NUMCYCLES 50
    
-   UInt64 time1[NUMCYCLES];
-   UInt64 time2[NUMCYCLES];
-   UInt64 time3[NUMCYCLES];
+   uint64_t time1[NUMCYCLES];
+   uint64_t time2[NUMCYCLES];
+   uint64_t time3[NUMCYCLES];
    
    // open the fd 
    for( int port=startPort; port<endPort; port++)
    {
-      fd[port] =  socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+      fd[port] = (int)socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
       if( fd[port] ==  INVALID_SOCKET )
       {
          cerr << "Fail on creating socket for port " << port << endl;
@@ -118,7 +118,7 @@ main(int argc, char* argv[])
                      break;
                      
                   default:
-                     cerr <<"Error receiving, errno="<<err << " " << strerror(err);
+                     cerr <<"Error receiving, errno="<<err << " " << strError(err);
                      break;
                }
             }
@@ -130,6 +130,7 @@ main(int argc, char* argv[])
    for ( int i=1; i<NUMCYCLES; i++ )
    {
       cout << time2[i] - time1[i] << " ";
+      cout << time3[i] - time2[i] << " ";
       cout << time1[i] - time1[i-1] << " ";
       
       cout << endl;

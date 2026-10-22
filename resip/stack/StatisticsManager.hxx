@@ -59,8 +59,8 @@ class StatisticsManager : public StatisticsMessage::Payload
       void poll(); // force an update
 
       SipStack& mStack;
-      UInt64 mInterval;
-      UInt64 mNextPoll;
+      uint64_t mInterval;
+      uint64_t mNextPoll;
 
       ExternalStatsHandler *mExternalHandler;
       //

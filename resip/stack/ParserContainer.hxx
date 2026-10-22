@@ -131,6 +131,22 @@ class ParserContainer : public ParserContainerBase
       }
       
       /**
+         @brief Returns a pointer to the header field value at the given 0-based index,
+            or nullptr if the index is out of range.  O(1) - backed by a vector.
+      */
+      T* getByIndex(size_t index)
+      {
+         if (index >= mParsers.size()) return nullptr;
+         return &ensureInitialized(mParsers[index], this);
+      }
+
+      const T* getByIndex(size_t index) const
+      {
+         if (index >= mParsers.size()) return nullptr;
+         return &ensureInitialized(mParsers[index], this);
+      }
+
+      /**
          @brief Inserts a header field value at the front of this container.
       */
       void push_front(const T & t) 
@@ -164,11 +180,17 @@ class ParserContainer : public ParserContainerBase
       class const_iterator;
       
       /**
-         @brief An iterator class, derived from std::iterator (bidirectional)
+         @brief An iterator class (bidirectional)
       */
-      class iterator : public std::iterator<std::bidirectional_iterator_tag, T>
+      class iterator //: public std::iterator<std::bidirectional_iterator_tag, T>  // Note: std::iterator deprecated in C++17 usings below cover same functionality
       {
          public:
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = T;
+            using difference_type = std::ptrdiff_t;
+            using pointer = T*;
+            using reference = T&;
+
             iterator(typename Parsers::iterator i,ParserContainer* ref) : mIt(i),mRef(ref){}
             iterator() : mRef(0) {}
             iterator(const iterator& orig) : mIt(orig.mIt), mRef(orig.mRef) {}
@@ -177,14 +199,15 @@ class ParserContainer : public ParserContainerBase
             iterator operator++(int) {iterator it(mIt++,mRef); return it;}
             iterator operator--() {iterator it(--mIt,mRef); return it;}
             iterator operator--(int) {iterator it(mIt--,mRef); return it;}
-            bool operator!=(const iterator& rhs) { return mIt != rhs.mIt; }
-            bool operator==(const iterator& rhs) { return mIt == rhs.mIt; }
-            bool operator!=(const const_iterator& rhs) { return mIt != rhs.mIt; }
-            bool operator==(const const_iterator& rhs) { return mIt == rhs.mIt; }
+            friend bool operator!=(const iterator& lhs, const iterator& rhs) { return lhs.mIt != rhs.mIt; }
+            friend bool operator==(const iterator& lhs, const iterator& rhs) { return lhs.mIt == rhs.mIt; }
             iterator& operator=(const iterator& rhs) 
             {
-               mIt = rhs.mIt; 
-               mRef = rhs.mRef;
+               if (&rhs != this)
+               {
+                  mIt = rhs.mIt; 
+                  mRef = rhs.mRef;
+               }
                return *this;
             }
             T& operator*() {return ensureInitialized(*mIt,mRef);}
@@ -197,12 +220,17 @@ class ParserContainer : public ParserContainerBase
       };
 
       /**
-         @brief A const_iterator class, derived from std::iterator 
-            (bidirectional)
+         @brief A const_iterator class (bidirectional)
       */
-      class const_iterator : public std::iterator<std::bidirectional_iterator_tag, T>
+      class const_iterator //: public std::iterator<std::bidirectional_iterator_tag, T> // Note: std::iterator deprecated in C++17 usings below cover same functionality
       {
          public:
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = T;
+            using difference_type = std::ptrdiff_t;
+            using pointer = T*;
+            using reference = T&;
+
             const_iterator(Parsers::const_iterator i,const ParserContainer* ref) : mIt(i),mRef(ref){}
             const_iterator(const const_iterator& orig) : mIt(orig.mIt), mRef(orig.mRef) {}
             const_iterator(const iterator& orig) : mIt(orig.mIt), mRef(orig.mRef) {}
@@ -212,14 +240,15 @@ class ParserContainer : public ParserContainerBase
             const_iterator operator++(int) {const_iterator it(mIt++,mRef); return it;}
             const_iterator operator--() {const_iterator it(--mIt,mRef); return it;}
             const_iterator operator--(int) {const_iterator it(mIt--,mRef); return it;}
-            bool operator!=(const const_iterator& rhs) { return mIt != rhs.mIt; }
-            bool operator==(const const_iterator& rhs) { return mIt == rhs.mIt; }
-            bool operator!=(const iterator& rhs) { return mIt != rhs.mIt; }
-            bool operator==(const iterator& rhs) { return mIt == rhs.mIt; }
+            friend bool operator!=(const const_iterator& lhs, const const_iterator& rhs) { return lhs.mIt != rhs.mIt; }
+            friend bool operator==(const const_iterator& lhs, const const_iterator& rhs) { return lhs.mIt == rhs.mIt; }
             const_iterator& operator=(const const_iterator& rhs) 
             {
-               mIt = rhs.mIt;
-               mRef = rhs.mRef;
+               if (&rhs != this)
+               {
+                  mIt = rhs.mIt;
+                  mRef = rhs.mRef;
+               }
                return *this;
             }
             const_iterator& operator=(const iterator& rhs) 
@@ -378,7 +407,8 @@ insert(EncodeStream& s, const resip::ParserContainer<T>& c)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

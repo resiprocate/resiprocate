@@ -125,7 +125,7 @@ FileSystem::Directory::iterator::is_directory() const
    StackLog(<<"calling stat() for " << mDirent->d_name);
    if(stat(mFullFilename.c_str(), &s) < 0)
    {
-      ErrLog(<<"Error calling stat() for " << mFullFilename.c_str() << ": " << strerror(errno));
+      ErrLog(<<"Error calling stat() for " << mFullFilename.c_str() << ": " << strError(errno));
       throw Exception("stat() failed", __FILE__, __LINE__);
    }
    return S_ISDIR(s.st_mode);
@@ -145,7 +145,8 @@ FileSystem::Directory::create() const
 #else
 
 FileSystem::Directory::iterator::iterator() :
-   mWinSearch(0)
+   mWinSearch(0),
+   mIsDirectory(false)
 {
 }
 
@@ -172,6 +173,7 @@ FileSystem::Directory::iterator::iterator(const Directory& dir)
    {
       mFile = fileData.cFileName;
       mFullFilename = mPath + '/' + mFile;
+      mIsDirectory = (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) > 0;
    }
 }
 
@@ -202,7 +204,7 @@ FileSystem::Directory::iterator::operator++()
    {
       mFile = fileData.cFileName;
       mFullFilename = mPath + '/' + mFile;
-      mIsDirectory = (fileData.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) > 0;
+      mIsDirectory = (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) > 0;
    }  
    return *this;
 }

@@ -11,9 +11,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
+#include <functional>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -139,7 +137,7 @@ StunEndPoint::generateBindingResponse()
 {
    return new CommonAction(this, 
                            "Generate Binding Response",
-                           boost::bind(&StunEndPoint::generateBindingResponseDelegate, this));
+                           [this] { generateBindingResponseDelegate(); });
 }
 
 ActionBase*
@@ -147,7 +145,7 @@ StunEndPoint::generateBindingResponse(const Uri& mappedAddress)
 {
    return new CommonAction(this, 
                            "Generate Binding Response",
-                           boost::bind(&StunEndPoint::generateBindingResponseDelegate, this, mappedAddress));
+                           [=] { generateBindingResponseDelegate(mappedAddress); });
 }
 
 ActionBase*
@@ -155,7 +153,7 @@ StunEndPoint::generateSymmetricBindingResponse()
 {
    return new CommonAction(this, 
                            "Generate Symmetric Binding Response",
-                           boost::bind(&StunEndPoint::generateSymmetricBindingResponseDelegate, this));
+                           std::bind(&StunEndPoint::generateSymmetricBindingResponseDelegate, this));
 }
 
 ActionBase*
@@ -164,7 +162,7 @@ StunEndPoint::generateAllocateResponse()
    DebugLog(<< "generating TURN Allocate Response");
    return new CommonAction(this,
                            "Generate Allocate Response",
-                           boost::bind(&StunEndPoint::generateAllocateResponseDelegate, this));
+                           std::bind(&StunEndPoint::generateAllocateResponseDelegate, this));
 }
 
 ActionBase*
@@ -172,7 +170,7 @@ StunEndPoint::generateAllocateErrorResponse300(const Data& ip, int port)
 {
    return new CommonAction(this,
                            "Generate Allocate Error Response",
-                           boost::bind(&StunEndPoint::generateAllocateErrorResponse300Delegate, this, ip, port));
+                           std::bind(&StunEndPoint::generateAllocateErrorResponse300Delegate, this, ip, port));
 }
 
 ActionBase*
@@ -180,7 +178,7 @@ StunEndPoint::generateAllocateErrorResponse(int code)
 {
    return new CommonAction(this,
                            "Generate Allocate Error Response",
-                           boost::bind(&StunEndPoint::generateAllocateErrorResponseDelegate, this, code));
+                           std::bind(&StunEndPoint::generateAllocateErrorResponseDelegate, this, code));
 }
 
 ActionBase*
@@ -188,7 +186,7 @@ StunEndPoint::generateSendResponse()
 {
    return new CommonAction(this,
                            "Generate Send Response",
-                           boost::bind(&StunEndPoint::generateSendResponseDelegate, this));
+                           std::bind(&StunEndPoint::generateSendResponseDelegate, this));
 }
 
 ActionBase*
@@ -196,7 +194,7 @@ StunEndPoint::generateSetActiveDestinationResponse()
 {
    return new CommonAction(this,
                            "Generate Set Active Destination Response",
-                           boost::bind(&StunEndPoint::generateSetActiveDestinationResponseDelegate, this));
+                           std::bind(&StunEndPoint::generateSetActiveDestinationResponseDelegate, this));
 }
 
 TestEndPoint::ExpectBase*
@@ -209,7 +207,7 @@ StunEndPoint::expect(StunEvent::Type type, int timeoutMs, ActionBase* expectActi
 }
 
 void 
-StunEndPoint::onBindingRequest(boost::shared_ptr<StunRequestContext> request)
+StunEndPoint::onBindingRequest(std::shared_ptr<StunRequestContext> request)
 {
    DebugLog(<< "StunEndPoint::onBindingRequestReceived()");
    mRequests.push_back(request);
@@ -217,7 +215,7 @@ StunEndPoint::onBindingRequest(boost::shared_ptr<StunRequestContext> request)
 }
 
 void
-StunEndPoint::onUnknownRequest(boost::shared_ptr<StunRequestContext> request)
+StunEndPoint::onUnknownRequest(std::shared_ptr<StunRequestContext> request)
 {
    DebugLog(<< "StunEndPoint::onUnknownRequestReceived()");
 }
@@ -241,7 +239,7 @@ StunEndPoint::onResponseError()
 }
 
 void
-StunEndPoint::onAllocateRequest(boost::shared_ptr<StunRequestContext> request)
+StunEndPoint::onAllocateRequest(std::shared_ptr<StunRequestContext> request)
 {
    DebugLog(<< "StunEndPoint::onAllocateRequestReceived()");
    //mRequest = request;
@@ -250,7 +248,7 @@ StunEndPoint::onAllocateRequest(boost::shared_ptr<StunRequestContext> request)
 }
 
 void
-StunEndPoint::onSendRequest(boost::shared_ptr<StunRequestContext> request)
+StunEndPoint::onSendRequest(std::shared_ptr<StunRequestContext> request)
 {
    DebugLog(<< "StunEndPoint::onSendRequest()");
 //   mRequests.push_back(request);
@@ -258,7 +256,7 @@ StunEndPoint::onSendRequest(boost::shared_ptr<StunRequestContext> request)
 }
 
 void
-StunEndPoint::onSetActiveDestinationRequest(boost::shared_ptr<StunRequestContext> request)
+StunEndPoint::onSetActiveDestinationRequest(std::shared_ptr<StunRequestContext> request)
 {
    DebugLog(<< "StunEndPoint::onSetActiveDestinationRequest()");
    mRequests.push_back(request);

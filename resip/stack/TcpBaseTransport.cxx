@@ -76,13 +76,23 @@ TcpBaseTransport::init()
 
    int on = 1;
 #if !defined(WIN32)
+   if (mTransportFlags & RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS)
+   {
+      if (::setsockopt(mFd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)))
+      {
+         int e = getErrno();
+         InfoLog(<< "Couldn't set sockoptions SO_REUSEPORT: " << strError(e));
+         error(e);
+         throw Exception("Failed setsockopt", __FILE__, __LINE__);
+      }
+   }
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) )
 #else
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)) )
 #endif
    {
        int e = getErrno();
-       InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+       InfoLog (<< "Couldn't set sockoptions SO_REUSEADDR: " << strError(e));
        error(e);
        throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
@@ -98,7 +108,7 @@ TcpBaseTransport::init()
    if (e != 0 )
    {
       int e = getErrno();
-      InfoLog (<< "Failed listen " << strerror(e));
+      InfoLog (<< "Failed listen " << strError(e));
       error(e);
       // !cj! deal with errors
       throw Transport::Exception("Address already in use", __FILE__,__LINE__);
@@ -175,16 +185,14 @@ TcpBaseTransport::processListen()
       }
       if(!configureConnectedSocket(sock))
       {
+         closeSocket(sock);
          throw Exception("Failed to configure connected socket", __FILE__,__LINE__);
       }
       makeSocketNonBlocking(sock);
 
       DebugLog (<< this << " Received TCP connection from: " << tuple << " mTuple: " << mTuple << " as fd=" << sock);
 
-      if (mSocketFunc)
-      {
-         mSocketFunc(sock, transport(), __FILE__, __LINE__);
-      }
+      applySocketOptions(sock);
 
       Connection* c = mConnectionManager.findConnection(tuple);
       if(!c)
@@ -207,6 +215,66 @@ TcpBaseTransport::processListen()
    return 1;
 }
 
+bool
+TcpBaseTransport::bindClientSocket(Socket sock,
+      TransportFailure::FailureReason &failReason, int &failSubCode)
+{
+   char _sa[RESIP_MAX_SOCKADDR_SIZE];
+   sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
+   resip_assert(RESIP_MAX_SOCKADDR_SIZE >= mTuple.length());
+   
+   // Check if SYMMETRIC_CONNECTIONS flag is set
+   if (mTransportFlags & RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS)
+   {
+      // Symmetric connections mode: bind to the same port as the listening transport
+      // This ensures TCP source port matches the advertised SIP port in Via/Contact headers
+      
+      // Enable SO_REUSEADDR to allow binding to the same port as the listening socket
+      int on = 1;
+#if !defined(WIN32)
+      if (::setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)))
+      {
+         int err = getErrno();
+         WarningLog(<< "Failed to set SO_REUSEPORT on client socket: " << strError(err));
+      }
+      if (::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)))
+#else
+      if (::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)))
+#endif
+      {
+         int err = getErrno();
+         WarningLog(<< "Failed to set SO_REUSEADDR on client socket: " << strError(err));
+         // Continue anyway - this is not fatal
+      }
+      
+      // Bind to the same port as the listening transport (not ephemeral port)
+      memcpy(sa, &mTuple.getSockaddr(), mTuple.length());
+      
+      DebugLog(<< "Symmetric connections mode: binding client socket to " << mTuple);
+   }
+   else
+   {
+      // Default behavior: use ephemeral port (port = 0)
+      mTuple.copySockaddrAnyPort(sa);
+      
+      DebugLog(<< "Default mode: binding client socket with ephemeral port: " << mTuple);
+   }
+   
+#ifdef USE_NETNS
+      NetNs::setNs(netNs());
+#endif
+   if(::bind(sock, sa, mTuple.length()) != 0)
+   {
+      int err = getErrno();
+      WarningLog( << "Error in binding to source interface address: " << strError(err));
+      failReason = TransportFailure::Failure;
+      failSubCode = err;
+      return false;
+   }
+   
+   return true;
+}
+
 Connection*
 TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       TransportFailure::FailureReason &failReason, int &failSubCode)
@@ -221,7 +289,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
    {
       int err = getErrno();
-      InfoLog (<< "Failed to create a socket " << strerror(err));
+      InfoLog (<< "Failed to create a socket " << strError(err));
       error(err);
       if(mConnectionManager.gc(ConnectionManager::MinimumGcAge, 1) == 0)
       {
@@ -235,7 +303,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       if ( sock == INVALID_SOCKET )
       {
          err = getErrno();
-         WarningLog( << "Error in finding free filedescriptor to use. " << strerror(err));
+         WarningLog( << "Error in finding free filedescriptor to use. " << strError(err));
          error(err);
          failReason = TransportFailure::TransportNoSocket;
          failSubCode = err;
@@ -246,29 +314,21 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    resip_assert(sock != INVALID_SOCKET);
 
    DebugLog (<<"Opening new connection to " << dest);
-   char _sa[RESIP_MAX_SOCKADDR_SIZE];
-   sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
-   resip_assert(RESIP_MAX_SOCKADDR_SIZE >= mTuple.length());
-   mTuple.copySockaddrAnyPort(sa);
-#ifdef USE_NETNS
-      NetNs::setNs(netNs());
-#endif
-   if(::bind(sock, sa, mTuple.length()) != 0)
+   
+   // Bind client socket: symmetric port (if RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS set) 
+   // or ephemeral port (default behavior)
+   if (!bindClientSocket(sock, failReason, failSubCode))
    {
-      WarningLog( << "Error in binding to source interface address. " << strerror(errno));
-      failReason = TransportFailure::Failure;
-      failSubCode = errno;
+      closeSocket(sock);
       return NULL;
    }
    if(!configureConnectedSocket(sock))
    {
+      closeSocket(sock);
       throw Exception("Failed to configure connected socket", __FILE__,__LINE__);
    }
    makeSocketNonBlocking(sock);
-   if (mSocketFunc)
-   {
-      mSocketFunc(sock, transport(), __FILE__, __LINE__);
-   }
+   applySocketOptions(sock);
    const sockaddr& servaddr = dest.getSockaddr();
    int ret = connect( sock, &servaddr, dest.length() );
 
@@ -288,7 +348,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
          default:
          {
             // !jf! this has failed
-            InfoLog( << "Error on TCP connect to " <<  dest << ", err=" << err << ": " << strerror(err));
+            InfoLog( << "Error on TCP connect to " <<  dest << ", err=" << err << ": " << strError(err));
             error(err);
             //fdset.clear(sock);
             closeSocket(sock);
@@ -357,7 +417,7 @@ TcpBaseTransport::processAllWriteRequests()
             return;
          }
          resip_assert(conn->getSocket() != INVALID_SOCKET);
-         data->destination.mFlowKey = conn->getSocket();
+         data->destination.mFlowKey = (FlowKey)conn->getSocket();  // Note: https://stackoverflow.com/questions/1953639/is-it-safe-to-cast-socket-to-int-under-win64
       }
 
       if (conn == 0)
@@ -385,7 +445,7 @@ TcpBaseTransport::processAllWriteRequests()
 void
 TcpBaseTransport::process()
 {
-   mStateMachineFifo.flush();
+   drainDscpRefresh();
 
    // called within SipStack's thread. There is some risk of
    // recursion here if connection starts doing anything fancy.
@@ -393,13 +453,16 @@ TcpBaseTransport::process()
    // now, but rather wait for the process() call
    if (mPollGrp)
    {
-      processAllWriteRequests();
+       processAllWriteRequests();
    }
+   mStateMachineFifo.flush();
 }
 
 void
 TcpBaseTransport::process(FdSet& fdSet)
 {
+   drainDscpRefresh();
+
    resip_assert( mPollGrp==NULL );
 
    processAllWriteRequests();
@@ -407,21 +470,21 @@ TcpBaseTransport::process(FdSet& fdSet)
    // process the connections in ConnectionManager
    mConnectionManager.process(fdSet);
 
-   mStateMachineFifo.flush();
-
    // process our own listen/accept socket for incoming connections
    if (mFd!=INVALID_SOCKET && fdSet.readyToRead(mFd))
    {
       processListen();
    }
+
+   mStateMachineFifo.flush();
 }
 
 void
-TcpBaseTransport::processPollEvent(FdPollEventMask mask) {
-   if ( mask & FPEM_Read )
+TcpBaseTransport::processPollEvent(FdPollEventMask mask) 
+{
+   if (mask & FPEM_Read)
    {
-      while ( processListen() > 0 )
-         ;
+      while(processListen() > 0);
    }
 }
 
@@ -432,6 +495,14 @@ TcpBaseTransport::setRcvBufLen(int buflen)
    // need to store away the length and use when setting up new connections
 }
 
+void 
+TcpBaseTransport::invokeAfterSocketCreationFunc() const
+{
+    // Call for base socket
+    InternalTransport::invokeAfterSocketCreationFunc();
+    // Call for each connection
+    mConnectionManager.invokeAfterSocketCreationFunc();
+}
 
 
 /* ====================================================================

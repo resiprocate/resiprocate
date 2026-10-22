@@ -5,7 +5,7 @@
 **/
 
 #include <iomanip>
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
@@ -14,6 +14,8 @@
 #include "RendSketch.hxx"
 
 #include "popt.h"
+
+using std::placeholders::_1;
 
 #ifdef WIN32
 int ffsl(int mask) 
@@ -249,9 +251,9 @@ int ffsl(int mask)
  * It is widely published on web. It seems to be the fastest
  * non-lookup table approach.
  */
-static inline unsigned rendPopcount(UInt32 val)
+static inline unsigned rendPopcount(uint32_t val)
 {
-   UInt32 tmp = val - ((val >> 1) & 033333333333) - ((val >> 2) & 011111111111);
+   uint32_t tmp = val - ((val >> 1) & 033333333333) - ((val >> 2) & 011111111111);
    return ((tmp + (tmp >> 3)) & 030707070707) % 63;
 }
 
@@ -262,7 +264,7 @@ struct RendEventPubPosture
       mAbsPubTime(0), mPendCnt(-1) { }
    bool mWatchable;
    unsigned mPidfSn;
-   UInt32 mExpireAbsSecs; // absolute time, 0 if not active
+   uint32_t mExpireAbsSecs; // absolute time, 0 if not active
    unsigned mSessionIdx; // kind of like callback data
    RendTimeUs mAbsPubTime; // Used for timing server latency
    int mPendCnt;
@@ -277,9 +279,9 @@ struct RendTupDetail
    unsigned mPubPidfSn;
    unsigned mSubAcctIdx;
    unsigned mSubRptIdx;
-   UInt32 mWatchMask;
-   UInt32 mReadyMask;
-   UInt32 mPendMask;
+   uint32_t mWatchMask;
+   uint32_t mReadyMask;
+   uint32_t mPendMask;
 
    // Total number of subscriptions (incl repleats) to this presentity
    unsigned mWatchCnt;
@@ -315,7 +317,7 @@ public:
 class RendPubSubEvent
 {
 public:
-   RendPubSubEvent(resip::Data evName, resip::Mime contentType)
+   RendPubSubEvent(const resip::Data& evName, const resip::Mime& contentType)
       : mEventName(evName), mContentType(contentType), 
         mTuplePrefix(resip::Random::getRandomBase64(4)), // should be 6 char long
         mPosture(0),
@@ -382,7 +384,7 @@ public:
                         unsigned pubPidfSn);
 
    void recordNotifyMask(RendTimeUs now,
-                         unsigned pubAcct, UInt32 pubRptMask,
+                         unsigned pubAcct, uint32_t pubRptMask,
                          unsigned subAcct, unsigned subRpt);
 
    void dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const;
@@ -405,8 +407,8 @@ protected:
    unsigned mNumSubAccts;
    unsigned mNumSubRpts;
    RendEventPubPosture* mPosture;
-   UInt32* mWatching;
-   UInt32* mPidfReady;
+   uint32_t* mWatching;
+   uint32_t* mPidfReady;
 
    RendEventNotifyIf* mNotifyObj;
 
@@ -458,13 +460,13 @@ RendPubSubEvent::setSize(unsigned numAcct, unsigned numPubRpt, unsigned numSubRp
    // watch[pubAcct][subAcct][subRpt] = bool
    v = mNumPubAccts*mNumSubAccts;
 
-   mWatching = new UInt32[v];
-   memset(mWatching, 0, sizeof(UInt32)*v);
+   mWatching = new uint32_t[v];
+   memset(mWatching, 0, sizeof(uint32_t)*v);
    // ready[pubAcct][pubRpt][subAcct][subRpt] = bool
 
    v = mNumPubAccts*mNumPubRpts*mNumSubAccts;
-   mPidfReady = new UInt32[v];
-   memset(mPidfReady, 0, sizeof(UInt32)*v);
+   mPidfReady = new uint32_t[v];
+   memset(mPidfReady, 0, sizeof(uint32_t)*v);
 }
 
 inline RendEventPubPosture*
@@ -512,7 +514,7 @@ RendPubSubEvent::getNextPidfSn(unsigned pubAcctIdx, unsigned pubRptIdx,
          posture->mExpireAbsSecs = 0;
          return 0;
       }
-      posture->mExpireAbsSecs = REND_US2S(absExpTime);
+      posture->mExpireAbsSecs = (uint32_t)REND_US2S(absExpTime);
    }
    recordPublish(pubAcctIdx, pubRptIdx);
    return ++(posture->mPidfSn);
@@ -526,7 +528,7 @@ RendPubSubEvent::countWatchers(unsigned pubAcctIdx)
    resip_assert( pubAcctIdx < mNumPubAccts );
    unsigned watchCnt = 0;
    unsigned subAcctIdx;
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
    for (subAcctIdx=0; subAcctIdx < mNumSubAccts; subAcctIdx++) 
    {
       watchCnt += rendPopcount(watchBase[subAcctIdx]);
@@ -542,7 +544,7 @@ RendPubSubEvent::getWatching(unsigned pubAcctIdx, unsigned subAcctIdx,
    resip_assert( pubAcctIdx < mNumPubAccts );
    resip_assert( subAcctIdx < mNumSubAccts );
    resip_assert( subRptIdx < 32 );
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts+subAcctIdx];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts+subAcctIdx];
    return (*watchBase & (1<<subRptIdx)) ? true : false;
 }
 
@@ -555,8 +557,8 @@ RendPubSubEvent::setWatching(RendTimeUs now,
    resip_assert( pubAcctIdx < mNumPubAccts );
    resip_assert( subAcctIdx < mNumSubAccts );
    resip_assert( subRptIdx < mNumSubRpts );
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts+subAcctIdx];
-   UInt32 subMask = 1<<subRptIdx;
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts+subAcctIdx];
+   uint32_t subMask = 1<<subRptIdx;
    if ( ((*watchBase)&subMask) ^ (isWatching?subMask:0) ) 
    {
       // need to make a change
@@ -586,8 +588,8 @@ void
 RendPubSubEvent::recordPublish(unsigned pubAcctIdx, unsigned pubRptIdx) 
 {
    RendEventPubPosture *posture = getPosture(pubAcctIdx, pubRptIdx);
-   UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
    unsigned watchCnt = 0;
    unsigned subIdx;
    for (subIdx=0; subIdx < mNumSubAccts; subIdx++) {
@@ -604,8 +606,8 @@ RendPubSubEvent::checkPublish(unsigned pubAcctIdx, unsigned pubRptIdx)
    // watch[pubAcct][subAcct][subRpt] = bool
    resip_assert( pubAcctIdx < mNumPubAccts );
    resip_assert( pubRptIdx < mNumPubRpts );
-   UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
    unsigned subIdx;
    for (subIdx=0; subIdx < mNumSubAccts; subIdx++) 
    {
@@ -652,22 +654,22 @@ RendPubSubEvent::checkPublishDetail(RendTimeUs now,
    const RendEventPubPosture *posture = getPosture(pubAcctIdx, pubRptIdx);
    detail.mPubAcctIdx = pubAcctIdx;
    detail.mPubRptIdx = pubRptIdx;
-   detail.mPubExpireSecs = posture->mExpireAbsSecs 
-      ? posture->mExpireAbsSecs - REND_US2S(now) : 0;
+   detail.mPubExpireSecs = (int)(posture->mExpireAbsSecs 
+      ? posture->mExpireAbsSecs - REND_US2S(now) : 0);
    detail.mPubPidfSn = posture->mPidfSn; 
 
-   UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
    unsigned watchCnt = 0;
    unsigned pendCnt = 0;
    unsigned subIdx;
    bool isFirst = true;
    for (subIdx=0; subIdx < mNumSubAccts; subIdx++) 
    {
-      UInt32 watchMask = watchBase[subIdx];
+      uint32_t watchMask = watchBase[subIdx];
       watchCnt += rendPopcount(watchMask);
-      UInt32 readyMask = readyBase[subIdx];
-      UInt32 pendMask = watchMask & ~readyMask;
+      uint32_t readyMask = readyBase[subIdx];
+      uint32_t pendMask = watchMask & ~readyMask;
       if ( pendMask ) 
       {
          unsigned pendRpts = rendPopcount(pendMask);
@@ -701,9 +703,9 @@ RendPubSubEvent::recordNotifyTup(RendTimeUs now,
    // TBD: could check to see if expired
    if ( posture->mPidfSn == pubPidfSn && posture->mExpireAbsSecs > 0 ) 
    {
-      UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
-      UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-      UInt32 subMask = 1<<subRptIdx;
+      uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+      uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+      uint32_t subMask = 1<<subRptIdx;
       if ( (readyBase[subAcctIdx] & subMask)==0 ) 
       {
          /* not previously ready */
@@ -726,11 +728,11 @@ RendPubSubEvent::recordNotifyTup(RendTimeUs now,
 **/
 void
 RendPubSubEvent::recordNotifyMask(RendTimeUs now, 
-                                  unsigned pubAcctIdx, UInt32 pubRptMask,
+                                  unsigned pubAcctIdx, uint32_t pubRptMask,
                                   unsigned subAcctIdx, unsigned subRptIdx)
 {
 
-   UInt32 subRptMask = 1 << subRptIdx;
+   uint32_t subRptMask = 1 << subRptIdx;
    unsigned pubRptIdx;
    for ( pubRptIdx=0; pubRptIdx < mNumPubRpts; pubRptIdx++) 
    {
@@ -741,7 +743,7 @@ RendPubSubEvent::recordNotifyMask(RendTimeUs now,
       if ( posture->mExpireAbsSecs > 0 )
          continue; // PUB not expired
 
-      UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+      uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
       if ( (readyBase[subAcctIdx] & subRptMask)!=0 )
          continue; // already ready
 
@@ -758,8 +760,8 @@ RendPubSubEvent::recordNotifyMask(RendTimeUs now,
 void
 RendPubSubEvent::dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const 
 {
-   UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
 
    ErrLog(<<"EventDb: Dump of "<<pubAcctIdx<<"."<<pubRptIdx<<": ");
    unsigned watchCnt = 0;
@@ -769,7 +771,7 @@ RendPubSubEvent::dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const
    for (subIdx=0; subIdx < mNumSubAccts; subIdx++)
    {
       unsigned watchX = rendPopcount(watchBase[subIdx]);
-      UInt32 pendBits = (watchBase[subIdx] & ~readyBase[subIdx]);
+      uint32_t pendBits = (watchBase[subIdx] & ~readyBase[subIdx]);
       unsigned pendX = rendPopcount(pendBits);
       if ( watchBase[subIdx] || readyBase[subIdx] )
       {
@@ -800,13 +802,13 @@ inline unsigned
 RendPubSubEvent::countPendingTuplesCore(unsigned pubAcctIdx, unsigned pubRptIdx) const
 {
    unsigned pendCnt = 0;
-   UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
 
    unsigned subIdx;
    for (subIdx=0; subIdx < mNumSubAccts; subIdx++)
    {
-      UInt32 pendBits = (watchBase[subIdx] & ~readyBase[subIdx]);
+      uint32_t pendBits = (watchBase[subIdx] & ~readyBase[subIdx]);
       unsigned pendX = rendPopcount(pendBits);
       pendCnt += pendX;
    }
@@ -1077,13 +1079,8 @@ RendPubDlg::makeNextReq()
       const resip::Data& tupPre = mTroop.mEventInfo.getTuplePrefix();
       const char *basicStatus = "open";
       char noteBuf[100];
-#ifdef WIN32
-      _snprintf(noteBuf, sizeof(noteBuf), "%010u.%05u.%010u", 
-         mToAcctIdx+1, mRepeatIdx+1, mPidfSn+1);
-#else
       snprintf(noteBuf, sizeof(noteBuf), "%010u.%05u.%010u", 
          mToAcctIdx+1, mRepeatIdx+1, mPidfSn+1);
-#endif
       resip_assert( strlen(noteBuf)==27 );
       resip::Data body;
       {
@@ -1384,15 +1381,15 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess)
    resip::Data body;
    bodyHfv.toShareData(body);
    const resip::Data& tupPre = mTroop.mEventInfo.getTuplePrefix();
-   unsigned ofs = 0;
-   const unsigned siglen = 8+1+tupPre.size()+1+10+1+5+1+10+1+8;
-   UInt32 gotPubMask = 0;
+   resip::Data::size_type ofs = 0;
+   const unsigned siglen = 8+1+(unsigned)tupPre.size()+1+10+1+5+1+10+1+8;
+   uint32_t gotPubMask = 0;
    while ( (ofs = body.find(tag, ofs)) != resip::Data::npos )
    {
       // RENDNOTE.tupPrefix.pubAcctIdx.pubRptIdx.pidfSn.rendnote
       // 8       1   ?     1    10    1   5     1  10  1   8
       unsigned long pubAcctIdx, pubAcctRpt, pubPidfSn;
-      unsigned signext = ofs + siglen;
+      resip::Data::size_type signext = ofs + siglen;
 
       if ( signext > body.size() )
          break; // not error, just false positive
@@ -1583,7 +1580,7 @@ RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt)
 {
    RendSketchBase::getTroopReportCore(now, rpt);
    rpt.mWaveCnt = mWaveCnt;
-   rpt.mWaveStateSecs = REND_US2S(now - mWaveStateStartTime);
+   rpt.mWaveStateSecs = (int)REND_US2S(now - mWaveStateStartTime);
 
    const char *nm = "?";
 
@@ -1615,8 +1612,8 @@ RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt)
    rpt.mWavePubAliveCnt = mPubTroop.getSessionMoodCnt(REND_SM_GROUP_Alive);
    rpt.mWaveSubAliveCnt = mSubTroop.getSessionMoodCnt(REND_SM_GROUP_Alive);
 
-   rpt.mWaveLastPubDur = REND_US2S(mWaveLastPubDur);
-   rpt.mWaveLastSubDur = REND_US2S(mWaveLastSubDur);
+   rpt.mWaveLastPubDur = (int)REND_US2S(mWaveLastPubDur);
+   rpt.mWaveLastSubDur = (int)REND_US2S(mWaveLastSubDur);
 
    rpt.mWaveCurReqTotCnt = mCurWaveReqTotCnt;
    rpt.mWaveCurReqRemCnt = 
@@ -1639,15 +1636,15 @@ RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt)
    rpt.mWaveCurTupPendCnt = mPubTroop.mPendTupCurCnt;
    // add sub pend tups into above?
 
-   rpt.mWavePubReqAvgDur = REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendReq).avg());
-   rpt.mWavePubReqMaxDur = REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendReq).mMax);
-   rpt.mWavePubNotAvgDur = REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendNotify).avg());
-   rpt.mWavePubNotMaxDur = REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendNotify).mMax);
+   rpt.mWavePubReqAvgDur = (int)REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendReq).avg());
+   rpt.mWavePubReqMaxDur = (int)REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendReq).mMax);
+   rpt.mWavePubNotAvgDur = (int)REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendNotify).avg());
+   rpt.mWavePubNotMaxDur = (int)REND_US2MS(mPubTroop.getMoodDur(REND_SM_PendNotify).mMax);
 
-   rpt.mWaveSubReqAvgDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendReq).avg());
-   rpt.mWaveSubReqMaxDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendReq).mMax);
-   rpt.mWaveSubNotAvgDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendNotify).avg());
-   rpt.mWaveSubNotMaxDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendNotify).mMax);
+   rpt.mWaveSubReqAvgDur = (int)REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendReq).avg());
+   rpt.mWaveSubReqMaxDur = (int)REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendReq).mMax);
+   rpt.mWaveSubNotAvgDur = (int)REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendNotify).avg());
+   rpt.mWaveSubNotMaxDur = (int)REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendNotify).mMax);
 }
 
 
@@ -1853,13 +1850,13 @@ RendPres1Sketch::checkStale(RendTimeUs now)
 {
    bool failAll = false;
    int maxAgePR=-1, maxAgePN=-1, maxAgeSR=-1, maxAgeSN=-1; // returned by checkAge()
-   int numOldPR = mPubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+   int numOldPR = mPubTroop.checkAge(now, std::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
                                      REND_SM_PendReq, mFailAge, failAll, maxAgePR);
-   int numOldPN = mPubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+   int numOldPN = mPubTroop.checkAge(now, std::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
                                      REND_SM_PendNotify, mFailAge, failAll, maxAgePN);
-   int numOldSR = mSubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+   int numOldSR = mSubTroop.checkAge(now, std::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
                                      REND_SM_PendReq, mFailAge, failAll, maxAgeSR);
-   int numOldSN = mSubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+   int numOldSN = mSubTroop.checkAge(now, std::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
                                      REND_SM_PendNotify, mFailAge, failAll, maxAgeSN);
 
    if ( numOldPR>0 || numOldPN>0 || numOldSR>0 || numOldSN>0 )
@@ -1893,7 +1890,7 @@ operator<<(std::ostream& os, const RendFmtMoodStat stat)
    {
       char buf1[50];
       os<<"Most="<<stat.mTroop.getMostMoodCnt(stat.mMood)
-         <<" Dur="<<dur.fmt1(buf1, sizeof(buf1), .001, 3)
+         <<" Dur="<<dur.fmt1(buf1, sizeof(buf1), (float).001, 3)
          <<"ms";
    }
    if ( stat.mMood==REND_SM_PendReq ) 
@@ -1987,7 +1984,7 @@ RendPres1Sketch::doWorkChunk(RendTimeUs now, int minWork, int maxWork)
 
       case REND_SKETCH_WS_SUB_1:
          if ((numWork=mSubTroop.adjustAllDlgs(now, 
-                                              boost::bind(&RendSubTroop::checkGoalMood, &mSubTroop, _1), 
+                                              std::bind(&RendSubTroop::checkGoalMood, &mSubTroop, _1), 
                                               maxWork)) == 0) 
          {
             nextState = REND_SKETCH_WS_SUB_2;
@@ -2060,7 +2057,7 @@ RendPres1Sketch::doWorkChunk(RendTimeUs now, int minWork, int maxWork)
          // With current PubTroop, this should never do work
          // (It move stuff to Wave mood, not doesn't start any dlgs)
          if ( (numWork=mPubTroop.adjustAllDlgs(now, 
-            boost::bind(&RendPubTroop::checkGoalMood, &mPubTroop, _1), 
+            std::bind(&RendPubTroop::checkGoalMood, &mPubTroop, _1), 
             maxWork)) == 0) 
          {
             nextState = REND_SKETCH_WS_PUB_2;

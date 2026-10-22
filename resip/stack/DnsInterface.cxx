@@ -32,13 +32,14 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-DnsInterface::DnsInterface(DnsStub& dnsStub) : 
+DnsInterface::DnsInterface(DnsStub& dnsStub, bool useDnsVip) : 
    mUdpOnlyOnNumeric(false),
    mDnsStub(dnsStub)
 {
-#ifdef USE_DNS_VIP
-   mDnsStub.setResultTransform(&mVip);
-#endif
+   if (useDnsVip)
+   {
+      mDnsStub.setResultTransform(&mVip);
+   }
 }
 
 DnsInterface::~DnsInterface()
@@ -48,19 +49,23 @@ DnsInterface::~DnsInterface()
 void 
 DnsInterface::addTransportType(TransportType type, IpVersion version)
 {
-   Lock lock(mSupportedMutex);
-   mSupportedTransports[std::make_pair(type, version)]++;
    const Data* pNaptrType = getSupportedNaptrType(type);
-   if(pNaptrType)
+   auto ts = std::make_pair(type, version);
+   Lock lock(mSupportedMutex);
+   mSupportedTransports[std::move(ts)]++;
+   if (pNaptrType)
    {
-       mSupportedNaptrs[*pNaptrType]++;
+      mSupportedNaptrs[*pNaptrType]++;
    }
+
    //logSupportedTransports();
 }
 
 void 
 DnsInterface::removeTransportType(TransportType type, IpVersion version)
 {
+   const Data* pNaptrType = getSupportedNaptrType(type);
+
    Lock lock(mSupportedMutex);
    TransportMap::iterator itTrans = mSupportedTransports.find(std::make_pair(type, version));
    if(itTrans != mSupportedTransports.end())
@@ -72,7 +77,6 @@ DnsInterface::removeTransportType(TransportType type, IpVersion version)
       }
    }
 
-   const Data* pNaptrType = getSupportedNaptrType(type);
    if(pNaptrType)
    {
       SupportedNaptrMap::iterator itNT = mSupportedNaptrs.find(*pNaptrType);
@@ -145,14 +149,16 @@ bool
 DnsInterface::isSupported(const Data& service)
 {
    Lock lock(mSupportedMutex);
-   return mSupportedNaptrs.count(service) != 0;
+   return mSupportedNaptrs.find(service) != mSupportedNaptrs.end();
 }
 
 bool
 DnsInterface::isSupported(TransportType t, IpVersion version)
 {
+   auto ts = std::make_pair(t, version);
+
    Lock lock(mSupportedMutex);
-   return mSupportedTransports.find(std::make_pair(t, version)) != mSupportedTransports.end();
+   return mSupportedTransports.find(ts) != mSupportedTransports.end();
 }
 
 bool

@@ -14,8 +14,8 @@ main()
    {
       const char *txt1 = "REGISTER sip:registrar.biloxi.com SIP/2.0\r\nVia: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=z9hG4bKnashds7\r\nMax-Forwards: 70\r\nTo: Bob <sip:bob@biloxi.com>\r\nFrom: Bob <sip:bob@biloxi.com>;tag=456248\r\nCall-ID: 843817637684230@998sdasdh09\r\nCSeq: 1826 REGISTER\r\nContact: <sip:bob@192.0.2.4>\r\nExpires: 7200\r\nContent-Length: 0\r\n\r\n";
 
-      auto_ptr<SipMessage> message1(TestSupport::makeMessage(Data(txt1)));
-      auto_ptr<SipMessage> message2(TestSupport::makeMessage(Data(txt1)));
+      unique_ptr<SipMessage> message1(TestSupport::makeMessage(Data(txt1)));
+      unique_ptr<SipMessage> message2(TestSupport::makeMessage(Data(txt1)));
 
       NameAddr local;
       
@@ -30,8 +30,8 @@ main()
 
       const char *txt2 = "REGISTER sip:registrar.ixolib.com SIP/2.0\r\nVia: SIP/2.0/UDP qoqspc.ixolib.com:5060;branch=2222222222\r\nMax-Forwards: 70\r\nTo: Qoq <sip:qoq@ixolib.com>\r\nFrom: Qoq <sip:qoq@ixolib.com>;tag=456248\r\nCall-ID: 111111111111111\r\nCSeq: 6281 REGISTER\r\nContact: <sip:qoq@192.0.2.4>\r\nExpires: 7200\r\nContent-Length: 0\r\n\r\n";
 
-      auto_ptr<SipMessage> message1(TestSupport::makeMessage(Data(txt1)));
-      auto_ptr<SipMessage> message2(TestSupport::makeMessage(Data(txt2)));
+      unique_ptr<SipMessage> message1(TestSupport::makeMessage(Data(txt1)));
+      unique_ptr<SipMessage> message2(TestSupport::makeMessage(Data(txt2)));
       
       assert(message1->getRawHeader(Headers::CSeq)->getParserContainer() == 0);
       assert(message2->getRawHeader(Headers::CSeq)->getParserContainer() == 0);
@@ -49,8 +49,8 @@ main()
       const char *txt2 = "REGISTER sip:registrar.ixolib.com SIP/2.0\r\nVia: SIP/2.0/UDP qoqspc.ixolib.com:5060;branch=2222222222\r\nMax-Forwards: 70\r\nTo: Qoq <sip:qoq@ixolib.com>\r\nFrom: Qoq <sip:qoq@ixolib.com>;tag=456248\r\nCall-ID: 111111111111111\r\nCSeq: 6281 REGISTER\r\nContact: <sip:qoq@192.0.2.4>\r\nExpires: 7200\r\nContent-Length: 0\r\n\r\n";
 
 
-      auto_ptr<SipMessage> message1(TestSupport::makeMessage(Data(txt1)));
-      auto_ptr<SipMessage> message2(TestSupport::makeMessage(Data(txt2)));
+      unique_ptr<SipMessage> message1(TestSupport::makeMessage(Data(txt1)));
+      unique_ptr<SipMessage> message2(TestSupport::makeMessage(Data(txt2)));
 
       assert(message1->getRawHeader(Headers::CSeq)->getParserContainer() == 0);
       assert(message2->getRawHeader(Headers::CSeq)->getParserContainer() == 0);

@@ -3,7 +3,8 @@
 
 #include "resip/stack/WsConnectionValidator.hxx"
 #include "resip/stack/WsCookieContextFactory.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -12,14 +13,19 @@ class WsBaseTransport
 {
    public:
       RESIP_HeapCount(WsBaseTransport);
-      WsBaseTransport(SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(), SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(new BasicWsCookieContextFactory()));
-      virtual  ~WsBaseTransport();
+      explicit WsBaseTransport(std::shared_ptr<WsConnectionValidator> = nullptr, std::shared_ptr<WsCookieContextFactory> = std::make_shared<BasicWsCookieContextFactory>());
+      WsBaseTransport(const WsBaseTransport&) = delete;
+      WsBaseTransport(WsBaseTransport&&) = delete;
+      virtual  ~WsBaseTransport() = default;
 
-      SharedPtr<WsCookieContextFactory> cookieContextFactory() { return mCookieContextFactory; };
+      WsBaseTransport& operator=(const WsBaseTransport&) = delete;
+      WsBaseTransport& operator=(WsBaseTransport&&) = delete;
+
+      std::shared_ptr<WsCookieContextFactory> cookieContextFactory() const noexcept { return mCookieContextFactory; };
 
    protected:
-      SharedPtr<WsConnectionValidator> mConnectionValidator;
-      SharedPtr<WsCookieContextFactory> mCookieContextFactory;
+      std::shared_ptr<WsConnectionValidator> mConnectionValidator;
+      std::shared_ptr<WsCookieContextFactory> mCookieContextFactory;
 };
 
 }

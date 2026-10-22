@@ -22,7 +22,7 @@ class ClientPagerMessageHandler
       virtual void onSuccess(ClientPagerMessageHandle, const SipMessage& status)=0;
       //!kh!
       // Application could re-page the failed contents or just ingore it.
-      virtual void onFailure(ClientPagerMessageHandle, const SipMessage& status, std::auto_ptr<Contents> contents)=0;
+      virtual void onFailure(ClientPagerMessageHandle, const SipMessage& status, std::unique_ptr<Contents> contents)=0;
 };
 
 class ServerPagerMessageHandler

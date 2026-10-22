@@ -10,9 +10,13 @@ namespace resip
 class DialogEvent
 {
 public:
-   DialogEvent() {}
-   DialogEvent(const DialogEvent& rhs) {}
-   virtual ~DialogEvent() {}
+   DialogEvent() = default;
+   DialogEvent(const DialogEvent&) = default;
+   DialogEvent(DialogEvent&&) = default;
+   virtual ~DialogEvent() = default;
+
+   DialogEvent& operator=(const DialogEvent&) = delete;
+   DialogEvent& operator=(DialogEvent&&) = delete;
 
    enum DialogEventType
    {
@@ -35,11 +39,10 @@ public:
    TryingDialogEvent(const TryingDialogEvent& rhs)
       : mEventInfo(rhs.mEventInfo), mInitialInvite(rhs.mInitialInvite)
    {}
-   virtual ~TryingDialogEvent() {}
 
-   const DialogEventInfo& getEventInfo() const { return mEventInfo; }
-   const SipMessage& getInitialInvite() const { return mInitialInvite; }
-   DialogEventType getType() const { return DialogEvent::DialogEventType_Trying; }
+   const DialogEventInfo& getEventInfo() const noexcept { return mEventInfo; }
+   const SipMessage& getInitialInvite() const noexcept { return mInitialInvite; }
+   DialogEventType getType() const override { return DialogEvent::DialogEventType_Trying; }
 
 private:
    DialogEventInfo mEventInfo;
@@ -49,16 +52,15 @@ private:
 class ProceedingDialogEvent : public DialogEvent
 {
 public:
-   ProceedingDialogEvent(const DialogEventInfo& info) 
+   explicit ProceedingDialogEvent(const DialogEventInfo& info) 
       : mEventInfo(info)
    {}
    ProceedingDialogEvent(const ProceedingDialogEvent& rhs)
       : mEventInfo(rhs.mEventInfo)
    {}
-   virtual ~ProceedingDialogEvent() {}
 
-   const DialogEventInfo& getEventInfo() const { return mEventInfo; }
-   DialogEventType getType() const { return DialogEvent::DialogEventType_Proceeding; }
+   const DialogEventInfo& getEventInfo() const noexcept { return mEventInfo; }
+   DialogEventType getType() const override { return DialogEvent::DialogEventType_Proceeding; }
 
 private:
    DialogEventInfo mEventInfo;
@@ -67,17 +69,16 @@ private:
 class EarlyDialogEvent : public DialogEvent
 {
 public:
-   EarlyDialogEvent(const DialogEventInfo& info)
+   explicit EarlyDialogEvent(const DialogEventInfo& info)
       : mEventInfo(info)
    {}
    EarlyDialogEvent(const EarlyDialogEvent& rhs)
       : mEventInfo(rhs.mEventInfo)
    {
    }
-   virtual ~EarlyDialogEvent() {}
 
-   const DialogEventInfo& getEventInfo() const { return mEventInfo; }
-   DialogEventType getType() const { return DialogEvent::DialogEventType_Early; }
+   const DialogEventInfo& getEventInfo() const noexcept { return mEventInfo; }
+   DialogEventType getType() const override { return DialogEvent::DialogEventType_Early; }
 
 private:
    DialogEventInfo mEventInfo;
@@ -86,16 +87,15 @@ private:
 class ConfirmedDialogEvent : public DialogEvent
 {
 public:
-   ConfirmedDialogEvent(const DialogEventInfo& info) 
+   explicit ConfirmedDialogEvent(const DialogEventInfo& info) 
       : mEventInfo(info)
    {}
    ConfirmedDialogEvent(const ConfirmedDialogEvent& rhs)
       : mEventInfo(rhs.mEventInfo)
    {}
-   virtual ~ConfirmedDialogEvent() {}
 
-   const DialogEventInfo& getEventInfo() const { return mEventInfo; }
-   DialogEventType getType() const { return DialogEvent::DialogEventType_Confirmed; }
+   const DialogEventInfo& getEventInfo() const noexcept { return mEventInfo; }
+   DialogEventType getType() const override { return DialogEvent::DialogEventType_Confirmed; }
 
 private:
    DialogEventInfo mEventInfo;
@@ -110,12 +110,11 @@ public:
    TerminatedDialogEvent(const TerminatedDialogEvent& rhs)
       : mEventInfo(rhs.mEventInfo), mReason(rhs.mReason), mCode(rhs.mCode)
    {}
-   virtual ~TerminatedDialogEvent() {}
 
-   const DialogEventInfo& getEventInfo() const { return mEventInfo; }
-   InviteSessionHandler::TerminatedReason getTerminatedReason() const { return mReason; }
-   int getResponseCode() const { return mCode; }
-   DialogEventType getType() const { return DialogEvent::DialogEventType_Terminated; }
+   const DialogEventInfo& getEventInfo() const noexcept { return mEventInfo; }
+   InviteSessionHandler::TerminatedReason getTerminatedReason() const noexcept { return mReason; }
+   int getResponseCode() const noexcept { return mCode; }
+   DialogEventType getType() const override { return DialogEvent::DialogEventType_Terminated; }
 
 private:
    DialogEventInfo mEventInfo;
@@ -126,17 +125,16 @@ private:
 class MultipleEventDialogEvent : public DialogEvent
 {
 public:
-   typedef std::vector< SharedPtr<DialogEvent> > EventVector;
-   MultipleEventDialogEvent(EventVector& events) 
+   typedef std::vector<std::shared_ptr<DialogEvent>> EventVector;
+   explicit MultipleEventDialogEvent(EventVector& events) 
       : mEvents(events)
    {}
    MultipleEventDialogEvent(const MultipleEventDialogEvent& rhs)
       : mEvents(rhs.mEvents)
    {}
-   virtual ~MultipleEventDialogEvent() {}
 
-   const EventVector& getEvents() const { return mEvents; }
-   DialogEventType getType() const { return DialogEvent::DialogEventType_MultipleEvents; }
+   const EventVector& getEvents() const noexcept { return mEvents; }
+   DialogEventType getType() const override { return DialogEvent::DialogEventType_MultipleEvents; }
 
 private:
    EventVector mEvents;
@@ -145,7 +143,7 @@ private:
 class DialogEventHandler
 {
    public:   
-      virtual ~DialogEventHandler() {}
+      virtual ~DialogEventHandler() = default;
       virtual void onTrying(const TryingDialogEvent& evt)=0;
       virtual void onProceeding(const ProceedingDialogEvent& evt)=0;
       virtual void onEarly(const EarlyDialogEvent& evt)=0;

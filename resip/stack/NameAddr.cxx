@@ -84,7 +84,7 @@ NameAddr::operator=(const NameAddr& rhs)
 {
    if (this != &rhs)
    {
-      resip_assert( &rhs != 0 );
+      resip_assert_not_null( &rhs );
       
       ParserCategory::operator=(rhs);
       mAllContacts = rhs.mAllContacts;
@@ -97,7 +97,9 @@ NameAddr::operator=(const NameAddr& rhs)
 bool 
 NameAddr::operator==(const NameAddr& other) const
 {
-    return uri() == other.uri() && displayName() == other.displayName();
+    return mAllContacts == other.mAllContacts &&
+           uri() == other.uri() &&
+           displayName() == other.displayName();
 }
 
 bool
@@ -192,11 +194,13 @@ NameAddr::parse(ParseBuffer& pb)
    else
    {
       pb.reset(start);
+      // Check if we have a double quoted displayname
       if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
       {
          start = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          pb.skipToEndQuote();
          pb.data(mDisplayName, start);
+         adjustDisplayNameIfNeeded();
          pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          laQuote = true;
          pb.skipToChar(Symbols::LA_QUOTE[0]);
@@ -212,21 +216,29 @@ NameAddr::parse(ParseBuffer& pb)
             pb.skipChar(Symbols::LA_QUOTE[0]);
          }
       }
+      // Check if we have a URI without a displayname surrounded by angle brackets
       else if (*pb.position() == Symbols::LA_QUOTE[0])
       {
          pb.skipChar(Symbols::LA_QUOTE[0]);
          laQuote = true;
       }
+      // else, we could have a URI with a displayname that is not surrounded by double quotes
       else
       {
          start = pb.position();
-         pb.skipToChar(Symbols::LA_QUOTE[0]);
-         if (pb.eof())
+         // Note: An angle bracket can appear in a quoted parameter, we want to avoid matching those,
+         //       so if we see a double quote before <, then we ignore the <.  If the displayname
+         //       itself is double quoted that would have been picked off in the first condition 
+         //       of this if statement.
+         pb.skipToOneOf(Symbols::LA_QUOTE, Symbols::DOUBLE_QUOTE);
+         if (pb.eof() || *pb.position() == Symbols::DOUBLE_QUOTE[0])
          {
+            // We must have no displayname and a URI that is not surrounded by angle brackets
             pb.reset(start);
          }
          else
          {
+            // We have a displayname that is not surrounded by double quotes and a URI surround by angle brackets
             laQuote = true;
             pb.skipBackWhitespace();
             pb.data(mDisplayName, start);
@@ -235,6 +247,11 @@ NameAddr::parse(ParseBuffer& pb)
          }
       }
       pb.skipWhitespace();
+      mUri.setIsBetweenAngleQuotes(laQuote); // Tell Uri parser if the Uri is between angle quotes/brackets or not, so that it can relax embedded header parsing rules if so
+      // Without brackets, header parameters (";tag=...") may follow the
+      // Uri directly with no separator; tell the parser so schemes like
+      // urn: know to stop at ';'/'?'/',' instead of swallowing them.
+      mUri.setIsBareAddrSpec(!laQuote);
       mUri.parse(pb);
       if (laQuote)
       {
@@ -282,13 +299,11 @@ NameAddr::encodeParsed(EncodeStream& str) const
   {
      if (!mDisplayName.empty())
      {
-#ifndef HANDLE_EMBEDDED_QUOTES_DNAME
-        // .dlb. doesn't deal with embedded quotes
-        str << Symbols::DOUBLE_QUOTE << mDisplayName << Symbols::DOUBLE_QUOTE;
-#else
+#ifdef OMIT_DISPLAY_NAME_QUOTES_IF_NOT_REQUIRED
         // does nothing if display name is properly quoted
         if (mustQuoteDisplayName())
         {
+#endif
            str << Symbols::DOUBLE_QUOTE;
            for (unsigned int i=0; i < mDisplayName.size(); i++)
            {
@@ -304,13 +319,14 @@ NameAddr::encodeParsed(EncodeStream& str) const
               }
            }
            str << Symbols::DOUBLE_QUOTE;
+#ifdef OMIT_DISPLAY_NAME_QUOTES_IF_NOT_REQUIRED
         }
         else
         {
-           str << mDisplayName;           
+           str << mDisplayName;
         }
 #endif
-     }     
+     }
      str << Symbols::LA_QUOTE;
      mUri.encodeParsed(str);
      str << Symbols::RA_QUOTE;
@@ -384,6 +400,10 @@ NameAddr::mustQuoteDisplayName() const
       {
          const char* start;
          start = pb.skipWhitespace();
+         if (pb.eof())
+         {
+            return false;
+         }
          pb.skipNonWhitespace();
 		 const char* end = pb.position();
          for (const char* c = start; c < end; c++)
@@ -414,6 +434,31 @@ NameAddr::mustQuoteDisplayName() const
       }
    }
    return false;
+}
+
+void NameAddr::adjustDisplayNameIfNeeded()
+{
+   if (mDisplayName.find("\\") != Data::npos)
+   {
+      // Double quotes must be encoded as \", so if displayName contains any backslashes, then we remove them
+      Data adjustedDisplayName;
+      {
+         DataStream ds(adjustedDisplayName);
+
+         for (unsigned int i = 0; i < mDisplayName.size(); i++)
+         {
+            if (mDisplayName[i] == '\\')
+            {
+               i++;
+            }
+            if (i < mDisplayName.size())
+            {
+               ds << mDisplayName[i];
+            }
+         }
+      }
+      mDisplayName = adjustedDisplayName;
+   }
 }
 
 ParameterTypes::Factory NameAddr::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
@@ -500,12 +545,19 @@ defineParam(index, "index", DataParameter, "RFC 4244");
 defineParam(rc, "rc", DataParameter, "RFC 4244-bis");
 defineParam(mp, "mp", DataParameter, "RFC 4244-bis");
 defineParam(np, "np", DataParameter, "RFC 4244-bis");
+defineParam(reason, "reason", DataParameter, "RFC 5806");
+defineParam(counter, "counter", UInt32Parameter, "RFC 5806");
+defineParam(limit, "limit", UInt32Parameter, "RFC 5806");
+defineParam(privacy, "privacy", DataParameter, "RFC 5806");
+defineParam(screen, "screen", DataParameter, "RFC 5806");
+
 
 #undef defineParam
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2024-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

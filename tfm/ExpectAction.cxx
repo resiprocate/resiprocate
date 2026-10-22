@@ -3,17 +3,13 @@
 void 
 ExpectAction::operator()() 
 {
-   //!dcm!  you hit this assert chacnes are you are using a base class that
+   //!dcm!  you hit this assert chances are you are using a base class that
    //doesn't have operator() defined and that is expecting an event
    resip_assert(0); 
 }
 
-ExpectAction::Exception::Exception(const resip::Data& msg) throw() 
+ExpectAction::Exception::Exception(const resip::Data& msg)
    : TestException(msg, "<no file>", 0)
-{
-}
-
-ExpectAction::Exception::~Exception() throw() 
 {
 }
 

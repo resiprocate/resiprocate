@@ -6,15 +6,25 @@
 #include "tfm/SequenceSet.hxx"
 #include "tfm/ExpectActionEvent.hxx"
 
-#include <boost/version.hpp>
-
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-using namespace boost;
 using namespace std;
 using resip::Data;
 using resip::DataStream;
 
+static bool
+isStaleTimeout(const std::shared_ptr<Event>& event)
+{
+   if (const auto timeout = std::dynamic_pointer_cast<TimeoutEvent>(event))
+   {
+      return !timeout->getSequence().isCurrentTimeout(timeout->getGeneration());
+   }
+   if (const auto timeout = std::dynamic_pointer_cast<OptionalTimeoutEvent>(event))
+   {
+      return !timeout->getSequence().isCurrentTimeout(timeout->getGeneration());
+   }
+   return false;
+}
 
 SequenceSet::SequenceSet()
    : mSequences(),
@@ -61,21 +71,41 @@ SequenceSet::clear()
       mActiveSet.clear();
 
       mEventFifo.clear();
+      mNextEvents.clear();
    }
 }
      
 void
-SequenceSet::enqueue(boost::shared_ptr<Event> event)
+SequenceSet::enqueue(std::shared_ptr<Event> event)
 {
    DebugLog(<< "SequenceSet::enqueue(" << &*event << ") " << event->briefString());
    mEventFifo.add(event);
 }
 
 SequenceSet::EventFifo::TimerId
-SequenceSet::enqueue(boost::shared_ptr<Event> event, int delay)
+SequenceSet::enqueue(std::shared_ptr<Event> event, int delay)
 {
    InfoLog(<< "SequenceClass::enqueue " << event->briefString() << " with delay " << delay);
    return mEventFifo.addDelayMs(event, delay);
+}
+
+void
+SequenceSet::enqueueNext(std::shared_ptr<Event> event)
+{
+   DebugLog(<< "SequenceSet::enqueueNext(" << &*event << ") " << event->briefString());
+   mNextEvents.push_back(event);
+}
+
+std::shared_ptr<Event>
+SequenceSet::nextEvent()
+{
+   if (!mNextEvents.empty())
+   {
+      std::shared_ptr<Event> event = mNextEvents.front();
+      mNextEvents.pop_front();
+      return event;
+   }
+   return mEventFifo.getNext();
 }
 
 bool 
@@ -99,7 +129,7 @@ void
 SequenceSet::globalFailure(const resip::Data& message)
 {
    // keep first fail info
-   if (this && !mFailed) 
+   if (!mFailed) 
    {
       mFailed = true;
       mExplanation = message;
@@ -107,10 +137,10 @@ SequenceSet::globalFailure(const resip::Data& message)
 }
 
 void
-SequenceSet::globalFailure(resip::BaseException& e)
+SequenceSet::globalFailure(const resip::BaseException& e)
 {
    // keep first fail info
-   if (this && !mFailed) 
+   if (!mFailed) 
    {
       mFailed = true;
       mExplanation.clear();
@@ -178,7 +208,7 @@ SequenceSet::loop()
    while (!mActiveSet.empty() && !mFailed)
    {
       DebugLog(<<"Looking for event...");
-      handle(mEventFifo.getNext());
+      handle(nextEvent());
       DebugLog(<<"Found and handled an event.");
    }
    
@@ -202,7 +232,7 @@ SequenceSet::postLoop()
 }
 
 void
-SequenceSet::handle(boost::shared_ptr<Event> event)
+SequenceSet::handle(std::shared_ptr<Event> event)
 {
    //CerrLog( << "Current ActiveSet");
    for (set<SequenceClass*>::const_iterator i = mActiveSet.begin();
@@ -230,12 +260,18 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
          
    DebugLog(<< "handle_event::dequeue(" << event << ") " << event->briefString());
    //CerrLog(<< "Dequeued: " << event->briefString());
-         
-#if BOOST_VERSION >= 103500
-   boost::shared_ptr<ExpectActionEvent> action = dynamic_pointer_cast<ExpectActionEvent>(event);
-#else
-   boost::shared_ptr<ExpectActionEvent> action = shared_dynamic_cast<ExpectActionEvent>(event);
-#endif   
+
+   // A timeout whose timer fired just as the event satisfying its expect
+   // arrived: that event was handled first and the expect won, so this is
+   // stale (see SequenceClass::cancelTimeout()).  Handling it would fail the
+   // test on whichever expect is current by now.
+   if (isStaleTimeout(event))
+   {
+      InfoLog(<< "Ignoring stale " << event->briefString());
+      return;
+   }
+
+   const auto action = std::dynamic_pointer_cast<ExpectActionEvent>(event);
    if (action)
    {
       try
@@ -243,18 +279,14 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
          DebugLog(<<"Executing stored action.");
          action->doIt();
       }
-      catch (ExpectAction::Exception& e)
+      catch (const ExpectAction::Exception& e)
       {
          globalFailure(e);
       }
       return;
    }
-         
-#if BOOST_VERSION >= 103500
-   boost::shared_ptr<TimeoutEvent> timeout = dynamic_pointer_cast<TimeoutEvent>(event);
-#else
-   boost::shared_ptr<TimeoutEvent> timeout = shared_dynamic_cast<TimeoutEvent>(event);
-#endif   
+
+   const auto timeout = std::dynamic_pointer_cast<TimeoutEvent>(event);
    if (timeout)
    {
       Data errorMessage;
@@ -282,12 +314,8 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
 //      throw TestEndPoint::AssertException(errorMessage, __FILE__, __LINE__);
       return;
    }
-         
-#if BOOST_VERSION >= 103500
-   boost::shared_ptr<SequenceDoneEvent> seqDone = dynamic_pointer_cast<SequenceDoneEvent>(event);
-#else
-   boost::shared_ptr<SequenceDoneEvent> seqDone = shared_dynamic_cast<SequenceDoneEvent>(event);
-#endif   
+
+   const auto seqDone = std::dynamic_pointer_cast<SequenceDoneEvent>(event);
    if (seqDone)
    {
       // remove sequences that have completed
@@ -316,7 +344,7 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
 }
 
 void
-SequenceSet::handleEvent(boost::shared_ptr<Event> event)
+SequenceSet::handleEvent(std::shared_ptr<Event> event)
 {
    // prevent debug output on cascading message mismatches
    if (mFailed)
@@ -342,11 +370,7 @@ SequenceSet::handleEvent(boost::shared_ptr<Event> event)
       }
    }
 
-#if BOOST_VERSION >= 103500
-   if (!handled && !dynamic_pointer_cast<OptionalTimeoutEvent>(event))
-#else
-   if (!handled && !shared_dynamic_cast<OptionalTimeoutEvent>(event))
-#endif   
+   if (!handled && !std::dynamic_pointer_cast<OptionalTimeoutEvent>(event))
    {
       if (!mFailed)
       {
@@ -398,8 +422,10 @@ operator<<(EncodeStream& str, const SequenceSet& sset)
    str.flush();
    return str;
 }
+
 /*
-  Copyright (c) 2005, PurpleComm, Inc. 
+  Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
+  Copyright (c) 2005, PurpleComm, Inc.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without modification,

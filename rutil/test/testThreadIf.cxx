@@ -113,11 +113,11 @@ int main()
         Every4 e;
         e.run();
         sleep(5);
-        UInt64 t = Timer::getTimeMs();
+        uint64_t t = Timer::getTimeMs();
         cerr << "Stopping thread at: " << Timer::getTimeMs() << endl;
         e.shutdown();
         e.join();
-        UInt64 j = Timer::getTimeMs();
+        uint64_t j = Timer::getTimeMs();
         cerr << j - t << endl;
         
         assert(j - t < 100);

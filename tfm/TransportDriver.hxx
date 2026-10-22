@@ -6,7 +6,6 @@
 #include "rutil/Mutex.hxx"
 
 #include <sys/types.h>
-#include <boost/shared_ptr.hpp>
 #include <vector>
 #include <map>
 #include <memory>
@@ -44,7 +43,7 @@ class TransportDriver : public resip::ThreadIf
 
    private:
       //Singleton, don't call
-      friend class std::auto_ptr<TransportDriver>;      
+      friend class std::unique_ptr<TransportDriver>;      
       TransportDriver();
       ~TransportDriver();
 
@@ -58,11 +57,7 @@ class TransportDriver : public resip::ThreadIf
       std::vector<Client*> mClients;
       typedef std::map<unsigned int, resip::Transport*> TransportMap;
       TransportMap mTransports;
-      resip::Mutex mMutex;
-
-      //Singleton
-      static std::auto_ptr<TransportDriver> mInstance;
-      static resip::Mutex mInstanceMutex;      
+      resip::Mutex mMutex;     
 };
 
 #endif

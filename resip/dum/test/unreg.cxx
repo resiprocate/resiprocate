@@ -19,7 +19,7 @@ class TestUserAgent : public UserAgent
       void startup()
       {
          InfoLog (<< "register for " << mAor);
-         UInt32 e=0;
+         uint32_t e=0;
          NameAddr target(mAor);
          mDum.send(mDum.makeRegistration(target, e));
       }

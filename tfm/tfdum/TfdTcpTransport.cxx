@@ -23,7 +23,7 @@ TfdTcpTransport::~TfdTcpTransport()
 }
 
 Connection* 
-TfdTcpTransport::createConnection(Tuple& who, Socket fd, bool server)
+TfdTcpTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    DebugLog(<< "DtfTcpTransport::createConnection");
    Connection* conn = TcpTransport::createConnection(who, fd, server);

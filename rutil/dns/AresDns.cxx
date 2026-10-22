@@ -27,6 +27,14 @@
 #endif
 #endif
 
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wdeprecated-declarations"
+#else
+#pragma warning(push)
+#pragma warning(3 : 4996)
+#endif
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
@@ -308,7 +316,7 @@ AresDns::init(int dnsTimeout, int dnsTries, unsigned int features)
       clearPollItems();
    }
 
-#ifdef WIN32
+#if defined(WIN32) && defined(USE_ARES)
     // For windows OSs it is uncommon to run a local DNS server.  Therefor if there
     // are no defined DNS servers in windows networking and ARES just returned the
     // loopback address (ie. default localhost server / named)
@@ -381,6 +389,12 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       optmask |= ARES_OPT_FLAGS;
       opt.flags |= ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3;
    }
+   if ((features & ExternalDns::ReturnAllResults))
+   {
+      optmask |= ARES_OPT_FLAGS;
+      opt.flags |= ARES_FLAG_NOCHECKRESP;
+   }
+
 #endif
 
 #if defined(USE_CARES)
@@ -537,6 +551,12 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
 
       return Success;
    }
+}
+
+void
+AresDns::changeNameServers(const std::vector<GenericIPAddress>& additional)
+{
+   mAdditionalNameservers = additional;
 }
 
 bool AresDns::checkDnsChange()
@@ -777,7 +797,7 @@ AresDns::errorMessage(long errorCode)
    size_t len = strlen(aresMsg);
    char* errorString = new char[len+1];
 
-   strncpy(errorString, aresMsg, len);
+   snprintf(errorString, len+1, "%s", aresMsg);
    errorString[len] = '\0';
    return errorString;
 }
@@ -817,6 +837,38 @@ resip_AresDns_caresCallback(void *arg, int status, int timeouts,
    // Simply ignore the timeouts argument
    return ::resip_AresDns_aresCallback(arg, status, abuf, alen);
 }
+
+const char* 
+AresDns::dnsRRTypeToString(int rrtype)
+{
+   if (rrtype == T_A)
+   {
+      return "A";
+   }
+#if defined(USE_IPV6)
+   else if (rrtype == T_AAAA)
+   {
+      return "AAAA";
+   }
+#endif
+   else if (rrtype == T_NAPTR)
+   {
+      return "NAPTR";
+   }
+   else if (rrtype == T_SRV)
+   {
+      return "SRV";
+   }
+   else if (rrtype == T_CNAME)
+   {
+      return "CNAME";
+   }
+   else
+   {
+      return "Unknown";
+   }
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

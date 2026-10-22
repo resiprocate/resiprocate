@@ -10,12 +10,12 @@ void ArrayDeallocator(char* data)
    delete [] data;
 }
 
-DataBuffer::DataBuffer(const char* data, unsigned int size, deallocator dealloc)
-   : mDealloc(dealloc)
+DataBuffer::DataBuffer(const char* const data, const size_t size, deallocator dealloc)
+   : mBuffer(nullptr)
+   , mSize(size)
+   , mDealloc(dealloc)
 {
-   mBuffer = 0;
-   mSize   = size;
-   if ( mSize > 0 )
+   if (mSize > 0)
    {
       mBuffer = new char[mSize];
       memcpy(mBuffer, data, mSize);
@@ -23,18 +23,18 @@ DataBuffer::DataBuffer(const char* data, unsigned int size, deallocator dealloc)
    mStart = mBuffer;
 }
 
-DataBuffer::DataBuffer(unsigned int size, deallocator dealloc)
-   : mDealloc(dealloc)
+DataBuffer::DataBuffer(const size_t size, deallocator dealloc)
+   : mBuffer(nullptr)
+   , mSize(size)
+   , mDealloc(dealloc)
 {
-   mBuffer = 0;
-   mSize   = size;
-   if ( mSize > 0 )
+   if (mSize > 0)
    {
       mBuffer = new char[mSize];
       memset(mBuffer, 0, mSize);
    }
 
-   mStart  = mBuffer;
+   mStart = mBuffer;
 }
 
 DataBuffer::~DataBuffer() 
@@ -42,7 +42,7 @@ DataBuffer::~DataBuffer()
    mDealloc(mBuffer);
 }
 
-DataBuffer* DataBuffer::own(char* data, unsigned int size, deallocator dealloc)
+DataBuffer* DataBuffer::own(char* const data, const size_t size, deallocator dealloc)
 {
    DataBuffer* buff = new reTurn::DataBuffer(0, dealloc);
    buff->mBuffer = data;
@@ -52,53 +52,53 @@ DataBuffer* DataBuffer::own(char* data, unsigned int size, deallocator dealloc)
 }
 
 const char* 
-DataBuffer::data() 
+DataBuffer::data() const noexcept
 { 
    return mStart; 
 }
 
-unsigned int 
-DataBuffer::size() 
+size_t 
+DataBuffer::size() const noexcept
 { 
    return mSize; 
 }
 
 char* 
-DataBuffer::mutableData()
+DataBuffer::mutableData() noexcept
 {
    return mStart;
 }
 
-unsigned int&
-DataBuffer::mutableSize()
+size_t&
+DataBuffer::mutableSize() noexcept
 {
    return mSize;
 }
 
 char& 
-DataBuffer::operator[](unsigned int p) 
+DataBuffer::operator[](const size_t p)
 { 
    resip_assert(p < mSize); 
    return mBuffer[p]; 
 }
 
 char 
-DataBuffer::operator[](unsigned int p) const 
+DataBuffer::operator[](const size_t p) const
 { 
    resip_assert(p < mSize); 
    return mBuffer[p]; 
 }
 
-unsigned int 
-DataBuffer::truncate(unsigned int newSize) 
+size_t
+DataBuffer::truncate(const size_t newSize)
 { 
    resip_assert(newSize <= mSize); 
    mSize = newSize; 
    return mSize; 
 }
 
-unsigned int 
-DataBuffer::offset(unsigned int bytes) 
+size_t
+DataBuffer::offset(const size_t bytes)
 { 
    resip_assert(bytes < mSize); 
    mStart = mStart+bytes; 

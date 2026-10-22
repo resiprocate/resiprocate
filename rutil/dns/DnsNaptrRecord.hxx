@@ -17,7 +17,7 @@ class BaseException;
 class DnsNaptrRecord : public DnsResourceRecord
 {
    public:
-      class NaptrException : public BaseException
+      class NaptrException final : public BaseException
       {
          public:
             NaptrException(const Data& msg, const Data& file, const int line)
@@ -25,7 +25,7 @@ class DnsNaptrRecord : public DnsResourceRecord
             {
             }
             
-            const char* name() const { return "NaptrException"; }
+            const char* name() const noexcept override { return "NaptrException"; }
       };
 
       class RegExp
@@ -61,9 +61,9 @@ class DnsNaptrRecord : public DnsResourceRecord
       };
       
          
-      DnsNaptrRecord() : mOrder(-1), mPreference(-1) {}
+      DnsNaptrRecord() : mOrder(-1), mPreference(-1), mTTL(-1) {}
       DnsNaptrRecord(const RROverlay&);
-      ~DnsNaptrRecord() {}
+      virtual ~DnsNaptrRecord() {}
 
       // accessors.
       int order() const { return mOrder; }
@@ -73,9 +73,10 @@ class DnsNaptrRecord : public DnsResourceRecord
       const Data& service() const { return mService; }
       const RegExp& regexp() const { return mRegexp; }
       const Data& replacement() const { return mReplacement; }
-      const Data& name() const { return mName; }
-      bool isSameValue(const Data& value) const;
-      EncodeStream& dump(EncodeStream& strm) const;
+      virtual const Data& name() const { return mName; }
+      virtual int ttl() const { return mTTL; }
+      virtual bool isSameValue(const Data& value) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
       
    private:
       int mOrder;
@@ -85,7 +86,7 @@ class DnsNaptrRecord : public DnsResourceRecord
       RegExp mRegexp;
       Data mReplacement;
       Data mName;
-
+      int mTTL;
 };
 
 }

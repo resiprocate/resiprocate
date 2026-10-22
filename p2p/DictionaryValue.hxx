@@ -1,4 +1,4 @@
-#ifndef P2P_DictionayValue_hxx
+#ifndef P2P_DictionaryValue_hxx
 #define P2P_DictionaryValue_hxx
 
 #include "rutil/Data.hxx"

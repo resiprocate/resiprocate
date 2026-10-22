@@ -8,9 +8,10 @@
 
 using namespace dtls;
 
-DtlsTimer::DtlsTimer(unsigned int seq)
+DtlsTimer::DtlsTimer(unsigned int seq) :
+   mSeq(seq),
+   mValid(true)
 {
-   mValid=true;
 }
 
 DtlsTimer::~DtlsTimer() 
@@ -18,17 +19,17 @@ DtlsTimer::~DtlsTimer()
 }
 
 void
-DtlsTimer::fire() 
+DtlsTimer::fire()
 {
+   std::unique_lock<std::mutex> guard;
+   if(mLock)
+   {
+      guard = std::unique_lock<std::mutex>(*mLock);
+   }
+
    if(mValid)
    {
       expired();
-   }
-   else
-   {
-      //memory mangement is overly tricky and possibly wrong...deleted by target
-      //if valid is the contract. weak pointers would help.
-      delete this;
    }
 }
 
@@ -42,7 +43,8 @@ DtlsTimerContext::fire(DtlsTimer *timer)
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2007-2026, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

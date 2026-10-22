@@ -4,7 +4,11 @@
 #include <rutil/TransportType.hxx>
 #include <rutil/dns/DnsStub.hxx>
 #include <resip/stack/SecurityTypes.hxx> 
+#include <resip/stack/Transport.hxx>
 #include <resip/dum/MasterProfile.hxx>
+#include <reflow/RTCPEventLoggingHandler.hxx>
+
+#include <memory>
 #include <vector>
 
 namespace recon
@@ -27,11 +31,37 @@ public:
    public:
       resip::TransportType mProtocol;
       int mPort;
+      int mActualPort; // Only set after UserAgent is created and transports are added.  Useful if mPort is specified as ephemeral (0).
       resip::IpVersion mIPVersion;
+      resip::StunSetting mStunEnabled;
       resip::Data mIPInterface;
       resip::Data mSipDomainname;
+      resip::Data mTlsPrivateKeyPassPhrase;
       resip::SecurityTypes::SSLType mSslType;
+      unsigned mTransportFlags;
+      resip::Data mTlsCertificate;
+      resip::Data mTlsPrivateKey;
+      resip::SecurityTypes::TlsClientVerificationMode mCvm;
+      bool mUseEmailAsSIP;
+      unsigned int mRcvBufLen;
    };
+
+   void setTransportSipMessageLoggingHandler(std::shared_ptr<resip::Transport::SipMessageLoggingHandler> handler) noexcept;
+
+   std::shared_ptr<resip::Transport::SipMessageLoggingHandler> getTransportSipMessageLoggingHandler() const noexcept;
+
+   void setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> handler) noexcept;
+
+   std::shared_ptr<flowmanager::RTCPEventLoggingHandler> getRTCPEventLoggingHandler() const noexcept;
+
+   /**
+     Get/Set wether recon is allowed to log DTMF digits pressed.  Defaults to enabled. 
+     Disable for applications that accept credit card information for security purposes.
+
+     @return bool Set to false to disable logging DTMF digits
+   */
+   virtual bool& dtmfDigitLoggingEnabled();
+   virtual const bool dtmfDigitLoggingEnabled() const;
 
    /**
      Adds a network transport to use for send/receiving SIP messages.
@@ -45,21 +75,31 @@ public:
                         binds to all interfaces
      @param sipDomainname TLS Domain name - only used if protocol 
                       is TLS
-     @param sslType  SSLv23 vs TLSv1 - only use if protocol is TLS
+     @param sslType  DynamicTLS vs TLSv1 - only use if protocol is TLS
    */
    void addTransport( resip::TransportType protocol,
                       int port, 
                       resip::IpVersion version=resip::V4,
+                      resip::StunSetting stun=resip::StunDisabled,
                       const resip::Data& ipInterface = resip::Data::Empty, 
                       const resip::Data& sipDomainname = resip::Data::Empty, // TLS only
-                      resip::SecurityTypes::SSLType sslType = resip::SecurityTypes::TLSv1 );
+                      const resip::Data& privateKeyPassPhrase = resip::Data::Empty,
+                      resip::SecurityTypes::SSLType sslType = resip::SecurityTypes::DynamicTLS,
+                      unsigned transportFlags = 0,
+                      const resip::Data& certificateFilename = resip::Data::Empty,
+                      const resip::Data& privateKeyFilename = resip::Data::Empty,
+                      resip::SecurityTypes::TlsClientVerificationMode cvm = resip::SecurityTypes::None,
+                      bool useEmailAsSIP = false,
+                      unsigned int rcvBufLen = 0);
 
    /**
      Gets a vector of the transports previously added.
 
-     @return Reference to a vector of TransportInfo's
+     @return Reference to a vector of TransportInfo's.  Note:  Not returning 
+             as const since we want to set the actual port used if a an 
+             ephemeral port was specified
    */
-   const std::vector<TransportInfo>& getTransports() const;
+   std::vector<TransportInfo>& getTransports();
 
    /**
      Adds a domain suffix used in ENUM DNS queries.  
@@ -138,6 +178,17 @@ public:
    virtual bool& statisticsManagerEnabled();
    virtual const bool statisticsManagerEnabled() const; 
 
+
+   /**
+     Get/Set wether Server Auth Manager is enabled or not.  Note:  ServerAuthManager
+     must be enabled to support challengeOODReferRequests and challengeAutoAnswerRequests 
+     ConversationProfile settings.
+
+     @return bool Set to true to enable server auth manager
+   */
+   virtual bool& serverAuthManagerEnabled();
+   virtual const bool serverAuthManagerEnabled() const;
+
    /**
      Get/Set the starting port number in the range of valid port
      numbers to be used for RTP traffic.
@@ -176,6 +227,10 @@ private:
    std::vector<resip::Data> mRootCertDirectories;
    std::vector<resip::Data> mRootCertBundles;
    bool mStatisticsManagerEnabled;
+   bool mServerAuthManagerEnabled;
+   std::shared_ptr<resip::Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
+   std::shared_ptr<flowmanager::RTCPEventLoggingHandler> mRTCPEventLoggingHandler;
+   bool mDTMFDigitLoggingEnabled;
    std::vector<TransportInfo> mTransports;
    std::vector<resip::Data> mEnumSuffixes;
    resip::DnsStub::NameserverList mAdditionalDnsServers;
@@ -191,6 +246,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

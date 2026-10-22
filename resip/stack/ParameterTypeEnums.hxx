@@ -108,7 +108,7 @@ class ParameterTypes
 
          defineParam(realm, "realm", QuotedDataParameter, "RFC ????"),
          defineParam(reason, "reason", DataParameter, "RFC ????"),
-         defineParam(received, "received", DataParameter, "RFC ????"),
+         defineParam(received, "received", ReceivedParameter, "RFC 3261"),
          defineParam(require, "require", ExistsParameter, "RFC 5373"),
          defineParam(response, "response", QuotedDataParameter, "RFC ????"),
          defineParam(retryAfter, "retry-after", UInt32Parameter, "RFC ????"),
@@ -161,6 +161,15 @@ class ParameterTypes
          defineParam(content, "content", DataParameter, "draft-ietf-cuss-sip-uui-17"), // User-to-User
          defineParam(encoding, "encoding", DataParameter, "draft-ietf-cuss-sip-uui-17"), // User-to-User
 
+         defineParam(info, "info", UriParameter, "RFC 8224"),
+         defineParam(alg, "alg", DataParameter, "RFC 8224"),
+         defineParam(ppt, "ppt", DataParameter, "RFC 8224"),
+
+         defineParam(counter, "counter", UInt32Parameter, "RFC 5806"),
+         defineParam(limit, "limit", UInt32Parameter, "RFC 5806"),
+         defineParam(privacy, "privacy", DataParameter, "RFC 5806"),
+         defineParam(screen, "screen", DataParameter, "RFC 5806"),
+
          defineParam(qopOptions, "qop", DataParameter, "RFC 3261"),
          defineParam(addTransport, "addTransport", ExistsParameter, "Internal"),
          defineParam(wsSrcIp, "ws-src-ip", DataParameter, ""),
@@ -172,7 +181,7 @@ class ParameterTypes
       /**
         @brief does a convert to enum from a pointer into the HFV raw buffer
         */
-      static Type getType(const char* start, unsigned int length);
+      static Type getType(const char* start, size_t length);
 
       /**
          @param ParameterTypes::Type class on which to call decode to get 
@@ -206,6 +215,7 @@ class ParameterTypes
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

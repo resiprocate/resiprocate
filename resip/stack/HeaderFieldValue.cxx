@@ -22,7 +22,7 @@ using namespace resip;
 
 const HeaderFieldValue HeaderFieldValue::Empty;
 
-HeaderFieldValue::HeaderFieldValue(const char* field, unsigned int fieldLength)
+HeaderFieldValue::HeaderFieldValue(const char* field, size_t fieldLength)
    : mField(field),
      mFieldLength(fieldLength),
      mMine(false)

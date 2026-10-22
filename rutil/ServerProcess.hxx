@@ -3,6 +3,8 @@
   #include "config.h"
 #endif
 
+#include <chrono>
+
 #include "rutil/Data.hxx"
 
 namespace resip
@@ -11,11 +13,33 @@ namespace resip
 class ServerProcess
 {
 public:
-   ServerProcess();
+   ServerProcess(std::chrono::milliseconds waitPeriod = std::chrono::milliseconds(50));
    virtual ~ServerProcess();
 
+   void mainLoop();
+   void onSignal(int signo);
+
 protected:
-   /* The main subclass can call dropPrivileges() if
+   /* Returns true when this build can perform POSIX process control:
+      fork(), setuid/setgid and PID file handling.
+
+      Windows has none of these, so there this logs a warning naming the
+      dependent settings and returns false.  The caller then skips an
+      operation that cannot work on this platform rather than attempting it
+      and failing.
+
+      dependentSettings is only the label used in that warning, e.g.
+      "Daemonize" or "RunAsUser/RunAsGroup"; it is not inspected.
+
+      Call this only once the setting is known to be configured, so that no
+      warning is produced for settings the operator never set. */
+   bool checkPosixProcessControl(const Data& dependentSettings);
+
+   /* The main subclass can call installSignalHandler()
+      if it wants signals handled. */
+   void installSignalHandler();
+
+   /* The main subclass can call dropPrivileges()
       if and when it wants to drop root privileges */
    void dropPrivileges(const Data& runAsUser, const Data& runAsGroup);
 
@@ -30,14 +54,23 @@ protected:
    /* Filename of PID file, or empty string for no PID file */
    void setPidFile(const Data& pidFile);
 
+   virtual void doWait();
+   virtual void onLoop();
+
+   virtual void onReload();
+
 private:
+   std::chrono::milliseconds mWaitPeriod;
    Data mPidFile;
+   bool mFinished;
+   bool mReceivedHUP;
 };
 
 }
 
 /* ====================================================================
  *
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2012 Daniel Pocock.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

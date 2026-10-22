@@ -16,7 +16,6 @@ using namespace std;
 UserAgentRegistration::UserAgentRegistration(UserAgent& userAgent, DialogUsageManager& dum, unsigned int handle)
 : AppDialogSet(dum),
   mUserAgent(userAgent),
-  mDum(dum),
   mConversationProfileHandle(handle),
   mEnded(false)
 {
@@ -116,7 +115,7 @@ UserAgentRegistration::onSuccess(ClientRegistrationHandle h, const SipMessage& m
 void
 UserAgentRegistration::onFailure(ClientRegistrationHandle h, const SipMessage& msg)
 {
-   InfoLog(<< "onFailure(ClientRegistrationHandle): " << msg.brief());
+   WarningLog(<< "onFailure(ClientRegistrationHandle): " << msg.brief());
    mLastServerTuple = msg.getSource();
    if (!mEnded)
    {
@@ -154,8 +153,8 @@ UserAgentRegistration::onRequestRetry(ClientRegistrationHandle h, int retryMinim
 
 /* ====================================================================
 
+ Copyright (c) 2016-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2016, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

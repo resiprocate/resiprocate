@@ -17,7 +17,8 @@ AndroidLogger::operator()(Log::Level level,
                   const char* file,
                   int line,
                   const Data& message,
-                  const Data& messageWithHeaders)
+                  const Data& messageWithHeaders,
+                  const Data& instanceName)
 {
    android_LogPriority prio;
    switch(level)

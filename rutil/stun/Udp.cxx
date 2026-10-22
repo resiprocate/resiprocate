@@ -96,7 +96,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
          default:
          {
             cerr << "Could not bind UDP receive port"
-                 << "Error=" << e << " " << strerror(e) << endl;
+                 << "Error=" << e << " " << strError(e) << endl;
             closeSocket(fd);
             return INVALID_SOCKET;
          }
@@ -116,7 +116,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
 
 bool 
 getMessage( resip::Socket fd, char* buf, int* len,
-            UInt32* srcIp, unsigned short* srcPort,
+            uint32_t* srcIp, unsigned short* srcPort,
             bool verbose)
 {
    resip_assert( fd != INVALID_SOCKET );
@@ -233,7 +233,7 @@ sendMessage( resip::Socket fd, char* buf, int l,
          break;
          default:
          {
-            cerr << "err " << e << " "  << strerror(e) << " in send" << endl;
+            cerr << "err " << e << " "  << strError(e) << " in send" << endl;
          }
       }
       return false;

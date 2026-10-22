@@ -85,21 +85,21 @@ void
 B2BSession::startCall(const Uri& destinationUri, const NameAddr& from, const SdpContents *sdp)
 {
    // Create a UserProfile for new call
-   SharedPtr<UserProfile> userProfile(new UserProfile(mServer.getMasterProfile()));
+   auto userProfile = std::make_shared<UserProfile>(mServer.getMasterProfile());
 
    // Set the From address
    userProfile->setDefaultFrom(from);  
    userProfile->getDefaultFrom().remove(p_tag);  // Remove tag (if it exists)
 
    // Create the invite message
-   SharedPtr<SipMessage> invitemsg = mDum.makeInviteSession(
+   auto invitemsg = mDum.makeInviteSession(
       NameAddr(destinationUri), 
       userProfile,
       sdp, 
       this);
 
    // Send the invite message
-   mDum.send(invitemsg);
+   mDum.send(std::move(invitemsg));
 }
 
 void
@@ -142,7 +142,7 @@ bool
 B2BSession::buildLocalOffer(SdpContents& offer)
 {
    // Build s=, o=, t=, and c= lines
-   UInt64 currentTime = Timer::getTimeMicroSec();
+   uint64_t currentTime = Timer::getTimeMicroSec();
 
    unsigned int port=8000;  // Placeholder port
 
@@ -642,7 +642,7 @@ B2BSession::onRemoteSdpChanged(InviteSessionHandle h, const SipMessage& msg, con
    /// called when a modified SDP is received in a 2xx response to a
    /// session-timer reINVITE. Under normal circumstances where the response
    /// SDP is unchanged from current remote SDP no handler is called
-   /// There is not much we can do about this.  If session timers are used then they are managed seperately per leg
+   /// There is not much we can do about this.  If session timers are used then they are managed separately per leg
    /// and we have no real mechanism to notify the other peer of new SDP without starting a new offer/answer negotiation
    InfoLog(B2BLOG_PREFIX << "onRemoteSdpChanged: msg=" << LOG_MSG_WITH_SDP);
 }
@@ -717,8 +717,8 @@ B2BSession::onRefer(InviteSessionHandle h, ServerSubscriptionHandle ss, const Si
       newPeer->stealPeer(this);
       newPeer->mReferringAppDialogSet = getHandle();
 
-      SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), 0 /* SdpOffer */, newPeer);
-      mDum.send(invitemsg);
+      auto invitemsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), 0 /* SdpOffer */, newPeer);
+      mDum.send(std::move(invitemsg));
    }
    catch(BaseException &e)
    {
@@ -768,8 +768,8 @@ B2BSession::doReferNoSub(const SipMessage& msg)
    newPeer->mReferringAppDialogSet = getHandle();
 
    // Build the Invite
-   SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(msg, getUserProfile(), 0 /* Sdp Offer */, newPeer);
-   mDum.send(invitemsg);
+   auto invitemsg = mDum.makeInviteSessionFromRefer(msg, getUserProfile(), 0 /* Sdp Offer */, newPeer);
+   mDum.send(std::move(invitemsg));
    return true;
 }
 

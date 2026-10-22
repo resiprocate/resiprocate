@@ -229,7 +229,7 @@ RegSyncClient::tryParse()
          pb.skipToChars("</" + initialTag + ">");
          if (!pb.eof())
          {
-            pb.skipN((int)initialTag.size() + 3);  // Skip past </InitialTag>            
+            pb.skipN(initialTag.size() + 3);  // Skip past </InitialTag>            
             handleXml(pb.data(start));
 
             // Remove processed data from RxBuffer
@@ -302,7 +302,7 @@ RegSyncClient::handleXml(const Data& xmlData)
 void 
 RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
 {
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    Uri aor;
    ContactList contacts;
    DebugLog(<< "RegSyncClient::handleRegInfoEvent");
@@ -340,7 +340,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         if(xml.firstChild())
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: expires=" << xml.getValue());
-                           UInt64 expires = xml.getValue().convertUInt64();
+                           uint64_t expires = xml.getValue().convertUInt64();
                            rec.mRegExpires = (expires == 0 ? 0 : now+expires);
                            xml.parent();
                         }
@@ -396,6 +396,15 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: regid=" << xml.getValue());
                            rec.mRegId = xml.getValue().convertUnsignedLong();
+                           xml.parent();
+                        }
+                     }
+                     else if (isEqualNoCase(xml.getTag(), "useragent"))
+                     {
+                        if (xml.firstChild())
+                        {
+                           //InfoLog(<< "RegSyncClient::handleRegInfoEvent: useragent=" << xml.getValue());
+                           rec.mUserAgent = xml.getValue().xmlCharDataDecode();
                            xml.parent();
                         }
                      }
@@ -464,7 +473,7 @@ RegSyncClient::processModify(const resip::Uri& aor, ContactList& syncContacts)
 void
 RegSyncClient::handlePubInfoEvent(resip::XMLCursor& xml)
 {
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    PublicationPersistenceManager::PubDocument document;
    DebugLog(<< "RegSyncClient::handlePubInfoEvent");
    if (xml.firstChild())
@@ -499,7 +508,7 @@ RegSyncClient::handlePubInfoEvent(resip::XMLCursor& xml)
          {
             if (xml.firstChild())
             {
-               UInt64 expires = xml.getValue().convertUInt64();
+               uint64_t expires = xml.getValue().convertUInt64();
                document.mExpirationTime = (expires == 0 ? 0 : now + expires);
                document.mLingerTime = document.mExpirationTime;
                xml.parent();

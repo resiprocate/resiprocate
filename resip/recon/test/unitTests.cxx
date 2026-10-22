@@ -2,8 +2,9 @@
 #include "config.h"
 #endif
 
-#include "UserAgent.hxx"
-#include "ReconSubsystem.hxx"
+#include "resip/recon/UserAgent.hxx"
+#include "resip/recon/ReconSubsystem.hxx"
+#include "resip/recon/SipXMediaStackAdapter.hxx"
 
 #include <signal.h>
 #include "rutil/Log.hxx"
@@ -11,9 +12,7 @@
 #include "rutil/DnsUtil.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
-#ifdef WIN32
-extern int sdpTests(void);
-#endif 
+//#define RECON_LOCAL_HW_TESTS
 
 ///////////////////////////////////////////////////////////////////////////
 // SCENARIOS UNDER TEST
@@ -131,14 +130,14 @@ signalHandler(int signo)
 class AliceConversationManager : public ConversationManager
 {
 public:
-   AliceConversationManager(ConversationManager::MediaInterfaceMode mode) : ConversationManager(true, mode)
+   AliceConversationManager(SipXMediaStackAdapter::MediaInterfaceMode mode) : ConversationManager(make_shared<SipXMediaStackAdapter>(*this, true, mode))
    { 
       mLogPrefix = "Alice: ";
    };
 
-   virtual ConversationHandle createConversation()
+   virtual ConversationHandle createConversation(ConversationManager::AutoHoldMode autoHoldMode = AutoHoldEnabled) override
    {
-      ConversationHandle convHandle = ConversationManager::createConversation();
+      ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
       mConvHandles.push_back(convHandle);
       return convHandle;
    }
@@ -146,27 +145,32 @@ public:
    virtual void startup()
    {
       ConversationHandle convHandle = createConversation();    
+#ifdef RECON_LOCAL_HW_TESTS
       mLocalParticipant = createLocalParticipant();
       addParticipant(convHandle, mLocalParticipant);
+#else
+      Uri tone0("tone:0");
+      mLocalParticipant = createMediaResourceParticipant(convHandle, tone0);
+#endif
       createRemoteParticipant(convHandle, bobUri, ConversationManager::ForkSelectAutomatic);
    }
 
-   virtual void onConversationDestroyed(ConversationHandle convHandle)
+   virtual void onConversationDestroyed(ConversationHandle convHandle) override
    {
       InfoLog(<< mLogPrefix << "onConversationDestroyed: handle=" << convHandle);
    }
 
-   virtual void onParticipantDestroyed(ParticipantHandle partHandle)
+   virtual void onParticipantDestroyed(ParticipantHandle partHandle) override
    {
       InfoLog(<< mLogPrefix << "onParticipantDestroyed: handle=" << partHandle);
    }
 
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq) override
    {
       InfoLog(<< mLogPrefix << "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
    }
 
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
+   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
    {
       InfoLog(<< mLogPrefix << "onIncomingParticipant: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -214,12 +218,12 @@ public:
       }
    }
 
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
+   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile) override
    {
       InfoLog(<< mLogPrefix << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
    }
 
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(<< mLogPrefix << "onParticipantTerminated: handle=" << partHandle << " status=" << statusCode);
 
@@ -273,20 +277,20 @@ public:
       mConvHandles.clear();
    }
     
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantProceeding: handle=" << partHandle << " msg=" << msg.brief());
    }
 
    virtual void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
-                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle)
+                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle) override
    {
       InfoLog(<< mLogPrefix << "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
               << " origConvHandle=" << origConvHandle << " origPartHandle=" << origPartHandle);
       mConvHandles.push_back(relatedConvHandle);
    }
 
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -302,7 +306,7 @@ public:
       }
    }
     
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -327,17 +331,22 @@ public:
       }
    }
 
-   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle)
+   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle) override
    {
       InfoLog(<< mLogPrefix << "onParticipantRedirectSuccess: handle=" << partHandle);
    }
 
-   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(<< mLogPrefix << "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
    }
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) {}
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override
+   {
+      InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+   }
+
+   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) override {}
 
 private:
    std::list<ConversationHandle> mConvHandles;
@@ -351,14 +360,14 @@ private:
 class BobConversationManager : public ConversationManager
 {
 public:
-   BobConversationManager(ConversationManager::MediaInterfaceMode mode) : ConversationManager(true, mode)
+   BobConversationManager(SipXMediaStackAdapter::MediaInterfaceMode mode) : ConversationManager(make_shared<SipXMediaStackAdapter>(*this, true, mode))
    { 
       mLogPrefix = "Bob: ";
    };
 
-   virtual ConversationHandle createConversation()
+   virtual ConversationHandle createConversation(AutoHoldMode autoHoldMode = AutoHoldEnabled) override
    {
-      ConversationHandle convHandle = ConversationManager::createConversation();
+      ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
       mConvHandles.push_back(convHandle);
       return convHandle;
    }
@@ -367,17 +376,17 @@ public:
    {
    }
 
-   virtual void onConversationDestroyed(ConversationHandle convHandle)
+   virtual void onConversationDestroyed(ConversationHandle convHandle) override
    {
       InfoLog(<< mLogPrefix << "onConversationDestroyed: handle=" << convHandle);
    }
 
-   virtual void onParticipantDestroyed(ParticipantHandle partHandle)
+   virtual void onParticipantDestroyed(ParticipantHandle partHandle) override
    {
       InfoLog(<< mLogPrefix << "onParticipantDestroyed: handle=" << partHandle);
    }
 
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq) override
    {
       InfoLog(<< mLogPrefix << "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
 
@@ -404,8 +413,13 @@ public:
          case 4:
             {
                ConversationHandle convHandle = createConversation();    
+#ifdef RECON_LOCAL_HW_TESTS
                mLocalParticipant = createLocalParticipant();
                addParticipant(convHandle, mLocalParticipant);
+#else
+               Uri tone0("tone:0");
+               mLocalParticipant = createMediaResourceParticipant(convHandle, tone0);
+#endif
                createRemoteParticipant(convHandle, aliceUri, ConversationManager::ForkSelectAutomatic);
             }
             break;
@@ -416,7 +430,7 @@ public:
       }
    }
 
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
+   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
    {
       InfoLog(<< mLogPrefix << "onIncomingParticipant: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -439,7 +453,7 @@ public:
       }
    }
 
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
+   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile) override
    {
       InfoLog(<< mLogPrefix << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
       if(mConvHandles.empty())
@@ -449,7 +463,7 @@ public:
       }
    }
 
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(<< mLogPrefix << "onParticipantTerminated: handle=" << partHandle << " status=" << statusCode);
 
@@ -462,7 +476,7 @@ public:
          MARKER;
 
          // Next Scenario
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       case 2:
          assert(CALLBACK_SEQUENCE++ == 3);
@@ -471,7 +485,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       case 3:
          assert(CALLBACK_SEQUENCE++ == 5);
@@ -480,7 +494,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       case 4:
          assert(CALLBACK_SEQUENCE++ == 5);
@@ -489,7 +503,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         getUserAgent()->startApplicationTimer(0, std::chrono::milliseconds(500), 0);
          break;
       default:
          assert(false);
@@ -505,20 +519,20 @@ public:
       mConvHandles.clear();
    }
     
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantProceeding: handle=" << partHandle << " msg=" << msg.brief());
    }
 
    virtual void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
-                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle)
+                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle) override
    {
       InfoLog(<< mLogPrefix << "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
               << " origConvHandle=" << origConvHandle << " origPartHandle=" << origPartHandle);
       mConvHandles.push_back(relatedConvHandle);
    }
 
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -534,7 +548,7 @@ public:
       }
    }
     
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -555,12 +569,12 @@ public:
       }
    }
 
-   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle)
+   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle) override
    {
       InfoLog(<< mLogPrefix << "onParticipantRedirectSuccess: handle=" << partHandle);
    }
 
-   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(<< mLogPrefix << "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
       switch(SCENARIO)
@@ -577,7 +591,12 @@ public:
       }
    }
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) {}
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override
+   {
+      InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+   }
+
+   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) override {}
 
 private:
    std::list<ConversationHandle> mConvHandles;
@@ -589,42 +608,44 @@ private:
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
+   MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
       UserAgent(conversationManager, profile) {}
 
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+   void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override
    {
-      //InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+      // InfoLog(<< "onApplicationTimeout: id=" << id
+      //         << " dur=" << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
+      //         << " seq=" << seq);
       BobConversationManager* bcm = dynamic_cast<BobConversationManager*>(getConversationManager());
       if(bcm)
       {
-         bcm->onApplicationTimer(id, durationMs, seq);
+         bcm->onApplicationTimer(id, (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(), seq);
       }
       else
       {
          AliceConversationManager* acm = dynamic_cast<AliceConversationManager*>(getConversationManager());
          if(acm)
          {
-            acm->onApplicationTimer(id, durationMs, seq);
+            acm->onApplicationTimer(id, (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(), seq);
          }
       }
    }
 
-   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode)
+   void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode) override
    {
       InfoLog(<< "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
    }
 
-   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
+   void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData) override
    {
       InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
 };
 
 
-SharedPtr<UserAgentMasterProfile> createUserAgentMasterProfile()
+std::shared_ptr<UserAgentMasterProfile> createUserAgentMasterProfile()
 {
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   auto profile = std::make_shared<UserAgentMasterProfile>();
 
    // Settings
    profile->statisticsManagerEnabled() = false;
@@ -672,9 +693,9 @@ SharedPtr<UserAgentMasterProfile> createUserAgentMasterProfile()
    return profile;
 }
 
-SharedPtr<ConversationProfile> createConversationProfile(SharedPtr<UserAgentMasterProfile> profile, int port)
+std::shared_ptr<ConversationProfile> createConversationProfile(std::shared_ptr<UserAgentMasterProfile> profile, int port)
 {
-   SharedPtr<ConversationProfile> conversationProfile(new ConversationProfile(profile));
+   auto conversationProfile = std::make_shared<ConversationProfile>(profile);
    conversationProfile->setDefaultRegistrationTime(0);
 
    // Create Session Capabilities and assign to coversation Profile
@@ -697,27 +718,33 @@ SharedPtr<ConversationProfile> createConversationProfile(SharedPtr<UserAgentMast
 	sessionCaps.session() = session;
    conversationProfile->sessionCaps() = sessionCaps;
 
+   conversationProfile->mediaEndpointMode() = ConversationProfile::Base;
+   conversationProfile->delayedMediaOutboundMode() = false;
+
    return conversationProfile;
 }
 
-void executeConversationTest(ConversationManager::MediaInterfaceMode mode)
+void executeConversationTest(SipXMediaStackAdapter::MediaInterfaceMode mode)
 {
    //////////////////////////////////////////////////////////////////////////////
    // Setup UserAgentMasterProfiles
    //////////////////////////////////////////////////////////////////////////////
-   SharedPtr<UserAgentMasterProfile> profileAlice = createUserAgentMasterProfile();
+   auto profileAlice = createUserAgentMasterProfile();
    profileAlice->addTransport(UDP, aliceUri.uri().port(), V4);
-   SharedPtr<ConversationProfile> conversationProfileAlice = createConversationProfile(profileAlice, 16384);
+   // Alice and Bob each have their own RTP ports: sockets don't share them
+   profileAlice->rtpPortRangeMin() = 16384;
+   profileAlice->rtpPortRangeMax() = 16483;
+   auto conversationProfileAlice = createConversationProfile(profileAlice, 16384);
    conversationProfileAlice->setDefaultFrom(aliceUri);
    conversationProfileAlice->setUserAgent("Test-Alice");
 
-   SharedPtr<UserAgentMasterProfile> profileBob = createUserAgentMasterProfile();
+   auto profileBob = createUserAgentMasterProfile();
    profileBob->addTransport(UDP, bobUri.uri().port(), V4);
-   SharedPtr<ConversationProfile> conversationProfileBob = createConversationProfile(profileBob, 16385);
+   profileBob->rtpPortRangeMin() = 16484;
+   profileBob->rtpPortRangeMax() = 16583;
+   auto conversationProfileBob = createConversationProfile(profileBob, 16385);
    conversationProfileBob->setDefaultFrom(bobUri);
    conversationProfileBob->setUserAgent("Test-Bob");
-
-   InfoLog(<< "Tests for sipXGlobalMediaInterfaceMode");
 
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManagers and UserAgents
@@ -766,7 +793,7 @@ main (int argc, char** argv)
 #endif
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
-   resip::FindMemoryLeaks fml;
+   //resip::FindMemoryLeaks fml;  // TODO !slg! This seems to causing some kind of infinite loop in at least VS2019 x64 bit builds - commenting out for now
    {
 #endif
 
@@ -782,18 +809,14 @@ main (int argc, char** argv)
       exit( -1 );
    }
 
-#ifdef WIN32
-   // Run SdpTests
-   sdpTests();
-#endif
-
    Log::initialize(Log::Cout, LOG_LEVEL, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
    initNetwork();
 
    cout << "Tests for sipXConversationMediaInterfaceMode" << endl;
-   executeConversationTest(ConversationManager::sipXConversationMediaInterfaceMode);
+   executeConversationTest(SipXMediaStackAdapter::sipXConversationMediaInterfaceMode);
 
+#ifdef RECON_LOCAL_HW_TESTS
    // Reset counters, etc.
    SCENARIO = 1;
    LAST_SCENARIO = 4;
@@ -801,7 +824,8 @@ main (int argc, char** argv)
    finished = false;
 
    cout << "Tests for sipXGlobalMediaInterfaceMode" << endl;
-   executeConversationTest(ConversationManager::sipXGlobalMediaInterfaceMode);
+   executeConversationTest(SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode);
+#endif
 
    InfoLog(<< "unitTests is shutdown.");
    //sleepSeconds(10);
@@ -816,6 +840,8 @@ main (int argc, char** argv)
 
 /* ====================================================================
 
+ Copyright (c) 2021-2026, SIP Spectrum, Inc.
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

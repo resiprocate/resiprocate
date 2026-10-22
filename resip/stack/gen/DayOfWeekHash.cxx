@@ -1,4 +1,4 @@
-/* C++ code produced by gperf version 3.0.3 */
+/* C++ code produced by gperf version 3.1 */
 /* Command-line: gperf -C -D -E -L C++ -t --key-positions='*' --compare-strncmp -Z DayOfWeekHash DayOfWeekHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -25,7 +25,7 @@
       && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
       && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
 /* The character set is not based on ISO-646.  */
-#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
+#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
 #endif
 
 #line 1 "DayOfWeekHash.gperf"
@@ -43,56 +43,56 @@ struct days { const char *name; DayOfWeek type; };
 class DayOfWeekHash
 {
 private:
-  static inline unsigned int hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, size_t len);
 public:
-  static const struct days *in_word_set (const char *str, unsigned int len);
+  static const struct days *in_word_set (const char *str, size_t len);
 };
 
 inline unsigned int
-DayOfWeekHash::hash (register const char *str, register unsigned int len)
+DayOfWeekHash::hash (const char *str, size_t len)
 {
   static const unsigned char asso_values[] =
     {
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-       2, 19, 19, 19, 19, 19, 19,  2, 19, 19,
-      19, 19, 19,  0,  5, 19, 19,  2, 19, 19,
-      19, 19, 19, 19, 19, 19, 19,  0, 19, 19,
-       0,  5, 19, 19,  0,  5, 19, 19, 19, 19,
-       0,  0, 19, 19,  5, 19,  0,  5, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+       2, 16, 16, 16, 16, 16, 16,  2, 16, 16,
+      16, 16, 16,  0,  5, 16, 16,  2, 16, 16,
+      16, 16, 16, 16, 16, 16, 16,  0, 16, 16,
+       0,  5, 16, 16,  0,  5, 16, 16, 16, 16,
+       0,  0, 16, 16,  5, 16,  0,  5, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+      16, 16, 16, 16, 16, 16
     };
-  return len + asso_values[(unsigned char)str[2]] + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]];
+  return asso_values[static_cast<unsigned char>(str[2])] + asso_values[static_cast<unsigned char>(str[1])] + asso_values[static_cast<unsigned char>(str[0])];
 }
 
 const struct days *
-DayOfWeekHash::in_word_set (register const char *str, register unsigned int len)
+DayOfWeekHash::in_word_set (const char *str, size_t len)
 {
   enum
     {
       TOTAL_KEYWORDS = 7,
       MIN_WORD_LENGTH = 3,
       MAX_WORD_LENGTH = 3,
-      MIN_HASH_VALUE = 3,
-      MAX_HASH_VALUE = 18
+      MIN_HASH_VALUE = 0,
+      MAX_HASH_VALUE = 15
     };
 
   static const struct days wordlist[] =
@@ -115,21 +115,21 @@ DayOfWeekHash::in_word_set (register const char *str, register unsigned int len)
 
   static const signed char lookup[] =
     {
-      -1, -1, -1,  0, -1,  1, -1, -1,  2, -1,  3, -1, -1,  4,
-      -1,  5, -1, -1,  6
+       0, -1,  1, -1, -1,  2, -1,  3, -1, -1,  4, -1,  5, -1,
+      -1,  6
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = hash (str, len);
+      unsigned int key = hash (str, len);
 
-      if (key <= MAX_HASH_VALUE && key >= 0)
+      if (key <= MAX_HASH_VALUE)
         {
-          register int index = lookup[key];
+          int index = lookup[key];
 
           if (index >= 0)
             {
-              register const char *s = wordlist[index].name;
+              const char *s = wordlist[index].name;
 
               if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
                 return &wordlist[index];

@@ -1,10 +1,12 @@
 #if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
 #define RESIP_DIGEST_AUTHENTICATOR_HXX 
 
+#include <vector>
 #include "rutil/Data.hxx"
+#include "rutil/DigestStream.hxx"
 #include "resip/stack/Auth.hxx"
 #include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "repro/ProxyConfig.hxx"
 #include "repro/UserInfoMessage.hxx"
 
@@ -18,7 +20,10 @@ namespace repro
   class DigestAuthenticator : public Processor
   {
     public:
-      DigestAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher, const resip::Data& staticRealm = resip::Data::Empty);
+      DigestAuthenticator(ProxyConfig& config, 
+                          resip::Dispatcher* authRequestDispatcher, 
+                          const resip::Data& staticRealm = resip::Data::Empty,
+                          const std::vector<resip::DigestType>& challengeDigestTypes = std::vector<resip::DigestType>());
       ~DigestAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
@@ -32,14 +37,16 @@ namespace repro
       virtual resip::Data getRealm(RequestContext &);
       virtual bool isMyRealm(RequestContext &, const resip::Data& realm);
       
-    private:
-      Dispatcher* mAuthRequestDispatcher;
+    protected:
+      resip::Dispatcher* mAuthRequestDispatcher;
       resip::Data mStaticRealm;
       bool mNoIdentityHeaders;
       resip::Data mHttpHostname;  // Used in identity headers
       int  mHttpPort;
       bool mUseAuthInt;
       bool mRejectBadNonces;
+      bool mAllowInDialogImpersonationWithinRealm;
+      std::vector<resip::DigestType> mChallengeDigestTypes;
   };
   
 }
@@ -48,6 +55,7 @@ namespace repro
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

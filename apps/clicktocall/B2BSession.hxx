@@ -2,7 +2,6 @@
 #define B2BSession_hxx
 
 #include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
 #include <resip/dum/DialogSetHandler.hxx>

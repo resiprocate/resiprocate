@@ -15,7 +15,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/UserInfoMessage.hxx"
 #include "repro/UserStore.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -28,8 +28,11 @@ using namespace std;
 
 #ifdef USE_RADIUS_CLIENT
 
-RADIUSAuthenticator::RADIUSAuthenticator(ProxyConfig& config, const resip::Data& configurationFile, const Data& staticRealm) :
-   DigestAuthenticator(config, 0, staticRealm)
+RADIUSAuthenticator::RADIUSAuthenticator(ProxyConfig& config, 
+                                         const resip::Data& configurationFile,
+                                         const Data& staticRealm,
+                                         const std::vector<resip::DigestType>& challengeDigestTypes) :
+   DigestAuthenticator(config, 0, staticRealm, challengeDigestTypes)
 {
    RADIUSDigestAuthenticator::init(
       configurationFile.empty() ? 0 : configurationFile.c_str());
@@ -94,7 +97,7 @@ RADIUSAuthenticator::requestUserAuthInfo(RequestContext &rc, const Auth& auth, U
       if(result < 0)
       {
          ErrLog(<<"RADIUSServerAuthManager::requestCredential, uri = " << reqUri <<" failed to start thread, error = " << result);
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                          (Helper::makeResponse(*sipMessage, 500, "Auth failed")));
          return SkipAllChains;
       }
@@ -103,7 +106,7 @@ RADIUSAuthenticator::requestUserAuthInfo(RequestContext &rc, const Auth& auth, U
    {
       WarningLog(<<"RADIUSServerAuthManager::requestCredential, unexpected exception thrown");
       delete radiusListener;
-      rc.sendResponse(*auto_ptr<SipMessage>
+      rc.sendResponse(*unique_ptr<SipMessage>
                       (Helper::makeResponse(*sipMessage, 500, "Auth failed")));
       return SkipAllChains;
    }
@@ -157,6 +160,7 @@ ReproRADIUSDigestAuthListener::onError()
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock http://danielpocock.com
  * All rights reserved.
  *

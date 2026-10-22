@@ -5,7 +5,6 @@
 #ifdef USE_SSL
 #include <asio.hpp>
 #include <asio/ssl.hpp>
-#include <boost/function.hpp>
 #include <iostream>
 
 #include <rutil/Log.hxx>
@@ -27,97 +26,140 @@ FlowDtlsSocketContext::FlowDtlsSocketContext(Flow& flow, const asio::ip::address
 {
 }
 
-FlowDtlsSocketContext::~FlowDtlsSocketContext() 
+FlowDtlsSocketContext::~FlowDtlsSocketContext()
 {
-   if(mSrtpInitialized)
-   {
-      // Free the master key memory allocated in DtlsSocket::createSrtpSessionPolicies
-      delete mSRTPPolicyIn.key;
-      delete mSRTPPolicyOut.key;
-   }
+   destroySrtpSessions();
 }
 
-void 
+void
 FlowDtlsSocketContext::write(const unsigned char* data, unsigned int len)
 {
    InfoLog(<< "Dtls write to " << mAddress.to_string() << ":" << mPort << " called.  ComponentId=" << mFlow.getComponentId());
    mFlow.rawSendTo(mAddress, mPort, (const char*)data, len);
 }
 
-void 
+void
 FlowDtlsSocketContext::handshakeCompleted()
 {
    InfoLog(<< "Flow Dtls Handshake Completed!  ComponentId=" << mFlow.getComponentId());
 
-   char fprint[100];
-   SRTP_PROTECTION_PROFILE *srtp_profile;
-   int r;
-
-   if(mSocket->getRemoteFingerprint(fprint))
+   char fprint[DtlsSocket::FingerprintSize];
+   if(mSocket->getRemoteFingerprint("sha-256", fprint, sizeof(fprint)))
    {
-      Data remoteSDPFingerprint = mFlow.getRemoteSDPFingerprint();
-      if(!remoteSDPFingerprint.empty())
-      {
-         if(!mSocket->checkFingerprint(remoteSDPFingerprint.c_str(), remoteSDPFingerprint.size()))
-         {
-            InfoLog(<< "Remote fingerprint = " << fprint << " is not valid!  ComponentId=" << mFlow.getComponentId());
-            return;
-         }
-         else
-         {
-            InfoLog(<< "Remote fingerprint = " << fprint << " is valid!  ComponentId=" << mFlow.getComponentId());
-         }
-      }
-      else
-      {
-         InfoLog(<< "Remote fingerprint = " << fprint << "  ComponentId=" << mFlow.getComponentId());
-      }
-   } 
-   else
-   {
-      InfoLog(<< "Remote fingerprint cannot be obtained from Dtls handshake.  ComponentId=" << mFlow.getComponentId());
-      return; 
+      InfoLog(<< "Remote fingerprint (SHA-256) = " << fprint << "  ComponentId=" << mFlow.getComponentId());
    }
 
-   srtp_profile=mSocket->getSrtpProfile();
-
+   SRTP_PROTECTION_PROFILE* srtp_profile = mSocket->getSrtpProfile();
    if(srtp_profile)
    {
       InfoLog(<< "SRTP Extension negotiated profile=" << srtp_profile->name << "  ComponentId=" << mFlow.getComponentId());
    }
 
-   // !slg! TODO - we should probably be basing the policy creation off of what is returned from getSrtpProfile
-   mSocket->createSrtpSessionPolicies(mSRTPPolicyOut, mSRTPPolicyIn);
-
-   r=srtp_create(&mSRTPSessionIn, &mSRTPPolicyIn);   
-   resip_assert(r==0);
-   r=srtp_create(&mSRTPSessionOut, &mSRTPPolicyOut);
-   resip_assert(r==0);
-   mSrtpInitialized = true;
+   // The Flow calls us with its mutex held, so read its fingerprint directly.  If the remote SDP
+   // hasn't arrived yet, SRTP is set up when Flow::setRemoteSDPFingerprint is called
+   checkRemoteFingerprint(mFlow.mRemoteSDPFingerprintHashFunction, mFlow.mRemoteSDPFingerprint);
 }
- 
-void 
+
+void
 FlowDtlsSocketContext::handshakeFailed(const char *err)
 {
-   ErrLog(<< "Flow Dtls Handshake failed!  ComponentId=" << mFlow.getComponentId());
+   ErrLog(<< "Flow Dtls Handshake failed: " << err << "  ComponentId=" << mFlow.getComponentId());
 }
 
-void FlowDtlsSocketContext::fingerprintMismatch()
+std::shared_ptr<std::mutex>
+FlowDtlsSocketContext::timerLock()
 {
-   // Ensure Srtp is not initalized, so the will not process media packets from this endpoint
+   // The Flow's mutex, which it holds whenever it uses its DtlsSockets
+   return mFlow.mSharedMutex;
+}
+
+void
+FlowDtlsSocketContext::checkRemoteFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint)
+{
+   if(!mSocket->handshakeCompleted())
+   {
+      return;
+   }
+
+   if(fingerprint.empty())
+   {
+      InfoLog(<< "Waiting for the remote SDP fingerprint before setting up SRTP.  ComponentId=" << mFlow.getComponentId());
+      return;
+   }
+
+   if(mSocket->checkFingerprint(hashFunction.c_str(), fingerprint.c_str()))
+   {
+      if(!mSrtpInitialized)
+      {
+         InfoLog(<< "Remote certificate matches the SDP fingerprint (" << hashFunction << " " << fingerprint << "), setting up SRTP.  ComponentId=" << mFlow.getComponentId());
+         if(!createSrtpSessions())
+         {
+            ErrLog(<< "Unable to set up SRTP from the Dtls handshake.  ComponentId=" << mFlow.getComponentId());
+         }
+      }
+   }
+   else
+   {
+      // Log the certificate's fingerprint computed with the SDP's hash function, so the two can be compared
+      char fprint[EVP_MAX_MD_SIZE * 3];
+      Data remoteFingerprint = mSocket->getRemoteFingerprint(hashFunction.c_str(), fprint, sizeof(fprint)) ?
+                               Data(fprint) : Data("unavailable (unsupported hash function)");
+      WarningLog(<< "Remote certificate does not match the SDP fingerprint, "
+                 << (mSrtpInitialized ? "tearing down SRTP" : "not setting up SRTP")
+                 << ".  SDP fingerprint=" << hashFunction << " " << fingerprint
+                 << ", certificate fingerprint=" << remoteFingerprint << "  ComponentId=" << mFlow.getComponentId());
+      // Ensure Srtp is not initalized, so we will not process media packets from this endpoint
+      destroySrtpSessions();
+   }
+}
+
+bool
+FlowDtlsSocketContext::createSrtpSessions()
+{
+   srtp_policy_t policyIn;
+   srtp_policy_t policyOut;
+   if(!mSocket->createSrtpSessionPolicies(policyOut, policyIn))
+   {
+      return false;
+   }
+
+   bool created = false;
+   if(srtp_create(&mSRTPSessionIn, &policyIn) == srtp_err_status_ok)
+   {
+      if(srtp_create(&mSRTPSessionOut, &policyOut) == srtp_err_status_ok)
+      {
+         created = true;
+      }
+      else
+      {
+         srtp_dealloc(mSRTPSessionIn);
+      }
+   }
+
+   // srtp_create has derived the session keys, so the master keys DtlsSocket::createSrtpSessionPolicies
+   // allocated are no longer needed
+   delete[] policyIn.key;
+   delete[] policyOut.key;
+
+   mSrtpInitialized = created;
+   return created;
+}
+
+void
+FlowDtlsSocketContext::destroySrtpSessions()
+{
    if(mSrtpInitialized)
    {
-      // Free the master key memory allocated in DtlsSocket::createSrtpSessionPolicies
-      delete mSRTPPolicyIn.key;
-      delete mSRTPPolicyOut.key;
+      mSrtpInitialized = false;
+      srtp_dealloc(mSRTPSessionIn);
+      srtp_dealloc(mSRTPSessionOut);
    }
-   mSrtpInitialized = false;
 }
 
-err_status_t 
+srtp_err_status_t
 FlowDtlsSocketContext::srtpProtect(void* data, int* size, bool rtcp)
 {
-   err_status_t status = err_status_no_ctx;
+   srtp_err_status_t status = srtp_err_status_no_ctx;
    if(mSrtpInitialized)
    {
       if(rtcp)
@@ -132,10 +174,10 @@ FlowDtlsSocketContext::srtpProtect(void* data, int* size, bool rtcp)
    return status;
 }
 
-err_status_t 
+srtp_err_status_t
 FlowDtlsSocketContext::srtpUnprotect(void* data, int* size, bool rtcp)
 {
-   err_status_t status = err_status_no_ctx;
+   srtp_err_status_t status = srtp_err_status_no_ctx;
    if(mSrtpInitialized)
    {
       if(rtcp)
@@ -153,6 +195,7 @@ FlowDtlsSocketContext::srtpUnprotect(void* data, int* size, bool rtcp)
 #endif 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -19,11 +19,7 @@ RendAcctMgrSimple::Pattern::eval(int acctIdx)
    buf[0] = 0;
    if ( mNumericLen > 0 ) 
    {
-#ifdef WIN32
-      _snprintf(buf, sizeof(buf), "%0*d", mNumericLen, acctIdx);
-#else
       snprintf(buf, sizeof(buf), "%0*d", mNumericLen, acctIdx);
-#endif
    }
 
    return mPrefix + buf + mSuffix;

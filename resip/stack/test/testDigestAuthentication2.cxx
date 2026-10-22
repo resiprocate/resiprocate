@@ -21,7 +21,7 @@
 #include "resip/stack/test/TestSupport.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/DataStream.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "digcalc.hxx"
 #include "rutil/Logger.hxx"
 
@@ -44,7 +44,7 @@ main(int arc, char** argv)
       char* nonce = "92347fea23";
 
 
-      MD5Stream a1;
+      DigestStream a1;
       a1 << username
          << Symbols::COLON
          << realm
@@ -113,10 +113,10 @@ main(int arc, char** argv)
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
       
-      auto_ptr<SipMessage> request(TestSupport::makeMessage(txt.c_str()));      
+      unique_ptr<SipMessage> request(TestSupport::makeMessage(txt.c_str()));
 
       Data realm = "localhost";
-      auto_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, false));
+      unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, false));
 
       assert(challenge->exists(h_ProxyAuthenticates));
       assert(challenge->header(h_ProxyAuthenticates).size() == 1);
@@ -125,7 +125,7 @@ main(int arc, char** argv)
       Data password = "secret";
       Data cnonce;// = "366fead6";
       unsigned int nc = 0;
-      MD5Stream a1;
+      DigestStream a1;
       a1 << username
          << Symbols::COLON
          << realm
@@ -180,6 +180,7 @@ main(int arc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

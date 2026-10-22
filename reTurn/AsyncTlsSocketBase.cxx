@@ -4,14 +4,16 @@
 #endif
 
 #ifdef USE_SSL
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <functional>
 
+#include <openssl/err.h>
+#include <openssl/opensslv.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
 #include "AsyncTlsSocketBase.hxx"
 #include "AsyncSocketBaseHandler.hxx"
+#include <rutil/DnsUtil.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
 
@@ -21,36 +23,28 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncTlsSocketBase::AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::context& context, bool validateServerCertificateHostname) 
+AsyncTlsSocketBase::AsyncTlsSocketBase(asio::io_context& ioService, asio::ssl::context& context, bool validateServerCertificateHostname) 
    : AsyncSocketBase(ioService),
    mSocket(ioService, context),
    mResolver(ioService),
+   mHandshakeTimer(ioService),
+   mServerHandshakeDone(false),
    mValidateServerCertificateHostname(validateServerCertificateHostname)
-{
-}
-
-AsyncTlsSocketBase::~AsyncTlsSocketBase() 
 {
 }
 
 unsigned int 
 AsyncTlsSocketBase::getSocketDescriptor() 
 { 
-   return (unsigned int)mSocket.lowest_layer().native(); 
+   return (unsigned int)mSocket.lowest_layer().native_handle();
 }
 
 asio::error_code 
 AsyncTlsSocketBase::bind(const asio::ip::address& address, unsigned short port)
 {
-   asio::error_code errorCode;
-   mSocket.lowest_layer().open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
-   if(!errorCode)
-   {
-      mSocket.lowest_layer().set_option(asio::ip::tcp::socket::reuse_address(true), errorCode);
-      mSocket.lowest_layer().set_option(asio::ip::tcp::no_delay(true), errorCode); // ?slg? do we want this?
-      mSocket.lowest_layer().bind(asio::ip::tcp::endpoint(address, port), errorCode);
-   }
-   return errorCode;
+   // connect() binds the socket again, for each address it tries
+   mLocalTcpEndpoint = asio::ip::tcp::endpoint(address, port);
+   return openAndBind(mSocket.next_layer());
 }
 
 void 
@@ -61,29 +55,22 @@ AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::tcp::resolver::query query(address, service.c_str());   
-#else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
-#endif
-   mResolver.async_resolve(query,
-        boost::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
-                    asio::placeholders::error,
-                    asio::placeholders::iterator));
+   mResolver.async_resolve(mLocalTcpEndpoint.protocol(), address, service.c_str(),
+        std::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
+                    std::placeholders::_1,
+                    std::placeholders::_2));
 }
 
 void 
 AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
-                                  asio::ip::tcp::resolver::iterator endpoint_iterator)
+                                     const asio::ip::tcp::resolver::results_type& endpoints)
 {
    if (!ec)
    {
       // Attempt a connection to the first endpoint in the list. Each endpoint
-      // will be tried until we successfully establish a connection.
-      //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
-      mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            asio::placeholders::error, endpoint_iterator));
+      // will be tried until we successfully establish a connection (the handshake is with the
+      // first that accepts)
+      asyncConnect(mSocket.next_layer(), endpoints);
    }
    else
    {
@@ -91,62 +78,76 @@ AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
    }
 }
 
-void 
-AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
-                                  asio::ip::tcp::resolver::iterator endpoint_iterator)
+bool
+AsyncTlsSocketBase::setupClientSsl(SSL* ssl, const std::string& hostname, bool validateHostname)
 {
-   if (!ec)
-   {
-      // The connection was successful - now do handshake.
-      mSocket.async_handshake(asio::ssl::stream_base::client, 
-                              boost::bind(&AsyncSocketBase::handleClientHandshake, shared_from_this(), 
-                                          asio::placeholders::error, endpoint_iterator));
-   }
-   else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
-   {
-      // The connection failed. Try the next endpoint in the list.
-      asio::error_code ec;
-      mSocket.lowest_layer().close(ec);
-      mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            asio::placeholders::error, endpoint_iterator));
-   }
-   else
-   {
-      onConnectFailure(ec);
-   }
-}
+   const bool isIpAddress = resip::DnsUtil::isIpAddress(hostname.c_str());
 
-void 
-AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
-                                          asio::ip::tcp::resolver::iterator endpoint_iterator)
-{
-   if (!ec)
+   // RFC 6066 section 3: SNI carries a host name, never an IP address
+   if (!hostname.empty() && !isIpAddress && SSL_set_tlsext_host_name(ssl, hostname.c_str()) != 1)
    {
-      // The handshake was successful.
-      mConnected = true;
-      mConnectedAddress = endpoint_iterator->endpoint().address();
-      mConnectedPort = endpoint_iterator->endpoint().port();
+      WarningLog(<< "Failed to set SNI " << hostname << ", continuing without it");
+   }
 
-      // Validate that hostname in cert matches connection hostname
-      if(!mValidateServerCertificateHostname || validateServerCertificateHostname())
+   bool ok = true;
+   if (validateHostname)
+   {
+      // OpenSSL checks the server certificate against the name during the handshake, as RFC 6125
+      // describes: a DNS or IP address subjectAltName, or the common name if there are no DNS
+      // subjectAltNames, with wildcards only as a whole left-most label
+      if (isIpAddress)
       {
-         onConnectSuccess();
+         ok = X509_VERIFY_PARAM_set1_ip_asc(SSL_get0_param(ssl), hostname.c_str()) == 1;
       }
       else
       {
-         WarningLog(<< "Hostname in certificate does not match connection hostname!");
-         onConnectFailure(asio::error::operation_aborted);
+         SSL_set_hostflags(ssl, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+         ok = !hostname.empty() && SSL_set1_host(ssl, hostname.c_str()) == 1;
+      }
+      if (!ok)
+      {
+         ErrLog(<< "Unable to validate the server certificate against <" << hostname << ">");
       }
    }
-   else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
+
+   // Leave nothing on the error queue for the handshake: SSL_get_error() checks it first
+   ERR_clear_error();
+   return ok;
+}
+
+void
+AsyncTlsSocketBase::logClientHandshakeResult(SSL* ssl, const std::string& hostname, const asio::error_code& ec)
+{
+   if (!ec)
    {
-      // The handshake failed. Try the next endpoint in the list.
-      asio::error_code ec;
-      mSocket.lowest_layer().close(ec);
-      mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            asio::placeholders::error, endpoint_iterator));
+      const SSL_CIPHER* cipher = SSL_get_current_cipher(ssl);
+      InfoLog(<< "TLS session set up with " << hostname << ": " << SSL_get_version(ssl)
+              << " " << (cipher ? SSL_CIPHER_get_name(cipher) : "unknown cipher"));
+   }
+   else if (SSL_get_verify_result(ssl) != X509_V_OK)
+   {
+      // eg. X509_V_ERR_HOSTNAME_MISMATCH when the certificate isn't for hostname
+      WarningLog(<< "TLS handshake with " << hostname << " failed, server certificate rejected: "
+                 << X509_verify_cert_error_string(SSL_get_verify_result(ssl)));
+   }
+}
+
+void
+AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
+                                  const asio::ip::tcp::endpoint& endpoint)
+{
+   if (!ec)
+   {
+      if (!setupClientSsl(mSocket.native_handle(), mHostname, mValidateServerCertificateHostname))
+      {
+         onConnectFailure(asio::error::invalid_argument);
+         return;
+      }
+
+      // The connection was successful - now do handshake.
+      mSocket.async_handshake(asio::ssl::stream_base::client,
+                              std::bind(&AsyncSocketBase::handleClientHandshake, shared_from_this(),
+                                          std::placeholders::_1, endpoint));
    }
    else
    {
@@ -154,112 +155,53 @@ AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
    }
 }
 
-bool 
-AsyncTlsSocketBase::validateServerCertificateHostname()
+void
+AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
+                                          const asio::ip::tcp::endpoint& endpoint)
 {
-   bool valid = false;
-
-   // print session info
-   const SSL_CIPHER *ciph;
-   ciph=SSL_get_current_cipher(mSocket.impl()->ssl);
-   InfoLog( << "TLS session set up with " 
-      <<  SSL_get_version(mSocket.impl()->ssl) << " "
-      <<  SSL_CIPHER_get_version(ciph) << " "
-      <<  SSL_CIPHER_get_name(ciph) << " " );
-
-   // get the certificate - should always exist since mode is set for SSL to verify the cert first
-   X509* cert = SSL_get_peer_certificate(mSocket.impl()->ssl);
-   resip_assert(cert);
-
-   // Look at the SubjectAltName, and if found, set as peerName
-   bool hostnamePresentInSubjectAltName = false;
-   GENERAL_NAMES* gens;
-   gens = (GENERAL_NAMES*)X509_get_ext_d2i(cert, NID_subject_alt_name, 0, 0);
-   for(int i = 0; i < sk_GENERAL_NAME_num(gens); i++)
-   {  
-      GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, i);
-
-      DebugLog(<< "subjectAltName of cert contains type <" << gen->type << ">" );
-
-      if (gen->type == GEN_DNS)
-      {
-         ASN1_IA5STRING* asn = gen->d.dNSName;
-         resip::Data dns(asn->data, asn->length);
-         InfoLog(<< "subjectAltName of TLS session cert contains DNS <" << dns << ">" );
-         hostnamePresentInSubjectAltName = true;
-         if(resip::isEqualNoCase(dns, mHostname.c_str()))
-         {
-            valid = true;
-            break;
-         }
-      }
-
-      if (gen->type == GEN_EMAIL)
-      {
-         DebugLog(<< "subjectAltName of cert has EMAIL type" );
-      }
-
-      if(gen->type == GEN_URI) 
-      {
-         DebugLog(<< "subjectAltName of cert has URI type" );
-      }
+   logClientHandshakeResult(mSocket.native_handle(), mHostname, ec);
+   if (!ec)
+   {
+      // The handshake was successful - and so was the check of the server certificate's name,
+      // when that was asked for
+      mConnected = true;
+      mConnectedAddress = endpoint.address();
+      mConnectedPort = endpoint.port();
+      onConnectSuccess();
    }
-   sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
-
-   // If there are no peer names from the subjectAltName, then use the commonName
-   if(!hostnamePresentInSubjectAltName)
-   {   
-      // look at the Common Name to find the peerName of the cert 
-      X509_NAME* subject = X509_get_subject_name(cert);
-      if(!subject)
-      {
-         ErrLog( << "Invalid certificate: subject not found ");
-      }
-   
-      int i =-1;
-      while( !valid )
-      {
-         i = X509_NAME_get_index_by_NID(subject, NID_commonName,i);
-         if ( i == -1 )
-         {
-            break;
-         }
-         resip_assert( i != -1 );
-         X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
-         resip_assert( entry );
-   
-         ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
-         resip_assert( s );
-   
-         int t = M_ASN1_STRING_type(s);
-         int l = M_ASN1_STRING_length(s);
-         unsigned char* d = M_ASN1_STRING_data(s);
-         resip::Data name(d,l);
-         DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
-         resip_assert( name.size() == (unsigned)l );
-   
-         InfoLog( << "Found common name in cert: " << name );      
-         if(resip::isEqualNoCase(name, mHostname.c_str()))
-         {
-            valid = true;
-         }
-      }
+   else
+   {
+      onConnectFailure(ec);
    }
-   
-   X509_free(cert);
-   return valid;
 }
 
 void
-AsyncTlsSocketBase::doHandshake()
+AsyncTlsSocketBase::doHandshake(unsigned int timeoutSeconds)
 {
-   mSocket.async_handshake(asio::ssl::stream_base::server, 
-                           boost::bind(&AsyncSocketBase::handleServerHandshake, shared_from_this(), asio::placeholders::error));  
+   if (timeoutSeconds > 0)
+   {
+      // Don't let a client hold the connection open without ever completing the handshake
+      std::shared_ptr<AsyncSocketBase> self = shared_from_this();
+      mHandshakeTimer.expires_after(std::chrono::seconds(timeoutSeconds));
+      mHandshakeTimer.async_wait([this, self](const asio::error_code& e)
+      {
+         if (e != asio::error::operation_aborted && !mServerHandshakeDone)
+         {
+            WarningLog(<< "TLS handshake not completed in time, closing the connection");
+            asio::error_code ec;
+            mSocket.lowest_layer().close(ec);  // the handshake then fails with operation_aborted
+         }
+      });
+   }
+   mSocket.async_handshake(asio::ssl::stream_base::server,
+                           std::bind(&AsyncSocketBase::handleServerHandshake, shared_from_this(), std::placeholders::_1));
 }
 
-void 
+void
 AsyncTlsSocketBase::handleServerHandshake(const asio::error_code& e)
 {
+   mServerHandshakeDone = true;
+   mHandshakeTimer.cancel();
    if(e)
    {
       onServerHandshakeFailure(e);
@@ -274,7 +216,7 @@ AsyncTlsSocketBase::handleServerHandshake(const asio::error_code& e)
    }
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncTlsSocketBase::getSenderEndpointAddress() 
 { 
    return mConnectedAddress; 
@@ -291,14 +233,14 @@ AsyncTlsSocketBase::transportSend(const StunTuple& destination, std::vector<asio
 {
    // Note: destination is ignored for TLS
    asio::async_write(mSocket, buffers, 
-                     boost::bind(&AsyncTlsSocketBase::handleSend, shared_from_this(), asio::placeholders::error));
+                     std::bind(&AsyncTlsSocketBase::handleSend, shared_from_this(), std::placeholders::_1));
 }
 
 void 
 AsyncTlsSocketBase::transportReceive()
 {
    mSocket.async_read_some(asio::buffer((void*)mReceiveBuffer->data(), RECEIVE_BUFFER_SIZE),
-                           boost::bind(&AsyncTlsSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+                           std::bind(&AsyncTlsSocketBase::handleReceive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 
 }
 
@@ -306,7 +248,7 @@ void
 AsyncTlsSocketBase::transportFramedReceive()
 {
    asio::async_read(mSocket, asio::buffer((void*)mReceiveBuffer->data(), 4),
-                    boost::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), asio::placeholders::error));
+                    std::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), std::placeholders::_1));
 }
 
 void 
@@ -314,7 +256,7 @@ AsyncTlsSocketBase::transportClose()
 {
    if (mOnBeforeSocketCloseFp)
    {
-      mOnBeforeSocketCloseFp(mSocket.lowest_layer().native());
+      mOnBeforeSocketCloseFp((unsigned int)mSocket.lowest_layer().native_handle());
    }
 
    asio::error_code ec;
@@ -337,23 +279,29 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
       */
 
       // Note:  For both StunMessages and ChannelData messages the length in bytes 3 and 4
-      UInt16 dataLen;
+      uint16_t dataLen;
       memcpy(&dataLen, &(*mReceiveBuffer)[2], 2);
       dataLen = ntohs(dataLen);
 
+      // ChannelData's padding is read with it, but not passed on
+      size_t padding = 0;
       if(((*mReceiveBuffer)[0] & 0xC0) == 0)  // If first 2 bits are 00 then this is a stun message
       {
          dataLen += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
       }
-
-      if(dataLen+4 < RECEIVE_BUFFER_SIZE)
+      else
       {
-         asio::async_read(mSocket, asio::buffer(&(*mReceiveBuffer)[4], dataLen),
-                          boost::bind(&AsyncTlsSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, dataLen+4));
+         padding = channelDataPadding(dataLen);
+      }
+
+      if (dataLen + padding + 4U < RECEIVE_BUFFER_SIZE)
+      {
+         asio::async_read(mSocket, asio::buffer(&(*mReceiveBuffer)[4], dataLen + padding),
+                          std::bind(&AsyncTlsSocketBase::handleReceive, shared_from_this(), std::placeholders::_1, dataLen+4));
       }
       else
       {
-         WarningLog(<< "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accomdate incoming framed data (" << dataLen+4 << ") closing connection.");
+         WarningLog(<< "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accommodate incoming framed data (" << dataLen+4 << ") closing connection.");
          close();
       }
    }
@@ -372,6 +320,7 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -10,13 +10,13 @@
 
 using namespace resip;
 
-BaseUsage::Exception::Exception(const Data& msg,const Data& file,int line)
+BaseUsage::Exception::Exception(const Data& msg, const Data& file, const int line)
    : BaseException(msg, file, line)
 {
 }
 
 const char*
-BaseUsage::Exception::name() const
+BaseUsage::Exception::name() const noexcept
 {
    return "BaseUsage::Exception";
 }
@@ -33,9 +33,14 @@ BaseUsage::~BaseUsage()
 }
 
 BaseUsageHandle 
-BaseUsage::getBaseHandle()
+BaseUsage::getBaseHandle() const
 {
    return mHandle;
+}
+
+void BaseUsage::postDum(Message* messageForDum)
+{
+   mDum.post(messageForDum);
 }
 
 #if 0

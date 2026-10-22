@@ -3,16 +3,16 @@
 //#include "tfm/tfdum/DumEvent.hxx"
 //#include "rutil/Logger.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 using namespace resip;
 
 void
-DumUaAction::operator()(boost::shared_ptr<Event> event)
+DumUaAction::operator()(std::shared_ptr<Event> event)
 {
-   //!dcm! having resip::SharedPtr is annoying now..two dynamic_pointer_cast templates
-   boost::shared_ptr<DumEvent> dumEvent 
-      = boost::dynamic_pointer_cast<DumEvent, Event>(event);        
+   auto dumEvent = std::dynamic_pointer_cast<DumEvent>(event);        
    return (*this)(*mUa, dumEvent);
 }
 
@@ -23,7 +23,7 @@ DumUaAction::operator()()
 }
 
 void 
-DumUaAction::operator()(DumUserAgent& tua, boost::shared_ptr<DumEvent> event)
+DumUaAction::operator()(DumUserAgent& tua, std::shared_ptr<DumEvent> event)
 {
    return (*this)(*mUa);
 }
@@ -64,14 +64,14 @@ Shutdown::operator()(DumUserAgent& dua)
 
 DumUaSendingCommand::DumUaSendingCommand(DumUserAgent* dua, Functor func) :
    DumUaAction(dua),
-   mFunctor(func),
-   mMessageAdorner(0)
+   mFunctor(std::move(func)),
+   mMessageAdorner(nullptr)
 {
 }
 
 DumUaSendingCommand::DumUaSendingCommand(DumUserAgent* dua, Functor func, MessageAdorner* adorner) :
    DumUaAction(dua),
-   mFunctor(func),
+   mFunctor(std::move(func)),
    mMessageAdorner(adorner)
 {
 }
@@ -85,11 +85,11 @@ void
 DumUaSendingCommand::operator()(DumUserAgent& dua)
 {
    dua.getDum().post(new DumUaSendingCommandCommand(dua.getDum(), mFunctor, mMessageAdorner));
-   mMessageAdorner=0;
+   mMessageAdorner = nullptr;
 }
 
 DumUaSendingCommandCommand::DumUaSendingCommandCommand(resip::DialogUsageManager& dum, Functor func, MessageAdorner* adorn) :
-   mFunctor(func),
+   mFunctor(std::move(func)),
    mMessageAdorner(adorn),
    mDum(dum)
 {}
@@ -109,7 +109,7 @@ void
 DumUaSendingCommandCommand::executeCommand()
 {
    StackLog(<< "DumUaSendingCommand::operator(): Executing deferred call: ");
-   SharedPtr<SipMessage> msg = mFunctor();
+   auto msg = mFunctor();
    if (mMessageAdorner)
    {
       mDum.send((*mMessageAdorner)(msg));
@@ -122,7 +122,7 @@ DumUaSendingCommandCommand::executeCommand()
 
 DumUaCommand::DumUaCommand(DumUserAgent* dua, Functor func) :
    DumUaAction(dua),
-   mFunctor(func)
+   mFunctor(std::move(func))
 {
 }
 

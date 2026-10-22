@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <ctype.h>
+
 #include "resip/stack/MessageWaitingContents.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -336,7 +338,7 @@ MessageWaitingContents::parse(ParseBuffer& pb)
    while (!pb.eof() && *pb.position() != Symbols::CR[0])
    {
       int ht = -1;
-      switch (tolower(*pb.position()))
+      switch (tolower(static_cast< unsigned char >(*pb.position())))
       {
          case 'v' :
             ht = mw_voice;

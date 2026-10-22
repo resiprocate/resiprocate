@@ -3,12 +3,7 @@
 
 #include <list>
 
-#ifdef WIN32
-#include <pcreposix.h>
-#else
-#include <regex.h>
-#endif
-#include "rutil/Data.hxx"
+#include <regex>
 
 namespace gateway
 {
@@ -32,7 +27,7 @@ class AddressTranslator
          public:
             resip::Data mMatchingPattern;
             resip::Data mRewriteExpression;
-            regex_t *preq;
+            std::regex *preq;
       };
       
       typedef std::list<FilterOp> FilterOpList;

@@ -1,0 +1,64 @@
+name: Windows-CI
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build with Visual Studio
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # Cache the built sipXtapi ExternalProject tree so it is only rebuilt when
+      # the pinned commit (build/sipxtapi-commit.txt) changes. tar preserves the
+      # ExternalProject stamp mtimes, so on a hit the build step sees sipXtapi as
+      # up to date and skips the msbuild. Bump the trailing salt (v1) if the
+      # runner's MSVC toolset changes and a rebuild is required.
+      - name: Cache sipXtapi
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/_build/sipXtapi-prefix
+          key: sipxtapi-${{ runner.os }}-${{ hashFiles('build/sipxtapi-commit.txt') }}-Debug-v1
+
+      - name: "Configure"
+        run: >
+          cmake
+          -S ${{ github.workspace }}
+          -B ${{ github.workspace }}/_build
+          -DUSE_SIPXTAPI=ON
+          -DSIPXTAPI_CONFIGURATIONS=Debug
+
+      - name: "Build"
+        run: >
+          cmake
+          --build ${{ github.workspace }}/_build
+          --config Debug
+          --parallel
+
+      # A failing test is run once more before failing the job.  The TFM suites
+      # (sanityTests, dumTests) depend on timing, and CI runners occasionally
+      # stall the whole process for seconds; a genuine regression fails both runs.
+      - name: "Test Debug"
+        run: >
+          ctest
+          --test-dir ${{ github.workspace }}/_build
+          --build-config Debug
+          --output-on-failure
+          --repeat until-pass:2
+
+      # The TFM suites log in detail to resiprocate.log in their working
+      # directories (the source tree, under ctest).  Keep those logs when a run
+      # fails, since a timing failure may not reproduce anywhere else.
+      - name: "Upload TFM logs"
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfm-logs-windows
+          path: |
+            ${{ github.workspace }}/tfm/repro/resiprocate.log
+            ${{ github.workspace }}/tfm/tfdum/resiprocate.log
+          if-no-files-found: ignore

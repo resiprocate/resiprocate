@@ -89,7 +89,7 @@ RequestFilter::RequestFilter(ProxyConfig& config,
       {
          // Initialize My SQL using Global settings
          WarningLog(<<"Using deprecated parameter " << mySQLSettingPrefix << "MySQLServer, please update to indexed Database definitions.");
-         mSqlDb = new MySqlDb(mySQLServer, 
+         mSqlDb = new MySqlDb(config, mySQLServer,
                        config.getConfigData(mySQLSettingPrefix + "MySQLUser", ""), 
                        config.getConfigData(mySQLSettingPrefix + "MySQLPassword", ""),
                        config.getConfigData(mySQLSettingPrefix + "MySQLDatabaseName", ""),
@@ -187,7 +187,7 @@ RequestFilter::process(RequestContext &rc)
             if(mSqlDb)
             {
                // Dispatch async
-               std::auto_ptr<ApplicationMessage> async(new RequestFilterAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy(), actionData));
+               std::unique_ptr<ApplicationMessage> async(new RequestFilterAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy(), actionData));
                mAsyncDispatcher->post(async);
                return WaitingForEvent;
             }

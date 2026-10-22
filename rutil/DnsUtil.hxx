@@ -28,7 +28,7 @@ class Tuple;
 class DnsUtil
 {
    public:
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             Exception(const Data& msg,
@@ -36,7 +36,7 @@ class DnsUtil
                       const int line)
                : BaseException(msg, file, line) {}            
          protected:
-            virtual const char* name() const { return "DnsUtil::Exception"; }
+            const char* name() const noexcept override { return "DnsUtil::Exception"; }
       };
 
       /** @returns the fully qualified local host name as the host
@@ -87,7 +87,7 @@ class DnsUtil
         @code
          Data addr("5f1b:df00:ce3e:e200:20:800:2b37:6426");
          cerr << "!! "<< addr << endl;
-         assert(DnsUtil::isIpV6Address(addr));
+         resip_assert(DnsUtil::isIpV6Address(addr));
         @endcode
         */
       static bool isIpV6Address(const Data& ipAddress);
@@ -149,6 +149,9 @@ class DnsUtil
       /// Used to synchronously query A records - only for test code usage
       static std::list<Data> lookupARecords(const Data& host);
 
+   private:
+      /// Used to synchronously query the local hostname
+      static Data lookupLocalHostName();
 };
 
 }

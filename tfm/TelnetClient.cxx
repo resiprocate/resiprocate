@@ -70,7 +70,7 @@ TelnetClient::send(const Data& data, bool newline)
       sdata += Data("\r");
    }
    
-   mClient.write(sdata.c_str(), sdata.size()+1);
+   mClient.write(sdata.c_str(), (Netxx::size_type)sdata.size()+1);
    //mClient.flush();
 }
 

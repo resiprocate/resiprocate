@@ -28,17 +28,19 @@ DnsHostRecord::DnsHostRecord(const RROverlay& overlay)
 {
    char* name = 0;
    long len = 0;
-   int status = ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
-   (void)status;
-   resip_assert(status == ARES_SUCCESS);	// .kw. what should we do if bad?
+   if (ARES_SUCCESS != ares_expand_name(overlay.data() - overlay.nameLength() - RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
+   {
+      throw HostException("Failed parse of Host record", __FILE__, __LINE__);
+   }
    mName = name;
    free(name);
+   mTTL = overlay.ttl();
    memcpy(&mAddr, overlay.data(), sizeof(in_addr));
 }
 
 Data DnsHostRecord::host() const
 {
-   return Data(inet_ntoa(mAddr));
+   return DnsUtil::inet_ntop(mAddr);
 }
 
 bool DnsHostRecord::isSameValue(const Data& value) const
@@ -49,7 +51,7 @@ bool DnsHostRecord::isSameValue(const Data& value) const
 EncodeStream&
 DnsHostRecord::dump(EncodeStream& strm) const
 {
-   strm << mName << "(A)--> " << DnsUtil::inet_ntop(mAddr);
+   strm << mName << "(A)--> " << DnsUtil::inet_ntop(mAddr) << " ttl=" << mTTL;
    return strm;
 }
 

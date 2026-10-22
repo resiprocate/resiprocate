@@ -39,12 +39,21 @@ class Aor
       EncodeStream& operator<<(EncodeStream& str) const;
 
    private:
+      // Owns a copy of the string passed to Aor(const Data&): mScheme/
+      // mUser/mHost below are overlays (non-owning views, set via
+      // ParseBuffer::data()) into whatever buffer gets parsed, so it must
+      // be this member -- which lives as long as the Aor -- and not the
+      // constructor's `value` argument directly, which may be a temporary
+      // (e.g. Aor aor("sip:...")) destroyed right after the constructor
+      // returns, leaving those views dangling.
+      Data mOwnedBuffer;
+
       mutable Data mValue;
 
       mutable Data mOldScheme;
       mutable Data mOldUser;
       mutable Data mOldHost;
-      mutable int mOldPort;
+      mutable int mOldPort = 0;
 
       // cache for IPV6 host comparison
       mutable Data mCanonicalHost;
@@ -52,7 +61,7 @@ class Aor
       Data mScheme;
       Data mUser;
       Data mHost;
-      int mPort;
+      int mPort = 0;
 };
       
 }

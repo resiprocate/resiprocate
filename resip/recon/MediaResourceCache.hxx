@@ -8,7 +8,7 @@ namespace recon
 {
 
 /**
-  This class is responsible for caching media resouce buffers.  It use a Mutex
+  This class is responsible for caching media resource buffers.  It use a Mutex
   for locking, so that additions can happen from other threads.
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
@@ -44,6 +44,8 @@ class MediaResourceCache
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -20,7 +20,7 @@ class TfdTcpTransport : public TcpTransport
       void removeConnections();
 
    protected:
-      Connection* createConnection(Tuple& who, Socket fd, bool server=false);
+      Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
 
    private:
       std::list<Connection*> mConnections;

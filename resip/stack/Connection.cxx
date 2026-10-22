@@ -127,13 +127,25 @@ Connection::performWrite()
    switch(mOutstandingSends.front()->command)
    {
    case SendData::CloseConnection:
-      // .bwc. Close this connection.
-      return -1;
+      // .bwc. Close this connection.  A WebSocket connection sends a Close frame
+      // first: it is framed below, and the connection is closed once it is written.
+      if(mSendingTransmissionFormat != WebSocketData)
+      {
+         return -1;
+      }
       break;
    case SendData::EnableFlowTimer:
       enableFlowTimer();
       removeFrontOutstandingSend();
       return 0;
+      break;
+   case SendData::SendWsPong:
+      if(mSendingTransmissionFormat != WebSocketData)
+      {
+         WarningLog(<<"WebSocket Pong queued on a connection that is not a WebSocket, dropping it");
+         removeFrontOutstandingSend();
+         return 0;
+      }
       break;
    default:
       // do nothing
@@ -156,14 +168,37 @@ Connection::performWrite()
    else if(mSendingTransmissionFormat == WebSocketHandshake)
    {
       mSendingTransmissionFormat = WebSocketData;
+      // this is the handshake response, which is HTTP and is sent as it is: marking it
+      // stops a retry after a partial write from framing the rest of it
+      mOutstandingSends.front()->isAlreadyEncoded = true;
    }
-   else if(mSendingTransmissionFormat == WebSocketData)
+   else if(mSendingTransmissionFormat == WebSocketData &&
+           !mOutstandingSends.front()->isAlreadyEncoded)
    {
-      SendData *dataWs, *oldSd;
-      const Data& dataRaw = mOutstandingSends.front()->data;
-      UInt64 dataSize = 1 + 1 + dataRaw.size();
-      UInt64 lSize = (UInt64)dataRaw.size();
-      UInt8* uBuffer;
+      // Frame the data, once: it is replaced in place, so the SendData keeps its command,
+      // and marked as encoded, so a write retried after a partial write (or
+      // SSL_ERROR_WANT_WRITE) sends the same bytes instead of framing them again
+      SendData* sd = mOutstandingSends.front();
+      uint8_t opcode = WsFrameExtractor::OpBinary;
+      if(sd->command == SendData::CloseConnection)
+      {
+         opcode = WsFrameExtractor::OpClose;
+         if(sd->data.empty())
+         {
+            // a Close we start ourselves: status 1000, normal closure
+            static const char normalClosure[2] = { 0x03, (char)0xE8 };
+            sd->data = Data(normalClosure, 2);
+         }
+      }
+      else if(sd->command == SendData::SendWsPong)
+      {
+         opcode = WsFrameExtractor::OpPong;
+      }
+
+      const Data& dataRaw = sd->data;
+      uint64_t dataSize = 1 + 1 + dataRaw.size();
+      uint64_t lSize = (uint64_t)dataRaw.size();
+      uint8_t* uBuffer;
 
       if(lSize > 0x7D && lSize <= 0xFFFF)
       {
@@ -174,52 +209,47 @@ Connection::performWrite()
          dataSize += 8;
       }
 
-      oldSd = mOutstandingSends.front();
-      dataWs = new SendData(oldSd->destination,
-            Data(Data::Take, new char[(int)dataSize], (Data::size_type)dataSize),
-            oldSd->transactionId,
-            oldSd->sigcompId,
-            false);
-      resip_assert(dataWs && dataWs->data.data());
-      uBuffer = (UInt8*)dataWs->data.data();
+      Data framed(Data::Take, new char[(int)dataSize], (Data::size_type)dataSize);
+      resip_assert(framed.data());
+      uBuffer = (uint8_t*)framed.data();
 
-      uBuffer[0] = 0x82;
+      // FIN plus the opcode
+      uBuffer[0] = (uint8_t)(0x80 | opcode);
       if(lSize <= 0x7D)
       {
-         uBuffer[1] = (UInt8)lSize;
+         uBuffer[1] = (uint8_t)lSize;
          uBuffer = &uBuffer[2];
       }
       else if(lSize <= 0xFFFF)
       {
          uBuffer[1] = 0x7E;
-         uBuffer[2] = (UInt8)((lSize >> 8) & 0xFF);
-         uBuffer[3] = (UInt8)(lSize & 0xFF);
+         uBuffer[2] = (uint8_t)((lSize >> 8) & 0xFF);
+         uBuffer[3] = (uint8_t)(lSize & 0xFF);
          uBuffer = &uBuffer[4];
       }
       else
       {
          uBuffer[1] = 0x7F;
-         uBuffer[2] = (UInt8)((lSize >> 56) & 0xFF);
-         uBuffer[3] = (UInt8)((lSize >> 48) & 0xFF);
-         uBuffer[4] = (UInt8)((lSize >> 40) & 0xFF);
-         uBuffer[5] = (UInt8)((lSize >> 32) & 0xFF);
-         uBuffer[6] = (UInt8)((lSize >> 24) & 0xFF);
-         uBuffer[7] = (UInt8)((lSize >> 16) & 0xFF);
-         uBuffer[8] = (UInt8)((lSize >> 8) & 0xFF);
-         uBuffer[9] = (UInt8)(lSize & 0xFF);
+         uBuffer[2] = (uint8_t)((lSize >> 56) & 0xFF);
+         uBuffer[3] = (uint8_t)((lSize >> 48) & 0xFF);
+         uBuffer[4] = (uint8_t)((lSize >> 40) & 0xFF);
+         uBuffer[5] = (uint8_t)((lSize >> 32) & 0xFF);
+         uBuffer[6] = (uint8_t)((lSize >> 24) & 0xFF);
+         uBuffer[7] = (uint8_t)((lSize >> 16) & 0xFF);
+         uBuffer[8] = (uint8_t)((lSize >> 8) & 0xFF);
+         uBuffer[9] = (uint8_t)(lSize & 0xFF);
          uBuffer = &uBuffer[10];
       }
 
       memcpy(uBuffer, dataRaw.data(), dataRaw.size());
-      mOutstandingSends.front() = dataWs;
-      dataWs = 0;
-      delete oldSd;
+      sd->data.takeBuf(framed);
+      sd->isAlreadyEncoded = true;
    }
 
 #ifdef USE_SIGCOMP
    // Perform compression here, if appropriate
    if (mSendingTransmissionFormat == Compressed
-       && !(mOutstandingSends.front()->isAlreadyCompressed))
+       && !(mOutstandingSends.front()->isAlreadyEncoded))
    {
       const Data& uncompressed = mOutstandingSends.front()->data;
       osc::SigcompMessage *sm = 
@@ -255,7 +285,7 @@ Connection::performWrite()
       }
       if (mEnablePostConnectSocketFuncCall)
       {
-          mTransport->callSocketFunc(getSocket());
+          mTransport->applySocketOptions(getSocket());
       }
    }
 
@@ -284,9 +314,16 @@ Connection::performWrite()
       if (mSendPos == data.size())
       {
          mSendPos = 0;
+         // only a WebSocket Close gets this far as a CloseConnection
+         const bool closeNow = mOutstandingSends.front()->command == SendData::CloseConnection;
          removeFrontOutstandingSend();
+         if (closeNow)
+         {
+            DebugLog(<< "WebSocket Close sent, closing connection: " << mWho);
+            return -1;
+         }
       }
-      return bytesWritten;
+      return (int)bytesWritten;
    }
 }
 
@@ -301,7 +338,7 @@ Connection::performWrites(unsigned int max)
 
    if(res<0)
    {
-      delete this;
+      // error writing, caller should ensure this connection is deleted
       return false;
    }
    return true;
@@ -348,8 +385,6 @@ Connection::read()
    {
       return bytesRead;
    }  
-   // mBuffer might have been reallocated inside read()
-   writePair = getCurrentWriteBuffer();
 
    getConnectionManager().touch(this);
 
@@ -358,6 +393,9 @@ Connection::read()
    // connection is compressed.
    if(mReceivingTransmissionFormat == Unknown)
    {
+     // mBuffer might have been reallocated inside read()
+     writePair = getCurrentWriteBuffer();
+
      if (((writePair.first[0] & 0xf8) == 0xf8) && mCompression.isEnabled())
      {
        mReceivingTransmissionFormat = Compressed;
@@ -390,6 +428,11 @@ Connection::read()
             if(performWrites())
             {
                mReceivingTransmissionFormat = WebSocketData;
+            }
+            else
+            {
+               // The write failed, returning -1 to the read will cause this connection to get deleted in performReads
+               bytesRead = -1;
             }
          }
          else if(dropConnection)
@@ -468,6 +511,28 @@ Connection::onSingleCRLF()
    mTransport->keepAlivePong(mWho);
 }
 
+void
+Connection::onWsClose(const Data& payload)
+{
+   // RFC 6455 section 5.5.1: answer with a Close of our own, echoing the peer's
+   // status code, then close the TCP connection (performWrite() does both).  The
+   // write is queued, so anything already waiting to be sent goes out first.
+   SendData* close = new SendData(mWho,
+                                  payload.size() >= 2 ? Data(payload.data(), 2) : Data::Empty,
+                                  Data::Empty, Data::Empty);
+   close->command = SendData::CloseConnection;
+   requestWrite(close);
+}
+
+void
+Connection::onWsPing(const Data& payload)
+{
+   // RFC 6455 section 5.5.3: a Pong carries the Ping's payload back
+   SendData* pong = new SendData(mWho, payload, Data::Empty, Data::Empty);
+   pong->command = SendData::SendWsPong;
+   requestWrite(pong);
+}
+
 bool 
 Connection::hasDataToRead()
 {
@@ -490,8 +555,13 @@ Connection::checkConnectionTimedout()
       if (errNum == ETIMEDOUT || errNum == EHOSTUNREACH || 
           errNum == ECONNREFUSED || errNum == ECONNABORTED)
       {
-         InfoLog(<< "Exception on socket " << mWho.mFlowKey << " code: " << errNum << "; closing connection");
-         setFailureReason(TransportFailure::ConnectionException, errNum);
+         Data failureString;
+         {
+            DataStream ds(failureString);
+            ds << "Exception on socket " << mWho.mFlowKey << ", errNum=" << errNum << ", err=" << Transport::errorToString(errNum);
+         }
+         InfoLog(<< failureString << "; closing connection");
+         setFailureReason(TransportFailure::ConnectionException, errNum, failureString);
          delete this;
          return true;
       }
@@ -513,7 +583,8 @@ Connection::isWritable()
     Virtual function of FdPollItemIf, called to process io events
 **/
 void
-Connection::processPollEvent(FdPollEventMask mask) {
+Connection::processPollEvent(FdPollEventMask mask) 
+{
    /* The original code in ConnectionManager.cxx didn't check
     * for error events unless no writable event. (e.g., writable
     * masked error. Why?)
@@ -522,8 +593,14 @@ Connection::processPollEvent(FdPollEventMask mask) {
    {
       Socket fd = getSocket();
       int errNum = getSocketError(fd);
-      InfoLog(<< "Exception on socket " << fd << " code: " << errNum << "; closing connection");
-      setFailureReason(TransportFailure::ConnectionException, errNum);
+      Data failureString;
+      {
+         DataStream ds(failureString);
+         ds << "Exception on socket " << fd << ", errNum=" << errNum << ", err=" << Transport::errorToString(errNum);
+      }
+
+      InfoLog(<< failureString << "; closing connection");
+      setFailureReason(TransportFailure::ConnectionException, errNum, failureString);
       delete this;
       return;
    }
@@ -531,21 +608,37 @@ Connection::processPollEvent(FdPollEventMask mask) {
    {
       if(!performWrites())
       {
-         // Just deleted self
+         delete this;
          return;
       }
    }
    if ( mask & FPEM_Read ) 
    {
-      performReads();
+       if (!performReads())
+       {
+           // Just deleted self
+           return;
+       }
    }
+   mTransport->flushStateMacFifo();
 }
 
-bool Connection::isServer()const{ return mIsServer; }
+bool 
+Connection::isServer() const
+{ 
+   return mIsServer; 
+}
+
+void 
+Connection::invokeAfterSocketCreationFunc() const
+{
+    mTransport->applySocketOptions(getSocket());
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without

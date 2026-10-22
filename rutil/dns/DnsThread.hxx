@@ -22,7 +22,7 @@ class DnsThread : public ThreadIf
 
    protected:
       DnsStub& mDnsStub;
-      std::auto_ptr<FdPollGrp> mPollGrp;
+      std::unique_ptr<FdPollGrp> mPollGrp;
 }; // class DnsThread
 
 } // namespace resip

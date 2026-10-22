@@ -3,6 +3,7 @@
 #endif
 
 #include "TurnTcpSocket.hxx"
+#include "../AsyncSocketBase.hxx"
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
 
@@ -17,37 +18,83 @@ TurnTcpSocket::TurnTcpSocket(const asio::ip::address& address, unsigned short po
    mSocket(mIOService)
 {
    mLocalBinding.setTransportType(StunTuple::TCP);
-
-   asio::error_code errorCode;
-   mSocket.open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
-   if(!errorCode)
-   {
-      mSocket.set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
-      mSocket.set_option(asio::ip::tcp::socket::reuse_address(true));
-      mSocket.bind(asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
-   }
+   // connect() opens the socket and binds it to address and port
 }
 
-asio::error_code 
+asio::ip::tcp
+TurnTcpSocket::protocol() const
+{
+   return mLocalBinding.getAddress().is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4();
+}
+
+asio::error_code
+TurnTcpSocket::openAndBind(asio::ip::tcp::socket& socket)
+{
+   asio::error_code errorCode;
+   socket.open(protocol(), errorCode);
+   if(!errorCode)
+   {
+      asio::error_code ignored;
+      socket.set_option(asio::ip::tcp::no_delay(true), ignored); // ?slg? do we want this?
+      socket.set_option(asio::ip::tcp::socket::reuse_address(true), ignored);
+      socket.bind(asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
+   }
+   return errorCode;
+}
+
+asio::error_code
+TurnTcpSocket::waitForConnectStep(asio::error_code& result, const std::function<void()>& cancel)
+{
+   bool timedOut = false;
+   asio::steady_timer timer(mIOService);
+   timer.expires_after(std::chrono::milliseconds(mConnectTimeout));
+   timer.async_wait([&timedOut, &cancel](const asio::error_code& e)
+   {
+      if(!e)
+      {
+         timedOut = true;
+         cancel();  // the operation then completes, with operation_aborted
+      }
+   });
+
+   mIOService.restart();
+   while(result == asio::error::would_block && mIOService.run_one() > 0)
+   {
+   }
+   timer.cancel();
+   mIOService.run();  // lets the timer's handler finish
+   mIOService.restart();
+   return timedOut ? asio::error_code(asio::error::timed_out) : result;
+}
+
+asio::error_code
 TurnTcpSocket::connect(const std::string& address, unsigned short port)
 {
    // Get a list of endpoints corresponding to the server name.
    asio::ip::tcp::resolver resolver(mIOService);
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::tcp::resolver::query query(address, service.c_str());   
-#else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
-#endif
-   asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   asio::ip::tcp::resolver::iterator end;
+   asio::error_code errorCode;
+   asio::ip::tcp::resolver::results_type results = resolver.resolve(protocol(), address, service.c_str(), errorCode);
+   if(errorCode)
+   {
+      return errorCode;
+   }
+   asio::ip::tcp::resolver::results_type::const_iterator endpoint_iterator = results.begin();
+   asio::ip::tcp::resolver::results_type::const_iterator end = results.end();
 
-   // Try each endpoint until we successfully establish a connection.
-   asio::error_code errorCode = asio::error::host_not_found;
+   // Try each endpoint until we successfully establish a connection, each on a new socket bound
+   // to the local binding
+   errorCode = asio::error::host_not_found;
    while (errorCode && endpoint_iterator != end)
    {
       mSocket.close();
-      mSocket.connect(*endpoint_iterator, errorCode);
+      errorCode = openAndBind(mSocket);
+      if(!errorCode)
+      {
+         asio::error_code result = asio::error::would_block;
+         mSocket.async_connect(*endpoint_iterator, [&result](const asio::error_code& ec) { result = ec; });
+         errorCode = waitForConnectStep(result, [this]() { asio::error_code ignored; mSocket.close(ignored); });
+      }
 
       if(!errorCode)
       {
@@ -56,7 +103,7 @@ TurnTcpSocket::connect(const std::string& address, unsigned short port)
          mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
          mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
       }
-      endpoint_iterator++;
+      ++endpoint_iterator;
    }
 
    return errorCode;
@@ -86,9 +133,9 @@ TurnTcpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::
 
    // Wait for timer and read to end
    mIOService.run();
-   mIOService.reset();
+   mIOService.restart();
 
-   *bytesRead = (unsigned int)mBytesRead+4;
+   *bytesRead = (unsigned int)(mBytesRead + 4 - (mBytesRead >= mPadding ? mPadding : 0));
    if(!mReadErrorCode)
    {
       if(sourceAddress)
@@ -107,14 +154,14 @@ void
 TurnTcpSocket::readHeader()
 {
    asio::async_read(mSocket, asio::buffer(mReadBuffer, 4),
-                    boost::bind(&TurnTcpSocket::handleReadHeader, this, asio::placeholders::error));
+                    std::bind(&TurnTcpSocket::handleReadHeader, this, std::placeholders::_1));
 }
 
 void 
 TurnTcpSocket::readBody(unsigned int len)
 {
    asio::async_read(mSocket, asio::buffer(&mReadBuffer[4], len),
-                    boost::bind(&TurnTcpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+                    std::bind(&TurnTcpSocket::handleRawRead, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void
@@ -139,16 +186,22 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
       */
 
       // Note:  For both StunMessages and ChannelData messages the length in bytes 3 and 4
-      UInt16 dataLen;
+      uint16_t dataLen;
       memcpy(&dataLen, &mReadBuffer[2], 2);
       dataLen = ntohs(dataLen);
 
+      // ChannelData's padding is read with it, but not counted in what rawRead reports
+      mPadding = 0;
       if((mReadBuffer[0] & 0xC0) == 0)  // If first 2 bits are 00 then this is a stun message
       {
          dataLen += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
       }
+      else
+      {
+         mPadding = AsyncSocketBase::channelDataPadding(dataLen);
+      }
 
-      readBody(dataLen);
+      readBody(dataLen + (unsigned int)mPadding);
    }
    else 
    {
@@ -167,6 +220,7 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

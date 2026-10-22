@@ -24,7 +24,7 @@ class RROverlay
    public:
       RROverlay(const unsigned char *aptr, const unsigned char *abuf, int alen);
       
-      class OverlayException : public BaseException
+      class OverlayException final : public BaseException
       {
          public:
             OverlayException(const Data& msg, const Data& file, const int line)
@@ -32,7 +32,7 @@ class RROverlay
             {
             }
             
-            const char* name() const { return "OverlayException"; }
+            const char* name() const noexcept override { return "OverlayException"; }
       };
 
       const unsigned char* data() const { return mData; }

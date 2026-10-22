@@ -31,7 +31,7 @@ class TuSelector
   
       TransactionUser* selectTransactionUser(const SipMessage& msg);
       bool haveTransactionUsers() const { return mTuSelectorMode; }
-      void registerTransactionUser(TransactionUser&);
+      void registerTransactionUser(TransactionUser&, const bool front = false);
       void requestTransactionUserShutdown(TransactionUser&);
       void unregisterTransactionUser(TransactionUser&);
       void process();
@@ -44,7 +44,7 @@ class TuSelector
       
       void setCongestionManager(CongestionManager* manager);
       CongestionManager::RejectionBehavior getRejectionBehavior(TransactionUser* tu) const;
-      UInt32 getExpectedWait(TransactionUser* tu) const;
+      uint32_t getExpectedWait(TransactionUser* tu) const;
 
    private:
       void remove(TransactionUser* tu);

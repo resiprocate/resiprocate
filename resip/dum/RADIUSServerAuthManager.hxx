@@ -8,6 +8,7 @@
 
 #ifdef USE_RADIUS_CLIENT
 
+#include <vector>
 #include "rutil/RADIUSDigestAuthenticator.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
 
@@ -24,7 +25,8 @@ class RADIUSServerAuthManager : public resip::ServerAuthManager
                               TargetCommand::Target& target,
                               const Data& configurationFile,
                               bool challengeThirdParties = true,
-                              const Data& staticRealm = "");
+                              const Data& staticRealm = "",
+                              const std::vector<DigestType>& challengeDigestTypes = std::vector<DigestType>());
       virtual ~RADIUSServerAuthManager();
 
    protected:
@@ -61,6 +63,7 @@ class MyRADIUSDigestAuthListener : public RADIUSDigestAuthListener
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2008-2013 Daniel Pocock http://danielpocock.com
  * All rights reserved.
  *

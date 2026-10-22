@@ -11,7 +11,13 @@
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/SendData.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <list>
+#include <memory>
+#include <utility>
+
+#include <atomic>
+
 namespace resip
 {
 
@@ -38,11 +44,6 @@ class FdPollGrp;
  * TXALL:
  *    When transmitting to a socket, write all possible messages before
  *    returning to event loop. This allows higher thruput but burstier.
- * KEEP_BUFFER:
- *    With this flag, Transports will keep receive and transmit buffers
- *    allocated even when not in use. This increases memory utilization
- *    but speeds things up. Without this flag, the buffer is released
- *    when not in used.
  * TXNOW:
  *    When a message to transmit is posted to Transport's transmit queue
  *    immediately try sending it. This should have less latency
@@ -52,13 +53,21 @@ class FdPollGrp;
  *    Specifies whether this Transport object has its own thread (ie; if
  *    set, the TransportSelector should not run the select/poll loop for
  *    this transport, since that is another thread's job)
+ * SYMMETRIC_CONNECTIONS:
+ *    On connection-oriented transports (TCP/TLS), bind outbound client
+ *    connections to the same port as the listening socket. This ensures
+ *    the TCP source port matches the advertised SIP port in Via/Contact
+ *    headers, enabling proper connection reuse by SIP servers. Note: This
+ *    prevents multiple simultaneous connections to different destinations
+ *    from the same transport. Suitable for client applications but may not
+ *    be appropriate for server applications like repro.
  */
-#define RESIP_TRANSPORT_FLAG_NOBIND      (1<<0)
-#define RESIP_TRANSPORT_FLAG_RXALL       (1<<1)
-#define RESIP_TRANSPORT_FLAG_TXALL       (1<<2)
-#define RESIP_TRANSPORT_FLAG_KEEP_BUFFER (1<<3)
-#define RESIP_TRANSPORT_FLAG_TXNOW       (1<<4)
-#define RESIP_TRANSPORT_FLAG_OWNTHREAD   (1<<5)
+#define RESIP_TRANSPORT_FLAG_NOBIND                (1<<0)
+#define RESIP_TRANSPORT_FLAG_RXALL                 (1<<1)
+#define RESIP_TRANSPORT_FLAG_TXALL                 (1<<2)
+#define RESIP_TRANSPORT_FLAG_TXNOW                 (1<<4)
+#define RESIP_TRANSPORT_FLAG_OWNTHREAD             (1<<5)
+#define RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS (1<<6)
 
 /**
    @brief The base class for Transport classes.
@@ -73,20 +82,33 @@ class FdPollGrp;
 class Transport : public FdSetIOObserver
 {
    public:
-    class SipMessageLoggingHandler
+
+      class SipMessageLoggingHandler
       {
       public:
-          virtual ~SipMessageLoggingHandler(){}
+          SipMessageLoggingHandler() = default;
+          SipMessageLoggingHandler(const SipMessageLoggingHandler&) = delete;
+          SipMessageLoggingHandler(SipMessageLoggingHandler&&) = delete;
+          virtual ~SipMessageLoggingHandler() = default;
+
+          SipMessageLoggingHandler& operator=(const SipMessageLoggingHandler&) = delete;
+          SipMessageLoggingHandler& operator=(SipMessageLoggingHandler&&) = delete;
+
           virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg) = 0;
-          // Note:  retranmissions store already encoded messages, so callback doesn't send SipMessage it sends
+          // Note:  retransmissions store already encoded messages, so callback doesn't send SipMessage it sends
           //        the encoded version of the SipMessage instead.  If you need a SipMessage you will need to
           //        re-parse back into a SipMessage in the callback handler.
           virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data) {}
           virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg) = 0;
       };
 
-      void setSipMessageLoggingHandler(SharedPtr<SipMessageLoggingHandler> handler) { mSipMessageLoggingHandler = handler; }
-      SipMessageLoggingHandler* getSipMessageLoggingHandler() { return 0 != mSipMessageLoggingHandler.get() ? mSipMessageLoggingHandler.get() : 0; }
+      using SipMessageLoggingHandlerList = std::vector<std::shared_ptr<SipMessageLoggingHandler> >;
+
+      void setSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler);
+      void addSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler);
+      void setSipMessageLoggingHandlers(const SipMessageLoggingHandlerList& handlers);
+      void unsetSipMessageLoggingHandler() noexcept;
+      SipMessageLoggingHandlerList getSipMessageLoggingHandlers() const noexcept;
 
       /**
          @brief General exception class for Transport.
@@ -94,11 +116,11 @@ class Transport : public FdSetIOObserver
          This would be thrown if there was an attempt to bind to a port
          that is already in use.
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
-            Exception(const Data& msg, const Data& file, const int line);
-            const char* name() const { return "TransportException"; }
+            Exception(const Data& msg, const Data& file, int line);
+            const char* name() const noexcept override { return "TransportException"; }
       };
       
       /**
@@ -114,7 +136,7 @@ class Transport : public FdSetIOObserver
       Transport(Fifo<TransactionMessage>& rxFifo, 
                 const GenericIPAddress& address,
                 const Data& tlsDomain = Data::Empty, // !dcm! where is this used?
-                AfterSocketCreationFuncPtr socketFunc = 0,
+                AfterSocketCreationFuncPtr socketFunc = nullptr,
                 Compression &compression = Compression::Disabled
          );
 
@@ -144,12 +166,14 @@ class Transport : public FdSetIOObserver
                 IpVersion version, 
                 const Data& interfaceObj,
                 const Data& tlsDomain = Data::Empty,
-                AfterSocketCreationFuncPtr socketFunc = 0,
+                AfterSocketCreationFuncPtr socketFunc = nullptr,
                 Compression &compression = Compression::Disabled,
                 unsigned transportFlags = 0,
                 const Data& netNs = Data::Empty);
 
       virtual ~Transport();
+
+      virtual void onReload();
 
       /**
          @note Subclasses override this method by checking whether
@@ -158,7 +182,7 @@ class Transport : public FdSetIOObserver
       */
       virtual bool isFinished() const=0;
       
-      std::auto_ptr<SendData> makeSendData( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId = Data::Empty);
+      std::unique_ptr<SendData> makeSendData( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId = Data::Empty);
       
       /**
          @todo !bwc! What we do with a SendData is flexible. It might make a
@@ -168,7 +192,7 @@ class Transport : public FdSetIOObserver
          @todo !bch! Should this be protected and not public?
                !bwc! TransportSelector uses this directly for retransmissions.
       */
-      virtual void send(std::auto_ptr<SendData> data)=0;
+      virtual void send(std::unique_ptr<SendData> data)=0;
 
       /**
          Called when a writer is done adding messages to the TxFifo; this is
@@ -216,15 +240,19 @@ class Transport : public FdSetIOObserver
          Posts a ConnectionTerminated message to TransactionMessage
          Fifo.
       */
-      void flowTerminated(const Tuple& flow);
+      void flowTerminated(const Tuple& flow, 
+                          TransportFailure::FailureReason failureReason, 
+                          int failureSubCode, 
+                          const Data& failureString, 
+                          const std::list<Data> additionalFailureStrings);
       void keepAlivePong(const Tuple& flow);
 
       /**
          Posts a TransportFailure to the TransactionMessage Fifo.
       */
       void fail(const Data& tid,
-            TransportFailure::FailureReason reason = TransportFailure::Failure,
-            int subCode = 0);
+                TransportFailure::FailureReason reason = TransportFailure::Failure,
+                int subCode = 0);
 
       /**
          Posts a TcpConnectState to the TransactionMessage Fifo.
@@ -238,6 +266,7 @@ class Transport : public FdSetIOObserver
          @param e the socket error number
       */
       static void error(int e);
+      static Data errorToString(int e);
 
       // These methods are used by the TransportSelector
       const Data& interfaceName() const { return mInterface; }
@@ -284,11 +313,11 @@ class Transport : public FdSetIOObserver
 
       void makeFailedResponse(const SipMessage& msg,
                               int responseCode = 400,
-                              const char * warning = 0);
-      std::auto_ptr<SendData> make503(SipMessage& msg,
-                                      UInt16 retryAfter);
+                              const char * warning = nullptr);
+      std::unique_ptr<SendData> make503(SipMessage& msg,
+                                      uint16_t retryAfter);
 
-      std::auto_ptr<SendData> make100(SipMessage& msg);
+      std::unique_ptr<SendData> make100(SipMessage& msg);
       void setRemoteSigcompId(SipMessage&msg, Data& id);
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
@@ -343,7 +372,86 @@ class Transport : public FdSetIOObserver
       //# queued messages on this transport
       virtual unsigned int getFifoSize() const=0;
 
-      void callSocketFunc(Socket sock);
+      void callSocketFunc(Socket sock) const;
+      virtual void invokeAfterSocketCreationFunc() const = 0;  //used to invoke the after socket creation func immediately for all existing sockets - can be used to modify QOS settings at runtime
+
+      /**
+         Sets the DSCP class this transport puts on its sockets, and returns
+         whether it was accepted. The range is 0 to 63; -1 asks for no marking,
+         and is the state of a transport this was never called on. Callable from
+         any thread.
+
+         A value outside -1..63 is refused and the transport keeps the one it
+         had. A value that differs schedules a refresh of the sockets this
+         transport already holds, which it serves from its own processing cycle
+         -- and with it, the AfterSocketCreationFunc a user installed. Setting
+         the same value again schedules no refresh, so a service may call this on
+         every configuration reload.
+      */
+      bool setDscp(int dscp);
+
+      /**
+         The class to write to a socket right now, or -1 to leave it alone.
+
+         | mDscp | mWasMarkRequested | result |
+         |-------|-------------------|--------|
+         | >= 0  | any               | mDscp |
+         | -1    | true              | 0, undo the mark we made |
+         | -1    | false             | -1, never marked, leave the socket alone |
+
+         The last two rows are why a mark is tracked at all: undoing one and
+         never having made one are different actions.
+      */
+      int effectiveDscp() const;
+
+      /**
+         effectiveDscp() for a value the caller has already read. A traversal
+         has to read mDscp exactly once -- a value that changes while it runs
+         raises its own request, and reading again would mix the two passes.
+      */
+      int effectiveDscp(int wanted) const;
+
+      /**
+         The one place a socket of this transport is configured. Puts the
+         effective DSCP class on {sock}, then hands it to the user's
+         AfterSocketCreationFunc. Every site that configures a socket -- the
+         listener, an accepted connection, an outgoing connection -- routes
+         through here, so a socket cannot be created without passing it.
+      */
+      void applySocketOptions(Socket sock) const;
+
+      /**
+         Re-runs the per-socket set-up on every socket this transport holds --
+         the listener, and each established connection.
+
+         Call this directly only while the transport is still single-threaded,
+         before its processing thread starts. Once it is running, ask through
+         setDscp() instead: the traversal walks the list of connections that
+         thread owns.
+      */
+      void applyDscpToOwnSockets();
+
+   protected:
+
+      /**
+         Serves a pending refresh and a pending report. Called by the owning
+         thread at the top of its processing cycle.
+      */
+      void drainDscpRefresh();
+
+   private:
+
+      /**
+         Compares the class this transport's listener carries against {wanted},
+         the value the drain cycle acted on, and logs the mismatch. Read from the
+         socket rather than from the configured value: the two differ when the
+         write failed, and the read-back is the only evidence the marking is
+         real. {wanted} below zero -- a transport the feature never touched --
+         reports nothing.
+      */
+      void reportDscp(int wanted) const;
+
+   public:
 
       virtual void setCongestionManager(CongestionManager* manager)
       {
@@ -359,9 +467,14 @@ class Transport : public FdSetIOObserver
          return CongestionManager::NORMAL;
       }
 
-      UInt32 getExpectedWaitForIncoming() const
+      void flushStateMacFifo()
       {
-         return (UInt32)mStateMachineFifo.getFifo().expectedWaitTimeMilliSec()/1000;
+          mStateMachineFifo.flush();
+      }
+
+      uint32_t getExpectedWaitForIncoming() const
+      {
+         return (uint32_t)mStateMachineFifo.getFifo().expectedWaitTimeMilliSec()/1000;
       }
 
       // called by Connection to deliver a received message
@@ -374,6 +487,12 @@ class Transport : public FdSetIOObserver
       inline void setKey(unsigned int pKey) { mTuple.mTransportKey = pKey;} // should only be called once after creation
 
    protected:
+
+      /**
+         The transport's own listening or bound socket, or INVALID_SOCKET for a
+         transport that holds none.
+      */
+      virtual Socket getListenerSocket() const { return INVALID_SOCKET; }
 
       Data mInterface;
       Tuple mTuple;
@@ -388,12 +507,25 @@ class Transport : public FdSetIOObserver
       friend EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);
 
       Data mTlsDomain;
-      SharedPtr<SipMessageLoggingHandler> mSipMessageLoggingHandler;
+      SipMessageLoggingHandlerList mSipMessageLoggingHandlers;
 
    protected:
       AfterSocketCreationFuncPtr mSocketFunc;
       Compression &mCompression;
       unsigned mTransportFlags;
+
+      // The signalling DSCP class, and the state its refresh needs.
+      std::atomic<int> mDscp { -1 };           //!< the class to write, -1 for "do not mark"
+      /// Set by setDscp() when the value changes, cleared by the owning thread's
+      /// refresh. Sequentially consistent on purpose: under a relaxed order that
+      /// refresh could see the request and still read the previous mDscp.
+      std::atomic<bool> mDscpRefreshPending { false };
+      /// Set by every setDscp() call, cleared by the owning thread's report, so
+      /// a reload that changed nothing still says what the listener carries.
+      std::atomic<bool> mDscpReportPending { false };
+      /// Whether this transport has asked a socket to carry a class that a clear
+      /// would have to undo.
+      mutable std::atomic<bool> mWasMarkRequested { false };
 };
 
 EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);

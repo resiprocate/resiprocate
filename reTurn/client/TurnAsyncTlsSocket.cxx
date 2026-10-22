@@ -5,8 +5,10 @@
 
 #ifdef USE_SSL
 #include "TurnAsyncTlsSocket.hxx"
+#include "rutil/Lock.hxx"
 
 using namespace std;
+using namespace resip;
 
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 )
@@ -14,7 +16,7 @@ using namespace std;
 
 namespace reTurn {
 
-TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_service& ioService,
+TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_context& ioService,
                                        asio::ssl::context& sslContext,
                                        bool validateServerCertificateHostname,
                                        TurnAsyncSocketHandler* turnAsyncSocketHandler,
@@ -25,24 +27,28 @@ TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_service& ioService,
 {
    mLocalBinding.setTransportType(StunTuple::TLS);
 
-   bind(address, port);
+   mBindError = bind(address, port);
 }
 
 void 
 TurnAsyncTlsSocket::onConnectSuccess()
 {
-   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
+   {
+      RecursiveLock lock(mHandlerMutex);
+      if (mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
+   }
    turnReceive();
 }
 
 void 
 TurnAsyncTlsSocket::onConnectFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectFailure(getSocketDescriptor(), e);
 }
 
 void 
-TurnAsyncTlsSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncTlsSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    handleReceivedData(address, port, data);
    turnReceive();
@@ -51,18 +57,21 @@ TurnAsyncTlsSocket::onReceiveSuccess(const asio::ip::address& address, unsigned 
 void 
 TurnAsyncTlsSocket::onReceiveFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
 }
  
 void 
 TurnAsyncTlsSocket::onSendSuccess()
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendSuccess(getSocketDescriptor());
 }
  
 void 
 TurnAsyncTlsSocket::onSendFailure(const asio::error_code& e)
 {
+   RecursiveLock lock(mHandlerMutex);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendFailure(getSocketDescriptor(), e);
 }
 
@@ -71,6 +80,7 @@ TurnAsyncTlsSocket::onSendFailure(const asio::error_code& e)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026, SIP Specturm, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -2,7 +2,7 @@
 // impl/connect.hpp
 // ~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,14 +15,18 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
+#include <algorithm>
+#include "asio/associator.hpp"
+#include "asio/detail/base_from_cancellation_state.hpp"
 #include "asio/detail/bind_handler.hpp"
-#include "asio/detail/consuming_buffers.hpp"
-#include "asio/detail/handler_alloc_helpers.hpp"
 #include "asio/detail/handler_cont_helpers.hpp"
-#include "asio/detail/handler_invoke_helpers.hpp"
+#include "asio/detail/handler_tracking.hpp"
 #include "asio/detail/handler_type_requirements.hpp"
+#include "asio/detail/non_const_lvalue.hpp"
 #include "asio/detail/throw_error.hpp"
+#include "asio/detail/type_traits.hpp"
 #include "asio/error.hpp"
+#include "asio/post.hpp"
 
 #include "asio/detail/push_options.hpp"
 
@@ -30,34 +34,73 @@ namespace asio {
 
 namespace detail
 {
-  struct default_connect_condition
+  template <typename Protocol, typename Iterator>
+  inline typename Protocol::endpoint deref_connect_result(
+      Iterator iter, asio::error_code& ec)
   {
-    template <typename Iterator>
-    Iterator operator()(const asio::error_code&, Iterator next)
-    {
-      return next;
-    }
-  };
-}
+    return ec ? typename Protocol::endpoint() : *iter;
+  }
 
-template <typename Protocol, typename SocketService, typename Iterator>
-Iterator connect(basic_socket<Protocol, SocketService>& s, Iterator begin)
+  template <typename ConnectCondition, typename Iterator>
+  inline Iterator call_connect_condition(ConnectCondition& connect_condition,
+      const asio::error_code& ec, Iterator next, Iterator end,
+      constraint_t<
+        is_same<
+          result_of_t<ConnectCondition(asio::error_code, Iterator)>,
+          Iterator
+        >::value
+      > = 0)
+  {
+    if (next != end)
+      return connect_condition(ec, next);
+    return end;
+  }
+
+  template <typename ConnectCondition, typename Iterator>
+  inline Iterator call_connect_condition(ConnectCondition& connect_condition,
+      const asio::error_code& ec, Iterator next, Iterator end,
+      constraint_t<
+        is_same<
+          result_of_t<ConnectCondition(asio::error_code,
+            decltype(*declval<Iterator>()))>,
+          bool
+        >::value
+      > = 0)
+  {
+    for (;next != end; ++next)
+      if (connect_condition(ec, *next))
+        return next;
+    return end;
+  }
+} // namespace detail
+
+template <typename Protocol, typename Executor, typename EndpointSequence>
+typename Protocol::endpoint connect(basic_socket<Protocol, Executor>& s,
+    const EndpointSequence& endpoints,
+    constraint_t<
+      is_endpoint_sequence<EndpointSequence>::value
+    >)
 {
   asio::error_code ec;
-  Iterator result = connect(s, begin, ec);
+  typename Protocol::endpoint result = connect(s, endpoints, ec);
   asio::detail::throw_error(ec, "connect");
   return result;
 }
 
-template <typename Protocol, typename SocketService, typename Iterator>
-inline Iterator connect(basic_socket<Protocol, SocketService>& s,
-    Iterator begin, asio::error_code& ec)
+template <typename Protocol, typename Executor, typename EndpointSequence>
+typename Protocol::endpoint connect(basic_socket<Protocol, Executor>& s,
+    const EndpointSequence& endpoints, asio::error_code& ec,
+    constraint_t<
+      is_endpoint_sequence<EndpointSequence>::value
+    >)
 {
-  return connect(s, begin, Iterator(), detail::default_connect_condition(), ec);
+  return detail::deref_connect_result<Protocol>(
+      connect(s, endpoints.begin(), endpoints.end(),
+        detail::default_connect_condition(), ec), ec);
 }
 
-template <typename Protocol, typename SocketService, typename Iterator>
-Iterator connect(basic_socket<Protocol, SocketService>& s,
+template <typename Protocol, typename Executor, typename Iterator>
+Iterator connect(basic_socket<Protocol, Executor>& s,
     Iterator begin, Iterator end)
 {
   asio::error_code ec;
@@ -66,37 +109,57 @@ Iterator connect(basic_socket<Protocol, SocketService>& s,
   return result;
 }
 
-template <typename Protocol, typename SocketService, typename Iterator>
-inline Iterator connect(basic_socket<Protocol, SocketService>& s,
+template <typename Protocol, typename Executor, typename Iterator>
+inline Iterator connect(basic_socket<Protocol, Executor>& s,
     Iterator begin, Iterator end, asio::error_code& ec)
 {
   return connect(s, begin, end, detail::default_connect_condition(), ec);
 }
 
-template <typename Protocol, typename SocketService,
-    typename Iterator, typename ConnectCondition>
-Iterator connect(basic_socket<Protocol, SocketService>& s,
-    Iterator begin, ConnectCondition connect_condition)
+template <typename Protocol, typename Executor,
+    typename EndpointSequence, typename ConnectCondition>
+typename Protocol::endpoint connect(basic_socket<Protocol, Executor>& s,
+    const EndpointSequence& endpoints, ConnectCondition connect_condition,
+    constraint_t<
+      is_endpoint_sequence<EndpointSequence>::value
+    >,
+    constraint_t<
+      is_connect_condition<ConnectCondition,
+        decltype(declval<const EndpointSequence&>().begin())>::value
+    >)
 {
   asio::error_code ec;
-  Iterator result = connect(s, begin, connect_condition, ec);
+  typename Protocol::endpoint result = connect(
+      s, endpoints, connect_condition, ec);
   asio::detail::throw_error(ec, "connect");
   return result;
 }
 
-template <typename Protocol, typename SocketService,
-    typename Iterator, typename ConnectCondition>
-inline Iterator connect(basic_socket<Protocol, SocketService>& s,
-    Iterator begin, ConnectCondition connect_condition,
-    asio::error_code& ec)
+template <typename Protocol, typename Executor,
+    typename EndpointSequence, typename ConnectCondition>
+typename Protocol::endpoint connect(basic_socket<Protocol, Executor>& s,
+    const EndpointSequence& endpoints, ConnectCondition connect_condition,
+    asio::error_code& ec,
+    constraint_t<
+      is_endpoint_sequence<EndpointSequence>::value
+    >,
+    constraint_t<
+      is_connect_condition<ConnectCondition,
+        decltype(declval<const EndpointSequence&>().begin())>::value
+    >)
 {
-  return connect(s, begin, Iterator(), connect_condition, ec);
+  return detail::deref_connect_result<Protocol>(
+      connect(s, endpoints.begin(), endpoints.end(),
+        connect_condition, ec), ec);
 }
 
-template <typename Protocol, typename SocketService,
+template <typename Protocol, typename Executor,
     typename Iterator, typename ConnectCondition>
-Iterator connect(basic_socket<Protocol, SocketService>& s,
-    Iterator begin, Iterator end, ConnectCondition connect_condition)
+Iterator connect(basic_socket<Protocol, Executor>& s, Iterator begin,
+    Iterator end, ConnectCondition connect_condition,
+    constraint_t<
+      is_connect_condition<ConnectCondition, Iterator>::value
+    >)
 {
   asio::error_code ec;
   Iterator result = connect(s, begin, end, connect_condition, ec);
@@ -104,17 +167,20 @@ Iterator connect(basic_socket<Protocol, SocketService>& s,
   return result;
 }
 
-template <typename Protocol, typename SocketService,
+template <typename Protocol, typename Executor,
     typename Iterator, typename ConnectCondition>
-Iterator connect(basic_socket<Protocol, SocketService>& s,
-    Iterator begin, Iterator end, ConnectCondition connect_condition,
-    asio::error_code& ec)
+Iterator connect(basic_socket<Protocol, Executor>& s, Iterator begin,
+    Iterator end, ConnectCondition connect_condition,
+    asio::error_code& ec,
+    constraint_t<
+      is_connect_condition<ConnectCondition, Iterator>::value
+    >)
 {
   ec = asio::error_code();
 
   for (Iterator iter = begin; iter != end; ++iter)
   {
-    iter = connect_condition(ec, iter);
+    iter = (detail::call_connect_condition(connect_condition, ec, iter, end));
     if (iter != end)
     {
       s.close(ec);
@@ -122,6 +188,8 @@ Iterator connect(basic_socket<Protocol, SocketService>& s,
       if (!ec)
         return iter;
     }
+    else
+      break;
   }
 
   if (!ec)
@@ -147,8 +215,7 @@ namespace detail
     void check_condition(const asio::error_code& ec,
         Iterator& iter, Iterator& end)
     {
-      if (iter != end)
-        iter = connect_condition_(ec, static_cast<const Iterator&>(iter));
+      iter = detail::call_connect_condition(connect_condition_, ec, iter, end);
     }
 
   private:
@@ -171,27 +238,205 @@ namespace detail
     }
   };
 
-  template <typename Protocol, typename SocketService, typename Iterator,
-      typename ConnectCondition, typename ComposedConnectHandler>
-  class connect_op : base_from_connect_condition<ConnectCondition>
+  template <typename Protocol, typename Executor, typename EndpointSequence,
+      typename ConnectCondition, typename RangeConnectHandler>
+  class range_connect_op
+    : public base_from_cancellation_state<RangeConnectHandler>,
+      base_from_connect_condition<ConnectCondition>
   {
   public:
-    connect_op(basic_socket<Protocol, SocketService>& sock,
+    range_connect_op(basic_socket<Protocol, Executor>& sock,
+        const EndpointSequence& endpoints,
+        const ConnectCondition& connect_condition,
+        RangeConnectHandler& handler)
+      : base_from_cancellation_state<RangeConnectHandler>(
+          handler, enable_partial_cancellation()),
+        base_from_connect_condition<ConnectCondition>(connect_condition),
+        socket_(sock),
+        endpoints_(endpoints),
+        index_(0),
+        start_(0),
+        handler_(static_cast<RangeConnectHandler&&>(handler))
+    {
+    }
+
+    range_connect_op(const range_connect_op& other)
+      : base_from_cancellation_state<RangeConnectHandler>(other),
+        base_from_connect_condition<ConnectCondition>(other),
+        socket_(other.socket_),
+        endpoints_(other.endpoints_),
+        index_(other.index_),
+        start_(other.start_),
+        handler_(other.handler_)
+    {
+    }
+
+    range_connect_op(range_connect_op&& other)
+      : base_from_cancellation_state<RangeConnectHandler>(
+          static_cast<base_from_cancellation_state<RangeConnectHandler>&&>(
+            other)),
+        base_from_connect_condition<ConnectCondition>(other),
+        socket_(other.socket_),
+        endpoints_(other.endpoints_),
+        index_(other.index_),
+        start_(other.start_),
+        handler_(static_cast<RangeConnectHandler&&>(other.handler_))
+    {
+    }
+
+    void operator()(asio::error_code ec, int start = 0)
+    {
+      this->process(ec, start,
+          const_cast<const EndpointSequence&>(endpoints_).begin(),
+          const_cast<const EndpointSequence&>(endpoints_).end());
+    }
+
+  //private:
+    template <typename Iterator>
+    void process(asio::error_code ec,
+        int start, Iterator begin, Iterator end)
+    {
+      Iterator iter = begin;
+      std::advance(iter, index_);
+
+      switch (start_ = start)
+      {
+        case 1:
+        for (;;)
+        {
+          this->check_condition(ec, iter, end);
+          index_ = std::distance(begin, iter);
+
+          if (iter != end)
+          {
+            socket_.close(ec);
+            ASIO_HANDLER_LOCATION((__FILE__, __LINE__, "async_connect"));
+            socket_.async_connect(*iter,
+                static_cast<range_connect_op&&>(*this));
+            return;
+          }
+
+          if (start)
+          {
+            ec = asio::error::not_found;
+            ASIO_HANDLER_LOCATION((__FILE__, __LINE__, "async_connect"));
+            asio::post(socket_.get_executor(),
+                detail::bind_handler(
+                  static_cast<range_connect_op&&>(*this), ec));
+            return;
+          }
+
+          /* fall-through */ default:
+
+          if (iter == end)
+            break;
+
+          if (!socket_.is_open())
+          {
+            ec = asio::error::operation_aborted;
+            break;
+          }
+
+          if (!ec)
+            break;
+
+          if (this->cancelled() != cancellation_type::none)
+          {
+            ec = asio::error::operation_aborted;
+            break;
+          }
+
+          ++iter;
+          ++index_;
+        }
+
+        static_cast<RangeConnectHandler&&>(handler_)(
+            static_cast<const asio::error_code&>(ec),
+            static_cast<const typename Protocol::endpoint&>(
+              ec || iter == end ? typename Protocol::endpoint() : *iter));
+      }
+    }
+
+    basic_socket<Protocol, Executor>& socket_;
+    EndpointSequence endpoints_;
+    std::size_t index_;
+    int start_;
+    RangeConnectHandler handler_;
+  };
+
+  template <typename Protocol, typename Executor, typename EndpointSequence,
+      typename ConnectCondition, typename RangeConnectHandler>
+  inline bool asio_handler_is_continuation(
+      range_connect_op<Protocol, Executor, EndpointSequence,
+        ConnectCondition, RangeConnectHandler>* this_handler)
+  {
+    return asio_handler_cont_helpers::is_continuation(
+        this_handler->handler_);
+  }
+
+  template <typename Protocol, typename Executor>
+  class initiate_async_range_connect
+  {
+  public:
+    typedef Executor executor_type;
+
+    explicit initiate_async_range_connect(basic_socket<Protocol, Executor>& s)
+      : socket_(s)
+    {
+    }
+
+    executor_type get_executor() const noexcept
+    {
+      return socket_.get_executor();
+    }
+
+    template <typename RangeConnectHandler,
+        typename EndpointSequence, typename ConnectCondition>
+    void operator()(RangeConnectHandler&& handler,
+        const EndpointSequence& endpoints,
+        const ConnectCondition& connect_condition) const
+    {
+      // If you get an error on the following line it means that your
+      // handler does not meet the documented type requirements for an
+      // RangeConnectHandler.
+      ASIO_RANGE_CONNECT_HANDLER_CHECK(RangeConnectHandler,
+          handler, typename Protocol::endpoint) type_check;
+
+      non_const_lvalue<RangeConnectHandler> handler2(handler);
+      range_connect_op<Protocol, Executor, EndpointSequence, ConnectCondition,
+        decay_t<RangeConnectHandler>>(socket_, endpoints,
+          connect_condition, handler2.value)(asio::error_code(), 1);
+    }
+
+  private:
+    basic_socket<Protocol, Executor>& socket_;
+  };
+
+  template <typename Protocol, typename Executor, typename Iterator,
+      typename ConnectCondition, typename IteratorConnectHandler>
+  class iterator_connect_op
+    : public base_from_cancellation_state<IteratorConnectHandler>,
+      base_from_connect_condition<ConnectCondition>
+  {
+  public:
+    iterator_connect_op(basic_socket<Protocol, Executor>& sock,
         const Iterator& begin, const Iterator& end,
         const ConnectCondition& connect_condition,
-        ComposedConnectHandler& handler)
-      : base_from_connect_condition<ConnectCondition>(connect_condition),
+        IteratorConnectHandler& handler)
+      : base_from_cancellation_state<IteratorConnectHandler>(
+          handler, enable_partial_cancellation()),
+        base_from_connect_condition<ConnectCondition>(connect_condition),
         socket_(sock),
         iter_(begin),
         end_(end),
         start_(0),
-        handler_(ASIO_MOVE_CAST(ComposedConnectHandler)(handler))
+        handler_(static_cast<IteratorConnectHandler&&>(handler))
     {
     }
 
-#if defined(ASIO_HAS_MOVE)
-    connect_op(const connect_op& other)
-      : base_from_connect_condition<ConnectCondition>(other),
+    iterator_connect_op(const iterator_connect_op& other)
+      : base_from_cancellation_state<IteratorConnectHandler>(other),
+        base_from_connect_condition<ConnectCondition>(other),
         socket_(other.socket_),
         iter_(other.iter_),
         end_(other.end_),
@@ -200,16 +445,18 @@ namespace detail
     {
     }
 
-    connect_op(connect_op&& other)
-      : base_from_connect_condition<ConnectCondition>(other),
+    iterator_connect_op(iterator_connect_op&& other)
+      : base_from_cancellation_state<IteratorConnectHandler>(
+          static_cast<base_from_cancellation_state<IteratorConnectHandler>&&>(
+            other)),
+        base_from_connect_condition<ConnectCondition>(other),
         socket_(other.socket_),
         iter_(other.iter_),
         end_(other.end_),
         start_(other.start_),
-        handler_(ASIO_MOVE_CAST(ComposedConnectHandler)(other.handler_))
+        handler_(static_cast<IteratorConnectHandler&&>(other.handler_))
     {
     }
-#endif // defined(ASIO_HAS_MOVE)
 
     void operator()(asio::error_code ec, int start = 0)
     {
@@ -223,19 +470,23 @@ namespace detail
           if (iter_ != end_)
           {
             socket_.close(ec);
+            ASIO_HANDLER_LOCATION((__FILE__, __LINE__, "async_connect"));
             socket_.async_connect(*iter_,
-                ASIO_MOVE_CAST(connect_op)(*this));
+                static_cast<iterator_connect_op&&>(*this));
             return;
           }
 
           if (start)
           {
             ec = asio::error::not_found;
-            socket_.get_io_service().post(detail::bind_handler(*this, ec));
+            ASIO_HANDLER_LOCATION((__FILE__, __LINE__, "async_connect"));
+            asio::post(socket_.get_executor(),
+                detail::bind_handler(
+                  static_cast<iterator_connect_op&&>(*this), ec));
             return;
           }
 
-          default:
+          /* fall-through */ default:
 
           if (iter_ == end_)
             break;
@@ -249,177 +500,143 @@ namespace detail
           if (!ec)
             break;
 
+          if (this->cancelled() != cancellation_type::none)
+          {
+            ec = asio::error::operation_aborted;
+            break;
+          }
+
           ++iter_;
         }
 
-        handler_(static_cast<const asio::error_code&>(ec),
+        static_cast<IteratorConnectHandler&&>(handler_)(
+            static_cast<const asio::error_code&>(ec),
             static_cast<const Iterator&>(iter_));
       }
     }
 
   //private:
-    basic_socket<Protocol, SocketService>& socket_;
+    basic_socket<Protocol, Executor>& socket_;
     Iterator iter_;
     Iterator end_;
     int start_;
-    ComposedConnectHandler handler_;
+    IteratorConnectHandler handler_;
   };
 
-  template <typename Protocol, typename SocketService, typename Iterator,
-      typename ConnectCondition, typename ComposedConnectHandler>
-  inline void* asio_handler_allocate(std::size_t size,
-      connect_op<Protocol, SocketService, Iterator,
-        ConnectCondition, ComposedConnectHandler>* this_handler)
-  {
-    return asio_handler_alloc_helpers::allocate(
-        size, this_handler->handler_);
-  }
-
-  template <typename Protocol, typename SocketService, typename Iterator,
-      typename ConnectCondition, typename ComposedConnectHandler>
-  inline void asio_handler_deallocate(void* pointer, std::size_t size,
-      connect_op<Protocol, SocketService, Iterator,
-        ConnectCondition, ComposedConnectHandler>* this_handler)
-  {
-    asio_handler_alloc_helpers::deallocate(
-        pointer, size, this_handler->handler_);
-  }
-
-  template <typename Protocol, typename SocketService, typename Iterator,
-      typename ConnectCondition, typename ComposedConnectHandler>
+  template <typename Protocol, typename Executor, typename Iterator,
+      typename ConnectCondition, typename IteratorConnectHandler>
   inline bool asio_handler_is_continuation(
-      connect_op<Protocol, SocketService, Iterator,
-        ConnectCondition, ComposedConnectHandler>* this_handler)
+      iterator_connect_op<Protocol, Executor, Iterator,
+        ConnectCondition, IteratorConnectHandler>* this_handler)
   {
     return asio_handler_cont_helpers::is_continuation(
         this_handler->handler_);
   }
 
-  template <typename Function, typename Protocol,
-      typename SocketService, typename Iterator,
-      typename ConnectCondition, typename ComposedConnectHandler>
-  inline void asio_handler_invoke(Function& function,
-      connect_op<Protocol, SocketService, Iterator,
-        ConnectCondition, ComposedConnectHandler>* this_handler)
+  template <typename Protocol, typename Executor>
+  class initiate_async_iterator_connect
   {
-    asio_handler_invoke_helpers::invoke(
-        function, this_handler->handler_);
-  }
+  public:
+    typedef Executor executor_type;
 
-  template <typename Function, typename Protocol,
-      typename SocketService, typename Iterator,
-      typename ConnectCondition, typename ComposedConnectHandler>
-  inline void asio_handler_invoke(const Function& function,
-      connect_op<Protocol, SocketService, Iterator,
-        ConnectCondition, ComposedConnectHandler>* this_handler)
-  {
-    asio_handler_invoke_helpers::invoke(
-        function, this_handler->handler_);
-  }
+    explicit initiate_async_iterator_connect(
+        basic_socket<Protocol, Executor>& s)
+      : socket_(s)
+    {
+    }
+
+    executor_type get_executor() const noexcept
+    {
+      return socket_.get_executor();
+    }
+
+    template <typename IteratorConnectHandler,
+        typename Iterator, typename ConnectCondition>
+    void operator()(IteratorConnectHandler&& handler,
+        Iterator begin, Iterator end,
+        const ConnectCondition& connect_condition) const
+    {
+      // If you get an error on the following line it means that your
+      // handler does not meet the documented type requirements for an
+      // IteratorConnectHandler.
+      ASIO_ITERATOR_CONNECT_HANDLER_CHECK(
+          IteratorConnectHandler, handler, Iterator) type_check;
+
+      non_const_lvalue<IteratorConnectHandler> handler2(handler);
+      iterator_connect_op<Protocol, Executor, Iterator, ConnectCondition,
+        decay_t<IteratorConnectHandler>>(socket_, begin, end,
+          connect_condition, handler2.value)(asio::error_code(), 1);
+    }
+
+  private:
+    basic_socket<Protocol, Executor>& socket_;
+  };
 } // namespace detail
 
-template <typename Protocol, typename SocketService,
-    typename Iterator, typename ComposedConnectHandler>
-inline ASIO_INITFN_RESULT_TYPE(ComposedConnectHandler,
-    void (asio::error_code, Iterator))
-async_connect(basic_socket<Protocol, SocketService>& s,
-    Iterator begin, ASIO_MOVE_ARG(ComposedConnectHandler) handler)
+#if !defined(GENERATING_DOCUMENTATION)
+
+template <template <typename, typename> class Associator,
+    typename Protocol, typename Executor, typename EndpointSequence,
+    typename ConnectCondition, typename RangeConnectHandler,
+    typename DefaultCandidate>
+struct associator<Associator,
+    detail::range_connect_op<Protocol, Executor,
+      EndpointSequence, ConnectCondition, RangeConnectHandler>,
+    DefaultCandidate>
+  : Associator<RangeConnectHandler, DefaultCandidate>
 {
-  // If you get an error on the following line it means that your handler does
-  // not meet the documented type requirements for a ComposedConnectHandler.
-  ASIO_COMPOSED_CONNECT_HANDLER_CHECK(
-      ComposedConnectHandler, handler, Iterator) type_check;
+  static typename Associator<RangeConnectHandler, DefaultCandidate>::type get(
+      const detail::range_connect_op<Protocol, Executor, EndpointSequence,
+        ConnectCondition, RangeConnectHandler>& h) noexcept
+  {
+    return Associator<RangeConnectHandler, DefaultCandidate>::get(h.handler_);
+  }
 
-  detail::async_result_init<ComposedConnectHandler,
-    void (asio::error_code, Iterator)> init(
-      ASIO_MOVE_CAST(ComposedConnectHandler)(handler));
+  static auto get(
+      const detail::range_connect_op<Protocol, Executor,
+        EndpointSequence, ConnectCondition, RangeConnectHandler>& h,
+      const DefaultCandidate& c) noexcept
+    -> decltype(
+      Associator<RangeConnectHandler, DefaultCandidate>::get(
+        h.handler_, c))
+  {
+    return Associator<RangeConnectHandler, DefaultCandidate>::get(
+        h.handler_, c);
+  }
+};
 
-  detail::connect_op<Protocol, SocketService, Iterator,
-    detail::default_connect_condition, ASIO_HANDLER_TYPE(
-      ComposedConnectHandler, void (asio::error_code, Iterator))>(s,
-        begin, Iterator(), detail::default_connect_condition(), init.handler)(
-          asio::error_code(), 1);
-
-  return init.result.get();
-}
-
-template <typename Protocol, typename SocketService,
-    typename Iterator, typename ComposedConnectHandler>
-inline ASIO_INITFN_RESULT_TYPE(ComposedConnectHandler,
-    void (asio::error_code, Iterator))
-async_connect(basic_socket<Protocol, SocketService>& s,
-    Iterator begin, Iterator end,
-    ASIO_MOVE_ARG(ComposedConnectHandler) handler)
+template <template <typename, typename> class Associator,
+    typename Protocol, typename Executor, typename Iterator,
+    typename ConnectCondition, typename IteratorConnectHandler,
+    typename DefaultCandidate>
+struct associator<Associator,
+    detail::iterator_connect_op<Protocol, Executor,
+      Iterator, ConnectCondition, IteratorConnectHandler>,
+    DefaultCandidate>
+  : Associator<IteratorConnectHandler, DefaultCandidate>
 {
-  // If you get an error on the following line it means that your handler does
-  // not meet the documented type requirements for a ComposedConnectHandler.
-  ASIO_COMPOSED_CONNECT_HANDLER_CHECK(
-      ComposedConnectHandler, handler, Iterator) type_check;
+  static typename Associator<IteratorConnectHandler, DefaultCandidate>::type
+  get(const detail::iterator_connect_op<Protocol, Executor, Iterator,
+        ConnectCondition, IteratorConnectHandler>& h) noexcept
+  {
+    return Associator<IteratorConnectHandler, DefaultCandidate>::get(
+        h.handler_);
+  }
 
-  detail::async_result_init<ComposedConnectHandler,
-    void (asio::error_code, Iterator)> init(
-      ASIO_MOVE_CAST(ComposedConnectHandler)(handler));
+  static auto get(
+      const detail::iterator_connect_op<Protocol, Executor,
+        Iterator, ConnectCondition, IteratorConnectHandler>& h,
+      const DefaultCandidate& c) noexcept
+    -> decltype(
+      Associator<IteratorConnectHandler, DefaultCandidate>::get(
+        h.handler_, c))
+  {
+    return Associator<IteratorConnectHandler, DefaultCandidate>::get(
+        h.handler_, c);
+  }
+};
 
-  detail::connect_op<Protocol, SocketService, Iterator,
-    detail::default_connect_condition, ASIO_HANDLER_TYPE(
-      ComposedConnectHandler, void (asio::error_code, Iterator))>(s,
-        begin, end, detail::default_connect_condition(), init.handler)(
-          asio::error_code(), 1);
-
-  return init.result.get();
-}
-
-template <typename Protocol, typename SocketService, typename Iterator,
-    typename ConnectCondition, typename ComposedConnectHandler>
-inline ASIO_INITFN_RESULT_TYPE(ComposedConnectHandler,
-    void (asio::error_code, Iterator))
-async_connect(basic_socket<Protocol, SocketService>& s,
-    Iterator begin, ConnectCondition connect_condition,
-    ASIO_MOVE_ARG(ComposedConnectHandler) handler)
-{
-  // If you get an error on the following line it means that your handler does
-  // not meet the documented type requirements for a ComposedConnectHandler.
-  ASIO_COMPOSED_CONNECT_HANDLER_CHECK(
-      ComposedConnectHandler, handler, Iterator) type_check;
-
-  detail::async_result_init<ComposedConnectHandler,
-    void (asio::error_code, Iterator)> init(
-      ASIO_MOVE_CAST(ComposedConnectHandler)(handler));
-
-  detail::connect_op<Protocol, SocketService, Iterator,
-    ConnectCondition, ASIO_HANDLER_TYPE(
-      ComposedConnectHandler, void (asio::error_code, Iterator))>(s,
-        begin, Iterator(), connect_condition, init.handler)(
-          asio::error_code(), 1);
-
-  return init.result.get();
-}
-
-template <typename Protocol, typename SocketService, typename Iterator,
-    typename ConnectCondition, typename ComposedConnectHandler>
-inline ASIO_INITFN_RESULT_TYPE(ComposedConnectHandler,
-    void (asio::error_code, Iterator))
-async_connect(basic_socket<Protocol, SocketService>& s,
-    Iterator begin, Iterator end, ConnectCondition connect_condition,
-    ASIO_MOVE_ARG(ComposedConnectHandler) handler)
-{
-  // If you get an error on the following line it means that your handler does
-  // not meet the documented type requirements for a ComposedConnectHandler.
-  ASIO_COMPOSED_CONNECT_HANDLER_CHECK(
-      ComposedConnectHandler, handler, Iterator) type_check;
-
-  detail::async_result_init<ComposedConnectHandler,
-    void (asio::error_code, Iterator)> init(
-      ASIO_MOVE_CAST(ComposedConnectHandler)(handler));
-
-  detail::connect_op<Protocol, SocketService, Iterator,
-    ConnectCondition, ASIO_HANDLER_TYPE(
-      ComposedConnectHandler, void (asio::error_code, Iterator))>(s,
-        begin, end, connect_condition, init.handler)(
-          asio::error_code(), 1);
-
-  return init.result.get();
-}
+#endif // !defined(GENERATING_DOCUMENTATION)
 
 } // namespace asio
 

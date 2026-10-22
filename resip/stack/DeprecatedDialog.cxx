@@ -33,7 +33,7 @@ DeprecatedDialog::DeprecatedDialog(const NameAddr& localContact)
      mRemoteUri(),
      mLocalUri()
 {
-    // .kw. members "secure" and "expireyTimeAbsoluteMs" are not initialized!
+    // .kw. member "expireyTimeAbsoluteMs" not initialized!
 }
 
 SipMessage*
@@ -758,7 +758,7 @@ int
 DeprecatedDialog::getExpirySeconds()
 {
 	// !cj! TODO - may be bugs here when result is negative 
-   UInt64 delta = ( expireyTimeAbsoluteMs - Timer::getTimeMs() )/1000;
+   uint64_t delta = ( expireyTimeAbsoluteMs - Timer::getTimeMs() )/1000;
 
    int ret = (int)delta;
    return ret;

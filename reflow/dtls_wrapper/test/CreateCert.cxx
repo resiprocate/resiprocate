@@ -1,11 +1,14 @@
 #include "CreateCert.hxx"
 
+#include <openssl/evp.h>
+#include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
 
 #include <string>
 #include <rutil/Random.hxx>
+#include <rutil/ResipAssert.h>
 
 using namespace std;
 using namespace dtls;
@@ -19,49 +22,56 @@ int dtls::createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*
    Data aor = "sip:" + pAor;
    
    // Make sure that necessary algorithms exist:
-   assert(EVP_sha1());
+   resip_assert(EVP_sha256());
 
-   RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
-   assert(rsa);    // couldn't make key pair
-   
-   EVP_PKEY* privkey = EVP_PKEY_new();
-   assert(privkey);
-   ret = EVP_PKEY_set1_RSA(privkey, rsa);
-   assert(ret);
+   // An RSA key (the default public exponent is 65537): ECDSA would be quicker to generate,
+   // but older endpoints may only support RSA
+   EVP_PKEY* privkey = NULL;
+   EVP_PKEY_CTX* keyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+   ret = keyCtx &&
+         EVP_PKEY_keygen_init(keyCtx) == 1 &&
+         EVP_PKEY_CTX_set_rsa_keygen_bits(keyCtx, keyLen) == 1 &&
+         EVP_PKEY_keygen(keyCtx, &privkey) == 1;
+   EVP_PKEY_CTX_free(keyCtx);
+   if(!ret)
+   {
+      return 0;  // couldn't make key pair
+   }
 
    X509* cert = X509_new();
-   assert(cert);
+   resip_assert(cert);
    
    X509_NAME* subject = X509_NAME_new();
-   X509_EXTENSION* ext = X509_EXTENSION_new();
+   X509_EXTENSION* ext;
    
    // set version to X509v3 (starts from 0)
    X509_set_version(cert, 2L);
    
    int serial = Random::getRandom();  // get an int worth of randomness
-   assert(sizeof(int)==4);
+   resip_assert(sizeof(int)==4);
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    
 //    ret = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_ASC, 
 //                                      (unsigned char *) domain.data(), domain.size(), 
 //                                      -1, 0);
-   assert(ret);
+   resip_assert(ret);
    ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_ASC, 
                                      (unsigned char *) aor.data(), aor.size(), 
                                      -1, 0);
-   assert(ret);
+   resip_assert(ret);
    
    ret = X509_set_issuer_name(cert, subject);
-   assert(ret);
+   resip_assert(ret);
    ret = X509_set_subject_name(cert, subject);
-   assert(ret);
+   resip_assert(ret);
+   X509_NAME_free(subject);  // the certificate holds copies
    
    const long duration = 60*60*24*expireDays;   
-   X509_gmtime_adj(X509_get_notBefore(cert),0);
-   X509_gmtime_adj(X509_get_notAfter(cert), duration);
+   X509_gmtime_adj(X509_getm_notBefore(cert),0);
+   X509_gmtime_adj(X509_getm_notAfter(cert), duration);
    
    ret = X509_set_pubkey(cert, privkey);
-   assert(ret);
+   resip_assert(ret);
    
    Data subjectAltNameStr = Data("URI:sip:") + aor
       + Data(",URI:im:")+aor
@@ -74,13 +84,14 @@ int dtls::createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*
    static char CA_FALSE[] = "CA:FALSE";
    ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, CA_FALSE);
    ret = X509_add_ext( cert, ext, -1);
-   assert(ret);
+   resip_assert(ret);
    X509_EXTENSION_free(ext);
    
    // TODO add extensions NID_subject_key_identifier and NID_authority_key_identifier
    
-   ret = X509_sign(cert, privkey, EVP_sha1());
-   assert(ret);
+   // SHA-256, the hash function of the fingerprint we advertise (RFC 4572 required them to match)
+   ret = X509_sign(cert, privkey, EVP_sha256());
+   resip_assert(ret);
 
    outCert = cert;
    outKey = privkey;
@@ -90,7 +101,8 @@ int dtls::createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

@@ -30,21 +30,21 @@ public:
                            const resip::SipMessage& pub,
                            const resip::Contents* contents,
                            const resip::SecurityAttributes* attrs,
-                           UInt32 expires);
+                           uint32_t expires);
     virtual void onExpired(resip::ServerPublicationHandle h, const resip::Data& etag);
     virtual void onRefresh(resip::ServerPublicationHandle,
                            const resip::Data& etag,
                            const resip::SipMessage& pub,
                            const resip::Contents* contents,
                            const resip::SecurityAttributes* attrs,
-                           UInt32 expires);
+                           uint32_t expires);
     virtual void onUpdate(resip::ServerPublicationHandle h,
                           const resip::Data& etag,
                           const resip::SipMessage& pub,
                           const resip::Contents* contents,
                           const resip::SecurityAttributes* attrs,
-                          UInt32 expires);
-    virtual void onRemoved(resip::ServerPublicationHandle h, const resip::Data& etag, const resip::SipMessage& pub, UInt32 expires);
+                          uint32_t expires);
+    virtual void onRemoved(resip::ServerPublicationHandle h, const resip::Data& etag, const resip::SipMessage& pub, uint32_t expires);
 
 private:
 

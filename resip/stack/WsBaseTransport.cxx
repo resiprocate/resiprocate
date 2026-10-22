@@ -2,7 +2,6 @@
 #include "config.h"
 #endif
 
-#include <memory>
 #include "rutil/compat.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
@@ -11,18 +10,16 @@
 #include "resip/stack/WsConnection.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 using namespace std;
 using namespace resip;
 
-WsBaseTransport::WsBaseTransport(SharedPtr<WsConnectionValidator> connectionValidator, SharedPtr<WsCookieContextFactory> cookieContextFactory)
+WsBaseTransport::WsBaseTransport(std::shared_ptr<WsConnectionValidator> connectionValidator, std::shared_ptr<WsCookieContextFactory> cookieContextFactory)
  : mConnectionValidator(connectionValidator),
    mCookieContextFactory(cookieContextFactory)
-{
-}
-
-WsBaseTransport::~WsBaseTransport()
 {
 }
 

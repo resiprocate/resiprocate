@@ -2,25 +2,75 @@
 
 set -e
 
-./configure \
-  --enable-assert-syslog \
-  --with-popt \
-  --with-ssl \
-  --with-mysql \
-  --with-postgresql \
-  --with-apps \
-  --enable-dtls \
-  --enable-ipv6 \
-  --with-radcli \
-  --with-repro \
-  --enable-repro-plugins \
-  DEPS_PYTHON_CFLAGS="`/usr/bin/python2.7-config --cflags`" \
-  DEPS_PYTHON_LIBS="`/usr/bin/python2.7-config --ldflags`" \
-  PYCXX_SRCDIR=/usr/share/python2.7/CXX/Python2 \
-  --with-python \
-  --with-rend \
-  --with-recon \
-  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20" \
+PYTHON_MAJOR_VERSION=`python3 -V | cut -f2 -d' ' | cut -f1,2 -d.`
+PYCFG_CFLAGS=`/usr/bin/python3-config --cflags | sed -e 's!-specs=/usr/share/dpkg/no-pie-compile.specs!!g'`
+
+WARNING_CONFIG="-Wno-unknown-pragmas"
+
+# this makes the build more strict:
+# any warning will become an error,
+# as an error, it will fail the build
+WARNING_CONFIG="-Werror  ${WARNING_CONFIG}"
+
+# FIXME - need to make sure the gstreamer-dev packages have all the right
+# headers before we enable it here
+BLEEDING_EDGE_RECON_FEATURES="-DBUILD_RECON=ON -DBUILD_RECONSERVER=ON -DUSE_SIPXTAPI=ON -DUSE_KURENTO=OFF -DUSE_GSTREAMER=OFF"
+if [[ -e /etc/os-release ]]
+then
+  source /etc/os-release
+  if [[ "${VERSION_CODENAME}" == "buster" ]]
+  then
+    # those features do not compile on Debian Buster
+    BLEEDING_EDGE_RECON_FEATURES="-DBUILD_RECON=OFF -DBUILD_RECONSERVER=OFF -DUSE_SIPXTAPI=OFF -DUSE_KURENTO=OFF -DUSE_GSTREAMER=OFF"
+  fi
+fi
+
+# Notes:
+# - please keep the order of parameters synchronized with build/debian.sh
+#   so we can easily diff the configuration.
+# - we don't enable ichat-gw because of https://www.resiprocate.org/bugzilla/show_bug.cgi?id=133
+#     (compile fails on clang)
+CPPFLAGS="-I/usr/include/postgresql -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags` ${WARNING_CONFIG}" \
   CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
-  --with-c-ares
+cmake \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DENABLE_LOG_REPOSITORY_DETAILS=OFF \
+    -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" \
+    -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON \
+    -DWITH_C_ARES=ON \
+    -DWITH_SSL=ON \
+    -DUSE_POPT=ON \
+    -DUSE_SIGCOMP=OFF \
+    -DUSE_FMT=OFF \
+    -DVERSIONED_SONAME=ON \
+    -DENABLE_ANDROID=OFF \
+    -DUSE_IPV6=ON \
+    -DUSE_DTLS=ON \
+    -DPEDANTIC_STACK=OFF \
+    -DUSE_MYSQL=ON \
+    -DUSE_SOCI_POSTGRESQL=ON \
+    -DUSE_SOCI_MYSQL=ON \
+    -DUSE_POSTGRESQL=ON \
+    -DUSE_MAXMIND_GEOIP=ON \
+    -DRESIP_HAVE_RADCLI=ON \
+    -DUSE_NETSNMP=ON \
+    -DBUILD_REPRO=ON \
+    -DBUILD_DSO_PLUGINS=ON \
+    -DBUILD_RETURN=ON \
+    -DBUILD_REND=ON \
+    -DBUILD_TFM=ON \
+    -DBUILD_ICHAT_GW=OFF \
+    -DBUILD_TELEPATHY_CM=OFF \
+    -DUSE_SRTP1=OFF \
+    -DUSE_LIBWEBRTC=OFF \
+    -DRECON_LOCAL_HW_TESTS=OFF \
+    -DBUILD_P2P=OFF \
+    -DBUILD_PYTHON=ON \
+    -DBUILD_QPID_PROTON=ON \
+    -DRESIP_ASSERT_SYSLOG=ON \
+    -DREGENERATE_MEDIA_SAMPLES=ON \
+    ${BLEEDING_EDGE_RECON_FEATURES} \
+    . \
+  "${@}"
 

@@ -62,6 +62,7 @@ class Symbols
       static const char* Sip;
       static const char* Sips;
       static const char* Tel;
+      static const char* Urn;
       static const char* Pres;
       
       static const char* Phone;
@@ -111,6 +112,7 @@ class Symbols
       static const char* TargetDialog;
       static const char* Path;
       static const char* Outbound;
+      static const char* Join;
       static const char* Undefined;
 
       static const char* Pending;
@@ -130,6 +132,7 @@ class Symbols
       static const char* Hex; // from draft-ietf-cuss-sip-uui-17
       static const char* IsdnInterwork; // from draft-johnston-sipping-cc-uui-09
       static const char* IsdnUui; // from draft-johnston-sipping-cc-uui-09
+      static const char* TrickleIce; // from RFC 8840
 };
 
 }

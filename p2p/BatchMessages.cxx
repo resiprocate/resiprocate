@@ -12,21 +12,22 @@
 #include "p2p/Update.hxx"
 #include "p2p/Message.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
 using namespace p2p;
 
 BatchMessages::BatchMessages(Dispatcher& dispatcher,
-                             std::vector<std::auto_ptr<Message> >& messages,
+                             std::vector<std::unique_ptr<Message>>& messages,
                              Postable<Event>& postable)
    : mPostable(&postable),
      mResponseCount(messages.size()),
      mSucceeded(true)
 {
-   for (std::vector<std::auto_ptr<Message> >::iterator i = messages.begin();
-        i != messages.end(); i++) 
+   for (auto& message : messages) 
    {
-      dispatcher.send(*i, *this);
+      dispatcher.send(std::move(message), *this);
    }
 }
 
@@ -43,7 +44,7 @@ BatchMessages::countDown(Message& message)
    mResponseCount--;
    if (mResponseCount == 0) 
    {
-      mPostable->post(std::auto_ptr<Event>(this));
+      mPostable->post(std::unique_ptr<Event>(this));
    }
 }
 

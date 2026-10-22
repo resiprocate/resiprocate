@@ -16,6 +16,11 @@ using namespace std;
 //====================
 // GenericUri
 //====================
+GenericUri::GenericUri(const Data& uri) :
+   ParserCategory(),
+   mUri(uri)
+{}
+
 GenericUri::GenericUri(const GenericUri& rhs,
                         PoolBase* pool)
    : ParserCategory(rhs, pool),
@@ -156,6 +161,8 @@ GenericUri::param(const _enum##_Param& paramType) const                         
 }
 
 defineParam(purpose, "purpose", DataParameter, "RFC 3261");
+defineParam(alg, "alg", DataParameter, "RFC 8224");
+defineParam(ppt, "ppt", DataParameter, "RFC 8224");
 
 #undef defineParam
 

@@ -21,32 +21,25 @@ class EventDispatcher
 
       bool dispatch(Message* msg)
       {
-         Lock lock(mMutex);
-         bool ret = false;
-         
          E* event = dynamic_cast<E*>(msg);
-         if (event)
-         {
-            if(mListeners.size() > 0)
-            {
-               ret = true;
-               unsigned int counter = 1;
-               for (std::vector<Postable*>::iterator it = mListeners.begin(); it != mListeners.end(); ++it)
-               {
-                  if (counter == mListeners.size())
-                  {
-                     (*it)->post(msg);
-                  }
-                  else
-                  {
-                     ++counter;
-                     (*it)->post(msg->clone());
-                  }
-               }
-            }         
-         }
+         if (!event) return false;                         
 
-         return ret;
+         Lock lock(mMutex);                       
+         const std::size_t size = mListeners.size();
+         if (size == 0) return false; 
+
+         for (std::size_t i = 0; i < size; ++i)
+         {
+            if ((i + 1) == size)
+            {
+               mListeners[i]->post(msg);
+            }
+            else
+            {
+               mListeners[i]->post(msg->clone());
+            }
+         }
+         return true;
       }
 
       void addListener(Postable* listener)

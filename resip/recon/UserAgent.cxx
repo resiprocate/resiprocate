@@ -7,8 +7,11 @@
 #include "UserAgentCmds.hxx"
 #include "UserAgentServerAuthManager.hxx"
 #include "UserAgentClientSubscription.hxx"
+#include "UserAgentClientPublication.hxx"
 #include "UserAgentRegistration.hxx"
 #include "ReconSubsystem.hxx"
+
+#include "MediaStackAdapter.hxx"
 
 #include "reflow/FlowManagerSubsystem.hxx"
 
@@ -17,16 +20,29 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <resip/stack/ConnectionTerminated.hxx>
+#include <resip/stack/GenericPidfContents.hxx>
 #include <resip/dum/ClientAuthManager.hxx>
 #include <resip/dum/ClientSubscription.hxx>
 #include <resip/dum/ServerSubscription.hxx>
+#include <resip/dum/ClientPublication.hxx>
+#include <resip/dum/ServerPublication.hxx>
 #include <resip/dum/ClientRegistration.hxx>
+#include <resip/dum/ClientPagerMessage.hxx>
+#include <resip/dum/ServerPagerMessage.hxx>
+#include <resip/stack/PlainContents.hxx>
 #include <resip/dum/KeepAliveManager.hxx>
 #include <resip/dum/AppDialogSet.hxx>
 #if defined(USE_SSL)
+#ifdef WIN32
+#include <resip/stack/ssl/WinSecurity.hxx>
+#else
 #include <resip/stack/ssl/Security.hxx>
 #endif
+#endif
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Random.hxx>
+
+#include <utility>
 
 using namespace recon;
 using namespace resip;
@@ -34,21 +50,28 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc) : 
+UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc) : 
    mCurrentSubscriptionHandle(1),
    mCurrentConversationProfileHandle(1),
    mDefaultOutgoingConversationProfileHandle(0),
    mConversationManager(conversationManager),
    mProfile(profile),
 #if defined(USE_SSL)
-   mSecurity(new Security(profile->certPath())),
+#ifdef WIN32
+   mSecurity(new WinSecurity(mProfile->certPath())),
+#else
+   mSecurity(new Security(mProfile->certPath())),
+#endif
 #else
    mSecurity(0),
 #endif
-   mStack(mSecurity, profile->getAdditionalDnsServers(), &mSelectInterruptor, false /* stateless */, socketFunc),
+   mPollGrp(FdPollGrp::create()),
+   mEventInterruptor(new EventThreadInterruptor(*mPollGrp)),
+   mStack(mSecurity, mProfile->getAdditionalDnsServers(), mEventInterruptor, false /* stateless */, socketFunc, 0, mPollGrp),
    mDum(mStack),
-   mStackThread(mStack, mSelectInterruptor),
-   mDumShutdown(false)
+   mStackThread(mStack, *mEventInterruptor, *mPollGrp),
+   mDumShutdown(false),
+   mUserAgentShutdown(false)
 {
 #if defined(USE_SSL)
    const std::vector<Data>& rootCertDirectories = mProfile->rootCertDirectories();
@@ -67,20 +90,23 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    resip_assert(mConversationManager);
    mConversationManager->setUserAgent(this);
 
+   mStack.setTransportSipMessageLoggingHandler(mProfile->getTransportSipMessageLoggingHandler());
+   mConversationManager->getMediaStackAdapter().setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
+
    addTransports();
 
    // Set Enum Suffixes
-   mStack.setEnumSuffixes(profile->getEnumSuffixes());
+   mStack.setEnumSuffixes(mProfile->getEnumSuffixes());
 
    // Enable/Disable Statistics Manager
-   mStack.statisticsManagerEnabled() = profile->statisticsManagerEnabled();
+   mStack.statisticsManagerEnabled() = mProfile->statisticsManagerEnabled();
    
    // Install Handlers
    mDum.setMasterProfile(mProfile);
    mDum.setClientRegistrationHandler(this);
    mDum.registerForConnectionTermination(this);
-   mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
-   mDum.setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
+   mDum.setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum.setKeepAliveManager(std::unique_ptr<KeepAliveManager>(new KeepAliveManager));
    mDum.setRedirectHandler(mConversationManager);
    mDum.setInviteSessionHandler(mConversationManager); 
    mDum.setDialogSetHandler(mConversationManager);
@@ -88,6 +114,8 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mDum.addOutOfDialogHandler(REFER, mConversationManager);
    mDum.addClientSubscriptionHandler("refer", mConversationManager);
    mDum.addServerSubscriptionHandler("refer", mConversationManager);
+   mDum.setServerPagerMessageHandler(mConversationManager);
+   mDum.setClientPagerMessageHandler(mConversationManager);
 
    //mDum.addClientSubscriptionHandler(Symbols::Presence, this);
    //mDum.addClientPublicationHandler(Symbols::Presence, this);
@@ -95,12 +123,14 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    //mDum.addServerSubscriptionHandler("message-summary", this);
 
    // Set AppDialogSetFactory
-   auto_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
-	mDum.setAppDialogSetFactory(dsf);
+   std::unique_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
+   mDum.setAppDialogSetFactory(std::move(dsf));
 
-   // Set UserAgentServerAuthManager
-   SharedPtr<ServerAuthManager> uasAuth( new UserAgentServerAuthManager(*this));
-   mDum.setServerAuthManager(uasAuth);
+   if (profile->serverAuthManagerEnabled())
+   {
+      // Set UserAgentServerAuthManager
+      mDum.setServerAuthManager(std::make_shared<UserAgentServerAuthManager>(*this));
+   }
 }
 
 UserAgent::~UserAgent()
@@ -133,6 +163,25 @@ UserAgent::unregisterSubscription(UserAgentClientSubscription *subscription)
    mSubscriptions.erase(subscription->getSubscriptionHandle());
 }
 
+PublicationHandle
+UserAgent::getNewPublicationHandle()
+{
+   Lock lock(mPublicationHandleMutex);
+   return mCurrentPublicationHandle++;
+}
+
+void
+UserAgent::registerPublication(UserAgentClientPublication *publication)
+{
+   mPublications[publication->getPublicationHandle()] = publication;
+}
+
+void
+UserAgent::unregisterPublication(UserAgentClientPublication *publication)
+{
+   mPublications.erase(publication->getPublicationHandle());
+}
+
 ConversationProfileHandle 
 UserAgent::getNewConversationProfileHandle()
 {
@@ -156,22 +205,33 @@ void
 UserAgent::process(int timeoutMs)
 {
    mDum.process(timeoutMs);
+   mConversationManager->process();
 }
 
 void
 UserAgent::shutdown()
 {
-   UserAgentShutdownCmd* cmd = new UserAgentShutdownCmd(this);
-   mDum.post(cmd);
-
-   // Wait for Dum to shutdown
-   while(!mDumShutdown) 
+   if (!mUserAgentShutdown)
    {
-      process(100);
-   }
+      UserAgentShutdownCmd* cmd = new UserAgentShutdownCmd(this);
+      mDum.post(cmd);
 
-   mStackThread.shutdown();
-   mStackThread.join();
+      InfoLog(<< "UserAgent::shutdown: posted UserAgentShutdownCmd, waiting for DUM to shutdown...");
+
+      // Wait for Dum to shutdown
+      while (!mDumShutdown)
+      {
+         process(100);
+      }
+
+      InfoLog(<< "UserAgent::shutdown: DUM shutdown, shutting down StackThread...");
+
+      mStackThread.shutdown();
+      mStackThread.join();
+
+      InfoLog(<< "UserAgent::shutdown: StackThread shutdown.");
+      mUserAgentShutdown = true;
+   }
 }
 
 void
@@ -186,12 +246,12 @@ UserAgent::clearDnsCache()
    mStack.clearDnsCache();
 }
 
-void 
-UserAgent::post(ApplicationMessage& message, unsigned int ms)
+void
+UserAgent::post(ApplicationMessage& message, std::chrono::duration<double> duration)
 {
-   if(ms > 0)
+   if(duration > std::chrono::milliseconds::zero())
    {
-      mStack.postMS(message, ms, &mDum);
+      mStack.post(message, duration, &mDum);
    }
    else
    {
@@ -244,7 +304,7 @@ UserAgent::setLogLevel(Log::Level level, LoggingSubsystem subsystem)
 }
 
 ConversationProfileHandle 
-UserAgent::addConversationProfile(SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+UserAgent::addConversationProfile(std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing)
 {
    ConversationProfileHandle handle = getNewConversationProfileHandle();
    AddConversationProfileCmd* cmd = new AddConversationProfileCmd(this, handle, conversationProfile, defaultOutgoing);
@@ -282,8 +342,24 @@ UserAgent::destroySubscription(SubscriptionHandle handle)
    mDum.post(cmd);
 }
 
+PublicationHandle
+UserAgent::createPublication(const Data& eventType, const NameAddr& target, const Data& status, unsigned int publicationTime, const Mime& mimeType)
+{
+   PublicationHandle handle = getNewPublicationHandle();
+   CreatePublicationCmd* cmd = new CreatePublicationCmd(this, handle, status, eventType, target, publicationTime, mimeType);
+   mDum.post(cmd);
 
-SharedPtr<ConversationProfile> 
+   return handle;   
+}
+
+void 
+UserAgent::destroyPublication(PublicationHandle handle)
+{
+   DestroyPublicationCmd* cmd = new DestroyPublicationCmd(this, handle);
+   mDum.post(cmd);
+}
+
+std::shared_ptr<ConversationProfile> 
 UserAgent::getDefaultOutgoingConversationProfile()
 {
    if(mDefaultOutgoingConversationProfileHandle != 0)
@@ -294,11 +370,28 @@ UserAgent::getDefaultOutgoingConversationProfile()
    {
       resip_assert(false);
       ErrLog( << "getDefaultOutgoingConversationProfile: something is wrong - no profiles to return");
-      return SharedPtr<ConversationProfile>((ConversationProfile*)0);
+      return nullptr;
    }
 }
 
-SharedPtr<ConversationProfile> 
+std::shared_ptr<ConversationProfile>
+UserAgent::getConversationProfileByMediaAddress(const resip::Data& mediaAddress)
+{
+   resip_assert(!mediaAddress.empty());
+
+   ConversationProfileMap::iterator conIt;
+   for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); conIt++)
+   {
+      auto cp = conIt->second;
+      if(cp->sessionCaps().session().origin().getAddress() == mediaAddress)
+      {
+         return cp;
+      }
+   }
+   return nullptr;
+}
+
+std::shared_ptr<ConversationProfile> 
 UserAgent::getIncomingConversationProfile(const SipMessage& msg)
 {
    resip_assert(msg.isRequest());
@@ -314,7 +407,6 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
       NameAddrs::const_iterator naIt;
       for(naIt = contacts.begin(); naIt != contacts.end(); naIt++)
       {
-         InfoLog( << "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri());
          if ((*naIt).uri() == requestUri &&             // uri's match 
              (!requestUri.exists(p_rinstance) ||        // and request Uri doesn't have rinstance parameter OR 
               ((*naIt).uri().exists(p_rinstance) && requestUri.param(p_rinstance) == (*naIt).uri().param(p_rinstance))))  // rinstance parameter matches
@@ -322,8 +414,17 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
             ConversationProfileMap::iterator conIt = mConversationProfiles.find(regIt->first);
             if(conIt != mConversationProfiles.end())
             {
+               InfoLog(<< "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri() << " - MATCHED!");
                return conIt->second;
             }
+            else
+            {
+               InfoLog(<< "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri() << " - matched, but conversation profile not found");
+            }
+         }
+         else
+         {
+            InfoLog(<< "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri() << " - no match");
          }
       }
    }
@@ -333,10 +434,14 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
    ConversationProfileMap::iterator conIt;
    for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); conIt++)
    {
-      InfoLog( << "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor());
       if(isEqualNoCase(toAor, conIt->second->getDefaultFrom().uri().getAor()))
       {
+         InfoLog(<< "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor() << " - MATCHED!");
          return conIt->second;
+      }
+      else
+      {
+         InfoLog(<< "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor() << " - no match");
       }
    }
 
@@ -345,8 +450,8 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
    return getDefaultOutgoingConversationProfile();
 }
 
-SharedPtr<UserAgentMasterProfile> 
-UserAgent::getUserAgentMasterProfile()
+std::shared_ptr<UserAgentMasterProfile> 
+UserAgent::getUserAgentMasterProfile() const noexcept
 {
    return mProfile;
 }
@@ -366,6 +471,7 @@ UserAgent::getConversationManager()
 void 
 UserAgent::onDumCanBeDeleted()
 {
+   InfoLog(<< "UserAgent::onDumCanBeDeleted called.");
    mDumShutdown = true;
 }
 
@@ -395,47 +501,80 @@ UserAgent::post(resip::Message* pMsg)
 void
 UserAgent::addTransports()
 {
-   const std::vector<UserAgentMasterProfile::TransportInfo>& transports = mProfile->getTransports();
-   std::vector<UserAgentMasterProfile::TransportInfo>::const_iterator i;
+   std::vector<UserAgentMasterProfile::TransportInfo>& transports = mProfile->getTransports();
+   std::vector<UserAgentMasterProfile::TransportInfo>::iterator i;
+   int lastActualPort = 0;
    for(i = transports.begin(); i != transports.end(); i++)
    {
+      UserAgentMasterProfile::TransportInfo& ti = *i;
       try
       {
-         switch((*i).mProtocol)
-         {
 #ifdef USE_SSL
-         case TLS:
-#ifdef USE_DTLS
-         case DTLS:
+         // Make sure certificate material available before trying to instantiate Transport
+         if(isSecure(ti.mProtocol))
+         {
+            // FIXME: see comments about repro / CertificatePath
+            if(!ti.mTlsCertificate.empty())
+            {
+               mSecurity->addDomainCertPEM(ti.mSipDomainname, Data::fromFile(ti.mTlsCertificate));
+            }
+            if(!ti.mTlsPrivateKey.empty())
+            {
+               mSecurity->addDomainPrivateKeyPEM(ti.mSipDomainname, Data::fromFile(ti.mTlsPrivateKey), ti.mTlsPrivateKeyPassPhrase);
+            }
+         }
 #endif
-            mDum.addTransport((*i).mProtocol, (*i).mPort, (*i).mIPVersion, (*i).mIPInterface, (*i).mSipDomainname, Data::Empty, (*i).mSslType);
-            break;
+         
+         Transport *t = mStack.addTransport(ti.mProtocol,
+                                 ti.mPort == -1 ? lastActualPort : ti.mPort, // Port as -1 is special designation that we should use the actual port from the last transport added
+                                 ti.mIPVersion,
+                                 StunEnabled,
+                                 ti.mIPInterface,       // interface to bind to
+                                 ti.mSipDomainname,
+                                 ti.mTlsPrivateKeyPassPhrase,  // private key passphrase
+                                 ti.mSslType, // sslType
+                                 0,            // transport flags
+                                 ti.mTlsCertificate, ti.mTlsPrivateKey,
+                                 ti.mCvm,          // tls client verification mode
+                                 ti.mUseEmailAsSIP);
+
+         if (t)
+         {
+            int rcvBufLen = ti.mRcvBufLen;
+            if (rcvBufLen >0 )
+            {
+#if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
+               // this new method is part of the epoll changeset,
+               // which isn't commited yet.
+               t->setRcvBufLen(rcvBufLen);
+#else
+               resip_assert(0);
 #endif
-         case UDP:
-         case TCP:
-            mDum.addTransport((*i).mProtocol, (*i).mPort, (*i).mIPVersion, (*i).mIPInterface);
-            break;
-         default:
-            WarningLog (<< "Failed to add " << Tuple::toData((*i).mProtocol) << " transport - unsupported type");
+            }
+
+            // Fill in actual port used
+            ti.mActualPort = t->getTuple().getPort();
+            // Store last actual port, incase next transport uses special port of -1 to indicate use of last actual port
+            lastActualPort = ti.mActualPort;
          }
       }
       catch (BaseException& e)
       {
          WarningLog (<< "Caught: " << e);
-         WarningLog (<< "Failed to add " << Tuple::toData((*i).mProtocol) << " transport on " << (*i).mPort);
+         WarningLog (<< "Failed to add " << Tuple::toData(ti.mProtocol) << " transport on " << ti.mPort);
       }
    }
 }
 
 void 
-UserAgent::startApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber)
+UserAgent::startApplicationTimer(unsigned int timerId, std::chrono::duration<double> duration, unsigned int seqNumber)
 {
-   UserAgentTimeout t(*this, timerId, durationMs, seqNumber);
-   post(t, durationMs);
+   UserAgentTimeout t(*this, timerId, duration, seqNumber);
+   post(t, duration);
 }
 
 void 
-UserAgent::onApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber)
+UserAgent::onApplicationTimer(unsigned int timerId, std::chrono::duration<double> duration, unsigned int seqNumber)
 {
    // Default implementation is to do nothing - application should override this
 }
@@ -455,9 +594,11 @@ UserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyDat
 void 
 UserAgent::shutdownImpl()
 {
+   InfoLog(<< "UserAgent::shutdownImpl shutting down DUM...");
    mDum.shutdown(this);
 
    // End all subscriptions
+   InfoLog(<< "UserAgent::shutdownImpl ending " << mSubscriptions.size() << " subscriptions...");
    SubscriptionMap tempSubs = mSubscriptions;  // Create copy for safety, since ending Subscriptions can immediately remove themselves from map
    SubscriptionMap::iterator i;
    for(i = tempSubs.begin(); i != tempSubs.end(); i++)
@@ -466,6 +607,7 @@ UserAgent::shutdownImpl()
    }
 
    // Unregister all registrations
+   InfoLog(<< "UserAgent::shutdownImpl ending " << mRegistrations.size() << " registrations...");
    RegistrationMap tempRegs = mRegistrations;  // Create copy for safety, since ending can immediately remove themselves from map
    RegistrationMap::iterator j;
    for(j = tempRegs.begin(); j != tempRegs.end(); j++)
@@ -477,7 +619,7 @@ UserAgent::shutdownImpl()
 }
 
 void 
-UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing)
 {
    // Store new profile
    mConversationProfiles[handle] = conversationProfile;
@@ -489,7 +631,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPt
    // the cert at runtime to equal the aor in the default conversation profile
    if(!mDefaultOutgoingConversationProfileHandle)
    {
-      mConversationManager->getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
+      mConversationManager->getMediaStackAdapter().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor());
    }
 #endif
 
@@ -569,6 +711,75 @@ UserAgent::destroySubscriptionImpl(SubscriptionHandle handle)
    }
 }
 
+void 
+UserAgent::createPublicationImpl(PublicationHandle handle, const Data& status, const Data& eventType, const NameAddr& target, unsigned int publicationTime, const Mime& mimeType)
+{
+   // Ensure we have a client publication handler for this event type
+   if(!mDum.getClientPublicationHandler(eventType))
+   {
+      mDum.addClientPublicationHandler(eventType, this);
+   }
+
+   Data note;
+   if(status == "dnd")
+   {
+      note = Data("Busy (DND)");
+   }
+   else if(status == "available")
+   {
+      note = Data("Online");
+   }
+   else if(status == "away")
+   {
+      note = Data("Away");
+   }
+
+   // Adding rpid defined at RFC 4480 https://tools.ietf.org/html/rfc4480#page-7
+   resip::GenericPidfContents gPidf;
+   gPidf.setSimplePresenceTupleNode(Data(string("ID-") + Random::getRandomHex(3).c_str()), true, Data::Empty, note, target.uri().getAorNoReally(), Data(1.0));
+
+   resip::GenericPidfContents::Node* dm = new resip::GenericPidfContents::Node();
+   dm->mNamespacePrefix = Data("dm:");
+   dm->mTag = "person";
+   dm->mAttributes["id"] = Data(string("ID-") + Random::getRandomHex(3).c_str());
+
+   resip::GenericPidfContents::Node* rpid = new resip::GenericPidfContents::Node();
+   rpid->mNamespacePrefix = Data("rpid:");
+   rpid->mTag = "activities";
+   dm->mChildren.push_back(rpid);   
+
+   if(status != "available")
+   {
+      resip::GenericPidfContents::Node* st = new resip::GenericPidfContents::Node();
+      st->mNamespacePrefix = Data("rpid:");
+      st->mTag = status;
+      rpid->mChildren.push_back(st);
+   }
+   
+   resip::GenericPidfContents::NodeList rootNodes = gPidf.getRootNodes();
+   rootNodes.push_back(dm);
+   gPidf.setRootNodes(rootNodes);
+
+   gPidf.setEntity(target.uri());
+   gPidf.addNamespace(Data("urn:ietf:params:xml:ns:pidf:data-model"), Data("dm"));
+   gPidf.addNamespace(Data("urn:ietf:params:xml:ns:pidf:rpid"), Data("rpid"));
+
+   DebugLog( << "generated final gPidf : " << endl << gPidf );
+   
+   UserAgentClientPublication *publication = new UserAgentClientPublication(*this, mDum, handle);
+   mDum.send(mDum.makePublication(target, getDefaultOutgoingConversationProfile(), gPidf, eventType, publicationTime, publication));
+}
+
+void 
+UserAgent::destroyPublicationImpl(PublicationHandle handle)
+{
+   PublicationMap::iterator it = mPublications.find(handle);
+   if(it != mPublications.end())
+   {
+      it->second->end();
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Registration Handler ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -635,11 +846,38 @@ UserAgent::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, const Si
    return dynamic_cast<UserAgentClientSubscription *>(h->getAppDialogSet().get())->onRequestRetry(h, retryMinimum, msg);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// ClientPublicationHandler ////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void
+UserAgent::onSuccess(ClientPublicationHandle h, const SipMessage& status)
+{
+   dynamic_cast<UserAgentClientPublication *>(h->getAppDialogSet().get())->onSuccess(h, status);
+}
+
+void
+UserAgent::onRemove(ClientPublicationHandle h, const SipMessage& status)
+{
+   dynamic_cast<UserAgentClientPublication *>(h->getAppDialogSet().get())->onRemove(h, status);
+}
+
+int
+UserAgent::onRequestRetry(ClientPublicationHandle h, int retrySeconds, const SipMessage& status)
+{
+   return dynamic_cast<UserAgentClientPublication *>(h->getAppDialogSet().get())->onRequestRetry(h, retrySeconds, status);
+}
+
+void
+UserAgent::onFailure(ClientPublicationHandle h, const SipMessage& status)
+{
+   dynamic_cast<UserAgentClientPublication *>(h->getAppDialogSet().get())->onFailure(h, status);
+}
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2016, SIP Spectrum, Inc.
+ Copyright (c) 2016-2026, SIP Spectrum, Inc. https://www.sipspectrum.com
 
  All rights reserved.
 

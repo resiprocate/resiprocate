@@ -6,7 +6,7 @@
 #include <rutil/Data.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Logger.hxx>
-#include <rutil/MD5Stream.hxx>
+#include <rutil/DigestStream.hxx>
 #include <rutil/ParseBuffer.hxx>
 #include <rutil/Socket.hxx>
 #include <rutil/Timer.hxx>
@@ -86,7 +86,7 @@ WebAdmin::buildPage( const Data& uri,
          return;
       }
       
-      MD5Stream dba1;
+      DigestStream dba1;
       dba1 << "admin" // username
            << Symbols::COLON
            << Data::Empty // realm
@@ -96,7 +96,7 @@ WebAdmin::buildPage( const Data& uri,
 
       if ( !dbA1.empty() )
       {
-         MD5Stream a1;
+         DigestStream a1;
          a1 << pUser // username
             << Symbols::COLON
             << Data::Empty // realm
@@ -289,6 +289,7 @@ WebAdmin::buildClickToCallPage(DataStream& s)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

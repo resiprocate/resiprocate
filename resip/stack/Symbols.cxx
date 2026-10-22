@@ -61,6 +61,7 @@ const char* Symbols::SRVSCTP = "_sctp.";
 const char* Symbols::Sip = "sip";
 const char* Symbols::Sips = "sips";
 const char* Symbols::Tel = "tel";
+const char* Symbols::Urn = "urn";
 const char* Symbols::Pres = "pres";
 
 const char* Symbols::Phone = "phone";
@@ -110,6 +111,7 @@ const char* Symbols::AnswerMode   = "answermode";
 const char* Symbols::TargetDialog = "tdialog";
 const char* Symbols::Path         = "path";
 const char* Symbols::Outbound     = "outbound";
+const char* Symbols::Join         = "join";
 const char* Symbols::Undefined    = "UNDEFINED";
 
 const char* Symbols::Pending = "pending";
@@ -121,7 +123,7 @@ const char* Symbols::Credential = "credential";
 
 const char* Symbols::SipProfile = "sip-profile";
 
-const char* Symbols::id = "id"; // from RFC 3323
+const char* Symbols::id = "id"; // from RFC 3325
 
 const char* Symbols::Gruu = "gruu";
 
@@ -129,6 +131,8 @@ const char* Symbols::Uui = "uui";
 const char* Symbols::Hex = "hex";
 const char* Symbols::IsdnInterwork = "isdn-interwork";
 const char* Symbols::IsdnUui = "isdn-uui";
+
+const char* Symbols::TrickleIce = "trickle-ice";  // from RFC 8840
 
 #if defined(WIN32)
 const char *Symbols::pathSep = "\\";

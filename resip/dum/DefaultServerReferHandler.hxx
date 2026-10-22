@@ -1,5 +1,5 @@
 #if !defined(RESIP_DEFAULTSERVERREFERHANDLER_HXX)
-#define RESIP__DEFAULTSERVERREFERHANDLER_HXX
+#define RESIP_DEFAULTSERVERREFERHANDLER_HXX
 
 #include "resip/dum/SubscriptionHandler.hxx"
 
@@ -21,7 +21,7 @@ class DefaultServerReferHandler : public ServerSubscriptionHandler
       //static DefaultServerReferHandler* Instance();
 
       virtual bool hasDefaultExpires() const;
-      virtual UInt32 getDefaultExpires() const;
+      virtual uint32_t getDefaultExpires() const;
    protected:
 };
 

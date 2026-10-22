@@ -17,7 +17,6 @@ MasterProfile::MasterProfile() :
    mValidateContentLanguageEnabled(false),
    mValidateAcceptEnabled(false),
    mAllowBadRegistrationEnabled(false),
-   mHasServerRegistrationMinExpires(false),
    mCheckReqUriInMergeDetectionEnabled(false),
    mUacReliableProvisionalMode(Never),
    mUasReliableProvisionalMode(Never),
@@ -38,7 +37,10 @@ MasterProfile::MasterProfile() :
    addSupportedMethod(OPTIONS);
    addSupportedMethod(BYE);
    addSupportedMethod(UPDATE);
-   addSupportedScheme(Symbols::Sip);  
+   addSupportedScheme(Symbols::Sip);
+   // urn: (e.g. RFC 5031 emergency service URNs) is intentionally not
+   // added to the default supported schemes. An application that wants 
+   // it should call addSupportedScheme(Symbols::Urn) itself.
 }
 
 void 
@@ -50,11 +52,11 @@ MasterProfile::addSupportedScheme(const Data& scheme)
 bool 
 MasterProfile::isSchemeSupported(const Data& scheme) const
 {
-   return mSupportedSchemes.count(scheme) != 0;
+   return mSupportedSchemes.find(scheme) != mSupportedSchemes.end();
 }
 
 void 
-MasterProfile::clearSupportedSchemes()
+MasterProfile::clearSupportedSchemes() noexcept
 {
    mSupportedSchemes.clear();
 }
@@ -66,10 +68,28 @@ MasterProfile::addSupportedMethod(const MethodTypes& method)
    mSupportedMethods.push_back(Token(getMethodName(method)));
 }
 
+void 
+MasterProfile::removeSupportedMethod(const MethodTypes& method)
+{
+   mSupportedMethodTypes.erase(method);
+   for (Tokens::iterator i = mSupportedMethods.begin();
+            i != mSupportedMethods.end(); ++i)
+   {
+       if (getMethodType(i->value()) == method)
+       {
+           mSupportedMethods.erase(i);
+           break;
+       }
+   }
+
+   // Should we clear the mimetypes as well?
+   // clearSupportedMimeTypes(method);
+}
+
 bool 
 MasterProfile::isMethodSupported(MethodTypes method) const
 {
-   return mSupportedMethodTypes.count(method) != 0;
+   return mSupportedMethodTypes.find(method) != mSupportedMethodTypes.end();
 }
 
 Tokens 
@@ -97,7 +117,7 @@ MasterProfile::getAllowedMethodsData() const
 }
 
 void 
-MasterProfile::clearSupportedMethods()
+MasterProfile::clearSupportedMethods() noexcept
 {
    mSupportedMethodTypes.clear();
    mSupportedMethods.clear();
@@ -148,31 +168,31 @@ MasterProfile::getSupportedOptionTags() const
 }
 
 void 
-MasterProfile::clearSupportedOptionTags()
+MasterProfile::clearSupportedOptionTags() noexcept
 {
    mSupportedOptionTags.clear();
 }
 
 void
-MasterProfile::setUacReliableProvisionalMode(ReliableProvisionalMode mode)
+MasterProfile::setUacReliableProvisionalMode(ReliableProvisionalMode mode) noexcept
 {
    mUacReliableProvisionalMode = mode;
 }
 
 void
-MasterProfile::setUasReliableProvisionalMode(ReliableProvisionalMode mode)
+MasterProfile::setUasReliableProvisionalMode(ReliableProvisionalMode mode) noexcept
 {
   mUasReliableProvisionalMode = mode;
 }
 
 MasterProfile::ReliableProvisionalMode
-MasterProfile::getUacReliableProvisionalMode() const
+MasterProfile::getUacReliableProvisionalMode() const noexcept
 {
    return mUacReliableProvisionalMode;
 }
 
 MasterProfile::ReliableProvisionalMode
-MasterProfile::getUasReliableProvisionalMode() const
+MasterProfile::getUasReliableProvisionalMode() const noexcept
 {
    return mUasReliableProvisionalMode;
 }
@@ -240,7 +260,7 @@ MasterProfile::clearSupportedMimeTypes(const MethodTypes& method)
 }
 
 void 
-MasterProfile::clearSupportedMimeTypes()
+MasterProfile::clearSupportedMimeTypes() noexcept
 {
    mSupportedMimeTypes.clear();
 }
@@ -264,7 +284,7 @@ MasterProfile::getSupportedEncodings() const
 }
 
 void 
-MasterProfile::clearSupportedEncodings()
+MasterProfile::clearSupportedEncodings() noexcept
 {
    mSupportedEncodings.clear();
 }
@@ -295,7 +315,7 @@ MasterProfile::getSupportedLanguages() const
 }
 
 void 
-MasterProfile::clearSupportedLanguages()
+MasterProfile::clearSupportedLanguages() noexcept
 {
    mSupportedLanguages.clear();
 }
@@ -326,104 +346,104 @@ MasterProfile::getAllowedEvents() const
 }
 
 void 
-MasterProfile::clearAllowedEvents()
+MasterProfile::clearAllowedEvents() noexcept
 {
    mAllowedEvents.clear();
 }
 
 bool& 
-MasterProfile::validateContentEnabled()
+MasterProfile::validateContentEnabled() noexcept
 {
    return mValidateContentEnabled;   
 }
 
 bool 
-MasterProfile::validateContentEnabled() const
+MasterProfile::validateContentEnabled() const noexcept
 {
    return mValidateContentEnabled;   
 }
 
 bool& 
-MasterProfile::validateContentLanguageEnabled()
+MasterProfile::validateContentLanguageEnabled() noexcept
 {
    return mValidateContentLanguageEnabled;   
 }
 
 bool 
-MasterProfile::validateContentLanguageEnabled() const
+MasterProfile::validateContentLanguageEnabled() const noexcept
 {
    return mValidateContentLanguageEnabled;   
 }
 
 bool& 
-MasterProfile::validateAcceptEnabled()
+MasterProfile::validateAcceptEnabled() noexcept
 {
    return mValidateAcceptEnabled;   
 }
 
 bool 
-MasterProfile::validateAcceptEnabled() const
+MasterProfile::validateAcceptEnabled() const noexcept
 {
    return mValidateAcceptEnabled;   
 }
 
 bool 
-MasterProfile::allowBadRegistrationEnabled() const
+MasterProfile::allowBadRegistrationEnabled() const noexcept
 {
    return mAllowBadRegistrationEnabled;   
 }
 
 bool& 
-MasterProfile::allowBadRegistrationEnabled()
+MasterProfile::allowBadRegistrationEnabled() noexcept
 {
    return mAllowBadRegistrationEnabled;   
 }
 
   
-UInt32 &
-MasterProfile::serverRegistrationMinExpiresTime(void)
+uint32_t &
+MasterProfile::serverRegistrationMinExpiresTime() noexcept
 {
    return mServerRegistrationMinExpires;
 }
 
-const UInt32 
-MasterProfile::serverRegistrationMinExpiresTime(void) const
+uint32_t 
+MasterProfile::serverRegistrationMinExpiresTime() const noexcept
 {
    return mServerRegistrationMinExpires;
 }
 
-UInt32 &
-MasterProfile::serverRegistrationMaxExpiresTime(void)
+uint32_t &
+MasterProfile::serverRegistrationMaxExpiresTime() noexcept
 {
    return mServerRegistrationMaxExpires;
 }
 
-const UInt32 
-MasterProfile::serverRegistrationMaxExpiresTime(void) const
+uint32_t 
+MasterProfile::serverRegistrationMaxExpiresTime() const noexcept
 {
    return mServerRegistrationMaxExpires;
 }
 
-UInt32 &
-MasterProfile::serverRegistrationDefaultExpiresTime(void)
+uint32_t &
+MasterProfile::serverRegistrationDefaultExpiresTime() noexcept
 {
    return mServerRegistrationDefaultExpires;
 }
 
-const UInt32 
-MasterProfile::serverRegistrationDefaultExpiresTime(void) const
+uint32_t 
+MasterProfile::serverRegistrationDefaultExpiresTime() const noexcept
 {
    return mServerRegistrationDefaultExpires;
 }
 
 bool 
-MasterProfile::checkReqUriInMergeDetectionEnabled() const
+MasterProfile::checkReqUriInMergeDetectionEnabled() const noexcept
 {
    return mCheckReqUriInMergeDetectionEnabled;   
 }
 
 bool& 
-MasterProfile::checkReqUriInMergeDetectionEnabled()
+MasterProfile::checkReqUriInMergeDetectionEnabled() noexcept
 {
    return mCheckReqUriInMergeDetectionEnabled;   
 }
@@ -434,12 +454,12 @@ MasterProfile::clone() const
    return new MasterProfile(*this);
 }
 
-bool& MasterProfile::additionalTransactionTerminatingResponsesEnabled()
+bool& MasterProfile::additionalTransactionTerminatingResponsesEnabled() noexcept
 {
   return mAdditionalTransactionTerminatingResponsesEnabled;
 }
 
-bool MasterProfile::additionalTransactionTerminatingResponsesEnabled() const
+bool MasterProfile::additionalTransactionTerminatingResponsesEnabled() const noexcept
 {
   return mAdditionalTransactionTerminatingResponsesEnabled;
 }
@@ -463,7 +483,7 @@ const std::set<int>& MasterProfile::getAdditionalTransactionTerminatingResponses
   return mAdditionalTransactionTerminatingResponsess;
 }
 
-void MasterProfile::clearAdditionalTransactionTerminatingResponses(void)
+void MasterProfile::clearAdditionalTransactionTerminatingResponses() noexcept
 {
   mAdditionalTransactionTerminatingResponsess.clear();
 }

@@ -27,7 +27,6 @@ class DumProcessHandler : public AsyncProcessHandler, public ExternalTimerHandle
       DialogUsageManager* mDum;      
       ExternalTimer* mExternalTimer;      
       bool mStopped;      
-      bool mCurrentlyProcessing;
 };
 
 } // namespace resip

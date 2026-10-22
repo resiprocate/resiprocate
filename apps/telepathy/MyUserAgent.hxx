@@ -23,28 +23,37 @@
 #endif
 
 #include <resip/recon/UserAgent.hxx>
+#include <resip/stack/Pidf.hxx>
 
 #include "Connection.hxx"
+#include "MyInstantMessage.hxx"
 
 namespace tr {
 
 class Connection;
+class MyInstantMessage;
 
 class MyUserAgent : public QObject, public recon::UserAgent, public resip::ThreadIf
 {
    Q_OBJECT
 public:
-   MyUserAgent(recon::ConversationManager* conversationManager, resip::SharedPtr<recon::UserAgentMasterProfile> profile, Connection& connection);
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
-   virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
-   virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
-   virtual void onSuccess(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
-   virtual void onRemoved(resip::ClientRegistrationHandle, const resip::SipMessage& response);
-   virtual void onFailure(resip::ClientRegistrationHandle, const resip::SipMessage& response);
-   virtual int onRequestRetry(resip::ClientRegistrationHandle, int retrySeconds, const resip::SipMessage& response);
-   virtual void thread();
+   MyUserAgent(recon::ConversationManager* conversationManager, std::shared_ptr<recon::UserAgentMasterProfile> profile, Connection& connection, std::shared_ptr<MyInstantMessage> instantMessage);
+   void onApplicationTimer(unsigned int id, std::chrono::duration<double> duration, unsigned int seq) override;
+   void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode) override;
+   void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData) override;
+   void onSuccess(resip::ClientRegistrationHandle h, const resip::SipMessage& response) override;
+   void onRemoved(resip::ClientRegistrationHandle, const resip::SipMessage& response) override;
+   void onFailure(resip::ClientRegistrationHandle, const resip::SipMessage& response) override;
+   int onRequestRetry(resip::ClientRegistrationHandle, int retrySeconds, const resip::SipMessage& response) override;
+   void thread() override;
    virtual void setStatus(uint newStatus, uint reason);
    virtual void stop();
+   
+private:
+   std::vector<resip::Pidf::Tuple> getTuplesFromXML(const resip::Data& notifyData);
+   
+signals:
+   void setContactStatus(const QString& identifier, const QString& status);
 
 private:
    tr::Connection& mConnection;

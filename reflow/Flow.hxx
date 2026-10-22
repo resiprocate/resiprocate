@@ -9,12 +9,7 @@
 #include <rutil/TimeLimitFifo.hxx>
 #include <rutil/Mutex.hxx>
 
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp/srtp.h>
-#endif
-#include <boost/shared_ptr.hpp>
+#include "Srtp2Helper.hxx"
 
 #include "reTurn/client/TurnAsyncUdpSocket.hxx"
 #include "reTurn/client/TurnAsyncTcpSocket.hxx"
@@ -23,6 +18,12 @@
 #include "reTurn/StunMessage.hxx"
 #include "FakeSelectSocketDescriptor.hxx"
 #include "dtls_wrapper/DtlsSocket.hxx"
+
+#include "FlowContext.hxx"
+#include "RTCPEventLoggingHandler.hxx"
+
+#include <memory>
+#include <utility>
 
 using namespace reTurn;
 
@@ -44,6 +45,14 @@ class Flow : public TurnAsyncSocketHandler
 {
 public:
 
+   static int maxReceiveFifoDuration;
+   static int maxReceiveFifoSize;
+   /// Seconds after which a server DTLS handshake still in progress gives up its place, when a
+   /// flow already has as many DTLS associations as it allows, to a new peer that has completed
+   /// the cookie exchange: a real handshake takes a few round trips; one that hasn't finished by
+   /// then has stalled (eg. to hold the place)
+   static int dtlsHandshakeEvictionGrace;
+
    enum FlowState
    {
       Unconnected,
@@ -55,15 +64,18 @@ public:
       Ready
    };
 
-   Flow(asio::io_service& ioService,
+   Flow(asio::io_context& ioService,
         asio::ssl::context& sslContext,
         unsigned int componentId,
         const StunTuple& localBinding, 
-        MediaStream& mediaStream);
+        MediaStream& mediaStream,
+        bool forceCOMedia,
+        std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = nullptr,
+        std::shared_ptr<FlowContext> context = nullptr);
    ~Flow();
 
-   void activateFlow(UInt8 allocationProps = StunMessage::PropsNone);
-   void activateFlow(UInt64 reservationToken);
+   void activateFlow(uint8_t allocationProps = StunMessage::PropsNone);
+   void activateFlow(uint64_t reservationToken);
 
    bool isReady() { return mFlowState == Ready; }
 
@@ -97,9 +109,14 @@ public:
    void startDtlsClient(const char* address, unsigned short port);
 
    /// This method should be called when remote fingerprint is discovered
-   /// via SDP negotiation.  After this is called only dtls-srtp connections
-   /// with a matching fingerprint will be maintained.
-   void setRemoteSDPFingerprint(const resip::Data& fingerprint);
+   /// via SDP negotiation (RFC 8122 a=fingerprint): hashFunction is its hash
+   /// function textual name, eg. "sha-256".  SRTP is only set up for dtls-srtp
+   /// connections whose peer certificate matches it, so none is set up until
+   /// this is called; connections that have already completed their handshake
+   /// are checked now.  Calling it means DTLS-SRTP was negotiated: from then on,
+   /// media is only sent to, and passed on from, endpoints whose DTLS handshake
+   /// has set up SRTP - never in the clear.
+   void setRemoteSDPFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint);
 
    /// Retrieves the stored remote SDP Fingerprint.
    const resip::Data getRemoteSDPFingerprint();
@@ -108,11 +125,14 @@ public:
    StunTuple getSessionTuple();  // returns either local, reflexive, or relay tuple depending on NatTraversalMode
    StunTuple getRelayTuple();
    StunTuple getReflexiveTuple();
-   UInt64 getReservationToken();
+   uint64_t getReservationToken();
    unsigned int getComponentId() { return mComponentId; }
 
 private:
-   asio::io_service& mIOService;
+   // Reads mRemoteSDPFingerprint* from its handshakeCompleted callback, which is run with mMutex held
+   friend class FlowDtlsSocketContext;
+
+   asio::io_context& mIOService;
    asio::ssl::context& mSslContext;
 
    // Note: these member variables are set at creation time and never changed, thus
@@ -123,24 +143,48 @@ private:
    // MediaStream that this Flow belongs too
    MediaStream& mMediaStream;
 
+   // Use peer's RTP source IP instead of the peer's SDP connection IP
+   bool mForceCOMedia;
+
+   // Logging handler, if set
+   std::shared_ptr<RTCPEventLoggingHandler> mRtcpEventLoggingHandler;
+
+   // Flow context from application layer
+   std::shared_ptr<FlowContext> mFlowContext;
+
    // mTurnSocket has it's own threading protection
-   boost::shared_ptr<TurnAsyncSocket> mTurnSocket;
+   std::shared_ptr<TurnAsyncSocket> mTurnSocket;
+   bool mPrivatePeer;
 
    // These are only set once, then accessed - thus they do not require mutex protection
-   UInt8 mAllocationProps;
-   UInt64 mReservationToken; 
+   uint8_t mAllocationProps;
+   uint64_t mReservationToken; 
 
-   // Mutex to protect the following members that may be get/set from multiple threads
-   resip::Mutex mMutex;
+   // Mutex to protect the following members that may be get/set from multiple threads.  Shared
+   // with the DtlsSockets' retransmission timers, which take it when they fire (on the io thread)
+   // and may still be pending when the Flow is destroyed.
+   std::shared_ptr<resip::Mutex> mSharedMutex;
+   resip::Mutex& mMutex;
    StunTuple mReflexiveTuple;
    StunTuple mRelayTuple;
+   resip::Data mRemoteSDPFingerprintHashFunction;
    resip::Data mRemoteSDPFingerprint;
+   asio::ip::address mActiveDestinationAddress;
+   unsigned short mActiveDestinationPort;
 
    // Map to store all DtlsSockets - in forking cases there can be more than one
    std::map<reTurn::StunTuple, dtls::DtlsSocket*> mDtlsSockets;
    dtls::DtlsSocket* getDtlsSocket(const reTurn::StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketClient(const StunTuple& endpoint);
-   dtls::DtlsSocket* createDtlsSocketServer(const StunTuple& endpoint);
+#ifdef USE_SSL
+   // Handles a DTLS packet from an endpoint without a DtlsSocket: through mDtlsListener's cookie
+   // exchange, so a server DtlsSocket is only created once the endpoint proves it receives at its
+   // address, and only up to MaxDtlsSockets.  Returns the new socket, if one was created.
+   dtls::DtlsSocket* acceptDtlsSocketServer(const StunTuple& endpoint, const unsigned char* data, size_t len);
+   static const size_t MaxDtlsSockets = 8;
+   std::unique_ptr<dtls::DtlsListener> mDtlsListener;
+   bool mDtlsSocketLimitLogged = false;
+#endif
 
    volatile FlowState mFlowState;
    void changeFlowState(FlowState newState);
@@ -149,13 +193,12 @@ private:
    class ReceivedData
    {
    public:
-      ReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data) :
+      ReceivedData(const asio::ip::address& address, unsigned short port, std::shared_ptr<DataBuffer> data) :
          mAddress(address), mPort(port), mData(data) {}
-      ~ReceivedData() {}
 
       asio::ip::address mAddress;
       unsigned short mPort;
-      boost::shared_ptr<DataBuffer> mData;
+      std::shared_ptr<DataBuffer> mData;
    };
    // FIFO for received data
    typedef resip::TimeLimitFifo<ReceivedData> ReceivedDataFifo;
@@ -175,7 +218,7 @@ private:
    virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple);
    virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple);
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken);
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, uint64_t reservationToken);
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e);
 
    virtual void onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime);
@@ -191,7 +234,7 @@ private:
    virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e);
 
    //virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
 
    virtual void onSendSuccess(unsigned int socketDesc);
@@ -207,6 +250,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2007-2026, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -1,4 +1,6 @@
- #include <iostream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
 #if !defined(WIN32)
 #include <sys/types.h>
@@ -21,11 +23,17 @@
 #include "CreateCert.hxx"
 #include "TestDtlsUdp.hxx"
 
-extern "C" 
+// The fixed RTP header (RFC 3550 section 5.1).  Defined here because libsrtp's
+// srtp_hdr_t lives in srtp_priv.h, which libsrtp2 doesn't install.
+struct RtpHeader
 {
-#include <srtp/srtp.h>
-#include <srtp/srtp_priv.h>
-}
+   unsigned char vpxcc;  // version (2 bits), padding, extension, CSRC count
+   unsigned char mpt;    // marker bit, payload type (7 bits)
+   uint16_t seq;         // network byte order
+   uint32_t ts;          // network byte order
+   uint32_t ssrc;        // network byte order
+};
+static_assert(sizeof(RtpHeader) == 12, "RTP header must be 12 bytes");
 
 void DumpHexa2(const unsigned char* pInMsg, unsigned long ulInMsgLen, std::string &rOutDump)
 {
@@ -34,20 +42,18 @@ void DumpHexa2(const unsigned char* pInMsg, unsigned long ulInMsgLen, std::strin
       return;
    }
 
-   char tmp[5];
-   const unsigned char* pp = pInMsg;
-
-   rOutDump += "\n\n***new data*** length: ";
-   rOutDump += ulInMsgLen;
-   rOutDump += " dump: ";
+   std::ostringstream ss;
+   ss << "\n\n***new data***";
+   ss << " length: " << ulInMsgLen;
+   ss << " dump:";
 
    for (unsigned int z=0; z < ulInMsgLen; z++)
    {
-      memset(tmp, 0, sizeof(tmp));
-      sprintf(tmp, "%02X ",pp[z]);
-      pp++;
-      rOutDump += tmp;
+      ss << ' ';
+      ss << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned>(pInMsg[z]);
    }
+
+   rOutDump = ss.str();
 }
 
 using namespace std;
@@ -87,26 +93,7 @@ TestDtlsUdpSocketContext::write(const unsigned char* data, unsigned int len)
 
    if ( s == SOCKET_ERROR )
    {
-      int e = errno;
-      switch (e)
-      {
-      case ECONNREFUSED:
-      case EHOSTDOWN:
-      case EHOSTUNREACH:
-         {
-            // quietly ignore this 
-         }
-         break;
-      case EAFNOSUPPORT:
-         {
-            clog << "err EAFNOSUPPORT in send" << endl;
-         }
-         break;
-      default:
-         {
-            clog << "err " << e << " "  << strerror(e) << " in send" << endl;
-         }
-      }
+      clog << "err " << getErrno() << " in send" << endl;
       assert(0);
    }
 
@@ -128,7 +115,7 @@ TestDtlsUdpSocketContext::handshakeCompleted()
 
    cout << "Hey, amazing, it worked\n";
 
-   if(mSocket->getRemoteFingerprint(fprint))
+   if(mSocket->getRemoteFingerprint("sha-256",fprint,sizeof(fprint)))
    {
       cout << "Remote fingerprint == " << fprint << endl;
    } 
@@ -139,24 +126,27 @@ TestDtlsUdpSocketContext::handshakeCompleted()
       cout <<"SRTP Extension negotiated profile="<<srtp_profile->name << endl;
    }
 
-   mSocket->createSrtpSessionPolicies(srtpPolicyIn,srtpPolicyOut);
+   bool created=mSocket->createSrtpSessionPolicies(srtpPolicyOut,srtpPolicyIn);  // (outbound, inbound)
+   assert(created);
 
    r=srtp_create(&srtpIn,&srtpPolicyIn);
    assert(r==0);
    r=srtp_create(&srtpOut,&srtpPolicyOut);
    assert(r==0);
+   delete[] srtpPolicyIn.key;
+   delete[] srtpPolicyOut.key;
 
    useSrtp=true;
 
    cout << "Made SRTP policies\n";
    if(mSocket->getSocketType()==DtlsSocket::Client) 
    {
-      char *testData="test data";
+      const char *testData="test data";
       sendRtpData((const unsigned char *)testData,strlen(testData)+1);
 
 
 #if defined(WIN32)
-      char *testData2="test bobo";
+      const char *testData2="test bobo";
       sendRtpData((const unsigned char *)testData2,strlen(testData)+1);
 #endif
    }
@@ -172,55 +162,53 @@ TestDtlsUdpSocketContext::handshakeFailed(const char *err)
 void
 TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int len)
 {
-   srtp_hdr_t *hdr;
-   unsigned char *ptr;
+   RtpHeader *hdr;
+   unsigned char *buffer, *ptr;
    int l=0;
 
    cerr << "Sending RTP packet of length " << len << endl;
 
-   ptr=(unsigned char *)malloc(sizeof(srtp_hdr_t)+len+SRTP_MAX_TRAILER_LEN+4);
-   assert(ptr!=0);
-   hdr=(srtp_hdr_t *)ptr;
-   ptr+=sizeof(srtp_hdr_t);
-   l+=sizeof(srtp_hdr_t);
+   buffer=(unsigned char *)malloc(sizeof(RtpHeader)+len+SRTP_MAX_TRAILER_LEN+4);
+   assert(buffer!=0);
+   ptr=buffer;
+   hdr=(RtpHeader *)ptr;
+   ptr+=sizeof(RtpHeader);
+   l+=sizeof(RtpHeader);
 
-   hdr->version = 2;              /* RTP version two     */
-   hdr->p    = 0;                 /* no padding needed   */
-   hdr->x    = 0;                 /* no header extension */
-   hdr->cc   = 0;                 /* no CSRCs            */
-   hdr->m    = 0;                 /* marker bit          */
-   hdr->pt   = 0xf;               /* payload type        */
-   hdr->seq  = mRtpSeq++;         /* sequence number     */
-   hdr->ts   = htonl(0xdecafbad); /* timestamp           */
-   hdr->ssrc = htonl(ssrc);       /* synch. source       */
+   hdr->vpxcc = 0x80;             /* version 2, no padding, extension or CSRCs */
+   hdr->mpt   = 0x0f;             /* no marker, payload type 15 */
+   hdr->seq   = htons(mRtpSeq++); /* sequence number     */
+   hdr->ts    = htonl(0xdecafbad);/* timestamp           */
+   hdr->ssrc  = htonl(ssrc);      /* synch. source       */
 
    memcpy(ptr,data,len);
    l+=len;
 
    if(useSrtp)
    {
-      int r=srtp_protect(srtpOut,(unsigned char *)hdr,&l);
-      assert(r==0);
+      srtp_err_status_t r=srtp_protect(srtpOut,(unsigned char *)hdr,&l);
+      assert(r==srtp_err_status_ok);
    }
    write((unsigned char *)hdr,l);
+
+   free(buffer);
 }
 
 void
 TestDtlsUdpSocketContext::recvRtpData(unsigned char *in, unsigned int inlen, unsigned char *out, unsigned int *outlen,unsigned int maxoutlen)
 {
-   srtp_hdr_t *hdr;
    int len_int=(int)inlen;
-   hdr=(srtp_hdr_t *)in;
 
    if(useSrtp)
    {
-      int r=srtp_unprotect(srtpIn,hdr,&len_int);
-      assert(r==0);
+      srtp_err_status_t r=srtp_unprotect(srtpIn,in,&len_int);
+      assert(r==srtp_err_status_ok);
       inlen=(unsigned int)len_int;
    }
 
-   in+=sizeof(srtp_hdr_t);
-   inlen-=sizeof(srtp_hdr_t);
+   assert(inlen>=sizeof(RtpHeader));
+   in+=sizeof(RtpHeader);
+   inlen-=sizeof(RtpHeader);
 
    assert(inlen<maxoutlen);
    memcpy(out,in,inlen);
@@ -230,7 +218,8 @@ TestDtlsUdpSocketContext::recvRtpData(unsigned char *in, unsigned int inlen, uns
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

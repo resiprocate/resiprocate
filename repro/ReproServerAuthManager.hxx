@@ -2,12 +2,15 @@
 #define REPRO_SERVERAUTHMANAGER_HXX
 
 #include <map>
+#include <vector>
 
+#include "rutil/AsyncBool.hxx"
+#include "rutil/DigestStream.hxx"
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 
 namespace resip
 {
@@ -23,12 +26,13 @@ class ReproServerAuthManager: public resip::ServerAuthManager
 {
    public:
       ReproServerAuthManager(resip::DialogUsageManager& dum, 
-                             Dispatcher* authRequestDispatcher,
+                             resip::Dispatcher* authRequestDispatcher,
                              AclStore& aclDb,
                              bool useAuthInt,
                              bool rejectBadNonces,
                              bool challengeThirdParties,
-                             const resip::Data& staticRealm = resip::Data::Empty);
+                             const resip::Data& staticRealm = resip::Data::Empty,
+                             const std::vector<resip::DigestType>& challengeDigestTypes = std::vector<resip::DigestType>());
       
       ~ReproServerAuthManager();
       
@@ -42,11 +46,11 @@ class ReproServerAuthManager: public resip::ServerAuthManager
       
       virtual bool useAuthInt() const;
       virtual bool rejectBadNonces() const;
-      virtual AsyncBool requiresChallenge(const resip::SipMessage& msg);
+      virtual resip::AsyncBool requiresChallenge(const resip::SipMessage& msg);
 
    private:
       resip::DialogUsageManager& mDum;
-      Dispatcher* mAuthRequestDispatcher;
+      resip::Dispatcher* mAuthRequestDispatcher;
       AclStore&  mAclDb;
       bool mUseAuthInt;
       bool mRejectBadNonces;
@@ -60,6 +64,7 @@ class ReproServerAuthManager: public resip::ServerAuthManager
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

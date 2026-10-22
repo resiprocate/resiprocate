@@ -18,7 +18,7 @@ namespace resip
 class TokenOrQuotedStringCategory : public ParserCategory
 {
    public:
-      enum {commaHandling = CommasAllowedOutputCommas};
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputCommas;
 
       TokenOrQuotedStringCategory();
       explicit TokenOrQuotedStringCategory(const Data& value, bool quoted);

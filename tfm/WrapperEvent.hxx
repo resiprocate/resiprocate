@@ -3,18 +3,21 @@
 
 #include "tfm/Expect.hxx"
 
+#include <memory>
+#include <utility>
+
 template<class T>
 class WrapperEvent : public Event
 {
    public:
       
-      WrapperEvent(boost::shared_ptr<T> t, TestEndPoint* endPoint) : 
+      WrapperEvent(std::shared_ptr<T> t, TestEndPoint* endPoint) :
          Event(endPoint),
-         mEvent(t)
+         mEvent(std::move(t))
       {
       }
 
-      const boost::shared_ptr<T> get() const
+      std::shared_ptr<T> get() const noexcept
       {
          return mEvent;
       }
@@ -34,20 +37,20 @@ class WrapperEvent : public Event
       }      
 
    protected:
-      boost::shared_ptr<T> mEvent;
+       std::shared_ptr<T> mEvent;
 };
 
 template<class T>
-static WrapperEvent<T>* createWrapperEvent(boost::shared_ptr<T> t, TestEndPoint* endPoint)
+static WrapperEvent<T>* createWrapperEvent(std::shared_ptr<T> t, TestEndPoint* endPoint)
 {
-   return new WrapperEvent<T>(t, endPoint);
+   return new WrapperEvent<T>(std::move(t), endPoint);
 }
 
 template<class T>
 class WrapperEventMatcher : public EventMatcher
 {
    public:
-      virtual bool isMatch(boost::shared_ptr<Event> event)
+      virtual bool isMatch(std::shared_ptr<Event> event)
       {
          WrapperEvent<T>* wevent = dynamic_cast<WrapperEvent<T>*>(event.get());
          if (wevent)
@@ -92,7 +95,7 @@ class WrapperEventPredicate : public ExpectPredicate
          return mMessage;
       }      
    public:
-      virtual bool passes(boost::shared_ptr<Event> event) 
+      virtual bool passes(std::shared_ptr<Event> event)
       {
          WrapperEvent<T>* wevent = dynamic_cast<WrapperEvent<T>*>(event.get());
          if (wevent)

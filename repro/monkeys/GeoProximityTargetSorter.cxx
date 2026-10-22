@@ -4,6 +4,7 @@
 
 #ifndef RESIP_FIXED_POINT
 #include <algorithm>
+#include <random>
 
 #ifdef USE_MAXMIND_GEOIP
 // MaxMind GeoIP header
@@ -71,13 +72,19 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
    mDefaultDistance(config.getConfigUnsignedLong("GeoProximityDefaultDistance", 0)),
    mLoadBalanceEqualDistantTargets(config.getConfigBool("LoadBalanceEqualDistantTargets", true))
 {
-   int flags = REG_EXTENDED | REG_NOSUB;
+   // Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+   // of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+   // std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+   // use the EMCAScript syntax.
+   std::regex_constants::syntax_option_type flags = std::regex_constants::ECMAScript | std::regex_constants::nosubs;
 
    if(!mRUriRegularExpressionData.empty())
    {
-      mRUriRegularExpression = new regex_t;
-      int ret = regcomp(mRUriRegularExpression, mRUriRegularExpressionData.c_str(), flags);
-      if( ret != 0 )
+      try
+      {
+         mRUriRegularExpression = new regex(mRUriRegularExpressionData.c_str(), flags);
+      }
+      catch(std::regex_error&)
       {
          delete mRUriRegularExpression;
          ErrLog( << "GeoProximityRequestUriFilter rule has invalid match expression: "
@@ -98,7 +105,9 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
       mGeoIPv4 = (GeoIP*)GeoIP_open(geoIPv4Database.c_str(), GEOIP_MEMORY_CACHE);  // Cache entire DB in memory - could make this configurable
       if(mGeoIPv4 != 0)
       {
-         InfoLog(<< "GeoProximityTargetSorter: IPv4 db info: " << GeoIP_database_info((GeoIP*)mGeoIPv4));
+         char* dbInfo = GeoIP_database_info((GeoIP*)mGeoIPv4);
+         InfoLog(<< "GeoProximityTargetSorter: IPv4 db info: " << dbInfo);
+         free(dbInfo);
 
          int i = GeoIP_database_edition((GeoIP*)mGeoIPv4);
    
@@ -130,7 +139,9 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
       mGeoIPv6 = (GeoIP*)GeoIP_open(geoIPv6Database.c_str(), GEOIP_MEMORY_CACHE);  // Cache entire DB in memory - could make this configurable
       if(mGeoIPv6 != 0)
       {
-         InfoLog(<< "GeoProximityTargetSorter: IPv6 db info: " << GeoIP_database_info((GeoIP*)mGeoIPv6));
+         char* dbInfo = GeoIP_database_info((GeoIP*)mGeoIPv6);
+         InfoLog(<< "GeoProximityTargetSorter: IPv6 db info: " << dbInfo);
+         free(dbInfo);
 
          int i = GeoIP_database_edition((GeoIP*)mGeoIPv6);
 
@@ -163,7 +174,6 @@ GeoProximityTargetSorter::~GeoProximityTargetSorter()
 {
    if(mRUriRegularExpression)
    {
-      regfree(mRUriRegularExpression);
       delete mRUriRegularExpression;
       mRUriRegularExpression = 0;
    }
@@ -211,7 +221,9 @@ GeoProximityTargetSorter::process(RequestContext &rc)
          {
             if(mRUriRegularExpression)
             {
-               if(regexec(mRUriRegularExpression, Data::from(rc.getOriginalRequest().header(h_RequestLine).uri()).c_str(), 0 /*ignored*/, 0 /*ignored*/, 0/*eflags*/) != 0)
+               // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+               //        the string, this is backwards compatible with the previous regexec PCRE implementation
+               if(!std::regex_search(Data::from(rc.getOriginalRequest().header(h_RequestLine).uri()).c_str(), *mRUriRegularExpression))
                {
                   // did not match 
                   DebugLog( << "GeoProximityTargetSorter: Skipped - request URI "<< rc.getOriginalRequest().header(h_RequestLine).uri() << " did not match.");
@@ -275,8 +287,10 @@ GeoProximityTargetSorter::process(RequestContext &rc)
 
          if(mLoadBalanceEqualDistantTargets)
          {
+            random_device rd;
+            mt19937 randomgen(rd());
             // Shuffle Targets - so that targets of equal distance will be in random order
-            random_shuffle(flatTargetList.begin(), flatTargetList.end());
+            shuffle(flatTargetList.begin(), flatTargetList.end(), randomgen);
          }
 
          // Sort List by distance - note:  if we don't know the client location, there is no point in sorting

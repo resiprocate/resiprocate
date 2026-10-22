@@ -18,26 +18,103 @@
 #include "rutil/ServerProcess.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Time.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
 using namespace resip;
 using namespace std;
 
-ServerProcess::ServerProcess() : mPidFile("")
+static ServerProcess* _instance = NULL;
+
+static void
+signalHandler(int signo)
 {
+   resip_assert(_instance);
+   _instance->onSignal(signo);
+}
+
+ServerProcess::ServerProcess(std::chrono::milliseconds waitPeriod)
+ : mWaitPeriod(waitPeriod),
+   mPidFile(""),
+   mFinished(false),
+   mReceivedHUP(false)
+{
+   resip_assert(!_instance);
+   _instance = this;
 }
 
 ServerProcess::~ServerProcess()
 {
+   _instance = NULL;
+}
+
+void
+ServerProcess::onSignal(int signo)
+{
+#ifndef _WIN32
+   if(signo == SIGHUP)
+   {
+      InfoLog(<<"Received HUP signal, logger reset");
+      Log::reset();
+      mReceivedHUP = true;
+      return;
+   }
+#endif
+   std::cerr << "Shutting down" << endl;
+   mFinished = true;
+}
+
+bool
+ServerProcess::checkPosixProcessControl(const Data& dependentSettings)
+{
+#ifdef WIN32
+   WarningLog(<<dependentSettings<<" not supported on Windows, the setting will be ignored");
+   return false;
+#else
+   return true;
+#endif
+}
+
+void
+ServerProcess::installSignalHandler()
+{
+   // Install signal handlers
+#ifndef _WIN32
+   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
+   {
+      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
+      exit(-1);
+   }
+   if ( signal( SIGHUP, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGHUP" << endl;
+      exit( -1 );
+   }
+#endif
+
+   if ( signal( SIGINT, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGINT" << endl;
+      exit( -1 );
+   }
+
+   if ( signal( SIGTERM, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGTERM" << endl;
+      exit( -1 );
+   }
 }
 
 void
 ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
 {
 #ifdef WIN32
-   // setuid is not supported on Windows
-   throw std::runtime_error("Unable to drop privileges on Windows, please check the config");
+   // setuid is not supported on Windows.  Callers are expected to check
+   // checkPosixProcessControl() first and skip this entirely; warn through the
+   // same helper and return rather than throwing, so that a caller which
+   // forgets does not abort the process over a setting with no meaning here.
+   checkPosixProcessControl("RunAsUser/RunAsGroup");
 #else
    int rval;
    uid_t cur_uid;
@@ -190,16 +267,18 @@ void
 ServerProcess::daemonize()
 {
 #ifdef WIN32
-   // fork is not possible on Windows
-   ErrLog(<<"Unable to fork/daemonize on Windows, please check the config");
-   throw std::runtime_error("Unable to fork/daemonize on Windows, please check the config");
+   // fork() is not possible on Windows.  Callers are expected to check
+   // checkPosixProcessControl() first and skip this entirely; warn through the
+   // same helper and return rather than throwing, so that a caller which
+   // forgets keeps running in the foreground instead of aborting.
+   checkPosixProcessControl("Daemonize");
 #else
    pid_t pid;
    if ((pid = fork()) < 0) 
    {
       // fork() failed
-      ErrLog(<<"fork() failed: "<<strerror(errno));
-      throw std::runtime_error(strerror(errno));
+      ErrLog(<<"fork() failed: "<<strError(errno));
+      throw std::runtime_error(strError(errno));
    }
    else if (pid != 0)
    {
@@ -208,8 +287,8 @@ ServerProcess::daemonize()
    }
    if(chdir("/") < 0)
    {
-      ErrLog(<<"chdir() failed: "<<strerror(errno));
-      throw std::runtime_error(strerror(errno));
+      ErrLog(<<"chdir() failed: "<<strError(errno));
+      throw std::runtime_error(strError(errno));
    }
    // Nothing should be writing to stdout/stderr after this
    close(STDIN_FILENO);
@@ -231,8 +310,41 @@ ServerProcess::setPidFile(const Data& pidFile)
    mPidFile = pidFile;
 }
 
+void
+ServerProcess::mainLoop()
+{
+   // Main program thread, just waits here for a signal to shutdown
+   while (!mFinished)
+   {
+      doWait();
+      if(mReceivedHUP)
+      {
+         onReload();
+         mReceivedHUP = false;
+      }
+      onLoop();
+   }
+}
+
+void
+ServerProcess::doWait()
+{
+   sleepMs((unsigned int)mWaitPeriod.count());
+}
+
+void
+ServerProcess::onLoop()
+{
+}
+
+void
+ServerProcess::onReload()
+{
+}
+
 /* ====================================================================
  *
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2012 Daniel Pocock.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

@@ -14,8 +14,8 @@ class NodeIdStruct : public PDU {
 public:
    NodeIdStruct();
    NodeIdStruct(const NodeIdStruct&);
-   UInt64                        mHigh;
-   UInt64                        mLow;
+   uint64_t                        mHigh;
+   uint64_t                        mLow;
 
 
    PDUMemberFunctions
@@ -43,8 +43,8 @@ class IPv4AddrPortStruct : public PDU {
 public:
    IPv4AddrPortStruct();
    IPv4AddrPortStruct(const IPv4AddrPortStruct&);
-   UInt32                        mAddr;
-   UInt16                        mPort;
+   uint32_t                        mAddr;
+   uint16_t                        mPort;
 
 
    PDUMemberFunctions
@@ -56,7 +56,7 @@ public:
    IPv6AddrPortStruct();
    IPv6AddrPortStruct(const IPv6AddrPortStruct&);
    unsigned char                 mAddr[16];
-   UInt16                        mPort;
+   uint16_t                        mPort;
 
 
    PDUMemberFunctions
@@ -68,7 +68,7 @@ public:
    IpAddressAndPortStruct();
    IpAddressAndPortStruct(const IpAddressAndPortStruct&);
    AddressType                   mType;
-   UInt8                         mLength;
+   uint8_t                         mLength;
    struct mIpv4Address_ {
         IPv4AddrPortStruct*           mV4addrPort;
    } mIpv4Address;
@@ -131,8 +131,8 @@ class SignatureAndHashAlgorithmStruct : public PDU {
 public:
    SignatureAndHashAlgorithmStruct();
    SignatureAndHashAlgorithmStruct(const SignatureAndHashAlgorithmStruct&);
-   UInt8                         mSig;
-   UInt8                         mHash;
+   uint8_t                         mSig;
+   uint8_t                         mHash;
 
 
    PDUMemberFunctions
@@ -156,19 +156,19 @@ class ForwardingHeaderStruct : public PDU {
 public:
    ForwardingHeaderStruct();
    ForwardingHeaderStruct(const ForwardingHeaderStruct&);
-   UInt32                        mReloToken;
-   UInt32                        mOverlay;
-   UInt8                         mTtl;
-   UInt8                         mReserved;
-   UInt16                        mFragment;
-   UInt8                         mVersion;
-   UInt32                        mLength;
-   UInt64                        mTransactionId;
-   UInt16                        mFlags;
+   uint32_t                        mReloToken;
+   uint32_t                        mOverlay;
+   uint8_t                         mTtl;
+   uint8_t                         mReserved;
+   uint16_t                        mFragment;
+   uint8_t                         mVersion;
+   uint32_t                        mLength;
+   uint64_t                        mTransactionId;
+   uint16_t                        mFlags;
    std::vector<DestinationStruct*>  mViaList;
    std::vector<DestinationStruct*>  mDestinationList;
-   UInt16                        mRouteLogLenDummy;
-   UInt16                        mMessageCode;
+   uint16_t                        mRouteLogLenDummy;
+   uint16_t                        mMessageCode;
 
 
    PDUMemberFunctions
@@ -203,7 +203,7 @@ class ErrorResponseStruct : public PDU {
 public:
    ErrorResponseStruct();
    ErrorResponseStruct(const ErrorResponseStruct&);
-   UInt16                        mErrorCode;
+   uint16_t                        mErrorCode;
    resip::Data                   mReasonPhrase;
    resip::Data                   mErrorInfo;
 
@@ -271,12 +271,12 @@ public:
    FramedMessageStruct(const FramedMessageStruct&);
    FramedMessageType             mType;
    struct mData_ {
-        UInt32                        mSequence;
+        uint32_t                        mSequence;
         resip::Data                   mMessage;
    } mData;
    struct mAck_ {
-        UInt32                        mAckSequence;
-        UInt32                        mReceived;
+        uint32_t                        mAckSequence;
+        uint32_t                        mReceived;
    } mAck;
 
 
@@ -301,7 +301,7 @@ public:
    ConnectReqAnsStruct(const ConnectReqAnsStruct&);
    resip::Data                   mUfrag;
    resip::Data                   mPassword;
-   UInt16                        mApplication;
+   uint16_t                        mApplication;
    resip::Data                   mRole;
    std::vector<IceCandidateStruct*>  mCandidates;
 
@@ -319,7 +319,7 @@ class PingReqStruct : public PDU {
 public:
    PingReqStruct();
    PingReqStruct(const PingReqStruct&);
-   std::vector<UInt8>            mRequestedInfo;
+   std::vector<uint8_t>            mRequestedInfo;
 
 
    PDUMemberFunctions
@@ -332,10 +332,10 @@ public:
    PingInformationStruct(const PingInformationStruct&);
    PingInformationType           mType;
    struct mResponsibleSet_ {
-        UInt32                        mResponsiblePpb;
+        uint32_t                        mResponsiblePpb;
    } mResponsibleSet;
    struct mNumResources_ {
-        UInt32                        mNumResources;
+        uint32_t                        mNumResources;
    } mNumResources;
 
 
@@ -347,7 +347,7 @@ class PingAnsStruct : public PDU {
 public:
    PingAnsStruct();
    PingAnsStruct(const PingAnsStruct&);
-   UInt64                        mResponseId;
+   uint64_t                        mResponseId;
    std::vector<PingInformationStruct*>  mPingInfo;
 
 
@@ -359,7 +359,7 @@ class TunnelReqStruct : public PDU {
 public:
    TunnelReqStruct();
    TunnelReqStruct(const TunnelReqStruct&);
-   UInt16                        mApplication;
+   uint16_t                        mApplication;
    resip::Data                   mDialogId;
    resip::Data                   mApplicationPdu;
 
@@ -391,7 +391,7 @@ class ArrayEntryStruct : public PDU {
 public:
    ArrayEntryStruct();
    ArrayEntryStruct(const ArrayEntryStruct&);
-   UInt32                        mIndex;
+   uint32_t                        mIndex;
    DataValueStruct*              mValue;
 
 
@@ -446,8 +446,8 @@ class StoredDataStruct : public PDU {
 public:
    StoredDataStruct();
    StoredDataStruct(const StoredDataStruct&);
-   UInt64                        mStorageTime;
-   UInt32                        mLifetime;
+   uint64_t                        mStorageTime;
+   uint32_t                        mLifetime;
    StoredDataValueStruct*        mValue;
    SignatureStruct*              mSignature;
 
@@ -460,9 +460,9 @@ class StoreKindDataStruct : public PDU {
 public:
    StoreKindDataStruct();
    StoreKindDataStruct(const StoreKindDataStruct&);
-   UInt32                        mKind;
+   uint32_t                        mKind;
    DataModel                     mDataModel;
-   UInt64                        mGenerationCounter;
+   uint64_t                        mGenerationCounter;
    std::vector<StoredDataStruct*>  mValues;
 
 
@@ -475,7 +475,7 @@ public:
    StoreReqStruct();
    StoreReqStruct(const StoreReqStruct&);
    ResourceIdStruct*             mResource;
-   UInt8                         mReplicaNumber;
+   uint8_t                         mReplicaNumber;
    std::vector<StoreKindDataStruct*>  mKindData;
 
 
@@ -487,8 +487,8 @@ class StoreKindResponseStruct : public PDU {
 public:
    StoreKindResponseStruct();
    StoreKindResponseStruct(const StoreKindResponseStruct&);
-   UInt32                        mKind;
-   UInt64                        mGenerationCounter;
+   uint32_t                        mKind;
+   uint64_t                        mGenerationCounter;
    std::vector<NodeIdStruct*>    mReplicas;
 
 
@@ -511,8 +511,8 @@ class ArrayRangeStruct : public PDU {
 public:
    ArrayRangeStruct();
    ArrayRangeStruct(const ArrayRangeStruct&);
-   UInt32                        mFirst;
-   UInt32                        mLast;
+   uint32_t                        mFirst;
+   uint32_t                        mLast;
 
 
    PDUMemberFunctions
@@ -523,9 +523,9 @@ class StoredDataSpecifierStruct : public PDU {
 public:
    StoredDataSpecifierStruct();
    StoredDataSpecifierStruct(const StoredDataSpecifierStruct&);
-   UInt32                        mKind;
+   uint32_t                        mKind;
    DataModel                     mModel;
-   UInt64                        mGeneration;
+   uint64_t                        mGeneration;
    struct mSingleValue_ {
    } mSingleValue;
    struct mArray_ {
@@ -556,8 +556,8 @@ class FetchKindResponseStruct : public PDU {
 public:
    FetchKindResponseStruct();
    FetchKindResponseStruct(const FetchKindResponseStruct&);
-   UInt32                        mKind;
-   UInt64                        mGeneration;
+   uint32_t                        mKind;
+   uint64_t                        mGeneration;
    std::vector<StoredDataStruct*>  mValues;
 
 
@@ -604,7 +604,7 @@ public:
    FindReqStruct();
    FindReqStruct(const FindReqStruct&);
    ResourceIdStruct*             mResource;
-   std::vector<UInt32>           mKinds;
+   std::vector<uint32_t>           mKinds;
 
 
    PDUMemberFunctions
@@ -615,7 +615,7 @@ class FindKindDataStruct : public PDU {
 public:
    FindKindDataStruct();
    FindKindDataStruct(const FindKindDataStruct&);
-   UInt32                        mKind;
+   uint32_t                        mKind;
    ResourceIdStruct*             mClosest;
 
 
@@ -638,7 +638,7 @@ class TurnServerStruct : public PDU {
 public:
    TurnServerStruct();
    TurnServerStruct(const TurnServerStruct&);
-   UInt8                         mIteration;
+   uint8_t                         mIteration;
    IpAddressAndPortStruct*       mServerAddress;
 
 

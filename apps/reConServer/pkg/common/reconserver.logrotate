@@ -1,0 +1,9 @@
+/var/log/reconserver/reconserver.log {
+	rotate 14
+	daily
+	compress
+	missingok
+	postrotate
+		service reconserver reload
+	endscript
+}

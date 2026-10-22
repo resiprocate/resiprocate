@@ -20,96 +20,53 @@ enum SignatureStatus
 
 class SecurityAttributes
 {
-   public:
-      SecurityAttributes();
-      ~SecurityAttributes();      
+public:
+   SecurityAttributes();
+   SecurityAttributes(const SecurityAttributes& rhs);
+   ~SecurityAttributes();
 
-      typedef enum {None, Sign, Encrypt, SignAndEncrypt} OutgoingEncryptionLevel;
+   typedef enum {None, Sign, Encrypt, SignAndEncrypt} OutgoingEncryptionLevel;
 
-      typedef enum {From, FailedIdentity, Identity} IdentityStrength;
+   typedef enum {From, FailedIdentity, Identity} IdentityStrength;
 
-      SignatureStatus getSignatureStatus() const
-      {
-         return mSigStatus;
-      }
+   void setIdentity(const Data& identity) { mIdentity = identity; }
+   const Data& getIdentity() const { return mIdentity; }
 
-      bool isEncrypted() const
-      {
-         return mIsEncrypted;
-      }
-      void setEncrypted()
-      {
-         mIsEncrypted = true;
-      }
-      
-      void setSignatureStatus(SignatureStatus status)
-      {
-         mSigStatus = status;
-      }
+   void setIdentityStrength(IdentityStrength strength) { mStrength = strength; }
+   IdentityStrength getIdentityStrength() const { return mStrength; }
 
-      void setIdentity(const Data& identity)
-      {
-         mIdentity = identity;
-      }
+   void setEncrypted() { mIsEncrypted = true; }
+   bool isEncrypted() const { return mIsEncrypted; }
 
-      const Data& getIdentity() const
-      {
-         return mIdentity;
-      }
+   void setSignatureStatus(SignatureStatus status) { mSigStatus = status; }
+   SignatureStatus getSignatureStatus() const { return mSigStatus; }
 
-      void setIdentityStrength(IdentityStrength strength)
-      {
-         mStrength = strength;         
-      }      
+   void setSigner(const Data& signer) { mSigner = signer; }
+   const Data& getSigner() const { return mSigner; }
 
-      IdentityStrength getIdentityStrength() const
-      {
-         return mStrength;
-      }
-      
-      void setSigner(const Data& signer)
-      {
-         mSigner = signer;
-      }
+   void setOutgoingEncryptionLevel(OutgoingEncryptionLevel level) { mLevel = level; }
+   OutgoingEncryptionLevel getOutgoingEncryptionLevel() const { return mLevel; }
 
-      const Data& getSigner() const
-      {
-         return mSigner;
-      }
-
-      OutgoingEncryptionLevel getOutgoingEncryptionLevel() const
-      {
-         return mLevel;
-      }
-
-      void setOutgoingEncryptionLevel(OutgoingEncryptionLevel level)
-      {
-         mLevel = level;
-      }
-
-      bool encryptionPerformed() const
-      {
-         return mEncryptionPerformed;
-      }
-
-      void setEncryptionPerformed(bool performed)
-      {
-         mEncryptionPerformed = performed;
-      }
+   void setEncryptionPerformed(bool performed) { mEncryptionPerformed = performed; }
+   bool encryptionPerformed() const { return mEncryptionPerformed; }
 
    friend EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
 
-   private:
-      bool mIsEncrypted;
-      SignatureStatus mSigStatus;
-      Data mSigner;
-      Data mIdentity;
-      IdentityStrength mStrength;
-      OutgoingEncryptionLevel mLevel; // for outgoing messages.
-      bool mEncryptionPerformed;
+private:
+   // Indentity Header Info
+   Data mIdentity;
+   IdentityStrength mStrength;
+
+   // Body Encryption Info
+   bool mIsEncrypted;
+   SignatureStatus mSigStatus;
+   Data mSigner;
+   // for outgoing messages.
+   OutgoingEncryptionLevel mLevel;
+   bool mEncryptionPerformed;
 };
 
-   EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
+EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
 }
 
 #endif
@@ -117,6 +74,7 @@ class SecurityAttributes
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

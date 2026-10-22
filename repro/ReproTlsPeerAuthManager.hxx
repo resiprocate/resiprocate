@@ -1,6 +1,7 @@
 #if !defined(RESIP_REPROTLSPEERAUTHMANAGER_HXX)
 #define RESIP_REPROTLSPEERAUTHMANAGER_HXX
 
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
 
 #include "repro/AclStore.hxx"
@@ -12,13 +13,15 @@ class ReproTlsPeerAuthManager : public resip::TlsPeerAuthManager
 {
 
    public:
-      ReproTlsPeerAuthManager(resip::DialogUsageManager& dum, resip::TargetCommand::Target& target, AclStore& aclStore, bool thirdPartyRequiresCertificate, resip::CommonNameMappings& commonNameMappings);
+      ReproTlsPeerAuthManager(resip::DialogUsageManager& dum, resip::TargetCommand::Target& target, resip::Dispatcher* authRequestDispatcher, AclStore& aclStore, bool thirdPartyRequiresCertificate, resip::CommonNameMappings& commonNameMappings);
 
       virtual ~ReproTlsPeerAuthManager();
 
    protected:
+      resip::Dispatcher* mAuthRequestDispatcher;
       AclStore& mAclStore;
 
+      virtual resip::AsyncBool asyncLookup(resip::TlsPeerIdentityInfoMessage *info);
       virtual bool isTrustedSource(const resip::SipMessage& msg);
 };
 

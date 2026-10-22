@@ -17,7 +17,7 @@ namespace resip
 class RAckCategory : public ParserCategory
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      static constexpr CommaHandlingMode commaHandling = NoCommaTokenizing;
       
       RAckCategory();
       RAckCategory(const HeaderFieldValue& hfv, 

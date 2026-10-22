@@ -5,6 +5,7 @@
 #ifdef USE_SSL
 
 #include "resip/stack/ssl/Security.hxx"
+#include "rutil/ssl/OpenSSLOptions.hxx"
 
 #include <ostream>
 #include <fstream>
@@ -16,6 +17,7 @@
 #include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/Transport.hxx"
+#include "resip/stack/ConnectionBase.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/ResipAssert.h"
 #include "rutil/BaseException.hxx"
@@ -25,10 +27,9 @@
 #include "rutil/Socket.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "rutil/FileSystem.hxx"
 #include "rutil/WinLeakCheck.hxx"
-
-#include "rutil/ssl/SHA1Stream.hxx"
 
 #if !defined(WIN32)
 #include <sys/types.h>
@@ -43,13 +44,15 @@
 #endif
 
 #include <sys/types.h>
-#include <openssl/e_os2.h>
+#include <openssl/opensslv.h>
+#include <openssl/dh.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/pkcs7.h>
 #include <openssl/ossl_typ.h>
+#include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
@@ -80,7 +83,7 @@ pemTypePrefixes(  Security::PEMType pType )
       case  Security::UserPrivateKey:   return userKey;
       default:
       {
-         ErrLog( << "Some unkonw pem type prefix requested" << (int)(pType) );
+         ErrLog( << "Unknown pem type prefix requested" << (int)(pType) );
          resip_assert(0);
       }
    }
@@ -94,32 +97,72 @@ getAor(const Data& filename, const  Security::PEMType &pemType )
    return filename.substr(prefix.size(), filename.size() - prefix.size() - PEM.size());
 }
 
+// Use static method and idx so it initializes on first call and after OpenSSL has performed it's initialization
+int BaseSecurity::getResipConnectionExDataIdx()
+{
+   static int idx = SSL_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
+   return idx;
+}
+
 extern "C"
 {
-   
+
 static int 
-verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
+verifyCallback(int preverifyOk, X509_STORE_CTX* storeCtx)
 {
-   char cBuf1[257];
-   char cBuf2[501];
-   X509 *pErrCert;
-   int iErr = 0;
-   int iDepth = 0;
-   pErrCert = X509_STORE_CTX_get_current_cert(pInStore);
-   iErr = X509_STORE_CTX_get_error(pInStore);
-   iDepth = X509_STORE_CTX_get_error_depth(pInStore);
-
-   if (NULL != pErrCert)
-      X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
-
-   snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
-   if(!iInCode)
+   if (!preverifyOk)
    {
-      ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
-      DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
+      char subjectNameBuf[256] = {0};
+      X509* cert = X509_STORE_CTX_get_current_cert(storeCtx);  // Doesn't require X509_free call
+      int errorCode = X509_STORE_CTX_get_error(storeCtx);
+      // This is a nonnegative integer representing where in the certificate chain the error occurred. 
+      // If it is zero it occurred in the end entity certificate, one if it is the certificate which 
+      // signed the end entity certificate and so on.
+      int errorDepth = X509_STORE_CTX_get_error_depth(storeCtx);
+
+      if (cert)
+      {
+         // Use modern, safe subject name formatting
+         BIO* bio = BIO_new(BIO_s_mem());
+         if (bio)
+         {
+            const X509_NAME* subjectName = X509_get_subject_name(cert);
+            if (subjectName)
+            {
+               // RFC 2253 is the preferred format (readable and reversible)
+               X509_NAME_print_ex(bio, subjectName, 0, XN_FLAG_RFC2253);
+               BIO_gets(bio, subjectNameBuf, sizeof(subjectNameBuf));
+            }
+            BIO_free(bio);
+         }
+      }
+
+      // Retrieve the associated resip transport connection object (if available)
+      SSL* ssl = (SSL*)X509_STORE_CTX_get_ex_data(storeCtx, SSL_get_ex_data_X509_STORE_CTX_idx());
+      ConnectionBase* connection = nullptr;
+      if (ssl)
+      {
+         connection = (ConnectionBase*)SSL_get_ex_data(ssl, BaseSecurity::getResipConnectionExDataIdx());
+      }
+
+      Data errorString;
+      {
+         DataStream ds(errorString);
+         ds << "'" << X509_verify_cert_error_string(errorCode) << "', errorDepth=" << errorDepth << ", subjectName=[" << subjectNameBuf << "]";
+      }
+
+      if (connection)
+      {
+         connection->addAdditionalFailureString(errorString);
+         ErrLog(<< "Error when verifying peer's chain of certificates: tuple=" << connection->who() << ", error=" << errorString);
+      }
+      else
+      {
+         ErrLog(<< "Error when verifying peer's chain of certificates: error=" << errorString);
+      }
    }
- 
-   return iInCode;
+
+   return preverifyOk;
 }
  
 }
@@ -132,16 +175,14 @@ BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT
 /**
  * Note:
  *
- * When SSLv23 mode is selected and the options flags SSL_OP_NO_SSLv2
- * and SSL_OP_NO_SSLv3 are set, SSLv23_method() will allow a dynamic
- * choice of TLS v1.0, v1.1 or v1.2 on each connection.
- *
- * If SSL_OP_NO_SSLv3 is removed (by an application changing the value
- * of BaseSecurity::OpenSSLCTXSetOptions before instantiating
- * resip::Security) then using SSLv23_method() will allow a dynamic
- * choice of SSL v3.0 or any of the TLS versions on each connection.
+ * When DynamicTLS/SSLv23 mode is selected OpenSSL will allow a dynamic
+ * choice of SSL/TLS versions on each connection.  Set flags like 
+ * SSL_OP_NO_SSLv2 and SSL_OP_NO_SSLv3 in order to disable older protocols.
+ * 
+ * An application must change these flags before creating the 
+ * SSL_CTX object / Security object instance.
  */
-long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
+long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
 long BaseSecurity::OpenSSLCTXClearOptions = 0;
 
 Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase, const Data& dHParamsFilename) :
@@ -194,11 +235,22 @@ Security::loadCADirectory(const Data& _dir)
    FileSystem::Directory::iterator it(dir);
    for (; it != dir.end(); ++it)
    {
-      if(!it.is_directory())
+      try
       {
-         Data name = *it;
-         Data fileName = _dir + name;
-         loadCAFile(fileName);
+         if (!it.is_directory())  // This can throw!
+         {
+            Data name = *it;
+            Data fileName = _dir + name;
+            loadCAFile(fileName);
+         }
+      }
+      catch (const BaseException& e)
+      {
+         ErrLog(<< "loadCADirectory: Some problem reading " << *it << ": " << e);
+      }
+      catch (...)
+      {
+         ErrLog(<< "loadCADirectory: Some problem reading " << *it);
       }
    }
 }
@@ -213,11 +265,11 @@ Security::loadCAFile(const Data& _file)
    }
    catch (Exception& e)
    {
-      ErrLog(<< "Some problem reading " << _file << ": " << e);
+      ErrLog(<< "loadCAFile: Some problem reading " << _file << ": " << e);
    }
    catch (...)
    {
-      ErrLog(<< "Some problem reading " << _file);
+      ErrLog(<< "loadCAFile: Some problem reading " << _file);
    }
 }
 
@@ -232,24 +284,24 @@ Security::preload()
    // or a collection of root certificates
    struct stat s;
    Data fileName(mPath);
-   if(fileName.postfix("/"))
+   if (fileName.postfix("/"))
    {
       fileName.truncate(fileName.size() - 1);
    }
-   if(fileName.size() > 0)
+   if (fileName.size() > 0)
    {
-      StackLog(<<"calling stat() for " << fileName);
-      if(stat(fileName.c_str(), &s) < 0)
+      StackLog(<< "calling stat() for " << fileName);
+      if (stat(fileName.c_str(), &s) < 0)
       {
-         ErrLog(<<"Error calling stat() for " << fileName.c_str()
-                << ": " << strerror(errno));
+         ErrLog(<< "Error calling stat() for " << fileName.c_str()
+            << ": " << strError(errno));
       }
       else
       {
-         if(!S_ISDIR(s.st_mode))
+         if (!S_ISDIR(s.st_mode))
          {
-            WarningLog(<<"mPath argument is a file rather than a directory, "
-                         "treating mPath as a file of trusted root certificates");
+            WarningLog(<< "mPath argument is a file rather than a directory, "
+               "treating mPath as a file of trusted root certificates");
             loadCAFile(fileName);
             count++;
          }
@@ -262,30 +314,30 @@ Security::preload()
    for (; it != dir.end(); ++it)
    {
       Data name = *it;
-           
+
       if (name.postfix(PEM))
       {
          Data fileName = mPath + name;
          bool attemptedToLoad = true;
-         
-         DebugLog(<< "Checking to load file " << name );
+
+         DebugLog(<< "Checking to load file " << name);
          try
          {
             if (name.prefix(pemTypePrefixes(UserCert)))
             {
-               addCertPEM( UserCert, getAor(name, UserCert), Data::fromFile(fileName), false );
+               addCertPEM(UserCert, getAor(name, UserCert), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(UserPrivateKey)))
             {
-               addPrivateKeyPEM( UserPrivateKey, getAor(name, UserPrivateKey), Data::fromFile(fileName), false);
+               addPrivateKeyPEM(UserPrivateKey, getAor(name, UserPrivateKey), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(DomainCert)))
             {
-               addCertPEM( DomainCert, getAor(name, DomainCert), Data::fromFile(fileName), false);
+               addCertPEM(DomainCert, getAor(name, DomainCert), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(DomainPrivateKey)))
             {
-               addPrivateKeyPEM( DomainPrivateKey, getAor(name, DomainPrivateKey), Data::fromFile(fileName), false);
+               addPrivateKeyPEM(DomainPrivateKey, getAor(name, DomainPrivateKey), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(RootCert)))
             {
@@ -297,30 +349,30 @@ Security::preload()
                attemptedToLoad = false;
             }
          }
-         catch (Exception& e)
+         catch (const BaseException& e)
          {
             ErrLog(<< "Some problem reading " << fileName << ": " << e);
          }
          catch (...)
-         {  
-            ErrLog(<< "Some problem reading " << fileName );
-         }
-         
-         if(attemptedToLoad)
          {
-            InfoLog(<<"Successfully loaded " << fileName );
+            ErrLog(<< "Some problem reading " << fileName);
+         }
+
+         if (attemptedToLoad)
+         {
+            InfoLog(<< "Successfully loaded " << fileName);
             count++;
          }
       }
    }
-   InfoLog(<<"Files loaded by prefix: " << count);
+   InfoLog(<< "Files loaded by prefix: " << count);
 
-   if(count == 0 && mCADirectories.empty() && mCAFiles.empty() && mPath.size() > 0)
+   if (count == 0 && mCADirectories.empty() && mCAFiles.empty() && mPath.size() > 0)
    {
       // If no other source of trusted roots exists,
       // assume mPath was meant to be in mCADirectories
-      WarningLog(<<"No root certificates found using legacy prefixes, "
-                   "treating mPath as a normal directory of root certs");
+      InfoLog(<< "No root certificates found using legacy prefixes, "
+                 "treating mPath=" << mPath << " as a normal directory of root certs");
       loadCADirectory(mPath);
    }
 
@@ -342,9 +394,8 @@ int pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 {
    if(password)
    {
-      strncpy(buf, (char *)(password), size);
-      buf[size - 1] = '\0';
-      return(strlen(buf));
+      snprintf(buf, size, "%s", (char*)password);
+      return (int)strlen(buf);
    }
    else
    {
@@ -355,24 +406,53 @@ int pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 SSL_CTX* 
 Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename, const Data& privateKeyPassPhrase)
 {
-#if (OPENSSL_VERSION_NUMBER >= 0x1000000fL )
    SSL_CTX* ctx = SSL_CTX_new(method);
-#else
-   SSL_CTX* ctx = SSL_CTX_new((SSL_METHOD*)method);
-#endif
    resip_assert(ctx);
 
-   X509_STORE* x509Store = X509_STORE_new();
-   resip_assert(x509Store);
+   // Share the root certificate store with Security's own SSL_CTXs (every root
+   // certificate is added to it), so roots added after this transport was
+   // created are trusted too.  set1 takes a reference of its own.
+   SSL_CTX_set1_cert_store(ctx, mRootSslCerts);
 
-   // Load root certs into store
-   X509List::iterator it;
-   for(it = mRootCerts.begin(); it != mRootCerts.end(); it++)
+   try
    {
-      X509_STORE_add_cert(x509Store,*it);
+      updateDomainCtx(ctx, domain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
    }
-   SSL_CTX_set_cert_store(ctx, x509Store);
+   catch(...)
+   {
+      SSL_CTX_free(ctx);
+      throw;
+   }
 
+   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
+   SSL_CTX_set_cipher_list(ctx, mCipherList.cipherList().c_str());
+   setDHParams(ctx);
+   SSL_CTX_set_options(ctx, BaseSecurity::OpenSSLCTXSetOptions);
+   SSL_CTX_clear_options(ctx, BaseSecurity::OpenSSLCTXClearOptions);
+
+   // A server that asks for client certificates (SSL_VERIFY_PEER) needs a
+   // session id context, or OpenSSL fails the handshake of any client that
+   // tries to resume a session (SSL_R_SESSION_ID_CONTEXT_UNINITIALIZED)
+   // instead of doing a full one.  Derived from the domain so sessions are
+   // only resumed in the context they were set up in.
+   const Data sessionContext(Data("resip:") + domain);
+   unsigned char sessionIdContext[EVP_MAX_MD_SIZE];
+   unsigned int sessionIdContextLength = 0;
+   if(EVP_Digest(sessionContext.data(), sessionContext.size(), sessionIdContext,
+                 &sessionIdContextLength, EVP_sha256(), nullptr) != 1 ||
+      sessionIdContextLength > SSL_MAX_SID_CTX_LENGTH ||
+      SSL_CTX_set_session_id_context(ctx, sessionIdContext, sessionIdContextLength) != 1)
+   {
+      WarningLog(<< "Failed to set the TLS session id context for domain " << domain
+                 << ", clients verified with a certificate can't resume sessions");
+   }
+
+   return ctx;
+}
+
+void
+Security::updateDomainCtx(SSL_CTX* ctx, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename, const Data& privateKeyPassPhrase)
+{
    // Load domain cert chain and private key
    if(!domain.empty())
    {
@@ -386,7 +466,6 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
       if(SSL_CTX_use_certificate_chain_file(ctx, certFilename.c_str()) != 1)
       {
          ErrLog (<< "Error reading domain chain file " << certFilename);
-         SSL_CTX_free(ctx);
          throw BaseSecurity::Exception("Failed opening PEM chain file", __FILE__,__LINE__);
       }
 
@@ -395,24 +474,22 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
       {
          // Add to storage
          addCertPEM( DomainCert, domain, Data::fromFile(certFilename), false);
-         InfoLog(<< "Security::createDomainCtx: Successfully loaded domain cert and added to Security storage, domain=" << domain << ", filename=" <<  certFilename);
+         InfoLog(<< "Security::updateDomainCtx: Successfully loaded domain cert and added to Security storage, domain=" << domain << ", filename=" <<  certFilename);
       }
       else
       {
-         InfoLog(<< "Security::createDomainCtx: Successfully loaded domain cert, domain=" << domain << ", filename=" <<  certFilename);
+         InfoLog(<< "Security::updateDomainCtx: Successfully loaded domain cert, domain=" << domain << ", filename=" <<  certFilename);
       }
 
       Data keyFilename(privateKeyFilename.empty() ? mPath + pemTypePrefixes(DomainPrivateKey) + domain + PEM : privateKeyFilename);
       if(SSL_CTX_use_PrivateKey_file(ctx, keyFilename.c_str(), SSL_FILETYPE_PEM) != 1)
       {
          ErrLog (<< "Error reading domain private key file " << keyFilename);
-         SSL_CTX_free(ctx);
          throw BaseSecurity::Exception("Failed opening PEM private key file", __FILE__,__LINE__);
       }
       if (!SSL_CTX_check_private_key(ctx))
       {
          ErrLog (<< "Invalid domain private key from file: " << keyFilename);
-         SSL_CTX_free(ctx);
          throw BaseSecurity::Exception("Invalid domain private key", __FILE__,__LINE__);
       }
 
@@ -421,21 +498,13 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
       {
          // Add to storage
          addPrivateKeyPEM( DomainPrivateKey, domain, Data::fromFile(keyFilename), false, privateKeyPassPhrase);
-         InfoLog(<< "Security::createDomainCtx: Successfully loaded domain private key and added to Security storage, domain=" << domain << ", filename=" <<  keyFilename);
+         InfoLog(<< "Security::updateDomainCtx: Successfully loaded domain private key and added to Security storage, domain=" << domain << ", filename=" <<  keyFilename);
       }
       else
       {
-          InfoLog(<< "Security::createDomainCtx: Successfully loaded domain private key, domain=" << domain << ", filename=" <<  keyFilename);
+          InfoLog(<< "Security::updateDomainCtx: Successfully loaded domain private key, domain=" << domain << ", filename=" <<  keyFilename);
       }
    }
-
-   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
-   SSL_CTX_set_cipher_list(ctx, mCipherList.cipherList().c_str());
-   setDHParams(ctx);
-   SSL_CTX_set_options(ctx, BaseSecurity::OpenSSLCTXSetOptions);
-   SSL_CTX_clear_options(ctx, BaseSecurity::OpenSSLCTXClearOptions);
-
-   return ctx;
 }
 
 void
@@ -443,7 +512,7 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 {
    Data filename = mPath + pemTypePrefixes(type) + name + PEM;
 
-   InfoLog (<< "Reading PEM file " << filename << " into " << name);
+   InfoLog (<< "Reading PEM file " << filename << " for " << name);
    // .dlb. extra copy
    buffer = Data::fromFile(filename);
 }
@@ -491,12 +560,7 @@ BaseSecurity::addCertDER (PEMType type,
 
    X509* cert = 0;
 
-#if (OPENSSL_VERSION_NUMBER < 0x0090800fL )
-   unsigned char* in = (unsigned char*)certDER.data();
-#else
    unsigned const char* in = (unsigned const char*)certDER.data();
-#endif
-
    if (d2i_X509(&cert,&in,(long)certDER.size()) == 0)
    {
       ErrLog(<< "Could not read DER certificate from " << certDER );
@@ -604,7 +668,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
             throw Exception("BIO_get_mem_data failed: this cert will not be "
                               "added.", __FILE__,__LINE__);
          }
-         Data  buf(Data::Borrow, p, len);
+         Data buf(Data::Borrow, p, (Data::size_type)len);
          
          this->onWritePEM(key, type, buf);
       }
@@ -623,9 +687,9 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
 }
 
 bool
-BaseSecurity::hasCert (PEMType type, const Data& aor) const
+BaseSecurity::hasCert(PEMType type, const Data& aor, bool logErrors) const
 {
-   resip_assert( !aor.empty() );
+   resip_assert(!aor.empty());
    const X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
    X509Map::const_iterator where = certs.find(aor);
@@ -633,7 +697,7 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
    {
       return true;
    }
-   
+
    try
    {
       Data certPEM;
@@ -642,23 +706,28 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
       {
          return false;
       }
-      BaseSecurity*  mutable_this = const_cast<BaseSecurity*>(this);
+      BaseSecurity* mutable_this = const_cast<BaseSecurity*>(this);
       mutable_this->addCertPEM(type, aor, certPEM, false);
    }
-   catch (Exception& e)
+   catch (const BaseException& e)
    {
-      ErrLog(<<"Caught exception: " << e);
-      return   false;
+      if(logErrors) ErrLog(<< "Caught exception: " << e);
+      return false;
+   }
+   catch (const std::exception& e)
+   {
+      if (logErrors) ErrLog(<< "Caught exception: " << e.what());
+      return false;
    }
    catch (...)
    {
-      ErrLog(<<"Caught exception: ");
-      return   false;
+      if (logErrors) ErrLog(<< "Caught exception: ");
+      return false;
    }
 
-   resip_assert(  certs.find(aor) != certs.end() );
-   
-   return   true;
+   resip_assert(certs.find(aor) != certs.end());
+
+   return true;
 }
 
 void
@@ -700,8 +769,6 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       resip_assert(0);
    }
 
-   //assert(0); // the code following this has no hope of working 
-   
    X509* x = where->second;
    unsigned char* buffer=0;
    int len = i2d_X509(x, &buffer);
@@ -729,17 +796,6 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
    PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? 
                                  mDomainPrivateKeys : mUserPrivateKeys);
 
-   /*
-   // make a copy of the the key 
-   resip_assert( EVP_PKEY_type(pKey->type) == EVP_PKEY_RSA );
-   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
-   resip_assert( rsa );
-   EVP_PKEY* nKey = EVP_PKEY_new();
-   resip_assert( nKey );
-   EVP_PKEY_set1_RSA(nKey, rsa);
-   */
-   
-   //privateKeys.insert(std::make_pair(name, nKey));
    privateKeys.insert(std::make_pair(name, pKey));
       
    if (write)
@@ -797,7 +853,7 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
             throw Exception("BIO_get_mem_data failed: cannot add"
                               " private key.", __FILE__, __LINE__);
          }
-         Data  pem(Data::Borrow, p, len);
+         Data pem(Data::Borrow, p, (Data::size_type)len);
          onWritePEM(name, type, pem );
       }
       catch(Exception& e)
@@ -933,7 +989,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
          char buffer[120];
          unsigned long err = ERR_get_error();
          ERR_error_string(err, buffer);
-         if(ERR_GET_LIB(err) == ERR_LIB_EVP && ERR_GET_FUNC(err) == EVP_F_EVP_DECRYPTFINAL_EX && ERR_GET_REASON(err) == EVP_R_BAD_DECRYPT)
+         if(ERR_GET_LIB(err) == ERR_LIB_EVP && ERR_GET_REASON(err) == EVP_R_BAD_DECRYPT)
          {
             ErrLog(<< "Could not read private key (error=" << buffer << ") - likely incorrect password provided, may load correctly when transports are added with appropriate password");
          }
@@ -1017,8 +1073,6 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
       }
    }
 
-   resip_assert(0); // TODO - following code has no hope of working 
-    
    // !kh!
    // creates a read/write BIO buffer.
    BIO *out = BIO_new(BIO_s_mem());
@@ -1027,7 +1081,7 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
    resip_assert(pk);
 
    // write pk to out using key phrase p, with no cipher.
-   int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, p);  // paraters
+   int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, p);  // parameters
                                                                 // are in the wrong order
    (void)ret;
    resip_assert(ret == 1);
@@ -1037,7 +1091,7 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
    (void)BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
-   Data retVal(Data::Borrow, buf, len);
+   Data retVal(buf, len);
 
    BIO_free(out);
 
@@ -1052,7 +1106,7 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
 
    if ( !hasPrivateKey(type, key) )
    {
-      ErrLog(<< "Could find private key for '" << key << "'");
+      ErrLog(<< "Could not find private key for '" << key << "'");
       throw Exception("Could not find private key", __FILE__,__LINE__);
    }
 
@@ -1068,8 +1122,6 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
          p = const_cast<char*>(iter->second.c_str());
       }
    }
-
-   resip_assert(0); // TODO - following code has no hope of working 
     
    // !kh!
    // creates a read/write BIO buffer.
@@ -1088,7 +1140,7 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
    (void)BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
-   Data retVal(Data::Borrow, buf, len);
+   Data retVal(buf, len);
 
    BIO_free(out);
    
@@ -1137,7 +1189,7 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    mRootSslCerts = X509_STORE_new();
    resip_assert(mRootTlsCerts && mRootSslCerts);
 
-   mTlsCtx = SSL_CTX_new( TLSv1_method() );
+   mTlsCtx = SSL_CTX_new( TLS_method() );
    if (!mTlsCtx)
    {
       ErrLog(<< "SSL_CTX_new failed, dumping OpenSSL error stack:");
@@ -1148,6 +1200,8 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
          ErrLog(<< "OpenSSL error stack: " << errBuf);
       }
    }
+   SSL_CTX_set_min_proto_version(mTlsCtx, TLS1_VERSION);
+   SSL_CTX_set_max_proto_version(mTlsCtx, TLS1_VERSION);
    resip_assert(mTlsCtx);
 
    SSL_CTX_set_default_passwd_cb(mTlsCtx, pem_passwd_cb);
@@ -1159,7 +1213,7 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    SSL_CTX_set_options(mTlsCtx, BaseSecurity::OpenSSLCTXSetOptions);
    SSL_CTX_clear_options(mTlsCtx, BaseSecurity::OpenSSLCTXClearOptions);
    
-   mSslCtx = SSL_CTX_new( SSLv23_method() );
+   mSslCtx = SSL_CTX_new( TLS_method() );
    resip_assert(mSslCtx);
    SSL_CTX_set_default_passwd_cb(mSslCtx, pem_passwd_cb);
    SSL_CTX_set_cert_store(mSslCtx, mRootSslCerts);
@@ -1279,7 +1333,6 @@ BaseSecurity::addDomainCertPEM(const Data& domainName, const Data& certPEM)
    addCertPEM(DomainCert, domainName, certPEM, false);
 }
 
-
 void
 BaseSecurity::addDomainCertDER(const Data& domainName, const Data& certDER)
 {
@@ -1287,22 +1340,21 @@ BaseSecurity::addDomainCertDER(const Data& domainName, const Data& certDER)
 }
 
 bool
-BaseSecurity::hasDomainCert(const Data& domainName) const
+BaseSecurity::hasDomainCert(const Data& domainName, bool logErrors) const
 {
-   return   hasCert(DomainCert, domainName);
+   return hasCert(DomainCert, domainName, logErrors);
 }
-
 
 void
 BaseSecurity::removeDomainCert(const Data& domainName)
 {
-   return   removeCert(DomainCert, domainName);
+   return removeCert(DomainCert, domainName);
 }
 
 Data
 BaseSecurity::getDomainCertDER(const Data& domainName) const
 {
-   return   getCertDER(DomainCert, domainName);
+   return getCertDER(DomainCert, domainName);
 }
 
 void
@@ -1323,7 +1375,6 @@ BaseSecurity::removeDomainPrivateKey(const Data& domainName)
    removePrivateKey(DomainPrivateKey, domainName);
 }
 
-
 Data
 BaseSecurity::getDomainPrivateKeyPEM(const Data& domainName) const
 {
@@ -1336,7 +1387,6 @@ BaseSecurity::addUserCertPEM(const Data& aor, const Data& certPEM)
    addCertPEM(UserCert, aor, certPEM, false);
 }
 
-
 void
 BaseSecurity::addUserCertDER(const Data& aor, const Data& certDER)
 {
@@ -1346,9 +1396,8 @@ BaseSecurity::addUserCertDER(const Data& aor, const Data& certDER)
 bool
 BaseSecurity::hasUserCert(const Data& aor) const
 {
-   return   hasCert(UserCert, aor);
+   return hasCert(UserCert, aor);
 }
-
 
 void
 BaseSecurity::removeUserCert(const Data& aor)
@@ -1359,7 +1408,7 @@ BaseSecurity::removeUserCert(const Data& aor)
 Data
 BaseSecurity::getUserCertDER(const Data& aor) const
 {
-   return   getCertDER(UserCert, aor);
+   return getCertDER(UserCert, aor);
 }
 
 void
@@ -1382,11 +1431,11 @@ BaseSecurity::hasUserPassPhrase(const Data& aor) const
    PassPhraseMap::const_iterator iter = mUserPassPhrases.find(aor);
    if (iter == mUserPassPhrases.end())
    {
-      return   false;
+      return false;
    }
    else
    {
-      return   true;
+      return true;
    }
 }
 
@@ -1410,11 +1459,11 @@ BaseSecurity::getUserPassPhrase(const Data& aor) const
    PassPhraseMap::const_iterator iter = mUserPassPhrases.find(aor);
    if(iter == mUserPassPhrases.end())
    {
-      return   iter->second;
+      return iter->second;
    }
    else
    {
-      return   Data::Empty;
+      return Data::Empty;
    }
 }
 
@@ -1445,13 +1494,13 @@ BaseSecurity::removeUserPrivateKey(const Data& aor)
 Data
 BaseSecurity::getUserPrivateKeyPEM(const Data& aor) const
 {
-   return   getPrivateKeyPEM(UserPrivateKey, aor);
+   return getPrivateKeyPEM(UserPrivateKey, aor);
 }
 
 Data
 BaseSecurity::getUserPrivateKeyDER(const Data& aor) const
 {
-   return   getPrivateKeyDER(UserPrivateKey, aor);
+   return getPrivateKeyDER(UserPrivateKey, aor);
 }
 
 void
@@ -1479,46 +1528,32 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    // Make sure that necessary algorithms exist:
    resip_assert(EVP_sha256());
 
-#if OPENSSL_VERSION_NUMBER < 0x00908000l
-   RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
-#else
-   RSA* rsa = NULL;
+   // An RSA key (the default public exponent is 65537)
+   EVP_PKEY* privkey = NULL;
+   EVP_PKEY_CTX* keyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+   bool generated = keyCtx &&
+                    EVP_PKEY_keygen_init(keyCtx) == 1 &&
+                    EVP_PKEY_CTX_set_rsa_keygen_bits(keyCtx, keyLen) == 1 &&
+                    EVP_PKEY_keygen(keyCtx, &privkey) == 1;
+   EVP_PKEY_CTX_free(keyCtx);
+   if (!generated)
    {
-      BIGNUM *e = BN_new();
-      RSA *r = NULL;
-      if(!e) goto done;
-      if(! BN_set_word(e, RSA_F4)) goto done;
-      r = RSA_new();
-      if(!r) goto done;
-      if (RSA_generate_key_ex(r, keyLen, e, NULL) == -1)
-         goto done;
-
-      rsa = r;
-      r = NULL;
-   done:
-      if (e)
-         BN_free(e);
-      if (r)
-         RSA_free(r);
-    }
-#endif
-   resip_assert(rsa);    // couldn't make key pair
-   
-   EVP_PKEY* privkey = EVP_PKEY_new();
-   resip_assert(privkey);
-   ret = EVP_PKEY_set1_RSA(privkey, rsa);
-   resip_assert(ret);
+      ErrLog( <<"Unable to generate a " << keyLen << " bit RSA key for " << aor );
+      throw Exception("Unable to generate a key pair in generateUserCert", __FILE__,__LINE__);
+   }
 
    X509* cert = X509_new();
    resip_assert(cert);
    
    X509_NAME* subject = X509_NAME_new();
-   X509_EXTENSION* ext = X509_EXTENSION_new();
+   X509_EXTENSION* ext;
    
    // set version to X509v3 (starts from 0)
    X509_set_version(cert, 2L);
    
-   int serial = Random::getRandom();  // get an int worth of randomness
+   // RFC 5280 4.1.2.2 wants a positive serial, and getCryptoRandom() fills a
+   // whole int from RAND_bytes, so it is negative about half the time.
+   int serial = Random::getCryptoRandom() & 0x7FFFFFFF;
    resip_assert(sizeof(int)==4);
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    
@@ -1535,10 +1570,11 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    resip_assert(ret);
    ret = X509_set_subject_name(cert, subject);
    resip_assert(ret);
+   X509_NAME_free(subject);  // the certificate holds copies
    
    const long duration = 60*60*24*expireDays;   
-   X509_gmtime_adj(X509_get_notBefore(cert),0);
-   X509_gmtime_adj(X509_get_notAfter(cert), duration);
+   X509_gmtime_adj(X509_getm_notBefore(cert),0);
+   X509_gmtime_adj(X509_getm_notAfter(cert), duration);
    
    ret = X509_set_pubkey(cert, privkey);
    resip_assert(ret);
@@ -1551,7 +1587,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    X509_add_ext( cert, ext, -1);
    X509_EXTENSION_free(ext);
    
-   static char CA_FALSE[] = "CA:FALSE";
+   static const char CA_FALSE[] = "CA:FALSE";
    ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, CA_FALSE);
    ret = X509_add_ext( cert, ext, -1);
    resip_assert(ret);
@@ -1603,8 +1639,8 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    resip_assert(chain);
 
    DebugLog( << "searching for cert/key for <" << senderAor << ">" );
-   if (mUserCerts.count(senderAor) == 0 ||
-       mUserPrivateKeys.count(senderAor) == 0)
+   if (mUserCerts.find(senderAor) == mUserCerts.end() ||
+       mUserPrivateKeys.find(senderAor) == mUserPrivateKeys.end())
    {
       BIO_free(in);
       BIO_free(out);
@@ -1659,7 +1695,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    resip_assert( size > 0 );
 
    Data outData(outBuf,size);
-   static char RESIP_SIGN_OUT_SIG[] = "resip-sign-out-sig";
+   static const char RESIP_SIGN_OUT_SIG[] = "resip-sign-out-sig";
    Security::dumpAsn(RESIP_SIGN_OUT_SIG,outData);
 
    Pkcs7SignedContents* sigBody = new Pkcs7SignedContents( outData );
@@ -1713,7 +1749,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    DebugLog( << "created out BIO" );
 
    InfoLog( << "target cert name is <" << recipCertName << ">" );
-   if (mUserCerts.count(recipCertName) == 0)
+   if (mUserCerts.find(recipCertName) == mUserCerts.end())
    {
       BIO_free(in);
       BIO_free(out);
@@ -1731,18 +1767,8 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 // if you think you need to change the following few lines, please email fluffy
 // the value of OPENSSL_VERSION_NUMBER ( in opensslv.h ) and the signature of
 // PKCS_encrypt found ( in pkcs7.h ) and the OS you are using
-#if (  OPENSSL_VERSION_NUMBER > 0x009060ffL )
-//   const EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
    const EVP_CIPHER* cipher =  EVP_aes_128_cbc(); 
-#else
-   //const EVP_CIPHER* cipher = EVP_enc_null();
-   EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
-#endif
    resip_assert( cipher );
-
-#if (OPENSSL_VERSION_NUMBER < 0x0090705fL )
-#warning PKCS7_encrypt() is broken in OpenSSL 0.9.7d
-#endif
 
    PKCS7* pkcs7 = PKCS7_encrypt( certs, in, cipher, flags);
    if ( !pkcs7 )
@@ -1770,7 +1796,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    InfoLog( << "Encrypted body size is " << outData.size() );
    InfoLog( << "Encrypted body is <" << outData.escaped() << ">" );
 
-   static char RESIP_ENCRYPT_OUT[] = "resip-encrypt-out";
+   static const char RESIP_ENCRYPT_OUT[] = "resip-encrypt-out";
    Security::dumpAsn(RESIP_ENCRYPT_OUT, outData);
 
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
@@ -1815,75 +1841,53 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    EVP_PKEY* pKey = k->second;
    resip_assert( pKey );
- 
-   if ( pKey->type !=  EVP_PKEY_RSA )
+
+   if ( EVP_PKEY_base_id(pKey) != EVP_PKEY_RSA )
    {
-      ErrLog( << "Private key (type=" << pKey->type <<"for " 
+      ErrLog( << "Private key (type=" << EVP_PKEY_id(pKey) << ") for "
               << signerDomain << " is not of type RSA" );
       throw Exception("No RSA private key when computing identity",__FILE__,__LINE__);
    }
 
-   resip_assert( pKey->type ==  EVP_PKEY_RSA );
-   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
-
-   unsigned char result[4096];
-   int resultSize = sizeof(result);
-   resip_assert( resultSize >= RSA_size(rsa) );
-
-   SHA1Stream sha;
-   sha << in;
-   Data hashRes =  sha.getBin();
-   DebugLog( << "hash of string is 0x" << hashRes.hex() );
-
-#if 1
-   int r = RSA_sign(NID_sha256, (unsigned char *)hashRes.data(), (unsigned int)hashRes.size(),
-                    result, (unsigned int*)( &resultSize ),
-            rsa);
-   if( r != 1 )
+   unsigned char digest[EVP_MAX_MD_SIZE];
+   unsigned int digestSize = sizeof(digest);
+   auto digestType = EVP_sha256();
+   if (!EVP_Digest(in.data(), in.size(), digest, &digestSize, digestType, NULL))
    {
-      ErrLog(<< "RSA_sign failed with return " << r);
+      ErrLog( << "Failed to compute digest of identity" );
+      throw Exception("Failed to compute digest of identity",__FILE__, __LINE__);
+   }
+   DebugLog( << "hash of string is 0x" << Data(digest, digestSize).hex() );
+
+   // RSASSA-PKCS1-v1_5 signature of the SHA-256 digest
+   unsigned char result[4096];
+   size_t resultSize = sizeof(result);
+   EVP_PKEY_CTX* signCtx = EVP_PKEY_CTX_new(pKey, NULL);
+   bool signedOk = signCtx &&
+                   EVP_PKEY_sign_init(signCtx) == 1 &&
+                   EVP_PKEY_CTX_set_rsa_padding(signCtx, RSA_PKCS1_PADDING) == 1 &&
+                   EVP_PKEY_CTX_set_signature_md(signCtx, digestType) == 1 &&
+                   EVP_PKEY_sign(signCtx, result, &resultSize, digest, digestSize) == 1;
+   EVP_PKEY_CTX_free(signCtx);
+   if( !signedOk )
+   {
+      ErrLog(<< "Signing the identity digest failed");
       resip_assert(0);
       return Data::Empty;
    }
-#else
-   resultSize = RSA_private_encrypt(hashResLen, hashRes,
-                                    result, rsa, RSA_PKCS1_PADDING);
-   if ( resultSize == -1 )
-   {
-      DebugLog( << "Problem doing RSA encrypt for identity");
-      while (1)
-      {
-         const char* file;
-         int line;
-
-         unsigned long code = ERR_get_error_line(&file,&line);
-         if ( code == 0 )
-         {
-            break;
-         }
-
-         char buf[256];
-         ERR_error_string_n(code,buf,sizeof(buf));
-         ErrLog( << buf  );
-         InfoLog( << "Error code = " << code << " file="<<file<<" line=" << line );
-      }
-
-      return Data::Empty;
-   }
-#endif
 
    Data res(result,resultSize);
    DebugLog( << "rsa encrypt of hash is 0x"<< res.hex() );
 
    Data enc = res.base64encode();
 
-   static char IDENTITY_IN[] = "identity-in";
-   static char IDENTITY_IN_HASH[] = "identity-in-hash";
-   static char IDENTITY_IN_RSA[] = "identity-in-rsa";
-   static char IDENTITY_IN_BASE64[] = "identity-in-base64";
+   static const char IDENTITY_IN[] = "identity-in";
+   static const char IDENTITY_IN_HASH[] = "identity-in-hash";
+   static const char IDENTITY_IN_RSA[] = "identity-in-rsa";
+   static const char IDENTITY_IN_BASE64[] = "identity-in-base64";
 
    Security::dumpAsn(IDENTITY_IN, in );
-   Security::dumpAsn(IDENTITY_IN_HASH, hashRes );
+   Security::dumpAsn(IDENTITY_IN_HASH, Data(digest, digestSize) );
    Security::dumpAsn(IDENTITY_IN_RSA,res);
    Security::dumpAsn(IDENTITY_IN_BASE64,enc);
 
@@ -1912,67 +1916,62 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    Data sig = sigBase64.base64decode();
    DebugLog( << "decoded sig is 0x"<< sig.hex() );
 
-   SHA1Stream sha;
-   sha << in;
-   Data hashRes =  sha.getBin();
-   DebugLog( << "hash of string is 0x" << hashRes.hex() );
+   unsigned char digest[EVP_MAX_MD_SIZE];
+   unsigned int digestSize = sizeof(digest);
+   auto digestType = EVP_sha256();
 
-   EVP_PKEY* pKey = X509_get_pubkey( cert );
-   resip_assert( pKey );
+   if (!EVP_Digest(in.data(), in.size(), digest, &digestSize, digestType, NULL))
+   {
+      ErrLog( << "Failed to compute digest of identity" );
+      throw Exception("Failed to compute digest of identity",__FILE__, __LINE__);
+   }
+   DebugLog( << "hash of string is 0x" << Data(digest, digestSize).hex() );
 
-   resip_assert( pKey->type ==  EVP_PKEY_RSA );
-   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
+   EVP_PKEY* pKey = X509_get_pubkey( cert );  // a new reference
+   if ( !pKey || EVP_PKEY_base_id(pKey) != EVP_PKEY_RSA )
+   {
+      ErrLog( << "Public key for " << signerDomain << " is not of type RSA" );
+      EVP_PKEY_free(pKey);
+      return false;
+   }
 
-#if 1
-   int ret = RSA_verify(NID_sha256, (unsigned char *)hashRes.data(),
-                        (unsigned int)hashRes.size(), (unsigned char*)sig.data(), (unsigned int)sig.size(),
-                        rsa);
-#else
-   unsigned char result[4096];
-   int resultSize = sizeof(result);
-   resip_assert( resultSize >= RSA_size(rsa) );
-
-   resultSize = RSA_public_decrypt(sig.size(),(unsigned char*)sig.data(),
-                                   result, rsa, RSA_PKCS1_PADDING );
-   resip_assert( resultSize != -1 );
-   //assert( resultSize == SHA_DIGEST_LENGTH );
-   Data recievedHash(result,resultSize);
-   dumpAsn("identity-out-decrypt", recievedHash );
-
-   bool ret =  ( computedHash == recievedHash );
-#endif
-
+   // RSASSA-PKCS1-v1_5 signature of the SHA-256 digest
+   EVP_PKEY_CTX* verifyCtx = EVP_PKEY_CTX_new(pKey, NULL);
+   int ret = verifyCtx &&
+             EVP_PKEY_verify_init(verifyCtx) == 1 &&
+             EVP_PKEY_CTX_set_rsa_padding(verifyCtx, RSA_PKCS1_PADDING) == 1 &&
+             EVP_PKEY_CTX_set_signature_md(verifyCtx, digestType) == 1 &&
+             EVP_PKEY_verify(verifyCtx, (const unsigned char*)sig.data(), sig.size(), digest, digestSize) == 1;
+   EVP_PKEY_CTX_free(verifyCtx);
+   EVP_PKEY_free(pKey);
    DebugLog( << "rsa verify result is " << ret  );
 
-   static char IDENTITY_OUT_MSG[] = "identity-out-msg";
-   static char IDENTITY_OUT_BASE64[] = "identity-out-base64";
-   static char IDENTITY_OUT_SIG[] = "identity-out-sig";
-   static char IDENTITY_OUT_HASH[] = "identity-out-hash";
+   static const char IDENTITY_OUT_MSG[] = "identity-out-msg";
+   static const char IDENTITY_OUT_BASE64[] = "identity-out-base64";
+   static const char IDENTITY_OUT_SIG[] = "identity-out-sig";
+   static const char IDENTITY_OUT_HASH[] = "identity-out-hash";
 
    Security::dumpAsn(IDENTITY_OUT_MSG, in );
    Security::dumpAsn(IDENTITY_OUT_BASE64,sigBase64);
    Security::dumpAsn(IDENTITY_OUT_SIG, sig);
-   Security::dumpAsn(IDENTITY_OUT_HASH, hashRes );
+   Security::dumpAsn(IDENTITY_OUT_HASH, Data(digest, digestSize) );
 
    return (ret != 0);
 }
 
 
+// TODO !SLG!  RFC4474 has been deprecated by RFC8224 (Authenticated Identity Management).  We should remove/adjust this code.
 void
 BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
 {
-   auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
+   unique_ptr<SecurityAttributes> sec(new SecurityAttributes);
    X509* cert=NULL;
    
    try
    {
       if ( !certDer.empty() )
       {
-#if (OPENSSL_VERSION_NUMBER < 0x0090800fL )
-         unsigned char* in = (unsigned char*)certDer.data();
-#else
          unsigned const char* in = (unsigned const char*)certDer.data();
-#endif
          if (d2i_X509(&cert,&in,(long)certDer.size()) == 0)
          {
             DebugLog(<< "Could not read DER certificate from " << certDer );
@@ -1983,7 +1982,7 @@ BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
       {
          if ( checkIdentity(msg.const_header(h_From).uri().host(),
                             msg.getCanonicalIdentityString(),
-                            msg.const_header(h_Identity).value(),
+                            msg.const_header(h_Identities).front().value(),
                             cert ) )
          {
             sec->setIdentity(msg.const_header(h_From).uri().getAor());
@@ -2007,7 +2006,8 @@ BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
       sec->setIdentity(msg.const_header(h_From).uri().getAor());
       sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
    }
-   msg.setSecurityAttributes(sec);
+   msg.setSecurityAttributes(std::move(sec));
+   X509_free(cert);
 }
 
 
@@ -2027,7 +2027,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    DebugLog( << "uncode body = <" << text.escaped() << ">" );
    DebugLog( << "uncode body size = " << text.size() );
 
-   static char RESIP_ASN_DECRYPT[] = "resip-asn-decrypt";
+   static const char RESIP_ASN_DECRYPT[] = "resip-asn-decrypt";
    Security::dumpAsn(RESIP_ASN_DECRYPT, text );
 
    BIO* in = BIO_new_mem_buf( (void*)text.c_str(), (int)text.size());
@@ -2049,7 +2049,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
          const char* file;
          int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
          unsigned long code = ERR_get_error_line(&file,&line);
+#else
+         unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
          if ( code == 0 )
          {
             break;
@@ -2069,30 +2073,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    (void)BIO_flush(in);
 
    int type=OBJ_obj2nid(pkcs7->type);
-   switch (type)
-   {
-      case NID_pkcs7_signed:
-         InfoLog( << "data is pkcs7 signed" );
-         break;
-      case NID_pkcs7_signedAndEnveloped:
-         InfoLog( << "data is pkcs7 signed and enveloped" );
-         break;
-      case NID_pkcs7_enveloped:
-         InfoLog( << "data is pkcs7 enveloped" );
-         break;
-      case NID_pkcs7_data:
-         InfoLog( << "data i pkcs7 data" );
-         break;
-      case NID_pkcs7_encrypted:
-         InfoLog( << "data is pkcs7 encrypted " );
-         break;
-      case NID_pkcs7_digest:
-         InfoLog( << "data is pkcs7 digest" );
-         break;
-      default:
-         InfoLog( << "Unknown pkcs7 type" );
-         break;
-   }
+   InfoLog( << "data is " << OBJ_nid2ln(type) );
 
    STACK_OF(X509)* certs = sk_X509_new_null();
    resip_assert( certs );
@@ -2115,7 +2096,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
 
       case NID_pkcs7_enveloped:
       {
-         if (mUserPrivateKeys.count(decryptorAor) == 0)
+         if (mUserPrivateKeys.find(decryptorAor) == mUserPrivateKeys.end())
          {
             BIO_free(in);
             BIO_free(out);
@@ -2124,7 +2105,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
             InfoLog( << "Don't have a private key for " << decryptorAor << " for  PKCS7_decrypt" );
             throw Exception("Missing private key", __FILE__, __LINE__);
          }
-         else if (mUserCerts.count(decryptorAor) == 0)
+         else if (mUserCerts.find(decryptorAor) == mUserCerts.end())
          {
             BIO_free(in);
             BIO_free(out);
@@ -2145,7 +2126,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
                const char* file;
                int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
                unsigned long code = ERR_get_error_line(&file,&line);
+#else
+               unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
                if ( code == 0 )
                {
                   break;
@@ -2179,7 +2164,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    BUF_MEM* bufMem;
    BIO_get_mem_ptr(out, &bufMem);
 
-   int len = bufMem->length;
+   int len = (int)bufMem->length;
    char* buffer = new char[len];
    memcpy(buffer, bufMem->data, len);
 
@@ -2249,6 +2234,12 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                              Data* signedBy,
                              SignatureStatus* sigStat )
 {
+   // RFC 1847: the signature covers the first body part exactly as it was
+   // received.  Take those bytes first, because the mutable parts() calls
+   // below drop them.  The Data is returned by value and keeps working after
+   // that.
+   const Data rawFirst = multi->getRawFirstPart();
+
    if ( multi->parts().size() != 2 )
    {
       ErrLog(<< "Trying to decode a message with wrong number of contents " << multi->parts().size());
@@ -2277,16 +2268,44 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    Data sigData = sig->getBodyData();
 
    Data textData;
-   DataStream strm( textData );
-   first->encodeHeaders( strm );
-   first->encode( strm );
-   strm.flush();
+   if (!rawFirst.empty())
+   {
+      textData = rawFirst;
+   }
+   else
+   {
+      // Nothing recorded.  Three ways to get here, and only the last one is
+      // a defect:
+      //
+      //   - the body was built locally rather than parsed, so the re-encoding
+      //     is both all there is and what goes on the wire;
+      //   - the body is a copy of one that had already been parsed.  A copy
+      //     keeps the parts but not the view, and SipMessage::init() clones
+      //     mContents, so an ordinary message copy lands here;
+      //   - something upstream reached the body through the mutable parts().
+      //
+      // From here the three are indistinguishable, so say which path was
+      // taken.  Without this line a future caller that drops the bytes turns
+      // into "signatures mysteriously stopped verifying" instead of something
+      // greppable.
+      InfoLog( << "No received bytes recorded for the first body part; "
+               << "verifying against a re-encoding.  Expected for a locally "
+               << "built body and for a copy of an already parsed one; a "
+               << "regression if this body was parsed here, which happens when "
+               << "a caller reaches it through the mutable "
+               << "MultipartMixedContents::parts()." );
+
+      DataStream strm( textData );
+      first->encodeHeaders( strm );
+      first->encode( strm );
+      strm.flush();
+   }
 
    InfoLog( << "text <"    << textData.escaped() << ">" );
    InfoLog( << "signature <" << sigData.escaped() << ">" );
 
-   static char RESIP_ASN_UNCODE_SIGNED_TEXT[] = "resip-asn-uncode-signed-text";
-   static char RESIP_ASN_UNCODE_SIGNED_SIG[] = "resip-asn-uncode-signed-sig";
+   static const char RESIP_ASN_UNCODE_SIGNED_TEXT[] = "resip-asn-uncode-signed-text";
+   static const char RESIP_ASN_UNCODE_SIGNED_SIG[] = "resip-asn-uncode-signed-sig";
 
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_TEXT, textData );
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_SIG, sigData );
@@ -2314,7 +2333,11 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          const char* file;
          int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
          unsigned long code = ERR_get_error_line(&file,&line);
+#else
+         unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
          if ( code == 0 )
          {
             break;
@@ -2334,30 +2357,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    (void)BIO_flush(in);
 
    int type=OBJ_obj2nid(pkcs7->type);
-   switch (type)
-   {
-      case NID_pkcs7_signed:
-         InfoLog( << "data is pkcs7 signed" );
-         break;
-      case NID_pkcs7_signedAndEnveloped:
-         InfoLog( << "data is pkcs7 signed and enveloped" );
-         break;
-      case NID_pkcs7_enveloped:
-         InfoLog( << "data is pkcs7 enveloped" );
-         break;
-      case NID_pkcs7_data:
-         InfoLog( << "data is pkcs7 data" );
-         break;
-      case NID_pkcs7_encrypted:
-         InfoLog( << "data is pkcs7 encrypted " );
-         break;
-      case NID_pkcs7_digest:
-         InfoLog( << "data is pkcs7 digest" );
-         break;
-      default:
-         InfoLog( << "Unknown pkcs7 type" );
-         break;
-   }
+   InfoLog( << "data is " << OBJ_nid2ln(type) );
 
    STACK_OF(X509)* certs = 0;
    certs = sk_X509_new_null();
@@ -2374,7 +2374,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    }
    else
    {
-      if (mUserCerts.count( *signedBy ))
+      if (mUserCerts.find( *signedBy ) != mUserCerts.end())
       {
          InfoLog( <<"Adding cert from " <<  *signedBy << " to check sig" );
          X509* cert = mUserCerts[ *signedBy ];
@@ -2406,7 +2406,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
             if (gen->type == GEN_URI)
             {
                ASN1_IA5STRING* uri = gen->d.uniformResourceIdentifier;
-               Data name(uri->data, uri->length);
+               Data name(ASN1_STRING_get0_data(uri), ASN1_STRING_length(uri));
                InfoLog(<< "subjectAltName of signing cert contains <" << name << ">" );
                try
                {
@@ -2493,7 +2493,11 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                const char* file;
                int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
                unsigned long code = ERR_get_error_line(&file,&line);
+#else
+               unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
                if ( code == 0 )
                {
                   break;
@@ -2597,8 +2601,8 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
 
    Data commonName;
 
-   // look at the Common Name to find the peerName of the cert 
-   X509_NAME* subject = X509_get_subject_name(cert);
+   // look at the Common Name to find the peerName of the cert
+   const X509_NAME* subject = X509_get_subject_name(cert);
    if(NULL == subject)
    {
       ErrLog( << "Invalid certificate: subject not found ");
@@ -2608,21 +2612,22 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
    int i =-1;
    while( true )
    {
-      i = X509_NAME_get_index_by_NID(subject, NID_commonName,i);
+      // OpenSSL 1.1.1 takes a non-const X509_NAME here, 3.0+ a const one
+      i = X509_NAME_get_index_by_NID(const_cast<X509_NAME*>(subject), NID_commonName,i);
       if ( i == -1 )
       {
          break;
       }
       resip_assert( i != -1 );
-      X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
+      const X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
       resip_assert( entry );
       
-      ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
+      const ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
       resip_assert( s );
       
-      int t = M_ASN1_STRING_type(s);
-      int l = M_ASN1_STRING_length(s);
-      unsigned char* d = M_ASN1_STRING_data(s);
+      int t = ASN1_STRING_type(s);
+      int l = ASN1_STRING_length(s);
+      const unsigned char* d = ASN1_STRING_get0_data(s);
       Data name(d,l);
       DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
       resip_assert( name.size() == (unsigned)l );
@@ -2632,9 +2637,9 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       commonName = name;
    }
 
-#if 0  // junk code to print certificates extentions for debugging 
+#if 0  // junk code to print certificates extensions for debugging 
    int numExt = X509_get_ext_count(cert);
-   ErrLog(<< "Got peer certificate with " << numExt << " extentions" );
+   ErrLog(<< "Got peer certificate with " << numExt << " extensions" );
 
    for ( int i=0; i<numExt; i++ )
    {
@@ -2643,11 +2648,11 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       
       const char* str = OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
       resip_assert(str);
-      DebugLog(<< "Got certificate extention" << str );
+      DebugLog(<< "Got certificate extension" << str );
 
       if  ( OBJ_obj2nid(X509_EXTENSION_get_object(ext)) == NID_subject_alt_name )
       {   
-         DebugLog(<< "Got subjectAltName extention" );
+         DebugLog(<< "Got subjectAltName extension" );
       }
    }
 #endif 
@@ -2664,7 +2669,7 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       if (gen->type == GEN_DNS)
       {
          ASN1_IA5STRING* asn = gen->d.dNSName;
-         Data dns(asn->data, asn->length);
+         Data dns(ASN1_STRING_get0_data(asn), ASN1_STRING_length(asn));
          PeerName peerName(SubjectAltName, dns);
          peerNames.push_back(peerName);
          InfoLog(<< "subjectAltName of TLS session cert contains DNS <" << dns << ">" );
@@ -2675,7 +2680,7 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
          if(useEmailAsSIP)
          {
             ASN1_IA5STRING* asn = gen->d.rfc822Name;
-            Data email(asn->data, asn->length);
+            Data email(ASN1_STRING_get0_data(asn), ASN1_STRING_length(asn));
             PeerName peerName(SubjectAltName, email);
             peerNames.push_back(peerName);
             InfoLog(<< "subjectAltName of TLS session cert contains EMAIL <" << email << ">" );
@@ -2684,26 +2689,92 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
             DebugLog(<< "subjectAltName of cert has EMAIL type" );
       }
           
+      if (gen->type == GEN_IPADD)
+      {
+         // RFC 3280 "For IP Version 4, as specified in RFC 791, the octet string
+         // MUST contain exactly four octets.  For IP Version 6, as specified in
+         // RFC 1883, the octet string MUST contain exactly sixteen octets."
+         ASN1_OCTET_STRING* asn = gen->d.iPAddress;
+         const unsigned char* asnData = ASN1_STRING_get0_data(asn);
+         const int asnLen = ASN1_STRING_length(asn);
+         if (asnLen == 4)
+         {
+            uint32_t ip = (asnData[0] << 24) |
+                (asnData[1] << 16) |
+                (asnData[2] << 8) |
+                (asnData[3]);
+
+            sockaddr_in sa;
+            sa.sin_family = AF_INET;
+            sa.sin_addr.s_addr = htonl(ip);
+
+            char addrStr[INET_ADDRSTRLEN];
+            if (inet_ntop(sa.sin_family, &(sa.sin_addr), addrStr, INET_ADDRSTRLEN) != NULL)
+            {
+                Data ipv4(addrStr);
+                PeerName peerName(SubjectAltName, ipv4);
+                peerNames.push_back(peerName);
+                InfoLog(<< "subjectAltName of TLS session cert contains IP ADDRESS <" << ipv4 << ">" );
+            }
+         }
+         else if (asnLen == 16)
+         {
+            sockaddr_in6 sa;
+            sa.sin6_family = AF_INET6;
+            sa.sin6_addr.s6_addr[0] = asnData[0];
+            sa.sin6_addr.s6_addr[1] = asnData[1];
+            sa.sin6_addr.s6_addr[2] = asnData[2];
+            sa.sin6_addr.s6_addr[3] = asnData[3];
+            sa.sin6_addr.s6_addr[4] = asnData[4];
+            sa.sin6_addr.s6_addr[5] = asnData[5];
+            sa.sin6_addr.s6_addr[6] = asnData[6];
+            sa.sin6_addr.s6_addr[7] = asnData[7];
+            sa.sin6_addr.s6_addr[8] = asnData[8];
+            sa.sin6_addr.s6_addr[9] = asnData[9];
+            sa.sin6_addr.s6_addr[10] = asnData[10];
+            sa.sin6_addr.s6_addr[11] = asnData[11];
+            sa.sin6_addr.s6_addr[12] = asnData[12];
+            sa.sin6_addr.s6_addr[13] = asnData[13];
+            sa.sin6_addr.s6_addr[14] = asnData[14];
+            sa.sin6_addr.s6_addr[15] = asnData[15];
+
+            char addrStr[INET6_ADDRSTRLEN];
+            if (inet_ntop(sa.sin6_family, &(sa.sin6_addr), addrStr, INET6_ADDRSTRLEN) != NULL)
+            {
+                Data ipv6(addrStr);
+                PeerName peerName(SubjectAltName, ipv6);
+                peerNames.push_back(peerName);
+                InfoLog(<< "subjectAltName of TLS session cert contains IP ADDRESS <" << ipv6 << ">" );
+            }
+         }
+         else
+            DebugLog(<< "subjectAltName of cert contains invalid IP ADDRESS" );
+      }
+
       if(gen->type == GEN_URI) 
       {
          ASN1_IA5STRING* asn = gen->d.uniformResourceIdentifier;
-         Uri uri(Data(asn->data, asn->length));
+         Data uriString(ASN1_STRING_get0_data(asn), ASN1_STRING_length(asn));
          try
          {
+             // The Uri constructor parses, so it has to be inside the try: an
+             // exception escaping from here would break the TLS handshake code
+             Uri uri(uriString);
              PeerName peerName(SubjectAltName, uri.host());
              peerNames.push_back(peerName);
              InfoLog(<< "subjectAltName of TLS session cert contains URI <" << uri << ">" );
          }
          catch (...)
          {
-             InfoLog(<< "subjectAltName of TLS session cert contains unparseable URI");
+             InfoLog(<< "subjectAltName of TLS session cert contains unparsable URI <" << uriString << ">, ignoring it");
          }
       }
    }
    sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
 
-   // If there are no peer names from the subjectAltName, then use the commonName
-   if(peerNames.empty())
+   // If there are no peer names from the subjectAltName, then use the commonName,
+   // if the certificate has one: an empty name would match an empty target domain
+   if(peerNames.empty() && !commonName.empty())
    {
       PeerName peerName(CommonName, commonName);
       peerNames.push_back(peerName);
@@ -2719,7 +2790,7 @@ BaseSecurity::getCertName(X509 *cert)
    //get all the names (subjectAltName or CommonName)
    getCertNames(cert, cNames);
 
-   //prefere the subjectAltName
+   //prefer the subjectAltName
    for(std::list<PeerName>::const_iterator it = cNames.begin(); it != cNames.end(); it++)
    {
       if(it->mType == SubjectAltName)
@@ -2742,9 +2813,14 @@ BaseSecurity::getCertName(X509 *cert)
 /**
    Applies the certificate and domain name matching rules
 */
-int 
+int
 BaseSecurity::matchHostName(const Data& certificateName, const Data& domainName)
 {
+   // An empty name never identifies anyone, even when both are empty
+   if(certificateName.empty() || domainName.empty())
+   {
+      return 0;
+   }
    if(mAllowWildcardCertificates)
       return matchHostNameWithWildcards(certificateName,domainName);
    return isEqualNoCase(certificateName,domainName);
@@ -2756,220 +2832,75 @@ BaseSecurity::matchHostName(const Data& certificateName, const Data& domainName)
 SecurityTypes::SSLType
 BaseSecurity::parseSSLType(const Data& typeName)
 {
-   if(typeName == "TLSv1")
+   if(isEqualNoCase(typeName, "TLSv1"))
    {
       return SecurityTypes::TLSv1;
    }
-   if(typeName == "SSLv23")
+   if(isEqualNoCase(typeName, "SSLv23") || isEqualNoCase(typeName, "DynamicTLS"))
    {
-      return SecurityTypes::SSLv23;
+      return SecurityTypes::DynamicTLS;
    }
    Data error = "Not a recognized SSL type: " + typeName;
    throw invalid_argument(error.c_str());
 }
 /**
    Converts a string containing an OpenSSL option name
-   (for SSL_CTX_set_options) to the numeric value from ssl.h
+   (for SSL_CTX_set_options) to the numeric value from ssl.h - see resip::parseOpenSSLCTXOption
 */
 long
 BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
 {
-   if(optionName == "SSL_OP_ALL")
-   {
-      return SSL_OP_ALL;
-   }
-   if(optionName == "SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION")
-   {
-      return SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION;
-   }
-   if(optionName == "SSL_OP_CIPHER_SERVER_PREFERENCE")
-   {
-      return SSL_OP_CIPHER_SERVER_PREFERENCE;
-   }
-   if(optionName == "SSL_OP_CISCO_ANYCONNECT")
-   {
-      return SSL_OP_CISCO_ANYCONNECT;
-   }
-   if(optionName == "SSL_OP_COOKIE_EXCHANGE")
-   {
-      return SSL_OP_COOKIE_EXCHANGE;
-   }
-   if(optionName == "SSL_OP_CRYPTOPRO_TLSEXT_BUG")
-   {
-      return SSL_OP_CRYPTOPRO_TLSEXT_BUG;
-   }
-   if(optionName == "SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS")
-   {
-      return SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
-   }
-   if(optionName == "SSL_OP_EPHEMERAL_RSA")
-   {
-      return SSL_OP_EPHEMERAL_RSA;
-   }
-   if(optionName == "SSL_OP_LEGACY_SERVER_CONNECT")
-   {
-      return SSL_OP_LEGACY_SERVER_CONNECT;
-   }
-   if(optionName == "SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER")
-   {
-      return SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER;
-   }
-   if(optionName == "SSL_OP_MICROSOFT_SESS_ID_BUG")
-   {
-      return SSL_OP_MICROSOFT_SESS_ID_BUG;
-   }
-   if(optionName == "SSL_OP_MSIE_SSLV2_RSA_PADDING")
-   {
-      return SSL_OP_MSIE_SSLV2_RSA_PADDING;
-   }
-   if(optionName == "SSL_OP_NETSCAPE_CA_DN_BUG")
-   {
-      return SSL_OP_NETSCAPE_CA_DN_BUG;
-   }
-   if(optionName == "SSL_OP_NETSCAPE_CHALLENGE_BUG")
-   {
-      return SSL_OP_NETSCAPE_CHALLENGE_BUG;
-   }
-   if(optionName == "SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG")
-   {
-      return SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG;
-   }
-   if(optionName == "SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG")
-   {
-      return SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG;
-   }
-   if(optionName == "SSL_OP_NO_COMPRESSION")
-   {
-      return SSL_OP_NO_COMPRESSION;
-   }
-   if(optionName == "SSL_OP_NO_QUERY_MTU")
-   {
-      return SSL_OP_NO_QUERY_MTU;
-   }
-   if(optionName == "SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION")
-   {
-      return SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
-   }
-   if(optionName == "SSL_OP_NO_SSLv2")
-   {
-      return SSL_OP_NO_SSLv2;
-   }
-   if(optionName == "SSL_OP_NO_SSLv3")
-   {
-      return SSL_OP_NO_SSLv3;
-   }
-   if(optionName == "SSL_OP_NO_TICKET")
-   {
-      return SSL_OP_NO_TICKET;
-   }
-   if(optionName == "SSL_OP_NO_TLSv1")
-   {
-      return SSL_OP_NO_TLSv1;
-   }
-#ifdef SSL_OP_NO_TLSv1_1
-   if(optionName == "SSL_OP_NO_TLSv1_1")
-   {
-      return SSL_OP_NO_TLSv1_1;
-   }
-#endif
-#ifdef SSL_OP_NO_TLSv1_2
-   if(optionName == "SSL_OP_NO_TLSv1_2")
-   {
-      return SSL_OP_NO_TLSv1_2;
-   }
-#endif
-   if(optionName == "SSL_OP_PKCS1_CHECK_1")
-   {
-      return SSL_OP_PKCS1_CHECK_1;
-   }
-   if(optionName == "SSL_OP_PKCS1_CHECK_2")
-   {
-      return SSL_OP_PKCS1_CHECK_2;
-   }
-#ifdef SSL_OP_SAFARI_ECDHE_ECDSA_BUG
-   if(optionName == "SSL_OP_SAFARI_ECDHE_ECDSA_BUG")
-   {
-      return SSL_OP_SAFARI_ECDHE_ECDSA_BUG;
-   }
-#endif
-   if(optionName == "SSL_OP_SINGLE_DH_USE")
-   {
-      return SSL_OP_SINGLE_DH_USE;
-   }
-   if(optionName == "SSL_OP_SINGLE_ECDH_USE")
-   {
-      return SSL_OP_SINGLE_ECDH_USE;
-   }
-   if(optionName == "SSL_OP_SSLEAY_080_CLIENT_DH_BUG")
-   {
-      return SSL_OP_SSLEAY_080_CLIENT_DH_BUG;
-   }
-   if(optionName == "SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG")
-   {
-      return SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG;
-   }
-   if(optionName == "SSL_OP_TLS_BLOCK_PADDING_BUG")
-   {
-      return SSL_OP_TLS_BLOCK_PADDING_BUG;
-   }
-   if(optionName == "SSL_OP_TLS_D5_BUG")
-   {
-      return SSL_OP_TLS_D5_BUG;
-   }
-   if(optionName == "SSL_OP_TLS_ROLLBACK_BUG")
-   {
-      return SSL_OP_TLS_ROLLBACK_BUG;
-   }
-   Data error = "Not a recognized OpenSSL option name: " + optionName;
-   throw invalid_argument(error.c_str());
+   return resip::parseOpenSSLCTXOption(optionName);
 }
 /**
-   Does a wildcard match on domain and certificate name
-   @todo    looks incomplete, make better
+   Matches a certificate name, which may hold a wildcard, against the domain
+   name we connected to, following RFC 6125 section 6.4.3: the wildcard has to
+   be the whole left-most label ("*.example.com"), it stands for exactly one
+   non-empty label of the domain name, at least two labels have to follow it,
+   and it never matches an IP address.
 */
-int 
+int
 BaseSecurity::matchHostNameWithWildcards(const Data& certificateName, const Data& domainName)
 {
-   const char *dot = NULL;
-
-   const char *certName = certificateName.c_str();
-   if(certName == NULL)
-      return 0;
-
-   const char *domName = domainName.c_str();
-   if(domName == NULL)
-      return 0;
-
-   dot = strchr(domName, '.');
-   if (dot == NULL)
+   if(isEqualNoCase(certificateName, domainName))
    {
-      char *pnt = (char *)strchr(certName, '.'); // bad
-      /* hostname is not fully-qualified; unqualify the certName. */
-      if (pnt != NULL) 
-      {
-         *pnt = '\0';
-      }
+      return 1;
    }
-   else 
+
+   static const Data wildcardLabel("*.");
+   if(!certificateName.prefix(wildcardLabel) || DnsUtil::isIpAddress(domainName))
    {
-      if (strncmp(certName, "*.", 2) == 0) 
-      {
-         domName = dot + 1;
-         certName += 2;
-      }
+      return 0;
    }
-   return !strcasecmp(certName, domName);
+
+   // What the wildcard's label is followed by has to be two labels or more,
+   // otherwise "*.com" would match every host in a top-level domain
+   const Data certificateBase = certificateName.substr(wildcardLabel.size());
+   const Data::size_type baseDot = certificateBase.find(".");
+   if(baseDot == Data::npos || baseDot == 0 || baseDot + 1 == certificateBase.size())
+   {
+      return 0;
+   }
+
+   // The wildcard stands for the domain name's first label, which can't be empty
+   const Data::size_type dot = domainName.find(".");
+   if(dot == Data::npos || dot == 0)
+   {
+      return 0;
+   }
+   return isEqualNoCase(domainName.substr(dot + 1), certificateBase);
 }
 
 bool
 BaseSecurity::isSelfSigned(const X509 *cert)
 {
-   int iRet = X509_NAME_cmp(cert->cert_info->issuer, cert->cert_info->subject);
+   X509 *mutableCert = const_cast<X509*>(cert);
+   int iRet = X509_NAME_cmp(X509_get_issuer_name(mutableCert), X509_get_subject_name(mutableCert));
    return (iRet == 0);
 }
 
 void
-BaseSecurity::dumpAsn( char* name, Data data)
+BaseSecurity::dumpAsn(const char* name, Data data)
 {
 #if 0 // for debugging
    resip_assert(name);
@@ -2993,25 +2924,45 @@ BaseSecurity::dumpAsn( char* name, Data data)
 X509*     
 BaseSecurity::getDomainCert( const Data& domain )
 {
-   return mDomainCerts.count(domain) ? mDomainCerts[domain] : 0;
+   auto it = mDomainCerts.find(domain);
+   if (it != mDomainCerts.end())
+   {
+      return it->second;
+   }
+   return nullptr;
 }
 
 X509*     
 BaseSecurity::getUserCert( const Data& aor )
 {
-   return mUserCerts.count(aor) ? mUserCerts[aor] : 0;
+   auto it = mUserCerts.find(aor);
+   if (it != mUserCerts.end())
+   {
+      return it->second;
+   }
+   return nullptr;
 }
 
 EVP_PKEY* 
 BaseSecurity::getDomainKey(  const Data& domain )
 {
-   return mDomainPrivateKeys.count(domain) ? mDomainPrivateKeys[domain] : 0;
+   auto it = mDomainPrivateKeys.find(domain);
+   if (it != mDomainPrivateKeys.end())
+   {
+      return it->second;
+   }
+   return nullptr;
 }
 
 EVP_PKEY*
 BaseSecurity::getUserPrivateKey( const Data& aor )
 {
-   return mUserPrivateKeys.count(aor) ? mUserPrivateKeys[aor] : 0;
+   auto it = mUserPrivateKeys.find(aor);
+   if (it != mUserPrivateKeys.end())
+   {
+      return it->second;
+   }
+   return nullptr;
 }
 
 void
@@ -3019,78 +2970,74 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
 {
    if(mDHParamsFilename.empty())
    {
-      WarningLog(<< "unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified");
+      InfoLog(<< "Unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified");
    }
    else
    {
-      DebugLog(<< "attempting to read DH parameters from " << mDHParamsFilename);
+      DebugLog(<< "Attempting to read DH parameters from " << mDHParamsFilename);
 
       BIO* bio = BIO_new_file(mDHParamsFilename.c_str(), "r");
       if(bio == NULL)
       {
-         WarningLog(<< "unable to load DH parameters (required for PFS): BIO_new_file failed to open file " << mDHParamsFilename);
+         WarningLog(<< "Unable to load DH parameters (required for PFS): BIO_new_file failed to open file " << mDHParamsFilename);
+         ERR_clear_error();
+         return;
       }
 
+      bool loaded = false;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+      // OpenSSL 3 deprecates the DH type and its functions: the parameters are read as an EVP_PKEY
+      EVP_PKEY* dh = PEM_read_bio_Parameters(bio, NULL);
+      if(dh == NULL || !(EVP_PKEY_is_a(dh, "DH") || EVP_PKEY_is_a(dh, "DHX")))
+      {
+         WarningLog(<< "Unable to load DH parameters (required for PFS): no DH parameters read from file " << mDHParamsFilename);
+         EVP_PKEY_free(dh);
+      }
+      else if(!SSL_CTX_set0_tmp_dh_pkey(ctx, dh))  // takes dh, if it succeeds
+      {
+         WarningLog(<< "Unable to load DH parameters (required for PFS): SSL_CTX_set0_tmp_dh_pkey failed for file " << mDHParamsFilename);
+         EVP_PKEY_free(dh);
+      }
+      else
+      {
+         loaded = true;
+      }
+#else
       DH* dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
       if(dh == NULL)
       {
-         WarningLog(<< "unable to load DH parameters (required for PFS): PEM_read_bio_DHparams failed for file " << mDHParamsFilename);
+         WarningLog(<< "Unable to load DH parameters (required for PFS): PEM_read_bio_DHparams failed for file " << mDHParamsFilename);
       }
       else
       {
          if(!SSL_CTX_set_tmp_dh(ctx, dh))
          {
-            WarningLog(<< "unable to load DH parameters (required for PFS): SSL_CTX_set_tmp_dh failed for file " << mDHParamsFilename);
+            WarningLog(<< "Unable to load DH parameters (required for PFS): SSL_CTX_set_tmp_dh failed for file " << mDHParamsFilename);
          }
          else
          {
-            long options = SSL_OP_CIPHER_SERVER_PREFERENCE |
-#if !defined(OPENSSL_NO_ECDH) && OPENSSL_VERSION_NUMBER >= 0x10000000L
-                           SSL_OP_SINGLE_ECDH_USE |
-#endif
-                           SSL_OP_SINGLE_DH_USE;
-            options = SSL_CTX_set_options(ctx, options);
-            DebugLog(<<"DH parameters loaded, PFS cipher-suites enabled");
+            loaded = true;
          }
          DH_free(dh);
       }
-      BIO_free(bio);
-   }
-
-#ifndef SSL_CTRL_SET_ECDH_AUTO
-#define SSL_CTRL_SET_ECDH_AUTO 94
 #endif
+      BIO_free(bio);
 
-   // FIXME: add WarningLog statements to the block below if it fails
-
-   /* SSL_CTX_set_ecdh_auto(ctx,on) requires OpenSSL 1.0.2 which wraps: */
-   if (SSL_CTX_ctrl(ctx, SSL_CTRL_SET_ECDH_AUTO, 1, NULL))
-   {
-      DebugLog(<<"ECDH initialized");
-   }
-   else
-   {
-#if !defined(OPENSSL_NO_ECDH) && OPENSSL_VERSION_NUMBER >= 0x10000000L
-      EC_KEY* ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-      if (ecdh != NULL)
+      if(loaded)
       {
-         if (SSL_CTX_set_tmp_ecdh(ctx, ecdh))
-         {
-	    DebugLog(<<"ECDH initialized");
-	 }
-         else
-         {
-            WarningLog(<<"unable to initialize ECDH: SSL_CTX_set_tmp_ecdh failed");
-         }
-         EC_KEY_free(ecdh);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+         uint64_t options;
+#else
+         long options;
+#endif
+         options = SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_SINGLE_DH_USE;
+         options = SSL_CTX_set_options(ctx, options);
+         DebugLog(<<"DH parameters loaded, PFS cipher-suites enabled");
       }
       else
       {
-         WarningLog(<<"unable to initialize ECDH: EC_KEY_new_by_curve_name failed");
+         ERR_clear_error();  // what failed is logged: don't leave it for the next OpenSSL call on this thread
       }
-#else
-      WarningLog(<<"unable to initialize ECDH: SSL_CTX_ctrl failed, OPENSSL_NO_ECDH defined or repro was compiled with an old OpenSSL version");
-#endif
    }
 }
 
@@ -3102,6 +3049,7 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
 /* ====================================================================
 * The Vovida Software License, Version 1.0
 *
+* Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
 * Copyright (c) 2002-2005 Vovida Networks, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without

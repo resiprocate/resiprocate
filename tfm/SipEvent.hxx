@@ -1,8 +1,9 @@
 #if !defined(TFM_SipEvent_hxx)
 #define TFM_SipEvent_hxx
 
-#include <boost/shared_ptr.hpp>
 #include "tfm/Event.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -16,14 +17,14 @@ class SipEvent : public Event
 {
    public:
       SipEvent(TestSipEndPoint* endPoint, 
-               const boost::shared_ptr<resip::SipMessage>& msg);
-      boost::shared_ptr<resip::SipMessage> getMessage();
+               std::shared_ptr<resip::SipMessage> msg);
+      std::shared_ptr<resip::SipMessage> getMessage() const noexcept;
             
       virtual resip::Data toString() const;
       virtual resip::Data briefString() const;
 
    private:
-      boost::shared_ptr<resip::SipMessage> mMsg;
+       std::shared_ptr<resip::SipMessage> mMsg;
 };
 
 #endif

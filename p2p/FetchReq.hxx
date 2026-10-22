@@ -2,9 +2,9 @@
 #define P2P_FetchReq_hxx
 
 #include "DataSpecifier.hxx"
-
-#include "rutil/SharedPtr.hxx"
 #include "Message.hxx"
+
+#include <memory>
 
 namespace p2p
 {
@@ -12,14 +12,14 @@ namespace p2p
 class FetchReq : public ResourceMessage
 {
    public:
-      typedef std::list<resip::SharedPtr<DataSpecifier> > DataSpecifiers;
+      typedef std::list<std::shared_ptr<DataSpecifier>> DataSpecifiers;
       
       virtual MessageType getMessageType() const { return Message::FetchReqType; }
 
       DataSpecifiers& specifiers();
       const DataSpecifiers& specifiers() const;
 
-      std::auto_ptr<Event> event()
+      std::unique_ptr<Event> event()
       {
          return wrap(this);
       }

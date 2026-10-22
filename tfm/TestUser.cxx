@@ -10,7 +10,6 @@
 
 using namespace resip;
 using namespace std;
-using namespace boost;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -92,14 +91,14 @@ TestUser::TestUserAction::operator()()
 }
 
 
-boost::shared_ptr<SipMessage>
-TestUser::DigestRespond::go(boost::shared_ptr<SipMessage> response)
+std::shared_ptr<SipMessage>
+TestUser::DigestRespond::go(std::shared_ptr<SipMessage> response)
 {
    resip_assert(response->isResponse());
    DebugLog (<< "DigestRespond: " << Inserter(mEndPoint.mRequests));
    
    resip_assert(mEndPoint.mRequests.find(response->header(h_Vias).front().param(p_branch).getTransactionId()) != mEndPoint.mRequests.end());
-   boost::shared_ptr<SipMessage> request = mEndPoint.mRequests[response->header(h_Vias).front().param(p_branch).getTransactionId()];
+   std::shared_ptr<SipMessage> request = mEndPoint.mRequests[response->header(h_Vias).front().param(p_branch).getTransactionId()];
    Helper::addAuthorization(*request, *response, mEndPoint.mAuthName, mEndPoint.mPassword, "foo", mEndPoint.mNonceCount);
 
    // increment cseq
@@ -112,12 +111,12 @@ TestUser::DigestRespond::go(boost::shared_ptr<SipMessage> response)
    return request;
 }
 
-boost::shared_ptr<SipMessage>
-TestUser::DigestChallenge::go(boost::shared_ptr<SipMessage> request)
+std::shared_ptr<SipMessage>
+TestUser::DigestChallenge::go(std::shared_ptr<SipMessage> request)
 {
    resip_assert(request->isRequest());
    // !jf! should be a UA challenge 401
-   boost::shared_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, request->header(h_To).uri().host()));;
+   std::shared_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, request->header(h_To).uri().host()));;
    return challenge;
 }
 
@@ -132,10 +131,10 @@ TestUser::Register::Register(TestUser* endPoint,
 {
 }
 
-boost::shared_ptr<SipMessage>
+std::shared_ptr<SipMessage>
 TestUser::Register::go()
 {
-   boost::shared_ptr<SipMessage> reg = static_cast<TestUser&>(mEndPoint).mRegistration;
+   std::shared_ptr<SipMessage> reg = static_cast<TestUser&>(mEndPoint).mRegistration;
 
    // increment cseq
    reg->header(h_CSeq).sequence()++;
@@ -160,7 +159,7 @@ TestUser::Register::go()
    }
 
    //Copy is made to prevent conditions from corrupting mRegistration
-   boost::shared_ptr<SipMessage> copy(dynamic_cast<SipMessage*>(reg->clone()));
+   std::shared_ptr<SipMessage> copy(dynamic_cast<SipMessage*>(reg->clone()));
    
    return copy;
 }
@@ -220,10 +219,10 @@ TestUser::RemoveAllRegistrationBindings::RemoveAllRegistrationBindings(TestUser 
 }
 
 
-boost::shared_ptr<SipMessage>
+std::shared_ptr<SipMessage>
 TestUser::RemoveAllRegistrationBindings::go()
 {
-   boost::shared_ptr<SipMessage> reg = static_cast<TestUser&>(mEndPoint).mRegistration;
+   std::shared_ptr<SipMessage> reg = static_cast<TestUser&>(mEndPoint).mRegistration;
 
    reg->header(h_CSeq).sequence()++;
 

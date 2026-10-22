@@ -25,6 +25,8 @@ class RouteGuard
       resip::Data mMatchingPattern;
       resip::Data mMethod;
       resip::Data mEvent;
+      int mPriority;
+      int mWeight;
 };
 
 #endif

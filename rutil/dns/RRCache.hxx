@@ -52,10 +52,10 @@ class RRCache
       static const int DEFAULT_USER_DEFINED_TTL = 10; // in seconds.
 
       static const int DEFAULT_SIZE = 512;
-      class CompareT  : public std::binary_function<const RRList*, const RRList*, bool>
+      class CompareT
       {
          public:
-            bool operator()(RRList* lhs, RRList* rhs) const
+            bool operator()(const RRList* lhs, const RRList* rhs) const
             {
                if (lhs->rrType() < rhs->rrType())
                {
@@ -93,7 +93,7 @@ class RRCache
       typedef std::map<int, resip::RRFactoryBase*> FactoryMap;
       FactoryMap  mFactoryMap;
       
-      int mUserDefinedTTL; // used when the ttl in RR is 0 or less than default(60). in seconds.
+      int mUserDefinedTTL; // used when the ttl in RR is 0 or less than default(10). in seconds.
       unsigned int mSize;
 };
 

@@ -28,14 +28,15 @@
 
 #include "TelepathyConversationProfile.hxx"
 
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 using namespace tr;
 using namespace resip;
 
-TelepathyConversationProfile::TelepathyConversationProfile(SharedPtr<Profile> baseProfile, const QVariantMap &parameters)
-   : ConversationProfile(baseProfile),
+TelepathyConversationProfile::TelepathyConversationProfile(std::shared_ptr<Profile> baseProfile, const QVariantMap &parameters)
+   : ConversationProfile(std::move(baseProfile)),
      TelepathyParameters(parameters)
 {
    bool registrationDisabled = false;

@@ -22,6 +22,10 @@
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4996)
+#endif
+
 using namespace resip;
 
 Resolver::Resolver(const Uri& uri) : 
@@ -308,7 +312,7 @@ Resolver::getHostName()
    char buffer[255];
    if (gethostname(buffer, sizeof(buffer)) < 0)
    {
-      InfoLog (<< "Failed gethostname() " << strerror(errno));
+      InfoLog (<< "Failed gethostname() " << strError(errno));
       return "localhost";
    }
    else

@@ -1,11 +1,11 @@
 #ifndef SequenceSet_hxx
 #define SequenceSet_hxx
 
+#include <deque>
 #include <iosfwd>
 #include <list>
 #include <set>
 #include <memory>
-#include <boost/shared_ptr.hpp>
 
 #include "tfm/TestEndPoint.hxx"
 #include "rutil/BaseException.hxx"
@@ -21,12 +21,22 @@ class SequenceSet
       friend class SequenceClass;
 
       SequenceSet();
+      SequenceSet(const SequenceSet&) = delete;
+      SequenceSet(SequenceSet&&) = delete;
       ~SequenceSet();
 
-      void enqueue(boost::shared_ptr<Event> event);
-      long enqueue(boost::shared_ptr<Event> event, int delay);
+      SequenceSet& operator=(const SequenceSet&) = delete;
+      SequenceSet& operator=(SequenceSet&&) = delete;
+
+      void enqueue(std::shared_ptr<Event> event);
+      long enqueue(std::shared_ptr<Event> event, int delay);
+      // Handle event before any event already queued.  For a consequence of
+      // the event being handled, such as a sequence completing, that must take
+      // effect before the next event.  Only call from the thread running the
+      // loop.
+      void enqueueNext(std::shared_ptr<Event> event);
       void globalFailure(const resip::Data& message);
-      void globalFailure(resip::BaseException& e);
+      void globalFailure(const resip::BaseException& e);
       bool executionFailed() const;
 
       bool exec();
@@ -39,18 +49,22 @@ class SequenceSet
 
       void clear();
 
-      boost::shared_ptr<SequenceSet> getHandle() { return mHandle; }
+      std::shared_ptr<SequenceSet> getHandle() { return mHandle; }
       void release() { mHandle.reset(); }
 
    protected:
-      void handle(boost::shared_ptr<Event> event);
+      void handle(std::shared_ptr<Event> event);
+      // The next event to handle: those from enqueueNext() first, in order
+      std::shared_ptr<Event> nextEvent();
       std::list<SequenceClass*> mSequences;
       std::set<SequenceClass*> mActiveSet;
 
-      void handleEvent(boost::shared_ptr<Event> event);
+      void handleEvent(std::shared_ptr<Event> event);
 
-      typedef resip::ValueFifo< boost::shared_ptr<Event> > EventFifo;
+      typedef resip::ValueFifo<std::shared_ptr<Event>> EventFifo;
       EventFifo mEventFifo;
+      // Events from enqueueNext().  Only touched by the loop's thread.
+      std::deque<std::shared_ptr<Event>> mNextEvents;
 
       bool mFailed;
 
@@ -68,17 +82,16 @@ class SequenceSet
    public:
 
    private:
-      boost::shared_ptr<SequenceSet> mHandle;      
-      // no value semanitcs
-      SequenceSet(const SequenceSet&);
-      SequenceSet& operator=(const SequenceSet&);
+      std::shared_ptr<SequenceSet> mHandle;
 };
 
 EncodeStream&
 operator<<(EncodeStream& str, const SequenceSet& sset);
 
 #endif
+
 /*
+  Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
   Copyright (c) 2005, PurpleComm, Inc. 
   All rights reserved.
 

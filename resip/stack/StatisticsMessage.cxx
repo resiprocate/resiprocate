@@ -93,7 +93,7 @@ void
 StatisticsMessage::logStats(const resip::Subsystem& subsystem, 
                             const StatisticsMessage::Payload& stats)
 {
-   WarningLog(<< subsystem
+   InfoLog(<< subsystem
               << std::endl
               << stats);
 }

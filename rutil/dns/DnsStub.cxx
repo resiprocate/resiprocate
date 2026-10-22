@@ -219,18 +219,21 @@ DnsStub::cache(const Data& key,
       aptr = createOverlay(abuf, alen, aptr, overlays);
    }
 
-   // sort overlays by type.
-   sort(overlays.begin(), overlays.end());
-
-   vector<RROverlay>::iterator itLow = lower_bound(overlays.begin(), overlays.end(), *overlays.begin());
-   vector<RROverlay>::iterator itHigh = upper_bound(overlays.begin(), overlays.end(), *overlays.begin());
-   while (itLow != overlays.end())
+   if (overlays.size() > 0)
    {
-      mRRCache.updateCache(key, (*itLow).type(), itLow, itHigh);
-      itLow = itHigh;
-      if (itHigh != overlays.end())
+      // sort overlays by type.
+      sort(overlays.begin(), overlays.end());
+
+      vector<RROverlay>::iterator itLow = lower_bound(overlays.begin(), overlays.end(), *overlays.begin());
+      vector<RROverlay>::iterator itHigh = upper_bound(overlays.begin(), overlays.end(), *overlays.begin());
+      while (itLow != overlays.end())
       {
-         itHigh = upper_bound(itLow, overlays.end(), *itLow);
+         mRRCache.updateCache(key, (*itLow).type(), itLow, itHigh);
+         itLow = itHigh;
+         if (itHigh != overlays.end())
+         {
+            itHigh = upper_bound(itLow, overlays.end(), *itLow);
+         }
       }
    }
 }
@@ -298,6 +301,17 @@ DnsStub::skipDNSQuestion(const unsigned char *aptr,
    aptr += QFIXEDSZ;
    free(name);
    return aptr;
+}
+
+bool
+DnsStub::changeNameServers(const NameserverList& additional)
+{
+    if(mDnsProvider)
+    {
+        mDnsProvider->changeNameServers(additional);
+        return mDnsProvider->checkDnsChange();
+    }
+    return false;
 }
 
 bool
@@ -450,7 +464,7 @@ typeToData(int rr)
    {
       return RR_SRV::getRRTypeName();
    }
-   else if (RR_CNAME::getRRType())
+   else if (rr == RR_CNAME::getRRType())
    {
       return RR_CNAME::getRRTypeName();
    }
@@ -463,31 +477,38 @@ typeToData(int rr)
 void
 DnsStub::Query::go()
 {
-   StackLog(<< "DNS query of:" << mTarget << " " << typeToData(mRRType));
+   StackLog(<< "DNS query: target=" << mTarget << ", type=" << typeToData(mRRType));
 
    DnsResourceRecordsByPtr records;
    int status = 0;
    bool cached = false;
    Data targetToQuery = mTarget;
-   cached = mStub.mRRCache.lookup(mTarget, mRRType, mProto, records, status);
+   bool newTargetToQuery = false;
 
+   cached = mStub.mRRCache.lookup(mTarget, mRRType, mProto, records, status);
    if (!cached)
    {
       if (mRRType != T_CNAME)
       {
+         int numRequeries = 0;
          do
          {
             DnsResourceRecordsByPtr cnames;
-            cached = mStub.mRRCache.lookup(targetToQuery, T_CNAME, mProto, cnames, status);
-            if (cached)
+            if(mStub.mRRCache.lookup(targetToQuery, T_CNAME, mProto, cnames, status) && cnames.size() > 0)
             {
                targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
+               newTargetToQuery = true;
             }
-         } while(cached);
+            else
+            {
+               // No more CNames to follow
+               break;
+            }
+         } while(++numRequeries < MAX_REQUERIES);
       }
    }
 
-   if (targetToQuery != mTarget)
+   if (newTargetToQuery)
    {
       StackLog(<< mTarget << " mapped to CNAME " << targetToQuery);
       cached = mStub.mRRCache.lookup(targetToQuery, mRRType, mProto, records, status);
@@ -525,7 +546,7 @@ DnsStub::Query::go()
       }
       else
       {
-         StackLog (<< targetToQuery << " not cached. Doing external dns lookup");
+         StackLog (<< targetToQuery << " not cached. Doing external dns lookup, type=" << typeToData(mRRType));
          mStub.lookupRecords(targetToQuery, mRRType, this);
       }
    }
@@ -721,6 +742,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
       ErrLog(<< "Failed to cache result for " << targetToQuery << ": " << e.getMessage());
       mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink);
       bGotAnswers = false;
+      free(name);
       return;
    }
 
@@ -737,17 +759,21 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
             do
             {
                DnsResourceRecordsByPtr cnames;
-               cached = mStub.mRRCache.lookup(targetToQuery, T_CNAME, mProto, cnames, status);
-               if (cached)
+               if(mStub.mRRCache.lookup(targetToQuery, T_CNAME, mProto, cnames, status) && cnames.size() > 0)
                {
-                  ++mReQuery;
                   targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
                }
-            } while(mReQuery < MAX_REQUERIES && cached);
+               else
+               {
+                  // No more CNames to follow
+                  break;
+               }
+            } while(++mReQuery < MAX_REQUERIES);
 
             DnsResourceRecordsByPtr result;
             if (!mStub.mRRCache.lookup(targetToQuery, mRRType, mProto, result, status))
             {
+               StackLog(<< targetToQuery << " not cached. Doing external dns lookup, type=" << typeToData(mRRType));
                mStub.lookupRecords(targetToQuery, mRRType, this);
                bDeleteThis = false;
                bGotAnswers = false;

@@ -7,28 +7,26 @@ using namespace std;
 using namespace dtls;
 using namespace resip;
 
-TestTimerContext::TestTimerContext()
+TestTimerContext::TestTimerContext() :
+   mExpiryTime(0)
 {
-   mTimer=0;
 }
 
 void
-TestTimerContext::addTimer(DtlsTimer *timer, unsigned int lifetime)
+TestTimerContext::addTimer(std::shared_ptr<DtlsTimer> timer, unsigned int lifetime)
 {
-   if(mTimer)
-      delete mTimer;
-
-   mTimer=timer;
-   UInt64 timeMs=Timer::getTimeMs();
+   // Replaces the timer before, which its socket has invalidated
+   mTimer=std::move(timer);
+   uint64_t timeMs=Timer::getTimeMs();
    mExpiryTime=timeMs+lifetime;
 
    cerr << "Setting a timer for " << lifetime << " ms from now" << endl;
 }
 
-UInt64
+uint64_t
 TestTimerContext::getRemainingTime()
 {
-   UInt64 timeMs=Timer::getTimeMs();
+   uint64_t timeMs=Timer::getTimeMs();
 
    if(mTimer)
    {
@@ -46,24 +44,38 @@ TestTimerContext::getRemainingTime()
 void
 TestTimerContext::updateTimer()
 {
-   UInt64 timeMs=Timer::getTimeMs();
+   uint64_t timeMs=Timer::getTimeMs();
 
    if(mTimer) 
    {
       if(mExpiryTime<timeMs)
       {
-         DtlsTimer *tmpTimer=mTimer;
-         mTimer=0;
+         // Firing it can set a new timer
+         std::shared_ptr<DtlsTimer> tmpTimer=std::move(mTimer);
+         mTimer.reset();
 
-         fire(tmpTimer);
+         fire(tmpTimer.get());
       }
+   }
+}
+
+int TestTimerContext::select(resip::FdSet& fdSet)
+{
+   if(mTimer)
+   {
+      return fdSet.selectMilliSeconds(getRemainingTime());
+   }
+   else
+   {
+      return fdSet.select();
    }
 }
 
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

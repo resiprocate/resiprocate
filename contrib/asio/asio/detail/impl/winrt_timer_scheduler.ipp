@@ -2,7 +2,7 @@
 // detail/impl/winrt_timer_scheduler.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -27,47 +27,39 @@
 namespace asio {
 namespace detail {
 
-winrt_timer_scheduler::winrt_timer_scheduler(
-    asio::io_service& io_service)
-  : asio::detail::service_base<winrt_timer_scheduler>(io_service),
-    io_service_(use_service<io_service_impl>(io_service)),
+winrt_timer_scheduler::winrt_timer_scheduler(execution_context& context)
+  : execution_context_service_base<winrt_timer_scheduler>(context),
+    scheduler_(use_service<scheduler_impl>(context)),
     mutex_(),
     event_(),
     timer_queues_(),
-    thread_(0),
+    thread_(),
     stop_thread_(false),
     shutdown_(false)
 {
-  thread_ = new asio::detail::thread(
-      bind_handler(&winrt_timer_scheduler::call_run_thread, this));
+  thread_ = thread(bind_handler(&winrt_timer_scheduler::call_run_thread, this));
 }
 
 winrt_timer_scheduler::~winrt_timer_scheduler()
 {
-  shutdown_service();
+  shutdown();
 }
 
-void winrt_timer_scheduler::shutdown_service()
+void winrt_timer_scheduler::shutdown()
 {
   asio::detail::mutex::scoped_lock lock(mutex_);
   shutdown_ = true;
   stop_thread_ = true;
   event_.signal(lock);
   lock.unlock();
-
-  if (thread_)
-  {
-    thread_->join();
-    delete thread_;
-    thread_ = 0;
-  }
+  thread_.join();
 
   op_queue<operation> ops;
   timer_queues_.get_all_timers(ops);
-  io_service_.abandon_operations(ops);
+  scheduler_.abandon_operations(ops);
 }
 
-void winrt_timer_scheduler::fork_service(asio::io_service::fork_event)
+void winrt_timer_scheduler::notify_fork(execution_context::fork_event)
 {
 }
 
@@ -89,7 +81,7 @@ void winrt_timer_scheduler::run_thread()
     if (!ops.empty())
     {
       lock.unlock();
-      io_service_.post_deferred_completions(ops);
+      scheduler_.post_deferred_completions(ops);
       lock.lock();
     }
   }

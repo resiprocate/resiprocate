@@ -21,7 +21,7 @@ class TimeAccumulate
    private:
       struct Accumulator
       {
-            UInt64 totalTime;
+            uint64_t totalTime;
             size_t count;
       };
 
@@ -34,7 +34,7 @@ class TimeAccumulate
 
       ~TimeAccumulate()
       {
-         UInt64 end = Timer::getTimeMs();
+         uint64_t end = Timer::getTimeMs();
          end -= mStart;
          Lock lock(TimeAccumulate::mMutex);
 
@@ -58,7 +58,7 @@ class TimeAccumulate
       }
 #endif
       
-      static UInt64 getTime(const Data& name)
+      static uint64_t getTime(const Data& name)
       {
          Lock lock(TimeAccumulate::mMutex);
          return TimeAccumulate::mTimes[name].totalTime;
@@ -76,7 +76,7 @@ class TimeAccumulate
       class Guard
       {
          public:
-            explicit Guard(UInt64& accumulator)
+            explicit Guard(uint64_t& accumulator)
                : mAccumulator(accumulator)
             {
                mAccumulator -= Timer::getTimeMs();
@@ -87,14 +87,14 @@ class TimeAccumulate
             }
 
          private:
-            UInt64& mAccumulator;
+            uint64_t& mAccumulator;
       };
 
    private:
       typedef std::map<Data, Accumulator> TimeMap;
 
       const Data mName;
-      const UInt64 mStart;
+      const uint64_t mStart;
 
       static Mutex mMutex;
       static TimeMap mTimes;

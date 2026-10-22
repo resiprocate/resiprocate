@@ -21,10 +21,19 @@ class MediaEvent : public resip::DumCommand
    public:
       typedef enum 
       { 
-         PLAY_FINISHED
+         RESOURCE_DONE,
+         RESOURCE_FAILED,
+         VOICE_STARTED,
+         VOICE_STOPPED
       } MediaEventType;
 
-      MediaEvent(ConversationManager& conversationManager, ConversationHandle conversationHandle, int connectionId, MediaEventType eventType);
+      typedef enum
+      {
+         DIRECTION_IN,
+         DIRECTION_OUT
+      } MediaDirection;
+
+      MediaEvent(ConversationManager& conversationManager, ParticipantHandle partHandle, MediaEventType eventType, MediaDirection direction);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -33,9 +42,9 @@ class MediaEvent : public resip::DumCommand
 
    private:
       ConversationManager& mConversationManager;
-      ConversationHandle mConversationHandle;  // set to 0 if media interface mode is global
-      int mConnectionId;
+      ParticipantHandle mParticipantHandle;
       MediaEventType mEventType;
+      MediaDirection mDirection;
 };
 
 
@@ -46,6 +55,8 @@ class MediaEvent : public resip::DumCommand
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

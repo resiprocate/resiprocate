@@ -2,16 +2,18 @@
 #define REPRO_RADIUSSERVERAUTHMANAGER_HXX
 
 #include <map>
+#include <vector>
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
 #endif
 
+#include "rutil/AsyncBool.hxx"
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/RADIUSServerAuthManager.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 
 #ifdef USE_RADIUS_CLIENT
 
@@ -34,17 +36,17 @@ class ReproRADIUSServerAuthManager: public resip::RADIUSServerAuthManager
                              bool rejectBadNonces,
                              const resip::Data& configurationFile,
                              bool challengeThirdParties,
-                             const resip::Data& staticRealm);
+                             const resip::Data& staticRealm,
+                             const std::vector<resip::DigestType>& challengeDigestTypes = std::vector<resip::DigestType>());
       
       ~ReproRADIUSServerAuthManager();
       
    protected:
       virtual bool useAuthInt() const;
       virtual bool rejectBadNonces() const;
-      virtual AsyncBool requiresChallenge(const resip::SipMessage& msg);
+      virtual resip::AsyncBool requiresChallenge(const resip::SipMessage& msg);
 
    private:
-      resip::DialogUsageManager& mDum;
       AclStore&  mAclDb;
       bool mUseAuthInt;
       bool mRejectBadNonces;
@@ -59,6 +61,7 @@ class ReproRADIUSServerAuthManager: public resip::RADIUSServerAuthManager
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock http://danielpocock.com
  * All rights reserved.
  *

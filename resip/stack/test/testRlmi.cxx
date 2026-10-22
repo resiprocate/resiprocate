@@ -46,7 +46,7 @@ main()
                      "</list>\r\n"
                      "\r\n");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       Rlmi* rlmi = dynamic_cast<Rlmi*>(msg->getContents());
 

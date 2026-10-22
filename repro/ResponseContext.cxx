@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <utility>
 
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/InteropHelper.hxx"
@@ -62,14 +63,14 @@ resip::Data
 ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately)
 {
    InfoLog (<< "Adding candidate " << addr);
-   std::auto_ptr<Target> target(new Target(addr));
+   std::unique_ptr<Target> target(new Target(addr));
    Data tid=target->tid();
-   addTarget(target, beginImmediately);
+   addTarget(std::move(target), beginImmediately);
    return tid;
 }
 
 bool
-ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately, bool checkDuplicates)
+ResponseContext::addTarget(std::unique_ptr<repro::Target> target, bool beginImmediately, bool checkDuplicates)
 {
    if(mRequestContext.mHaveSentFinalResponse || !target.get())
    {
@@ -238,7 +239,7 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
 }
 
 bool 
-ResponseContext::cancelActiveClientTransactions()
+ResponseContext::cancelActiveClientTransactions(const resip::Tokens* reasons)
 {
    if(mRequestContext.mHaveSentFinalResponse)
    {
@@ -257,7 +258,7 @@ ResponseContext::cancelActiveClientTransactions()
    for (TransactionMap::iterator i = mActiveTransactionMap.begin(); 
         i != mActiveTransactionMap.end(); ++i)
    {
-      cancelClientTransaction(i->second);
+      cancelClientTransaction(i->second, reasons);
    }
       
    return true;
@@ -265,7 +266,7 @@ ResponseContext::cancelActiveClientTransactions()
 }
 
 bool
-ResponseContext::cancelAllClientTransactions()
+ResponseContext::cancelAllClientTransactions(const resip::Tokens* reasons)
 {
 
    InfoLog (<< "Cancel ALL client transactions: " << mCandidateTransactionMap.size()
@@ -282,25 +283,25 @@ ResponseContext::cancelAllClientTransactions()
       for (TransactionMap::iterator i = mActiveTransactionMap.begin(); 
            i != mActiveTransactionMap.end(); ++i)
       {
-         cancelClientTransaction(i->second);
+         cancelClientTransaction(i->second, reasons);
       }
    }
 
-   clearCandidateTransactions();
+   clearCandidateTransactions(reasons);
    
    return true;
 
 }
 
 bool
-ResponseContext::clearCandidateTransactions()
+ResponseContext::clearCandidateTransactions(const resip::Tokens* reasons)
 {
    bool result=false;
    for (TransactionMap::iterator j = mCandidateTransactionMap.begin(); 
         j != mCandidateTransactionMap.end();)
    {
       result=true;
-      cancelClientTransaction(j->second);
+      cancelClientTransaction(j->second, reasons);
       mTerminatedTransactionMap[j->second->tid()] = j->second;
       TransactionMap::iterator temp = j;
       j++;
@@ -311,7 +312,7 @@ ResponseContext::clearCandidateTransactions()
 }
 
 bool 
-ResponseContext::cancelClientTransaction(const resip::Data& tid)
+ResponseContext::cancelClientTransaction(const resip::Data& tid, const resip::Tokens* reasons)
 {
 
    TransactionMap::iterator i = mActiveTransactionMap.find(tid);
@@ -319,7 +320,7 @@ ResponseContext::cancelClientTransaction(const resip::Data& tid)
    {
       if(i!=mActiveTransactionMap.end())
       {
-         cancelClientTransaction(i->second);      
+         cancelClientTransaction(i->second, reasons);
          return true;
       }
    }
@@ -327,7 +328,7 @@ ResponseContext::cancelClientTransaction(const resip::Data& tid)
    TransactionMap::iterator j = mCandidateTransactionMap.find(tid);
    if(j != mCandidateTransactionMap.end())
    {
-      cancelClientTransaction(j->second);
+      cancelClientTransaction(j->second, reasons);
       mTerminatedTransactionMap[tid] = j->second;
       mCandidateTransactionMap.erase(j);
       return true;
@@ -483,6 +484,101 @@ ResponseContext::isDuplicate(const repro::Target* target) const
    return false;
 }
 
+std::unique_ptr<resip::SipMessage>
+ResponseContext::buildTargetRequest(Target *target)
+{
+   SipMessage &orig = mRequestContext.getOriginalRequest();
+   std::unique_ptr<SipMessage> request(new SipMessage(orig));
+
+   // If the target has a ;lr parameter, then perform loose routing
+   if (target->uri().exists(p_lr))
+   {
+      request->header(h_Routes).push_front(NameAddr(target->uri()));
+   }
+   else
+   {
+      request->header(h_RequestLine).uri() = target->uri();
+   }
+
+   // .bwc. Proxy checks whether this is valid, and rejects if not.
+   request->header(h_MaxForwards).value()--;
+
+   bool inDialog = false;
+
+   try
+   {
+      inDialog = request->header(h_To).exists(p_tag);
+   }
+   catch (resip::ParseException &)
+   {
+      // ?bwc? Do we ignore this and just say this is a dialog-creating
+      // request?
+   }
+
+   // Potential source Record-Route addition only for new dialogs
+   // !bwc! It looks like we really ought to be record-routing in-dialog
+   // stuff.
+
+   // only add record route if configured to do so
+   bool transportSpecificRecordRoute;
+   const NameAddr &receivedTransportRecordRoute = mRequestContext.mProxy.getRecordRoute(orig.getSource().mTransportKey, &transportSpecificRecordRoute);
+   if (!receivedTransportRecordRoute.uri().host().empty())
+   {
+      if (!inDialog && // only for dialog-creating request
+          (request->method() == INVITE ||
+           request->method() == SUBSCRIBE ||
+           request->method() == REFER))
+      {
+         insertRecordRoute(*request,
+                           orig.getReceivedTransportTuple(),
+                           receivedTransportRecordRoute,
+                           transportSpecificRecordRoute,
+                           target);
+      }
+      else if (request->method() == REGISTER)
+      {
+         insertRecordRoute(*request,
+                           orig.getReceivedTransportTuple(),
+                           receivedTransportRecordRoute,
+                           transportSpecificRecordRoute,
+                           target,
+                           true /* do Path instead */);
+       }
+   }
+
+   if ((resip::InteropHelper::getOutboundSupported() ||
+        resip::InteropHelper::getRRTokenHackEnabled() ||
+        mIsClientBehindNAT) &&
+       target->rec().mUseFlowRouting &&
+       target->rec().mReceivedFrom.mFlowKey)
+   {
+      // .bwc. We only override the destination if we are sending to an
+      // outbound contact. If this is not an outbound contact, but the
+      // endpoint has given us a Contact with the correct ip-address and
+      // port, we might be able to find the connection they formed when they
+      // registered earlier, but that will happen down in TransportSelector.
+      request->setDestination(target->rec().mReceivedFrom);
+   }
+
+   DebugLog(<< "Set tuple dest: " << request->getDestination());
+
+   // .bwc. Path header addition.
+   if (!target->rec().mSipPath.empty())
+   {
+      request->header(h_Routes).append(target->rec().mSipPath);
+   }
+
+   // a baboon might adorn the message, record call logs or CDRs, might
+   // insert loose routes on the way to the next hop
+   Helper::processStrictRoute(*request);
+
+   //This is where the request acquires the tid of the Target. The tids
+   //should be the same from here on out.
+   request->header(h_Vias).push_front(target->via());
+
+   return request;
+}
+
 void
 ResponseContext::beginClientTransaction(repro::Target* target)
 {
@@ -490,107 +586,19 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    // target in an invalid state, it is a bug.
    resip_assert(target->status() == Target::Candidate);
 
-   SipMessage& orig=mRequestContext.getOriginalRequest();
-   SipMessage request(orig);
+   auto targetRequest = buildTargetRequest(target);
 
-   // If the target has a ;lr parameter, then perform loose routing
-   if(target->uri().exists(p_lr))
+   if (mRequestContext.getOriginalRequest().method() == INVITE)
    {
-      request.header(h_Routes).push_front(NameAddr(target->uri()));
-   }
-   else
-   {
-      request.header(h_RequestLine).uri() = target->uri();
-   }
-
-   // .bwc. Proxy checks whether this is valid, and rejects if not.
-   request.header(h_MaxForwards).value()--;
-   
-   bool inDialog=false;
-   
-   try
-   {
-      inDialog=request.header(h_To).exists(p_tag);
-   }
-   catch(resip::ParseException&)
-   {
-      // ?bwc? Do we ignore this and just say this is a dialog-creating
-      // request?
-   }
-   
-   // Potential source Record-Route addition only for new dialogs
-   // !bwc! It looks like we really ought to be record-routing in-dialog
-   // stuff.
-
-   // only add record route if configured to do so
-   bool transportSpecificRecordRoute;
-   const NameAddr& receivedTransportRecordRoute = mRequestContext.mProxy.getRecordRoute(orig.getSource().mTransportKey, &transportSpecificRecordRoute);
-   if(!receivedTransportRecordRoute.uri().host().empty())
-   {
-      if (!inDialog &&  // only for dialog-creating request
-          (request.method() == INVITE ||
-           request.method() == SUBSCRIBE ||
-           request.method() == REFER))
-      {
-         insertRecordRoute(request,
-                           orig.getReceivedTransportTuple(),
-                           receivedTransportRecordRoute,
-                           transportSpecificRecordRoute,
-                           target);
-      }
-      else if(request.method()==REGISTER)
-      {
-         insertRecordRoute(request,
-                           orig.getReceivedTransportTuple(),
-                           receivedTransportRecordRoute,
-                           transportSpecificRecordRoute,
-                           target,
-                           true /* do Path instead */);
-      }
-   }
-      
-   if((resip::InteropHelper::getOutboundSupported() ||
-       resip::InteropHelper::getRRTokenHackEnabled() ||
-       mIsClientBehindNAT) &&
-      target->rec().mUseFlowRouting &&
-      target->rec().mReceivedFrom.mFlowKey)
-   {
-      // .bwc. We only override the destination if we are sending to an
-      // outbound contact. If this is not an outbound contact, but the
-      // endpoint has given us a Contact with the correct ip-address and 
-      // port, we might be able to find the connection they formed when they
-      // registered earlier, but that will happen down in TransportSelector.
-      request.setDestination(target->rec().mReceivedFrom);
-   }
-
-   DebugLog(<<"Set tuple dest: " << request.getDestination());
-
-   // .bwc. Path header addition.
-   if(!target->rec().mSipPath.empty())
-   {
-      request.header(h_Routes).append(target->rec().mSipPath);
-   }
-
-   // a baboon might adorn the message, record call logs or CDRs, might
-   // insert loose routes on the way to the next hop
-   Helper::processStrictRoute(request);
-   
-   //This is where the request acquires the tid of the Target. The tids 
-   //should be the same from here on out.
-   request.header(h_Vias).push_front(target->via());
-
-   if(!mRequestContext.mInitialTimerCSet &&
-      mRequestContext.getOriginalRequest().method()==INVITE)
-   {
-      mRequestContext.mInitialTimerCSet=true;
-      mRequestContext.updateTimerC();
+      // Starting TimerC for the new client transaction
+      updateTimerC(targetRequest->getTransactionId());
    }
    
    // the rest of 16.6 is implemented by the transaction layer of resip
    // - determining the next hop (tuple)
    // - adding a content-length if needed
    // - sending the request
-   sendRequest(request); 
+   sendRequest(*targetRequest);
 
    target->status() = Target::Started;
 }
@@ -686,7 +694,7 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
    // in, we do care though.)
    if(!doPathInstead || recordRouted)
    {
-      std::auto_ptr<resip::MessageDecorator> rrDecorator(
+      std::unique_ptr<resip::MessageDecorator> rrDecorator(
                                  new RRDecorator(mRequestContext.mProxy,
                                                 receivedTransportTuple,
                                                 receivedTransportRecordRoute,
@@ -695,7 +703,7 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
                                                 mRequestContext.mProxy.getRecordRouteForced(),
                                                 doPathInstead,
                                                 mIsClientBehindNAT));
-      outgoing.addOutboundDecorator(rrDecorator);
+      outgoing.addOutboundDecorator(std::move(rrDecorator));
    }
 }
 
@@ -744,7 +752,7 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
       }
    }
 
-   if(flowToken.empty() && orig.header(h_Vias).size()==1)
+   if(flowToken.empty() && orig.header(h_Vias).size() == 1)
    {
       if(resip::InteropHelper::getRRTokenHackEnabled() ||
          mIsClientBehindNAT ||
@@ -759,6 +767,15 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
          Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
          flowToken = binaryFlowToken.base64encode();
       }
+   }
+
+   if (flowToken.empty() &&
+       resip::InteropHelper::getRRTokenHackEnabled() &&
+       InteropHelper::getAllowInboundFlowTokensForNonDirectClients())
+   {
+       resip::Data binaryFlowToken;
+       Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
+       flowToken = binaryFlowToken.base64encode();
    }
 
    return flowToken;
@@ -941,29 +958,79 @@ ResponseContext::processCancel(const SipMessage& request)
    resip_assert(request.isRequest());
    resip_assert(request.method() == CANCEL);
 
-   std::auto_ptr<SipMessage> ok(Helper::makeResponse(request, 200));   
+   std::unique_ptr<SipMessage> ok(Helper::makeResponse(request, 200));
    mRequestContext.sendResponse(*ok);
 
    if (!mRequestContext.mHaveSentFinalResponse)
    {
-      cancelAllClientTransactions();
+      if (request.exists(h_Reasons))
+      {
+         cancelAllClientTransactions(&request.header(h_Reasons));
+      }
+      else
+      {
+         cancelAllClientTransactions();
+      }
       if(!hasActiveTransactions())
       {
          SipMessage reqterm;
-         Helper::makeResponse(reqterm,mRequestContext.getOriginalRequest(),487);
+         Helper::makeResponse(reqterm, mRequestContext.getOriginalRequest(), 487);
          mRequestContext.sendResponse(reqterm);
       }
    }
 }
 
 void
-ResponseContext::processTimerC()
+ResponseContext::updateTimerC(const resip::Data &tid)
 {
-   if (!mRequestContext.mHaveSentFinalResponse)
+   InfoLog(<<"Updating timer C for client transaction " << tid);
+   int timerCSerial = TimerCSerialInit;
+   auto i = mTimerCSerial.find(tid);
+   if (i != mTimerCSerial.end())
    {
-      InfoLog(<<"Canceling client transactions due to timer C.");
-      cancelAllClientTransactions();
+       timerCSerial = ++i->second;
    }
+   else
+   {
+       mTimerCSerial[tid] = timerCSerial;
+   }
+   TimerCMessage *tc = new TimerCMessage(tid, timerCSerial);
+   mRequestContext.getProxy().postTimerC(std::unique_ptr<TimerCMessage>(tc));
+}
+
+void
+ResponseContext::processTimerC(const resip::Data &tid, int serial)
+{
+    bool isLatestTimer = false;
+    auto i = mTimerCSerial.find(tid);
+    if (i != mTimerCSerial.end())
+    {
+       isLatestTimer = (serial == i->second);
+    }
+
+    if (!mRequestContext.mHaveSentFinalResponse && isLatestTimer)
+    {
+        InfoLog(<<"Canceling client transaction " << tid << " due to timer C.");
+        cancelClientTransaction(tid);
+
+        if (serial == TimerCSerialInit) 
+        {
+            // TimerC fired BEFORE receiving provisional response
+            // From RFC3261, 16.8 - 
+            //      the proxy MUST behave as if the transaction received a 408(Request Timeout) response.
+            // Otherwise, relying on the client to correctly handle CANCEL request and generate 487, which will
+            // also trigger next target processing
+            auto i = mActiveTransactionMap.find(tid);
+            if (i != mActiveTransactionMap.end())
+            {
+                // Reconstruct original target request to be able to generate the response
+                auto targetRequest = buildTargetRequest(i->second);
+                std::unique_ptr<resip::SipMessage> response(Helper::makeResponse(*targetRequest, 408));
+                // Pretend like 408 response has been received to trigger next target processing
+                mRequestContext.process(std::move(response));
+            }
+        }
+    }
 }
 
 void
@@ -990,20 +1057,26 @@ ResponseContext::processResponse(SipMessage& response)
       {
          return;
       }
-      else if (response.header(h_StatusLine).statusCode() > 199)
+      else if (response.header(h_StatusLine).statusCode() != 100)
       {
-         InfoLog( << "Received final response, but can't forward as there are "
-                        "no more Vias. Considering this branch failed. " 
-                        << response.brief() );
-         // .bwc. Treat as server error.
-         terminateClientTransaction(mCurrentResponseTid);
-         return;
-      }
-      else if(response.header(h_StatusLine).statusCode() != 100)
-      {
-         InfoLog( << "Received provisional response, but can't forward as there"
-                     " are no more Vias. Ignoring. " << response.brief() );
-         return;
+         if (!mRequestContext.handleMissingResponseVias(&response))
+         {
+            // If handle MissingResponseVias returns false, then processing does not continue
+            if (response.header(h_StatusLine).statusCode() > 199)
+            {
+               InfoLog(<< "Received final response, but can't forward as there are "
+                  "no more Vias. Considering this branch failed. "
+                  << response.brief());
+               // .bwc. Treat as server error.
+               terminateClientTransaction(mCurrentResponseTid);
+            }
+            else
+            {
+               InfoLog(<< "Received provisional response, but can't forward as there"
+                  " are no more Vias. Ignoring. " << response.brief());
+            }
+            return;
+         }
       }
    }
    else // We have a second Via
@@ -1084,9 +1157,9 @@ ResponseContext::processResponse(SipMessage& response)
    switch (code / 100)
    {
       case 1:
-         if(mRequestContext.getOriginalRequest().method()==INVITE)
+         if(mRequestContext.getOriginalRequest().method() == INVITE)
          {
-            mRequestContext.updateTimerC();
+            updateTimerC(mCurrentResponseTid);
          }
 
          if  (!mRequestContext.mHaveSentFinalResponse)
@@ -1105,18 +1178,23 @@ ResponseContext::processResponse(SipMessage& response)
          terminateClientTransaction(mCurrentResponseTid);
          if (mRequestContext.getOriginalRequest().method() == INVITE)
          {
-            cancelAllClientTransactions();
+            Tokens reasons;
+            Token reason("SIP");
+            reason.param(p_cause) = code;
+            reason.param(p_text) = "Call completed elsewhere";
+            // RFC 3326 reason-text is a quoted-string
+            reason.getParameterByEnum(ParameterTypes::text)->setQuoted(true);
+            reasons.push_back(reason);
+            cancelAllClientTransactions(&reasons);
             mRequestContext.mHaveSentFinalResponse = true;
-            mBestResponse.header(h_StatusLine).statusCode()=
-               response.header(h_StatusLine).statusCode();
+            mBestResponse.header(h_StatusLine).statusCode() = code;
             mRequestContext.sendResponse(response);
          }
          else if (!mRequestContext.mHaveSentFinalResponse)
          {
             clearCandidateTransactions();
             mRequestContext.mHaveSentFinalResponse = true;
-            mBestResponse.header(h_StatusLine).statusCode()=
-               response.header(h_StatusLine).statusCode();
+            mBestResponse.header(h_StatusLine).statusCode() = code;
 
             // If this is a registration response and we have flow timers enabled, and
             // we are doing outbound for this registration and there is no FlowTimer
@@ -1131,7 +1209,7 @@ ResponseContext::processResponse(SipMessage& response)
                mRequestContext.getProxy().getStack().enableFlowTimer(mRequestContext.getOriginalRequest().getSource());
             }
 
-            mRequestContext.sendResponse(response);            
+            mRequestContext.sendResponse(response);
          }
          break;
          
@@ -1169,8 +1247,7 @@ ResponseContext::processResponse(SipMessage& response)
                }
                else if (code / 100 == 3) // merge 3xx
                {
-
-                  if(mBestResponse.header(h_StatusLine).statusCode()/100!=3)
+                  if(mBestResponse.header(h_StatusLine).statusCode() / 100 != 3)
                   {
                      // .bwc. Do not merge contacts in 3xx with contacts from a
                      // previous 4xx or 5xx
@@ -1225,7 +1302,14 @@ ResponseContext::processResponse(SipMessage& response)
                if (mRequestContext.getOriginalRequest().method() == INVITE)
                {
                   // CANCEL INVITE branches
-                  cancelAllClientTransactions();
+                  Tokens reasons;
+                  Token reason("SIP");
+                  reason.param(p_cause) = code;
+                  reason.param(p_text) = response.header(h_StatusLine).reason();
+                  // RFC 3326 reason-text is a quoted-string
+                  reason.getParameterByEnum(ParameterTypes::text)->setQuoted(true);
+                  reasons.push_back(reason);
+                  cancelAllClientTransactions(&reasons);
                }
             }
             
@@ -1243,12 +1327,12 @@ ResponseContext::processResponse(SipMessage& response)
 }
 
 void
-ResponseContext::cancelClientTransaction(repro::Target* target)
+ResponseContext::cancelClientTransaction(repro::Target* target, const resip::Tokens* reasons)
 {
    if (target->status() == Target::Started)
    {
       InfoLog (<< "Cancel client transaction: " << target);
-      mRequestContext.cancelClientTransaction(target->via().param(p_branch).getTransactionId());
+      mRequestContext.cancelClientTransaction(target->via().param(p_branch).getTransactionId(), reasons);
 
       DebugLog(<< "Canceling a transaction with uri: " 
                << resip::Data::from(target->uri()) << " , to host: " 
@@ -1286,9 +1370,7 @@ ResponseContext::terminateClientTransaction(const resip::Data& tid)
       mCandidateTransactionMap.erase(j);
       return;   
    }
-      
 }
-
 
 int
 ResponseContext::getPriority(const resip::SipMessage& msg)
@@ -1296,132 +1378,132 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
    int responseCode = msg.header(h_StatusLine).statusCode();
    int p = 0;  // "p" is the relative priority of the response
 
-      resip_assert(responseCode >= 300 && responseCode <= 599);
-      if (responseCode <= 399)  // 3xx response
-      { 
-         return 5;  // response priority is 5
-      }
-      if (responseCode >= 500)
-      {
-         switch(responseCode)
-         {
-            case 501:	// these four have different priorities
-            case 503:   // which are addressed in the case statement
-            case 580:	// below (with the 4xx responses)
-            case 513:
-                  break;
-            default:
-                  return 42; // response priority of other 5xx is 42
-         }
-      }
-
+   resip_assert(responseCode >= 300 && responseCode <= 599);
+   if (responseCode <= 399)  // 3xx response
+   { 
+      return 5;  // response priority is 5
+   }
+   if (responseCode >= 500)
+   {
       switch(responseCode)
       {
-         // Easy to Repair Responses: 412, 484, 422, 423, 407, 401, 300..399, 402
-         case 412:		// Publish ETag was stale
-            return 1;
-         case 484:		// overlap dialing
-            return 2;
-         case 422:		// Session-Timer duration too long
-         case 423:		// Expires too short
-            return 3;
-         case 407:		// Proxy-Auth
-         case 401:		// UA Digest challenge
-            return 4;
-                  
-         // 3xx responses have p = 5
-         case 402:		// Payment required
-            return 6;
-
-         // Responses used for negotiation: 493, 429, 420, 406, 415, 488
-         case 493:		// Undecipherable, try again unencrypted 
-            return 10;
-
-         case 420:		// Required Extension not supported, try again without
-            return 12;
-
-         case 406:		// Not Acceptable
-         case 415:		// Unsupported Media Type
-         case 488:		// Not Acceptable Here
-            return 13;
-                  
-         // Possibly useful for negotiation, but less likely: 421, 416, 417, 494, 580, 485, 405, 501, 413, 414
-         
-         case 416:		// Unsupported scheme
-         case 417:		// Unknown Resource-Priority
-            return 20;
-
-         case 405:		// Method not allowed (both used for negotiating REFER, PUBLISH, etc..
-         case 501:		// Usually used when the method is not OK
-            return 21;
-
-         case 580:		// Preconditions failure
-            return 22;
-
-         case 485:		// Ambiguous userpart.  A bit better than 404?
-            return 23;
-
-         case 428:		// Use Identity header
-         case 429:		// Provide Referrer Identity 
-         case 494:		// Use the sec-agree mechanism
-            return 24;
-
-         case 413:		// Request too big
-         case 414:		// URI too big
-            return 25;
-
-         case 421:		// An extension required by the server was not in the Supported header
-            return 26;
-         
-         // The request isn't repairable, but at least we can try to provide some 
-         // useful information: 486, 480, 410, 404, 403, 487
-         
-         case 486:		// Busy Here
-            return 30;
-
-         case 480:		// Temporarily unavailable
-            return 31;
-
-         case 410:		// Gone
-            return 32;
-
-         case 436:		// Bad Identity-Info 
-         case 437:		// Unsupported Certificate
-         case 513:      // Message too large
-            return 33;
-
-         case 403:		// Forbidden
-            return 34;
-
-         case 404:		// Not Found
-            return 35;
-
-         case 487:		// Some branches were cancelled, if the UAC sent a CANCEL this is good news
-            return 36;
-
-         // We are hosed: 503, 483, 482, 481, other 5xx, 400, 491, 408  // totally useless
-
-         case 503:	// bad news, we should never forward this back anyway
-            return 43;
-
-         case 483:	// loops, encountered
-         case 482:
-            return 41;
-                  
-         // other 5xx   p = 42
-
-         // UAS is seriously confused: p = 43
-         // case 481:	
-         // case 400:
-         // case 491:
-         // default:
-         
-         case 408:	// very, very bad  (even worse than the remaining 4xx responses)
-            return 49;
-         
+         case 501:	// these four have different priorities
+         case 503:   // which are addressed in the case statement
+         case 580:	// below (with the 4xx responses)
+         case 513:
+               break;
          default:
-            return 43;
+               return 42; // response priority of other 5xx is 42
       }
+   }
+
+   switch(responseCode)
+   {
+      // Easy to Repair Responses: 412, 484, 422, 423, 407, 401, 300..399, 402
+      case 412:		// Publish ETag was stale
+         return 1;
+      case 484:		// overlap dialing
+         return 2;
+      case 422:		// Session-Timer duration too long
+      case 423:		// Expires too short
+         return 3;
+      case 407:		// Proxy-Auth
+      case 401:		// UA Digest challenge
+         return 4;
+                  
+      // 3xx responses have p = 5
+      case 402:		// Payment required
+         return 6;
+
+      // Responses used for negotiation: 493, 429, 420, 406, 415, 488
+      case 493:		// Undecipherable, try again unencrypted 
+         return 10;
+
+      case 420:		// Required Extension not supported, try again without
+         return 12;
+
+      case 406:		// Not Acceptable
+      case 415:		// Unsupported Media Type
+      case 488:		// Not Acceptable Here
+         return 13;
+                  
+      // Possibly useful for negotiation, but less likely: 421, 416, 417, 494, 580, 485, 405, 501, 413, 414
+      
+      case 416:		// Unsupported scheme
+      case 417:		// Unknown Resource-Priority
+         return 20;
+
+      case 405:		// Method not allowed (both used for negotiating REFER, PUBLISH, etc..
+      case 501:		// Usually used when the method is not OK
+         return 21;
+
+      case 580:		// Preconditions failure
+         return 22;
+
+      case 485:		// Ambiguous userpart.  A bit better than 404?
+         return 23;
+
+      case 428:		// Use Identity header
+      case 429:		// Provide Referrer Identity 
+      case 494:		// Use the sec-agree mechanism
+         return 24;
+
+      case 413:		// Request too big
+      case 414:		// URI too big
+         return 25;
+
+      case 421:		// An extension required by the server was not in the Supported header
+         return 26;
+         
+      // The request isn't repairable, but at least we can try to provide some 
+      // useful information: 486, 480, 410, 404, 403, 487
+         
+      case 486:		// Busy Here
+         return 30;
+
+      case 480:		// Temporarily unavailable
+         return 31;
+
+      case 410:		// Gone
+         return 32;
+
+      case 436:		// Bad Identity-Info 
+      case 437:		// Unsupported Certificate
+      case 513:      // Message too large
+         return 33;
+
+      case 403:		// Forbidden
+         return 34;
+
+      case 404:		// Not Found
+         return 35;
+
+      case 487:		// Some branches were cancelled, if the UAC sent a CANCEL this is good news
+         return 36;
+
+      // We are hosed: 503, 483, 482, 481, other 5xx, 400, 491, 408  // totally useless
+
+      case 503:	// bad news, we should never forward this back anyway
+         return 43;
+
+      case 483:	// loops, encountered
+      case 482:
+         return 41;
+                  
+      // other 5xx   p = 42
+
+      // UAS is seriously confused: p = 43
+      // case 481:	
+      // case 400:
+      // case 491:
+      // default:
+         
+      case 408:	// very, very bad  (even worse than the remaining 4xx responses)
+         return 49;
+         
+      default:
+         return 43;
+   }
    return p;
 }
 
@@ -1439,18 +1521,26 @@ void
 ResponseContext::forwardBestResponse()
 {
    InfoLog (<< "Forwarding best response: " << mBestResponse.brief());
-   
-   clearCandidateTransactions();
+
+   Tokens reasons;
+   Token reason("SIP");
+   reason.param(p_cause) = mBestResponse.header(h_StatusLine).statusCode();
+   reason.param(p_text) = mBestResponse.header(h_StatusLine).reason();
+   // RFC 3326 reason-text is a quoted-string
+   reason.getParameterByEnum(ParameterTypes::text)->setQuoted(true);
+   reasons.push_back(reason);
+
+   clearCandidateTransactions(&reasons);
    
    if(mRequestContext.getOriginalRequest().method()==INVITE)
    {
-      cancelActiveClientTransactions();
+      cancelActiveClientTransactions(&reasons);
    }
    
    if(mBestResponse.header(h_StatusLine).statusCode() == 503)
    {
-      //See RFC 3261 sec 16.7, page 110, paragraph 2
-      mBestResponse.header(h_StatusLine).statusCode() = 480;
+      // See RFC 3261 sec 16.7, page 111, paragraph 2
+      mBestResponse.header(h_StatusLine).statusCode() = 500;
    }
 
    if(mBestResponse.header(h_StatusLine).statusCode() == 408 &&

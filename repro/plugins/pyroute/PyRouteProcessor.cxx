@@ -61,15 +61,24 @@ PyRouteProcessor::process(RequestContext &context)
       return Processor::Continue;
    }
    work = new PyRouteWork(*this, context.getTransactionId(), &(context.getProxy()), msg);
-   std::auto_ptr<ApplicationMessage> app(work);
-   mDispatcher.post(app);
-
-   return Processor::WaitingForEvent;
+   std::unique_ptr<ApplicationMessage> app(work);
+   if(mDispatcher.post(app))
+   {
+      return Processor::WaitingForEvent;
+   }
+   else
+   {
+      ErrLog(<<"mDispatcher.post failed, maybe not accepting work");
+      context.sendResponse(*std::unique_ptr<SipMessage>
+         (Helper::makeResponse(msg, 500, "Internal error")));
+      return Processor::SkipAllChains;
+   }
 }
 
 /* ====================================================================
  *
- * Copyright 2014 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2014-2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

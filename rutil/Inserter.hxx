@@ -6,11 +6,12 @@
 #include <map>
 #include <set>
 #include <list>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <deque>
 #include "rutil/ResipAssert.h"
 
-#include "HashMap.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/resipfaststreams.hxx"
 
@@ -166,15 +167,12 @@ insert(EncodeStream& s, const std::multiset <K, C>& c)
 }
 #endif
 
-// HashMap
-#if defined(HASH_MAP_NAMESPACE)
 template <class K, class V, class H>
 EncodeStream&
-insert(EncodeStream& s, const HashMap<K,V,H>& c)
+insert(EncodeStream& s, const std::unordered_map<K,V,H>& c)
 {
    s << leftsqbracket;
-   for (typename HashMap<K,V,H>::const_iterator i = c.begin();
-        i != c.end(); i++) 
+   for (auto i = c.begin(); i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
@@ -187,16 +185,13 @@ insert(EncodeStream& s, const HashMap<K,V,H>& c)
    s << rightsqbracket;
    return s;
 }
-#endif
 
-#if defined(HASH_MAP_NAMESPACE)
 template <class V, class H>
 EncodeStream&
-insert(EncodeStream& s, const HashSet<V,H>& c)
+insert(EncodeStream& s, const std::unordered_set<V,H>& c)
 {
    s << leftsqbracket;
-   for (typename HashSet<V,H>::const_iterator i = c.begin();
-        i != c.end(); i++) 
+   for (auto i = c.begin(); i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
@@ -207,7 +202,6 @@ insert(EncodeStream& s, const HashSet<V,H>& c)
    s << rightsqbracket;
    return s;
 }
-#endif
 
 // map
 template <class K, class V, class H>
@@ -419,15 +413,12 @@ insertP(EncodeStream& s, const std::multiset <K, C>& c)
 }
 #endif
 
-// HashMap
-#if defined(HASH_MAP_NAMESPACE)
 template <class K, class V, class H>
 EncodeStream&
-insertP(EncodeStream& s, const HashMap<K,V,H>& c)
+insertP(EncodeStream& s, const std::unordered_map<K,V,H>& c)
 {
    s << leftsqbracket;
-   for (typename HashMap<K,V,H>::const_iterator i = c.begin();
-        i != c.end(); i++) 
+   for (auto i = c.begin(); i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
@@ -440,16 +431,13 @@ insertP(EncodeStream& s, const HashMap<K,V,H>& c)
    s << rightsqbracket;
    return s;
 }
-#endif
 
-#if defined(HASH_MAP_NAMESPACE)
 template <class V, class H>
 EncodeStream&
-insertP(EncodeStream& s, const HashSet<V,H>& c)
+insertP(EncodeStream& s, const std::unordered_set<V,H>& c)
 {
    s << leftsqbracket;
-   for (typename HashSet<V,H>::const_iterator i = c.begin();
-        i != c.end(); i++) 
+   for (auto i = c.begin(); i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
@@ -460,7 +448,6 @@ insertP(EncodeStream& s, const HashSet<V,H>& c)
    s << rightsqbracket;
    return s;
 }
-#endif
 
 // map
 template <class K, class V, class H>

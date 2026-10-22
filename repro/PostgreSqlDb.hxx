@@ -17,7 +17,8 @@ namespace repro
 class PostgreSqlDb: public SqlDb
 {
    public:
-      PostgreSqlDb(const resip::Data& dbConnInfo,
+      PostgreSqlDb(const resip::ConfigParse& config,
+              const resip::Data& dbConnInfo,
               const resip::Data& dbServer,
               const resip::Data& user, 
               const resip::Data& password, 
@@ -32,6 +33,11 @@ class PostgreSqlDb: public SqlDb
       virtual resip::Data getUserAuthInfo(  const Key& key ) const;
       virtual Key firstUserKey();// return empty if no more
       virtual Key nextUserKey(); // return empty if no more 
+
+      virtual bool addTlsPeerIdentity( const Key& key, const TlsPeerIdentityRecord& rec );
+      virtual TlsPeerIdentityRecord getTlsPeerIdentity( const Key& key ) const;
+      virtual Key firstTlsPeerIdentityKey();// return empty if no more
+      virtual Key nextTlsPeerIdentityKey(); // return empty if no more
 
       // Perform a query that expects a single result/row - returns all column/field data in a vector
       virtual int singleResultQuery(const resip::Data& queryCommand, std::vector<resip::Data>& fields) const;
@@ -73,6 +79,7 @@ class PostgreSqlDb: public SqlDb
       mutable int mRow[MaxTable];
 
       void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
+      void tlsPeerIdentityWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
 };
 
 }

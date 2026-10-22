@@ -1,11 +1,6 @@
 #ifndef REMOTEPEER_HXX
 #define REMOTEPEER_HXX
 
-#include <asio.hpp>
-#ifdef USE_SSL
-#include <asio/ssl.hpp>
-#endif
-
 #include "StunTuple.hxx"
 
 namespace reTurn {

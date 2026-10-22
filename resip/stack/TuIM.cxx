@@ -30,7 +30,7 @@
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/OctetContents.hxx"
 #include "resip/stack/Helper.hxx"
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "resip/stack/SipFrag.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
@@ -69,7 +69,7 @@ TuIM::TuIM(SipStack* stack,
      mStack(stack),
      mAor(aor),
      mContact(contact),
-     mPidf( new Pidf ),
+     mPidf( new GenericPidfContents ),
      mRegistrationDialog(NameAddr(contact)),
      mNextTimeToRegister(0),
      mRegistrationPassword( Data::Empty ),
@@ -82,9 +82,8 @@ TuIM::TuIM(SipStack* stack,
    resip_assert(mCallback);
    resip_assert(mPidf);
    
-   mPidf->setSimpleId( Random::getRandomHex(4) );  
-   mPidf->setEntity(mAor);  
-   mPidf->setSimpleStatus( true, Data::Empty, mContact.getAor() );
+   mPidf->setEntity(mAor);
+   mPidf->setSimplePresenceTupleNode(Random::getRandomHex(4), true, Data::Empty, Data::Empty, mContact.getAor());
 }
 
 
@@ -143,7 +142,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 
    DeprecatedDialog* dialog = new DeprecatedDialog( NameAddr(mContact) );
  
-   auto_ptr<SipMessage> msg( dialog->makeInitialMessage(NameAddr(target),NameAddr(from)) );
+   unique_ptr<SipMessage> msg( dialog->makeInitialMessage(NameAddr(target),NameAddr(from)) );
  
    Page page;
    page.text = text;
@@ -216,7 +215,8 @@ TuIM::sendPage(const Data& text, const Uri& dest,
       //Data token = msg->getCanonicalIdentityString();
       //Data res = sec->computeIdentity( token );
 
-      msg->header(h_Identity).value() = Data::Empty;
+      // TODO !SLG!  RFC4474 has been deprecated by RFC8224 (Authenticated Identity Management).  We should remove/adjust this code.
+      msg->header(h_Identities).push_back(IdentityCategory(Data::Empty));
    }
    
    setOutbound( *msg );
@@ -411,7 +411,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    resip_assert( dialog );
    dialog->setExpirySeconds( expires );
    
-   auto_ptr<SipMessage> response( dialog->makeResponse( *msg, 200 ));
+   unique_ptr<SipMessage> response( dialog->makeResponse( *msg, 200 ));
  
    response->header(h_Expires).value() = expires;
    response->header(h_Event).value() = Data("presence");
@@ -424,7 +424,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    // do symetric subscriptions 
    // See if this person is our buddy list and if we are not subscribed to them
 
-    UInt64 now = Timer::getTimeMs();
+    uint64_t now = Timer::getTimeMs();
     Uri from = msg->header(h_From).uri();
 
     for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
@@ -504,7 +504,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
 
    processSipFrag( msg );
 
-   auto_ptr<SipMessage> response( Helper::makeResponse( *msg, 200 ));
+   unique_ptr<SipMessage> response( Helper::makeResponse( *msg, 200 ));
    mStack->send( *response );
 
    Uri from = msg->header(h_From).uri();
@@ -521,7 +521,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    Mime mime = contents->getType();
    DebugLog ( << "got  NOTIFY event with body of type  " << mime.type() << "/" << mime.subType() );
   
-   Pidf* body = dynamic_cast<Pidf*>(contents);
+   GenericPidfContents* body = dynamic_cast<GenericPidfContents*>(contents);
    if ( !body )
    {
       InfoLog(<< "Received NOTIFY message event with no PIDF contents" );
@@ -529,8 +529,8 @@ TuIM::processNotifyRequest(SipMessage* msg)
       return;
    }
  
-   Data note;
-   bool open = body->getSimpleStatus( &note );
+   bool open = body->getSimplePresenceOnline();
+   Data note = body->getSimplePresenceNote();
 
    bool changed = true;
 
@@ -1103,14 +1103,14 @@ TuIM::process()
 {
    resip_assert( mStack );
 
-   UInt64 now = Timer::getTimeMs();
+   uint64_t now = Timer::getTimeMs();
    
    // check if register needs refresh
    if ( now > mNextTimeToRegister )
    {
       if ( mRegistrationDialog.isCreated() )
       {
-         auto_ptr<SipMessage> msg( mRegistrationDialog.makeRegister() );
+         unique_ptr<SipMessage> msg( mRegistrationDialog.makeRegister() );
          msg->header(h_Expires).value() = mRegistrationTimeSeconds;
          setOutbound( *msg );
          mStack->send( *msg );
@@ -1131,7 +1131,7 @@ TuIM::process()
          resip_assert(  buddy.presDialog );
          if ( buddy.presDialog->isCreated() )
          {
-            auto_ptr<SipMessage> msg( buddy.presDialog->makeSubscribe() );
+            unique_ptr<SipMessage> msg( buddy.presDialog->makeSubscribe() );
                         
             msg->header(h_Event).value() = Data("presence");;
             msg->header(h_Accepts).push_back( Mime( "application","pidf+xml") );
@@ -1183,7 +1183,7 @@ TuIM::registerAor( const Uri& uri, const Data& password  )
    //contactName.uri() = mContact;
    //SipMessage* msg = Helper::makeRegister(aorName,aorName,contactName);
 
-   auto_ptr<SipMessage> msg( mRegistrationDialog.makeInitialRegister(NameAddr(uri),NameAddr(uri)) );
+   unique_ptr<SipMessage> msg( mRegistrationDialog.makeInitialRegister(NameAddr(uri),NameAddr(uri)) );
 
    msg->header(h_Expires).value() = mRegistrationTimeSeconds;
    msg->header(h_Contacts).front().param(p_expires) = mRegistrationTimeSeconds;
@@ -1248,7 +1248,7 @@ void
 TuIM::subscribeBuddy( Buddy& buddy )
 {
    // subscribe to this budy 
-   auto_ptr<SipMessage> msg( buddy.presDialog->makeInitialSubscribe(NameAddr(buddy.uri),NameAddr(mAor)) );
+   unique_ptr<SipMessage> msg( buddy.presDialog->makeInitialSubscribe(NameAddr(buddy.uri),NameAddr(mAor)) );
 
    msg->header(h_Event).value() = Data("presence");;
    msg->header(h_Accepts).push_back( Mime( "application","pidf+xml") );
@@ -1308,9 +1308,9 @@ TuIM::sendNotify(DeprecatedDialog* dialog)
 { 
    resip_assert( dialog );
    
-   auto_ptr<SipMessage> msg( dialog->makeNotify() );
+   unique_ptr<SipMessage> msg( dialog->makeNotify() );
 
-   Pidf* pidf = new Pidf( *mPidf );
+   GenericPidfContents* pidf = new GenericPidfContents( *mPidf );
 
    msg->header(h_Event).value() = "presence";
 
@@ -1332,9 +1332,9 @@ TuIM::sendPublish(StateAgent& sa)
 { 
    resip_assert( sa.dialog );
    
-   auto_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
+   unique_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
 
-   Pidf* pidf = new Pidf( *mPidf );
+   GenericPidfContents* pidf = new GenericPidfContents( *mPidf );
 
    msg->header(h_Event).value() = "presence";
 
@@ -1358,7 +1358,7 @@ TuIM::setMyPresence( const bool open, const Data& status, const Data& user  )
 {
    // TODO implement the pser user status (when user is not empty)
    resip_assert( mPidf );
-   mPidf->setSimpleStatus( open, status, mContact.getAor() );
+   mPidf->setSimplePresenceTupleNode(mPidf->getSimplePresenceTupleId(), open, Data::Empty, status, mContact.getAor());
    
    for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {

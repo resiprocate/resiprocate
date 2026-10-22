@@ -50,7 +50,8 @@ MessageFilterRule::matches(const SipMessage &msg) const
       return false;
    }
    
-   if (msg.header(h_RequestLine).uri().scheme() != Symbols::Tel)
+   if (msg.header(h_RequestLine).uri().scheme() != Symbols::Tel &&
+       msg.header(h_RequestLine).uri().scheme() != Symbols::Urn)
    {
       // !rwm! Should be hostport, not host
       if (!hostIsInList( msg.header(h_RequestLine).uri().host()))
@@ -93,7 +94,8 @@ MessageFilterRule::schemeIsInList(const Data& scheme) const
    // Emtpy list means "sip or sips"
    if (mSchemeList.empty())
    {
-      return (scheme == Symbols::Sip || scheme == Symbols::Sips || scheme == Symbols::Tel);
+      return (scheme == Symbols::Sip || scheme == Symbols::Sips ||
+              scheme == Symbols::Tel || scheme == Symbols::Urn);
    }
 
    // step through mSchemeList looking for supported schemes

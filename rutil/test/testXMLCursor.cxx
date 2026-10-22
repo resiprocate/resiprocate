@@ -42,6 +42,19 @@ main()
    Log::initialize(Log::Cout, Log::Stack, "testXMLCursor");
 
    {
+      const Data test("foo");
+
+      try
+      {
+         XMLCursor xmlc(ParseBuffer(test.data(), test.size()));
+      }
+      catch (ParseException&)
+      {
+         // should not leak memory
+      }
+   }
+
+   {
        // extremely simple doc with leading whitespace and no prolog
        const Data test("\r\n\r\n<reginfo><test>12</test></reginfo>\r\n");
 
@@ -180,7 +193,7 @@ main()
          assert(!xmlc.nextSibling());
          assert(false);
       }
-      catch (ParseException& e)
+      catch (ParseException&)
       {
       }
    }

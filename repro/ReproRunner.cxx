@@ -5,22 +5,9 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <utility>
 #ifndef WIN32
 #include <syslog.h>
-#endif
-
-#ifdef REPRO_DSO_PLUGINS
-
-// in an autotools build, this is defined using pkglibdir
-#ifndef REPRO_DSO_PLUGIN_DIR_DEFAULT
-#define REPRO_DSO_PLUGIN_DIR_DEFAULT ""
-#endif
-
-// This is the UNIX way of doing DSO, an alternative implementation
-// for Windows needs to include the relevant Windows headers here
-// and implement the loader code further below
-#include <dlfcn.h>
-
 #endif
 
 #include "rutil/ResipAssert.h"
@@ -30,12 +17,16 @@
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/GeneralCongestionManager.hxx"
 #include "rutil/TransportType.hxx"
+#include "rutil/hep/HepAgent.hxx"
 
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/EventStackThread.hxx"
+#include "resip/stack/ExtendedDomainMatcher.hxx"
+#include "resip/stack/HEPSipMessageLoggingHandler.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/ConnectionManager.hxx"
+#include "resip/stack/TransactionState.hxx"
 #include "resip/stack/WsCookieContextFactory.hxx"
 
 #include "resip/dum/InMemorySyncRegDb.hxx"
@@ -51,7 +42,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/ProxyConfig.hxx"
 #include "repro/BerkeleyDb.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "repro/UserAuthGrabber.hxx"
 #include "repro/ProcessorChain.hxx"
 #include "repro/ReproVersion.hxx"
@@ -87,7 +78,7 @@
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #include "resip/stack/ssl/Security.hxx"
-#define DEFAULT_TLS_METHOD "SSLv23"
+#define DEFAULT_TLS_METHOD SecurityTypes::DynamicTLS
 #endif
 
 #if defined(USE_MYSQL)
@@ -117,7 +108,8 @@ public:
                            const char* file,
                            int line,
                            const Data& message,
-                           const Data& messageWithHeaders)
+                           const Data& messageWithHeaders,
+                           const Data& instanceName)
    {
       // Log any errors to the screen 
       if(level <= Log::Err)
@@ -183,7 +175,7 @@ public:
             Data mySQLServer = dbConfig.getConfigData("Host", Data::Empty);
             if (!mySQLServer.empty())
             {
-                return new MySqlDb(mySQLServer,
+                return new MySqlDb(dbConfig, mySQLServer,
                     dbConfig.getConfigData("User", Data::Empty),
                     dbConfig.getConfigData("Password", Data::Empty),
                     dbConfig.getConfigData("DatabaseName", Data::Empty),
@@ -202,7 +194,7 @@ public:
             Data postgreSQLServer = dbConfig.getConfigData("Host", Data::Empty);
             if (!postgreSQLConnInfo.empty() || !postgreSQLServer.empty())
             {
-                return new PostgreSqlDb(postgreSQLConnInfo, postgreSQLServer,
+                return new PostgreSqlDb(dbConfig, postgreSQLConnInfo, postgreSQLServer,
                     dbConfig.getConfigData("User", Data::Empty),
                     dbConfig.getConfigData("Password", Data::Empty),
                     dbConfig.getConfigData("DatabaseName", Data::Empty),
@@ -253,6 +245,7 @@ ReproRunner::ReproRunner()
    , mRegSyncClient(0)
    , mRegSyncServerV4(0)
    , mRegSyncServerV6(0)
+   , mRegSyncServerAMQP(0)
    , mRegSyncServerThread(0)
    , mCommandServerThread(0)
    , mCongestionManager(0)
@@ -268,6 +261,8 @@ bool
 ReproRunner::run(int argc, char** argv)
 {
    if(mRunning) return false;
+
+   installSignalHandler();
 
    if(!mRestarting)
    {
@@ -296,7 +291,11 @@ ReproRunner::run(int argc, char** argv)
    // Non-Windows server process stuff
    if(!mRestarting)
    {
-      setPidFile(mProxyConfig->getConfigData("PidFile", Data::Empty, true));
+      Data pidFile = mProxyConfig->getConfigData("PidFile", Data::Empty, true);
+      if(!pidFile.empty() && checkPosixProcessControl("PidFile"))
+      {
+         setPidFile(pidFile);
+      }
 
       if(isAlreadyRunning())
       {
@@ -307,22 +306,18 @@ ReproRunner::run(int argc, char** argv)
          return false;
       }
 
-      if(mProxyConfig->getConfigBool("Daemonize", false))
+      if(mProxyConfig->getConfigBool("Daemonize", false) && checkPosixProcessControl("Daemonize"))
       {
          daemonize();
       }
    }
 
    // Initialize resip logger
-   GenericLogImpl::MaxByteCount = mProxyConfig->getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */);
    Data loggingType = mProxyConfig->getConfigData("LoggingType", "cout", true);
-   Data syslogFacilityName = mProxyConfig->getConfigData("SyslogFacility", "LOG_DAEMON", true);
-   Log::initialize(loggingType, 
-                   mProxyConfig->getConfigData("LogLevel", "INFO", true), 
-                   mArgv[0], 
-                   mProxyConfig->getConfigData("LogFilename", "repro.log", true).c_str(),
-                   isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0, // if logging to file then write WARNINGS, and Errors to console still
-                   syslogFacilityName);
+   Log::initialize(
+      *mProxyConfig,
+      mArgv[0],
+      isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0);
 
    InfoLog( << "Starting repro version " << VersionUtils::instance().releaseVersion() << "...");
 
@@ -340,8 +335,8 @@ ReproRunner::run(int argc, char** argv)
 
    // Drop privileges (can do this now that sockets are bound)
    Data runAsUser = mProxyConfig->getConfigData("RunAsUser", Data::Empty, true);
-   Data runAsGroup = mProxyConfig->getConfigData("RunAsGroup", Data::Empty, true); 
-   if(!runAsUser.empty())
+   Data runAsGroup = mProxyConfig->getConfigData("RunAsGroup", Data::Empty, true);
+   if(!runAsUser.empty() && checkPosixProcessControl("RunAsUser/RunAsGroup"))
    {
       InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
       dropPrivileges(runAsUser, runAsGroup);
@@ -505,14 +500,16 @@ ReproRunner::restart()
 }
 
 void
-ReproRunner::onHUP()
+ReproRunner::onReload()
 {
+   mSipStack->onReload();
    // Let the plugins know
-   std::vector<Plugin*>::iterator it;
-   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+#ifdef DSO_PLUGINS
+   if(mPluginManager)
    {
-      (*it)->onReload();
+      mPluginManager->onReload();
    }
+#endif
 }
 
 void
@@ -529,6 +526,7 @@ ReproRunner::cleanupObjects()
       mCommandServerList.clear();
    }
    delete mRegSyncServerThread; mRegSyncServerThread = 0;
+   delete mRegSyncServerAMQP; mRegSyncServerAMQP = 0;
    delete mRegSyncServerV6; mRegSyncServerV6 = 0;
    delete mRegSyncServerV4; mRegSyncServerV4 = 0;
    delete mRegSyncClient; mRegSyncClient = 0;
@@ -573,68 +571,14 @@ ReproRunner::loadPlugins()
    std::vector<Data> pluginNames;
    mProxyConfig->getConfigValue("LoadPlugins", pluginNames);
 
-#ifdef REPRO_DSO_PLUGINS
-   if(pluginNames.empty())
-   {
-      DebugLog(<<"LoadPlugins not specified, not attempting to load any plugins");
-      return true;
-   }
-
-   const Data& pluginDirectory = mProxyConfig->getConfigData("PluginDirectory", REPRO_DSO_PLUGIN_DIR_DEFAULT, true);
-   if(pluginDirectory.empty())
-   {
-      ErrLog(<<"LoadPlugins specified but PluginDirectory not specified, can't load plugins");
-      return false;
-   }
-   for(std::vector<Data>::iterator it = pluginNames.begin(); it != pluginNames.end(); it++)
-   {
-      void *dlib;
-      // FIXME:
-      // - not all platforms use the .so extension
-      // - detect and use correct directory separator charactor
-      // - do we need to support relative paths here?
-      // - should we use the filename prefix 'lib', 'mod' or something else?
-      Data name = pluginDirectory + '/' + "lib" + *it + ".so";
-      dlib = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
-      if(!dlib)
-      {
-         ErrLog(<< "Failed to load plugin " << *it << " (" << name << "): " << dlerror());
-         return false;
-      }
-      ReproPluginDescriptor* desc = (ReproPluginDescriptor*)dlsym(dlib, "reproPluginDesc");
-      if(!desc)
-      {
-         ErrLog(<< "Failed to find reproPluginDesc in plugin " << *it << " (" << name << "): " << dlerror());
-         return false;
-      }
-      if(!(desc->mPluginApiVersion == REPRO_DSO_PLUGIN_API_VERSION))
-      {
-         ErrLog(<< "Failed to load plugin " << *it << " (" << name << "): found version " << desc->mPluginApiVersion << ", expecting version " << REPRO_DSO_PLUGIN_API_VERSION);
-      }
-      DebugLog(<<"Trying to instantiate plugin " << *it);
-      // Instantiate the plugin object and add it to our runtime environment
-      Plugin* plugin = desc->creationFunc();
-      if(!plugin)
-      {
-         ErrLog(<< "Failed to instantiate plugin " << *it << " (" << name << ")");
-         return false;
-      }
-      if(!plugin->init(*mSipStack, mProxyConfig))
-      {
-         ErrLog(<< "Failed to initialize plugin " << *it << " (" << name << ")");
-         return false;
-      }
-      mPlugins.push_back(plugin);
-   }
-   return true;
+#ifdef DSO_PLUGINS
+   mPluginManager.reset(new ReproPluginManager(*mSipStack, mProxyConfig));
+   return mPluginManager->loadPlugins(pluginNames);
 #else
-   if(!pluginNames.empty())
-   {
-      ErrLog(<<"LoadPlugins specified but repro not compiled with plugin DSO support");
-      return false;
-   }
-   DebugLog(<<"Not compiled with plugin DSO support");
-   return true;
+   if (pluginNames.empty()) return true;
+
+   CritLog(<< "LoadPlugins is specified in the configuration but repro was compiled without plugin support");
+   return false;
 #endif
 }
 
@@ -659,7 +603,7 @@ bool
 ReproRunner::createSipStack()
 {
    // Override T1 timer if configured to do so
-   unsigned long overrideT1 = mProxyConfig->getConfigInt("TimerT1", 0);
+   unsigned long overrideT1 = mProxyConfig->getConfigUnsignedLong("TimerT1", 0);
    if(overrideT1)
    {
       WarningLog(<< "Overriding T1! (new value is " << overrideT1 << ")");
@@ -667,7 +611,10 @@ ReproRunner::createSipStack()
    }
 
    // Set TCP Connect timeout 
-   resip::Timer::TcpConnectTimeout = mProxyConfig->getConfigInt("TCPConnectTimeout", 0);
+   resip::Timer::TcpConnectTimeout = mProxyConfig->getConfigUnsignedLong("TCPConnectTimeout", 10000);  // Default to 10 seconds
+
+   // Set DNS Greylist Duration
+   resip::TransactionState::DnsGreylistDurationMs = mProxyConfig->getConfigUnsignedLong("DNSGreylistDuration", 1800000);  // Default to 30mins
 
    unsigned long messageSizeLimit = mProxyConfig->getConfigUnsignedLong("StreamMessageSizeLimit", 0);
    if(messageSizeLimit > 0)
@@ -701,18 +648,21 @@ ReproRunner::createSipStack()
    {
       security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty), dHParamsFilename);
    }
-   Data caDir;
-   mProxyConfig->getConfigValue("CADirectory", caDir);
-   if(!caDir.empty())
+   std::vector<Data> caDirNames;
+   mProxyConfig->getConfigValue("CADirectory", caDirNames);
+   for(std::vector<Data>::const_iterator caDir = caDirNames.begin();
+      caDir != caDirNames.end(); caDir++)
    {
-      security->addCADirectory(caDir);
+      security->addCADirectory(*caDir);
    }
-   Data caFile;
-   mProxyConfig->getConfigValue("CAFile", caFile);
-   if(!caFile.empty())
+   std::vector<Data> caFileNames;
+   mProxyConfig->getConfigValue("CAFile", caFileNames);
+   for(std::vector<Data>::const_iterator caFile = caFileNames.begin();
+      caFile != caFileNames.end(); caFile++)
    {
-      security->addCAFile(caFile);
+      security->addCAFile(*caFile);
    }
+   BaseSecurity::setAllowWildcardCertificates(mProxyConfig->getConfigBool("AllowWildcardCertificates", false));
 #endif
 
 #ifdef USE_SIGCOMP
@@ -785,9 +735,18 @@ ReproRunner::createSipStack()
    mSipStack->setExternalStatsHandler(this);
 
    // Set Transport SipMessage Logging Handler - if enabled
-   if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
+   Data captureHost;
+   mProxyConfig->getConfigValue("CaptureHost", captureHost);
+   if(!captureHost.empty())
    {
-       mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<ReproSipMessageLoggingHandler>(new ReproSipMessageLoggingHandler));
+      int capturePort = mProxyConfig->getConfigInt("CapturePort", 9060);
+      int captureAgentID = mProxyConfig->getConfigInt("CaptureAgentID", 2001);
+      auto agent = std::make_shared<HepAgent>(captureHost, capturePort, captureAgentID);
+      mSipStack->addTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
+   }
+   else if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
+   {
+       mSipStack->addTransportSipMessageLoggingHandler(std::make_shared<ReproSipMessageLoggingHandler>());
    }
 
    // Add stack transports
@@ -802,7 +761,9 @@ ReproRunner::createSipStack()
    InteropHelper::setOutboundVersion(mProxyConfig->getConfigInt("OutboundVersion", 5626));
    InteropHelper::setOutboundSupported(mProxyConfig->getConfigBool("DisableOutbound", false) ? false : true);
    InteropHelper::setRRTokenHackEnabled(mProxyConfig->getConfigBool("EnableFlowTokens", false));
+   InteropHelper::setAllowInboundFlowTokensForNonDirectClients(mProxyConfig->getConfigBool("AllowInboundFlowTokensForNonDirectClients", false));
    InteropHelper::setAssumeFirstHopSupportsOutboundEnabled(mProxyConfig->getConfigBool("AssumeFirstHopSupportsOutbound", false));
+   InteropHelper::setAssumeFirstHopSupportsFlowTokensEnabled(mProxyConfig->getConfigBool("AssumeFirstHopSupportsFlowTokens", false));
    Data clientNATDetectionMode = mProxyConfig->getConfigData("ClientNatDetectionMode", "DISABLED");
    if(isEqualNoCase(clientNATDetectionMode, "ENABLED"))
    {
@@ -831,16 +792,17 @@ ReproRunner::createSipStack()
       ConnectionManager::EnableAgressiveGc = true;
    }
 
+   // Decide whether or not to add rport to the Via header
+   InteropHelper::setRportEnabled(mProxyConfig->getConfigBool("AddViaRport", true));
+
    // Check Path and RecordRoute settings, print warning if features are enabled that
    // require record-routing and record-route uri(s) is not configured
-   bool assumePath = mProxyConfig->getConfigBool("AssumePath", false);
    bool forceRecordRoute = mProxyConfig->getConfigBool("ForceRecordRouting", false);
    Uri recordRouteUri;
    mProxyConfig->getConfigValue("RecordRouteUri", recordRouteUri);
    if((InteropHelper::getOutboundSupported() 
          || InteropHelper::getRRTokenHackEnabled()
          || InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled
-         || assumePath
          || forceRecordRoute
       )
       && !(allTransportsSpecifyRecordRoute || !recordRouteUri.host().empty()))
@@ -851,7 +813,6 @@ ReproRunner::createSipStack()
       InteropHelper::setOutboundSupported(false);
       InteropHelper::setRRTokenHackEnabled(false);
       InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionDisabled);
-      assumePath = false;
       forceRecordRoute=false;
    }
 
@@ -926,7 +887,7 @@ ReproRunner::createDatastore()
       if(!mySQLServer.empty())
       {
          WarningLog(<<"Using deprecated parameter MySQLServer, please update to indexed Database definitions.");
-         mAbstractDb = new MySqlDb(mySQLServer,
+         mAbstractDb = new MySqlDb(*mProxyConfig, mySQLServer,
                           mProxyConfig->getConfigData("MySQLUser", Data::Empty),
                           mProxyConfig->getConfigData("MySQLPassword", Data::Empty),
                           mProxyConfig->getConfigData("MySQLDatabaseName", Data::Empty),
@@ -958,7 +919,7 @@ ReproRunner::createDatastore()
       if(!runtimeMySQLServer.empty())
       {
          WarningLog(<<"Using deprecated parameter RuntimeMySQLServer, please update to indexed Database definitions.");
-         mRuntimeAbstractDb = new MySqlDb(runtimeMySQLServer,
+         mRuntimeAbstractDb = new MySqlDb(*mProxyConfig, runtimeMySQLServer,
                           mProxyConfig->getConfigData("RuntimeMySQLUser", Data::Empty), 
                           mProxyConfig->getConfigData("RuntimeMySQLPassword", Data::Empty),
                           mProxyConfig->getConfigData("RuntimeMySQLDatabaseName", Data::Empty),
@@ -990,7 +951,7 @@ ReproRunner::createDatastore()
       resip_assert(!mRegistrationPersistenceManager);
       mRegistrationPersistenceManager = new InMemorySyncRegDb(mRegSyncPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
       resip_assert(!mPublicationPersistenceManager);
-      mPublicationPersistenceManager = new InMemorySyncPubDb((mRegSyncPort && mProxyConfig->getConfigBool("EnablePublicationRepication", false)) ? true : false);
+      mPublicationPersistenceManager = new InMemorySyncPubDb((mRegSyncPort && mProxyConfig->getConfigBool("EnablePublicationReplication", false)) ? true : false);
    }
    resip_assert(mRegistrationPersistenceManager);
    resip_assert(mPublicationPersistenceManager);
@@ -1014,7 +975,8 @@ ReproRunner::createDialogUsageManager()
 {
    // Create Profile settings for DUM Instance that handles ServerRegistration,
    // and potentially certificate subscription server
-   SharedPtr<MasterProfile> profile(new MasterProfile);
+   auto profile = std::make_shared<MasterProfile>();
+   profile->setRportEnabled(InteropHelper::getRportEnabled());
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
 #ifdef USE_SSL
@@ -1047,11 +1009,12 @@ ReproRunner::createDialogUsageManager()
    resip::MessageFilterRuleList ruleList;
    bool registrarEnabled = !mProxyConfig->getConfigBool("DisableRegistrar", false);
    bool certServerEnabled = mProxyConfig->getConfigBool("EnableCertServer", false);
-   if (registrarEnabled || certServerEnabled)
+   bool presenceEnabled = mProxyConfig->getConfigBool("EnablePresenceServer", false);
+   if (registrarEnabled || certServerEnabled || presenceEnabled)
    {
       mDum = new DialogUsageManager(*mSipStack);
       mDum->setMasterProfile(profile);
-      addDomains(*mDum, false /* log? already logged when adding to Proxy - no need to log again*/);
+      addDomains(*mDum);
    }
 
    // If registrar is enabled, configure DUM to handle REGISTER requests
@@ -1092,7 +1055,6 @@ ReproRunner::createDialogUsageManager()
 #endif
    }
 
-   bool presenceEnabled = mProxyConfig->getConfigBool("EnablePresenceServer", false);
    if (presenceEnabled)
    {
       resip_assert(mDum);
@@ -1134,7 +1096,7 @@ ReproRunner::createDialogUsageManager()
       Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
       if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
       {
-         SharedPtr<WsCookieAuthManager> cookieAuth(new WsCookieAuthManager(*mDum, mDum->dumIncomingTarget()));
+         auto cookieAuth = std::make_shared<WsCookieAuthManager>(*mDum, mDum->dumIncomingTarget());
          mDum->addIncomingFeature(cookieAuth);
       }
 
@@ -1154,17 +1116,15 @@ bool
 ReproRunner::createProxy()
 {
    // Create AsyncProcessorDispatcher thread pool that is shared by the processsors for
-   // any asyncronous tasks (ie: RequestFilter and MessageSilo processors)
+   // any asynchronous tasks (ie: RequestFilter and MessageSilo processors)
    int numAsyncProcessorWorkerThreads = mProxyConfig->getConfigInt("NumAsyncProcessorWorkerThreads", 2);
    if(numAsyncProcessorWorkerThreads > 0)
    {
       resip_assert(!mAsyncProcessorDispatcher);
-      mAsyncProcessorDispatcher = new Dispatcher(std::auto_ptr<Worker>(new AsyncProcessorWorker), 
+      mAsyncProcessorDispatcher = new Dispatcher(std::unique_ptr<Worker>(new AsyncProcessorWorker),
                                                  mSipStack, 
                                                  numAsyncProcessorWorkerThreads);
    }
-
-   std::vector<Plugin*>::iterator it;
 
    // Create proxy processor chains
    /* Explanation:  "Monkeys" are processors which operate on incoming requests
@@ -1176,30 +1136,36 @@ ReproRunner::createProxy()
    mMonkeys = new ProcessorChain(Processor::REQUEST_CHAIN);
    makeRequestProcessorChain(*mMonkeys);
    InfoLog(<< *mMonkeys);
-   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+#ifdef DSO_PLUGINS
+   if(mPluginManager)
    {
-      (*it)->onRequestProcessorChainPopulated(*mMonkeys);
+      mPluginManager->onRequestProcessorChainPopulated(*mMonkeys);
    }
+#endif
 
    // Make Lemurs
    resip_assert(!mLemurs);
    mLemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
    makeResponseProcessorChain(*mLemurs);
    InfoLog(<< *mLemurs);
-   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+#ifdef DSO_PLUGINS
+   if(mPluginManager)
    {
-      (*it)->onResponseProcessorChainPopulated(*mLemurs);
+      mPluginManager->onResponseProcessorChainPopulated(*mLemurs);
    }
+#endif
 
    // Make Baboons
    resip_assert(!mBaboons);
    mBaboons = new ProcessorChain(Processor::TARGET_CHAIN);
    makeTargetProcessorChain(*mBaboons);
    InfoLog(<< *mBaboons);
-   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+#ifdef DSO_PLUGINS
+   if(mPluginManager)
    {
-      (*it)->onTargetProcessorChainPopulated(*mBaboons);
+      mPluginManager->onTargetProcessorChainPopulated(*mBaboons);
    }
+#endif
 
    // Create main Proxy class
    resip_assert(!mProxy);
@@ -1208,8 +1174,8 @@ ReproRunner::createProxy()
                       *mMonkeys, 
                       *mLemurs, 
                       *mBaboons);
-   Data defaultRealm = addDomains(*mProxy, true);
-   mHttpRealm = mProxyConfig->getConfigData("HttpAdminRealm", defaultRealm);
+   addDomains(*mProxy);
+   mHttpRealm = mProxyConfig->getConfigData("HttpAdminRealm", mDefaultRealm);
 
    // Set Server Text
 #ifdef PACKAGE_VERSION
@@ -1383,11 +1349,22 @@ ReproRunner::createRegSync()
    resip_assert(!mRegSyncClient);
    resip_assert(!mRegSyncServerV4);
    resip_assert(!mRegSyncServerV6);
+   resip_assert(!mRegSyncServerAMQP);
    resip_assert(!mRegSyncServerThread);
-   if(mRegSyncPort != 0)
+   bool enablePublicationReplication = mProxyConfig->getConfigBool("EnablePublicationReplication", false);
+   std::list<RegSyncServer*> regSyncServerList;
+   Data regSyncBrokerTopic = mProxyConfig->getConfigData("RegSyncBrokerTopic", Data::Empty);
+   if(!regSyncBrokerTopic.empty())
    {
-      bool enablePublicationReplication = mProxyConfig->getConfigBool("EnablePublicationRepication", false);
-      std::list<RegSyncServer*> regSyncServerList;
+#ifdef BUILD_QPID_PROTON
+      mRegSyncServerAMQP = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
+                                             regSyncBrokerTopic,
+                                             enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
+      regSyncServerList.push_back(mRegSyncServerAMQP);
+#endif
+   }
+   if(mRegSyncPort != 0 || regSyncServerList.size() > 0)
+   {
       if(mUseV4) 
       {
          mRegSyncServerV4 = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), 
@@ -1414,9 +1391,12 @@ ReproRunner::createRegSync()
          {
             remoteRegSyncPort = mRegSyncPort;
          }
-         mRegSyncClient = new RegSyncClient(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
-                                            regSyncPeerAddress, remoteRegSyncPort,
-                                            enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
+         if(remoteRegSyncPort != 0)
+         {
+            mRegSyncClient = new RegSyncClient(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
+                                               regSyncPeerAddress, remoteRegSyncPort,
+                                               enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
+         }
       }
    }
 }
@@ -1430,6 +1410,12 @@ ReproRunner::createCommandServer()
    std::vector<resip::Data> commandServerBindAddresses;
    mProxyConfig->getConfigValue("CommandBindAddress", commandServerBindAddresses);
    int commandPort = mProxyConfig->getConfigInt("CommandPort", 5081);
+
+   WebAdmin* webAdmin = 0;
+   if(!mWebAdminList.empty())
+   {
+      webAdmin = mWebAdminList.front();
+   }
 
    if(commandPort != 0)
    {
@@ -1449,7 +1435,7 @@ ReproRunner::createCommandServer()
       {
          if(mUseV4 && DnsUtil::isIpV4Address(*it))
          {
-            CommandServer* pCommandServerV4 = new CommandServer(*this, *it, commandPort, V4);
+            CommandServer* pCommandServerV4 = new CommandServer(*this, *it, commandPort, V4, webAdmin);
 
             if(pCommandServerV4->isSane())
             {
@@ -1464,7 +1450,7 @@ ReproRunner::createCommandServer()
 
          if(mUseV6 && DnsUtil::isIpV6Address(*it))
          {
-            CommandServer* pCommandServerV6 = new CommandServer(*this, *it, commandPort, V6);
+            CommandServer* pCommandServerV6 = new CommandServer(*this, *it, commandPort, V6, webAdmin);
 
             if(pCommandServerV6->isSane())
             {
@@ -1477,31 +1463,82 @@ ReproRunner::createCommandServer()
             }
          }
       }
+   }
 
-      if(!mCommandServerList.empty())
+#ifdef BUILD_QPID_PROTON
+   std::vector<resip::Data> commandServerQueues;
+   mProxyConfig->getConfigValue("CommandQueue", commandServerQueues);
+   for(Data& brokerUrl : commandServerQueues)
+   {
+      CommandServer* pCommandServerQueue = new CommandServer(*this, brokerUrl, false, webAdmin);
+      if(pCommandServerQueue->isSane())
       {
-         mCommandServerThread = new CommandServerThread(mCommandServerList);
+         mCommandServerList.push_back(pCommandServerQueue);
       }
+      else
+      {
+         CritLog(<<"Failed to start CommandServerQueue");
+         delete pCommandServerQueue;
+      }
+   }
+
+   std::vector<resip::Data> commandServerTopics;
+   mProxyConfig->getConfigValue("CommandEventTopic", commandServerTopics);
+   for(Data& brokerUrl : commandServerTopics)
+   {
+      CommandServer* pCommandServerTopic = new CommandServer(*this, brokerUrl, true, webAdmin);
+      if(pCommandServerTopic->isSane())
+      {
+         mCommandServerList.push_back(pCommandServerTopic);
+      }
+      else
+      {
+         CritLog(<<"Failed to start CommandServerTopic");
+         delete pCommandServerTopic;
+      }
+   }
+#endif
+
+   if(!mCommandServerList.empty())
+   {
+      mCommandServerThread = new CommandServerThread(mCommandServerList);
    }
 }
 
-Data
-ReproRunner::addDomains(TransactionUser& tu, bool log)
+void
+ReproRunner::initDomainMatcher()
 {
    resip_assert(mProxyConfig);
-   Data realm;
    
+   auto matcher = std::make_shared<ExtendedDomainMatcher>();
+   mDomainMatcher = matcher;
+
    std::vector<Data> configDomains;
    if(mProxyConfig->getConfigValue("Domains", configDomains))
    {
       for (std::vector<Data>::const_iterator i=configDomains.begin(); 
          i != configDomains.end(); ++i)
       {
-         if(log) InfoLog (<< "Adding domain " << *i << " from command line");
-         tu.addDomain(*i);
-         if ( realm.empty() )
+         InfoLog (<< "Adding domain " << *i << " from command line");
+         matcher->addDomain(*i);
+         if ( mDefaultRealm.empty() )
          {
-            realm = *i;
+            mDefaultRealm = *i;
+         }
+      }
+   }
+
+   std::vector<Data> configDomainSuffixes;
+   if(mProxyConfig->getConfigValue("DomainSuffixes", configDomainSuffixes))
+   {
+      for (std::vector<Data>::const_iterator i=configDomainSuffixes.begin();
+         i != configDomainSuffixes.end(); ++i)
+      {
+         InfoLog (<< "Adding domain suffix " << *i << " from command line");
+         matcher->addDomainSuffix(*i);
+         if ( mDefaultRealm.empty() )
+         {
+            mDefaultRealm = *i;
          }
       }
    }
@@ -1510,11 +1547,11 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
    for (ConfigStore::ConfigData::const_iterator i=dList.begin(); 
            i != dList.end(); ++i)
    {
-      if(log) InfoLog (<< "Adding domain " << i->second.mDomain << " from config");
-      tu.addDomain( i->second.mDomain );
-      if ( realm.empty() )
+      InfoLog (<< "Adding domain " << i->second.mDomain << " from config");
+      matcher->addDomain( i->second.mDomain );
+      if ( mDefaultRealm.empty() )
       {
-         realm = i->second.mDomain;
+         mDefaultRealm = i->second.mDomain;
       }
    }
 
@@ -1522,36 +1559,44 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
       add any of the items below to the Domains config option in repro.config
 
    Data localhostname(DnsUtil::getLocalHostName());
-   if(log) InfoLog (<< "Adding local hostname domain " << localhostname );
-   tu.addDomain(localhostname);
-   if ( realm.empty() )
+   InfoLog (<< "Adding local hostname domain " << localhostname );
+   matcher->addDomain(localhostname);
+   if ( mDefaultRealm.empty() )
    {
-      realm = localhostname;
+      mDefaultRealm = localhostname;
    }
 
-   if(log) InfoLog (<< "Adding localhost domain.");
-   tu.addDomain("localhost");
-   if ( realm.empty() )
+   InfoLog (<< "Adding localhost domain.");
+   matcher->addDomain("localhost");
+   if ( mDefaultRealm.empty() )
    {
-      realm = "localhost";
+      mDefaultRealm = "localhost";
    }
    
    list<pair<Data,Data> > ips = DnsUtil::getInterfaces();
    for ( list<pair<Data,Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
    {
-      if(log) InfoLog( << "Adding domain for IP " << i->second << " from interface " << i->first  );
-      tu.addDomain(i->second);
+      InfoLog( << "Adding domain for IP " << i->second << " from interface " << i->first  );
+      matcher->addDomain(i->second);
    }
 
-   if(log) InfoLog (<< "Adding 127.0.0.1 domain.");
-   tu.addDomain("127.0.0.1"); */
+   InfoLog (<< "Adding 127.0.0.1 domain.");
+   matcher->addDomain("127.0.0.1"); */
 
-   if( realm.empty() )
+   if( mDefaultRealm.empty() )
    {
-      realm = "Unconfigured";
+      mDefaultRealm = "Unconfigured";
    }
+}
 
-   return realm;
+void
+ReproRunner::addDomains(TransactionUser& tu)
+{
+   if (!mDomainMatcher)
+   {
+      initDomainMatcher();
+   }
+   tu.setDomainMatcher(mDomainMatcher);
 }
 
 bool
@@ -1565,25 +1610,24 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 
    bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
    Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
-   SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator; // NULL
-   SharedPtr<WsCookieContextFactory> wsCookieContextFactory;
+   std::shared_ptr<BasicWsConnectionValidator> basicWsConnectionValidator;
+   std::shared_ptr<WsCookieContextFactory> wsCookieContextFactory;
    if(!wsCookieAuthSharedSecret.empty())
    {
-      basicWsConnectionValidator.reset(new BasicWsConnectionValidator(wsCookieAuthSharedSecret));
+      basicWsConnectionValidator = std::make_shared<BasicWsConnectionValidator>(wsCookieAuthSharedSecret);
       Data infoCookieName = mProxyConfig->getConfigData("WSCookieNameInfo", Data::Empty);
       Data extraCookieName = mProxyConfig->getConfigData("WSCookieNameExtra", Data::Empty);
       Data macCookieName = mProxyConfig->getConfigData("WSCookieNameMac", Data::Empty);
 
-      wsCookieContextFactory.reset(new BasicWsCookieContextFactory(infoCookieName, extraCookieName, macCookieName));
+      wsCookieContextFactory = std::make_shared<BasicWsCookieContextFactory>(infoCookieName, extraCookieName, macCookieName);
    }
 
    try
    {
       // Check if advanced transport settings are provided
-      std::set<Data> interfaceKeys;
-      mProxyConfig->getConfigIndexKeys("Transport", interfaceKeys);
-      DebugLog(<<"Found " << interfaceKeys.size() << " interface(s) defined in the advanced format");
-      if(!interfaceKeys.empty())
+      ConfigParse::NestedConfigMap m = mProxyConfig->getConfigNested("Transport");
+      DebugLog(<<"Found " << m.size() << " interface(s) defined in the advanced format");
+      if(!m.empty())
       {
          // Sample config file format for advanced transport settings
          // Transport1Interface = 192.168.1.106:5061
@@ -1599,23 +1643,15 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          allTransportsSpecifyRecordRoute = true;
 
          const char *anchor;
-         for(std::set<Data>::iterator it = interfaceKeys.begin();
-            it != interfaceKeys.end();
+         for(ConfigParse::NestedConfigMap::iterator it = m.begin();
+            it != m.end();
             it++)
          {
-            const Data& settingKeyBase = *it;
-            DebugLog(<< "checking values for transport: " << settingKeyBase);
-            Data interfaceSettingKey(settingKeyBase + "Interface");
-            Data interfaceSettings = mProxyConfig->getConfigData(interfaceSettingKey, Data::Empty, true);
-            Data typeSettingKey(settingKeyBase + "Type");
-            Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
-            Data tlsCertificateSettingKey(settingKeyBase + "TlsCertificate");
-            Data tlsPrivateKeySettingKey(settingKeyBase + "TlsPrivateKey");
-            Data tlsPrivateKeyPassPhraseKey(settingKeyBase + "TlsPrivateKeyPassPhrase");
-            Data tlsCVMSettingKey(settingKeyBase + "TlsClientVerification");
-            Data tlsConnectionMethodKey(settingKeyBase + "TlsConnectionMethod");
-            Data recordRouteUriSettingKey(settingKeyBase + "RecordRouteUri");
-            Data rcvBufSettingKey(settingKeyBase + "RcvBufLen");
+            int idx = it->first;
+            SipConfigParse tc(it->second);
+            Data transportPrefix = "Transport" + Data(idx);
+            DebugLog(<< "checking values for transport: " << idx);
+            Data interfaceSettings = tc.getConfigData("Interface", Data::Empty, true);
 
             // Parse out interface settings
             ParseBuffer pb(interfaceSettings);
@@ -1634,40 +1670,27 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                pb.data(portData, anchor);
                if(!DnsUtil::isIpAddress(ipAddr))
                {
-                  CritLog(<< "Malformed IP-address found in " << interfaceSettingKey << " setting: " << ipAddr);
+                  CritLog(<< "Malformed IP-address found in " << transportPrefix << "Interface setting: " << ipAddr);
                }
                int port = portData.convertInt();
                if(port == 0)
                {
-                  CritLog(<< "Invalid port found in " << interfaceSettingKey << " setting: " << port);
+                  CritLog(<< "Invalid port found in " << transportPrefix << " setting: " << port);
                }
-               TransportType tt = Tuple::toTransport(mProxyConfig->getConfigData(typeSettingKey, "UDP"));
+               TransportType tt = Tuple::toTransport(tc.getConfigData("Type", "UDP"));
                if(tt == UNKNOWN_TRANSPORT)
                {
-                  CritLog(<< "Unknown transport type found in " << typeSettingKey << " setting: " << mProxyConfig->getConfigData(typeSettingKey, "UDP"));
+                  CritLog(<< "Unknown transport type found in " << transportPrefix << "Type setting: " << tc.getConfigData("Type", "UDP"));
                }
-               Data tlsDomain = mProxyConfig->getConfigData(tlsDomainSettingKey, Data::Empty);
-               Data tlsCertificate = mProxyConfig->getConfigData(tlsCertificateSettingKey, Data::Empty);
-               Data tlsPrivateKey = mProxyConfig->getConfigData(tlsPrivateKeySettingKey, Data::Empty);
-               Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData(tlsPrivateKeyPassPhraseKey, Data::Empty);
-               Data tlsCVMValue = mProxyConfig->getConfigData(tlsCVMSettingKey, "NONE");
-               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
+               Data tlsDomain = tc.getConfigData("TlsDomain", Data::Empty);
+               Data tlsCertificate = tc.getConfigData("TlsCertificate", Data::Empty);
+               Data tlsPrivateKey = tc.getConfigData("TlsPrivateKey", Data::Empty);
+               Data tlsPrivateKeyPassPhrase = tc.getConfigData("TlsPrivateKeyPassPhrase", Data::Empty);
+               SecurityTypes::TlsClientVerificationMode cvm = tc.getConfigClientVerificationMode("TlsClientVerification", SecurityTypes::None);
                SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
 #ifdef USE_SSL
-               sslType = Security::parseSSLType(mProxyConfig->getConfigData(tlsConnectionMethodKey, DEFAULT_TLS_METHOD));
+               sslType = tc.getConfigSSLType("TlsConnectionMethod", DEFAULT_TLS_METHOD);
 #endif
-               if(isEqualNoCase(tlsCVMValue, "Optional"))
-               {
-                  cvm = SecurityTypes::Optional;
-               }
-               else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
-               {
-                  cvm = SecurityTypes::Mandatory;
-               }
-               else if(!isEqualNoCase(tlsCVMValue, "None"))
-               {
-                  CritLog(<< "Unknown TLS client verification mode found in " << tlsCVMSettingKey << " setting: " << tlsCVMValue);
-               }
 
 #ifdef USE_SSL
                // Make sure certificate material available before trying to instantiate Transport
@@ -1703,7 +1726,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 
                if (t)
                {
-                  int rcvBufLen = mProxyConfig->getConfigInt(rcvBufSettingKey, 0);
+                  int rcvBufLen = tc.getConfigInt("RcvBufLen", 0);
                   if (rcvBufLen >0 )
                   {
 #if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
@@ -1715,31 +1738,26 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 #endif
                   }
 
-                  Data recordRouteUri = mProxyConfig->getConfigData(recordRouteUriSettingKey, Data::Empty);
+                  Data recordRouteUri = tc.getConfigData("RecordRouteUri", Data::Empty);
                   if(!recordRouteUri.empty())
                   {
                      try
                      {
                         if(isEqualNoCase(recordRouteUri, "auto")) // auto generated record route uri
                         {
+                           NameAddr rr;
                            if(isSecure(tt))
                            {
-                              NameAddr rr;
                               rr.uri().host()=tlsDomain;
-                              rr.uri().port()=port;
-                              rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
-                              mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
-                              InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                            }
                            else
                            {
-                              NameAddr rr;
                               rr.uri().host()=ipAddr;
-                              rr.uri().port()=port;
-                              rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
-                              mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
-                              InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                            }
+                           rr.uri().port()=port;
+                           rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
+                           mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
+                           InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                         }
                         else
                         {
@@ -1750,7 +1768,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                      }
                      catch(BaseException& e)
                      {
-                        ErrLog (<< "Invalid uri provided in " << recordRouteUriSettingKey << " setting (ignoring): " << e);
+                        ErrLog (<< "Invalid uri provided in " << transportPrefix << "RecordRouteUri setting (ignoring): " << e);
                         allTransportsSpecifyRecordRoute = false;
                      }
                   }
@@ -1762,7 +1780,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             }
             else
             {
-               CritLog(<< "Port not specified in " << interfaceSettingKey << " setting: expected format is <IPAddress>:<Port>");
+               CritLog(<< "Port not specified in " << transportPrefix << " setting: expected format is <IPAddress>:<Port>");
                return false;
             }
          }
@@ -1792,24 +1810,11 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          Data tlsCertificate = mProxyConfig->getConfigData("TLSCertificate", Data::Empty);
          Data tlsPrivateKey = mProxyConfig->getConfigData("TLSPrivateKey", Data::Empty);
          Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData("TlsPrivateKeyPassPhrase", Data::Empty);
-         Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
-         SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
+         SecurityTypes::TlsClientVerificationMode cvm = mProxyConfig->getConfigClientVerificationMode("TLSClientVerification", SecurityTypes::None);
          SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
 #ifdef USE_SSL
-         sslType = Security::parseSSLType(mProxyConfig->getConfigData("TLSConnectionMethod", DEFAULT_TLS_METHOD));
+         sslType = mProxyConfig->getConfigSSLType("TLSConnectionMethod", DEFAULT_TLS_METHOD);
 #endif
-         if(isEqualNoCase(tlsCVMValue, "Optional"))
-         {
-            cvm = SecurityTypes::Optional;
-         }
-         else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
-         {
-            cvm = SecurityTypes::Mandatory;
-         }
-         else if(!isEqualNoCase(tlsCVMValue, "None"))
-         {
-            CritLog(<< "Unknown TLS client verification mode found in TLSClientVerification setting: " << tlsCVMValue);
-         }
 
 #ifdef USE_SSL
          // Make sure certificate material available before trying to instantiate Transport
@@ -1874,9 +1879,9 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 }
 
 void 
-ReproRunner::addProcessor(repro::ProcessorChain& chain, std::auto_ptr<Processor> processor)
+ReproRunner::addProcessor(repro::ProcessorChain& chain, std::unique_ptr<Processor> processor)
 {
-   chain.addProcessor(processor);
+   chain.addProcessor(std::move(processor));
 }
 
 void  // Monkeys
@@ -1886,10 +1891,10 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    resip_assert(mRegistrationPersistenceManager);
 
    // Add strict route fixup monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new StrictRouteFixup));
+   addProcessor(chain, std::unique_ptr<Processor>(new StrictRouteFixup));
 
    // Add is trusted node monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
+   addProcessor(chain, std::unique_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
 
    // Add Certificate Authenticator - if required
    resip_assert(mAuthFactory);
@@ -1907,7 +1912,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    Data wsCookieExtraHeaderName = mProxyConfig->getConfigData("WSCookieExtraHeaderName", "X-WS-Session-Extra");
    if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
    {
-      addProcessor(chain, std::auto_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, wsCookieExtraHeaderName, mSipStack)));
+      addProcessor(chain, std::unique_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, wsCookieExtraHeaderName, mSipStack)));
    }
 
    // Add digest authenticator monkey - if required
@@ -1917,14 +1922,14 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    }
 
    // Add am I responsible monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new AmIResponsible(mProxyConfig->getConfigBool("AlwaysAllowRelaying", false))));
+   addProcessor(chain, std::unique_ptr<Processor>(new AmIResponsible(mProxyConfig->getConfigBool("AlwaysAllowRelaying", false))));
 
    // Add RequestFilter monkey
    if(!mProxyConfig->getConfigBool("DisableRequestFilterProcessor", false))
    {
       if(mAsyncProcessorDispatcher)
       {
-         addProcessor(chain, std::auto_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
+         addProcessor(chain, std::unique_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
       }
       else
       {
@@ -1942,16 +1947,16 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    if (routeSet.empty())
    {
       // add static route monkey
-      addProcessor(chain, std::auto_ptr<Processor>(new StaticRoute(*mProxyConfig))); 
+      addProcessor(chain, std::unique_ptr<Processor>(new StaticRoute(*mProxyConfig)));
    }
    else
    {
       // add simple static route monkey
-      addProcessor(chain, std::auto_ptr<Processor>(new SimpleStaticRoute(*mProxyConfig))); 
+      addProcessor(chain, std::unique_ptr<Processor>(new SimpleStaticRoute(*mProxyConfig)));
    }
 
    // Add location server monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthFactory->getDispatcher())));
+   addProcessor(chain, std::unique_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthFactory->getDispatcher())));
 
    // Add message silo monkey
    if(mProxyConfig->getConfigBool("MessageSiloEnabled", false))
@@ -1960,7 +1965,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       {
          MessageSilo* silo = new MessageSilo(*mProxyConfig, mAsyncProcessorDispatcher);
          mRegistrar->addRegistrarHandler(silo);
-         addProcessor(chain, std::auto_ptr<Processor>(silo));
+         addProcessor(chain, std::unique_ptr<Processor>(silo));
       }
       else
       {
@@ -1976,12 +1981,12 @@ ReproRunner::makeResponseProcessorChain(ProcessorChain& chain)
    resip_assert(mRegistrationPersistenceManager);
 
    // Add outbound target handler lemur
-   addProcessor(chain, std::auto_ptr<Processor>(new OutboundTargetHandler(*mRegistrationPersistenceManager))); 
+   addProcessor(chain, std::unique_ptr<Processor>(new OutboundTargetHandler(*mRegistrationPersistenceManager)));
 
    if (mProxyConfig->getConfigBool("RecursiveRedirect", false))
    {
       // Add recursive redirect lemur
-      addProcessor(chain, std::auto_ptr<Processor>(new RecursiveRedirect)); 
+      addProcessor(chain, std::unique_ptr<Processor>(new RecursiveRedirect));
    }
 }
 
@@ -1993,18 +1998,18 @@ ReproRunner::makeTargetProcessorChain(ProcessorChain& chain)
 #ifndef RESIP_FIXED_POINT
    if(mProxyConfig->getConfigBool("GeoProximityTargetSorting", false))
    {
-      addProcessor(chain, std::auto_ptr<Processor>(new GeoProximityTargetSorter(*mProxyConfig)));
+      addProcessor(chain, std::unique_ptr<Processor>(new GeoProximityTargetSorter(*mProxyConfig)));
    }
 #endif
 
    if(mProxyConfig->getConfigBool("QValue", true))
    {
       // Add q value target handler baboon
-      addProcessor(chain, std::auto_ptr<Processor>(new QValueTargetHandler(*mProxyConfig))); 
+      addProcessor(chain, std::unique_ptr<Processor>(new QValueTargetHandler(*mProxyConfig)));
    }
    
    // Add simple target handler baboon
-   addProcessor(chain, std::auto_ptr<Processor>(new SimpleTargetHandler)); 
+   addProcessor(chain, std::unique_ptr<Processor>(new SimpleTargetHandler));
 }
 
 bool 
@@ -2015,12 +2020,21 @@ ReproRunner::operator()(resip::StatisticsMessage &statsMessage)
    {
        (*it)->handleStatisticsMessage(statsMessage);
    }
+   // Dispatch to each web admin (so REST /api/v1/stats callers can receive
+   // the payload).
+   for(std::list<WebAdmin*>::iterator it = mWebAdminList.begin(); it != mWebAdminList.end(); it++)
+   {
+       (*it)->handleStatisticsMessage(statsMessage);
+   }
    return true;
 }
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2022, Daniel Pocock https://danielpocock.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -17,20 +17,33 @@ class RROverlay;
 class DnsHostRecord : public DnsResourceRecord
 {
    public:
+      class HostException final : public BaseException
+      {
+      public:
+         HostException(const Data& msg, const Data& file, const int line)
+            : BaseException(msg, file, line)
+         {
+         }
+
+         const char* name() const noexcept override { return "HostException"; }
+      };
+
       DnsHostRecord(const RROverlay&);
-      DnsHostRecord(const Data name, const in_addr addr): mAddr(addr), mName(name){};
-      ~DnsHostRecord() {}
+      DnsHostRecord(const Data name, const in_addr addr): mAddr(addr), mName(name), mTTL(-1) {};
+      virtual ~DnsHostRecord() {}
 
       // accessors.
       Data host() const;
       in_addr addr() const { return mAddr; }
-      const Data& name() const { return mName; }
-      bool isSameValue(const Data& value) const;
-      EncodeStream& dump(EncodeStream& strm) const;
+      virtual const Data& name() const { return mName; }
+      virtual int ttl() const { return mTTL; }
+      virtual bool isSameValue(const Data& value) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
       
    private:
       in_addr mAddr;
       Data mName;
+      int mTTL;
 };
 
 }

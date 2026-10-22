@@ -1,4 +1,5 @@
 #include "TurnSocket.hxx"
+#include "../AsyncSocketBase.hxx"
 #include "ErrorCode.hxx"
 #include <rutil/Lock.hxx>
 #include <rutil/WinLeakCheck.hxx>
@@ -22,16 +23,24 @@ using namespace resip;
 
 #define SOFTWARE_STRING "reTURN Sync Client 0.3 - RFC5389/turn-12"
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+#include <chrono>
+using namespace std::chrono;
+#endif
+
 namespace reTurn {
 
 // Initialize static members
 unsigned int TurnSocket::UnspecifiedLifetime = 0xFFFFFFFF;
 unsigned int TurnSocket::UnspecifiedBandwidth = 0xFFFFFFFF; 
 unsigned short TurnSocket::UnspecifiedToken = 0;
-asio::ip::address TurnSocket::UnspecifiedIpAddress = asio::ip::address::from_string("0.0.0.0");
+asio::ip::address TurnSocket::UnspecifiedIpAddress = asio::ip::make_address("0.0.0.0");
 
 TurnSocket::TurnSocket(const asio::ip::address& address, unsigned short port) : 
    mLocalBinding(StunTuple::None /* Set properly by sub class */, address, port),
+   mSoftware(SOFTWARE_STRING),
    mHaveAllocation(false),
    mActiveDestination(0),
    mReadTimer(mIOService),
@@ -48,7 +57,7 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
                                 char* password, unsigned int passwordSize)
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // Should we check here if TLS and deny?
 
@@ -115,11 +124,28 @@ TurnSocket::setUsernameAndPassword(const char* username, const char* password, b
    }
 }
 
+void
+TurnSocket::setSoftware(const char* software)
+{
+   mSoftware = software;
+
+   const uint32_t unpaddedSize = (unsigned int)mSoftware.size();
+   if(unpaddedSize > 0)
+   {
+      // Pad size to a multiple of 4, to help compatibility with older clients
+      const uint32_t remainder  = unpaddedSize % 4,
+                   paddedSize = remainder ? unpaddedSize + 4 - remainder : unpaddedSize;
+
+      while(mSoftware.size() < paddedSize)
+         mSoftware.append(" ", 1);
+   }
+}
+
 asio::error_code 
 TurnSocket::bindRequest()
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // Ensure Connected
    if(!mConnected)
@@ -161,11 +187,11 @@ asio::error_code
 TurnSocket::createAllocation(unsigned int lifetime,
                              unsigned int bandwidth,
                              unsigned char requestedProps, 
-                             UInt64 reservationToken,
+                             uint64_t reservationToken,
                              StunTuple::TransportType requestedTransportType)
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // Store Allocation Properties
    mRequestedLifetime = lifetime;
@@ -285,7 +311,7 @@ asio::error_code
 TurnSocket::refreshAllocation()
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // Form Turn Allocate request
    StunMessage request;
@@ -338,7 +364,7 @@ TurnSocket::refreshAllocation()
 asio::error_code 
 TurnSocket::destroyAllocation()
 {
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
    if(mHaveAllocation)
    {
       mRequestedLifetime = 0;
@@ -383,7 +409,7 @@ asio::error_code
 TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // ensure there is an allocation
    if(!mHaveAllocation)
@@ -460,7 +486,7 @@ asio::error_code
 TurnSocket::clearActiveDestination()
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // ensure there is an allocation
    if(!mHaveAllocation)
@@ -493,7 +519,7 @@ TurnSocket::send(const char* buffer, unsigned int size)
 asio::error_code 
 TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
 {
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
    // ensure there is an allocation 
    if(!mHaveAllocation)
    {
@@ -520,7 +546,7 @@ TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const 
 asio::error_code 
 TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size)
 {
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    // Check to see if an allocation refresh is required - if so send it and make sure it was sucessful
    asio::error_code ret = checkIfAllocationRefreshRequired();
@@ -543,21 +569,20 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       unsigned short channelNumber = remotePeer.getChannel();
       channelNumber = htons(channelNumber);
       memcpy(&framing[0], &channelNumber, 2);
-      if(mLocalBinding.getTransportType() == StunTuple::UDP)
-      {
-         // No size in header for UDP
-         framing[2] = 0x00;
-         framing[3] = 0x00;
-      }
-      else
-      {
-         UInt16 turnDataSize = size;
-         turnDataSize = htons(turnDataSize);
-         memcpy((void*)&framing[2], &turnDataSize, 2);
-      }
+
+      uint16_t turnDataSize = size;
+      turnDataSize = htons(turnDataSize);
+      memcpy((void*)&framing[2], &turnDataSize, 2);
+
       std::vector<asio::const_buffer> bufs;
       bufs.push_back(asio::buffer(framing, sizeof(framing)));
       bufs.push_back(asio::buffer(buffer, size));
+      if(mLocalBinding.getTransportType() != StunTuple::UDP)
+      {
+         // Over TCP and TLS, padded to a multiple of 4 bytes (RFC 5766 11.5, RFC 8656 12.5)
+         static const char zeros[3] = { 0, 0, 0 };
+         bufs.push_back(asio::buffer(zeros, AsyncSocketBase::channelDataPadding(size)));
+      }
 
       return rawWrite(bufs);
    }
@@ -577,7 +602,7 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       else
       {
          ind.mTurnXorPeerAddress[0].family = StunMessage::IPv4Family;
-         ind.mTurnXorPeerAddress[0].addr.ipv4 = remotePeer.getPeerTuple().getAddress().to_v4().to_ulong();
+         ind.mTurnXorPeerAddress[0].addr.ipv4 = remotePeer.getPeerTuple().getAddress().to_v4().to_uint();
       }
       if(size > 0)
       {
@@ -590,11 +615,22 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
    }
 }
 
-asio::error_code 
+void
+TurnSocket::queueReceived(unsigned int size)
+{
+   if(mReceivedWhileWaiting.size() >= MaxReceivedWhileWaiting)
+   {
+      WarningLog(<< "TurnSocket: " << mReceivedWhileWaiting.size() << " packets received while waiting for a response, not yet received - dropping the oldest");
+      mReceivedWhileWaiting.pop_front();
+   }
+   mReceivedWhileWaiting.emplace_back(mReadBuffer, mReadBuffer + size);
+}
+
+asio::error_code
 TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
    bool done = false;
 
    // TODO - rethink this scheme so that we don't need to copy recieved data
@@ -604,12 +640,25 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
    {
       done = true;
 
-      // Wait for response
+      // Wait for response - unless peers' data arrived while waiting for a response to a request
       unsigned int readSize;
-      errorCode = rawRead(timeout, &readSize, sourceAddress, sourcePort); // Note: SourceAddress and sourcePort may be overwritten below if from Turn Relay
-      if(errorCode)
+      if(!mHaveAllocation)
       {
-         return errorCode;
+         mReceivedWhileWaiting.clear();
+      }
+      if(!mReceivedWhileWaiting.empty())
+      {
+         readSize = (unsigned int)mReceivedWhileWaiting.front().size();
+         memcpy(mReadBuffer, mReceivedWhileWaiting.front().data(), readSize);
+         mReceivedWhileWaiting.pop_front();
+      }
+      else
+      {
+         errorCode = rawRead(timeout, &readSize, sourceAddress, sourcePort); // Note: SourceAddress and sourcePort may be overwritten below if from Turn Relay
+         if(errorCode)
+         {
+            return errorCode;
+         }
       }
 
       // Note if this is a UDP RFC3489 back compat socket, then allocations are not allowed and handleRawData will always be used
@@ -620,21 +669,38 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
 
       if(readSize > 4)
       {
-         // Stun Message has first two bits as 00 
-         if((mReadBuffer[0] & 0xC0) == 0)
+         // What it is, by its first byte (RFC 7983): 0-3 STUN, 64-127 TURN ChannelData (channel
+         // numbers 0x4000-0x7FFF).  Everything the TURN server sends is one or the other - peers'
+         // data comes through it - so anything else (eg. sent straight to us) is skipped.
+         const unsigned char firstByte = (unsigned char)mReadBuffer[0];
+         if(firstByte <= 3)
          {
             // StunMessage
             StunMessage* stunMsg = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[0], readSize);
-            unsigned int tempsize = size;
-            errorCode = handleStunMessage(*stunMsg, buffer, tempsize, sourceAddress, sourcePort);
-            if(!errorCode && tempsize == 0)  // Signifies that a Stun/Turn request was received and there is nothing to return to receive caller
+            if(!stunMsg->isValid())
             {
+               DebugLog(<< "TurnSocket::receive: discarding a packet that isn't valid STUN");
                done = false;
             }
             else
             {
-               size = tempsize;
+               unsigned int tempsize = size;
+               errorCode = handleStunMessage(*stunMsg, buffer, tempsize, sourceAddress, sourcePort);
+               if(!errorCode && tempsize == 0)  // Signifies that a Stun/Turn request was received and there is nothing to return to receive caller
+               {
+                  done = false;
+               }
+               else
+               {
+                  size = tempsize;
+               }
             }
+            delete stunMsg;
+         }
+         else if((firstByte & 0xC0) != 0x40)
+         {
+            DebugLog(<< "TurnSocket::receive: discarding a packet that is neither STUN nor channel data");
+            done = false;
          }
          else // Channel Data Message
          {
@@ -645,7 +711,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
             RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
             if(remotePeer)
             {
-               UInt16 dataLen;
+               uint16_t dataLen;
                memcpy(&dataLen, &mReadBuffer[2], 2);
                dataLen = ntohs(dataLen);
    
@@ -684,7 +750,7 @@ TurnSocket::receiveFrom(const asio::ip::address& address, unsigned short port, c
    unsigned short sourcePort;
    bool done = false;
    asio::error_code errorCode;
-   resip::Lock lock(mMutex);
+   resip::RecursiveLock lock(mMutex);
 
    while(!done)
    {
@@ -754,13 +820,8 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          remoteTuple.setTransportType(mRelayTuple.getTransportType());
          StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress[0]);
 
-         RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
-         if(!remotePeer)
-         {
-            // Remote Peer not found - discard data
-            WarningLog(<< "Data received from unknown RemotePeer - discarding");
-            return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
-         }
+         // Should we record all the remoteTuples we have sent to before, and reject this message if
+         // not from one of the those endpoints?
 
          if(stunMessage.mTurnData->size() > size)
          {
@@ -813,7 +874,10 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          }
 
          // Add Software Attribute
-         response.setSoftware(SOFTWARE_STRING);
+         if(!mSoftware.empty())
+         {
+            response.setSoftware(mSoftware.c_str());
+         }
 
          // send bind response to local client
          unsigned int bufferSize = 512;  // enough room for Stun Header + XorMapped Address (v6) or Unknown Attributes + Software Attribute;
@@ -851,8 +915,8 @@ TurnSocket::startReadTimer(unsigned int timeout)
 {
    if(timeout != 0)
    {
-      mReadTimer.expires_from_now(boost::posix_time::milliseconds(timeout));
-      mReadTimer.async_wait(boost::bind(&TurnSocket::handleRawReadTimeout, this, asio::placeholders::error));
+      mReadTimer.expires_after(milliseconds(timeout));
+      mReadTimer.async_wait(std::bind(&TurnSocket::handleRawReadTimeout, this, std::placeholders::_1));
    }
 }
 
@@ -921,7 +985,10 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
    unsigned int readsize = 0;
 
    // Add Software Attribute
-   request.setSoftware(SOFTWARE_STRING);
+   if(!mSoftware.empty())
+   {
+      request.setSoftware(mSoftware.c_str());
+   }
 
    if(addAuthInfo && !mUsername.empty() && !mHmacKey.empty())
    {
@@ -989,14 +1056,33 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
 
       if(readsize > 4)
       {
-         // Stun Message has first two bits as 00 
-         if((mReadBuffer[0] & 0xC0) == 0)
+         // What it is, by its first byte (RFC 7983): 0-3 STUN, 64-127 TURN ChannelData (with an
+         // allocation).  Anything else isn't for us here (eg. sent straight to us): skip it.
+         const unsigned char firstByte = (unsigned char)mReadBuffer[0];
+         if(firstByte > 3 && !(mHaveAllocation && (firstByte & 0xC0) == 0x40))
+         {
+            DebugLog(<< "TurnSocket: discarding a packet that is neither STUN nor channel data, while waiting for a response");
+            continue;  // read next message
+         }
+         if(firstByte <= 3)
          {
             StunMessage* response = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[0], readsize);
 
             // If response is valid and has no unknown comprehension-required attributes then we can process it
-            if(response->isValid() && response->mUnknownRequiredAttributes.numAttributes == 0) 
+            if(response->isValid() && response->mUnknownRequiredAttributes.numAttributes == 0)
             {
+               // Not a response: a Data indication (a peer's data, kept for receive()), or
+               // something not for us here
+               if(response->mClass != StunMessage::StunClassSuccessResponse && response->mClass != StunMessage::StunClassErrorResponse)
+               {
+                  if(mHaveAllocation && response->mClass == StunMessage::StunClassIndication && response->mMethod == StunMessage::TurnDataMethod)
+                  {
+                     queueReceived(readsize);
+                  }
+                  delete response;
+                  continue;  // read next message
+               }
+
                if(!response->checkMessageIntegrity(request.mHmacKey))
                {
                   WarningLog(<< "Stun response message integrity is bad!");
@@ -1044,11 +1130,10 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
                return 0;
             }
          }
-         else  // Channel Data Message
+         else  // Channel Data Message: a peer's data, kept for receive()
          {
-            // TODO - handle buffering of Turn data that is receive while waiting for a Request/Response
-            errorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);  
-            return 0;
+            queueReceived(readsize);
+            continue;  // read next message
          }
       }
       else
@@ -1065,6 +1150,7 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

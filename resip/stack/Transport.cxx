@@ -27,6 +27,44 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
+void
+Transport::setSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler)
+{
+   mSipMessageLoggingHandlers.clear();
+
+   if (handler)
+   {
+      mSipMessageLoggingHandlers.push_back(handler);
+   }
+}
+
+void
+Transport::addSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler)
+{
+   if (handler)
+   {
+      mSipMessageLoggingHandlers.push_back(handler);
+   }
+}
+
+void
+Transport::setSipMessageLoggingHandlers(const SipMessageLoggingHandlerList& handlers)
+{
+   mSipMessageLoggingHandlers = handlers;
+}
+
+void
+Transport::unsetSipMessageLoggingHandler() noexcept
+{
+   mSipMessageLoggingHandlers.clear();
+}
+
+Transport::SipMessageLoggingHandlerList
+Transport::getSipMessageLoggingHandlers() const noexcept
+{
+   return mSipMessageLoggingHandlers;
+}
+
 Transport::Exception::Exception(const Data& msg, const Data& file, const int line) :
    BaseException(msg,file,line)
 {
@@ -38,7 +76,7 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      AfterSocketCreationFuncPtr socketFunc,
                      Compression &compression) :
    mTuple(address),
-   mCongestionManager(0),
+   mCongestionManager(nullptr),
    mStateMachineFifo(rxFifo, 8),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
@@ -64,7 +102,7 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      const Data& netNs) :
    mInterface(intfc),
    mTuple(intfc, portNum, version, UNKNOWN_TRANSPORT, Data::Empty, netNs),
-   mCongestionManager(0),
+   mCongestionManager(nullptr),
    mStateMachineFifo(rxFifo,8),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
@@ -79,133 +117,229 @@ Transport::~Transport()
 }
 
 void
-Transport::error(int e)
+Transport::onReload()
 {
-   switch (e)
+}
+
+void
+Transport::drainDscpRefresh()
+{
+   // Read before the traversal clears the mark state, so a reset still reports
+   // the 0 it wrote.
+   const int handled = effectiveDscp();
+
+   // The refresh first, so the report reads the class this pass wrote.
+   if (mDscpRefreshPending.load())
    {
-      case EAGAIN:
-         //InfoLog (<< "No data ready to read" << strerror(e));
-         break;
-      case EINTR:
-         InfoLog (<< "The call was interrupted by a signal before any data was read : " << strerror(e));
-         break;
-      case EIO:
-         InfoLog (<< "I/O error : " << strerror(e));
-         break;
-      case EBADF:
-         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << strerror(e));
-         break;
-      case EINVAL:
-         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << strerror(e));
-         break;
-      case EFAULT:
-         InfoLog (<< "buf is outside your accessible address space : " << strerror(e));
-         break;
+      applyDscpToOwnSockets();
+   }
 
-#if defined(WIN32)
-      case WSAENETDOWN:
-         InfoLog (<<" The network subsystem has failed.  ");
-         break;
-      case WSAEFAULT:
-         InfoLog (<<" The buf or from parameters are not part of the user address space, "
-                   "or the fromlen parameter is too small to accommodate the peer address.  ");
-         break;
-      case WSAEINTR:
-         InfoLog (<<" The (blocking) call was canceled through WSACancelBlockingCall.  ");
-         break;
-      case WSAEINPROGRESS:
-         InfoLog (<<" A blocking Windows Sockets 1.1 call is in progress, or the "
-                   "service provider is still processing a callback function.  ");
-         break;
-      case WSAEINVAL:
-         InfoLog (<<" The socket has not been bound with bind, or an unknown flag was specified, "
-                   "or MSG_OOB was specified for a socket with SO_OOBINLINE enabled, "
-                   "or (for byte stream-style sockets only) len was zero or negative.  ");
-         break;
-      case WSAEISCONN :
-         InfoLog (<<"The socket is connected. This function is not permitted with a connected socket, "
-                  "whether the socket is connection-oriented or connectionless.  ");
-         break;
-      case WSAENETRESET:
-         InfoLog (<<" The connection has been broken due to the keep-alive activity "
-                  "detecting a failure while the operation was in progress.  ");
-         break;
-      case WSAENOTSOCK :
-         InfoLog (<<"The descriptor is not a socket.  ");
-         break;
-      case WSAEOPNOTSUPP:
-         InfoLog (<<" MSG_OOB was specified, but the socket is not stream-style such as type "
-                   "SOCK_STREAM, OOB data is not supported in the communication domain associated with this socket, "
-                   "or the socket is unidirectional and supports only send operations.  ");
-         break;
-      case WSAESHUTDOWN:
-         InfoLog (<<"The socket has been shut down; it is not possible to recvfrom on a socket after "
-                  "shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.  ");
-         break;
-      case WSAEMSGSIZE:
-         InfoLog (<<" The message was too large to fit into the specified buffer and was truncated.  ");
-         break;
-      case WSAETIMEDOUT:
-         InfoLog (<<" The connection has been dropped, because of a network failure or because the "
-                  "system on the other end went down without notice.  ");
-         break;
-      case WSAECONNRESET :
-         InfoLog (<<"Connection reset ");
-         break;
-
-      case WSAEWOULDBLOCK:
-         DebugLog (<<"Would Block ");
-         break;
-
-      case WSAEHOSTUNREACH:
-         InfoLog (<<"A socket operation was attempted to an unreachable host ");
-         break;
-      case WSANOTINITIALISED:
-         InfoLog (<<"Either the application has not called WSAStartup or WSAStartup failed. "
-                  "The application may be accessing a socket that the current active task does not own (that is, trying to share a socket between tasks),"
-                  "or WSACleanup has been called too many times.  ");
-         break;
-      case WSAEACCES:
-         InfoLog (<<"An attempt was made to access a socket in a way forbidden by its access permissions ");
-         break;
-      case WSAENOBUFS:
-         InfoLog (<<"An operation on a socket could not be performed because the system lacked sufficient "
-                  "buffer space or because a queue was full");
-         break;
-      case WSAENOTCONN:
-         InfoLog (<<"A request to send or receive data was disallowed because the socket is not connected "
-                  "and (when sending on a datagram socket using sendto) no address was supplied");
-         break;
-      case WSAECONNABORTED:
-         InfoLog (<<"An established connection was aborted by the software in your host computer, possibly "
-                  "due to a data transmission time-out or protocol error");
-         break;
-      case WSAEADDRNOTAVAIL:
-         InfoLog (<<"The requested address is not valid in its context. This normally results from an attempt to "
-                  "bind to an address that is not valid for the local computer");
-         break;
-      case WSAEAFNOSUPPORT:
-         InfoLog (<<"An address incompatible with the requested protocol was used");
-         break;
-      case WSAEDESTADDRREQ:
-         InfoLog (<<"A required address was omitted from an operation on a socket");
-         break;
-      case WSAENETUNREACH:
-         InfoLog (<<"A socket operation was attempted to an unreachable network");
-         break;
-
-#endif
-
-      default:
-         InfoLog (<< "Some other error (" << e << "): " << strerror(e));
-         break;
+   if (mDscpReportPending.exchange(false))
+   {
+      reportDscp(handled);
    }
 }
 
 void
-Transport::flowTerminated(const Tuple& flow)
+Transport::applyDscpToOwnSockets()
 {
-   mStateMachineFifo.add(new ConnectionTerminated(flow));
+   // Clear the request before reading the value it was raised for. A setDscp()
+   // that lands after this either carries the value this pass is about to
+   // write, or raises the request again for the next cycle.
+   mDscpRefreshPending.store(false);
+
+   const int wanted = mDscp.load();
+
+   // Before the traversal: with nothing to write and nothing to undo, the
+   // user's AfterSocketCreationFunc must not be re-invoked at all.
+   if (effectiveDscp(wanted) < 0)
+   {
+      return;
+   }
+
+   invokeAfterSocketCreationFunc();
+
+   // What this pass wrote, not what mDscp says now: a value that changed while
+   // the traversal ran has raised its own request.
+   mWasMarkRequested.store(wanted >= 0);
+}
+
+void
+Transport::reportDscp(int wanted) const
+{
+   if (wanted < 0)
+   {
+      return;
+   }
+
+   const Socket listener = getListenerSocket();
+   if (listener == INVALID_SOCKET)
+   {
+      return;
+   }
+
+   const int carried = getSocketTos(listener, ipVersion());
+   if (carried < 0)
+   {
+      ErrLog(<< *this << " cannot read the signaling DSCP class back from its listener");
+      return;
+   }
+
+   // As a class rather than a byte, so the kernel's own ECN bits do not read
+   // as a mismatch.
+   if ((carried >> 2) != wanted)
+   {
+      ErrLog(<< *this << " asked for signaling DSCP " << wanted
+             << " but its listener carries " << (carried >> 2)
+             << " (ToS byte " << carried << ")");
+      return;
+   }
+
+   InfoLog(<< *this << " signaling DSCP " << (carried >> 2)
+           << " (ToS byte " << carried << ")");
+}
+
+void
+Transport::error(int e)
+{
+   if (e != EAGAIN)
+   {
+      InfoLog(<< errorToString(e));
+   }
+}
+
+Data
+Transport::errorToString(int e)
+{
+   Data errorString;
+   DataStream ds(errorString);
+   switch (e)
+   {
+      case 0:
+         ds << "None";
+         break;
+      case EAGAIN:
+         ds << "No data ready to read: " << strError(e);
+         break;
+      case EINTR:
+         ds << "The call was interrupted by a signal before any data was read: " << strError(e);
+         break;
+      case EIO:
+         ds << "I/O error: " << strError(e);
+         break;
+      case EBADF:
+         ds << "fd is not a valid file descriptor or is not open for reading: " << strError(e);
+         break;
+      case EINVAL:
+         ds << "fd is attached to an object which is unsuitable for reading: " << strError(e);
+         break;
+      case EFAULT:
+         ds << "buf is outside your accessible address space: " << strError(e);
+         break;
+
+#if defined(WIN32)
+      case WSAENETDOWN:
+         ds << "The network subsystem has failed.";
+         break;
+      case WSAEFAULT:
+         ds << "The buf or from parameters are not part of the user address space, "
+               "or the fromlen parameter is too small to accommodate the peer address.";
+         break;
+      case WSAEINTR:
+         ds << "The (blocking) call was canceled through WSACancelBlockingCall.";
+         break;
+      case WSAEINPROGRESS:
+         ds << "A blocking Windows Sockets 1.1 call is in progress, or the "
+               "service provider is still processing a callback function.";
+         break;
+      case WSAEINVAL:
+         ds << "The socket has not been bound with bind, or an unknown flag was specified, "
+               "or MSG_OOB was specified for a socket with SO_OOBINLINE enabled, "
+               "or (for byte stream-style sockets only) len was zero or negative.";
+         break;
+      case WSAEISCONN :
+         ds << "The socket is connected. This function is not permitted with a connected socket, "
+               "whether the socket is connection-oriented or connectionless.";
+         break;
+      case WSAENETRESET:
+         ds << "The connection has been broken due to the keep-alive activity "
+               "detecting a failure while the operation was in progress.";
+         break;
+      case WSAENOTSOCK:
+         ds << "The descriptor is not a socket.";
+         break;
+      case WSAEOPNOTSUPP:
+         ds << " MSG_OOB was specified, but the socket is not stream-style such as type "
+               "SOCK_STREAM, OOB data is not supported in the communication domain associated with this socket, "
+               "or the socket is unidirectional and supports only send operations.";
+         break;
+      case WSAESHUTDOWN:
+         ds << "The socket has been shut down; it is not possible to recvfrom on a socket after "
+               "shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.";
+         break;
+      case WSAEMSGSIZE:
+         ds << "The message was too large to fit into the specified buffer and was truncated.";
+         break;
+      case WSAETIMEDOUT:
+         ds << "The connection has been dropped, because of a network failure or because the "
+               "system on the other end went down without notice.";
+         break;
+      case WSAECONNRESET :
+         ds << "Connection reset.";
+         break;
+      case WSAEWOULDBLOCK:
+         ds << "Would block.";
+         break;
+      case WSAEHOSTUNREACH:
+         ds << "A socket operation was attempted to an unreachable host.";
+         break;
+      case WSANOTINITIALISED:
+         ds << "Either the application has not called WSAStartup or WSAStartup failed. "
+               "The application may be accessing a socket that the current active task does not own (that is, trying to share a socket between tasks),"
+               "or WSACleanup has been called too many times.";
+         break;
+      case WSAEACCES:
+         ds << "An attempt was made to access a socket in a way forbidden by its access permissions.";
+         break;
+      case WSAENOBUFS:
+         ds << "An operation on a socket could not be performed because the system lacked sufficient "
+               "buffer space or because a queue was full.";
+         break;
+      case WSAENOTCONN:
+         ds << "A request to send or receive data was disallowed because the socket is not connected "
+               "and (when sending on a datagram socket using sendto) no address was supplied.";
+         break;
+      case WSAECONNABORTED:
+         ds << "An established connection was aborted by the software in your host computer, possibly "
+               "due to a data transmission time-out or protocol error.";
+         break;
+      case WSAEADDRNOTAVAIL:
+         ds << "The requested address is not valid in its context. This normally results from an attempt to "
+               "bind to an address that is not valid for the local computer.";
+         break;
+      case WSAEAFNOSUPPORT:
+         ds << "An address incompatible with the requested protocol was used.";
+         break;
+      case WSAEDESTADDRREQ:
+         ds << "A required address was omitted from an operation on a socket.";
+         break;
+      case WSAENETUNREACH:
+         ds << "A socket operation was attempted to an unreachable network.";
+         break;
+#endif
+
+      default:
+         ds << "Some other error (" << e << "): " << strError(e);
+         break;
+   }
+   ds.flush();
+   return errorString;
+}
+
+void
+Transport::flowTerminated(const Tuple& flow, TransportFailure::FailureReason failureReason, int failureSubCode, const Data& failureString, const std::list<Data> additionalFailureStrings)
+{
+   mStateMachineFifo.add(new ConnectionTerminated(flow, failureReason, failureSubCode, failureString, additionalFailureStrings));
 }
 
 void
@@ -232,11 +366,11 @@ Transport::setTcpConnectState(const Data& tid, TcpConnectState::State state)
     }
 }
 
-std::auto_ptr<SendData>
+std::unique_ptr<SendData>
 Transport::makeSendData( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
 {
    resip_assert(dest.getPort() != -1);
-   std::auto_ptr<SendData> data(new SendData(dest, d, tid, sigcompId));
+   std::unique_ptr<SendData> data(new SendData(dest, d, tid, sigcompId));
    return data;
 }
 
@@ -249,7 +383,7 @@ Transport::makeFailedResponse(const SipMessage& msg,
 
   const Tuple& dest = msg.getSource();
 
-  std::auto_ptr<SipMessage> errMsg(Helper::makeResponse(msg,
+  std::unique_ptr<SipMessage> errMsg(Helper::makeResponse(msg,
                                                         responseCode,
                                                         warning ? warning : "Original request had no Vias"));
 
@@ -267,13 +401,13 @@ Transport::makeFailedResponse(const SipMessage& msg,
   // Calculate compartment ID for outbound message
   Data remoteSigcompId;
    setRemoteSigcompId(*errMsg,remoteSigcompId);
-  send(std::auto_ptr<SendData>(makeSendData(dest, encoded, Data::Empty, remoteSigcompId)));
+  send(makeSendData(dest, encoded, Data::Empty, remoteSigcompId));
 }
 
-std::auto_ptr<SendData>
-Transport::make503(SipMessage& msg, UInt16 retryAfter)
+std::unique_ptr<SendData>
+Transport::make503(SipMessage& msg, uint16_t retryAfter)
 {
-  std::auto_ptr<SendData> result;
+  std::unique_ptr<SendData> result;
   if (msg.isResponse()) return result;
 
    try
@@ -304,10 +438,10 @@ Transport::make503(SipMessage& msg, UInt16 retryAfter)
   return result;
 }
 
-std::auto_ptr<SendData>
+std::unique_ptr<SendData>
 Transport::make100(SipMessage& msg)
 {
-  std::auto_ptr<SendData> result;
+  std::unique_ptr<SendData> result;
   if (msg.isResponse()) return result;
 
    try
@@ -430,8 +564,62 @@ Transport::basicCheck(const SipMessage& msg)
    return true;
 }
 
+bool
+Transport::setDscp(int dscp)
+{
+   // Refused once per change, not once per accepted connection.
+   if (dscp < -1 || dscp > 63)
+   {
+      ErrLog(<< *this << " refusing DSCP class " << dscp << ", outside -1..63");
+      return false;
+   }
+
+   if (mDscp.exchange(dscp) != dscp)
+   {
+      mDscpRefreshPending.store(true);
+   }
+
+   // Raised on every call, not only on a change: a marking that failed is then
+   // reported again on the next reload rather than reading as fixed.
+   mDscpReportPending.store(true);
+
+   return true;
+}
+
+int
+Transport::effectiveDscp() const
+{
+   return effectiveDscp(mDscp.load());
+}
+
+int
+Transport::effectiveDscp(int wanted) const
+{
+   if (wanted >= 0)
+   {
+      return wanted;
+   }
+
+   return mWasMarkRequested.load() ? 0 : -1;
+}
+
 void
-Transport::callSocketFunc(Socket sock)
+Transport::applySocketOptions(Socket sock) const
+{
+   const int dscp = effectiveDscp();
+   if (dscp >= 0)
+   {
+      // The return is dropped on purpose: the listener read-back reports the
+      // state once, instead of once per socket a refresh touches.
+      setSocketDscp(sock, dscp, ipVersion());
+      mWasMarkRequested.store(true);
+   }
+
+   callSocketFunc(sock);
+}
+
+void
+Transport::callSocketFunc(Socket sock) const
 {
    if (mSocketFunc)
    {
@@ -442,8 +630,7 @@ Transport::callSocketFunc(Socket sock)
 void
 Transport::pushRxMsgUp(SipMessage* message)
 {
-   SipMessageLoggingHandler* handler = getSipMessageLoggingHandler();
-   if(handler)
+   for(auto& handler : getSipMessageLoggingHandlers())
    {
        handler->inboundMessage(message->getSource(), message->getReceivedTransportTuple(), *message);
    }
@@ -463,13 +650,15 @@ EncodeStream&
 resip::operator<<(EncodeStream& strm, const resip::Transport& rhs)
 {
    strm << "Transport: " << rhs.mTuple;
-   if (!rhs.mInterface.empty()) strm << " on " << rhs.mInterface;
+   if (rhs.hasSpecificContact() && !rhs.mInterface.empty()) strm << " on " << rhs.mInterface;
+   if (!rhs.mTlsDomain.empty()) strm << " (tlsdomain=" << rhs.mTlsDomain << ")";
    return strm;
 }
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

@@ -3,6 +3,9 @@
 set -e
 
 if [ "$1" = "purge" ] ; then
+
+        rm -rf /etc/reTurn/dh2048.pem
+
         if getent passwd return >/dev/null; then
                 userdel return
         fi

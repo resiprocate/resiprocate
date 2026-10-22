@@ -20,7 +20,7 @@ class TransportThread : public ThreadIf
 
    protected:
       Transport& mTransport;
-      std::auto_ptr<FdPollGrp> mPollGrp;
+      std::unique_ptr<FdPollGrp> mPollGrp;
 }; // class TransportThread
 
 } // namespace resip

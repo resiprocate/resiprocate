@@ -4,6 +4,7 @@
   #include "config.h"
 #endif
 
+#include "rutil/AsyncBool.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "repro/ReproRADIUSServerAuthManager.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
@@ -25,9 +26,9 @@ ReproRADIUSServerAuthManager::ReproRADIUSServerAuthManager(DialogUsageManager& d
                                                bool rejectBadNonces,
                                                const resip::Data& configurationFile,
                                                bool challengeThirdParties,
-                                               const Data& staticRealm):
-   RADIUSServerAuthManager(dum, dum.dumIncomingTarget(), configurationFile, challengeThirdParties, staticRealm),
-   mDum(dum),
+                                               const Data& staticRealm,
+                                               const std::vector<DigestType>& challengeDigestTypes):
+   RADIUSServerAuthManager(dum, dum.dumIncomingTarget(), configurationFile, challengeThirdParties, staticRealm, challengeDigestTypes),
    mAclDb(aclDb),
    mUseAuthInt(useAuthInt),
    mRejectBadNonces(rejectBadNonces)
@@ -50,7 +51,7 @@ ReproRADIUSServerAuthManager::rejectBadNonces() const
    return mRejectBadNonces;
 }
 
-ServerAuthManager::AsyncBool
+AsyncBool
 ReproRADIUSServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
    resip_assert(msg.isRequest());
@@ -68,6 +69,7 @@ ReproRADIUSServerAuthManager::requiresChallenge(const SipMessage& msg)
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock http://danielpocock.com
  * All rights reserved.
  *

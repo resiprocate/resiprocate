@@ -6,7 +6,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/Ack200DoneMessage.hxx"
 #include "repro/UserStore.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 
 #include "resip/stack/TransactionTerminated.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
@@ -18,6 +18,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -82,7 +84,6 @@ Proxy::Proxy(SipStack& stack,
      mConfig(config),
      mRecordRoute(config.getConfigUri("RecordRouteUri", Uri())),
      mRecordRouteForced(config.getConfigBool("ForceRecordRouting", false)),
-     mAssumePath(config.getConfigBool("AssumePath", false)),
      mPAssertedIdentityProcessing(config.getConfigBool("EnablePAssertedIdentityProcessing", false)),
      mNeverStripProxyAuthorizationHeaders(config.getConfigBool("NeverStripProxyAuthorizationHeaders", false)),
 #ifdef PACKAGE_VERSION
@@ -127,15 +128,15 @@ Proxy::~Proxy()
 }
 
 void 
-Proxy::setOptionsHandler(OptionsHandler* handler)
+Proxy::setOptionsHandler(OptionsHandler* handler) noexcept
 {
    mOptionsHandler = handler;
 }
  
 void 
-Proxy::setRequestContextFactory(std::auto_ptr<RequestContextFactory> requestContextFactory)
+Proxy::setRequestContextFactory(std::unique_ptr<RequestContextFactory> requestContextFactory) noexcept
 {
-   mRequestContextFactory = requestContextFactory;
+   mRequestContextFactory = std::move(requestContextFactory);
 }
 
 bool
@@ -145,7 +146,7 @@ Proxy::isShutDown() const
 }
 
 UserStore&
-Proxy::getUserStore()
+Proxy::getUserStore() noexcept
 {
    return mUserStore;
 }
@@ -195,7 +196,7 @@ Proxy::thread()
                   {
                      if(mOptionsHandler)
                      {
-                        std::auto_ptr<SipMessage> resp(new SipMessage);
+                        std::unique_ptr<SipMessage> resp(new SipMessage);
                         Helper::makeResponse(*resp,*sip,200);
                         if(mOptionsHandler->onOptionsRequest(*sip, *resp))
                         {
@@ -206,7 +207,7 @@ Proxy::thread()
                      }
                      else if(sip->header(h_RequestLine).uri().user().empty())
                      {
-                        std::auto_ptr<SipMessage> resp(new SipMessage);
+                        std::unique_ptr<SipMessage> resp(new SipMessage);
                         Helper::makeResponse(*resp,*sip,200);
 
                         if(resip::InteropHelper::getOutboundSupported())
@@ -230,7 +231,7 @@ Proxy::thread()
                   {
                      //Malformed Max-Forwards! (Maybe we can be lenient and set
                      // it to 70...)
-                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip,400));
+                     std::unique_ptr<SipMessage> response(Helper::makeResponse(*sip,400));
                      response->header(h_StatusLine).reason()="Malformed Max-Forwards";
                      mStack.send(*response,this);
                      delete sip;
@@ -247,12 +248,12 @@ Proxy::thread()
                   {
                      if (sip->header(h_RequestLine).method() != OPTIONS)
                      {
-                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
+                     std::unique_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
                      mStack.send(*response, this);
                      }
                      else  // If the request is an OPTIONS, send an appropriate response
                      {
-                        std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 200));
+                        std::unique_ptr<SipMessage> response(Helper::makeResponse(*sip, 200));
                         mStack.send(*response, this);                        
                      }
                      // in either case get rid of the request and process the next one
@@ -262,7 +263,7 @@ Proxy::thread()
 
                   if(!sip->empty(h_ProxyRequires))
                   {
-                     std::auto_ptr<SipMessage> response(0);
+                     std::unique_ptr<SipMessage> response;
 
                      for(Tokens::iterator i=sip->header(h_ProxyRequires).begin();
                            i!=sip->header(h_ProxyRequires).end();
@@ -271,7 +272,7 @@ Proxy::thread()
                         if(!i->isWellFormed() || 
                            !mSupportedOptions.count(i->value()) )
                         {
-                           if(!response.get())
+                           if(!response)
                            {
                               response.reset(Helper::makeResponse(*sip, 420, "Bad extension"));
                            }
@@ -279,7 +280,7 @@ Proxy::thread()
                         }
                      }
 
-                     if(response.get())
+                     if(response)
                      {
                         mStack.send(*response, this);
                         delete sip;
@@ -303,7 +304,7 @@ Proxy::thread()
                      {
                         try
                         {
-                           i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                           i->second->process(std::unique_ptr<resip::SipMessage>(sip));
                         }
                         catch(resip::BaseException& e)
                         {
@@ -350,7 +351,7 @@ Proxy::thread()
                      // RequestContext 
                      try
                      {
-                        context->process(std::auto_ptr<resip::SipMessage>(sip));
+                        context->process(std::unique_ptr<resip::SipMessage>(sip));
                      }
                      catch(resip::BaseException& e)
                      {
@@ -377,7 +378,7 @@ Proxy::thread()
                         //DebugLog (<< "RequestContexts: " << InserterP(mServerRequestContexts));  For a busy proxy - this generates a HUGE log statement!
                         try
                         {
-                           context->process(std::auto_ptr<resip::SipMessage>(sip));
+                           context->process(std::unique_ptr<resip::SipMessage>(sip));
                         }
                         catch(resip::BaseException& e)
                         {
@@ -414,7 +415,7 @@ Proxy::thread()
                   {
                      try
                      {
-                        i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                        i->second->process(std::unique_ptr<resip::SipMessage>(sip));
                      }
                      catch(resip::BaseException& e)
                      {
@@ -447,7 +448,7 @@ Proxy::thread()
                   bool eraseThisTid =  (dynamic_cast<Ack200DoneMessage*>(app)!=0);
                   try
                   {
-                     i->second->process(std::auto_ptr<resip::ApplicationMessage>(app));
+                     i->second->process(std::unique_ptr<resip::ApplicationMessage>(app));
                   }
                   catch(resip::BaseException& e)
                   {
@@ -461,8 +462,24 @@ Proxy::thread()
                }
                else
                {
-                  InfoLog (<< "No matching request context...ignoring " << *app);
-                  delete app;
+                   RequestContextMap::iterator i = mClientRequestContexts.find(tid);
+                   if (i != mClientRequestContexts.end())
+                   {
+                       DebugLog(<< "Sending " << *app << " to " << *(i->second));
+                       try
+                       {
+                           i->second->process(std::unique_ptr<resip::ApplicationMessage>(app));
+                       }
+                       catch (resip::BaseException &e)
+                       {
+                           ErrLog(<< "Uncaught exception in process: " << e);
+                       }
+                   }
+                   else
+                   {
+                       InfoLog(<< "No matching request context...ignoring " << *app);
+                       delete app;
+                   }
                }
             }
             else if (term)
@@ -557,7 +574,7 @@ Proxy::addClientTransaction(const Data& transactionId, RequestContext* rc)
 }
 
 void
-Proxy::postTimerC(std::auto_ptr<TimerCMessage> tc)
+Proxy::postTimerC(std::unique_ptr<TimerCMessage> tc)
 {
    if(mTimerC > 0)
    {
@@ -567,7 +584,7 @@ Proxy::postTimerC(std::auto_ptr<TimerCMessage> tc)
 }
 
 void
-Proxy::postMS(std::auto_ptr<resip::ApplicationMessage> msg, int msec)
+Proxy::postMS(std::unique_ptr<resip::ApplicationMessage> msg, int msec)
 {
    mStack.postMS(*msg,msec,this);
 }
@@ -586,7 +603,6 @@ Proxy::isMyUri(const Uri& uri) const
    if(!ret)
    {
       ret = isMyDomain(uri.host());
-
       if(ret) 
       {
          // check if we are listening on the specified port
@@ -600,6 +616,10 @@ Proxy::isMyUri(const Uri& uri) const
          {
             ret = mStack.isMyPort(uri.port());
          }
+      }
+      if (!ret)
+      {
+         ret = isUriTransportRecordRoute(uri);
       }
    }
    DebugLog( << "Proxy::isMyUri " << uri << " " << ret);
@@ -617,6 +637,27 @@ void Proxy::removeTransportRecordRoute(unsigned int transportKey)
 {
    Lock lock(mTransportRecordRouteMutex);
    mTransportRecordRoutes.erase(transportKey);
+}
+
+bool
+Proxy::isUriTransportRecordRoute(const Uri& uri) const
+{
+   Lock lock(mTransportRecordRouteMutex);
+   for (const auto& pair : mTransportRecordRoutes)
+   {
+      if (pair.second.uri().host() == uri.host() &&
+          pair.second.uri().port() == uri.port())
+      {
+         if (pair.second.uri().exists(p_transport) && uri.exists(p_transport))
+         {
+            //InfoLog(<< "Proxy::isUriTransportRecordRoute: recordRoute(with transport)=" << pair.second.uri() << ", uri=" << uri);
+            return pair.second.uri().param(p_transport) == uri.param(p_transport);
+         }
+         //InfoLog(<< "Proxy::isUriTransportRecordRoute: recordRoute=" << pair.second.uri() << ", uri=" << uri);
+         return true;
+      }
+   }
+   return false;
 }
 
 const resip::NameAddr& 

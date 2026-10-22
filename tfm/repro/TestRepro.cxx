@@ -17,6 +17,7 @@
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 #include "rutil/GeneralCongestionManager.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "tfm/repro/TestRepro.hxx"
@@ -30,7 +31,7 @@ using namespace repro;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
+TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args, int timerC)
 {
    createDataStore(db);
 
@@ -48,74 +49,14 @@ TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
    insertConfigValue("QValueMsBetweenForkGroups", "5000");
    insertConfigValue("QValueMsBeforeCancel", "5000");
 
+   insertConfigValue("TimerC", Data(timerC).c_str());
+
    insertConfigValue("ForceRecordRouting", "true");
    //insertConfigValue("RecordRouteUri", "sip:127.0.0.1:5060");  // Set below per transport
 }
 
-static ProcessorChain&  
-makeRequestProcessorChain(ProcessorChain& chain, 
-                          ProxyConfig& config,
-                          Dispatcher* authRequestDispatcher,
-                          RegistrationPersistenceManager& regData,
-                          SipStack* stack)
-{
-   ProcessorChain* locators = new ProcessorChain(Processor::REQUEST_CHAIN);
-   
-   ProcessorChain* authenticators = new ProcessorChain(Processor::REQUEST_CHAIN);
-   
-   IsTrustedNode* isTrusted = new IsTrustedNode(config);
-   authenticators->addProcessor(std::auto_ptr<Processor>(isTrusted));
-
-   DigestAuthenticator* da = new DigestAuthenticator(config, authRequestDispatcher);
-   authenticators->addProcessor(std::auto_ptr<Processor>(da)); 
-
-   StrictRouteFixup* srf = new StrictRouteFixup;
-   locators->addProcessor(std::auto_ptr<Processor>(srf));
-
-   AmIResponsible* isme = new AmIResponsible;
-   locators->addProcessor(std::auto_ptr<Processor>(isme));
-      
-   StaticRoute* sr = new StaticRoute(config);
-   locators->addProcessor(std::auto_ptr<Processor>(sr));
- 
-   LocationServer* ls = new LocationServer(config, regData, authRequestDispatcher);
-   locators->addProcessor(std::auto_ptr<Processor>(ls));
- 
-   chain.addProcessor(std::auto_ptr<Processor>(authenticators));
-   chain.addProcessor(std::auto_ptr<Processor>(locators));
-   return chain;
-}
-
-static ProcessorChain&  
-makeResponseProcessorChain(ProcessorChain& chain,
-                           RegistrationPersistenceManager& regData) 
-{
-   ProcessorChain* lemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
-
-   OutboundTargetHandler* ob = new OutboundTargetHandler(regData);
-   lemurs->addProcessor(std::auto_ptr<Processor>(ob));
-
-   chain.addProcessor(std::auto_ptr<Processor>(lemurs));
-   return chain;
-}
-
-static ProcessorChain&  
-makeTargetProcessorChain(ProcessorChain& chain, ProxyConfig& config) 
-{
-   ProcessorChain* baboons = new ProcessorChain(Processor::TARGET_CHAIN);
-
-   QValueTargetHandler* qval =  new QValueTargetHandler(config);
-   baboons->addProcessor(std::auto_ptr<Processor>(qval));
-   
-   SimpleTargetHandler* smpl = new SimpleTargetHandler;
-   baboons->addProcessor(std::auto_ptr<Processor>(smpl));
-   
-   chain.addProcessor(std::auto_ptr<Processor>(baboons));
-   return chain;
-}
-
-static Uri  
-makeUri(const resip::Data& domain, int port)
+static Uri
+makeUri(const resip::Data &domain, int port)
 {
    Uri uri;
    uri.host() = domain;
@@ -131,7 +72,8 @@ TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& host, 
                      const CommandLineParser& args, 
                      const resip::Data& nwInterface,
-                     Security* security) : 
+                     Security* security,
+                     int timerC) : 
    TestProxy(name, host, args.mUdpPorts, args.mTcpPorts, args.mTlsPorts, args.mDtlsPorts, nwInterface),
    mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
    mInterruptor(new EventThreadInterruptor(*mPollGrp)),
@@ -147,10 +89,10 @@ TestRepro::TestRepro(const resip::Data& name,
 #endif
    mStackThread(new EventStackThread(*mStack, *mInterruptor, *mPollGrp)),
    mRegistrar(),
-   mProfile(new MasterProfile),
+   mProfile(std::make_shared<MasterProfile>()),
    mDb(new BerkeleyDb),
-   mConfig(mDb, args),
-   mAuthRequestDispatcher(new Dispatcher(std::auto_ptr<Worker>(new UserAuthGrabber(mConfig.getDataStore()->mUserStore)), 
+   mConfig(mDb, args, timerC),
+   mAuthRequestDispatcher(new Dispatcher(std::unique_ptr<Worker>(new UserAuthGrabber(*mConfig.getDataStore())), 
                                          mStack, 2)),
    mRequestProcessors(Processor::REQUEST_CHAIN),
    mResponseProcessors(Processor::RESPONSE_CHAIN),
@@ -188,7 +130,7 @@ TestRepro::TestRepro(const resip::Data& name,
                            nwInterface,
                            resip::Data::Empty,
                            resip::Data::Empty,
-                           resip::SecurityTypes::TLSv1,
+                           resip::SecurityTypes::DynamicTLS,
                            0);
       NameAddr rr;
       rr.uri().host() = "127.0.0.1";
@@ -207,7 +149,7 @@ TestRepro::TestRepro(const resip::Data& name,
                            nwInterface,
                            resip::Data::Empty,
                            resip::Data::Empty,
-                           resip::SecurityTypes::TLSv1,
+                           resip::SecurityTypes::DynamicTLS,
                            0);
       NameAddr rr;
       rr.uri().host() = "127.0.0.1";
@@ -228,7 +170,7 @@ TestRepro::TestRepro(const resip::Data& name,
                            "0.0.0.0",// multihomed
                            resip::Data::Empty,
                            resip::Data::Empty,
-                           resip::SecurityTypes::TLSv1,
+                           resip::SecurityTypes::DynamicTLS,
                            0);
       NameAddr rr;
       rr.uri().host() = "127.0.0.1";
@@ -246,14 +188,14 @@ TestRepro::TestRepro(const resip::Data& name,
    
    try
    {
-      Transport *t = mStack->addTransport(TLS, 
-                           5061, 
+      Transport *t = mStack->addTransport(TLS,
+                           5061,
                            V4, 
                            StunDisabled, 
                            nwInterface, 
                            "localhost",
                            resip::Data::Empty,
-                           resip::SecurityTypes::TLSv1,
+                           resip::SecurityTypes::DynamicTLS,
                            0);
       NameAddr rr;
       rr.uri().host() = "localhost";
@@ -292,19 +234,25 @@ TestRepro::TestRepro(const resip::Data& name,
                                         methodList) );
    mDum->setMessageFilterRuleList(ruleList);
     
-   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(*mDum, 
-                                                                   mAuthRequestDispatcher,
-                                                                   mConfig.getDataStore()->mAclStore, 
-                                                                   true, 
-                                                                   false,
-                                                                   true));
-   mDum->setServerAuthManager(authMgr);    
+   auto authMgr = std::make_shared<ReproServerAuthManager>(*mDum,
+                                                           mAuthRequestDispatcher,
+                                                           mConfig.getDataStore()->mAclStore,
+                                                           true,
+                                                           false,
+                                                           true,
+                                                           Data::Empty,
+#ifdef USE_SSL
+                                                           std::vector<resip::DigestType>{ resip::SHA512_256, resip::SHA256, resip::MD5 });
+#else
+                                                           std::vector<DigestType>());
+#endif
+   mDum->setServerAuthManager(authMgr);
 
    mStack->registerTransactionUser(mProxy);
 
    if(args.mUseCongestionManager)
    {
-      mCongestionManager.reset(new GeneralCongestionManager(
+      mCongestionManager = std::unique_ptr<GeneralCongestionManager>(new GeneralCongestionManager(
                                           GeneralCongestionManager::WAIT_TIME, 
                                           200));
       mStack->setCongestionManager(mCongestionManager.get());
@@ -322,6 +270,8 @@ TestRepro::TestRepro(const resip::Data& name,
 
 TestRepro::~TestRepro()
 {
+   mQValueTargetHandler = nullptr;
+
    mDumThread->shutdown();
    mDumThread->join();
    delete mAuthRequestDispatcher;
@@ -339,6 +289,70 @@ TestRepro::~TestRepro()
    // Note:  mStack descructor will delete mSecurity
   
    delete mDb;
+}
+
+ProcessorChain &
+TestRepro::makeRequestProcessorChain(ProcessorChain &chain,
+                                     ProxyConfig &config,
+                                     Dispatcher *authRequestDispatcher,
+                                     RegistrationPersistenceManager &regData,
+                                     SipStack *stack)
+{
+   ProcessorChain *locators = new ProcessorChain(Processor::REQUEST_CHAIN);
+
+   ProcessorChain *authenticators = new ProcessorChain(Processor::REQUEST_CHAIN);
+
+   IsTrustedNode *isTrusted = new IsTrustedNode(config);
+   authenticators->addProcessor(std::unique_ptr<Processor>(isTrusted));
+
+   DigestAuthenticator *da = new DigestAuthenticator(config, authRequestDispatcher);
+   authenticators->addProcessor(std::unique_ptr<Processor>(da));
+
+   StrictRouteFixup *srf = new StrictRouteFixup;
+   locators->addProcessor(std::unique_ptr<Processor>(srf));
+
+   AmIResponsible *isme = new AmIResponsible;
+   locators->addProcessor(std::unique_ptr<Processor>(isme));
+
+   StaticRoute *sr = new StaticRoute(config);
+   locators->addProcessor(std::unique_ptr<Processor>(sr));
+
+   LocationServer *ls = new LocationServer(config, regData, authRequestDispatcher);
+   locators->addProcessor(std::unique_ptr<Processor>(ls));
+
+   chain.addProcessor(std::unique_ptr<Processor>(authenticators));
+   chain.addProcessor(std::unique_ptr<Processor>(locators));
+   return chain;
+}
+
+ProcessorChain &
+TestRepro::makeResponseProcessorChain(ProcessorChain &chain,
+                                      RegistrationPersistenceManager &regData)
+{
+   ProcessorChain *lemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
+
+   OutboundTargetHandler *ob = new OutboundTargetHandler(regData);
+   lemurs->addProcessor(std::unique_ptr<Processor>(ob));
+
+   chain.addProcessor(std::unique_ptr<Processor>(lemurs));
+   return chain;
+}
+
+ProcessorChain &
+TestRepro::makeTargetProcessorChain(ProcessorChain &chain, ProxyConfig &config)
+{
+   ProcessorChain *baboons = new ProcessorChain(Processor::TARGET_CHAIN);
+
+   QValueTargetHandler *qval = new QValueTargetHandler(config);
+   baboons->addProcessor(std::unique_ptr<Processor>(qval));
+   // Store QValueTargetHandler pointer for dynamic behaviour adjustment from within test cases
+   mQValueTargetHandler = qval;
+
+   SimpleTargetHandler *smpl = new SimpleTargetHandler;
+   baboons->addProcessor(std::unique_ptr<Processor>(smpl));
+
+   chain.addProcessor(std::unique_ptr<Processor>(baboons));
+   return chain;
 }
 
 void
@@ -377,9 +391,10 @@ TestRepro::addRoute(const resip::Data& matchingPattern,
 void 
 TestRepro::deleteRoute(const resip::Data& matchingPattern, 
                        const resip::Data& method, 
-                       const resip::Data& event)
+                       const resip::Data& event,
+                       int priority)
 {
-   mConfig.getDataStore()->mRouteStore.eraseRoute(method, event, matchingPattern);
+   mConfig.getDataStore()->mRouteStore.eraseRoute(method, event, matchingPattern, priority);
 }
 
 bool
@@ -406,3 +421,15 @@ TestRepro::deleteTrustedHost(const resip::Data& host, resip::TransportType trans
        static_cast<const short&>(transport));
 }
 
+void 
+TestRepro::setQValueTargetHandlerCancelGroups(bool enabled)
+{
+    if (mQValueTargetHandler)
+    {
+        mQValueTargetHandler->setCancelBetweenForkGroups(enabled);
+    }
+    else if(!enabled) // Only log error if failed to disable (enabled by default)
+    {
+        ErrLog(<< "Unable to adjust QValueCancelBetweenForkGroups setting: QValueTargetHandler is NULL");
+    }
+}

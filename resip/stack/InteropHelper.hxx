@@ -12,6 +12,9 @@ namespace resip
 class InteropHelper
 {
    public:
+      static bool getRportEnabled() {return rport;}
+      static void setRportEnabled(bool enable) {rport=enable;}
+
       static int getOutboundVersion() {return theOutboundVersion;}
       static void setOutboundVersion(int version) {theOutboundVersion=version;}
       static bool getOutboundSupported() {return isOutboundSupported;}
@@ -40,6 +43,17 @@ class InteropHelper
       static bool getRRTokenHackEnabled(){return useRRTokenHack;}
       static void setRRTokenHackEnabled(bool enabled) {useRRTokenHack=enabled;}
       
+      // If EnableFlowTokens is enabled, then by default flow tokens are only used for inbound
+      // Record-Routes if the client is directly connected(ie: has only a single Via header).If you
+      // enable this setting then inbound flow tokens will be used for non-directly connected clients
+      // as well(ie: any number of Via headers).
+      // This is particularly useful for TLS based connections between two SIP proxies, to help ensure
+      // a single TLS connection per dialog.Avoiding an issue where a UAC request may be using an IP
+      // addresses in it's TLS based Record-Route but is presenting a certificate that does not contain
+      // the IP address.
+      static bool getAllowInboundFlowTokensForNonDirectClients() { return allowInboundFlowTokensForNonDirectClients; }
+      static void setAllowInboundFlowTokensForNonDirectClients(bool enabled) { allowInboundFlowTokensForNonDirectClients = enabled; }
+
       enum ClientNATDetectionMode
       {
          ClientNATDetectionDisabled,
@@ -71,17 +85,29 @@ class InteropHelper
       static bool getAssumeFirstHopSupportsOutboundEnabled(){return assumeFirstHopSupportsOutbound;}
       static void setAssumeFirstHopSupportsOutboundEnabled(bool enabled) {assumeFirstHopSupportsOutbound=enabled;}
 
+      // AssumeFirstHopSupportsOutbound only relaxes the Outbound logic for registrations from clients who send the
+      // instance-id and reg-id parameters.  If the registrations pass through an edge proxy or SBC with the
+      // useRRTokenHack or clientNATDetection hacks enabled before reaching the registration server,
+      // the registration server can also potentially accept registrations that have come through that proxy with Path headers.
+      // If this setting is enabled, repro will assume the first hop supports outbound or flow token hacks
+      // and will not reject registrations with the 439 error.
+      static bool getAssumeFirstHopSupportsFlowTokensEnabled(){return assumeFirstHopSupportsFlowTokens;}
+      static void setAssumeFirstHopSupportsFlowTokensEnabled(bool enabled) {assumeFirstHopSupportsFlowTokens=enabled;}
+
    private:
       InteropHelper();
       ~InteropHelper();
       
+      static bool rport;
       static int theOutboundVersion;
       static bool isOutboundSupported;
       static unsigned int flowTimerSeconds;
       static unsigned int flowTimerGracePeriodSeconds;
       static bool useRRTokenHack;
+      static bool allowInboundFlowTokensForNonDirectClients;
       static ClientNATDetectionMode clientNATDetection;
       static bool assumeFirstHopSupportsOutbound;
+      static bool assumeFirstHopSupportsFlowTokens;
 };
 }
 

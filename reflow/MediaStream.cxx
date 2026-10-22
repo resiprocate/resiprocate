@@ -2,8 +2,6 @@
 #include "config.h"
 #endif
 
-#include <boost/function.hpp>
-
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/Timer.hxx>
@@ -22,7 +20,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
-MediaStream::MediaStream(asio::io_service& ioService,
+MediaStream::MediaStream(asio::io_context& ioService,
 #ifdef USE_SSL
                          asio::ssl::context& sslContext,
 #endif
@@ -36,7 +34,11 @@ MediaStream::MediaStream(asio::io_service& ioService,
                          const char* natTraversalServerHostname, 
                          unsigned short natTraversalServerPort, 
                          const char* stunUsername,
-                         const char* stunPassword) :
+                         const char* stunPassword,
+                         bool forceCOMedia,
+                         std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
+                         std::shared_ptr<FlowContext> context,
+                         bool validateTlsServerHostname) :
 #ifdef USE_SSL
    mDtlsFactory(dtlsFactory),
 #endif  
@@ -47,6 +49,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
    mNatTraversalServerPort(natTraversalServerPort),
    mStunUsername(stunUsername),
    mStunPassword(stunPassword),
+   mForceCOMedia(forceCOMedia),
+   mValidateTlsServerHostname(validateTlsServerHostname),
    mMediaStreamHandler(mediaStreamHandler)
 {
    // Rtcp is enabled if localRtcpBinding transport type != None
@@ -60,7 +64,10 @@ MediaStream::MediaStream(asio::io_service& ioService,
 #endif
                           RTP_COMPONENT_ID, 
                           localRtpBinding, 
-                          *this);
+                          *this,
+                          mForceCOMedia,
+                          nullptr,
+                          context);
 
       mRtcpFlow = new Flow(ioService, 
 #ifdef USE_SSL
@@ -68,7 +75,10 @@ MediaStream::MediaStream(asio::io_service& ioService,
 #endif
                            RTCP_COMPONENT_ID,
                            localRtcpBinding, 
-                           *this);
+                           *this,
+                           mForceCOMedia,
+                           rtcpEventLoggingHandler,
+                           context);
 
       mRtpFlow->activateFlow(StunMessage::PropsPortPair);
 
@@ -86,7 +96,10 @@ MediaStream::MediaStream(asio::io_service& ioService,
 #endif
                           RTP_COMPONENT_ID,
                           localRtpBinding, 
-                          *this);
+                          *this,
+                          mForceCOMedia,
+                          nullptr,
+                          context);
       mRtpFlow->activateFlow(StunMessage::PropsPortEven);
       mRtcpFlow = 0;
    }
@@ -116,7 +129,7 @@ MediaStream::~MediaStream()
 }
 
 bool 
-MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen)
+MediaStream::createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, size_t keyLen)
 {
    if(keyLen != SRTP_MASTER_KEY_LEN)
    {
@@ -124,7 +137,7 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
       return false;
    }
 
-   err_status_t status;
+   srtp_err_status_t status;
    Lock lock(mMutex);
    if(mSRTPSessionOutCreated)
    {
@@ -150,11 +163,11 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
    mCryptoSuiteOut = cryptoSuite;
    switch(cryptoSuite)
    {
-   case SRTP_AES_CM_128_HMAC_SHA1_80:
+   case resip::MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_80:
       crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyOut.rtp);
       crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyOut.rtcp);
       break;
-   case SRTP_AES_CM_128_HMAC_SHA1_32:
+   case resip::MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32:
       crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyOut.rtp);
       crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyOut.rtcp);
       break;
@@ -181,7 +194,7 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
 }
 
 bool 
-MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen)
+MediaStream::createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, size_t keyLen)
 {
    if(keyLen != SRTP_MASTER_KEY_LEN)
    {
@@ -189,7 +202,7 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
       return false;
    }
 
-   err_status_t status;
+   srtp_err_status_t status;
    Lock lock(mMutex);
    if(mSRTPSessionInCreated)
    {
@@ -215,11 +228,11 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
    mCryptoSuiteIn = cryptoSuite;
    switch(cryptoSuite)
    {
-   case SRTP_AES_CM_128_HMAC_SHA1_80:
+   case resip::MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_80:
       crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyIn.rtp);
       crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyIn.rtcp);
       break;
-   case SRTP_AES_CM_128_HMAC_SHA1_32:
+   case resip::MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32:
       crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyIn.rtp);
       crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyIn.rtcp);
       break;
@@ -245,11 +258,11 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
    return true;
 }
 
-err_status_t 
+srtp_err_status_t
 MediaStream::srtpProtect(void* data, int* size, bool rtcp)
 {
    Lock lock(mMutex);
-   err_status_t status = err_status_no_ctx;
+   srtp_err_status_t status = srtp_err_status_no_ctx;
    if(mSRTPSessionOutCreated)
    {
       if(rtcp)
@@ -264,11 +277,11 @@ MediaStream::srtpProtect(void* data, int* size, bool rtcp)
    return status;
 }
 
-err_status_t 
+srtp_err_status_t
 MediaStream::srtpUnprotect(void* data, int* size, bool rtcp)
 {
    Lock lock(mMutex);
-   err_status_t status = err_status_no_ctx;
+   srtp_err_status_t status = srtp_err_status_no_ctx;
    if(mSRTPSessionInCreated)
    {
       if(rtcp)
@@ -316,6 +329,7 @@ MediaStream::onFlowError(unsigned int componentId, unsigned int errorCode)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

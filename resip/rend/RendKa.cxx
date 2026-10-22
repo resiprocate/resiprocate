@@ -66,7 +66,7 @@ bool operator<(const RendKaAssoc& a, const RendKaAssoc& b)
 
 struct RendKaConn 
 {
-   bool operator() (const RendKaAssocPtr& a, const RendKaAssocPtr& b) 
+   bool operator()(const RendKaAssocPtr& a, const RendKaAssocPtr& b) const
    {
       return *a < *b;
    }

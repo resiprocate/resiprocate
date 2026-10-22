@@ -2,18 +2,16 @@
 #define CheckPrivacy_hxx
 
 #include "tfm/Event.hxx"
-#include "resip/stack/SipMessage.hxx"                                         
-#include <boost/shared_ptr.hpp>
+#include "resip/stack/SipMessage.hxx"
 
+#include <memory>
 
 class CheckPrivacy
 {
    public:
-      CheckPrivacy()
-      {
-      }
+      CheckPrivacy() = default;
 
-      bool operator()(boost::shared_ptr<Event> event) const;
+      bool operator()(std::shared_ptr<Event> event) const;
 };
 
 #endif

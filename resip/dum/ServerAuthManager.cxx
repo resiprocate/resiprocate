@@ -11,15 +11,22 @@
 #include "resip/stack/Helper.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 using namespace std;
 
-ServerAuthManager::ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, bool challengeThirdParties, const Data& staticRealm) :
+ServerAuthManager::ServerAuthManager(DialogUsageManager& dum, 
+   TargetCommand::Target& target, 
+   bool challengeThirdParties, 
+   const Data& staticRealm,
+   const std::vector<DigestType>& challengeDigestTypes) :
    DumFeature(dum, target),
    mChallengeThirdParties(challengeThirdParties),
-   mStaticRealm(staticRealm)
+   mStaticRealm(staticRealm),
+   mChallengeDigestTypes(challengeDigestTypes)
 {
 }
 
@@ -40,7 +47,7 @@ ServerAuthManager::process(Message* msg)
 
    if (sipMsg)
    {
-      //!dcm! -- unecessary happens in handle
+      //!dcm! -- unnecessary happens in handle
       switch ( handle(sipMsg) )
       {
          case ServerAuthManager::Challenged:
@@ -66,7 +73,7 @@ ServerAuthManager::process(Message* msg)
       InfoLog(<< "ServerAuth got ChallengeInfo " << challengeInfo->brief());
       MessageMap::iterator it = mMessages.find(challengeInfo->getTransactionId());
       resip_assert(it != mMessages.end());
-      std::auto_ptr<SipMessage> sipMsg(it->second);
+      std::unique_ptr<SipMessage> sipMsg(it->second);
       mMessages.erase(it);
 
       if(challengeInfo->isFailed()) 
@@ -74,7 +81,7 @@ ServerAuthManager::process(Message* msg)
         // some kind of failure occurred while checking whether a 
         // challenge is required
         InfoLog(<< "ServerAuth requiresChallenge() async failed");
-        SharedPtr<SipMessage> response(new SipMessage);
+        auto response = std::make_shared<SipMessage>();
         Helper::makeResponse(*response, *sipMsg, 500, "Server Internal Error");
         mDum.send(response);
         return DumFeature::ChainDoneAndEventDone;
@@ -89,7 +96,7 @@ ServerAuthManager::process(Message* msg)
       else 
       {
         // challenge is not required, re-instate original message
-        postCommand(auto_ptr<Message>(sipMsg));
+        postCommand(std::move(sipMsg));
         return FeatureDoneAndEventDone;
       }
    }
@@ -104,7 +111,7 @@ ServerAuthManager::process(Message* msg)
          Message* result = handleUserAuthInfo(userAuth);
          if (result)
          {
-            postCommand(auto_ptr<Message>(result));
+            postCommand(unique_ptr<Message>(result));
             return FeatureDoneAndEventDone;
          }
          else
@@ -134,19 +141,24 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
        (userAuth->getMode() == UserAuthInfo::RetrievedA1 && userAuth->getA1().empty()))
    {
       InfoLog (<< "User unknown " << userAuth->getUser() << " in " << userAuth->getRealm());
-      SharedPtr<SipMessage> response(new SipMessage);
+      auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *requestWithAuth, 404, "User unknown.");
       mDum.send(response);
       onAuthFailure(BadCredentials, *requestWithAuth);
       delete requestWithAuth;
-      return 0;
+      return nullptr;
    }
 
    if (userAuth->getMode() == UserAuthInfo::Error)
    {
       InfoLog (<< "Error in auth procedure for " << userAuth->getUser() << " in " << userAuth->getRealm());
-      SharedPtr<SipMessage> response(new SipMessage);
-      Helper::makeResponse(*response, *requestWithAuth, 503, "Server Error.");
+      int32_t code = 0;
+      resip::Data statusText;
+      userAuth->getErrorInfo(code, statusText);
+
+      auto response = std::make_shared<SipMessage>();
+      Helper::makeResponse(*response, *requestWithAuth, code, statusText);
+
       mDum.send(response);
       onAuthFailure(Error, *requestWithAuth);
       delete requestWithAuth;
@@ -179,7 +191,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
             {
                InfoLog (<< "Authentication nonce badly formed for " << userAuth->getUser());
    
-               SharedPtr<SipMessage> response(new SipMessage);
+               auto response = std::make_shared<SipMessage>();
                Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid nonce");
                mDum.send(response);
                onAuthFailure(InvalidRequest, *requestWithAuth);
@@ -203,7 +215,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
    {
       InfoLog (<< "Nonce expired for " << userAuth->getUser());
 
-      issueChallenge(requestWithAuth);
+      issueChallenge(requestWithAuth, true);
       delete requestWithAuth;
       return 0;
    }
@@ -223,7 +235,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
          InfoLog (<< "User: " << userAuth->getUser() << " at realm: " << userAuth->getRealm() <<
                   " trying to forge request from: " << requestWithAuth->header(h_From).uri());
 
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid user name provided");
          mDum.send(response);
          onAuthFailure(InvalidRequest, *requestWithAuth);
@@ -239,7 +251,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
       InfoLog (<< "Invalid password provided for " << userAuth->getUser() << " in " << userAuth->getRealm());
       InfoLog (<< "  a1 hash of password from db was " << userAuth->getA1() );
 
-      SharedPtr<SipMessage> response(new SipMessage);
+      auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid password provided");
       mDum.send(response);
       onAuthFailure(BadCredentials, *requestWithAuth);
@@ -270,7 +282,7 @@ ServerAuthManager::rejectBadNonces() const
 }
 
 
-ServerAuthManager::AsyncBool
+AsyncBool
 ServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
    if(!mChallengeThirdParties)
@@ -360,7 +372,7 @@ ServerAuthManager::handle(SipMessage* sipMsg)
             // someone has cancelled a non-INVITE transaction or we have a tid collision.
             if(it->second->isRequest() && it->second->method() == INVITE)
             {
-               std::auto_ptr<SipMessage> inviteMsg(it->second);
+               std::unique_ptr<SipMessage> inviteMsg(it->second);
                mMessages.erase(it);  // Remove the INVITE from the message map and respond to it
 
                InfoLog (<< "Received a CANCEL for an INVITE request that we are still waiting on auth "
@@ -368,12 +380,12 @@ ServerAuthManager::handle(SipMessage* sipMsg)
                         << sipMsg->getTransactionId());
 
                // Send 487/Inv
-               SharedPtr<SipMessage> inviteResponse(new SipMessage);
+               auto inviteResponse = std::make_shared<SipMessage>();
                Helper::makeResponse(*inviteResponse, *inviteMsg, 487);  // Request Cancelled
                mDum.send(inviteResponse);
 
                // Send 200/Cancel
-               SharedPtr<SipMessage> cancelResponse(new SipMessage);
+               auto cancelResponse = std::make_shared<SipMessage>();
                Helper::makeResponse(*cancelResponse, *sipMsg, 200);  
                mDum.send(cancelResponse);
 
@@ -426,7 +438,7 @@ ServerAuthManager::handle(SipMessage* sipMsg)
          catch(BaseException& e)
          {
             InfoLog (<< "Invalid auth header provided " << e);
-            SharedPtr<SipMessage> response(new SipMessage);
+            auto response = std::make_shared<SipMessage>();
             Helper::makeResponse(*response, *sipMsg, 400, "Invalid auth header");
             mDum.send(response);
             onAuthFailure(InvalidRequest, *sipMsg);
@@ -457,17 +469,18 @@ ServerAuthManager::issueChallengeIfRequired(SipMessage *sipMsg)
 }
 
 void
-ServerAuthManager::issueChallenge(SipMessage *sipMsg) 
+ServerAuthManager::issueChallenge(SipMessage* sipMsg, bool stale)
 {
-  //assume TransactionUser has matched/repaired a realm
-  SharedPtr<SipMessage> challenge(Helper::makeChallenge(*sipMsg,
-                                                        getChallengeRealm(*sipMsg), 
-                                                        useAuthInt(), 
-                                                        false /*stale*/,
-                                                        proxyAuthenticationMode()));
+   //assume TransactionUser has matched/repaired a realm
+   std::shared_ptr<SipMessage> challenge(Helper::makeChallenge(*sipMsg,
+      getChallengeRealm(*sipMsg),
+      useAuthInt(),
+      stale,
+      proxyAuthenticationMode(),
+      mChallengeDigestTypes));
 
-  InfoLog (<< "Sending challenge to " << sipMsg->brief());
-  mDum.send(challenge);
+   InfoLog(<< "Sending challenge to " << sipMsg->brief());
+   mDum.send(challenge);
 }
 
 void 
@@ -486,6 +499,7 @@ ServerAuthManager::onAuthFailure(AuthFailureReason reason, const SipMessage& msg
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

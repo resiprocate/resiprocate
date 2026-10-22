@@ -7,14 +7,15 @@
 #ifndef DtlsSocket_hxx
 #define DtlsSocket_hxx
 
+#include <chrono>
+#include <functional>
 #include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
 extern "C" 
 {
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp/srtp.h>
-#endif
+#include "../Srtp2Helper.hxx"
 }
 
 #include <openssl/e_os2.h>
@@ -39,6 +40,10 @@ class DtlsSocketContext
       virtual void handshakeCompleted()=0;
       virtual void handshakeFailed(const char *err)=0;
 
+      // The lock the application holds while it uses the socket, if its timers fire on another
+      // thread: the socket's retransmission timer takes it too before it runs (see DtlsTimer::setLock)
+      virtual std::shared_ptr<std::mutex> timerLock() { return nullptr; }
+
    protected:
       DtlsSocket *mSocket;
      
@@ -51,14 +56,10 @@ class DtlsSocketContext
 class SrtpSessionKeys
 {
    public:
-      unsigned char *clientMasterKey;
-      int clientMasterKeyLen;
-      unsigned char *serverMasterKey;
-      int serverMasterKeyLen;
-      unsigned char *clientMasterSalt;
-      int clientMasterSaltLen;
-      unsigned char *serverMasterSalt;
-      int serverMasterSaltLen;
+      std::vector<unsigned char> clientMasterKey;
+      std::vector<unsigned char> serverMasterKey;
+      std::vector<unsigned char> clientMasterSalt;
+      std::vector<unsigned char> serverMasterSalt;
 };
 
 class DtlsSocketTimer;
@@ -70,17 +71,29 @@ class DtlsSocket
       ~DtlsSocket(); 
 
       // Inspects packet to see if it's a DTLS packet, if so continue processing
-      bool handlePacketMaybe(const unsigned char* bytes, unsigned int len);
+      bool handlePacketMaybe(const unsigned char* bytes, size_t len);
       
-      // Called by DtlSocketTimer when timer expires - causes a retransmission (forceRetransmit)
+      // Called by DtlsSocketTimer when the retransmission timer expires: retransmits the last
+      // flight if OpenSSL's timer has expired (see handleTimeout)
       void expired(DtlsSocketTimer*);
       
-      // Retrieves the finger print of the certificate presented by the remote party
-      bool getRemoteFingerprint(char *fingerprint);
+      // Size of the buffer getMyCertFingerprint and computeFingerprint write to: a SHA-256
+      // fingerprint, as uppercase hex pairs separated by colons
+      static const size_t FingerprintSize = 32 * 3;
 
-      // Retrieves the finger print of the certificate presented by the remote party and checks
-      // it agains the passed in certificate
-      bool checkFingerprint(const char* fingerprint, unsigned int len);
+      // Retrieves the finger print of the certificate presented by the remote party, computed with
+      // the hash function an SDP fingerprint names (see checkFingerprint) - returns false if there is
+      // no certificate, the hash function isn't supported, or the fingerprint doesn't fit in
+      // fingerprintSize (EVP_MAX_MD_SIZE * 3 is always enough)
+      bool getRemoteFingerprint(const char* hashFunction, char *fingerprint, size_t fingerprintSize);
+
+      // Checks the certificate presented by the remote party against an SDP fingerprint
+      // (RFC 8122): hashFunction is its hash function textual name (eg. "sha-256"), and
+      // fingerprint its uppercase or lowercase hex pairs separated by colons
+      bool checkFingerprint(const char* hashFunction, const char* fingerprint);
+
+      // Returns true if checkFingerprint supports this hash function textual name
+      static bool isFingerprintHashFunctionSupported(const char* hashFunction);
 
       // Retrieves the finger print of our local certificate, same as getMyCertFingerprint from DtlsFactory
       void getMyCertFingerprint(char *fingerprint);
@@ -91,51 +104,116 @@ class DtlsSocket
       // Returns the socket type: Client or Server
 	   SocketType getSocketType() {return mSocketType;} 
 
-      // Retreives the SRTP session keys from the Dtls session
+      // Retreives the SRTP session keys from the Dtls session, sized for the negotiated SRTP
+      // profile - empty if no profile was negotiated or libsrtp doesn't support it
       SrtpSessionKeys getSrtpSessionKeys();
 
-      // Utility fn to compute a certificates fingerprint
+      // Utility fn to compute a certificate's SHA-256 fingerprint into a buffer of FingerprintSize
       static void computeFingerprint(X509 *cert, char *fingerprint);
- 
-      // Retrieves the DTLS negotiated SRTP profile - may return 0 if profile selection failed
-      SRTP_PROTECTION_PROFILE* getSrtpProfile();      
 
-      // Creates SRTP session policies appropriately based on socket type (client vs server) and keys
-      // extracted from the DTLS handshake process
-      void createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy);      
+      // Utility fn to compute a certificate's fingerprint with the given digest - returns false
+      // if it doesn't fit in fingerprintSize (EVP_MAX_MD_SIZE * 3 is always enough)
+      static bool computeFingerprint(X509 *cert, const EVP_MD* digest, char *fingerprint, size_t fingerprintSize);
+
+      // Retrieves the DTLS negotiated SRTP profile - may return 0 if profile selection failed
+      SRTP_PROTECTION_PROFILE* getSrtpProfile();
+
+      // Creates SRTP session policies appropriately based on socket type (client vs server), the
+      // negotiated SRTP profile and keys extracted from the DTLS handshake process.  Returns false
+      // if no SRTP profile was negotiated or libsrtp doesn't support it.  On success the policies'
+      // key members point to memory allocated with new[]: the caller must delete[] them once
+      // it has created its SRTP sessions (srtp_create copies them).
+      bool createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy);
       
       // returns true if the DTLS handshake has completed
       bool handshakeCompleted() { return mHandshakeCompleted; }
+
+      // returns true if the DTLS handshake has failed
+      bool handshakeFailed() const { return mHandshakeFailed; }
+
+      // How long since the socket was created - for a server socket, since the peer's ClientHello
+      std::chrono::steady_clock::duration getAge() const { return std::chrono::steady_clock::now() - mCreated; }
 
       DtlsSocketContext* getSocketContext() { return mSocketContext.get(); }
 
    private:
       friend class DtlsFactory;
+      friend class DtlsListener;
 
-      // Causes an immediate handshake iteration to happen, which will retransmit the handshake
-      void forceRetransmit();     
+      // The retransmission timer has fired: retransmits the last flight (DTLSv1_handle_timeout),
+      // or reports the handshake as failed once OpenSSL gives up
+      void handleTimeout();
+
+      // Handles a packet after the handshake: eg. the peer's last flight again, if our final one
+      // was lost, which OpenSSL answers by retransmitting ours
+      void handlePacketAfterHandshake();
+
+      // Sends what OpenSSL wrote to mOutBio
+      void writeOutput();
+
+      // Sets mReadTimer to fire when OpenSSL's retransmission timer expires (DTLSv1_get_timeout),
+      // or clears it if no timer is running
+      void scheduleTimer();
 
       // Creates an SSL socket, and if client sets state to connect_state and if server sets state to accept_state.  Sets SSL BIO's.
-      DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType);
+      DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType);
+
+      // A server socket continuing the handshake DtlsListener started on acceptedSsl, with peer
+      DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, SSL* acceptedSsl, const std::string& peer);
+
+      // Creates the SSL object for a socket of the given type, with its BIOs
+      static SSL* newSsl(DtlsFactory* factory, SocketType type);
 
       // Give CPU cyces to the handshake process - checks current state and acts appropraitely
       void doHandshakeIteration();
 
-      // returns the amount of time between handshake retranmssions (500ms)
-      int getReadTimeout();
-      
       // Internals
-      std::auto_ptr<DtlsSocketContext> mSocketContext;
+      std::unique_ptr<DtlsSocketContext> mSocketContext;
       DtlsFactory* mFactory;
-      DtlsTimer *mReadTimer;  // Timer used during handshake process
+      std::shared_ptr<DtlsTimer> mReadTimer;  // Retransmission timer, during the handshake
       
-      // OpenSSL context data    
-      SSL *mSsl;      
+      // OpenSSL context data
+      SSL *mSsl;
       BIO *mInBio;
       BIO *mOutBio;
       
       SocketType mSocketType;
-      bool mHandshakeCompleted;      
+      bool mHandshakeCompleted;
+      bool mHandshakeFailed;
+      std::chrono::steady_clock::time_point mCreated;
+
+      // How long a server socket's handshake has left before it fails (DtlsFactory::
+      // setServerHandshakeTimeout), or duration::max() if there's no limit
+      std::chrono::steady_clock::duration serverHandshakeTimeLeft() const;
+      std::string mCookiePeer;  // the peer of a socket created by DtlsListener, for the cookie callbacks
+};
+
+// Stands in front of the server DtlsSockets for one local address, doing the cookie exchange of
+// RFC 6347 section 4.2.1: a ClientHello from a new peer is answered with a HelloVerifyRequest and
+// nothing is kept for the peer; only a ClientHello that returns a valid cookie - which proves the
+// peer receives at its address - gets a server DtlsSocket.  So packets from spoofed addresses
+// can't make us keep state, or answer them with a full handshake flight (amplification).
+class DtlsListener
+{
+   public:
+      ~DtlsListener();
+
+      // Handles a DTLS packet from peer (anything that identifies its address and port, eg.
+      // "192.0.2.1:5004"), which has no DtlsSocket yet.  Returns a new server DtlsSocket, with the
+      // context makeContext() returns, once peer's ClientHello carries a valid cookie - the socket
+      // has already handled that ClientHello.  Otherwise returns null, with response holding what
+      // to send back to peer (a HelloVerifyRequest), if anything.
+      DtlsSocket* handlePacket(const unsigned char* bytes, size_t len, const std::string& peer,
+                               std::vector<unsigned char>& response,
+                               const std::function<std::unique_ptr<DtlsSocketContext>()>& makeContext);
+
+   private:
+      friend class DtlsFactory;
+      explicit DtlsListener(DtlsFactory* factory);
+
+      DtlsFactory* mFactory;
+      SSL* mSsl;          // the SSL DTLSv1_listen runs on, handed to the socket it creates
+      std::string mPeer;  // the peer of the packet being handled, for the cookie callbacks
 };
 
 }
@@ -144,7 +222,8 @@ class DtlsSocket
 #endif 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

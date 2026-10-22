@@ -11,7 +11,7 @@
 #include "resip/stack/SdpContents.hxx"
 #include "rutil/ThreadIf.hxx"
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 static const int MaxBufferSize = 8192;
 typedef resip::SdpContents::Session::Medium Medium;
@@ -29,19 +29,19 @@ typedef enum
 
 struct RtpHeader
 {
-   UInt8 mVersion;
-   UInt8 mPayloadType;
-   UInt16 mSequenceNumber;
-   UInt32 mTimeStamp;
-   UInt32 mSsrc;
+   uint8_t mVersion;
+   uint8_t mPayloadType;
+   uint16_t mSequenceNumber;
+   uint32_t mTimeStamp;
+   uint32_t mSsrc;
 };
 
 struct RtcpHeader
 {
-   UInt8 mVersion;
-   UInt8 mPayloadType;
-   UInt16 mSequenceNumber;
-   UInt32 mSsrc;
+   uint8_t mVersion;
+   uint8_t mPayloadType;
+   uint16_t mSequenceNumber;
+   uint32_t mSsrc;
 };
 
 struct Packet
@@ -86,30 +86,30 @@ public:
    static resip::Data TcpMcProtocol;
 
 
-   static bool hasIce(boost::shared_ptr<resip::SipMessage> msg);
-   static bool isMediaInactive(boost::shared_ptr<resip::SipMessage> msg);
-   static resip::Data getConnectionAddr(boost::shared_ptr<resip::SipMessage> msg);
-   static bool isHold2543(boost::shared_ptr<resip::SipMessage> msg);
-   static bool isMediaSendOnly(boost::shared_ptr<resip::SipMessage> msg);
-   static bool isMediaRecvOnly(boost::shared_ptr<resip::SipMessage> msg);
-   static unsigned int getMediaCount(boost::shared_ptr<resip::SipMessage> msg);
+   static bool hasIce(std::shared_ptr<resip::SipMessage> msg);
+   static bool isMediaInactive(std::shared_ptr<resip::SipMessage> msg);
+   static resip::Data getConnectionAddr(std::shared_ptr<resip::SipMessage> msg);
+   static bool isHold2543(std::shared_ptr<resip::SipMessage> msg);
+   static bool isMediaSendOnly(std::shared_ptr<resip::SipMessage> msg);
+   static bool isMediaRecvOnly(std::shared_ptr<resip::SipMessage> msg);
+   static unsigned int getMediaCount(std::shared_ptr<resip::SipMessage> msg);
    // m-line
-   static unsigned int getMLineCount(boost::shared_ptr<resip::SipMessage> msg, const char * szMediaName);
+   static unsigned int getMLineCount(std::shared_ptr<resip::SipMessage> msg, const char * szMediaName);
    // codec
-   static unsigned int getCodecsCount(boost::shared_ptr<resip::SipMessage> msg, const char * szMediaName);
-   static bool hasPayloadNumber(boost::shared_ptr<resip::SipMessage> msg, int payloadNumber);
+   static unsigned int getCodecsCount(std::shared_ptr<resip::SipMessage> msg, const char * szMediaName);
+   static bool hasPayloadNumber(std::shared_ptr<resip::SipMessage> msg, int payloadNumber);
 
    /**
     * Media index starts at zero. Usually 0 means audio, 1 video, etc.
    */
    // port
-   static int getPort(boost::shared_ptr<resip::SipMessage> msg, unsigned int index = 0);
-   static int getPort(boost::shared_ptr<resip::SipMessage> msg, const char * szMediaName);
-   static void setPort(boost::shared_ptr<resip::SdpContents> sdp, const char * szMediaName, unsigned long);
+   static int getPort(std::shared_ptr<resip::SipMessage> msg, unsigned int index = 0);
+   static int getPort(std::shared_ptr<resip::SipMessage> msg, const char * szMediaName);
+   static void setPort(std::shared_ptr<resip::SdpContents> sdp, const char * szMediaName, unsigned long);
    // attribute a=
-   static void addAttr(boost::shared_ptr<resip::SdpContents> sdp, const char * szMediaName, const char* szAttrField, const char* szAttrValue);
+   static void addAttr(std::shared_ptr<resip::SdpContents> sdp, const char * szMediaName, const char* szAttrField, const char* szAttrValue);
 
-   static MediaDirection getMediaDirection(boost::shared_ptr<resip::SipMessage> msg, const char * szMediaName);
+   static MediaDirection getMediaDirection(std::shared_ptr<resip::SipMessage> msg, const char * szMediaName);
    static MediaDirection getMediaDirectionFromString(const char * szMediaName);
 };
 
@@ -120,7 +120,7 @@ class TestRtp : public EndPoint,
    public:
       TestRtp();
 
-      virtual ~TestRtp();
+      virtual ~TestRtp() = default;
 
       // class implementation
       void open();
@@ -169,7 +169,7 @@ class TestRtp : public EndPoint,
        */
       void setLocalAddr(const resip::Data& addr);
 
-      void loadStream(const resip::Data& file, UInt32 ssrc);
+      void loadStream(const resip::Data& file, uint32_t ssrc);
 
       /**
        * Set to use hold method described by RFC 2543 (settings connections to 0.0.0.0)
@@ -177,8 +177,8 @@ class TestRtp : public EndPoint,
       void setHold2543(bool hold2543 = true) { mHold2543 = hold2543; }
       void setDescribeWellKnownCodec(bool val = true) { mDescribeWellKnownCodec = val; }
 
-      boost::shared_ptr<resip::SdpContents> getLocalSdp() const;
-      boost::shared_ptr<resip::SdpContents> getLocalSdp(unsigned long, unsigned long = MEDIA_NONE) const;
+      std::shared_ptr<resip::SdpContents> getLocalSdp() const;
+      std::shared_ptr<resip::SdpContents> getLocalSdp(unsigned long, unsigned long = MEDIA_NONE) const;
 
       void setRemoteAddr(const resip::Tuple& addr);
 
@@ -193,9 +193,9 @@ class TestRtp : public EndPoint,
       ActionBase* enableSending(bool enable);
 
    private:
-      bool isRtcpPacket(const resip::Data& packet, UInt32 ssrc) const;
+      bool isRtcpPacket(const resip::Data& packet, uint32_t ssrc) const;
 
-      bool isRtpPacket(const resip::Data& packet, UInt32 ssrc) const;
+      bool isRtpPacket(const resip::Data& packet, uint32_t ssrc) const;
 
       void enableSendingDelegate(bool enable);
 
@@ -215,12 +215,12 @@ class TestRtp : public EndPoint,
        */
       void overrideSsrc(resip::Data& packet);
 
-      UInt16 getSeqNo(const Packet& packet);
+      uint16_t getSeqNo(const Packet& packet);
 
       void RtpPacketInfo();
 
    private:
-      boost::shared_ptr<resip::SdpContents> mLocalSdp;
+      std::shared_ptr<resip::SdpContents> mLocalSdp;
 
       resip::Socket mFdRtp;
       resip::Socket mFdRtcp;
@@ -232,9 +232,9 @@ class TestRtp : public EndPoint,
       resip::Tuple mLocalAddrVideoRtcp;
       resip::Tuple mRemoteAddrRtp;
       resip::Tuple mRemoteAddrRtcp;
-      UInt32 mLocalSsrc;
-      UInt32 mRemoteSsrc;
-      UInt8 mRemoteCodec;
+      uint32_t mLocalSsrc;
+      uint32_t mRemoteSsrc;
+      uint8_t mRemoteCodec;
 
       PacketSenderStatistics mSenderStatistics;
       PacketReceiverStatistics mReceiverStatistics;

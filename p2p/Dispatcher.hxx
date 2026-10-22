@@ -4,6 +4,7 @@
 #include "p2p/Postable.hxx"
 #include "p2p/Message.hxx"
 #include <map>
+#include <memory>
 
 namespace p2p
 {
@@ -19,10 +20,10 @@ class Dispatcher : public Postable<Message>
       
       void init(ForwardingLayer& forwardingLayer);
       void registerPostable(Message::MessageType type, Postable<Event>& postable);
-      void send(std::auto_ptr<Message> message, Postable<Event>& responseSink);
+      void send(std::unique_ptr<Message> message, Postable<Event>& responseSink);
 
       // not public API
-      virtual void post(std::auto_ptr<Message> message);
+      virtual void post(std::unique_ptr<Message> message);
 
    private:
       class Entry 

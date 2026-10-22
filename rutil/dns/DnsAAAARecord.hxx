@@ -19,6 +19,17 @@ class RROverlay;
 class DnsAAAARecord : public DnsResourceRecord
 {
    public:
+      class AaaaException final : public BaseException
+      {
+      public:
+         AaaaException(const Data& msg, const Data& file, const int line)
+            : BaseException(msg, file, line)
+         {
+         }
+
+         const char* name() const noexcept override { return "AaaaException"; }
+      };
+
       DnsAAAARecord(const RROverlay& overlay);
       virtual ~DnsAAAARecord() {}
 
@@ -27,8 +38,9 @@ class DnsAAAARecord : public DnsResourceRecord
 #endif
 
       virtual const Data& name() const { return mName; }
+      virtual int ttl() const { return mTTL; }
       virtual bool isSameValue(const Data& value) const;
-      EncodeStream& dump(EncodeStream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
       
    private:
       union
@@ -39,6 +51,7 @@ class DnsAAAARecord : public DnsResourceRecord
          char pad[28]; // this make union same size if v6 is in or out
       };
       Data mName;
+      int mTTL;
 };
 
 }

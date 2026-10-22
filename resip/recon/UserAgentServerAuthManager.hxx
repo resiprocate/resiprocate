@@ -3,6 +3,7 @@
 
 #include <map>
 
+#include <rutil/AsyncBool.hxx>
 #include <resip/stack/Auth.hxx>
 #include <resip/stack/Message.hxx>
 #include <resip/dum/UserProfile.hxx>
@@ -45,7 +46,7 @@ class UserAgentServerAuthManager: public resip::ServerAuthManager
       virtual bool authorizedForThisIdentity(const resip::Data &user, 
                                              const resip::Data &realm, 
                                              resip::Uri &fromUri);
-      virtual AsyncBool requiresChallenge(const resip::SipMessage& msg);
+      virtual resip::AsyncBool requiresChallenge(const resip::SipMessage& msg);
 
    private:
       UserAgent& mUserAgent;

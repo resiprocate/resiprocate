@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <utility>
 
 #include "repro/Proxy.hxx"
 #include "repro/RequestContext.hxx"
@@ -44,13 +45,12 @@ RequestContext::RequestContext(Proxy& proxy,
    mTargetProcessorChain(targetP),
    mTransactionCount(1),
    mProxy(proxy),
-   mResponseContext(*this),
-   mTCSerial(0),
+   mTopRouteFlowTupleSet(false),
+   mResponseContext(new ResponseContext(*this)),
    mSessionCreatedEventSent(false),
    mSessionEstablishedEventSent(false),
    mKeyValueStore(*Proxy::getRequestKeyValueStoreKeyAllocator())
 {
-   mInitialTimerCSet=false;
 }
 
 RequestContext::~RequestContext()
@@ -76,7 +76,7 @@ RequestContext::process(resip::TransactionTerminated& msg)
 
    if (msg.isClientTransaction())
    {
-      mResponseContext.removeClientTransaction(msg.getTransactionId());
+      mResponseContext->removeClientTransaction(msg.getTransactionId());
    }
    mTransactionCount--;
    if (mTransactionCount == 0)
@@ -86,7 +86,7 @@ RequestContext::process(resip::TransactionTerminated& msg)
 }
 
 void
-RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
+RequestContext::process(std::unique_ptr<resip::SipMessage> sipMessage)
 {
    bool original = false;
    InfoLog (<< "RequestContext::process(SipMessage) " << sipMessage->getTransactionId());
@@ -103,8 +103,8 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       resip_assert(sip);
       mOriginalRequest=sip;
       original = true;
-      mResponseContext.mIsClientBehindNAT = InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled && 
-                                            Helper::isClientBehindNAT(*sip, 
+      mResponseContext->mIsClientBehindNAT = InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled &&
+                                             Helper::isClientBehindNAT(*sip,
                                                   InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly);
      
       // RFC 3261 Section 16.4
@@ -241,7 +241,7 @@ RequestContext::processRequestInviteTransaction(SipMessage* msg, bool original)
          {
             getProxy().doSessionAccounting(*msg, true /* received */, *this);
          }
-         mResponseContext.processCancel(*msg);
+         mResponseContext->processCancel(*msg);
          doPostProcess=true;
       }
       else if(msg->method()==ACK)
@@ -255,7 +255,7 @@ RequestContext::processRequestInviteTransaction(SipMessage* msg, bool original)
          
          DebugLog(<<"This ACK has the same tid as the original INVITE.");
          DebugLog(<<"The reponse we sent back was a " 
-               << mResponseContext.mBestResponse.header(h_StatusLine).statusCode());
+               << mResponseContext->mBestResponse.header(h_StatusLine).statusCode());
          // .bwc. Since this is not an ACK transaction, the stack will let
          // us know when we need to clean up.
          if(!mHaveSentFinalResponse)
@@ -266,7 +266,7 @@ RequestContext::processRequestInviteTransaction(SipMessage* msg, bool original)
             ErrLog(<<"Got an ACK, but haven't sent a final response. "
                         "What happened here?");
          }
-         else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() / 100 == 2)
+         else if(mResponseContext->mBestResponse.header(h_StatusLine).statusCode() / 100 == 2)
          {
             InfoLog(<<"Got an ACK within an INVITE transaction, but our "
                      "response was a 2xx. Someone didn't change their tid "
@@ -363,12 +363,12 @@ void
 RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
 {
    resip_assert(msg->isRequest());
-   if(msg->method()!=ACK)
+   if(msg->method() != ACK)
    {
       // !bwc! Somebody collided with an ACK/200. Send a failure response.
       SipMessage response;
       Helper::makeResponse(response,*msg,400);
-      response.header(h_StatusLine).reason()="Transaction-id collision";
+      response.header(h_StatusLine).reason() = "Transaction-id collision";
       send(response);
       return;
    }
@@ -378,8 +378,9 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
    try
    {
       // .slg. look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
-      if((!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
-          getProxy().isMyUri(msg->header(h_RequestLine).uri()))
+      if(!mTopRouteFlowTupleSet &&  // If we have a flow token in top route, then we don't need to route with RequestUri (so don't consider self aimed)
+         (!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
+         getProxy().isMyUri(msg->header(h_RequestLine).uri()))
       {
          // .bwc. Someone sent an ACK with us in the Request-Uri, and no
          // Route headers (after we have removed ourself). We will never perform 
@@ -393,7 +394,7 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
          // Top most route is us, or From header uri is ours.  Note:  The From check is 
          // required to interoperate with endpoints that configure outbound proxy 
          // settings, and do not place the outbound proxy in a Route header.
-         mResponseContext.cancelAllClientTransactions();
+         mResponseContext->cancelAllClientTransactions();
          forwardAck200(*mOriginalRequest);
       }
       else
@@ -427,7 +428,7 @@ RequestContext::doPostRequestProcessing(SipMessage* msg, bool original)
    
    
    // if target list is empty return a 480
-   if (!mResponseContext.hasTargets())
+   if (!mResponseContext->hasTargets())
    {
       // make 480, send, dispose of memory
       resip::SipMessage response;
@@ -441,7 +442,7 @@ RequestContext::doPostRequestProcessing(SipMessage* msg, bool original)
    {
       Processor::processor_action_t ret=Processor::Continue;
       InfoLog (<< *this << " there are " 
-      << mResponseContext.mCandidateTransactionMap.size() 
+      << mResponseContext->mCandidateTransactionMap.size()
       << " candidates -> continue");
       
       try
@@ -450,7 +451,7 @@ RequestContext::doPostRequestProcessing(SipMessage* msg, bool original)
       }
       catch(resip::BaseException& e)
       {
-         if(mResponseContext.hasActiveTransactions())
+         if(mResponseContext->hasActiveTransactions())
          {
             // .bwc. Whoops. We may have just forwarded garbage upstream.
             // TODO is it appropriate to try to CANCEL here?
@@ -459,7 +460,7 @@ RequestContext::doPostRequestProcessing(SipMessage* msg, bool original)
          }
          else
          {
-            mResponseContext.clearCandidateTransactions();
+            mResponseContext->clearCandidateTransactions();
             SipMessage response;
             Helper::makeResponse(response,*mOriginalRequest,500);
             response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
@@ -470,9 +471,9 @@ RequestContext::doPostRequestProcessing(SipMessage* msg, bool original)
 
       if(ret != Processor::WaitingForEvent &&
          !mHaveSentFinalResponse && 
-         !mResponseContext.hasActiveTransactions())
+         !mResponseContext->hasActiveTransactions())
       {
-         if(mResponseContext.hasCandidateTransactions())
+         if(mResponseContext->hasCandidateTransactions())
          {
             // Someone forgot to start any of the targets they just added.
             // Send a 500 response
@@ -491,7 +492,7 @@ RequestContext::doPostRequestProcessing(SipMessage* msg, bool original)
             << " are already Terminated. Further, there are no candidate"
             << " Targets. (Bad monkey?)");
             // Send best response
-            mResponseContext.forwardBestResponse();
+            mResponseContext->forwardBestResponse();
          }
       }
    }
@@ -520,19 +521,19 @@ RequestContext::processResponseInviteTransaction(SipMessage* msg)
          else
          {
             // This means the response has been eaten. Do not forward back.
-            mResponseContext.terminateClientTransaction(tid);
+            mResponseContext->terminateClientTransaction(tid);
          }
       }
       catch(resip::ParseException& e)
       {
          InfoLog(<<"Garbage in response; dropping message. " << e);
-         mResponseContext.terminateClientTransaction(tid);
+         mResponseContext->terminateClientTransaction(tid);
       }
       catch(resip::BaseException& e)
       {
          ErrLog(<<"Exception thrown in response processor chain: " << e);
          // ?bwc? TODO what do we do here? Continue processing? Give up?
-         mResponseContext.terminateClientTransaction(tid);
+         mResponseContext->terminateClientTransaction(tid);
       }
    }
    else if(msg->method()==CANCEL)
@@ -571,19 +572,19 @@ RequestContext::processResponseNonInviteTransaction(SipMessage* msg)
          else
          {
             // This means the response has been eaten. Do not forward back.
-            mResponseContext.terminateClientTransaction(tid);
+            mResponseContext->terminateClientTransaction(tid);
          }
       }
       catch(resip::ParseException& e)
       {
          InfoLog(<<"Garbage in response; dropping message. " << e);
-         mResponseContext.terminateClientTransaction(tid);
+         mResponseContext->terminateClientTransaction(tid);
       }
       catch(resip::BaseException& e)
       {
          ErrLog(<<"Exception thrown in response processor chain: " << e);
          // ?bwc? TODO what do we do here? Continue processing? Give up?
-         mResponseContext.terminateClientTransaction(tid);
+         mResponseContext->terminateClientTransaction(tid);
       }
    }
    else
@@ -601,16 +602,16 @@ RequestContext::doPostResponseProcessing(SipMessage* msg)
 {
    bool nit408 = msg->method() != INVITE && msg->header(resip::h_StatusLine).statusCode() == 408;
 
-   mResponseContext.processResponse(*msg);
+   mResponseContext->processResponse(*msg);
 
    //If everything we have tried so far has gone quiescent, we
    //need to fire up some more Targets (if there are any left)
    mTargetProcessorChain.process(*this);
 
    if(!mHaveSentFinalResponse && 
-      !mResponseContext.hasActiveTransactions())
+      !mResponseContext->hasActiveTransactions())
    {
-      if(mResponseContext.hasCandidateTransactions())
+      if(mResponseContext->hasCandidateTransactions())
       {
          resip::SipMessage response;
          Helper::makeResponse(response, *mOriginalRequest, 500); 
@@ -637,9 +638,9 @@ RequestContext::doPostResponseProcessing(SipMessage* msg)
          << " but we have not sent a final response. (What happened here?) ");
 
          // Send best response if there is one - otherwise send 500
-         if(mResponseContext.mBestResponse.isResponse())
+         if(mResponseContext->mBestResponse.isResponse())
          {
-            mResponseContext.forwardBestResponse();
+            mResponseContext->forwardBestResponse();
          }
          else
          {
@@ -652,7 +653,7 @@ RequestContext::doPostResponseProcessing(SipMessage* msg)
 }
 
 void
-RequestContext::process(std::auto_ptr<ApplicationMessage> app)
+RequestContext::process(std::unique_ptr<ApplicationMessage> app)
 {
    InfoLog (<< "RequestContext::process(ApplicationMessage) " << *app);
 
@@ -673,11 +674,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 
    if(tc)
    {
-      if(tc->mSerial == mTCSerial)
-      {
-         mResponseContext.processTimerC();
-      }
-
+      mResponseContext->processTimerC(tc->getTransactionId(), tc->mSerial);
       return;
    }
 
@@ -706,7 +703,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 
             if(ret != Processor::WaitingForEvent && !mHaveSentFinalResponse)
             {
-               if (!mResponseContext.hasTargets())
+               if (!mResponseContext->hasTargets())
                {
                   // make 480, send, dispose of memory
                   resip::SipMessage response;
@@ -719,7 +716,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                else
                {
                   InfoLog (<< *this << " there are " 
-                  << mResponseContext.mCandidateTransactionMap.size() 
+                  << mResponseContext->mCandidateTransactionMap.size()
                   << " candidates -> continue");
 
                   try
@@ -728,7 +725,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                   }
                   catch(resip::BaseException& e)
                   {
-                     if(mResponseContext.hasActiveTransactions())
+                     if(mResponseContext->hasActiveTransactions())
                      {
                         // .bwc. Whoops. We may have just forwarded garbage upstream.
                         // ?bwc? TODO is it appropriate to try to CANCEL here?
@@ -737,7 +734,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                      }
                      else
                      {
-                        mResponseContext.clearCandidateTransactions();
+                        mResponseContext->clearCandidateTransactions();
                         resip::SipMessage response;
                         Helper::makeResponse(response,*mOriginalRequest,500);
                         response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
@@ -748,9 +745,9 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 
                   if(ret != Processor::WaitingForEvent &&
                      !mHaveSentFinalResponse && 
-                     !mResponseContext.hasActiveTransactions())
+                     !mResponseContext->hasActiveTransactions())
                   {
-                     if(mResponseContext.hasCandidateTransactions())
+                     if(mResponseContext->hasCandidateTransactions())
                      {
                         resip::SipMessage response;
                         Helper::makeResponse(response, *mOriginalRequest, 500); 
@@ -763,7 +760,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                                  << mOriginalRequest->header(h_RequestLine).uri() );
                         sendResponse(response);
                      }
-                     else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)
+                     else if(mResponseContext->mBestResponse.header(h_StatusLine).statusCode() != 408)
                      {
                         ErrLog(<< "In RequestContext, request and target processor "
                         << "chains have run, and all Targets are now Terminated."
@@ -771,7 +768,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                         << "best final response is not a 408.(What happened here?)");
 
                         // Send best response
-                        mResponseContext.forwardBestResponse();
+                        mResponseContext->forwardBestResponse();
                      }
                   }
                }
@@ -802,10 +799,17 @@ RequestContext::handleSelfAimedStrayAck(SipMessage* sip)
    InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");  
 }
 
-void
-RequestContext::cancelClientTransaction(const resip::Data& tid)
+bool
+RequestContext::handleMissingResponseVias(resip::SipMessage* response)
 {
-   getProxy().getStack().cancelClientInviteTransaction(tid);
+   // Default behaviour is to not continue processing, this can be overridden
+   return false;
+}
+
+void
+RequestContext::cancelClientTransaction(const resip::Data& tid, const resip::Tokens* reasons)
+{
+   getProxy().getStack().cancelClientInviteTransaction(tid, reasons);
 }
 
 void
@@ -819,15 +823,10 @@ RequestContext::forwardAck200(const resip::SipMessage& ack)
       
       mAck200ToRetransmit->header(h_Vias).push_front(Via());
 
-      // .bwc. Check for flow-token
-      if(!mTopRoute.uri().user().empty())
+      // .bwc. Check for flow-token use
+      if(mTopRouteFlowTupleSet)
       {
-         resip::Tuple dest(Tuple::makeTupleFromBinaryToken(mTopRoute.uri().user().base64decode(), Proxy::FlowTokenSalt));
-         if(!(dest==resip::Tuple()))
-         {
-            // valid flow token
-            mAck200ToRetransmit->setDestination(dest);
-         }
+         mAck200ToRetransmit->setDestination(mTopRouteFlowTuple);
       }
    }
 
@@ -885,18 +884,9 @@ RequestContext::getDigestIdentity() const
 }
 
 void
-RequestContext::updateTimerC()
+RequestContext::postTimedMessage(std::unique_ptr<resip::ApplicationMessage> msg,int seconds)
 {
-   InfoLog(<<"Updating timer C.");
-   mTCSerial++;
-   TimerCMessage* tc = new TimerCMessage(this->getTransactionId(),mTCSerial);
-   mProxy.postTimerC(std::auto_ptr<TimerCMessage>(tc));
-}
-
-void
-RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds)
-{
-   mProxy.postMS(msg,seconds);
+   mProxy.postMS(std::move(msg), seconds);
 }
 
 void
@@ -910,7 +900,7 @@ RequestContext::postAck200Done()
    // non-ACK transaction with the same tid during this time, and make
    // sure we don't explode violently when this happens.)
    mProxy.postMS(
-      std::auto_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
+      std::unique_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
       64*resip::Timer::T1);
 }
 
@@ -964,7 +954,7 @@ RequestContext::sendResponse(SipMessage& msg)
                         " Via before modification (in orig request): " <<
                         mOriginalRequest->header(h_Vias).front());
          // .bwc. Compensate for malicous/broken UAS fiddling with Via stack.
-         msg.header(h_Vias).front()=mOriginalRequest->header(h_Vias).front();
+         msg.header(h_Vias).front() = mOriginalRequest->header(h_Vias).front();
       }
 
       DebugLog(<<"Ensuring orig tid matches tid of response: " <<
@@ -1045,6 +1035,17 @@ RequestContext::removeTopRouteIfSelf()
             // should we reject?
          }
       }
+
+      // Extract Flow Token from mTopRoute - if present
+      if (!mTopRoute.uri().user().empty())
+      {
+          resip::Tuple flowTuple(Tuple::makeTupleFromBinaryToken(mTopRoute.uri().user().base64decode(), Proxy::FlowTokenSalt));
+          if (!(flowTuple == Tuple()))
+          {
+             mTopRouteFlowTuple = flowTuple;
+             mTopRouteFlowTupleSet = true;
+          }
+      }
    }
 }
 
@@ -1057,13 +1058,25 @@ RequestContext::getProxy()
 ResponseContext&
 RequestContext::getResponseContext()
 {
-   return mResponseContext;
+   return *mResponseContext;
 }
 
 NameAddr&
 RequestContext::getTopRoute()
 {
    return mTopRoute;
+}
+
+bool
+RequestContext::isTopRouteFlowTupleSet()
+{
+    return mTopRouteFlowTupleSet;
+}
+
+Tuple&
+RequestContext::getTopRouteFlowTuple()
+{
+   return mTopRouteFlowTuple;
 }
 
 const resip::Data&

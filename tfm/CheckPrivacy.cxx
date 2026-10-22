@@ -7,11 +7,11 @@
 using namespace resip;
 
 bool 
-CheckPrivacy::operator()(boost::shared_ptr<Event> event) const
+CheckPrivacy::operator()(std::shared_ptr<Event> event) const
 {
    SipEvent* msgEvent = dynamic_cast<SipEvent*>(event.get());
    resip_assert(msgEvent);
-   boost::shared_ptr<resip::SipMessage> msg = msgEvent->getMessage();
+   std::shared_ptr<resip::SipMessage> msg = msgEvent->getMessage();
    resip_assert(msg.get());
    
    DebugLog (<< "Checking for privacy: " << *msg);

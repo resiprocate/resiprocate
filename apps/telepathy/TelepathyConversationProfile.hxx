@@ -36,7 +36,7 @@ class TelepathyConversationProfile : public recon::ConversationProfile, public T
 public:
    // Initialize the profile using parameters from the account settings
    // panel.
-   TelepathyConversationProfile(resip::SharedPtr<Profile> baseProfile, const QVariantMap& parameters);
+   TelepathyConversationProfile(std::shared_ptr<Profile> baseProfile, const QVariantMap& parameters);
 
    resip::Data getDefaultAddress();
 };

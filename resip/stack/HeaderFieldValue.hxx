@@ -37,7 +37,7 @@ class HeaderFieldValue
            mFieldLength(0),
            mMine(false)
       {}
-      HeaderFieldValue(const char* field, unsigned int fieldLength);
+      HeaderFieldValue(const char* field, size_t fieldLength);
       HeaderFieldValue(const HeaderFieldValue& hfv);
       HeaderFieldValue(const HeaderFieldValue& hfv, CopyPaddingEnum);
       HeaderFieldValue(const HeaderFieldValue& hfv, NoOwnershipEnum);
@@ -62,7 +62,7 @@ class HeaderFieldValue
       }
       
       inline const char* getBuffer() const {return mField;}
-      inline unsigned int getLength() const {return mFieldLength;}
+      inline size_t getLength() const {return mFieldLength;}
       inline void clear()
       {
          if (mMine)
@@ -89,15 +89,13 @@ class HeaderFieldValue
    private:
       
       const char* mField;
-      unsigned int mFieldLength;
+      size_t mFieldLength;
       bool mMine;
 
       friend EncodeStream& operator<<(EncodeStream&, HeaderFieldValue&);
 };
 
-EncodeStream& operator<<(EncodeStream& stream, 
-			 HeaderFieldValue& hList);
-
+EncodeStream& operator<<(EncodeStream& stream, HeaderFieldValue& hList);
 
 }
 

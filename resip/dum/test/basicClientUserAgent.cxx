@@ -5,7 +5,7 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
-#include <rutil/MD5Stream.hxx>
+#include <rutil/DigestStream.hxx>
 #include <rutil/FdPoll.hxx>
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/PlainContents.hxx>
@@ -34,6 +34,8 @@
 #include "basicClientUserAgent.hxx"
 #include "basicClientCall.hxx"
 
+#include <utility>
+
 using namespace resip;
 using namespace std;
 
@@ -46,9 +48,11 @@ static unsigned int NotifySendTime = 30;  // If someone subscribes to our test e
 static unsigned int FailedSubscriptionRetryTime = 60; 
 
 //#define TEST_PASSING_A1_HASH_FOR_PASSWORD
+//#define TEST_PASSING_RESIP_A1_HASH_FOR_PASSWORD
 
 namespace resip
 {
+
 class ClientAppDialogSetFactory : public AppDialogSetFactory
 {
 public:
@@ -69,7 +73,7 @@ private:
    BasicClientUserAgent& mUserAgent;
 };
 
-// Used to set the IP Address in outbound SDP to match the IP address choosen by the stack to send the message on
+// Used to set the IP Address in outbound SDP to match the IP address chosen by the stack to send the message on
 class SdpMessageDecorator : public MessageDecorator
 {
 public:
@@ -141,6 +145,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    addTransport(TCP, mTcpPort);
 #if defined(USE_SSL)
    addTransport(TLS, mTlsPort);
+   BaseSecurity::setAllowWildcardCertificates(true);
 #endif
 #if defined(USE_DTLS)
    addTransport(DTLS, mDtlsPort);
@@ -226,8 +231,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mProfile->setMethodsParamEnabled(true);
 
    // Install Sdp Message Decorator
-   SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
-   mProfile->setOutboundDecorator(outboundDecorator);
+   mProfile->setOutboundDecorator(std::make_shared<SdpMessageDecorator>());
 
    // Other Profile Settings
    mProfile->setUserAgent("basicClient/1.0");
@@ -247,18 +251,23 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    // UserProfile Settings
    mProfile->setDefaultFrom(NameAddr(mAor));
 #ifdef TEST_PASSING_A1_HASH_FOR_PASSWORD
-   MD5Stream a1;
+   DigestStream a1;
    a1 << mAor.user()
       << Symbols::COLON
       << mAor.host()
       << Symbols::COLON
       << mPassword;
-   mProfile->setDigestCredential(mAor.host(), mAor.user(), a1.getHex(), true);   
+   mProfile->setDigestCredential(mAor.host(), mAor.user(), a1.getHex(), true);
 #else
-   mProfile->setDigestCredential(mAor.host(), mAor.user(), mPassword);   
+   #ifdef TEST_PASSING_RESIP_A1_HASH_FOR_PASSWORD
+      mProfile->setDigestCredential(mAor.host(), mAor.user(), Helper::createResipA1HashString(mAor.user(), mAor.host(), mPassword), true);
+   #else
+      mProfile->setDigestCredential(mAor.host(), mAor.user(), mPassword);
+  #endif
 #endif
+
    // Generate InstanceId appropriate for testing only.  Should be UUID that persists 
-   // across machine re-starts and is unique to this applicaiton instance.  The one used 
+   // across machine re-starts and is unique to this application instance.  The one used 
    // here is only as unique as the hostname of this machine.  If someone runs two 
    // instances of this application on the same host for the same Aor, then things will 
    // break.  See RFC5626 section 4.1
@@ -284,14 +293,16 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
       mProfile->clientOutboundEnabled() = true;
    }
 
+   resip::Timer::TcpConnectTimeout = 10000;
+
    // Install Managers
-   mDum->setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
-   mDum->setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
+   mDum->setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum->setKeepAliveManager(std::unique_ptr<KeepAliveManager>(new KeepAliveManager));
    mProfile->setKeepAliveTimeForDatagram(30);
    mProfile->setKeepAliveTimeForStream(120);
 
    // Install Handlers
-   mDum->setInviteSessionHandler(this); 
+   mDum->setInviteSessionHandler(this);
    mDum->setDialogSetHandler(this);
    mDum->addOutOfDialogHandler(OPTIONS, this);
    //mDum->addOutOfDialogHandler(REFER, this);
@@ -301,8 +312,8 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mDum->addServerSubscriptionHandler("basicClientTest", this);
 
    // Set AppDialogSetFactory
-   auto_ptr<AppDialogSetFactory> dsf(new ClientAppDialogSetFactory(*this));
-   mDum->setAppDialogSetFactory(dsf);
+   std::unique_ptr<AppDialogSetFactory> dsf(new ClientAppDialogSetFactory(*this));
+   mDum->setAppDialogSetFactory(std::move(dsf));
 
    mDum->setMasterProfile(mProfile);
 
@@ -342,7 +353,7 @@ BasicClientUserAgent::startup()
       // Check if we should try to form a test subscription
       if(!mSubscribeTarget.host().empty())
       {
-         SharedPtr<SipMessage> sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
+         auto sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
          mDum->send(sub);
       }
 
@@ -436,10 +447,16 @@ BasicClientUserAgent::addTransport(TransportType type, int port)
 void 
 BasicClientUserAgent::post(Message* msg)
 {
-   ConnectionTerminated* terminated = dynamic_cast<ConnectionTerminated*>(msg);
-   if (terminated)
+   ConnectionTerminated* pTerminated = dynamic_cast<ConnectionTerminated*>(msg);
+   if (pTerminated)
    {
-      InfoLog(<< "BasicClientUserAgent received connection terminated message for: " << terminated->getFlow());
+      InfoLog(<< "BasicClientUserAgent received: " << *pTerminated);
+#if defined(USE_SSL)
+      if (pTerminated->getFailureReason() == TransportFailure::CertValidationFailure)
+      {
+         InfoLog(<< "Certificate Validation Failure Reason: " << X509_verify_cert_error_string(pTerminated->getFailureSubCode()));
+      }
+#endif
       delete msg;
       return;
    }
@@ -464,8 +481,8 @@ BasicClientUserAgent::sendNotify()
       mServerSubscriptionHandle->send(mServerSubscriptionHandle->update(&plain));
 
       // start timer for next one
-      auto_ptr<ApplicationMessage> timer(new NotifyTimer(*this, ++mCurrentNotifyTimerId));
-      mStack->post(timer, NotifySendTime, mDum);
+      std::unique_ptr<ApplicationMessage> timer(new NotifyTimer(*this, ++mCurrentNotifyTimerId));
+      mStack->post(std::move(timer), NotifySendTime, mDum);
    }
 }
 
@@ -538,7 +555,7 @@ BasicClientUserAgent::onSuccess(ClientRegistrationHandle h, const SipMessage& ms
       // Check if we should try to form a test subscription
       if(!mSubscribeTarget.host().empty())
       {
-         SharedPtr<SipMessage> sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
+         auto sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
          mDum->send(sub);
       }
 
@@ -575,6 +592,7 @@ int
 BasicClientUserAgent::onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const SipMessage& msg)
 {
    mRegHandle = h;
+   mStack->logDnsCache();
    if(mShuttingdown)
    {
        return -1;
@@ -1008,7 +1026,7 @@ BasicClientUserAgent::hasDefaultExpires() const
    return true;
 }
 
-UInt32 
+uint32_t 
 BasicClientUserAgent::getDefaultExpires() const
 {
    return 60;
@@ -1038,7 +1056,7 @@ BasicClientUserAgent::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Si
    {
    case OPTIONS:
       {
-         SharedPtr<SipMessage> optionsAnswer = ood->answerOptions();
+         auto optionsAnswer = ood->answerOptions();
          ood->send(optionsAnswer);
          break;
       }
@@ -1079,7 +1097,7 @@ BasicClientUserAgent::onTryingNextTarget(AppDialogSetHandle, const SipMessage& m
 
 /* ====================================================================
 
- Copyright (c) 2011, SIP Spectrum, Inc.
+ Copyright (c) 2011-2026, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

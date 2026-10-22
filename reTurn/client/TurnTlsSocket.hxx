@@ -7,6 +7,8 @@
 #ifndef TURNTLSSOCKET_HXX
 #define TURNTLSSOCKET_HXX
 
+#include <memory>
+
 #include <asio.hpp>
 #include <asio/ssl.hpp>
 
@@ -17,16 +19,18 @@ namespace reTurn {
    class TurnTlsSocket : public TurnTcpSocket
 {
 public:
+   /// validateServerCertificateHostname: check the server certificate is for the host name (or
+   /// IP address) passed to connect().  rootCertificatesFile: the PEM file of root certificates
+   /// to verify the server certificate with.
    explicit TurnTlsSocket(bool validateServerCertificateHostname,
                           const asio::ip::address& address = UnspecifiedIpAddress, 
-                          unsigned short port = 0);
+                          unsigned short port = 0,
+                          const std::string& rootCertificatesFile = "ca.pem");
 
-   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.lowest_layer().native(); }
+   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket->lowest_layer().native_handle(); }
    virtual  asio::error_code connect(const std::string& address, unsigned short port);
 
 protected:
-   virtual bool validateServerCertificateHostname(const std::string& hostname);
-
    virtual asio::error_code rawWrite(const char* buffer, unsigned int size);
    virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers);
 
@@ -36,7 +40,9 @@ protected:
 
 private:
    asio::ssl::context mSslContext;
-   asio::ssl::stream<asio::ip::tcp::socket> mSocket;
+   // Made again for each connection attempt: once a handshake has failed, its SSL object can't
+   // be used for another
+   std::unique_ptr<asio::ssl::stream<asio::ip::tcp::socket>> mSocket;
    bool mValidateServerCertificateHostname;
 };
 
@@ -47,6 +53,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

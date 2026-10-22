@@ -31,7 +31,7 @@ class SiloStore
 
       bool getSiloRecords(const resip::Data& uri, AbstractDb::SiloRecordList& recordList);
       void deleteSiloRecord(time_t originalSendTime, const resip::Data& tid);
-      void cleanupExpiredSiloRecords(UInt64 now, unsigned long expirationTime);
+      void cleanupExpiredSiloRecords(uint64_t now, unsigned long expirationTime);
 
    private:
       Key buildKey(time_t originalSendTime, const resip::Data& tid) const;

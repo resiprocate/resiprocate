@@ -17,7 +17,7 @@ namespace resip
 class PrivacyCategory : public ParserCategory
 {
    public:
-      enum {commaHandling = CommasAllowedOutputCommas};
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputCommas;
 
       PrivacyCategory();
       explicit PrivacyCategory(const Data& d);

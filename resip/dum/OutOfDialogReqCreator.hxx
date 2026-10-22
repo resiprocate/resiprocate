@@ -12,7 +12,7 @@ class SipMessage;
 class OutOfDialogReqCreator: public BaseCreator
 {
    public:
-      OutOfDialogReqCreator(DialogUsageManager& dum, MethodTypes method, const NameAddr& target, SharedPtr<UserProfile> userProfile);
+      OutOfDialogReqCreator(DialogUsageManager& dum, MethodTypes method, const NameAddr& target, std::shared_ptr<UserProfile> userProfile);
       virtual void dispatch(SipMessage& msg);
 };
  

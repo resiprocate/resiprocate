@@ -6,6 +6,7 @@
 #endif
 
 #include <memory>
+#include <vector>
 
 #include "rutil/Socket.hxx"
 #include "rutil/compat.hxx"
@@ -25,6 +26,7 @@ namespace resip
 {
 
 struct GenericIPAddress;
+struct AddressMask;   // defined below (embeds a Tuple, so it follows the Tuple class)
 
 // WARNING!!
 // When you change this structure, make sure to update the hash function,
@@ -121,7 +123,8 @@ class Tuple
       void setType(TransportType type) { mTransportType = type; }
       void setPort(int port);
       int getPort() const;
-      inline FlowKey getFlowKey() const { return mFlowKey; } 
+      inline FlowKey getFlowKey() const { return mFlowKey; }
+      void setFlowKey(FlowKey flowKey) { mFlowKey = flowKey; }
 
       /// @deprecated use ipVersion()
       /// @todo !dcm! -- should deprecate asap
@@ -136,6 +139,7 @@ class Tuple
       socklen_t length() const; // of sockaddr
       bool isLoopback() const;
       bool isPrivateAddress() const;  // Return boolean based on definitions in RFC1918(v4) and RFC4193(v6)
+      bool isSpecialPurposeAddress() const; // Return boolean based on definitions in RFC6890
       
       ///  @brief Compares TransportType, the binary address, port, and
       /// address family of the Tuple.
@@ -144,7 +148,11 @@ class Tuple
       ///  @brief Compares TransportType, the binary address, port, and
       /// address family of the Tuple.
       bool operator==(const Tuple& rhs) const;
-      
+
+      ///  @brief compares this tuple with the one passed in for family, port
+      /// and address equality.  Potentially ignoring the port number and/or transport type.
+      bool isEqual(const Tuple& tuple, bool ignorePort = false, bool ignoreTransport = false) const;
+
       /// Wrapper around the inet_top() method.
       Data presentationFormat() const;
       
@@ -187,6 +195,16 @@ class Tuple
       /// and address equality using the passed in address mask (mask
       /// is specified by number of bits)
       bool isEqualWithMask(const Tuple& tuple, short mask, bool ignorePort=false, bool ignoreTransport=false) const;
+
+      ///  @brief Tests whether this address is permitted by the supplied allow/deny address lists.
+      ///
+      /// Deny wins: if this address matches any entry in @p denied the result is false.
+      /// Otherwise, if @p allowed is non-empty, this address must match one of its entries to be
+      /// permitted; an empty @p allowed list imposes no allow restriction.  Port and transport
+      /// are ignored; address family must match for an entry to apply (so an IPv4 address is
+      /// never permitted by an IPv6 allow entry, and vice versa).  Matching uses isEqualWithMask.
+      bool isAddressAllowed(const std::vector<AddressMask>& allowed,
+                            const std::vector<AddressMask>& denied) const;
 
       ///  @brief A "less than" comparator for Tuple, for use in map
       /// containers etc. Comparison is based on transport type, and
@@ -285,6 +303,22 @@ private:
 EncodeStream&
 operator<<(EncodeStream& ostrm, const Tuple& tuple);
 
+/// @brief An IP address paired with a CIDR prefix length (number of mask bits),
+/// for use in address-based access control lists.
+///
+/// The address is held in a Tuple (only its family and binary address are
+/// significant for matching; port and transport are ignored).  mMaskBits is the
+/// number of leading bits that must match: 1..32 for IPv4, 1..128 for IPv6.
+/// Matching is performed with Tuple::isEqualWithMask.
+struct AddressMask
+{
+   Tuple mAddress;
+   short mMaskBits = 0;
+};
+
+EncodeStream&
+operator<<(EncodeStream& ostrm, const AddressMask& addressMask);
+
 }
 
 HashValue(resip::Tuple);
@@ -293,6 +327,7 @@ HashValue(resip::Tuple);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

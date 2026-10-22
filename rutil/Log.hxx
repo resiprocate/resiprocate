@@ -8,8 +8,10 @@
 #include <unistd.h>
 #endif
 
+#include <atomic>
 #include <set>
 
+#include "rutil/ConfigParse.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/Lock.hxx"
 #include "rutil/HashMap.hxx"
@@ -25,11 +27,6 @@
 // crashes in the Mac OS native API.
 #if !defined(TARGET_OS_MAC)
 #define LOG_ENABLE_THREAD_SETTING
-// defining hash function in mac os (non-sdk api) and cygwin because
-// ThreadIf::Id is a pointer,  (this assumes it's always the same pointer)
-#if defined(__APPLE__) || defined(__CYGWIN__)
-HashValue(resip::ThreadIf::Id);
-#endif
 #endif
 
 extern "C"
@@ -91,13 +88,19 @@ class Log
          Bogus = 666
       };
 
+      enum MessageStructure
+      {
+         Unstructured = 0,
+         JSON_CEE
+      };
+
       /// Thread Local logger ID type.
       typedef int LocalLoggerId;
 
       /**
          @brief Implementation for logging macros.
 
-         Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__) << ... ;
+         Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__, __func__) << ... ;
       */
       class Guard
       {
@@ -107,7 +110,8 @@ class Log
             Guard(Level level,
                   const Subsystem& system,
                   const char* file,
-                  int line);
+                  int line,
+                  const char* methodName);
 
             /** Commit logging */
             ~Guard();
@@ -121,6 +125,7 @@ class Log
             resip::Data::size_type mHeaderLength;
             const char* mFile;
             int mLine;
+            const char* mMethodName;
             char mBuffer[128];
             Data mData;
             oDataStream mStream;
@@ -150,7 +155,9 @@ class Log
                                 const Subsystem& subsystem, 
                                 const char* file,
                                 int line,
-                                EncodeStream& strm);
+                                const char* methodName,
+                                EncodeStream& strm,
+                                MessageStructure messageStructure);
 
       static Data& timestamp(Data& result);
       static Data timestamp();
@@ -170,24 +177,35 @@ class Log
                              const Data& appName,
                              const char * logFileName = 0,
                              ExternalLogger* externalLogger = 0,
-                             const Data& syslogFacility = "LOG_DAEMON");
+                             const Data& syslogFacility = "LOG_DAEMON",
+                             MessageStructure messageStructure = Unstructured,
+                             const Data& instanceName = "");
       static void initialize(const Data& type,
                              const Data& level,
                              const Data& appName,
                              const char * logFileName = 0,
                              ExternalLogger* externalLogger = 0,
-                             const Data& syslogFacility = "LOG_DAEMON");
+                             const Data& syslogFacility = "LOG_DAEMON",
+                             const Data& messageStructure = "Unstructured",
+                             const Data& instanceName = "");
       static void initialize(const char* type,
                              const char* level,
                              const char* appName,
                              const char * logFileName = 0,
                              ExternalLogger* externalLogger = 0,
-                             const char* syslogFacility = "LOG_DAEMON");
+                             const char* syslogFacility = "LOG_DAEMON",
+                             const char* messageStructure = "Unstructured",
+                             const char* instanceName = "");
       static void initialize(Type type,
                              Level level,
                              const Data& appName,
                              ExternalLogger& logger,
-                             const Data& syslogFacility = "LOG_DAEMON");
+                             const Data& syslogFacility = "LOG_DAEMON",
+                             MessageStructure messageStructure = Unstructured,
+                             const Data& instanceName = "");
+      static void initialize(const ConfigParse& configParse,
+                             const Data& appName,
+                             ExternalLogger* externalLogger = 0);
 
       /** @brief Set logging level for current thread.
       * If thread has no local logger attached, then set global logging level.
@@ -208,6 +226,8 @@ class Log
       static void setMaxLineCount(unsigned int maxLineCount, LocalLoggerId loggerId);
       static void setMaxByteCount(unsigned int maxByteCount);
       static void setMaxByteCount(unsigned int maxByteCount, LocalLoggerId loggerId);
+      static void setKeepAllLogFiles(bool keepAllLogFiles);
+      static void setKeepAllLogFiles(bool keepAllLogFiles, LocalLoggerId loggerId);
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
@@ -226,7 +246,8 @@ class Log
       static LocalLoggerId localLoggerCreate(Type type,
                                              Level level,
                                              const char * logFileName = NULL,
-                                             ExternalLogger* externalLogger = NULL);
+                                             ExternalLogger* externalLogger = NULL,
+                                             MessageStructure messageStructure = Unstructured);
 
       /** Reinitialize all new setting for a local logger instance
       * @retval 0 on success
@@ -236,7 +257,8 @@ class Log
                                          Type type,
                                          Level level,
                                          const char * logFileName = NULL,
-                                         ExternalLogger* externalLogger = NULL);						
+                                         ExternalLogger* externalLogger = NULL,
+                                         MessageStructure messageStructure = Unstructured);
 
       /** Destroy existing logger instance.
       * @retval 0 on success
@@ -263,25 +285,31 @@ class Log
       static void droppingPrivileges(uid_t uid, pid_t pid);
 #endif
 
-   public:
-      static unsigned int MaxLineCount; 
-      static unsigned int MaxByteCount; 
-
    protected:
       static Mutex _mutex;
-      static volatile short touchCount;
+      static std::atomic<unsigned int> touchCount;
       static const Data delim;
+
+      static unsigned int MaxLineCount;
+      static unsigned int MaxByteCount;
+      static bool KeepAllLogFiles;
 
       class ThreadData
       {
          public:
             ThreadData(LocalLoggerId id, Type type=Cout, Level level=Info,
                        const char *logFileName=NULL,
-                       ExternalLogger *pExternalLogger=NULL)
+                       ExternalLogger *pExternalLogger=NULL,
+                       MessageStructure messageStructure = Unstructured,
+                       const Data& instanceName = "")
                : mLevel(level),
                  mMaxLineCount(0),
                  mMaxByteCount(0),
                  mExternalLogger(pExternalLogger),
+                 mMessageStructure(messageStructure),
+                 mInstanceName(instanceName),
+                 mKeepAllLogFiles(false),
+                 mKeepAllLogFilesSet(false),
                  mId(id),
                  mType(type),
                  mLogger(NULL),
@@ -294,37 +322,37 @@ class Log
             }
             ~ThreadData() { reset(); }
 
-            void set(Type type=Cout, Level level=Info,
-                     const char *logFileName=NULL,
-                     ExternalLogger *pExternalLogger=NULL)
-            {
-               mType = type;
-               mLevel = level;
-
-               if (logFileName)
-               {
-                  mLogFileName = logFileName;
-               }
-               mExternalLogger = pExternalLogger;
-            }
+            void set(Type type = Cout, Level level = Info,
+               const char* logFileName = NULL,
+               ExternalLogger* pExternalLogger = NULL,
+               MessageStructure messageStructure = Unstructured,
+               const Data& instanceName = "");
 
             LocalLoggerId id() const {return mId;}
             unsigned int maxLineCount() { return mMaxLineCount ? mMaxLineCount : MaxLineCount; }  // return local max, if not set use global max
             unsigned int maxByteCount() { return mMaxByteCount ? mMaxByteCount : MaxByteCount; }  // return local max, if not set use global max
+            bool keepAllLogFiles() { return mKeepAllLogFilesSet ? mKeepAllLogFiles : KeepAllLogFiles; } // return local if set, if not use global setting
             Type type() const {return mType;}
+
+            void setKeepAllLogFiles(bool keepAllLogFiles) { mKeepAllLogFiles = keepAllLogFiles; mKeepAllLogFilesSet = true; }
 
             std::ostream& Instance(unsigned int bytesToWrite); ///< Return logger stream instance, creating it if needed.
             void reset(); ///< Frees logger stream
 #ifndef WIN32
             void droppingPrivileges(uid_t uid, pid_t pid);
 #endif
-
             volatile Level mLevel;
             volatile unsigned int mMaxLineCount;
             volatile unsigned int mMaxByteCount;
             ExternalLogger* mExternalLogger;
 
          protected:
+            volatile MessageStructure mMessageStructure;
+            Data mInstanceName;
+
+            volatile bool mKeepAllLogFiles;
+            volatile bool mKeepAllLogFilesSet;
+
             friend class Guard;
             const LocalLoggerId mId;
             Type mType;
@@ -336,13 +364,12 @@ class Log
       static ThreadData mDefaultLoggerData; ///< Default logger settings.
       static Data mAppName;
       static Data mHostname;
+      static Data mFqdn;
       static int mSyslogFacility;
-#ifndef WIN32
-      static pid_t mPid;
-#else   
-      static int mPid;
-#endif
       static const char mDescriptions[][32];
+      static const char mCEEPri[][32];
+      static const int mSyslogPriority[];
+      static Data mInstanceName;
 
       static ThreadData &getLoggerData()
       {
@@ -361,7 +388,8 @@ class Log
          LocalLoggerId create(Type type,
                               Level level,
                               const char * logFileName = NULL,
-                              ExternalLogger* externalLogger = NULL);
+                              ExternalLogger* externalLogger = NULL,
+                              MessageStructure messageStructure = Unstructured);
 
          /** Reinitialize all new setting for a local logger instance
           * @retval 0 on success
@@ -371,7 +399,8 @@ class Log
                           Type type,
                           Level level,
                           const char * logFileName = NULL,
-                          ExternalLogger* externalLogger = NULL);						
+                          ExternalLogger* externalLogger = NULL,
+                          MessageStructure messageStructure = Unstructured);
 
          /** Remove existing logger instance from map and destroy.
          * @retval 0 on success
@@ -426,7 +455,8 @@ public:
       const char* file,
       int line,
       const Data& message,
-      const Data& messageWithHeaders) = 0;
+      const Data& messageWithHeaders,
+      const Data& instanceName) = 0;
 };
 
 /// Class to initialize Log class static variables.

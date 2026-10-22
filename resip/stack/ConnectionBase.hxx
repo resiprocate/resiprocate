@@ -11,6 +11,7 @@
 #include "resip/stack/SendData.hxx"
 #include "resip/stack/WsFrameExtractor.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/ConnectionInfo.hxx"
 
 namespace osc
 {
@@ -47,8 +48,10 @@ class ConnectionBase
       virtual Transport* transport() const;
 
       Tuple& who() { return mWho; }
-      const UInt64& whenLastUsed() { return mLastUsed; }
+      const uint64_t& whenLastUsed() { return mLastUsed; }
       void resetLastUsed() { mLastUsed = Timer::getTimeMs(); }
+
+      void addAdditionalFailureString(const Data& additionalFailureString);
 
       enum { ChunkSize = 8192 }; // !jf! what is the optimal size here?
          // !dp! 8192 seems to be consistent with a multiple of a page size and
@@ -83,7 +86,7 @@ class ConnectionBase
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();
-      char* getWriteBufferForExtraBytes(int extraBytes);
+      char* getWriteBufferForExtraBytes(int bytesRead, int extraBytes);
       
       // for avoiding copies in external transports--not used in core resip
       void setBuffer(char* bytes, int count);
@@ -91,7 +94,7 @@ class ConnectionBase
       Data::size_type mSendPos;
       std::list<SendData*> mOutstandingSends; // !jacob! intrusive queue?
 
-      void setFailureReason(TransportFailure::FailureReason failReason, int subCode);
+      void setFailureReason(TransportFailure::FailureReason failReason, int subCode, const Data& failureString);
 
       virtual ~ConnectionBase();
       // no value semantics
@@ -100,16 +103,23 @@ class ConnectionBase
       ConnectionBase(const Connection&);
       ConnectionBase& operator=(const Connection&);
       bool scanMsgHeader(int bytesRead);
-      std::auto_ptr<Data> makeWsHandshakeResponse();
+      std::unique_ptr<Data> makeWsHandshakeResponse();
       bool isUsingSecWebSocketKey();
       bool isUsingDeprecatedSecWebSocketKeys();
+      const std::shared_ptr<const ConnectionInfo>& getConnectionInfo();
    protected:
       virtual void onDoubleCRLF(){}
       virtual void onSingleCRLF(){}
+      // WebSocket control frames from the peer (RFC 6455 section 5.5); the payload of a
+      // Close is its status code and reason, if it sent any
+      virtual void onWsClose(const Data& payload){}
+      virtual void onWsPing(const Data& payload){}
       Transport* mTransport;
       Tuple mWho;
-      TransportFailure::FailureReason mFailureReason;      
+      TransportFailure::FailureReason mFailureReason;
       int mFailureSubCode;
+      Data mFailureString;
+      std::list<Data> mAdditionalFailureStrings;
       Compression &mCompression;
       osc::Stack *mSigcompStack;
       osc::TcpStream *mSigcompFramer;
@@ -124,9 +134,14 @@ class ConnectionBase
       WsFrameExtractor mWsFrameExtractor;
 
       static char connectionStates[MAX][32];
-      UInt64 mLastUsed;
+      uint64_t mLastUsed;
       ConnState mConnState;
       MsgHeaderScanner mMsgHeaderScanner;
+
+      // TLS/WebSocket details given to every message received on this
+      // connection; built when the first message arrives
+      std::shared_ptr<const ConnectionInfo> mConnectionInfo;
+      bool mConnectionInfoBuilt = false;
 
       static size_t messageSizeMax;
 
@@ -144,6 +159,7 @@ operator<<(EncodeStream& strm, const resip::ConnectionBase& c);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without

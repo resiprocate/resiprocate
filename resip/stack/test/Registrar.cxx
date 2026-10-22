@@ -27,9 +27,9 @@ Registrar::go()
       SipMessage* reg = mTransceiver.receive(5);
       if(reg)
       {
-         auto_ptr<SipMessage> forDel(reg);
+         unique_ptr<SipMessage> forDel(reg);
          
-         auto_ptr<SipMessage> response(Helper::makeResponse(*reg, 200));
+         unique_ptr<SipMessage> response(Helper::makeResponse(*reg, 200));
          response->header(h_StatusLine).reason() = "OK";
          response->header(h_Contacts) = reg->header(h_Contacts);
          mTransceiver.send(*response);

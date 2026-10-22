@@ -3,6 +3,8 @@
 #include "ReconSubsystem.hxx"
 #include "UserAgentMasterProfile.hxx"
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -11,12 +13,14 @@ using namespace std;
 
 UserAgentMasterProfile::UserAgentMasterProfile()
 : mStatisticsManagerEnabled(false),
+  mServerAuthManagerEnabled(true),
+  mDTMFDigitLoggingEnabled(true),
   mRTPPortRangeMin(16384),
   mRTPPortRangeMax(17385),
   mSubscriptionRetryInterval(60)
 {
 #ifdef WIN32
-   mCertPath = ".";
+   mCertPath = "./certs";
 #else
    const char* home_dir = getenv("HOME");
    if(home_dir)
@@ -27,28 +31,81 @@ UserAgentMasterProfile::UserAgentMasterProfile()
 #endif
 }
 
+void
+UserAgentMasterProfile::setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept
+{
+   mTransportSipMessageLoggingHandler = handler;
+}
+
+std::shared_ptr<Transport::SipMessageLoggingHandler>
+UserAgentMasterProfile::getTransportSipMessageLoggingHandler() const noexcept
+{
+   return mTransportSipMessageLoggingHandler;
+}
+
+void
+UserAgentMasterProfile::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> handler) noexcept
+{
+   mRTCPEventLoggingHandler = handler;
+}
+
+std::shared_ptr<flowmanager::RTCPEventLoggingHandler>
+UserAgentMasterProfile::getRTCPEventLoggingHandler() const noexcept
+{
+   return mRTCPEventLoggingHandler;
+}
+
+bool&
+UserAgentMasterProfile::dtmfDigitLoggingEnabled()
+{
+   return mDTMFDigitLoggingEnabled;
+}
+
+const bool
+UserAgentMasterProfile::dtmfDigitLoggingEnabled() const
+{
+   return mDTMFDigitLoggingEnabled;
+}
+
 void 
 UserAgentMasterProfile::addTransport( TransportType protocol,
                                       int port, 
                                       IpVersion version,
+                                      StunSetting stun,
                                       const Data& ipInterface, 
                                       const Data& sipDomainname,
-                                      SecurityTypes::SSLType sslType)
+                                      const Data& privateKeyPassPhrase,
+                                      SecurityTypes::SSLType sslType,
+                                      unsigned transportFlags,
+                                      const Data& certificateFilename,
+                                      const Data& privateKeyFilename,
+                                      SecurityTypes::TlsClientVerificationMode cvm,
+                                      bool useEmailAsSIP,
+                                      unsigned int rcvBufLen)
 {
    TransportInfo info;
 
    info.mProtocol = protocol;
    info.mPort = port;
+   info.mActualPort = 0; // Only set after UserAgent is created and transports are added.  Useful if mPort is specified as ephemeral (0).
    info.mIPVersion = version;
    info.mIPInterface = ipInterface;
+   info.mStunEnabled = stun;
    info.mSipDomainname = sipDomainname;
+   info.mTlsPrivateKeyPassPhrase = privateKeyPassPhrase;
    info.mSslType = sslType;
+   info.mTransportFlags = transportFlags;
+   info.mTlsCertificate = certificateFilename;
+   info.mTlsPrivateKey = privateKeyFilename;
+   info.mCvm = cvm;
+   info.mUseEmailAsSIP = useEmailAsSIP;
+   info.mRcvBufLen = rcvBufLen;
 
    mTransports.push_back(info);
 }
 
-const std::vector<UserAgentMasterProfile::TransportInfo>& 
-UserAgentMasterProfile::getTransports() const
+std::vector<UserAgentMasterProfile::TransportInfo>& 
+UserAgentMasterProfile::getTransports()
 {
    return mTransports;
 }
@@ -125,6 +182,18 @@ UserAgentMasterProfile::statisticsManagerEnabled() const
    return mStatisticsManagerEnabled;
 }
 
+bool&
+UserAgentMasterProfile::serverAuthManagerEnabled()
+{
+   return mServerAuthManagerEnabled;
+}
+
+const bool
+UserAgentMasterProfile::serverAuthManagerEnabled() const
+{
+   return mServerAuthManagerEnabled;
+}
+
 unsigned short& 
 UserAgentMasterProfile::rtpPortRangeMin()
 {
@@ -164,6 +233,7 @@ UserAgentMasterProfile::subscriptionRetryInterval() const
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -50,7 +50,7 @@ TfdTestSipEndPoint::TerminateConnection::operator()()
 }
 
 void 
-TfdTestSipEndPoint::TerminateConnection::operator()(boost::shared_ptr<Event> event)
+TfdTestSipEndPoint::TerminateConnection::operator()(std::shared_ptr<Event> event)
 {
    go();
 }

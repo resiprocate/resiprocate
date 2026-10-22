@@ -7,27 +7,12 @@
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
-
-std::auto_ptr<TransportDriver> TransportDriver::mInstance;
-resip::Mutex TransportDriver::mInstanceMutex;      
-
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST   
 
 TransportDriver& TransportDriver::instance()
 {
-   if (mInstance.get())
-   {
-      return *mInstance.get();
-   }
-   else
-   {
-      Lock guard(mInstanceMutex);
-      if (!mInstance.get())
-      {
-         mInstance = auto_ptr<TransportDriver>(new TransportDriver());
-      }
-      return *mInstance.get();
-   }
+   static TransportDriver instance;
+   return instance;
 }
    
 

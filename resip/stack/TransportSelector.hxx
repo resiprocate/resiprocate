@@ -59,7 +59,7 @@ members are accessed from the TransactionController processing loop.
 class TransportSelector
 {
    public:
-      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
+      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression, bool useDnsVip);
       virtual ~TransportSelector();
 
       /**
@@ -97,7 +97,7 @@ class TransportSelector
       void poke();
 
       /// Add/Remove a transport
-      void addTransport(std::auto_ptr<Transport> transport, bool isStackRunning);
+      void addTransport(std::unique_ptr<Transport> transport, bool isStackRunning);
       void removeTransport(unsigned int transportKey);
 
       /// DNS Resolution
@@ -153,53 +153,40 @@ class TransportSelector
          }
       }
 
+      void invokeAfterSocketCreationFunc(TransportType type);
+
       /**
          @internal - public only for stream operator access
       */
       class TlsTransportKey
       {
          public:
-            TlsTransportKey(const resip::Tuple& tuple) : mTuple(tuple) {}
-            TlsTransportKey(const resip::Data& domainName, resip::TransportType type, resip::IpVersion version) :
-               mTuple(Data::Empty, 0, version, type, domainName) {}
-            TlsTransportKey(const TlsTransportKey& orig) { mTuple = orig.mTuple; }
-            ~TlsTransportKey(){}
+            TlsTransportKey() = delete;
+            TlsTransportKey(const resip::Data& domainName, const resip::Tuple& tuple);
+            TlsTransportKey(const TlsTransportKey&) = default;
+            TlsTransportKey& operator=(const TlsTransportKey&) = default;
+            TlsTransportKey(TlsTransportKey&&) = default;
+            TlsTransportKey& operator=(TlsTransportKey&&) = default;
+            ~TlsTransportKey() = default;
 
-            bool operator<(const TlsTransportKey& rhs) const
-            {
-               if(mTuple.getTargetDomain() < rhs.mTuple.getTargetDomain())
-               {
-                  return true;
-               }
-               else if(mTuple.getTargetDomain() == rhs.mTuple.getTargetDomain())
-               {
-                  if(mTuple.getType() < rhs.mTuple.getType())
-                  {
-                     return true;
-                  }
-                  else if(mTuple.getType() == rhs.mTuple.getType())
-                  {
-                     return mTuple.ipVersion() < rhs.mTuple.ipVersion();
-                  }
-               }
-               return false;
-            }
+            // Comparison operator which follow strict rules.
+            bool operator<(const TlsTransportKey& rhs) const;
 
             resip::Tuple mTuple;
-
-         private:
-            TlsTransportKey();
       };
+
+   protected:  // for unit tests (testTransportSelector)
+      Transport* findTransportBySource(Tuple& src, const SipMessage* msg) const;
+      Transport* findTransportByDest(const Tuple& dest);
 
    private:
       void checkTransportAddRemoveQueue();
       Connection* findConnection(const Tuple& dest) const;
-      Transport* findTransportBySource(Tuple& src, const SipMessage* msg) const;
       Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
-      Transport* findTransportByDest(const Tuple& dest);
       Transport* findTransportByVia(SipMessage* msg, const Tuple& dest, Tuple& src) const;
-      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv) const;
+      Transport* findTlsTransport(const Data& domain, const Tuple& search) const;
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
+      void rebuildAnyPortTransportMaps(void);
 
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
@@ -251,7 +238,7 @@ class TransportSelector
 
       int mAvgBufferSize;
       Fifo<Transport> mTransportsToAddRemove;
-      std::auto_ptr<SelectInterruptor> mSelectInterruptor;
+      std::unique_ptr<SelectInterruptor> mSelectInterruptor;
       FdPollItemHandle mInterruptorHandle;
 
       friend class TestTransportSelector;
@@ -268,6 +255,7 @@ operator<<(EncodeStream& ostrm, const TransportSelector::TlsTransportKey& tlsTra
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

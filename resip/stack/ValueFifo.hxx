@@ -90,12 +90,12 @@ class ValueFifo : public resip::FifoStatsInterface
          {
             if (myTimerQueue.empty())
             {
-               myCondition.wait(&myMutex);
+               myCondition.wait(lock);
             }
             else
             {
-               myCondition.wait(&myMutex, myTimerQueue.getTimeout());
-            }            
+               myCondition.wait_for(lock, std::chrono::milliseconds(myTimerQueue.getTimeout()));
+            }
          }
 
          while (myTimerQueue.available())
@@ -170,7 +170,7 @@ class ValueFifo : public resip::FifoStatsInterface
       
       void wakeup()
       {
-         myCondition.signal();
+         myCondition.notify_one();
       }
       
       std::deque<T> myList;

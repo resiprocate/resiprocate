@@ -4,6 +4,9 @@
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
 
+#include <functional>
+#include <iterator>
+
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
@@ -12,11 +15,11 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncSocketBase::AsyncSocketBase(asio::io_service& ioService) : 
+AsyncSocketBase::AsyncSocketBase(asio::io_context& ioService) : 
   mIOService(ioService),
   mReceiving(false),
   mConnected(false),
-  mAsyncSocketBaseHandler(0)
+  mAsyncSocketBaseHandler(nullptr)
 {
 }
 
@@ -26,42 +29,47 @@ AsyncSocketBase::~AsyncSocketBase()
 }
 
 void 
-AsyncSocketBase::send(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data)
+AsyncSocketBase::send(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data)
 {
-   mIOService.dispatch(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, data, 0));
+   shared_ptr<AsyncSocketBase> _this = shared_from_this();
+   asio::dispatch(mIOService, std::bind([_this, destination, data](){
+	   _this->doSend(destination, data, 0);
+   }));
 }
 
 void 
-AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data)
+AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data)
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, channel, data, 0));
+   shared_ptr<AsyncSocketBase> _this = shared_from_this();
+   asio::dispatch(mIOService, std::bind([_this, destination, channel, data](){
+      _this->doSend(destination, channel, data, 0);
+   }));
 }
 
 void
-AsyncSocketBase::doSend(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data, unsigned int bufferStartPos)
+AsyncSocketBase::doSend(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data, const std::size_t bufferStartPos)
 {
    doSend(destination, NO_CHANNEL, data, bufferStartPos);
 }
 
 void
-AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data, unsigned int bufferStartPos)
+AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data, const std::size_t bufferStartPos)
 {
    bool writeInProgress = !mSendDataQueue.empty();
-   if(channel == NO_CHANNEL)
+   if (channel == NO_CHANNEL)
    {
-      boost::shared_ptr<DataBuffer> empty;
-      mSendDataQueue.push_back(SendData(destination, empty, data, bufferStartPos));
+      mSendDataQueue.push_back(SendData(destination, nullptr, data, bufferStartPos));
    }
    else
    {
       // Add Turn Framing
-      boost::shared_ptr<DataBuffer> frame = allocateBuffer(4);
+      const auto frame = allocateBuffer(4);
       channel = htons(channel);
       memcpy(&(*frame)[0], &channel, 2);
       unsigned short msgsize = htons((unsigned short)data->size());
-      memcpy(&(*frame)[2], (void*)&msgsize, 2);  // UDP doesn't need size - but shouldn't hurt to send it anyway
-
-      mSendDataQueue.push_back(SendData(destination, frame, data, bufferStartPos));
+      memcpy(&(*frame)[2], (void*)&msgsize, 2);
+      const size_t padding = destination.getTransportType() == StunTuple::UDP ? 0 : channelDataPadding(data->size());
+      mSendDataQueue.push_back(SendData(destination, frame, data, bufferStartPos, padding));
    }
    if (!writeInProgress)
    {
@@ -95,18 +103,23 @@ void
 AsyncSocketBase::sendFirstQueuedData()
 {
    std::vector<asio::const_buffer> bufs;
-   if(mSendDataQueue.front().mFrameData.get() != 0) // If we have frame data
+   if (mSendDataQueue.front().mFrameData) // If we have frame data
    {
       bufs.push_back(asio::buffer(mSendDataQueue.front().mFrameData->data(), mSendDataQueue.front().mFrameData->size()));
    }
    bufs.push_back(asio::buffer(mSendDataQueue.front().mData->data()+mSendDataQueue.front().mBufferStartPos, mSendDataQueue.front().mData->size()-mSendDataQueue.front().mBufferStartPos));
+   if (mSendDataQueue.front().mPadding)
+   {
+      static const char zeros[3] = { 0, 0, 0 };
+      bufs.push_back(asio::buffer(zeros, mSendDataQueue.front().mPadding));
+   }
    transportSend(mSendDataQueue.front().mDestination, bufs);
 }
 
 void 
 AsyncSocketBase::receive()
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doReceive, shared_from_this()));
+   asio::post(mIOService, std::bind(&AsyncSocketBase::doReceive, shared_from_this()));
 }
 
 void
@@ -123,7 +136,7 @@ AsyncSocketBase::doReceive()
 void 
 AsyncSocketBase::framedReceive()
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doFramedReceive, shared_from_this()));
+   asio::post(mIOService, std::bind(&AsyncSocketBase::doFramedReceive, shared_from_this()));
 }
 
 void
@@ -138,7 +151,7 @@ AsyncSocketBase::doFramedReceive()
 }
 
 void 
-AsyncSocketBase::handleReceive(const asio::error_code& e, std::size_t bytesTransferred)
+AsyncSocketBase::handleReceive(const asio::error_code& e, const size_t bytesTransferred)
 {
    mReceiving = false;
 
@@ -158,13 +171,140 @@ AsyncSocketBase::handleReceive(const asio::error_code& e, std::size_t bytesTrans
 void 
 AsyncSocketBase::close()
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::transportClose, shared_from_this()));
+   asio::post(mIOService, std::bind(&AsyncSocketBase::transportClose, shared_from_this()));
 }
 
-boost::shared_ptr<DataBuffer>  
-AsyncSocketBase::allocateBuffer(unsigned int size)
+std::shared_ptr<DataBuffer>
+AsyncSocketBase::allocateBuffer(const size_t size)
 {
-   return boost::shared_ptr<DataBuffer>(new DataBuffer(size));
+   return std::make_shared<DataBuffer>(size);
+}
+
+void
+AsyncSocketBase::setExclusiveAddressUse(asio::ip::udp::socket& socket)
+{
+#ifdef _WIN32
+   BOOL on = TRUE;
+   if(::setsockopt(socket.native_handle(), SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char*)&on, sizeof(on)) != 0)
+   {
+      WarningLog(<< "Unable to set SO_EXCLUSIVEADDRUSE on a UDP socket, error=" << WSAGetLastError());
+   }
+#else
+   (void)socket;
+#endif
+}
+
+asio::error_code
+AsyncSocketBase::openAndBind(asio::ip::tcp::socket& socket)
+{
+   asio::error_code errorCode;
+   socket.close(errorCode);
+   socket.open(mLocalTcpEndpoint.protocol(), errorCode);
+   if(!errorCode)
+   {
+      asio::error_code ignored;
+      socket.set_option(asio::ip::tcp::no_delay(true), ignored); // ?slg? do we want this?
+      socket.set_option(asio::ip::tcp::socket::reuse_address(true), ignored);
+      socket.bind(mLocalTcpEndpoint, errorCode);
+   }
+   return errorCode;
+}
+
+void
+AsyncSocketBase::asyncConnect(asio::ip::tcp::socket& socket, const asio::ip::tcp::resolver::results_type& endpoints)
+{
+   asyncConnectFrom(socket, endpoints, endpoints.begin(), asio::error::host_not_found);
+}
+
+void
+AsyncSocketBase::asyncConnectFrom(asio::ip::tcp::socket& socket, asio::ip::tcp::resolver::results_type endpoints,
+                                  asio::ip::tcp::resolver::results_type::const_iterator next, asio::error_code lastError)
+{
+   if(next == endpoints.end())
+   {
+      handleConnect(lastError, asio::ip::tcp::endpoint());
+      return;
+   }
+
+   // Each attempt on a new socket, bound to the local endpoint
+   asio::error_code errorCode = openAndBind(socket);
+   if(errorCode)
+   {
+      handleConnect(errorCode, asio::ip::tcp::endpoint());
+      return;
+   }
+
+   const asio::ip::tcp::endpoint endpoint = *next;
+   std::shared_ptr<AsyncSocketBase> self = shared_from_this();
+   socket.async_connect(endpoint, [self, &socket, endpoints, next, endpoint](const asio::error_code& ec)
+   {
+      // Done if connected, or if the socket has been closed meanwhile; otherwise try the next endpoint
+      if(!ec || ec == asio::error::operation_aborted)
+      {
+         self->handleConnect(ec, endpoint);
+      }
+      else
+      {
+         self->asyncConnectFrom(socket, endpoints, std::next(next), ec);
+      }
+   });
+}
+
+void
+AsyncSocketBase::startIdleTimer(unsigned int timeoutSeconds, std::function<bool()> inUse)
+{
+   if(timeoutSeconds == 0)
+   {
+      return;
+   }
+   mIdleTimeout = std::chrono::seconds(timeoutSeconds);
+   mInUse = std::move(inUse);
+   mIdleTimer.reset(new asio::steady_timer(mIOService));
+   noteReceived();
+   waitIdle(mIdleTimeout);
+}
+
+void
+AsyncSocketBase::stopIdleTimer()
+{
+   mInUse = nullptr;  // in case the timer has fired already, and its handler is queued
+   if(mIdleTimer)
+   {
+      mIdleTimer->cancel();
+   }
+}
+
+void
+AsyncSocketBase::waitIdle(std::chrono::steady_clock::duration wait)
+{
+   // Rather than being set again for each message received, the timer is set for when the
+   // connection would have been idle long enough, and then checks.  It holds a weak reference: it
+   // doesn't keep a stopped connection alive.
+   std::weak_ptr<AsyncSocketBase> weakSelf = shared_from_this();
+   mIdleTimer->expires_after(wait);
+   mIdleTimer->async_wait([weakSelf](const asio::error_code& e)
+   {
+      std::shared_ptr<AsyncSocketBase> self = weakSelf.lock();
+      if(e == asio::error::operation_aborted || !self || !self->mInUse)
+      {
+         return;
+      }
+      const std::chrono::steady_clock::duration idle = std::chrono::steady_clock::now() - self->mLastReceived;
+      if(self->mInUse())
+      {
+         self->waitIdle(self->mIdleTimeout);  // kept for as long as it's in use
+      }
+      else if(idle < self->mIdleTimeout)
+      {
+         self->waitIdle(self->mIdleTimeout - idle);
+      }
+      else
+      {
+         InfoLog(<< "Closing the connection from " << self->mConnectedAddress.to_string() << ":" << self->mConnectedPort
+                 << ": nothing received for " << std::chrono::duration_cast<std::chrono::seconds>(idle).count() << " seconds");
+         self->close();
+      }
+   });
 }
 
 } // namespace
@@ -172,6 +312,7 @@ AsyncSocketBase::allocateBuffer(unsigned int size)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

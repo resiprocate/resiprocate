@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <ctype.h>
+
 #include <cppunit/TextTestRunner.h>
 #include <cppunit/TextTestResult.h>
 #include <cppunit/TextOutputter.h>
@@ -14,6 +16,7 @@
 #include "rutil/Random.hxx"
 #include "tfm/repro/CommandLineParser.hxx"
 #include "tfm/repro/ReproFixture.hxx"
+#include "tfm/repro/TestRepro.hxx"
 #include "tfm/RouteGuard.hxx"
 #include "tfm/Sequence.hxx"
 #include "tfm/SipEvent.hxx"
@@ -23,6 +26,7 @@
 #include "tfm/predicates/ExpectUtils.hxx"
 #include "tfm/CppTestSelector.hxx"
 #include "tfm/CPTextTestProgressListener.hxx"
+#include "tfm/TfmHelper.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -37,9 +41,9 @@ static const int WaitFor180Spiral = 5000;  // Give more time since response is g
 static const int WaitFor487 = 1000;
 static const int WaitForAck = 1000;  //immediate ACK for 4xx and CANCEL; not ACK for 200
 static const int WaitForCommand = 1000;
-static const int WaitForCommandSpiral = 5000;  // Give more time since command is going to spiral first
+static const int WaitForCommandSpiral = 8000;  // Give more time since command is going to spiral first
 static const int WaitForResponse = 1000;
-static const int WaitForResponseSpiral = 5000; // Give more time since respond is going to spiral first
+static const int WaitForResponseSpiral = 8000; // Give more time since respond is going to spiral first
 static const int WaitForResponseLoop = 60000; // Give more time since respond is going to loop first
 static const int WaitForRegistration = 1000;
 static const int PauseTime = 100;
@@ -47,6 +51,15 @@ static const int WaitForPause = 1100;
 static const int WaitForEndOfTest = 100;
 static const int WaitForEndOfSeq = 100;
 static const int Seconds = 1000;
+// How late after its nominal interval a retransmission may arrive: the doubling
+// T1 interval of Timers A and E, or of Timer G for a response, capped at T2
+// for all but Timer A.
+// The proxy's timers and TFM's event handling both add delay, more so on a
+// loaded CI machine.  This was 100 ms, which retransmissions measurably
+// overran on Windows CI.  Keep it below T1, the shortest retransmission
+// interval, so that a missing retransmission still fails the test: the next
+// one arrives at least a full interval later.
+static const int RetransmitSlack = 250;
 
 // If defined test which are labeled with BUGTEST or BADTESTS will
 // be run.
@@ -83,8 +96,8 @@ class DisableDigestAuthGuard
 class TestHolder : public ReproFixture
 {
    public:
-      static boost::shared_ptr<SipMessage>
-      bogusAuth(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      bogusAuth(std::shared_ptr<SipMessage> msg)
       {
          if(msg->exists(h_ProxyAuthorizations))
          {
@@ -108,8 +121,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      badNonce(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      badNonce(std::shared_ptr<SipMessage> msg)
       {
          if(msg->exists(h_ProxyAuthorizations))
          {
@@ -123,52 +136,52 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      noUserInTo(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      noUserInTo(std::shared_ptr<SipMessage> msg)
       {
          msg->header(h_To).uri().user()="";
          return msg;
       }
       
-      static boost::shared_ptr<SipMessage>
-      userInReqUri(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      userInReqUri(std::shared_ptr<SipMessage> msg)
       {
          msg->header(h_RequestLine).uri().user()="boom";
          return msg;
       }
 
-   static boost::shared_ptr<SipMessage>
-   unknownHostInTo(boost::shared_ptr<SipMessage> msg)
+   static std::shared_ptr<SipMessage>
+   unknownHostInTo(std::shared_ptr<SipMessage> msg)
    {
       
       msg->header(h_To).uri().host()="po9eiwi7hpfnqvn89hpbcn";
       return msg;
    }
    
-   static boost::shared_ptr<SipMessage>
-   unknownHostInFrom(boost::shared_ptr<SipMessage> msg)
+   static std::shared_ptr<SipMessage>
+   unknownHostInFrom(std::shared_ptr<SipMessage> msg)
    {
       
       msg->header(h_From).uri().host()="po9eiwi7hpfnqvn89hpbcn";
       return msg;
    }
    
-   static boost::shared_ptr<SipMessage>
-   unknownUserInTo(boost::shared_ptr<SipMessage> msg)
+   static std::shared_ptr<SipMessage>
+   unknownUserInTo(std::shared_ptr<SipMessage> msg)
    {
       msg->header(h_To).uri().user()="n97n3qwbefcpp";
       return msg;
    }
 
-   static boost::shared_ptr<SipMessage>
-   unknownUserInFrom(boost::shared_ptr<SipMessage> msg)
+   static std::shared_ptr<SipMessage>
+   unknownUserInFrom(std::shared_ptr<SipMessage> msg)
    {
       msg->header(h_From).uri().user()="n97n3qwbefcpp";
       return msg;
    }
 
-      static boost::shared_ptr<SipMessage>
-      largeCallId(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      largeCallId(std::shared_ptr<SipMessage> msg)
       {
          const int oversize = 4096;
          Data callId(oversize, Data::Preallocate);
@@ -182,8 +195,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      largeContact(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      largeContact(std::shared_ptr<SipMessage> msg)
       {
          resip_assert(msg->exists(h_Contacts) &&
                 !msg->header(h_Contacts).empty());
@@ -200,54 +213,54 @@ class TestHolder : public ReproFixture
          return msg;
       }
       
-      static boost::shared_ptr<SipMessage>
-      inviteCSeq(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      inviteCSeq(std::shared_ptr<SipMessage> msg)
       {
          msg->header(resip::h_CSeq).method()=resip::INVITE;
          msg->header(resip::h_CSeq).unknownMethodName()="INVITE";         
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      cancelCSeq(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      cancelCSeq(std::shared_ptr<SipMessage> msg)
       {
          msg->header(resip::h_CSeq).method()=resip::CANCEL;
          msg->header(resip::h_CSeq).unknownMethodName()="CANCEL";         
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      ackCSeq(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      ackCSeq(std::shared_ptr<SipMessage> msg)
       {
          msg->header(resip::h_CSeq).method()=resip::ACK;
          msg->header(resip::h_CSeq).unknownMethodName()="ACK";         
          return msg;
       }
       
-      static boost::shared_ptr<SipMessage>
-      unknownCSeq(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      unknownCSeq(std::shared_ptr<SipMessage> msg)
       {
          msg->header(resip::h_CSeq).method()=resip::UNKNOWN;
          msg->header(resip::h_CSeq).unknownMethodName()="blargagsaqq";         
          return msg;
       }
       
-      static boost::shared_ptr<SipMessage>
-      missingTid(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      missingTid(std::shared_ptr<SipMessage> msg)
       {
          msg->header(h_Vias).front().remove(p_branch);
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      unknownProxyRequire(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      unknownProxyRequire(std::shared_ptr<SipMessage> msg)
       {
          msg->header(h_ProxyRequires).push_back(Token("foobajooba"));
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      supportedProxyRequire(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      supportedProxyRequire(std::shared_ptr<SipMessage> msg)
       {
          // !bwc! TODO Once we have something we _do_ support, put that here.
          msg->header(h_ProxyRequires).push_back(Token("p-fakeoption"));
@@ -268,12 +281,12 @@ class TestHolder : public ReproFixture
          // line all lies on one line.
          size_t endStartLine = msg.find("\r\n");
          Data result("SIP/2.0 200 OK");
-         result+=msg.substr(endStartLine);
+         result+=msg.substr((Data::size_type)endStartLine);
          return result;
       }
 
-      static boost::shared_ptr<SipMessage>
-      addRecordRoute(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      addRecordRoute(std::shared_ptr<SipMessage> msg)
       {
          resip::NameAddr rr("bogus@blahblahblah");
          msg->header(h_RecordRoutes).push_front(rr);
@@ -284,17 +297,17 @@ class TestHolder : public ReproFixture
       {
          public:
             AssertNoRecordRoutes();
-            virtual void operator()(boost::shared_ptr<Event> event)
+            virtual void operator()(std::shared_ptr<Event> event)
             {
                SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
                resip_assert(sipEvent);
-               boost::shared_ptr<SipMessage> msg = sipEvent->getMessage();
+               std::shared_ptr<SipMessage> msg = sipEvent->getMessage();
                resip_assert(!msg->exists(h_RecordRoutes));
             }
       };
 
-      static boost::shared_ptr<SipMessage>
-      makeMessage(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      makeMessage(std::shared_ptr<SipMessage> msg)
       {
          if(msg->isRequest())
          {
@@ -304,8 +317,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      makeInfo(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      makeInfo(std::shared_ptr<SipMessage> msg)
       {
          if(msg->isRequest())
          {
@@ -315,8 +328,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      makeInvite(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      makeInvite(std::shared_ptr<SipMessage> msg)
       {
          if(msg->isRequest())
          {
@@ -326,8 +339,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
       
-      static boost::shared_ptr<SipMessage>
-      makeAck(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      makeAck(std::shared_ptr<SipMessage> msg)
       {
          if(msg->isRequest())
          {
@@ -337,42 +350,42 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      fiddleBranchCase(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      fiddleBranchCase(std::shared_ptr<SipMessage> msg)
       {
          resip_assert(msg->isResponse());
          // Yes, this is evil. However, BranchParameter does not expose any API
          // for doing this evil, evil thing.
          Data& branch = *const_cast<Data*>(&(msg->header(h_Vias).front().param(p_branch).getTransactionId()));
-         for(size_t i=0;i<branch.size();++i)
+         for(Data::size_type i=0;i<branch.size();++i)
          {
-            if(isupper(branch[i]))
+            if(isupper(static_cast< unsigned char >(branch[i])))
             {
-               branch[i] = tolower(branch[i]);
+               branch[i] = tolower(static_cast< unsigned char >(branch[i]));
             }
-            else if(islower(branch[i]))
+            else if(islower(static_cast< unsigned char >(branch[i])))
             {
-               branch[i] = toupper(branch[i]);
+               branch[i] = toupper(static_cast< unsigned char >(branch[i]));
             }
          }
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      upperBranchCase(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      upperBranchCase(std::shared_ptr<SipMessage> msg)
       {
          // Yes, this is evil. However, BranchParameter does not expose any API
          // for doing this evil, evil thing.
          Data& branch = *const_cast<Data*>(&(msg->header(h_Vias).front().param(p_branch).getTransactionId()));
-         for(size_t i=0;i<branch.size();++i)
+         for(Data::size_type i=0;i<branch.size();++i)
          {
-            branch[i] = toupper(branch[i]);
+            branch[i] = toupper(static_cast< unsigned char >(branch[i]));
          }
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      removeProxyVias(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      removeProxyVias(std::shared_ptr<SipMessage> msg)
       {
          resip_assert(msg->header(h_Vias).size()>1);
          resip_assert(msg->isResponse());
@@ -382,8 +395,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      addProxyVia(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      addProxyVia(std::shared_ptr<SipMessage> msg)
       {
          resip_assert(msg->header(h_Vias).size()>1);
          resip_assert(msg->isResponse());
@@ -394,8 +407,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      corruptProxyBranch(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      corruptProxyBranch(std::shared_ptr<SipMessage> msg)
       {
          resip_assert(msg->header(h_Vias).size()>1);
          resip_assert(msg->isResponse());
@@ -410,8 +423,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      removeTo(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      removeTo(std::shared_ptr<SipMessage> msg)
       {
          msg->remove(h_To);
          return msg;
@@ -580,7 +593,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testRegister407Dropped!*");
 
-      boost::shared_ptr<SipMessage> reg;
+      std::shared_ptr<SipMessage> reg;
       Seq(save(reg,jason->registerUser(60,jason->getDefaultContacts())),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->retransmit(reg)),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
@@ -633,7 +646,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testRegisterClientRetransmits!*");
 
-      boost::shared_ptr<SipMessage> reg;
+      std::shared_ptr<SipMessage> reg;
       Seq(save(reg, jason->registerUser(60, jason->getDefaultContacts())),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->retransmit(reg)),
@@ -1218,7 +1231,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testRegister407DroppedWithOutbound!*");
       
-      boost::shared_ptr<SipMessage> reg;
+      std::shared_ptr<SipMessage> reg;
       Seq
       (
          save(reg,jason->registerUserWithOutbound(60,jason->getDefaultContacts())),
@@ -1288,7 +1301,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testRegisterClientRetransmitsWithOutbound!*");
 
-      boost::shared_ptr<SipMessage> reg;
+      std::shared_ptr<SipMessage> reg;
       Seq(save(reg, jason->registerUserWithOutbound(60, jason->getDefaultContacts())),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->retransmit(reg)),
@@ -2257,7 +2270,7 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               david->expect(INVITE/480, contact(derek),WaitForResponse,david->ack())
+               david->expect(INVITE/500, contact(derek),WaitForResponse,david->ack())
             )
             
          ),
@@ -2415,7 +2428,7 @@ class TestHolder : public ReproFixture
             (
                optional(jason->expect(INVITE/100,from(proxy),WaitForResponse,jason->noAction())),
                jason->expect(INVITE/180,contact(derek),WaitForResponse,jason->noAction()),
-               jason->expect(INVITE/480,contact(derek),WaitForResponse,chain(jason->cancel(),jason->pause(30),jason->ack())),
+               jason->expect(INVITE/500,contact(derek),WaitForResponse,chain(jason->cancel(),jason->pause(30),jason->ack())),
                jason->expect(CANCEL/200,from(proxy),WaitForResponse,jason->noAction())
             ),
             Sub
@@ -2530,7 +2543,7 @@ class TestHolder : public ReproFixture
           And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
               Sub(jason->expect(INVITE, contact(derek), WaitForCommand, chain(jason->send100(),jason->send503())),
                   jason->expect(ACK, from(proxy), WaitForAck, jason->noAction()),
-                  derek->expect(INVITE/480, from(proxy), WaitForResponse, derek->ack()))),
+                  derek->expect(INVITE/500, from(proxy), WaitForResponse, derek->ack()))),
           WaitForEndOfTest);
       
       ExecuteSequences();  
@@ -3266,7 +3279,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testInvite407Dropped!*");
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
 
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
@@ -3362,7 +3375,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
       Seq(derek->invite(*jason),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
@@ -3389,7 +3402,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
 
       Seq
       (
@@ -3427,8 +3440,8 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
       
-      boost::shared_ptr<SipMessage> inv;
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> ok;
       Seq(save(inv, derek->invite(*jason)),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
@@ -3452,7 +3465,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
       Seq(derek->invite(*jason),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
@@ -3482,7 +3495,8 @@ class TestHolder : public ReproFixture
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfSeq);
       ExecuteSequences();
-      
+
+      dynamic_cast<TestRepro *>(ReproFixture::proxy)->setQValueTargetHandlerCancelGroups(false);
       Seq
       (
          jason->invite(*derek),
@@ -3492,7 +3506,7 @@ class TestHolder : public ReproFixture
          optional(jason->expect(INVITE/100, from(proxy),WaitFor100,jason->noAction())),
          derek->expect(INVITE,contact(jason),WaitForResponse,derek->ring()),
          jason->expect(INVITE/180,contact(derek),WaitForResponse,jason->noAction()),
-         derek->expect(CANCEL,from(proxy),200000,chain(derek->ok(),derek->send487())),
+         derek->expect(CANCEL,from(proxy),41000,chain(derek->ok(),derek->send487())),
          And
          (
             Sub
@@ -3513,7 +3527,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testInviteServerSpams200!*");
       
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
 
       Seq(jason->registerUser(600, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
@@ -3611,7 +3625,7 @@ class TestHolder : public ReproFixture
       
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       
       Seq
       (
@@ -3664,7 +3678,7 @@ class TestHolder : public ReproFixture
       
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       
       Seq
       (
@@ -3702,7 +3716,7 @@ class TestHolder : public ReproFixture
       
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       
       Seq
       (
@@ -3770,7 +3784,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> busy;
+      std::shared_ptr<SipMessage> busy;
 
       Seq
       (
@@ -3808,7 +3822,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> error;
+      std::shared_ptr<SipMessage> error;
 
       Seq
       (
@@ -3827,7 +3841,7 @@ class TestHolder : public ReproFixture
             ),
             Sub //Client side
             (
-               derek->expect(INVITE/480,contact(jason),WaitForResponse,derek->ack())
+               derek->expect(INVITE/500,contact(jason),WaitForResponse,derek->ack())
             )
          ),
          WaitForEndOfTest
@@ -3846,7 +3860,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> error;
+      std::shared_ptr<SipMessage> error;
 
       Seq
       (
@@ -3882,7 +3896,7 @@ class TestHolder : public ReproFixture
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
           jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
-          jason->expect(INVITE/480, from(proxy), 5000, jason->ack()),
+          jason->expect(INVITE/500, from(proxy), 5000, jason->ack()),
           WaitForEndOfTest);
       ExecuteSequences();  
    }
@@ -3896,7 +3910,7 @@ class TestHolder : public ReproFixture
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
           jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
-          jason->expect(INVITE/480, from(proxy), 5000, jason->ack()),
+          jason->expect(INVITE/500, from(proxy), 5000, jason->ack()),
           WaitForEndOfTest);
       ExecuteSequences();  
    }
@@ -3932,7 +3946,7 @@ class TestHolder : public ReproFixture
           // Note:  Under windows when using WSAPoll - there is a bug in WSAPoll where it won't properly notify of
           //        TCP connection errors.  The implemented work around is to check the socket on the next send.
           //        This means that this test case will fail.
-          derek->expect(INVITE/480, from(proxy), WaitForResponseSpiral, derek->ack()),  // Give more time than just WaitForResponse - TCP connection failure detection can take some time
+          derek->expect(INVITE/500, from(proxy), WaitForResponseSpiral, derek->ack()),  // Give more time than just WaitForResponse - TCP connection failure detection can take some time
           WaitForEndOfTest);
       ExecuteSequences();  
    }
@@ -3951,17 +3965,17 @@ class TestHolder : public ReproFixture
       (
          derek->invite(*jason),
          optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         derek->expect(INVITE/407,from(proxy),600,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),1100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),2100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
-         derek->expect(INVITE/407,from(proxy),4100,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T1+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),2*resip::Timer::T1+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),4*resip::Timer::T1+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
+         derek->expect(INVITE/407,from(proxy),resip::Timer::T2+RetransmitSlack,derek->noAction()),
          WaitForEndOfTest
       );
       
@@ -3978,7 +3992,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
       
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
       
       Seq
       (
@@ -4036,13 +4050,13 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               jason->expect(INVITE,contact(derek),600,jason->noAction()), // <- original
-               jason->expect(INVITE,contact(derek),600,jason->noAction()), // <- first retransmission
-               jason->expect(INVITE,contact(derek),1100,jason->noAction()),
-               jason->expect(INVITE,contact(derek),2100,jason->noAction()),
-               jason->expect(INVITE,contact(derek),4100,jason->noAction()),
-               jason->expect(INVITE,contact(derek),8100,jason->noAction()),
-               optional(jason->expect(INVITE,contact(derek),16100,jason->noAction())), // <- might get sent, depending on timing
+               jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()), // <- original
+               jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()), // <- first retransmission
+               jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction())), // <- might get sent, depending on timing
                derek->expect(INVITE/408,from(proxy),21000,derek->ack())
             )
          ),
@@ -4583,7 +4597,7 @@ class TestHolder : public ReproFixture
                   cullen->expect(ACK,from(proxy),WaitForCommand,cullen->noAction())),
               Sub(enlai->expect(INVITE, contact(jason), WaitForCommand, enlai->send503()),
                   enlai->expect(ACK,from(proxy),WaitForCommand,enlai->noAction())),
-               Sub(jason->expect(INVITE/480, from(proxy), 3*WaitForCommand, jason->ack()))),
+               Sub(jason->expect(INVITE/500, from(proxy), 3*WaitForCommand, jason->ack()))),
           WaitForEndOfTest);
       
       ExecuteSequences();  
@@ -5851,7 +5865,7 @@ class TestHolder : public ReproFixture
                   ),
                   Sub
                   (
-                     jason->expect(INVITE/480, from(proxy), 3*WaitForCommand, jason->ack())
+                     jason->expect(INVITE/500, from(proxy), 3*WaitForCommand, jason->ack())
                   )
                )
             )
@@ -6978,7 +6992,7 @@ class TestHolder : public ReproFixture
       RouteGuard dGuard7(*proxy, "sip:7spiral@.*", "sip:6spiral@localhost");
       RouteGuard dGuard8(*proxy, "sip:8spiral@.*", "sip:7spiral@localhost");
       RouteGuard dGuard9(*proxy, "sip:9spiral@.*", "sip:8spiral@localhost");
-      
+
 
       Seq(david->registerUser(60, david->getDefaultContacts()),
           david->expect(REGISTER/407, from(proxy), WaitForResponse, david->digestRespond()),
@@ -6990,7 +7004,8 @@ class TestHolder : public ReproFixture
       (
          derek->message(proxy->makeUrl("9spiral").uri(),"Ping"),
          derek->expect(MESSAGE/407,from(proxy),WaitForResponse,derek->digestRespond()),
-         david->expect(MESSAGE, from(proxy),2*WaitForCommand,david->ok()),
+         optional(derek->expect(MESSAGE / 100, from(proxy), WaitForCommandSpiral, derek->noAction())),
+         david->expect(MESSAGE, from(proxy),WaitForCommandSpiral,david->ok()),
          derek->expect(MESSAGE/200,from(proxy),WaitForResponse, derek->noAction()),
          WaitForEndOfTest
       );
@@ -7255,7 +7270,7 @@ class TestHolder : public ReproFixture
           derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
           WaitForEndOfSeq);
       ExecuteSequences();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          save(msg, jason->message(*derek,"Ping")),
@@ -7406,7 +7421,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7429,7 +7444,7 @@ class TestHolder : public ReproFixture
           derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
           WaitForEndOfSeq);
       ExecuteSequences();
-      boost::shared_ptr<SipMessage> resp;
+      std::shared_ptr<SipMessage> resp;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7474,7 +7489,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7498,7 +7513,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7524,7 +7539,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7547,7 +7562,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7577,16 +7592,16 @@ class TestHolder : public ReproFixture
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->reflect(*derek)),
                  optional(jason->expect(INVITE/100,from(proxy), WaitFor100, jason->noAction())),
                  jason->expect(INVITE/480,from(proxy),WaitForResponse,jason->ack()),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -7612,16 +7627,16 @@ class TestHolder : public ReproFixture
          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->reflect(*derek,MESSAGE)),
                  jason->expect(MESSAGE/480,from(proxy),WaitForResponse,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -7646,16 +7661,16 @@ class TestHolder : public ReproFixture
          derek->invite(*jason),
          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->reflect(*derek,ACK)),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -7680,16 +7695,16 @@ class TestHolder : public ReproFixture
          derek->invite(*jason),
          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(makeMessage,jason->ok())),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -7714,16 +7729,16 @@ class TestHolder : public ReproFixture
          derek->invite(*jason),
          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(makeAck,jason->ok())),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -7759,17 +7774,17 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction()))
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()))
             )
          ),
          WaitForEndOfTest
@@ -7797,17 +7812,17 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction()))
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()))
             )
          ),
          WaitForEndOfTest
@@ -7835,17 +7850,17 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-               optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction()))
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+               optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()))
             )
          ),
          WaitForEndOfTest
@@ -7865,17 +7880,17 @@ class TestHolder : public ReproFixture
       (
          derek->message(*jason,"ping"),
          jason->expect(MESSAGE,contact(derek),WaitForCommand,jason->reflect(*derek,ACK)),
-         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction())),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction())),
          WaitForEndOfTest
       );
       ExecuteSequences();
@@ -7893,17 +7908,17 @@ class TestHolder : public ReproFixture
       (
          derek->message(*jason,"ping"),
          jason->expect(MESSAGE,contact(derek),WaitForCommand,condition(makeInvite,jason->ok())),
-         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction())),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction())),
          WaitForEndOfTest
       );
       ExecuteSequences();
@@ -7921,17 +7936,17 @@ class TestHolder : public ReproFixture
       (
          derek->message(*jason,"ping"),
          jason->expect(MESSAGE,contact(derek),WaitForCommand,condition(makeInfo,jason->ok())),
-         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction())),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction())),
          WaitForEndOfTest
       );
       ExecuteSequences();
@@ -7949,17 +7964,17 @@ class TestHolder : public ReproFixture
       (
          derek->message(*jason,"ping"),
          jason->expect(MESSAGE,contact(derek),WaitForCommand,condition(makeAck,jason->ok())),
-         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction())),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction())),
          WaitForEndOfTest
       );
       ExecuteSequences();
@@ -8511,16 +8526,16 @@ class TestHolder : public ReproFixture
          derek->invite(*jason),
          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
              Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(removeTo,jason->ring())),
-                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+RetransmitSlack,jason->noAction()))),
          And
          (
             Sub
             (
-               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+100,jason->noAction()))
+               optional(jason->expect(INVITE,contact(derek),32*resip::Timer::T1+RetransmitSlack,jason->noAction()))
             ),
             Sub
             (
@@ -8737,17 +8752,17 @@ class TestHolder : public ReproFixture
       (
          derek->message(*jason,"ping"),
          jason->expect(MESSAGE,contact(derek),WaitForCommand,condition(removeTo,jason->send100())),
-         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         jason->expect(MESSAGE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(MESSAGE,contact(derek),4100,jason->noAction())),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),2*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),4*resip::Timer::T1+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction()),
+         optional(jason->expect(MESSAGE,contact(derek),resip::Timer::T2+RetransmitSlack,jason->noAction())),
          WaitForEndOfTest
       );
       ExecuteSequences();
@@ -8768,7 +8783,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       Seq
       (
          chain(inv<=derek->invite(*jason),condition(makeMessage,derek->sendSip(inv,*jason))),
@@ -8798,7 +8813,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       Seq
       (
          chain(inv<=derek->invite(*jason),condition(makeAck,derek->sendSip(inv,*jason))),
@@ -8828,7 +8843,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       Seq
       (
          chain(inv<=derek->invite(*jason),rawcondition(make200Response,derek->sendSip(inv,*jason))),
@@ -8858,7 +8873,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       Seq
       (
          chain(inv<=derek->invite(*jason),rawcondition(make200Response,condition(makeInfo,derek->sendSip(inv,*jason)))),
@@ -8888,7 +8903,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       Seq
       (
          chain(inv<=derek->invite(*jason),rawcondition(make200Response,condition(makeAck,derek->sendSip(inv,*jason)))),
@@ -8921,7 +8936,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),condition(makeInvite,derek->sendSip(msg,*jason))),
@@ -8940,7 +8955,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),condition(makeInfo,derek->sendSip(msg,*jason))),
@@ -8959,7 +8974,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),condition(makeAck,derek->sendSip(msg,*jason))),
@@ -8978,7 +8993,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),rawcondition(make200Response,condition(makeInvite,derek->sendSip(msg,*jason)))),
@@ -8997,7 +9012,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),rawcondition(make200Response,derek->sendSip(msg,*jason))),
@@ -9016,7 +9031,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),rawcondition(make200Response,condition(makeInfo,derek->sendSip(msg,*jason)))),
@@ -9035,7 +9050,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),rawcondition(make200Response,condition(makeAck,derek->sendSip(msg,*jason)))),
@@ -9057,7 +9072,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9089,7 +9104,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9120,7 +9135,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9141,7 +9156,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9162,7 +9177,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9183,7 +9198,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9213,7 +9228,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9243,7 +9258,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9273,7 +9288,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9303,7 +9318,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9395,7 +9410,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> infoMsg;
+      std::shared_ptr<SipMessage> infoMsg;
       Seq(save(infoMsg, derek->info(david)),
           derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
           david->expect(INFO, from(derek), 1000, david->noAction()),
@@ -9509,7 +9524,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
       Seq(derek->invite(*jason),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
@@ -9532,11 +9547,11 @@ class TestHolder : public ReproFixture
          CheckRport(int rport) : mRport(rport)
          {
          }
-         bool operator()(boost::shared_ptr<Event> event) const
+         bool operator()(std::shared_ptr<Event> event) const
          {
             SipEvent* msgEvent = dynamic_cast<SipEvent*>(event.get());
             resip_assert(msgEvent);
-            boost::shared_ptr<resip::SipMessage> msg = msgEvent->getMessage();
+            std::shared_ptr<resip::SipMessage> msg = msgEvent->getMessage();
             resip_assert(msg.get());
 
             DebugLog (<< "Looking for rport=" << mRport << endl << *msg);
@@ -9558,7 +9573,7 @@ class TestHolder : public ReproFixture
          int mRport;
    };
 
-   static boost::shared_ptr<SipMessage>& addRport(boost::shared_ptr<SipMessage>& msg)
+   static std::shared_ptr<SipMessage> addRport(std::shared_ptr<SipMessage> msg)
    { 
       resip_assert(!msg->header(h_Vias).empty());
       // mentioning it makes it so
@@ -9865,7 +9880,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfTest);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
       Seq(derek->invite(*jason),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
@@ -10246,7 +10261,7 @@ class TestHolder : public ReproFixture
             mCallId(callId)
          {}
 
-         boost::shared_ptr<SipMessage> operator()(boost::shared_ptr<resip::SipMessage>& msg) const
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
          {
             DebugLog (<< "SetCallId=" << mCallId << endl << *msg);
 
@@ -10267,7 +10282,7 @@ class TestHolder : public ReproFixture
             mSeq(seq)
          {}
 
-         boost::shared_ptr<SipMessage> operator()(boost::shared_ptr<resip::SipMessage>& msg) const
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
          {
             DebugLog (<< "SetCSeqSequence=" << mSeq << endl << *msg);
 
@@ -10287,7 +10302,7 @@ class TestHolder : public ReproFixture
          StripAuth()
          {}
 
-         boost::shared_ptr<SipMessage> operator()(boost::shared_ptr<resip::SipMessage>& msg) const
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
          {
             DebugLog (<< "StripAuth" << endl << *msg);
 
@@ -10416,8 +10431,9 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      CountDown count487(2, "count487");         
+      CountDown count487(2, "count487");
 
+      dynamic_cast<TestRepro *>(ReproFixture::proxy)->setQValueTargetHandlerCancelGroups(false);
       Seq
       (
          derek->invite(*jason),
@@ -10431,14 +10447,14 @@ class TestHolder : public ReproFixture
             (
                jason2->expect(INVITE, contact(derek), WaitForCommand, jason2->ring()),
                derek->expect(INVITE/180, from(jason2), WaitFor180, derek->noAction()),
-               jason2->expect(CANCEL,from(proxy),200000,chain(jason2->ok(), jason2->send487(),count487.dec())),
+               jason2->expect(CANCEL,from(proxy),41000,chain(jason2->ok(), jason2->send487(),count487.dec())),
                jason2->expect(ACK,from(proxy),WaitForResponse,jason2->noAction())
             ),
             Sub
             (
                jason1->expect(INVITE, contact(derek), WaitForCommand, jason1->ring()),
                derek->expect(INVITE/180, from(jason1), WaitFor180, derek->noAction()),
-               jason1->expect(CANCEL,from(proxy),200000,chain(jason1->ok(), jason1->send487(),count487.dec())),
+               jason1->expect(CANCEL,from(proxy),41000,chain(jason1->ok(), jason1->send487(),count487.dec())),
                jason1->expect(ACK,from(proxy),WaitForResponse,jason1->noAction())
             )
          ),
@@ -10447,8 +10463,69 @@ class TestHolder : public ReproFixture
 
          
          WaitForEndOfTest);
+
+      ExecuteSequences();
+   }
+
+   void testTimerCForkedSequential()
+   {
+      WarningLog(<<"*!testTimerCForkedSequential!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
+
+      NameAddr con2 = *(jason->getDefaultContacts().begin());
+      con2.param(p_q)=0.2;
+
+      NameAddr con1 = *(derek->getDefaultContacts().begin());
+      con1.param(p_q)=0.1;
       
-      ExecuteSequences();  
+      std::set<resip::NameAddr> contacts;
+      contacts.insert(con1);
+      contacts.insert(con2);
+      
+      Seq
+      (
+         derek->registerUser(60,contacts),
+         derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+         derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+
+      dynamic_cast<TestRepro *>(ReproFixture::proxy)->setQValueTargetHandlerCancelGroups(false);
+      Seq
+      (
+         cullen->invite(*derek),
+         optional(cullen->expect(INVITE/100, from(proxy), WaitFor100, cullen->noAction())),
+         cullen->expect(INVITE/407, from(proxy), WaitForResponse, chain(cullen->ack(),cullen->digestRespond())),
+         
+         And
+         (
+            Sub
+            (
+               optional(cullen->expect(INVITE/100, from(proxy), WaitFor100, cullen->noAction()))
+            ),
+            Sub
+            (
+               jason->expect(INVITE, from(cullen), WaitForCommand, jason->ring()),
+               cullen->expect(INVITE/180, from(jason), WaitForResponse, cullen->noAction()),
+               jason->expect(CANCEL, from(proxy), 41000, chain(jason->ok(), jason->send487())),
+               jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction()),
+
+               derek->expect(INVITE, from(cullen), WaitForCommand, chain(derek->ring(),derek->ok())),
+               cullen->expect(INVITE/180, from(derek), WaitForResponse,cullen->noAction()),
+               cullen->expect(INVITE/200, from(derek), WaitForResponse, cullen->ack()),
+               derek->expect(ACK, from(cullen),WaitForCommand, derek->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+      );
+
+      ExecuteSequences();
    }
 
    /* Test that the routing logic can make decisions based on the method
@@ -10560,7 +10637,7 @@ class TestHolder : public ReproFixture
    
       ExecuteSequences();
       
-      boost::shared_ptr<SipMessage> ring;
+      std::shared_ptr<SipMessage> ring;
       
       Seq
       (
@@ -10927,7 +11004,9 @@ class MyTestCase
          TEST(testInvite1xxDropped);
          TEST(testInviteClientRetransmitsAfter200);
          TEST(testInviteClientMissedAck);
-         TEST(testTimerC); //This test takes a long time
+         TEST(testTimerC);
+         TEST(testTimerCForked);
+         TEST(testTimerCForkedSequential);
          TEST(testInviteServerSpams200);
          TEST(testInviteServerSends180After200);
          TEST(testInviteClientSpamsInvite); //tfm is asserting on this test, will look into
@@ -11036,6 +11115,9 @@ int main(int argc, char** argv)
 
    initNetwork();
    bool interactive = false;
+   // The exit status is what ctest reports, so it must reflect the results:
+   // a test that fails without crashing would otherwise pass in CI.
+   bool success = true;
    try
    {
       CommandLineParser args(argc, argv);
@@ -11080,19 +11162,27 @@ int main(int argc, char** argv)
             CPPUNIT_NS :: XmlOutputter xmloutputter (&collectedresults, testResult);
             xmloutputter.write ();
             testResult.close();
+            success = collectedresults.wasSuccessful();
          }
 
          DebugLog(<< "Finished");
       }
       else
       {
+         reportAssertsToStderr();
          TestHolder::createStatic();
          ReproFixture::initialize(args);
-      
+
          CppUnit::TextTestRunner runner;
 
+         // Name each test as it starts, in place of the default progress dots,
+         // so a test that asserts or hangs can be identified from the ctest
+         // output.
+         CPTextTestProgressListener progress;
+         runner.eventManager().addListener(&progress);
+
          runner.addTest( MyTestCase::suite() );
-         runner.run();
+         success = runner.run("", false, true, false);
          DebugLog(<< "Finished: waiting for all transactions to die.");
       
          sleepSeconds(32);
@@ -11113,12 +11203,12 @@ int main(int argc, char** argv)
       std::cin >>ch;
    }
 
-   return 0;
+   return success ? 0 : 1;
 }
 
-// Copyright 2005 Purplecomm, Inc.
 /*
-  Copyright (c) 2005, PurpleComm, Inc. 
+  Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
+  Copyright (c) 2005, PurpleComm, Inc.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without modification,

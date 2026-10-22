@@ -23,7 +23,7 @@ typedef std::pair<resip::Data, resip::Data> RealmUserPair;
 class ReTurnConfig : public resip::ConfigParse
 {
 public:
-   class Exception : public resip::BaseException
+   class Exception final : public resip::BaseException
    {
       public:
          Exception(const resip::Data& msg,
@@ -31,7 +31,7 @@ public:
                    const int line)
             : resip::BaseException(msg, file, line) {}            
       protected:
-         virtual const char* name() const { return "ReTurnConfig::Exception"; }
+         const char* name() const noexcept override { return "ReTurnConfig::Exception"; }
    };
    
    ReTurnConfig();
@@ -68,21 +68,21 @@ public:
    unsigned short mAllocationPortRangeMax;
    unsigned long mDefaultAllocationLifetime;
    unsigned long mMaxAllocationLifetime;
-   unsigned long mMaxAllocationsPerUser;  // TODO - enforcement needs to be implemented
+   unsigned long mMaxAllocationsPerUser;  // over all transports, 0 for no limit
 
    resip::Data mTlsServerCertificateFilename;
    resip::Data mTlsServerPrivateKeyFilename;
    resip::Data mTlsTempDhFilename;
    resip::Data mTlsPrivateKeyPassword;
+   unsigned long mTlsHandshakeTimeout;  // seconds, 0 for none
+   unsigned long mTcpConnectionIdleTimeout;  // seconds a TCP/TLS connection without an allocation may receive nothing, 0 for none
+   unsigned long mMaxTcpConnectionsPerIp;    // TCP and TLS connections from one client IP address, 0 for no limit
+   long mOpenSSLCTXSetOptions;    // SSL_OP_* flags for SSL_CTX_set_options, as repro's settings of the same name
+   long mOpenSSLCTXClearOptions;  // SSL_OP_* flags for SSL_CTX_clear_options
 
    resip::Data mUsersDatabaseFilename;
    bool mUserDatabaseHashedPasswords;
 
-   resip::Data mLoggingType;
-   resip::Data mSyslogFacility;
-   resip::Data mLoggingLevel;
-   resip::Data mLoggingFilename;
-   unsigned int mLoggingFileMaxLineCount;
    bool mDaemonize;
    resip::Data mPidFile;
    resip::Data mRunAsUser;
@@ -90,7 +90,7 @@ public:
 
    bool isUserNameValid(const resip::Data& username,  const resip::Data& realm) const;
    resip::Data getHa1ForUsername(const resip::Data& username, const resip::Data& realm) const;
-   std::auto_ptr<UserAuthData> getUser(const resip::Data& userName, const resip::Data& realm) const;
+   std::unique_ptr<UserAuthData> getUser(const resip::Data& userName, const resip::Data& realm) const;
    void addUser(const resip::Data& username, const resip::Data& password, const resip::Data& realm);
    void authParse(const resip::Data& accountDatabaseFilename);
 
@@ -104,7 +104,7 @@ private:
 class ReTurnUserFileScanner
 {
    public:
-      ReTurnUserFileScanner(asio::io_service& ioService, ReTurnConfig& reTurnConfig);
+      ReTurnUserFileScanner(asio::io_context& ioService, ReTurnConfig& reTurnConfig);
       void start();
 
    private:
@@ -113,7 +113,7 @@ class ReTurnUserFileScanner
       static bool mHup;
       int mLoopInterval;
       time_t mNextFileCheck;
-      asio::deadline_timer mTimer;
+      asio::steady_timer mTimer;
 
       bool hasUserFileChanged();
       void timeout(const asio::error_code& e);
@@ -128,6 +128,7 @@ class ReTurnUserFileScanner
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

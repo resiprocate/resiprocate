@@ -17,7 +17,7 @@ public:
 	virtual resip::Data brief() const { return "UpdateAns Message"; }
 
 
-	std::auto_ptr<Event> event()
+	std::unique_ptr<Event> event()
 	{
 		return wrap(this);
 	}
@@ -42,7 +42,7 @@ public:
 	virtual void getEncodedPayload(resip::DataStream &data);
 	virtual resip::Data brief() const { return "UpdateReq Message"; }
 
-	std::auto_ptr<Event> event()
+	std::unique_ptr<Event> event()
 	{
 		return wrap(this);
 	}

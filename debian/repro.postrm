@@ -10,6 +10,8 @@ if [ "$1" = "purge" ] ; then
         rm -rf /var/lib/repro
         rm -rf /var/run/repro
 
+        rm -rf /etc/repro/dh2048.pem
+
         if getent passwd repro >/dev/null; then
                 userdel repro
         fi

@@ -17,7 +17,8 @@
 #include "repro/Proxy.hxx"
 #include "repro/UserInfoMessage.hxx"
 #include "repro/UserStore.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
+#include "repro/TlsPeerIdentityInfo.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -31,21 +32,25 @@ using namespace std;
 KeyValueStore::Key CertificateAuthenticator::mCertificateVerifiedKey = Proxy::allocateRequestKeyValueStoreKey();
 
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
+                                                   Dispatcher* authRequestDispatcher,
                                                    resip::SipStack* stack,
                                                    AclStore& aclStore,
                                                    bool thirdPartyRequiresCertificate) :
    Processor("CertificateAuthenticator"),
+   mAuthRequestDispatcher(authRequestDispatcher),
    mAclStore(aclStore),
    mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate)
 {
 }
 
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
+                                                   Dispatcher* authRequestDispatcher,
                                                    resip::SipStack* stack,
                                                    AclStore& aclStore,
                                                    bool thirdPartyRequiresCertificate,
                                                    CommonNameMappings& commonNameMappings) :
    Processor("CertificateAuthenticator"),
+   mAuthRequestDispatcher(authRequestDispatcher),
    mAclStore(aclStore),
    mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate),
    mCommonNameMappings(commonNameMappings)
@@ -64,6 +69,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
    Message *message = rc.getCurrentEvent();
    
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
+   TlsPeerIdentityInfo *tpaInfo = dynamic_cast<TlsPeerIdentityInfo*>(message);
    Proxy &proxy = rc.getProxy();
    
    if (sipMessage)
@@ -71,6 +77,14 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
       if (sipMessage->method() == ACK ||
             sipMessage->method() == BYE)
       {
+         return Continue;
+      }
+
+      if (sipMessage->header(h_To).exists(p_tag))
+      {
+         // If a tag is present, the UAS will validate the
+         // tag or reject the request
+         DebugLog(<<"To-tag detected, allowing a request that claims to belong to an existing dialog");
          return Continue;
       }
 
@@ -84,9 +98,24 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          sipMessage->header(h_From).isAllContacts() )
       {
          InfoLog(<<"Malformed From header: cannot verify against any certificate. Rejecting.");
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                          (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
          return SkipAllChains;         
+      }
+      Uri claimedUri = sipMessage->header(h_From).uri();
+      if(sipMessage->method() == REFER && sipMessage->exists(h_ReferredBy))
+      {
+         if(!sipMessage->header(h_ReferredBy).isWellFormed() ||
+            sipMessage->header(h_ReferredBy).isAllContacts() )
+         {
+            InfoLog(<<"Malformed Referred-By header: cannot verify against any certificate. Rejecting.");
+            rc.sendResponse(*unique_ptr<SipMessage>
+                            (Helper::makeResponse(*sipMessage, 400, "Malformed Referred-By header")));
+            return SkipAllChains;
+         }
+         // For REFER requests, we authenticate the Referred-By header
+         // instead of the From header
+         claimedUri = sipMessage->header(h_ReferredBy).uri();
       }
 
       // Get the certificate from the peer
@@ -107,25 +136,36 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          return Continue;
       }
 
-      if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
+      if (proxy.isMyDomain(claimedUri.host()))
       {
-         if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
+         if (rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
-            // peerNames is empty if client certificate mode is `optional'
-            // or if the message didn't come in on TLS transport
-            if(peerNames.empty())
-               return Continue;
-            if(authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri()))
-            {
-               rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
-               return Continue;
-            }
-            rc.sendResponse(*auto_ptr<SipMessage>
-                            (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
-            return SkipAllChains;
-         }
-         else
+            DebugLog(<<"from trusted node, skipping checks");
             return Continue;
+         }
+         // peerNames is empty if client certificate mode is `optional'
+         // or if the message didn't come in on TLS transport
+         if(peerNames.empty())
+         {
+            DebugLog(<<"peerNames is empty, allowing the message without further inspection");
+            return Continue;
+         }
+         AsyncBool _auth = authorizedForThisIdentity(rc, peerNames, claimedUri);
+         if(_auth == True)
+         {
+            rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
+            DebugLog(<<"authorized");
+            return Continue;
+         }
+         else if(_auth == Async)
+         {
+            DebugLog(<<"waiting for async authorization");
+            return WaitingForEvent;
+         }
+         DebugLog(<<"not authorized");
+         rc.sendResponse(*unique_ptr<SipMessage>
+                         (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
+         return SkipAllChains;
       }
       else
       {
@@ -135,24 +175,54 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          {
             if(mThirdPartyRequiresCertificate)
             {
-               rc.sendResponse(*auto_ptr<SipMessage>
+               DebugLog(<<"third party requires certificate");
+               rc.sendResponse(*unique_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Mutual TLS required to handle that message")));
                return SkipAllChains;
             }
             else
+            {
+               DebugLog(<<"third party does not require certificate, allowing the message without further inspection");
                return Continue;
+            }
          }
-         if(authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri()))
+         AsyncBool _auth = authorizedForThisIdentity(rc, peerNames, claimedUri);
+         if(_auth == True)
          {
             rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
+            DebugLog(<<"authorized");
             return Continue;
          }
-         rc.sendResponse(*auto_ptr<SipMessage>
+         else if(_auth == Async)
+         {
+            DebugLog(<<"waiting for async authorization");
+            return WaitingForEvent;
+         }
+         DebugLog(<<"not authorized");
+         rc.sendResponse(*unique_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
          return SkipAllChains;
       }
    }
+   else if (tpaInfo)
+   {
+      DebugLog(<<"handling TlsPeerIdentityInfo");
+      sipMessage = &rc.getOriginalRequest();
+      if(tpaInfo->authorized())
+      {
+         DebugLog(<<"authorized");
+         return Continue;
+      }
+      else
+      {
+         DebugLog(<<"not authorized");
+         rc.sendResponse(*unique_ptr<SipMessage>
+                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
+         return SkipAllChains;
+      }
+   }
 
+   DebugLog(<<"not a recognized message type");
    return Continue;
 }
 
@@ -162,7 +232,7 @@ CertificateAuthenticator::isTrustedSource(const std::list<Data>& peerNames)
    return mAclStore.isTlsPeerNameTrusted(peerNames);
 }
 
-bool
+AsyncBool
 CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, const std::list<Data>& peerNames,
                                                 resip::Uri &fromUri)
 {
@@ -176,12 +246,12 @@ CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, con
       if(i == aor)
       {
          DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor);
-         return true;
+         return True;
       }
       if(i == domain)
       {
          DebugLog(<< "Matched certificate name " << i << " against domain " << domain);
-         return true;
+         return True;
       }
       CommonNameMappings::iterator _mapping =
          mCommonNameMappings.find(i);
@@ -192,19 +262,35 @@ CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, con
          if(permitted.find(aor) != permitted.end())
          {
             DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor << " by common name mappings");
-            return true;
+            return True;
          }
          if(permitted.find(domain) != permitted.end())
          {
             DebugLog(<< "Matched certificate name " << i << " against domain " << domain << " by common name mappings");
-            return true;
+            return True;
          }
       }
       DebugLog(<< "Certificate name " << i << " doesn't match AoR " << aor << " or domain " << domain);
    }
 
+   if(mCommonNameMappings.size() == 0)
+   {
+      DebugLog(<<"mCommonNameMappings is empty, trying database");
+      TlsPeerIdentityInfo* tpaInfo = new TlsPeerIdentityInfo(*this, context.getTransactionId(), &(context.getProxy()));
+      for(it = peerNames.begin(); it != peerNames.end(); ++it)
+      {
+         tpaInfo->peerNames().insert(*it);
+      }
+      tpaInfo->identities().insert(aor);
+      tpaInfo->identities().insert(domain);
+      std::unique_ptr<ApplicationMessage> app(tpaInfo);
+      mAuthRequestDispatcher->post(app);
+      return Async;
+   }
+
    // catch-all: access denied
-   return false;
+   DebugLog(<< "message content didn't match any peer name");
+   return False;
 }
 
 void

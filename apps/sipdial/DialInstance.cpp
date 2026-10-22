@@ -10,11 +10,12 @@
 #include "rutil/Data.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/SharedPtr.hxx"
 
 #include "DialerConfiguration.hxx"
 #include "DialInstance.hxx"
 #include "MyInviteSessionHandler.hxx"
+
+#include <memory>
 
 using namespace resip;
 using namespace std;
@@ -40,8 +41,12 @@ DialInstance::DialResult DialInstance::execute()
    Data certPath(mDialerConfiguration.getCertPath());
    if(certPath.size() == 0)
    {
+#ifndef WIN32
       certPath = getenv("HOME");
       certPath += "/.sipdial/certs";
+#else
+      certPath = ".";
+#endif
    }
    security = new Security(certPath);
 
@@ -50,12 +55,10 @@ DialInstance::DialResult DialInstance::execute()
 
    mSipStack = new SipStack(security);
    mDum = new DialogUsageManager(*mSipStack);
-   //mDum->addTransport(UDP, 5067, V4);
-   mDum->addTransport(TLS, 5067, V4);
-   SharedPtr<MasterProfile> masterProfile = SharedPtr<MasterProfile>(new MasterProfile);
-   mDum->setMasterProfile(masterProfile);
-   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
-   mDum->setClientAuthManager(clientAuth);
+   //mSipStack->addTransport(UDP, 5067, V4);
+   mSipStack->addTransport(TLS, 5067, V4);
+   mDum->setMasterProfile(std::make_shared<MasterProfile>());
+   mDum->setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
    MyInviteSessionHandler *ish = new MyInviteSessionHandler(*this);
    mDum->setInviteSessionHandler(ish);
 
@@ -63,17 +66,8 @@ DialInstance::DialResult DialInstance::execute()
 
    while(mSipStack != 0) 
    {
-      FdSet fdset;
-      mSipStack->buildFdSet(fdset);
-      int err = fdset.selectMilliSeconds(resipMin((int)mSipStack->getTimeTillNextProcessMS(), 50));
-      if(err == -1) {
-         if(errno != EINTR) {
-            //B2BUA_LOG_ERR("fdset.select returned error code %d", err);
-            resip_assert(0);  // FIXME
-         }
-      }
       // Process all SIP stack activity
-      mSipStack->process(fdset);
+      mSipStack->process(50);
       while(mDum->process());
 
       // FIXME - we should wait a little and make sure it really worked
@@ -144,10 +138,10 @@ void DialInstance::prepareAddress()
 
 void DialInstance::sendInvite() 
 {
-   SharedPtr<UserProfile> outboundUserProfile(mDum->getMasterUserProfile());
+   auto outboundUserProfile = mDum->getMasterUserProfile();
    outboundUserProfile->setDefaultFrom(mDialerConfiguration.getDialerIdentity());
    outboundUserProfile->setDigestCredential(mDialerConfiguration.getAuthRealm(), mDialerConfiguration.getAuthUser(), mDialerConfiguration.getAuthPassword());
-   SharedPtr<SipMessage> msg = mDum->makeInviteSession(NameAddr(mDialerConfiguration.getCallerUserAgentAddress()), outboundUserProfile, 0);
+   auto msg = mDum->makeInviteSession(NameAddr(mDialerConfiguration.getCallerUserAgentAddress()), outboundUserProfile, 0);
    HeaderFieldValue *hfv = 0;
    switch(mDialerConfiguration.getCallerUserAgentVariety())
    {
@@ -166,7 +160,7 @@ void DialInstance::sendInvite()
    default:
       break;
    }
-   mDum->send(msg);
+   mDum->send(std::move(msg));
    if(hfv != 0)
       delete hfv;
 }
@@ -177,8 +171,8 @@ void DialInstance::sendInvite()
 Data DialInstance::processNumber(const Data& verboseNumber)
 {
    Data num = Data("");
-   int len = verboseNumber.size();
-   for(int i = 0; i < len; i++)
+   size_t len = verboseNumber.size();
+   for(size_t i = 0; i < len; i++)
    {
       char c = verboseNumber[i];
       switch(c)

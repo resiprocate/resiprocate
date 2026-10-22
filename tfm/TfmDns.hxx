@@ -3,7 +3,7 @@
 
 #include <list>
 #include <map>
-#include "rutil/dns/ares/ares.h"
+#include <ares.h>
 #include "rutil/Data.hxx"
 #include "rutil/dns/ExternalDns.hxx"
 
@@ -46,12 +46,14 @@ class TfmDns : public ExternalDns
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr socketfunc, int dnsTimeout = 0, int dnsTries = 0,
                        unsigned int features = 0);
+      virtual int init(int dnsTimeout = 0, int dnsTries = 0, unsigned int features = 0);
       virtual bool requiresProcess();
       virtual unsigned int getTimeTillNextProcessMS(void) { return 0; }
       // Synchronous, so no need to do anything.
       virtual void setPollGrp(resip::FdPollGrp *) {}
       virtual void processTimers(void) {}
       virtual bool hostFileLookupLookupOnlyMode(void) { return false; }
+      virtual void changeNameServers(const std::vector<GenericIPAddress>& additional) { }
       virtual bool checkDnsChange() { return false; }
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
@@ -63,14 +65,12 @@ class TfmDns : public ExternalDns
 
       void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData);
 
-      virtual char* errorMessage(long errorCode) 
+      virtual char* errorMessage(long errorCode)
       {
          const char* msg = ares_strerror(errorCode);
-
          size_t len = strlen(msg);
-         char* errorString = new char[len+1];
-
-         strncpy(errorString, msg, len);
+         char* errorString = new char[len + 1];
+         memcpy(errorString, msg, len);
          errorString[len] = '\0';
          return errorString;
       }

@@ -10,6 +10,15 @@
 #include "rutil/ssl/SHA1Stream.hxx"
 #endif
 
+// Disable warnings about using deprecated SHA1Stream in these tests
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
+
 using namespace resip;
 using namespace std;
 
@@ -18,12 +27,22 @@ main(void)
 {
     // Test Sha1 class that does not use OpenSSL first
    {
-      resip::SHA1 sha1test;
+      resip::Sha1 sha1test;
       sha1test.update("");
-      assert(sha1test.final() == "da39a3ee5e6b4b0d3255bfef95601890afd80709");      
+      assert(sha1test.final() == "da39a3ee" "5e6b4b0d" "3255bfef" "95601890" "afd80709");
    }
    {
-      resip::SHA1 sha1test;
+      resip::Sha1 sha1test;
+      sha1test.update("abc");
+      assert(sha1test.final() == "a9993e36" "4706816a" "ba3e2571" "7850c26c" "9cd0d89d");
+   }
+   {
+      resip::Sha1 sha1test;
+      sha1test.update("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+      assert(sha1test.final() == "84983e44" "1c3bd26e" "baae4aa1" "f95129e5" "e54670f1");
+   }
+   {
+      resip::Sha1 sha1test;
       sha1test.update("");
       Data result = sha1test.finalBin();
       assert(result.hex() == "da39a3ee5e6b4b0d3255bfef95601890afd80709");      
@@ -43,7 +62,7 @@ main(void)
                  "a=rtpmap:0 PCMU/8000\r\n");
       {
          
-         resip::SHA1 sha1test;
+         resip::Sha1 sha1test;
          sha1test.update(input.c_str());
 
          assert(sha1test.final() == "f2eec616bd43c75fd1cd300691e57301b52b3ad3");
@@ -54,7 +73,24 @@ main(void)
    // Test Sha1Stream class that uses OpenSSL
    {
       SHA1Stream str;
-      assert(str.getHex() == "da39a3ee5e6b4b0d3255bfef95601890afd80709");
+      assert(str.getHex() == "da39a3ee" "5e6b4b0d" "3255bfef" "95601890" "afd80709");
+   }
+   {
+      SHA1Stream str;
+      str << "abc";
+      assert(str.getHex() == "a9993e36" "4706816a" "ba3e2571" "7850c26c" "9cd0d89d");
+   }
+   {
+      SHA1Stream str;
+      str << 'a';
+      str << 'b';
+      str << 'c';
+      assert(str.getHex() == "a9993e36" "4706816a" "ba3e2571" "7850c26c" "9cd0d89d");
+   }
+   {
+      SHA1Stream str;
+      str << "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+      assert(str.getHex() == "84983e44" "1c3bd26e" "baae4aa1" "f95129e5" "e54670f1");
    }
 
    {
@@ -117,3 +153,9 @@ main(void)
 
    return 0;
 }
+
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#else
+#pragma warning(pop)
+#endif

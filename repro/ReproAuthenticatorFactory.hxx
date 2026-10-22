@@ -3,9 +3,12 @@
 
 #include <memory>
 #include <set>
+#include <vector>
 
 #include "rutil/Data.hxx"
+#include "rutil/DigestStream.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
 #include "AuthenticatorFactory.hxx"
@@ -24,15 +27,15 @@ public:
 
    virtual bool certificateAuthEnabled() { return mEnableCertAuth; };
 
-   virtual resip::SharedPtr<resip::DumFeature> getCertificateAuthManager();
-   virtual std::auto_ptr<Processor> getCertificateAuthenticator();
+   virtual std::shared_ptr<resip::DumFeature> getCertificateAuthManager();
+   virtual std::unique_ptr<Processor> getCertificateAuthenticator();
 
    virtual bool digestAuthEnabled() { return mEnableDigestAuth; };
 
-   virtual resip::SharedPtr<resip::ServerAuthManager> getServerAuthManager();
-   virtual std::auto_ptr<Processor> getDigestAuthenticator();
+   virtual std::shared_ptr<resip::ServerAuthManager> getServerAuthManager();
+   virtual std::unique_ptr<Processor> getDigestAuthenticator();
 
-   virtual Dispatcher* getDispatcher();
+   virtual resip::Dispatcher* getDispatcher();
 
 private:
    void init();
@@ -53,12 +56,14 @@ private:
    // Maintains existing behavior for non-TLS cert auth users
    bool mDigestChallengeThirdParties;
 
+   std::vector<resip::DigestType> mChallengeDigestTypes;
+
    resip::CommonNameMappings mCommonNameMappings;
 
-   std::auto_ptr<Dispatcher> mAuthRequestDispatcher;
+   std::unique_ptr<resip::Dispatcher> mAuthRequestDispatcher;
 
-   resip::SharedPtr<resip::DumFeature> mCertificateAuthManager;
-   resip::SharedPtr<resip::ServerAuthManager> mServerAuthManager;
+   std::shared_ptr<resip::DumFeature> mCertificateAuthManager;
+   std::shared_ptr<resip::ServerAuthManager> mServerAuthManager;
 };
 
 }
@@ -68,6 +73,7 @@ private:
 /* ====================================================================
  * BSD License
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2013 Daniel Pocock http://danielpocock.com All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

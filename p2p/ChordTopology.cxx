@@ -15,6 +15,8 @@
 #include "p2p/Profile.hxx"
 #include "p2p/Update.hxx"
 
+#include <utility>
+
 using namespace p2p;
 
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
@@ -67,8 +69,8 @@ ChordTopology::newConnectionFormed( const NodeId& node, bool inbound )
       {
          DebugLog(<< "sending join to node: " << node);
    	   DestinationId destination(node);
-         std::auto_ptr<Message> joinReq(new JoinReq(destination, mProfile.nodeId()));
-         mDispatcher.send(joinReq, *this);      
+         std::unique_ptr<Message> joinReq(new JoinReq(destination, mProfile.nodeId()));
+         mDispatcher.send(std::move(joinReq), *this);      
       }
 
       // go and add this to the finger table
@@ -142,8 +144,8 @@ ChordTopology::consume(JoinReq& msg)
    if(!isResponsible(msg.getNodeId()))
    {
       // send error response - not responsible
-      std::auto_ptr<Message> errorAns(msg.makeErrorResponse(Message::Error::NotFound, "Not responsible for this Join"));
-      mDispatcher.send(errorAns, *this);
+      std::unique_ptr<Message> errorAns(msg.makeErrorResponse(Message::Error::NotFound, "Not responsible for this Join"));
+      mDispatcher.send(std::move(errorAns), *this);
       return;
    }
 
@@ -162,8 +164,8 @@ ChordTopology::consume(JoinReq& msg)
       sendUpdates();
    }
 
-   std::auto_ptr<Message> joinAns(msg.makeJoinResponse(resip::Data::Empty /* Overlay specific */));
-   mDispatcher.send(joinAns, *this);
+   std::unique_ptr<Message> joinAns(msg.makeJoinResponse(resip::Data::Empty /* Overlay specific */));
+   mDispatcher.send(std::move(joinAns), *this);
 }
 
 
@@ -182,8 +184,8 @@ ChordTopology::consume(UpdateReq& msg)
       sendUpdates();
    }
 
-   std::auto_ptr<Message> udpateAns(msg.makeUpdateResponse(resip::Data::Empty /* Overlay specific */));
-   mDispatcher.send(udpateAns, *this);
+   std::unique_ptr<Message> udpateAns(msg.makeUpdateResponse(resip::Data::Empty /* Overlay specific */));
+   mDispatcher.send(std::move(udpateAns), *this);
 }
 
 
@@ -195,8 +197,8 @@ ChordTopology::consume(LeaveReq& msg)
    // if this is in the prev/next table, remove it and send updates 
    resip_assert(0);
 
-   std::auto_ptr<Message> leaveAns(msg.makeLeaveResponse());
-   mDispatcher.send(leaveAns, *this);
+   std::unique_ptr<Message> leaveAns(msg.makeLeaveResponse());
+   mDispatcher.send(std::move(leaveAns), *this);
 }
 
 
@@ -403,7 +405,7 @@ ChordTopology::resourceId( const resip::Data& resourceName )
 
 
 void 
-ChordTopology::post(std::auto_ptr<Event> event)
+ChordTopology::post(std::unique_ptr<Event> event)
 {
    //will run in same thread as the dispatcher 
    DebugLog(<< "ChordTopology received: " << event->brief());
@@ -524,8 +526,8 @@ ChordTopology::sendUpdates()
    {   
       DebugLog(<< "sending update to prev neighbour: " << *it);
       DestinationId destination(*it);
-      std::auto_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
-      mDispatcher.send(updateReq, *this);
+      std::unique_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
+      mDispatcher.send(std::move(updateReq), *this);
    }
 
    it = mNextTable.begin();
@@ -533,8 +535,8 @@ ChordTopology::sendUpdates()
    {
       DebugLog(<< "sending update to next neighbour: " << *it);
 	   DestinationId destination(*it);
-      std::auto_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
-      mDispatcher.send(updateReq, *this);
+      std::unique_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
+      mDispatcher.send(std::move(updateReq), *this);
    }
 }
 
@@ -552,7 +554,7 @@ ChordTopology::attach(const NodeId &attachTo)
 }
 
 void
-ChordTopology::startCandidateCollection(const UInt64 tid, const NodeId &attachTo)
+ChordTopology::startCandidateCollection(const uint64_t tid, const NodeId &attachTo)
 {
    DebugLog(<< "Starting candidate collection");
    
@@ -561,7 +563,7 @@ ChordTopology::startCandidateCollection(const UInt64 tid, const NodeId &attachTo
 
 
 void 
-ChordTopology::candidatesCollected(UInt64 tid,
+ChordTopology::candidatesCollected(uint64_t tid,
                                    const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
 {
    
@@ -576,8 +578,8 @@ ChordTopology::candidatesCollected(UInt64 tid,
       ResourceId rid(node.encodeToNetwork());
       DestinationId destination(rid);
 
-      std::auto_ptr<Message> connectReq(new ConnectReq(destination, resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, candidates));
-      mDispatcher.send(connectReq, *this);
+      std::unique_ptr<Message> connectReq(new ConnectReq(destination, resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, candidates));
+      mDispatcher.send(std::move(connectReq), *this);
    }
    else
    {
@@ -593,7 +595,7 @@ ChordTopology::candidatesCollected(UInt64 tid,
             // Fill in the remaining Connect Response data
             ConnectAns* connectAns = (ConnectAns*)it->second;
             connectAns->setCandidates(candidates);
-            mDispatcher.send(std::auto_ptr<Message>(it->second), *this);
+            mDispatcher.send(std::unique_ptr<Message>(it->second), *this);
             // Send Connect Ans
             mPendingResponses.erase(it);
          }

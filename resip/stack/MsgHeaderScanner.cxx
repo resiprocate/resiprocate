@@ -9,6 +9,9 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 namespace resip 
 {
@@ -40,7 +43,7 @@ enum CharCategoryEnum
 typedef char CharCategory;
 
 char* 
-MsgHeaderScanner::allocateBuffer(int size)
+MsgHeaderScanner::allocateBuffer(size_t size)
 {
    return new char[size + MaxNumCharsChunkOverflow];
 }
@@ -498,7 +501,7 @@ cleanName(const char * name)
       unsigned int l = strlen(leaders[i]);
       if (strstr(name,leaders[i]) == name &&
           strlen(name) > l && 
-          isupper(name[l]))
+          isupper(static_cast< unsigned char >(name[l])))
       {
          offset = l;
          break;
@@ -932,13 +935,11 @@ MsgHeaderScanner::scanChunk(char * chunk,
    {
       textStartCharPtr = chunk;
    }
-   --charPtr;  // The loop starts by advancing "charPtr", so pre-adjust it.
-   for (;;)
+   for (;; ++charPtr)
    {
       // BEGIN message header character scan block BEGIN
       // The code in this block is executed once per message header character.
       // This entire file is designed specifically to minimize this block's size.
-      ++charPtr;
       CharInfo *charInfo = &localCharInfoArray[((unsigned char) (*charPtr))];
       CharCategory charCategory = charInfo->category;
       localTextPropBitMask |= charInfo->textPropBitMask;
@@ -989,7 +990,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
                                               mFieldKind,
                                               mFieldName,
                                               mFieldNameLength,
-                                              0,
+                                              charPtr,
                                               0,
                                               0);
             ++mNumHeaders;
@@ -1059,6 +1060,80 @@ MsgHeaderScanner::scanChunk(char * chunk,
    }//for
   endOfFunction:
    *termCharPtr = saveChunkTermChar;
+
+   if (result == MsgHeaderScanner::scrError && genericLogCheckLevel(resip::Log::Debug, RESIPROCATE_SUBSYSTEM))
+   {
+      const char* failedChar = *unprocessedCharPtr;
+      const char* lineBegin = failedChar;
+      while (lineBegin > chunk)
+      {
+         char c = *(lineBegin - 1);
+         if (!isprint(static_cast< unsigned char >(c)) && c != '\t')
+             break;
+         --lineBegin;
+      }
+      const char* lineEnd = failedChar;
+      while (lineEnd < termCharPtr)
+      {
+         char c = *lineEnd;
+         if (!isprint(static_cast< unsigned char >(c)) && c != '\t')
+             break;
+         ++lineEnd;
+      }
+
+      resip::Log::Guard lg(resip::Log::Debug, RESIPROCATE_SUBSYSTEM, __FILE__, __LINE__, __func__);
+      EncodeStream& strm = lg.asStream();
+      strm << "Message header scanning failed at position " << (failedChar - chunk) << '\n';
+      strm.write(lineBegin, lineEnd - lineBegin);
+      strm.put('\n');
+      static const char filler[] = "          ";
+      unsigned int n = (unsigned int)(failedChar - lineBegin);
+      while (n > sizeof(filler) - 1)
+      {
+          strm.write(filler, sizeof(filler) - 1);
+          n -= sizeof(filler) - 1;
+      }
+      strm.write(filler, n);
+      strm << "^ (character codes:";
+      char buf[20];
+      char* p = buf;
+      auto print_hex = [&p](char c)
+      {
+          static const char hex_charset[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+          *p++ = hex_charset[(static_cast< unsigned char >(c) >> 4u) & 0x0F];
+          *p++ = hex_charset[static_cast< unsigned char >(c) & 0x0F];
+      };
+      if ((failedChar - chunk) >= 2)
+      {
+          *p++ = ' ';
+          print_hex(*(failedChar - 2));
+      }
+      if ((failedChar - chunk) >= 1)
+      {
+          *p++ = ' ';
+          print_hex(*(failedChar - 1));
+      }
+      if ((termCharPtr - failedChar) >= 1)
+      {
+          *p++ = ' ';
+          *p++ = '[';
+          print_hex(*failedChar);
+          *p++ = ']';
+      }
+      if ((termCharPtr - failedChar) >= 2)
+      {
+          *p++ = ' ';
+          print_hex(*(failedChar + 1));
+      }
+      if ((termCharPtr - failedChar) >= 3)
+      {
+          *p++ = ' ';
+          print_hex(*(failedChar + 2));
+      }
+      *p++ = ')';
+      strm.write(buf, p - buf);
+   }
+
    return result;
 }
 

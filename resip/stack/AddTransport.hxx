@@ -3,19 +3,21 @@
 
 #include "resip/stack/TransactionMessage.hxx"
 #include "resip/stack/Transport.hxx"
+#include <memory>
+#include <utility>
 
 namespace resip
 {
 class AddTransport : public TransactionMessage
 {
    public:
-      explicit AddTransport(std::auto_ptr<Transport> transport) :
-         mTransport(transport)
+      explicit AddTransport(std::unique_ptr<Transport> transport) :
+         mTransport(std::move(transport))
       {}
       virtual ~AddTransport(){}
 
       virtual const Data& getTransactionId() const {return Data::Empty;}
-      std::auto_ptr<Transport> getTransport() { return mTransport; }
+      std::unique_ptr<Transport> getTransport() { return std::move(mTransport); }
 
       virtual bool isClientTransaction() const {return true;}
       virtual EncodeStream& encode(EncodeStream& strm) const
@@ -33,7 +35,7 @@ class AddTransport : public TransactionMessage
       }
 
    protected:
-      std::auto_ptr<Transport> mTransport;
+      std::unique_ptr<Transport> mTransport;
 }; // class AddTransport
 
 } // namespace resip

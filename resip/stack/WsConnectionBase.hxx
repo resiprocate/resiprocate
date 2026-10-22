@@ -4,9 +4,8 @@
 #include <resip/stack/WsConnectionValidator.hxx>
 #include <resip/stack/Cookie.hxx>
 #include <resip/stack/WsCookieContext.hxx>
-#include "rutil/Data.hxx"
-#include "rutil/SharedPtr.hxx"
 
+#include <memory>
 #include <vector>
 
 namespace resip
@@ -15,20 +14,25 @@ namespace resip
 class WsConnectionBase
 {
    public:
-      WsConnectionBase();
-      WsConnectionBase(SharedPtr<WsConnectionValidator> mWsConnectionValidator);
-      virtual ~WsConnectionBase();
+      WsConnectionBase() = default;
+      explicit WsConnectionBase(std::shared_ptr<WsConnectionValidator> mWsConnectionValidator);
+      WsConnectionBase(const WsConnectionBase&) = delete;
+      WsConnectionBase(WsConnectionBase&&) = delete;
+      virtual ~WsConnectionBase() = default;
 
-      void setCookies(CookieList& cookies) { mCookies = cookies; };
-      const CookieList& getCookies() const { return mCookies; };
-      SharedPtr<WsCookieContext> getWsCookieContext() const { return mWsCookieContext; }
-      void setWsCookieContext(SharedPtr<WsCookieContext> wsCookieContext) { mWsCookieContext = wsCookieContext; }
-      SharedPtr<WsConnectionValidator> connectionValidator() const;
+      WsConnectionBase& operator=(const WsConnectionBase&) = delete;
+      WsConnectionBase& operator=(WsConnectionBase&&) = delete;
+
+      void setCookies(const CookieList& cookies);
+      const CookieList& getCookies() const noexcept;
+      std::shared_ptr<WsCookieContext> getWsCookieContext() const noexcept;
+      void setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext) noexcept;
+      std::shared_ptr<WsConnectionValidator> connectionValidator() const noexcept;
 
    private:
       CookieList mCookies;
-      SharedPtr<WsCookieContext> mWsCookieContext;
-      SharedPtr<WsConnectionValidator> mWsConnectionValidator;
+      std::shared_ptr<WsCookieContext> mWsCookieContext;
+      std::shared_ptr<WsConnectionValidator> mWsConnectionValidator;
 };
 
 }

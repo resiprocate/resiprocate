@@ -17,7 +17,7 @@ namespace resip
 class Token : public ParserCategory
 {
    public:
-      enum {commaHandling = CommasAllowedOutputCommas};
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputCommas;
 
       Token();
       explicit Token(const Data& d);

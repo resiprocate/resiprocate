@@ -117,7 +117,7 @@ void ResourceIdStruct :: decode(std::istream& in)
 {
  StackLog(<< "Decoding ResourceIdStruct");
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 8, len);
       resip::DataStream strm(mId);
@@ -440,7 +440,7 @@ void DestinationStruct :: decode(std::istream& in)
 
       case 3:
             {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in_auto, 8, len);
       resip::DataStream strm(mCompressed.mCompressedId);
@@ -547,7 +547,7 @@ void SignerIdentityStruct :: decode(std::istream& in)
    }
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 16, len);
       resip::DataStream strm(mSignerIdentity);
@@ -686,7 +686,7 @@ void SignatureStruct :: decode(std::istream& in)
    mIdentity->decode(in);
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 16, len);
       resip::DataStream strm(mSignatureValue);
@@ -974,7 +974,7 @@ void ForwardingLayerMessageStruct :: decode(std::istream& in)
    mHeader->decode(in);
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 24, len);
       resip::DataStream strm(mPayload);
@@ -1043,7 +1043,7 @@ void MessagePayloadStruct :: decode(std::istream& in)
 {
  StackLog(<< "Decoding MessagePayloadStruct");
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 24, len);
       resip::DataStream strm(mPayload);
@@ -1114,7 +1114,7 @@ void ErrorResponseStruct :: decode(std::istream& in)
    StackLog( << "mErrorCode =" << std::hex << (unsigned long long) mErrorCode );
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 8, len);
       resip::DataStream strm(mReasonPhrase);
@@ -1128,7 +1128,7 @@ void ErrorResponseStruct :: decode(std::istream& in)
    }
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 16, len);
       resip::DataStream strm(mErrorInfo);
@@ -1202,7 +1202,7 @@ void JoinReqStruct :: decode(std::istream& in)
    mJoiningPeerId->decode(in);
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 16, len);
       resip::DataStream strm(mOverlaySpecificData);
@@ -1266,7 +1266,7 @@ void JoinAnsStruct :: decode(std::istream& in)
 {
  StackLog(<< "Decoding JoinAnsStruct");
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 16, len);
       resip::DataStream strm(mOverlaySpecificData);
@@ -1334,7 +1334,7 @@ void LeaveReqStruct :: decode(std::istream& in)
    mLeavingPeerId->decode(in);
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 16, len);
       resip::DataStream strm(mOverlaySpecificData);
@@ -1414,7 +1414,7 @@ void RouteQueryReqStruct :: decode(std::istream& in)
    mDestination->decode(in);
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 16, len);
       resip::DataStream strm(mOverlaySpecificData);
@@ -1496,7 +1496,7 @@ void FramedMessageStruct :: decode(std::istream& in)
             decode_uintX(in, 24, mData.mSequence);
    StackLog( << "mData.mSequence =" << std::hex << (unsigned long long) mData.mSequence );
             {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 24, len);
       resip::DataStream strm(mData.mMessage);
@@ -1590,7 +1590,7 @@ void IceCandidateStruct :: decode(std::istream& in)
 {
  StackLog(<< "Decoding IceCandidateStruct");
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 16, len);
       resip::DataStream strm(mCandidate);
@@ -1664,7 +1664,7 @@ void ConnectReqAnsStruct :: decode(std::istream& in)
 {
  StackLog(<< "Decoding ConnectReqAnsStruct");
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 8, len);
       resip::DataStream strm(mUfrag);
@@ -1678,7 +1678,7 @@ void ConnectReqAnsStruct :: decode(std::istream& in)
    }
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 8, len);
       resip::DataStream strm(mPassword);
@@ -1695,7 +1695,7 @@ void ConnectReqAnsStruct :: decode(std::istream& in)
    StackLog( << "mApplication =" << std::hex << (unsigned long long) mApplication );
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 8, len);
       resip::DataStream strm(mRole);
@@ -2049,7 +2049,7 @@ void TunnelReqStruct :: decode(std::istream& in)
    StackLog( << "mApplication =" << std::hex << (unsigned long long) mApplication );
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 8, len);
       resip::DataStream strm(mDialogId);
@@ -2063,7 +2063,7 @@ void TunnelReqStruct :: decode(std::istream& in)
    }
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 24, len);
       resip::DataStream strm(mApplicationPdu);
@@ -2141,7 +2141,7 @@ void DataValueStruct :: decode(std::istream& in)
    }
 
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 32, len);
       resip::DataStream strm(mValue);
@@ -2266,7 +2266,7 @@ void DictionaryKeyStruct :: decode(std::istream& in)
 {
  StackLog(<< "Decoding DictionaryKeyStruct");
    {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in, 16, len);
       resip::DataStream strm(mKey);
@@ -3873,7 +3873,7 @@ void SipRegistrationStruct :: decode(std::istream& in)
    switch(mType){
       case 1:
             {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in_auto, 16, len);
       resip::DataStream strm(mSipRegistrationUri.mUri);
@@ -3889,7 +3889,7 @@ void SipRegistrationStruct :: decode(std::istream& in)
 
       case 2:
             {
-      UInt32 len;
+      uint32_t len;
       int c;
       decode_uintX(in_auto, 16, len);
       resip::DataStream strm(mSipRegistrationRoute.mContactPrefs);

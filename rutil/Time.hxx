@@ -58,7 +58,7 @@ class ResipClock
 
       /** Returns the current clock time in microseconds.
       */
-      static UInt64 getTimeMicroSec()
+      static uint64_t getTimeMicroSec()
       {
          return getSystemTime();
       }
@@ -66,14 +66,14 @@ class ResipClock
 
       /** Returns the current clock time in milliseconds.
       */
-      static UInt64 getTimeMs()
+      static uint64_t getTimeMs()
       {
          return getSystemTime()/1000LL;
       }
 
       /** Returns the current clock time in seconds.
       */
-      static UInt64 getTimeSecs()
+      static uint64_t getTimeSecs()
       {
          return getSystemTime()/1000000LL;
       }
@@ -81,10 +81,10 @@ class ResipClock
       /** Returns an absolute time in ms that is between 50% and 90% of
           passed in ms from now.
       */
-      static UInt64 getRandomFutureTimeMs( UInt64 futureMs );
+      static uint64_t getRandomFutureTimeMs( uint64_t futureMs );
       /** Infinit time in future.
       */
-      static UInt64 getForever();
+      static uint64_t getForever();
 
       /** Some monotonic clock implementations may internally only return 32-bit values that will wrap.
         * @see Timer::getMaxSystemTimeWaitMs()
@@ -105,7 +105,7 @@ class ResipClock
       /** Returns the current clock time in microseconds.  Does not guarantee that this is related to the actual
         * OS system time (eg epoch or other time).
         */
-      static UInt64 getSystemTime();
+      static uint64_t getSystemTime();
 
       static unsigned mMaxSystemTimeWaitMs;
 
@@ -123,7 +123,7 @@ class ResipClock
             /** Returns a monotonic clock value in milliseconds.  Currently this is the system uptime as reported
               * by timeGetTime.
               */
-            static UInt64 GetClock64(void)
+            static uint64_t GetClock64(void)
             {
                return mGTC64();
             }                     
@@ -133,7 +133,7 @@ class ResipClock
             static void Initialize(void);
             /** Definition of a function that has no parameters and returns a 64-bit unsigned integer.
             */
-            typedef UInt64 (*PGTC64)(void);
+            typedef uint64_t (*PGTC64)(void);
 
             /** Get Tick Count wrapper for 32-bit version of ::timeGetTime that is nearly lockless and handles 32-bit wraparound.
               * _InterlockedExchange64 is used, which requires the CMPXCHG8B instruction.  This instruction is found
@@ -143,12 +143,12 @@ class ResipClock
             {
                public:
 
-                  static UInt64 GTC64(void);
+                  static uint64_t GTC64(void);
 
                   /** The maximum time that can elapse when using this class as the timer for resip stack processing.
                     @see resip::SipStack::getTimeTillNextProcessMS().
                   */
-                  static UInt32 GetMaxWaitMs(void)
+                  static uint32_t GetMaxWaitMs(void)
                   {
                      //Since the base time isn't updated on every call, need to ensure that it's updated once every 49.7 days.
                      //The base time will lag behind the current tick count, which means the lag time must be used
@@ -158,23 +158,23 @@ class ResipClock
                      if (maxWait <= 0)
                      {
                         resip_assert(0);
-                        const_cast<UInt32 &>(mBaseTimeUpdateInterval) = 60000;
-                        const_cast<UInt32 &>(mBaseTimeCushion) = 120000;
+                        const_cast<uint32_t &>(mBaseTimeUpdateInterval) = 60000;
+                        const_cast<uint32_t &>(mBaseTimeCushion) = 120000;
                         return UINT_MAX - mBaseTimeUpdateInterval - mBaseTimeCushion;
                      }
-                     return static_cast<UInt32>(maxWait);
+                     return static_cast<uint32_t>(maxWait);
                   }
 
                private:
                   /** Last stored time. Using InterlockedExchange (CMPXCHG8B) the alignment is not necessary, but it shouldn't hurt.
                       Align it on a cache line since it is rarely written and read often (to avoid false-sharing).
                   */
-                  static _declspec(align(128)) volatile UInt64 mBaseTime;
+                  static _declspec(align(128)) volatile uint64_t mBaseTime;
                   /** Max elapsed time since last GTC64 call, in milliseconds, before writing mBaseTime.
                       Cannot exceed UINT_MAX - mBaseTimeCushion.
                   */
-                  static const UInt32 mBaseTimeUpdateInterval = 60000;
-                  static const UInt32 mBaseTimeCushion = 120000; //!< large cushion to be cautious
+                  static const uint32_t mBaseTimeUpdateInterval = 60000;
+                  static const uint32_t mBaseTimeCushion = 120000; //!< large cushion to be cautious
             };
 
             /** Get Tick Count wrapper for 32-bit version of ::timeGetTime that minimizes locking and handles 32-bit wraparound.
@@ -186,9 +186,9 @@ class ResipClock
             {
                public:
 
-                  static UInt64 GTC64(void);
+                  static uint64_t GTC64(void);
 
-                  static UInt32 GetMaxWaitMs(void)
+                  static uint32_t GetMaxWaitMs(void)
                   {
                      return 120000;
                   }
@@ -198,7 +198,7 @@ class ResipClock
                     Therefore, the time will wrap around to zero if the system is run continuously for 49.7 days
                    if timer is called reasonable often we may manage wrap around by counter below
                    */
-                  static UInt32 mWrapCounter;
+                  static uint32_t mWrapCounter;
 
                   /** Last obtained tick to detect the need to increment mWrapCounter
                   */
@@ -216,7 +216,7 @@ class ResipClock
             class GTCLock
             {
                public:
-                  static UInt64 GTC64(void);
+                  static uint64_t GTC64(void);
 
                private:
                   static ULARGE_INTEGER mBaseTime;

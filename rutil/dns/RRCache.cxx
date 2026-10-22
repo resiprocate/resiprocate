@@ -31,6 +31,8 @@
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Timer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/dns/AresDns.hxx"
 #include "rutil/dns/RRFactory.hxx"
 #include "rutil/dns/RROverlay.hxx"
 #include "rutil/dns/RRFactory.hxx"
@@ -43,8 +45,12 @@
 #include "rutil/dns/RRCache.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+//#define VERBOSE_DNS_STACK_LOGS 1
+
 using namespace resip;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 RRCache::RRCache() 
    : mHead(),
@@ -70,16 +76,22 @@ void
 RRCache::updateCacheFromHostFile(const DnsHostRecord &record)
 {
    //FactoryMap::iterator it = mFactoryMap.find(T_A);
-   RRList* key = new RRList(record, 3600);         
+   RRList* key = new RRList(record, 3600);
    RRSet::iterator lb = mRRSet.lower_bound(key);
    if (lb != mRRSet.end() &&
        !(mRRSet.key_comp()(key, *lb)))
    {
+#ifdef VERBOSE_DNS_STACK_LOGS
+      StackLog(<< "Updating cache from hostfile: target=" << record.name() << ", host=" << record.host());
+#endif
       (*lb)->update(record, 3600);
       touch(*lb);
    }
    else
    {
+#ifdef VERBOSE_DNS_STACK_LOGS
+      StackLog(<< "Adding to cache from hostfile: target=" << record.name() << ", host=" << record.host());
+#endif
       RRList* val = new RRList(record, 3600);
       mRRSet.insert(val);
       mLruHead->push_back(val);
@@ -96,23 +108,56 @@ RRCache::updateCache(const Data& target,
 {
    Data domain = (*begin).domain();
    FactoryMap::iterator it = mFactoryMap.find(rrType);
-   resip_assert(it != mFactoryMap.end());
-   RRList* key = new RRList(domain, rrType);         
-   RRSet::iterator lb = mRRSet.lower_bound(key);
-   if (lb != mRRSet.end() &&
-       !(mRRSet.key_comp()(key, *lb)))
+   if (it != mFactoryMap.end())  // If we don't understand rrType - ignore it
    {
-      (*lb)->update(it->second, begin, end, mUserDefinedTTL);
-      touch(*lb);
+      RRList* key = new RRList(domain, rrType);
+      RRSet::iterator lb = mRRSet.lower_bound(key);
+      if (lb != mRRSet.end() &&
+         !(mRRSet.key_comp()(key, *lb)))
+      {
+         (*lb)->update(it->second, begin, end, mUserDefinedTTL);
+         if ((*lb)->numRecords() == 0)
+         {
+            // *lb might be a RRList with no records if parsing failed - remove from cache
+            (*lb)->remove();
+            delete *lb;
+            mRRSet.erase(lb);
+#ifdef VERBOSE_DNS_STACK_LOGS
+            StackLog(<< "Update cache failed to parse, removed entry: target=" << target << ", type=" << AresDns::dnsRRTypeToString(rrType) << ", totalCachedEntries=" << mRRSet.size());
+#endif
+         }
+         else
+         {
+#ifdef VERBOSE_DNS_STACK_LOGS
+            StackLog(<< "Updated cache: target=" << target << ", type=" << AresDns::dnsRRTypeToString(rrType));
+#endif
+            // update good - touch entry
+            touch(*lb);
+         }
+      }
+      else
+      {
+         RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
+         if (val->numRecords() == 0)
+         {
+#ifdef VERBOSE_DNS_STACK_LOGS
+            StackLog(<< "Update cache failed to parse for new entry: target=" << target << ", type=" << AresDns::dnsRRTypeToString(rrType));
+#endif
+            // val might be a RRList with no records if parsing failed - don't cache
+            delete val;
+         }
+         else
+         {
+            mRRSet.insert(val);
+            mLruHead->push_back(val);
+            purge();
+#ifdef VERBOSE_DNS_STACK_LOGS
+            StackLog(<< "Updated cache with new entry: target=" << target << ", type=" << AresDns::dnsRRTypeToString(rrType) << ", totalCachedEntries=" << mRRSet.size());
+#endif
+         }
+      }
+      delete key;
    }
-   else
-   {
-      RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
-      mRRSet.insert(val);
-      mLruHead->push_back(val);
-      purge();
-   }
-   delete key;
 }
 
 void 
@@ -144,6 +189,10 @@ RRCache::cacheTTL(const Data& target,
    mRRSet.insert(val);
    mLruHead->push_back(val);
    purge();
+
+#ifdef VERBOSE_DNS_STACK_LOGS
+   StackLog(<< "Updated cache ttl: target=" << target << ", type=" << AresDns::dnsRRTypeToString(rrType) << ", status=" << status << ", ttl=" << ttl << ", totalCachedEntries=" << mRRSet.size());
+#endif
 }
 
 bool 
@@ -153,25 +202,35 @@ RRCache::lookup(const Data& target,
                 Result& records, 
                 int& status)
 {
-   records.empty();
+   records.clear();
    status = 0;
    RRList* key = new RRList(target, type);
    RRSet::iterator it = mRRSet.find(key);
    delete key;
    if (it == mRRSet.end())
    {
+#ifdef VERBOSE_DNS_STACK_LOGS
+      StackLog(<< "Cache lookup failed for: target=" << target << ", type=" << AresDns::dnsRRTypeToString(type) << ", protocol=" << protocol << ", totalCachedEntries=" << mRRSet.size());
+#endif
       return false;
    }
    else
    {
       if (Timer::getTimeSecs() >= (*it)->absoluteExpiry())
       {
+#ifdef VERBOSE_DNS_STACK_LOGS
+         StackLog(<< "Cache lookup found expired entry for: target=" << target << ", type=" << AresDns::dnsRRTypeToString(type) << ", protocol=" << protocol << ", totalCachedEntries=" << mRRSet.size());
+#endif
+         (*it)->remove();
          delete *it;
          mRRSet.erase(it);
          return false;
       }
       else
       {
+#ifdef VERBOSE_DNS_STACK_LOGS
+         StackLog(<< "Cache lookup success for: target=" << target << ", type=" << AresDns::dnsRRTypeToString(type) << ", protocol=" << protocol << ", totalCachedEntries=" << mRRSet.size());
+#endif
          records = (*it)->records(protocol);
          status = (*it)->status();
          touch(*it);
@@ -202,9 +261,12 @@ RRCache::cleanup()
       delete *it;
    }
    mRRSet.clear();
+#ifdef VERBOSE_DNS_STACK_LOGS
+   StackLog(<< "Cache emptied, totalCachedEntries=" << mRRSet.size());
+#endif
 }
 
-int 
+int
 RRCache::getTTL(const RROverlay& overlay)
 {
    // overlay is a soa answer.
@@ -212,15 +274,21 @@ RRCache::getTTL(const RROverlay& overlay)
    char* name = 0;
    long len = 0;
    int status = ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
-   resip_assert( status == ARES_SUCCESS );
-   const unsigned char* pPos = overlay.data() + len;
-   free(name); name = 0;
-   status = ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
-   resip_assert( status == ARES_SUCCESS );
-   free(name);
-   pPos += len;
-   pPos += 16; // skip four 32 bit entities.
-   return DNS__32BIT(pPos);         
+   if (status == ARES_SUCCESS)
+   {
+      const unsigned char* pPos = overlay.data() + len;
+      free(name);
+      name = 0;
+      status = ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
+      if (status == ARES_SUCCESS)
+      {
+         free(name);
+         pPos += len;
+         pPos += 16; // skip four 32 bit entities.
+         return DNS__32BIT(pPos);
+      }
+   }
+   return -1;
 }
 
 void 
@@ -229,45 +297,43 @@ RRCache::purge()
    if (mRRSet.size() < mSize) return;
    RRList* lst = *(mLruHead->begin());
    RRSet::iterator it = mRRSet.find(lst);
-   resip_assert(it != mRRSet.end());
-   lst->remove();
-   delete *it;
-   mRRSet.erase(it);
+   if (it != mRRSet.end()) // safety check incase code forgets to remove from LRU list when removing from mRRset
+   {
+#ifdef VERBOSE_DNS_STACK_LOGS
+      StackLog(<< "Cache full purging LRU record, target=" << lst->key() << ", type=" << AresDns::dnsRRTypeToString(lst->rrType()) << ", status=" << lst->status() << ", totalCachedEntries=" << mRRSet.size() << ", maxSize=" << mSize);
+#endif
+
+      lst->remove();
+      delete* it;
+      mRRSet.erase(it);
+   }
 }
 
 void 
 RRCache::logCache()
 {
-   UInt64 now = Timer::getTimeSecs();
-   for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); )
-   {
-      if (now >= (*it)->absoluteExpiry())
-      {
-         delete *it;
-         mRRSet.erase(it++);
-      }
-      else
-      {
-         (*it)->log();
-         ++it;
-      }
-   }
+   Data dnsCacheDump;
+   getCacheDump(dnsCacheDump);
+   WarningLog(<< endl << dnsCacheDump);
 }
 
 void 
 RRCache::getCacheDump(Data& dnsCacheDump)
 {
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    DataStream strm(dnsCacheDump);
+   strm << "DNSCACHE: TotalEntries=" << mRRSet.size();
    for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); )
    {
       if (now >= (*it)->absoluteExpiry())
       {
+         (*it)->remove();
          delete *it;
          mRRSet.erase(it++);
       }
       else
       {
+         strm << endl;
          (*it)->encodeRRList(strm);
          ++it;
       }

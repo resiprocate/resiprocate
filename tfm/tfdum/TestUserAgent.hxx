@@ -37,11 +37,11 @@ class TestUserAgent : public TestEndPoint, public ThreadableUserAgent
 
 
 //--
-      class ExpectException : public resip::BaseException
+      class ExpectException final : public resip::BaseException
       {
          public:
-            ExpectException(const Data& msg, const Data& file, const int line);
-            virtual const char* name() const;
+            ExpectException(const Data& msg, const Data& file, int line);
+            const char* name() const noexcept override;
       };
 
       class Expect : public TestEndPoint::ExpectBase
@@ -52,7 +52,7 @@ class TestUserAgent : public TestEndPoint, public ThreadableUserAgent
                    int timeoutMs,
                    ActionBase* expectAction);
             virtual TestEndPoint* getEndPoint() const;
-            virtual void onEvent(TestEndPoint&, boost::shared_ptr<Event> event);
+            virtual void onEvent(TestEndPoint&, std::shared_ptr<Event> event);
             virtual Box layout() const;
             virtual void render(AsciiGraphic::CharRaster &out) const;
             virtual unsigned int getTimeout() const;
@@ -73,8 +73,8 @@ class TestUserAgent : public TestEndPoint, public ThreadableUserAgent
                            int timeoutMs,
                            ActionBase* expectAction);
             virtual ~ExpectMsgEvent();
-            virtual bool isMatch(boost::shared_ptr<Event> event) const;
-            virtual Data explainMismatch(boost::shared_ptr<Event> event) const;
+            virtual bool isMatch(std::shared_ptr<Event> event) const;
+            virtual Data explainMismatch(std::shared_ptr<Event> event) const;
             int getStatusCode() const { return mMsgEventCode.second; }
             virtual Data getMsgTypeString() const;
             virtual std::ostream& output(std::ostream& s) const;
@@ -99,8 +99,8 @@ class TestUserAgent : public TestEndPoint, public ThreadableUserAgent
                         int timeoutMs,
                         ActionBase* expectAction);
             virtual ~ExpectEvent();
-            virtual bool isMatch(boost::shared_ptr<Event> event) const;
-            virtual Data explainMismatch(boost::shared_ptr<Event> event) const;
+            virtual bool isMatch(std::shared_ptr<Event> event) const;
+            virtual Data explainMismatch(std::shared_ptr<Event> event) const;
             virtual Data getMsgTypeString() const;
             virtual std::ostream& output(std::ostream& s) const;
 
@@ -121,8 +121,8 @@ class TestUserAgent : public TestEndPoint, public ThreadableUserAgent
                             int timeoutMs,
                             ActionBase* expectAction);
             virtual ~ExpectSubscribeEvent();
-            virtual bool isMatch(boost::shared_ptr<Event> event) const;
-            virtual Data explainMismatch(boost::shared_ptr<Event> event) const;
+            virtual bool isMatch(std::shared_ptr<Event> event) const;
+            virtual Data explainMismatch(std::shared_ptr<Event> event) const;
             virtual Data getMsgTypeString() const;
             virtual std::ostream& output(std::ostream& s) const;
       };
@@ -151,8 +151,8 @@ class TestUserAgent : public TestEndPoint, public ThreadableUserAgent
             }
             
             /// determine if the message matches
-            virtual bool isMatch(boost::shared_ptr<Event> event) const;
-            virtual Data explainMismatch(boost::shared_ptr<Event> event) const;
+            virtual bool isMatch(std::shared_ptr<Event> event) const;
+            virtual Data explainMismatch(std::shared_ptr<Event> event) const;
             virtual Data getMsgTypeString() const;
             virtual std::ostream& output(std::ostream& s) const;
       };

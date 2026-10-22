@@ -7,8 +7,19 @@
 #include "ConversationManager.hxx"
 #include "Conversation.hxx"
 #include "RemoteParticipant.hxx"
+#include "RemoteIMPagerParticipant.hxx"
 #include "LocalParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
+#include "MediaStackAdapter.hxx"
+#ifdef USE_KURENTO
+#include "KurentoRemoteParticipant.hxx"
+#endif
+#ifdef USE_GSTREAMER
+#include "GstRemoteParticipant.hxx"
+#endif
+#ifdef USE_LIBWEBRTC
+#include "LibWebRTCRemoteParticipant.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
@@ -23,30 +34,31 @@ namespace recon
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
-class CreateConversationCmd  : public resip::DumCommand
+class CreateConversationCmd  : public resip::DumCommandAdapter
 {
    public:  
       CreateConversationCmd(ConversationManager* conversationManager, 
                             ConversationHandle convHandle,
-                            bool broadcastOnly) 
+                            ConversationManager::AutoHoldMode autoHoldMode,
+                            ConversationHandle sharedMediaInterfaceConvHandle)
          : mConversationManager(conversationManager),
            mConvHandle(convHandle),
-           mBroadcastOnly(broadcastOnly) {}
+           mAutoHoldMode(autoHoldMode),
+           mSharedMediaInterfaceConvHandle(sharedMediaInterfaceConvHandle){}
       virtual void executeCommand()
       {
-            Conversation* conversation = new Conversation(mConvHandle, *mConversationManager, 0, mBroadcastOnly);
+            Conversation* conversation = mConversationManager->getMediaStackAdapter().createConversationInstance(mConvHandle, 0, mSharedMediaInterfaceConvHandle, mAutoHoldMode);
             resip_assert(conversation);
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " CreateConversationCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateConversationCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ConversationHandle mConvHandle;
-      bool mBroadcastOnly;
+      ConversationManager::AutoHoldMode mAutoHoldMode;
+      ConversationHandle mSharedMediaInterfaceConvHandle;
 };
 
-class DestroyConversationCmd  : public resip::DumCommand
+class DestroyConversationCmd  : public resip::DumCommandAdapter
 {
    public:  
       DestroyConversationCmd(ConversationManager* conversationManager, 
@@ -61,15 +73,13 @@ class DestroyConversationCmd  : public resip::DumCommand
             conversation->destroy();
          }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " DestroyConversationCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " DestroyConversationCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ConversationHandle mConvHandle;
 };
 
-class JoinConversationCmd  : public resip::DumCommand
+class JoinConversationCmd  : public resip::DumCommandAdapter
 {
    public:  
       JoinConversationCmd(ConversationManager* conversationManager, 
@@ -80,46 +90,53 @@ class JoinConversationCmd  : public resip::DumCommand
            mDestConvHandle(destConvHandle) {}
       virtual void executeCommand()
       {
-         if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+         Conversation* sourceConversation = mConversationManager->getConversation(mSourceConvHandle);
+         Conversation* destConversation = mConversationManager->getConversation(mDestConvHandle);
+         if (sourceConversation && destConversation)
          {
-            WarningLog(<< "JoinConversationCmd: command not allowed in sipXConversationMediaInterfaceMode.");
+            if (sourceConversation == destConversation)
+            {
+               // NoOp
+               return;
+            }
+
+            // If either conversation has a Remote or Media participant, then make sure both conversations are using the same
+            // media interface
+            if (sourceConversation->getNumRemoteParticipants() != 0 || sourceConversation->getNumMediaParticipants() != 0 ||
+                destConversation->getNumRemoteParticipants() != 0 || destConversation->getNumMediaParticipants() != 0)
+            {
+               // Safety check when running in sipXConversationMediaInterfaceMode - ensure both conversation are using the same
+               // media interface
+               if (!mConversationManager->getMediaStackAdapter().canConversationsShareParticipants(sourceConversation, destConversation))
+               {
+                  WarningLog(<< "JoinConversationCmd: not supported for sourceConv=" << mSourceConvHandle << ", and destConv=" << mDestConvHandle);
+                  return;
+               }
+            }
+
+            // Join source Conversation into dest Conversation and destroy source conversation
+            sourceConversation->join(destConversation);
          }
          else
          {
-            Conversation* sourceConversation = mConversationManager->getConversation(mSourceConvHandle);
-            Conversation* destConversation = mConversationManager->getConversation(mDestConvHandle);
-            if(sourceConversation && destConversation)
+            if (!sourceConversation)
             {
-               if(sourceConversation == destConversation)
-               {
-                  // NoOp
-                  return;
-               }
-               sourceConversation->join(destConversation);  // Join source Conversation into dest Conversation and destroy source conversation
+               WarningLog(<< "JoinConversationCmd: invalid source conversation handle: " << mSourceConvHandle);
             }
-            else
+            if (!destConversation)
             {
-               if(!sourceConversation)
-               {
-                  WarningLog(<< "JoinConversationCmd: invalid source conversation handle.");
-               }
-               if(!destConversation)
-               {
-                  WarningLog(<< "JoinConversationCmd: invalid destination conversation handle.");
-               }
+               WarningLog(<< "JoinConversationCmd: invalid destination conversation handle: " << mDestConvHandle);
             }
          }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " JoinConversationCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " JoinConversationCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ConversationHandle mSourceConvHandle;
       ConversationHandle mDestConvHandle;
 };
 
-class CreateRemoteParticipantCmd  : public resip::DumCommand
+class CreateRemoteParticipantCmd  : public resip::DumCommandAdapter
 {
    public:  
       CreateRemoteParticipantCmd(ConversationManager* conversationManager, 
@@ -127,7 +144,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
                                  ConversationHandle convHandle,
                                  const resip::NameAddr& destination,
                                  ConversationManager::ParticipantForkSelectMode forkSelectMode,
-                                 resip::SharedPtr<resip::UserProfile> callerProfile = resip::SharedPtr<resip::UserProfile>(),
+                                 std::shared_ptr<ConversationProfile> callerProfile = nullptr,
                                  const std::multimap<resip::Data,resip::Data>& extraHeaders = (std::multimap<resip::Data,resip::Data>()))
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
@@ -141,8 +158,8 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation)
          {
-            RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(*mConversationManager, mForkSelectMode);
-            RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle); 
+            RemoteParticipantDialogSet* participantDialogSet = mConversationManager->getMediaStackAdapter().createRemoteParticipantDialogSetInstance(mForkSelectMode, mCallerProfile);
+            RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle);
             if(participant)
             {
                conversation->addParticipant(participant);
@@ -151,73 +168,137 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
             else
             {
                WarningLog(<< "CreateRemoteParticipantCmd: error creating UACOriginalRemoteParticipant.");
-               mConversationManager->onParticipantDestroyed(mPartHandle);
+               mConversationManager->onParticipantDestroyed(mPartHandle, ConversationManager::ParticipantType_Remote);
             }
          }
          else
          {
-            WarningLog(<< "CreateRemoteParticipantCmd: invalid conversation handle.");
-            mConversationManager->onParticipantDestroyed(mPartHandle);
+            WarningLog(<< "CreateRemoteParticipantCmd: invalid conversation handle: " << mConvHandle);
+            mConversationManager->onParticipantDestroyed(mPartHandle, ConversationManager::ParticipantType_Remote);
          }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " CreateRemoteParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateRemoteParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
       ConversationHandle mConvHandle;
       resip::NameAddr mDestination;
       ConversationManager::ParticipantForkSelectMode mForkSelectMode;
-      resip::SharedPtr<resip::UserProfile> mCallerProfile;
+      std::shared_ptr<ConversationProfile> mCallerProfile;
       std::multimap<resip::Data,resip::Data> mExtraHeaders;
 };
 
-class CreateMediaResourceParticipantCmd  : public resip::DumCommand
+class CreateRemoteIMPagerParticipantCmd : public resip::DumCommandAdapter
+{
+public:
+   CreateRemoteIMPagerParticipantCmd(ConversationManager* conversationManager,
+      ParticipantHandle partHandle,
+      const resip::NameAddr& destination,
+      std::shared_ptr<ConversationProfile> conversationProfile = nullptr)
+      : mConversationManager(conversationManager),
+      mPartHandle(partHandle),
+      mDestination(destination),
+      mConversationProfile(conversationProfile) {}
+   virtual void executeCommand()
+   {
+      new RemoteIMPagerParticipant(mPartHandle, *mConversationManager, mDestination, mConversationProfile);
+   }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateRemoteIMPagerParticipantCmd: "; return strm; }
+private:
+   ConversationManager* mConversationManager;
+   ParticipantHandle mPartHandle;
+   resip::NameAddr mDestination;
+   std::shared_ptr<ConversationProfile> mConversationProfile;
+};
+
+class CreateRemoteIMSessionParticipantCmd : public resip::DumCommandAdapter
+{
+public:
+   CreateRemoteIMSessionParticipantCmd(ConversationManager* conversationManager,
+      ParticipantHandle partHandle,
+      const resip::NameAddr& destination,
+      ConversationManager::ParticipantForkSelectMode forkSelectMode,
+      std::shared_ptr<ConversationProfile> callerProfile = nullptr,
+      const std::multimap<resip::Data, resip::Data>& extraHeaders = (std::multimap<resip::Data, resip::Data>()))
+      : mConversationManager(conversationManager),
+      mPartHandle(partHandle),
+      mDestination(destination),
+      mForkSelectMode(forkSelectMode),
+      mCallerProfile(callerProfile),
+      mExtraHeaders(extraHeaders) {}
+   virtual void executeCommand()
+   {
+      RemoteParticipantDialogSet* participantDialogSet = mConversationManager->createRemoteIMSessionParticipantDialogSetInstance(mForkSelectMode, mCallerProfile);
+      RemoteParticipant* participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle);
+      if (participant)
+      {
+         participant->initiateRemoteCall(mDestination, mCallerProfile, mExtraHeaders);
+      }
+      else
+      {
+         WarningLog(<< "CreateRemoteIMSessionParticipantCmd: error creating UACOriginalRemoteParticipant.");
+         mConversationManager->onParticipantDestroyed(mPartHandle, ConversationManager::ParticipantType_RemoteIMSession);
+      }
+   }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateRemoteIMSessionParticipantCmd: "; return strm; }
+private:
+   ConversationManager* mConversationManager;
+   ParticipantHandle mPartHandle;
+   resip::NameAddr mDestination;
+   ConversationManager::ParticipantForkSelectMode mForkSelectMode;
+   std::shared_ptr<ConversationProfile> mCallerProfile;
+   std::multimap<resip::Data, resip::Data> mExtraHeaders;
+};
+
+class CreateMediaResourceParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       CreateMediaResourceParticipantCmd(ConversationManager* conversationManager, 
                                         ParticipantHandle partHandle,
                                         ConversationHandle convHandle,
-                                        const resip::Uri& mediaUrl) 
+                                        const resip::Uri& mediaUrl,
+                                        const std::shared_ptr<resip::Data>& audioBuffer,
+                                        void* recordingCircularBuffer)
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mConvHandle(convHandle),
-           mMediaUrl(mediaUrl) {}
+           mMediaUrl(mediaUrl),
+           mAudioBuffer(audioBuffer),
+           mRecordingCircularBuffer(recordingCircularBuffer) {}
       virtual void executeCommand()
       {
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation)
          {
-            MediaResourceParticipant* mediaResourceParticipant = new MediaResourceParticipant(mPartHandle, *mConversationManager, mMediaUrl);
+            MediaResourceParticipant* mediaResourceParticipant = mConversationManager->getMediaStackAdapter().createMediaResourceParticipantInstance(mPartHandle, mMediaUrl, mAudioBuffer, mRecordingCircularBuffer);
             if(mediaResourceParticipant)
             {
                conversation->addParticipant(mediaResourceParticipant);
-               mediaResourceParticipant->startPlay();
+               mediaResourceParticipant->startResource();  // Note: Can call delete this (MediaResourceParticipant) on failures
             }
             else
             {
                WarningLog(<< "CreateMediaResourceParticipantCmd: error creating MediaResourceParticipant.");
-               mConversationManager->onParticipantDestroyed(mPartHandle);
+               mConversationManager->onParticipantDestroyed(mPartHandle, ConversationManager::ParticipantType_MediaResource);
             }
          }
          else
          {
-            WarningLog(<< "CreateMediaResourceParticipantCmd: invalid conversation handle.");
-            mConversationManager->onParticipantDestroyed(mPartHandle);
+            WarningLog(<< "CreateMediaResourceParticipantCmd: invalid conversation handle: " << mConvHandle);
+            mConversationManager->onParticipantDestroyed(mPartHandle, ConversationManager::ParticipantType_MediaResource);
          }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " CreateMediaResourceParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateMediaResourceParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
       ConversationHandle mConvHandle;
       resip::Uri mMediaUrl;
+      std::shared_ptr<resip::Data> mAudioBuffer;
+      void* mRecordingCircularBuffer;
 };
 
-class CreateLocalParticipantCmd  : public resip::DumCommand
+class CreateLocalParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       CreateLocalParticipantCmd(ConversationManager* conversationManager, 
@@ -226,17 +307,15 @@ class CreateLocalParticipantCmd  : public resip::DumCommand
            mPartHandle(partHandle) {}
       virtual void executeCommand()
       {
-         new LocalParticipant(mPartHandle, *mConversationManager);
+         mConversationManager->getMediaStackAdapter().createLocalParticipantInstance(mPartHandle);
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " CreateLocalParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateLocalParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
 };
 
-class DestroyParticipantCmd  : public resip::DumCommand
+class DestroyParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       DestroyParticipantCmd(ConversationManager* conversationManager, 
@@ -252,15 +331,14 @@ class DestroyParticipantCmd  : public resip::DumCommand
             participant->destroyParticipant();
          }
       }
-      resip::Message* clone() const { return new DestroyParticipantCmd(*this); }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " DestroyParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      virtual resip::Message* clone() const { return new DestroyParticipantCmd(*this); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " DestroyParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
 };
 
-class AddParticipantCmd  : public resip::DumCommand
+class AddParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       AddParticipantCmd(ConversationManager* conversationManager, 
@@ -274,14 +352,17 @@ class AddParticipantCmd  : public resip::DumCommand
          Participant* participant = mConversationManager->getParticipant(mPartHandle);
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
 
-         if(participant && conversation)
+         if (participant && conversation)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            // Participants using a media interface (ie: those with a connection port) can only belong to multiple conversations if they 
+            // have the same media interface
+            if (participant->getConversations().size() > 0 && participant->getConnectionPortOnBridge() != -1)
             {
-               // Need to ensure, that we are not adding the participant to more than one conversation.
-               if(participant->getConversations().size() > 0)
+               // All conversations they are currently in will have the same media interface, just check that first conversation's media interface
+               // matches the new conversation we are trying to add to.
+               if (!mConversationManager->getMediaStackAdapter().canConversationsShareParticipants(participant->getConversations().begin()->second, conversation))
                {
-                  WarningLog(<< "AddParticipantCmd: participants cannot belong to multiple conversations in sipXConversationMediaInterfaceMode.");
+                  WarningLog(<< "AddParticipantCmd: participants cannot belong to multiple conversations that don't share a media interface in sipXConversationMediaInterfaceMode.");
                   return;
                }
             }
@@ -291,24 +372,22 @@ class AddParticipantCmd  : public resip::DumCommand
          {
             if(!participant)
             {
-               WarningLog(<< "AddParticipantCmd: invalid participant handle.");
+               WarningLog(<< "AddParticipantCmd: invalid participant handle: " << mPartHandle);
             }
             if(!conversation)
             {
-               WarningLog(<< "AddParticipantCmd: invalid conversation handle.");
+               WarningLog(<< "AddParticipantCmd: invalid conversation handle: " << mConvHandle);
             }
          }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " AddParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " AddParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ConversationHandle mConvHandle;
       ParticipantHandle mPartHandle;
 };
 
-class RemoveParticipantCmd  : public resip::DumCommand
+class RemoveParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       RemoveParticipantCmd(ConversationManager* conversationManager, 
@@ -323,39 +402,28 @@ class RemoveParticipantCmd  : public resip::DumCommand
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(participant && conversation)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            // When using multiple media interfaces, only local participants and remote IM participants can exist outside of any conversations.  We need to
+            // prevent removal of other participant types (ie: those with a connection port on the bridge) from all conversations in this mode.
+            if (mConversationManager->getMediaStackAdapter().supportsMultipleMediaInterfaces() && participant->getNumConversations() == 1)
             {
-               // Need to ensure, that only local participants can be removed from conversations
-               if(!dynamic_cast<LocalParticipant*>(participant))
+               LocalParticipant* localPart = dynamic_cast<LocalParticipant*>(participant);
+               if (!localPart && participant->getConnectionPortOnBridge() != -1)  // Note:  connection port on bridge check eliminates RemoteIMParticipants from falling into if
                {
-                  WarningLog(<< "RemoveParticipantCmd: only local participants can be removed from conversations in sipXConversationMediaInterfaceMode.");
+                  WarningLog(<< "RemoveParticipantCmd: you cannot remove non-local participants from all conversations when in sipXConversationMediaInterfaceMode.");
                   return;
                }
             }
             conversation->removeParticipant(participant);
          }
-         else
-         {
-            if(!participant)
-            {
-               WarningLog(<< "RemoveParticipantCmd: invalid participant handle.");
-            }
-            if(!conversation)
-            {
-               WarningLog(<< "RemoveParticipantCmd: invalid conversation handle.");
-            }
-         }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " RemoveParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RemoveParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ConversationHandle mConvHandle;
       ParticipantHandle mPartHandle;
 };
 
-class MoveParticipantCmd  : public resip::DumCommand
+class MoveParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       MoveParticipantCmd(ConversationManager* conversationManager, 
@@ -371,53 +439,47 @@ class MoveParticipantCmd  : public resip::DumCommand
          Participant* participant = mConversationManager->getParticipant(mPartHandle);
          Conversation* sourceConversation = mConversationManager->getConversation(mSourceConvHandle);
          Conversation* destConversation   = mConversationManager->getConversation(mDestConvHandle);
-         if(participant && sourceConversation && destConversation)
+         if (participant && sourceConversation && destConversation)
          {
-            if(sourceConversation == destConversation)
+            if (sourceConversation == destConversation)
             {
                // No-Op
                return;
             }
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+
+            // If participant uses a media interface, then ensure it's safe to move
+            if (participant->getConnectionPortOnBridge() != -1)
             {
-               // Need to ensure, that only local participants can be moved between conversations
-               if(!dynamic_cast<LocalParticipant*>(participant))
+               // Safety check, mostly for when running in sipXConversationMediaInterfaceMode 
+               // - ensure both conversation are using the same media interface
+               if (!mConversationManager->getMediaStackAdapter().canConversationsShareParticipants(sourceConversation, destConversation))
                {
-                  WarningLog(<< "MoveParticipantCmd: only local participants can be moved between conversations in sipXConversationMediaInterfaceMode.");
+                  WarningLog(<< "MoveParticipantCmd: failed, both conversations must be using the same media interface.");
                   return;
                }
-               // Remove from old before adding to new conversation (since participants can't belong to multiple conversations
-               // and only local participants can be moved in sipXConversationMediaInterfaceMode - no need to worry about the
-               // hold/unhold issue that is mentioned in the 2nd half of the else statement for sipXGlobalMediaInterfaceMode)
-               sourceConversation->removeParticipant(participant);
-               destConversation->addParticipant(participant);
             }
-            else
-            {
-               // Add to new conversation and remove from old (add before remove, so that hold/unhold won't happen)
-               destConversation->addParticipant(participant);
-               sourceConversation->removeParticipant(participant);
-            }
+
+            // Add to new conversation and remove from old (add before remove, so that hold/unhold won't happen)
+            destConversation->addParticipant(participant);
+            sourceConversation->removeParticipant(participant);
          }
          else
          {
             if(!participant)
             {
-               WarningLog(<< "MoveParticipantCmd: invalid participant handle.");
+               WarningLog(<< "MoveParticipantCmd: invalid participant handle: " << mPartHandle);
             }
             if(!sourceConversation)
             {
-               WarningLog(<< "MoveParticipantCmd: invalid source conversation handle.");
+               WarningLog(<< "MoveParticipantCmd: invalid source conversation handle: " << mSourceConvHandle);
             }
             if(!destConversation)
             {
-               WarningLog(<< "MoveParticipantCmd: invalid destination conversation handle.");
+               WarningLog(<< "MoveParticipantCmd: invalid destination conversation handle: " << mDestConvHandle);
             }
          }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " RemoveParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RemoveParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
@@ -425,7 +487,7 @@ class MoveParticipantCmd  : public resip::DumCommand
       ConversationHandle mDestConvHandle;
 };
 
-class ModifyParticipantContributionCmd  : public resip::DumCommand
+class ModifyParticipantContributionCmd : public resip::DumCommandAdapter
 {
    public:  
       ModifyParticipantContributionCmd(ConversationManager* conversationManager, 
@@ -450,17 +512,15 @@ class ModifyParticipantContributionCmd  : public resip::DumCommand
          {
             if(!participant)
             {
-               WarningLog(<< "ModifyParticipantContributionCmd: invalid participant handle.");
+               WarningLog(<< "ModifyParticipantContributionCmd: invalid participant handle: " << mPartHandle);
             }
             if(!conversation)
             {
-               WarningLog(<< "ModifyParticipantContributionCmd: invalid conversation handle.");
+               WarningLog(<< "ModifyParticipantContributionCmd: invalid conversation handle: " << mConvHandle);
             }
          }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " ModifyParticipantContributionCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " ModifyParticipantContributionCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ConversationHandle mConvHandle;
@@ -469,24 +529,55 @@ class ModifyParticipantContributionCmd  : public resip::DumCommand
       unsigned int mOutputGain;
 };
 
-class OutputBridgeMixWeightsCmd  : public resip::DumCommand
+class ModifyParticipantRecordChannelCmd : public resip::DumCommandAdapter
 {
-   public:  
-      OutputBridgeMixWeightsCmd(ConversationManager* conversationManager) 
-         : mConversationManager(conversationManager) {}
-      virtual void executeCommand()
+public:
+   ModifyParticipantRecordChannelCmd(ConversationManager* conversationManager, ParticipantHandle partHandle, unsigned int channelNum)
+      : mConversationManager(conversationManager),
+        mPartHandle(partHandle),
+        mChannelNum(channelNum) {}
+   virtual void executeCommand()
+   {
+      if (mChannelNum >= 1 && mChannelNum <= 2)
       {
-         resip_assert(mConversationManager->getBridgeMixer()!=0);
-         mConversationManager->getBridgeMixer()->outputBridgeMixWeights();
+         Participant* participant = mConversationManager->getParticipant(mPartHandle);
+         if (participant)
+         {
+            participant->setRecordChannelNum(mChannelNum);
+         }
+         else
+         {
+            WarningLog(<< "ModifyParticipantRecordChannelCmd: invalid participant handle: " << mPartHandle);
+         }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " OutputBridgeMixWeightsCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
-   private:
-      ConversationManager* mConversationManager;
+      else
+      {
+         WarningLog(<< "ModifyParticipantRecordChannelCmd: partHandle=" << mPartHandle << ", invalid channelNum=" << mChannelNum << ", expecting either 1 or 2.");
+      }
+   }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " ModifyParticipantRecordChannelCmd: partHandle=" << mPartHandle << ", channelNum=" << mChannelNum; return strm; }
+private:
+   ConversationManager* mConversationManager;
+   ParticipantHandle mPartHandle;
+   unsigned int mChannelNum;
 };
 
-class AlertParticipantCmd  : public resip::DumCommand
+class OutputBridgeMixWeightsCmd : public resip::DumCommandAdapter
+{
+   public:  
+      OutputBridgeMixWeightsCmd(ConversationManager* conversationManager, ConversationHandle convHandle) 
+         : mConversationManager(conversationManager), mConversationHandle(convHandle) {}
+      virtual void executeCommand()
+      {
+         mConversationManager->getMediaStackAdapter().outputBridgeMatrixImpl(mConversationHandle);
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " OutputBridgeMixWeightsCmd: conversationHandle=" << mConversationHandle; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ConversationHandle mConversationHandle;
+};
+
+class AlertParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       AlertParticipantCmd(ConversationManager* conversationManager, 
@@ -500,13 +591,13 @@ class AlertParticipantCmd  : public resip::DumCommand
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode && mEarlyFlag)
+            if(mConversationManager->getMediaStackAdapter().supportsMultipleMediaInterfaces() && mEarlyFlag)
             {
-               // Need to ensure, that the remote paticipant is added to a conversation before doing an opertation that requires
+               // Need to ensure, that the remote paticipant is added to a conversation before doing an operation that requires
                // media (ie. EarlyMediaFlag set to true).
                if(remoteParticipant->getConversations().size() == 0)
                {
-                  WarningLog(<< "AlertParticipantCmd: remote participants must to added to a conversation before alert with early flag can be used when in sipXConversationMediaInterfaceMode.");
+                  WarningLog(<< "AlertParticipantCmd: remote participants must be added to a conversation before alert with early flag can be used when in sipXConversationMediaInterfaceMode.");
                   return;
                }
             }
@@ -514,19 +605,17 @@ class AlertParticipantCmd  : public resip::DumCommand
          }
          else
          {
-            WarningLog(<< "AlertParticipantCmd: invalid remote participant handle.");
+            WarningLog(<< "AlertParticipantCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " AlertParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " AlertParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
       bool mEarlyFlag;
 };
 
-class AnswerParticipantCmd  : public resip::DumCommand
+class AnswerParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       AnswerParticipantCmd(ConversationManager* conversationManager, 
@@ -535,34 +624,39 @@ class AnswerParticipantCmd  : public resip::DumCommand
            mPartHandle(partHandle) {}
       virtual void executeCommand()
       {
-         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         Participant* participant = mConversationManager->getParticipant(mPartHandle);
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(participant);
          if(remoteParticipant)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            if(mConversationManager->getMediaStackAdapter().supportsMultipleMediaInterfaces())
             {
                // Need to ensure, that the remote paticipant is added to a conversation before accepting the call
                if(remoteParticipant->getConversations().size() == 0)
                {
-                  WarningLog(<< "AnswerParticipantCmd: remote participant must to added to a conversation before calling accept in sipXConversationMediaInterfaceMode.");
+                  WarningLog(<< "AnswerParticipantCmd: remote participant must be added to a conversation before calling answer in sipXConversationMediaInterfaceMode.");
                   return;
                }
             }
             remoteParticipant->accept();
+            return;
          }
-         else
+
+         RemoteIMPagerParticipant* remoteIMPagerParticipant = dynamic_cast<RemoteIMPagerParticipant*>(participant);
+         if (remoteIMPagerParticipant)
          {
-            WarningLog(<< "AnswerParticipantCmd: invalid remote participant handle.");
+            remoteIMPagerParticipant->accept();
+            return;
          }
+
+         WarningLog(<< "AnswerParticipantCmd: invalid remote participant handle: " << mPartHandle);
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " AnswerParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " AnswerParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
 };
 
-class RejectParticipantCmd  : public resip::DumCommand
+class RejectParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       RejectParticipantCmd(ConversationManager* conversationManager, 
@@ -573,100 +667,286 @@ class RejectParticipantCmd  : public resip::DumCommand
            mRejectCode(rejectCode) {}
       virtual void executeCommand()
       {
-         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         Participant* participant = mConversationManager->getParticipant(mPartHandle);
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(participant);
          if(remoteParticipant)
          {
             remoteParticipant->reject(mRejectCode);
+            return;
          }
-         else
+
+         RemoteIMPagerParticipant* remoteIMPagerParticipant = dynamic_cast<RemoteIMPagerParticipant*>(participant);
+         if (remoteIMPagerParticipant)
          {
-            WarningLog(<< "RejectParticipantCmd: invalid remote participant handle.");
+            remoteIMPagerParticipant->reject(mRejectCode);
+            return;
          }
+
+         WarningLog(<< "RejectParticipantCmd: invalid remote participant handle: " << mPartHandle);
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " RejectParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RejectParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
       unsigned int mRejectCode;
 };
 
-class RedirectParticipantCmd  : public resip::DumCommand
+class RedirectParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       RedirectParticipantCmd(ConversationManager* conversationManager, 
                              ParticipantHandle partHandle,
-                             const resip::NameAddr& destination) 
+                             const resip::NameAddr& destination,
+                             unsigned int redirectCode,
+                             ConversationManager::RedirectSuccessCondition successCondition)
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
-           mDestination(destination) {}
+           mDestination(destination),
+           mRedirectCode(redirectCode),
+           mSuccessCondition(successCondition) {}
       virtual void executeCommand()
       {
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            remoteParticipant->redirect(mDestination);
+            remoteParticipant->redirect(mDestination, mRedirectCode, mSuccessCondition);
          }
          else
          {
-            WarningLog(<< "RedirectParticipantCmd: invalid remote participant handle.");
+            WarningLog(<< "RedirectParticipantCmd: invalid remote participant handle: " << mPartHandle);
          }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " RedirectParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RedirectParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
       resip::NameAddr mDestination;
+      unsigned int mRedirectCode;
+      ConversationManager::RedirectSuccessCondition mSuccessCondition;
 };
 
-class RedirectToParticipantCmd  : public resip::DumCommand
+class RedirectToParticipantCmd : public resip::DumCommandAdapter
 {
    public:  
       RedirectToParticipantCmd(ConversationManager* conversationManager, 
                                ParticipantHandle partHandle,
-                               ParticipantHandle destPartHandle) 
+                               ParticipantHandle destPartHandle,
+                               ConversationManager::RedirectSuccessCondition successCondition)
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
-           mDestPartHandle(destPartHandle) {}
+           mDestPartHandle(destPartHandle),
+           mSuccessCondition(successCondition) {}
       virtual void executeCommand()
       {
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          RemoteParticipant* destRemoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mDestPartHandle));
          if(remoteParticipant && destRemoteParticipant)
          {
-            remoteParticipant->redirectToParticipant(destRemoteParticipant->getInviteSessionHandle());
+            remoteParticipant->redirectToParticipant(destRemoteParticipant->getInviteSessionHandle(), mSuccessCondition);
          }
          else
          {
             if(!remoteParticipant)
             {
-               WarningLog(<< "RedirectToParticipantCmd: invalid remote participant handle.");
+               WarningLog(<< "RedirectToParticipantCmd: invalid remote participant handle: " << mPartHandle);
             }
             if(!destRemoteParticipant)
             {
-               WarningLog(<< "RedirectToParticipantCmd: invalid destination remote participant handle.");
+               WarningLog(<< "RedirectToParticipantCmd: invalid destination remote participant handle: " << mDestPartHandle);
             }
          }
       }
-      resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " RedirectToParticipantCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RedirectToParticipantCmd: "; return strm; }
    private:
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
       ParticipantHandle mDestPartHandle;
+      ConversationManager::RedirectSuccessCondition mSuccessCondition;
+};
+
+class HoldParticipantCmd : public resip::DumCommandAdapter
+{
+   public:
+      HoldParticipantCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle,
+                          bool hold)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle),
+           mHold(hold) {}
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            if(mConversationManager->getMediaStackAdapter().supportsMultipleMediaInterfaces() && mHold)
+            {
+               // Need to ensure, that the remote paticipant is added to a conversation before doing an opertation that requires
+               // media (ie. hold set to true).
+               if(remoteParticipant->getConversations().size() == 0)
+               {
+                  WarningLog(<< "HoldParticipantCmd: remote participants must be added to a conversation before hold can be used when in sipXConversationMediaInterfaceMode.");
+                  return;
+               }
+            }
+            remoteParticipant->setLocalHold(mHold);
+         }
+         else
+         {
+            WarningLog(<< "HoldParticipantCmd: invalid remote participant handle: " << mPartHandle);
+         }
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+      bool mHold;
+};
+
+class SendIMToParticipantCmd : public resip::DumCommandAdapter
+{
+public:
+   SendIMToParticipantCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle,
+                          std::unique_ptr<resip::Contents> contents)
+      : mConversationManager(conversationManager),
+        mPartHandle(partHandle),
+        mContents(std::move(contents)) {}
+   virtual void executeCommand()
+   {
+      Participant* participant = mConversationManager->getParticipant(mPartHandle);
+      IMParticipantBase* imParticipant = dynamic_cast<IMParticipantBase*>(participant);
+      if (imParticipant)
+      {
+         imParticipant->sendInstantMessage(std::move(mContents));
+         return;
+      }
+
+      WarningLog(<< "SendIMToParticipantCmd: invalid remote participant handle: " << mPartHandle);
+   }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " SendIMToParticipantCmd: "; return strm; }
+private:
+   ConversationManager* mConversationManager;
+   ParticipantHandle mPartHandle;
+   std::unique_ptr<resip::Contents> mContents;
+};
+
+class RequestKeyframeCmd : public resip::DumCommandAdapter
+{
+   public:
+      RequestKeyframeCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle) {}
+      virtual Message* clone() const { return new RequestKeyframeCmd(*this); }
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            remoteParticipant->requestKeyframe();
+         }
+         else
+         {
+            WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle: " << mPartHandle);
+         }
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+};
+
+class RequestKeyframeFromPeerCmd : public resip::DumCommandAdapter
+{
+   public:
+      RequestKeyframeFromPeerCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle) {}
+      virtual Message* clone() const { return new RequestKeyframeFromPeerCmd(*this); }
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            remoteParticipant->requestKeyframeFromPeer();
+         }
+         else
+         {
+            WarningLog(<< "RequestKeyframeFromPeerCmd: invalid remote participant handle: " << mPartHandle);
+         }
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RequestKeyframeFromPeerCmd: "; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+};
+
+class RequestKeyframeFromPeerRecurringCmd : public resip::DumCommandAdapter
+{
+   public:
+      RequestKeyframeFromPeerRecurringCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle,
+                          std::chrono::duration<double> interval)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle),
+           mInterval(interval) {}
+      virtual Message* clone() const { return new RequestKeyframeFromPeerRecurringCmd(*this); }
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            remoteParticipant->requestKeyframeFromPeerTimeout(false);
+            mConversationManager->requestKeyframeFromPeerRecurring(mPartHandle, mInterval);
+         }
+         else
+         {
+            WarningLog(<< "RequestKeyframeFromPeerRecurringCmd: invalid remote participant handle.");
+         }
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " RequestKeyframeFromPeerRecurringCmd: "; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+      std::chrono::duration<double> mInterval;
+};
+
+class ApplicationTimerCmd : public resip::DumCommand
+{
+public:
+   ApplicationTimerCmd(ConversationManager* conversationManager,
+      unsigned int timerId, unsigned int timerData1, unsigned int timerData2)
+      : mConversationManager(conversationManager),
+      mTimerId(timerId),
+      mTimerData1(timerData1),
+      mTimerData2(timerData2) {}
+   virtual void executeCommand()
+   {
+      mConversationManager->onApplicationTimer(mTimerId, mTimerData1, mTimerData2);
+   }
+   resip::Message* clone() const { return new ApplicationTimerCmd(mConversationManager, mTimerId, mTimerData1, mTimerData2); }
+   EncodeStream& encode(EncodeStream& strm) const { strm << " ApplicationTimerCmd: timerId=" << mTimerId << ", data1=" << mTimerData1 << ", data2=" << mTimerData2; return strm; }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+private:
+   ConversationManager* mConversationManager;
+   unsigned int mTimerId;
+   unsigned int mTimerData1;
+   unsigned int mTimerData2;
 };
 
 }
+
+#undef RESIPROCATE_SUBSYSTEM
 
 #endif
 
 
 /* ====================================================================
 
+ Copyright (c) 2021-2023, SIP Spectrum, Inc. http://www.sipspectrum.com
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

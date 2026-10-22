@@ -27,7 +27,7 @@ class TestServerSubscription : public TestUsage
 
       CommonAction* setSubscriptionState(resip::SubscriptionState state);
       CommonAction* end();
-      CommonAction* send(resip::SharedPtr<resip::SipMessage> msg);
+      CommonAction* send(std::shared_ptr<resip::SipMessage> msg);
 
       bool isMyEvent(Event*);
 

@@ -5,6 +5,9 @@
 
 #include "UserAgent.hxx"
 
+#include <memory>
+#include <utility>
+
 namespace recon
 {
 
@@ -38,7 +41,7 @@ class AddConversationProfileCmd  : public resip::DumCommand
    public:  
       AddConversationProfileCmd(UserAgent* userAgent,
                                 ConversationProfileHandle handle,
-                                resip::SharedPtr<ConversationProfile> conversationProfile,
+                                std::shared_ptr<ConversationProfile> conversationProfile,
                                 bool defaultOutgoing)
          : mUserAgent(userAgent),
            mHandle(handle),
@@ -54,7 +57,7 @@ class AddConversationProfileCmd  : public resip::DumCommand
    private:
       UserAgent* mUserAgent;
       ConversationProfileHandle mHandle;
-      resip::SharedPtr<ConversationProfile> mConversationProfile;
+      std::shared_ptr<ConversationProfile> mConversationProfile;
       bool mDefaultOutgoing;
 };
 
@@ -99,7 +102,7 @@ class DestroyConversationProfileCmd  : public resip::DumCommand
 class UserAgentTimeout : public resip::DumCommand
 {
    public:
-      UserAgentTimeout(UserAgent& userAgent, unsigned int timerId, unsigned int duration, unsigned int seqNumber) :
+      UserAgentTimeout(UserAgent& userAgent, unsigned int timerId, std::chrono::duration<double> duration, unsigned int seqNumber) :
          mUserAgent(userAgent), mTimerId(timerId), mDuration(duration), mSeqNumber(seqNumber) {}
       UserAgentTimeout(const UserAgentTimeout& rhs) :
          mUserAgent(rhs.mUserAgent), mTimerId(rhs.mTimerId), mDuration(rhs.mDuration), mSeqNumber(rhs.mSeqNumber) {}
@@ -108,17 +111,17 @@ class UserAgentTimeout : public resip::DumCommand
       void executeCommand() { mUserAgent.onApplicationTimer(mTimerId, mDuration, mSeqNumber); }
 
       resip::Message* clone() const { return new UserAgentTimeout(*this); }
-      EncodeStream& encode(EncodeStream& strm) const { strm << "UserAgentTimeout: id=" << mTimerId << ", duration=" << mDuration << ", seq=" << mSeqNumber; return strm; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << "UserAgentTimeout: id=" << mTimerId << ", duration=" << std::chrono::duration_cast<std::chrono::milliseconds>(mDuration).count() << "ms, seq=" << mSeqNumber; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
 
       unsigned int id() const { return mTimerId; }
       unsigned int seqNumber() const { return mSeqNumber; }
-      unsigned int duration() const { return mDuration; }
+      std::chrono::duration<double> duration() const { return mDuration; }
       
    private:
       UserAgent& mUserAgent;
       unsigned int mTimerId;
-      unsigned int mDuration;
+      std::chrono::duration<double> mDuration;
       unsigned int mSeqNumber;
 };
 
@@ -170,6 +173,59 @@ class DestroySubscriptionCmd  : public resip::DumCommand
    private:
       UserAgent* mUserAgent;
       SubscriptionHandle mHandle;
+};
+
+class CreatePublicationCmd  : public resip::DumCommand
+{
+   public:  
+      CreatePublicationCmd(UserAgent* userAgent,
+			   PublicationHandle handle,
+			   const resip::Data& status,
+			   const resip::Data& eventType, 
+			   const resip::NameAddr& target, 
+			   unsigned int publicationTime, 
+			   const resip::Mime& mimeType)
+         : mUserAgent(userAgent),
+           mHandle(handle),
+           mStatus(status),
+           mEventType(eventType),
+           mTarget(target),
+           mPublicationTime(publicationTime),
+           mMimeType(mimeType) {}
+      virtual void executeCommand()
+      {
+         mUserAgent->createPublicationImpl(mHandle, mStatus, mEventType, mTarget, mPublicationTime, mMimeType);
+      }
+      resip::Message* clone() const { resip_assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " CreatePublicationCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      UserAgent* mUserAgent;
+      PublicationHandle mHandle;
+      resip::Data mStatus;
+      resip::Data mEventType;
+      resip::NameAddr mTarget;
+      unsigned int mPublicationTime;
+      resip::Mime mMimeType;
+};
+
+class DestroyPublicationCmd  : public resip::DumCommand
+{
+   public:  
+      DestroyPublicationCmd(UserAgent* userAgent,
+                            PublicationHandle handle)
+         : mUserAgent(userAgent),
+           mHandle(handle) {}
+      virtual void executeCommand()
+      {
+         mUserAgent->destroyPublicationImpl(mHandle);
+      }
+      resip::Message* clone() const { resip_assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " DestroyPublicationCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      UserAgent* mUserAgent;
+      PublicationHandle mHandle;
 };
 
 }

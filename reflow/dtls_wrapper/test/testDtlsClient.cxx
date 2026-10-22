@@ -1,5 +1,9 @@
 #include <iostream>
 
+#if !defined(WIN32)
+#include <netdb.h>
+#endif
+
 #include <openssl/ssl.h>
 #include <openssl/srtp.h>
 
@@ -28,10 +32,10 @@ int main(int argc,char **argv)
 
    assert(argc==3);
 
-   createCert(resip::Data("sip:client@example.com"),365,1024,clientCert,clientKey);
+   createCert(resip::Data("sip:client@example.com"),365,2048,clientCert,clientKey);
 
    TestTimerContext *ourTimer=new TestTimerContext();
-   DtlsFactory *clientFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(ourTimer),clientCert,clientKey);
+   std::unique_ptr<DtlsFactory> clientFactory(new DtlsFactory(std::unique_ptr<DtlsTimerContext>(ourTimer),clientCert,clientKey));
 
    cout << "Created the factory\n";
 
@@ -44,13 +48,16 @@ int main(int argc,char **argv)
    // Make the UDP socket context
    char *host=argv[1];
    int port=atoi(argv[2]);
-   struct hostent *hp=gethostbyname(host);
+   struct addrinfo hints;
+   memset(&hints,0,sizeof(hints));
+   hints.ai_family=AF_INET;
+   hints.ai_socktype=SOCK_DGRAM;
+   struct addrinfo *res=0;
+   int err=getaddrinfo(host,0,&hints,&res);
+   assert(err==0 && res!=0);
    struct sockaddr_in peer_addr;
-   assert(hp!=0);
-   memset(&peer_addr,0,sizeof(struct in_addr));
-   peer_addr.sin_addr=*(struct in_addr*)
-      hp->h_addr_list[0];
-   peer_addr.sin_family=AF_INET;
+   memcpy(&peer_addr,res->ai_addr,sizeof(peer_addr));
+   freeaddrinfo(res);
    peer_addr.sin_port=htons(port);
 
    cout << "Made our UDP socket\n";
@@ -59,7 +66,7 @@ int main(int argc,char **argv)
 
    cout << "Made the socket context\n";
 
-   DtlsSocket *dtlsSocket=clientFactory->createClient(std::auto_ptr<DtlsSocketContext>(sockContext));
+   std::unique_ptr<DtlsSocket> dtlsSocket(clientFactory->createClient(std::unique_ptr<DtlsSocketContext>(sockContext)));
 
    cout << "Made the DTLS socket\n";
 
@@ -81,11 +88,7 @@ int main(int argc,char **argv)
       fdset.setRead(0);
 #endif
 
-      UInt64 towait=ourTimer->getRemainingTime();
-
-      // cerr << "Invoking select for time " << towait << endl;
-
-      int toread=fdset.selectMilliSeconds(towait);
+      int toread=ourTimer->select(fdset);;
 
       ourTimer->updateTimer();
 
@@ -96,6 +99,9 @@ int main(int argc,char **argv)
             char inbuf[1024];
             cin.getline(inbuf, 1024);
             cout << "Read from stdin " << inbuf << endl;
+            if (strlen(inbuf) == 0) {
+               exit(0);
+            }
             sockContext->sendRtpData((const unsigned char *)inbuf,strlen(inbuf));
          }
          if (fdset.readyToRead(fd))
@@ -136,7 +142,8 @@ int main(int argc,char **argv)
 
 /* ====================================================================
 
- Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without

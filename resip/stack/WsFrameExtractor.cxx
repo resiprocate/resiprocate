@@ -9,22 +9,45 @@ using namespace resip;
 
 
 const int WsFrameExtractor::mMaxHeaderLen = 14;
+const size_t WsFrameExtractor::mMaxFrames = 1024;
+
+const uint8_t WsFrameExtractor::OpContinuation;
+const uint8_t WsFrameExtractor::OpText;
+const uint8_t WsFrameExtractor::OpBinary;
+const uint8_t WsFrameExtractor::OpClose;
+const uint8_t WsFrameExtractor::OpPing;
+const uint8_t WsFrameExtractor::OpPong;
+
+// RFC 6455 section 5.5: a control frame carries at most 125 bytes
+static const uint64_t MaxControlPayload = 125;
 
 WsFrameExtractor::WsFrameExtractor(Data::size_type maxMessage)
    : mMaxMessage(maxMessage),
      mMessageSize(0),
      mHaveHeader(false),
-     mHeaderLen(0)
+     mHeaderLen(0),
+     mClosed(false),
+     mFinalFrame(false),
+     mMasked(false),
+     mOpcode(OpContinuation),
+     mPayloadLength(0),
+     mPayload(0),
+     mPayloadPos(0)
 {
+   memset(mWsMaskKey, 0, sizeof(mWsMaskKey));
+
    // we re-use this for multiple messages throughout
    // the lifetime of this parser object
-   mWsHeader = new UInt8[mMaxHeaderLen];
+   mWsHeader = new uint8_t[mMaxHeaderLen];
 }
 
 WsFrameExtractor::~WsFrameExtractor()
 {
    // FIXME - delete any objects left in the queues
    delete [] mWsHeader;
+
+   // the buffer of a frame that was only partially received
+   delete [] (char*)mPayload;
 
    while(!mFrames.empty()) 
    {
@@ -42,20 +65,37 @@ WsFrameExtractor::~WsFrameExtractor()
 
 }
 
-std::auto_ptr<Data>
-WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConnection)
+std::unique_ptr<Data>
+WsFrameExtractor::processBytes(uint8_t *input, Data::size_type len, bool& dropConnection)
 {
-   std::auto_ptr<Data> ret(0);
+   std::unique_ptr<Data> ret;
    dropConnection = false;
    Data::size_type pos = 0;
+   if(mClosed && input != 0 && len > 0)
+   {
+      // RFC 6455 section 5.5.1: the peer must not send anything after a Close
+      StackLog(<<"discarding " << len << " bytes received after a WebSocket Close");
+      pos = len;
+   }
    while(input != 0 && pos < len)
    {
-      while(!mHaveHeader && pos < len)
+      while(!mHaveHeader)
       {
          StackLog(<<"Need a header, parsing bytes...");
-         // Append bytes to the header buffer
+         // Append bytes to the header buffer.  parseHeader() only returns
+         // zero once it has a complete header, so keep re-parsing after
+         // every batch of bytes rather than waiting for more input to
+         // arrive: an oversized frame has to be rejected as soon as its
+         // header is known, not when its payload starts turning up.
          int needed = parseHeader();
-         if(mHeaderLen >= mMaxHeaderLen)
+         if(needed == 0)
+         {
+            break;
+         }
+         // only a header that is still incomplete once mMaxHeaderLen bytes
+         // have been consumed is too long: a full header (64 bit length and
+         // a mask key) occupies exactly mMaxHeaderLen bytes
+         if((mHeaderLen + needed) > mMaxHeaderLen)
          {
             WarningLog(<<"WS Frame header too long");
             dropConnection = true;
@@ -74,27 +114,57 @@ WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConn
       if(mHaveHeader)
       {
          StackLog(<<"have header, parsing payload data...");
-         // Process input bytes to output buffer, unmasking if necessary
-         if(mMessageSize + mPayloadLength > mMaxMessage)
+         const bool control = isControlFrame();
+         if(mOpcode != OpContinuation && mOpcode != OpText && mOpcode != OpBinary &&
+            mOpcode != OpClose && mOpcode != OpPing && mOpcode != OpPong)
          {
-            WarningLog(<<"WS frame header describes a payload size bigger than messageSizeMax, max = " << mMaxMessage 
+            WarningLog(<<"WS frame with reserved opcode " << (int)mOpcode << ", dropping connection");
+            dropConnection = true;
+            return ret;
+         }
+         if(control)
+         {
+            // RFC 6455 section 5.5: control frames are never fragmented and
+            // carry at most 125 bytes, so they cannot be used to get round the
+            // message size limit below
+            if(!mFinalFrame || mPayloadLength > MaxControlPayload)
+            {
+               WarningLog(<<"WS control frame (opcode " << (int)mOpcode << ") is fragmented or longer than "
+                    << MaxControlPayload << " bytes, dropping connection");
+               dropConnection = true;
+               return ret;
+            }
+         }
+         // Process input bytes to output buffer, unmasking if necessary.
+         // mPayloadLength is an attacker controlled 64 bit value, so the
+         // check has to be written to avoid wrapping: comparing
+         // mMessageSize + mPayloadLength against mMaxMessage would let a
+         // peer bypass it with a length close to 2^64.  Control frames are
+         // not part of a message and were bounded above.
+         else if(mPayloadLength > mMaxMessage ||
+            mMessageSize > mMaxMessage - mPayloadLength)
+         {
+            WarningLog(<<"WS frame header describes a payload size bigger than messageSizeMax, max = " << mMaxMessage
                  << ", dropping connection");
             dropConnection = true;
             return ret;
          }
 
+         // safe to narrow now that it has been bounded by mMaxMessage
+         const Data::size_type payloadLength = (Data::size_type)mPayloadLength;
+
          if(mPayload == 0)
          {
             StackLog(<<"starting new frame buffer");
             // Include an extra byte at the end for null terminator
-            mPayload = (UInt8*)new char[mPayloadLength + 1];
+            mPayload = (uint8_t*)new char[payloadLength + 1];
             mPayloadPos = 0;
          }
 
          Data::size_type takeBytes = len - pos;
-         if(takeBytes > mPayloadLength - mPayloadPos)
+         if(takeBytes > payloadLength - mPayloadPos)
          {
-            takeBytes = mPayloadLength - mPayloadPos;
+            takeBytes = payloadLength - mPayloadPos;
          }
 
          if(mMasked)
@@ -112,11 +182,32 @@ WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConn
             mPayloadPos += takeBytes;
          }
 
-         if(mPayloadPos == mPayloadLength)
+         if(mPayloadPos == payloadLength && control)
+         {
+            StackLog(<<"Got a whole control frame, opcode " << (int)mOpcode);
+            ControlFrame frame;
+            frame.opcode = mOpcode;
+            frame.payload = Data((const char*)mPayload, payloadLength);
+            mControlFrames.push(frame);
+            delete [] (char*)mPayload;
+            mPayload = 0;
+            mHaveHeader = false;
+            mHeaderLen = 0;
+            if(mOpcode == OpClose)
+            {
+               mClosed = true;
+               if(pos < len)
+               {
+                  StackLog(<<"discarding " << (len - pos) << " bytes received after a WebSocket Close");
+               }
+               pos = len;
+            }
+         }
+         else if(mPayloadPos == payloadLength)
          {
             StackLog(<<"Got a whole frame, queueing it");
-            mMessageSize += mPayloadLength;
-            Data *mFrame = new Data(Data::Borrow, (char *)mPayload, mPayloadLength, mPayloadLength + 1);
+            mMessageSize += payloadLength;
+            Data *mFrame = new Data(Data::Borrow, (char *)mPayload, payloadLength, payloadLength + 1);
             mFrames.push(mFrame);
             mHaveHeader = false;
             mHeaderLen = 0;
@@ -124,6 +215,16 @@ WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConn
             if(mFinalFrame)
             {
                joinFrames();
+            }
+            else if(mFrames.size() >= mMaxFrames)
+            {
+               // empty and tiny continuation frames don't advance
+               // mMessageSize fast enough (or at all) for the size check
+               // above to ever terminate this, so bound the frame count too
+               WarningLog(<<"WS message fragmented into more than " << mMaxFrames
+                    << " frames, dropping connection");
+               dropConnection = true;
+               return ret;
             }
          }
       }
@@ -133,7 +234,7 @@ WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConn
       StackLog(<<"no full messages available in queue"); 
       return ret;
    }
-   ret = std::auto_ptr<Data>(mMessages.front());
+   ret = std::unique_ptr<Data>(mMessages.front());
    mMessages.pop();
    StackLog(<<"returning a message, size = " << ret->size());
    return ret;
@@ -148,9 +249,10 @@ WsFrameExtractor::parseHeader()
       return (2 - mHeaderLen);
    }
 
-   UInt64 hdrPos = 2;
+   uint64_t hdrPos = 2;
 
    mFinalFrame = (mWsHeader[0] >> 7) != 0;
+   mOpcode = mWsHeader[0] & 0x0F;
    mMasked = (mWsHeader[1] >> 7) != 0;
 
    if(mWsHeader[0] & 0x40 || mWsHeader[0] & 0x20 || mWsHeader[0] & 0x10)
@@ -172,12 +274,14 @@ WsFrameExtractor::parseHeader()
    }
    else if(mPayloadLength == 127)
    {
-      if(mHeaderLen < 8)
+      // the 64 bit length occupies mWsHeader[2] through mWsHeader[9], so
+      // 10 bytes must have arrived before any of it can be read
+      if(mHeaderLen < 10)
       {
          StackLog(<< "Too short to contain ws data [2]");
-         return (8 - mHeaderLen) + (mMasked ? 4 : 0);
+         return (10 - mHeaderLen) + (mMasked ? 4 : 0);
       }
-      mPayloadLength = (((UInt64)mWsHeader[hdrPos]) << 56 | ((UInt64)mWsHeader[hdrPos + 1]) << 48 | ((UInt64)mWsHeader[hdrPos + 2]) << 40 | ((UInt64)mWsHeader[hdrPos + 3]) << 32 | ((UInt64)mWsHeader[hdrPos + 4]) << 24 | ((UInt64)mWsHeader[hdrPos + 5]) << 16 | ((UInt64)mWsHeader[hdrPos + 6]) << 8 || ((UInt64)mWsHeader[hdrPos + 7]));
+      mPayloadLength = (((uint64_t)mWsHeader[hdrPos]) << 56 | ((uint64_t)mWsHeader[hdrPos + 1]) << 48 | ((uint64_t)mWsHeader[hdrPos + 2]) << 40 | ((uint64_t)mWsHeader[hdrPos + 3]) << 32 | ((uint64_t)mWsHeader[hdrPos + 4]) << 24 | ((uint64_t)mWsHeader[hdrPos + 5]) << 16 | ((uint64_t)mWsHeader[hdrPos + 6]) << 8 | ((uint64_t)mWsHeader[hdrPos + 7]));
       hdrPos += 8;
    }
 
@@ -195,12 +299,32 @@ WsFrameExtractor::parseHeader()
       hdrPos += 4;
    }
 
-   StackLog(<< "successfully processed a WebSocket frame header, payload length = " << mPayloadLength
+   StackLog(<< "successfully processed a WebSocket frame header, opcode = " << (int)mOpcode
+            << ", payload length = " << mPayloadLength
             << ", masked = "<< mMasked << ", final frame = "<< mFinalFrame);
 
    mHaveHeader = true;
    mPayload = 0;
    return 0;
+}
+
+bool
+WsFrameExtractor::isControlFrame() const
+{
+   // RFC 6455 section 5.5: opcodes with the high bit set are control frames
+   return (mOpcode & 0x08) != 0;
+}
+
+bool
+WsFrameExtractor::popControlFrame(ControlFrame& frame)
+{
+   if(mControlFrames.empty())
+   {
+      return false;
+   }
+   frame = mControlFrames.front();
+   mControlFrames.pop();
+   return true;
 }
 
 void
@@ -222,11 +346,13 @@ WsFrameExtractor::joinFrames()
       // ShareEnum will change to Take when expanded
       char *_msg = (char *)msg->data();
       Data::size_type frameSize = msg->size();
-      delete msg;
 
       // allow extra byte for null terminator
-      char *newBuf = new char [mMessageSize + 1]; 
+      char *newBuf = new char [mMessageSize + 1];
       memcpy(newBuf, _msg, frameSize);
+      delete msg;
+      // the Data only borrowed this buffer, so it must be freed separately
+      delete [] _msg;
 
       msg = new Data(Data::Borrow, newBuf, frameSize, mMessageSize + 1);
    }
@@ -252,6 +378,7 @@ WsFrameExtractor::joinFrames()
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

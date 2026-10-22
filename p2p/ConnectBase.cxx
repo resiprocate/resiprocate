@@ -24,7 +24,7 @@ ConnectBase::getEncodedPayload(resip::DataStream &dataStream)
 	encode(dataStream);
 }
 
-ConnectBase::ConnectBase(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates) 
+ConnectBase::ConnectBase(const resip::Data &frag, const resip::Data &password, uint16_t application, const resip::Data &role, const std::vector<Candidate> &candidates) 
 {
 	mUfrag = frag;
 	mPassword = password;
@@ -45,7 +45,7 @@ ConnectBase::getPassword()
    return mPassword;
 }
 
-UInt16 
+uint16_t 
 ConnectBase::getApplication()
 {
    return mApplication;

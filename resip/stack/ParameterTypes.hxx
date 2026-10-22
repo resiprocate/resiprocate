@@ -10,7 +10,9 @@
 #include "resip/stack/QValueParameter.hxx"
 #include "resip/stack/ExistsParameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
+#include "resip/stack/ReceivedParameter.hxx"
 #include "resip/stack/RportParameter.hxx"
+#include "resip/stack/UriParameter.hxx"
 #include "resip/stack/Symbols.hxx"
 
 
@@ -73,6 +75,7 @@ class CallID;
 class DateCategory;
 class ExpiresCategory;
 class GenericUri;
+class IdentityCategory;
 class IntegerCategory;
 class UInt32Category;
 class Mime;
@@ -145,8 +148,8 @@ defineParam(protocol, "protocol", QuotedDataParameter, Mime, "RFC 1847");
 defineParam2(purpose, "purpose", DataParameter, GenericUri, TokenOrQuotedStringCategory, "RFC 3261, draft-ietf-cuss-sip-uui-17");
 defineParam3(q, "q", QValueParameter, NameAddr, Token, Mime, "RFC 3261");
 defineParam(realm, "realm", QuotedDataParameter, Auth, "RFC 2617");
-defineParam(reason, "reason", DataParameter, Token, "RFC 3265");
-defineParam(received, "received", DataParameter, Via, "RFC 3261");
+defineParam2(reason, "reason", DataParameter, Token, NameAddr, "RFC 3265, 5806");
+defineParam(received, "received", ReceivedParameter, Via, "RFC 3261");
 defineParam(require, "require", ExistsParameter, Token, "RFC 5373");
 defineParam(response, "response", QuotedDataParameter, Auth, "RFC 3261");
 defineParam(retryAfter, "retry-after", UInt32Parameter, Token, "RFC 3265");
@@ -199,6 +202,16 @@ defineParam(termIoi, "term-ioi", DataParameter, Token, "RFC 3455"); // P-Chargin
 defineParam(content, "content", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"); // User-to-User
 defineParam(encoding, "encoding", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"); // User-to-User
 
+defineParam(info, "info", UriParameter, IdentityCategory, "RFC 8224");
+defineParam(alg, "alg", DataParameter, GenericUri, "RFC 8224");
+defineParam(ppt, "ppt", DataParameter, GenericUri, "RFC 8224");
+
+// Diversion Header params
+defineParam(counter, "counter", UInt32Parameter, NameAddr, "RFC 5806");
+defineParam(limit, "limit", UInt32Parameter, NameAddr, "RFC 5806");
+defineParam(privacy, "privacy", DataParameter, NameAddr, "RFC 5806");
+defineParam(screen, "screen", DataParameter, NameAddr, "RFC 5806");
+
 // Internal use only
 defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");
 defineParam(addTransport, "addTransport", ExistsParameter, Uri, "RESIP INTERNAL");
@@ -215,6 +228,7 @@ defineParam(wsSrcPort, "ws-src-port", UInt32Parameter, Uri, "RESIP INTERNAL (Web
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

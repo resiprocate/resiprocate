@@ -6,12 +6,12 @@
 namespace resip
 {
 
-class UsageUseException : public BaseException
+class UsageUseException final : public BaseException
 {
    public:
       UsageUseException(const Data& msg, const Data& file, const int line)
          : BaseException(msg, file, line) {}
-      const char* name() const { return "UsageUseException"; }
+      const char* name() const noexcept override { return "UsageUseException"; }
 };
  
 }

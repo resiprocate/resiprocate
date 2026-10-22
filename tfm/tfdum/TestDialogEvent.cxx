@@ -10,9 +10,6 @@
 
 #include "resip/dum/Handles.hxx"
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
@@ -31,7 +28,7 @@ DialogEventPred::explainMismatch() const
 }
 
 bool
-DialogEventPred::passes(boost::shared_ptr<Event> event)
+DialogEventPred::passes(std::shared_ptr<Event> event)
 {
    DialogEventHandlerEvent* dehEvent = dynamic_cast<DialogEventHandlerEvent*>(event.get());
    resip_assert(dehEvent);

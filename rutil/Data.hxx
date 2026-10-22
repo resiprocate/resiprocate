@@ -8,6 +8,9 @@
 #include <iostream>
 #include <string>
 #include <bitset>
+#if RESIP_HAVE_STRING_VIEW
+#include <string_view>
+#endif
 #include "rutil/ResipAssert.h"
 
 #include "rutil/compat.hxx"
@@ -38,11 +41,11 @@ namespace resip
 template <int S>
 struct DataLocalSize
 {
-      explicit DataLocalSize(size_t) {}
+      explicit DataLocalSize(size_t) noexcept {}
 };
 
 // .bwc. Pack class Data; has to come before doxygen block though.
-#pragma pack(4)
+#pragma pack(push, 4)
 
 /**
   @brief An alternative to std::string, encapsulates an arbitrary buffer of 
@@ -88,7 +91,7 @@ class Data
    public:
       RESIP_HeapCount(Data);
 
-      typedef UInt32 size_type;
+      typedef size_t size_type;
 
       inline Data()
          : mBuf(mPreBuffer),
@@ -118,7 +121,7 @@ class Data
         @param capacity  The initial capacity of the buffer
 
         @param foo       This parameter is ignored; it is merely
-                         used to disambuguate this constructor
+                         used to disambiguate this constructor
                          from the constructor that takes a single
                          int. Always pass Data::Preallocate.
       */
@@ -138,7 +141,7 @@ class Data
         @param capacity  The initial capacity of the buffer
 
         @param foo       This parameter is ignored; it is merely
-                         used to disambuguate this constructor
+                         used to disambiguate this constructor
                          from the constructor that takes a single
                          int. Yes, it's ugly -- that's why it's
                          deprecated.
@@ -173,13 +176,18 @@ class Data
 
       Data(const Data& data);
 
-#ifdef RESIP_HAS_RVALUE_REFS
-      Data(Data &&data);
-#endif
+      Data(Data &&data) noexcept;
       /**
         Creates a data with the contents of the string.
       */
-      explicit Data(const std::string& str);
+      Data(const std::string& str);
+
+#if RESIP_HAVE_STRING_VIEW
+      /**
+        Creates a data with the contents of the string_view.
+      */
+      Data(const std::string_view sv);
+#endif
 
       /**
         Converts the passed in value into ascii-decimal
@@ -187,7 +195,7 @@ class Data
         that value. (E.g. "Data(75)" will create a Data
         with length=2, and contents of 0x37 0x35).
       */
-      explicit Data(Int32 value);
+      explicit Data(int32_t value);
 
       /**
         Converts the passed in value into ascii-decimal
@@ -195,7 +203,7 @@ class Data
         that value. (E.g. "Data(75)" will create a Data
         with length=2, and contents of 0x37 0x35).
       */
-      explicit Data(UInt32 value);
+      explicit Data(uint32_t value);
 
       /**
         Converts the passed in value into ascii-decimal
@@ -203,7 +211,7 @@ class Data
         that value. (E.g. "Data(75)" will create a Data
         with length=2, and contents of 0x37 0x35).
       */
-      explicit Data(UInt64 value);
+      explicit Data(uint64_t value);
 
 #ifndef RESIP_FIXED_POINT
       enum DoubleDigitPrecision 
@@ -343,7 +351,7 @@ class Data
         are legal. When done, {other} will be empty (it will ref its
         internal buffer).
       **/
-      Data& takeBuf(Data& other);
+      Data& takeBuf(Data& other) noexcept;
 
       /**
         Functional equivalent of: *this = Data(buf, length)
@@ -399,10 +407,20 @@ class Data
 
       friend bool operator==(const Data& lhs, const Data& rhs);
       friend bool operator==(const Data& lhs, const char* rhs);
+      friend bool operator==(const Data& lhs, const std::string& rhs) noexcept;
+#if RESIP_HAVE_STRING_VIEW
+      friend bool operator==(const Data& lhs, const std::string_view rhs) noexcept;
+#endif
 
       friend bool operator<(const Data& lhs, const Data& rhs);
       friend bool operator<(const Data& lhs, const char* rhs);
       friend bool operator<(const char* lhs, const Data& rhs);
+      friend bool operator<(const Data& lhs, const std::string& rhs) noexcept;
+      friend bool operator<(const std::string& lhs, const Data& rhs) noexcept;
+#if RESIP_HAVE_STRING_VIEW
+      friend bool operator<(const Data& lhs, const std::string_view rhs) noexcept;
+      friend bool operator<(const std::string_view lhs, const Data& rhs) noexcept;
+#endif
 
       Data& operator=(const Data& data)
       {
@@ -411,9 +429,12 @@ class Data
          return copy(data.mBuf,data.mSize);
       }
 
-#ifdef RESIP_HAS_RVALUE_REFS
-      Data& operator=(Data &&data);
-#endif
+      Data& operator=(Data &&data) noexcept;
+
+      operator std::string() const 
+      {
+         return std::string(c_str(), size());
+      }
 
       /**
         Assigns a null-terminated string to the buffer.
@@ -427,6 +448,25 @@ class Data
       {
          return copy(str, (size_type)strlen(str));
       }
+
+
+      Data& operator=(const std::string& str)
+      {
+         return copy(str.c_str(), static_cast<size_type>(str.size()));
+      }
+
+#if RESIP_HAVE_STRING_VIEW
+
+      operator std::string_view() const 
+      {
+         return std::string_view(c_str(), size());
+      }
+
+      Data& operator=(const std::string_view sv)
+      {
+         return copy(sv.data(), static_cast<size_type>(sv.size()));
+      }
+#endif
 
       /**
         Concatenates two Data objects.
@@ -548,7 +588,7 @@ class Data
       /**
         Checks whether the Data is empty.
       */
-      bool empty() const { return mSize == 0; }
+      bool empty() const noexcept { return mSize == 0; }
 
       /**
         Returns the number of bytes in this Data.
@@ -556,7 +596,7 @@ class Data
         @note This does NOT indicate the capacity of the
               underlying buffer.
       */
-      size_type size() const { return mSize; }
+      size_type size() const noexcept { return mSize; }
 
       /**
         Returns a pointer to the contents of this Data. This
@@ -565,7 +605,7 @@ class Data
 
         @note The value returned is NOT necessarily null-terminated.
       */
-      inline const char* data() const
+      const char* data() const noexcept
       {
          return mBuf;
       }
@@ -585,9 +625,21 @@ class Data
       const char* c_str() const;
 
       /**
+        Convert to a C++ string.
+      */
+      std::string toString() const;
+
+#if RESIP_HAVE_STRING_VIEW
+      /**
+        Creates a c++ string_view.
+      */
+      std::string_view toStringView() const;
+#endif
+
+      /**
         Returns a pointer to the beginning of the buffer used by the Data.
       */
-      inline const char* begin() const
+      const char* begin() const noexcept
       {
          return mBuf;
       }
@@ -595,7 +647,7 @@ class Data
       /**
         Returns a pointer to the end of the buffer used by the Data.
       */
-      inline const char* end() const
+      const char* end() const noexcept
       {
          return mBuf + mSize;
       }
@@ -779,7 +831,7 @@ class Data
         unsigned 64-bit integer. Will strip leading whitespace.
         This method stops upon encountering the first non-decimal digit.
       */ 
-      UInt64 convertUInt64() const;
+      uint64_t convertUInt64() const;
 
       /**
         Returns true if this Data starts with the bytes indicated by
@@ -787,7 +839,8 @@ class Data
         prefix(Data("ab")) would be true; however, prefix(Data("abcd"))
         would be false.
       */
-      bool prefix(const Data& pre) const;
+      bool prefix(const Data& pre) const noexcept;
+      bool prefixNoCase(const Data& pre) const noexcept;
 
       /**
         Returns true if this Data ends with the bytes indicated by
@@ -795,7 +848,8 @@ class Data
         postfix(Data("bc")) would be true; however, postfix(Data("ab"))
         would be false.
       */
-      bool postfix(const Data& post) const;
+      bool postfix(const Data& post) const noexcept;
+      bool postfixNoCase(const Data& post) const noexcept;
 
       /**
         Copies a portion of this Data into a new Data.
@@ -803,7 +857,7 @@ class Data
         @param first Index of the first byte to copy
         @param count Number of bytes to copy
       */
-      Data substr(size_type first, size_type count = Data::npos) const;
+      Data substr(size_type first, size_type count = Data::npos) const; 
 
       /**
         Finds a specified sequence of bytes in this Data.
@@ -1001,8 +1055,8 @@ class Data
       friend class ::TestData;
       friend class MD5Buffer;
 };
-// reset alignment to default
-#pragma pack()
+// reset alignment to previous value
+#pragma pack(pop)
 
 
 class DataHelper {
@@ -1014,6 +1068,9 @@ static bool invokeDataInit = Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE>(0))
 
 inline bool Data::isHex(unsigned char c)
 {
+   // Shut up the warning about invokeDataInit defined, but not used
+   if(0){(void) invokeDataInit;}
+
    return DataHelper::isCharHex[c];
 }
 
@@ -1050,7 +1107,7 @@ inline bool isLessThanNoCase(const Data& left, const Data& right)
 template<class Predicate> EncodeStream& 
 Data::escapeToStream(EncodeStream& str, Predicate shouldEscape) const
 {
-   static char hex[] = "0123456789ABCDEF";
+   constexpr char hex[] = "0123456789ABCDEF";
 
    if (empty())
    {
@@ -1092,15 +1149,42 @@ inline bool operator!=(const Data& lhs, const Data& rhs) { return !(lhs == rhs);
 inline bool operator>(const Data& lhs, const Data& rhs) { return rhs < lhs; }
 inline bool operator<=(const Data& lhs, const Data& rhs) { return !(rhs < lhs); }
 inline bool operator>=(const Data& lhs, const Data& rhs) { return !(lhs < rhs); }
+
 inline bool operator!=(const Data& lhs, const char* rhs) { return !(lhs == rhs); }
 inline bool operator>(const Data& lhs, const char* rhs) { return rhs < lhs; }
 inline bool operator<=(const Data& lhs, const char* rhs) { return !(rhs < lhs); }
 inline bool operator>=(const Data& lhs, const char* rhs) { return !(lhs < rhs); }
+
 inline bool operator==(const char* lhs, const Data& rhs) { return rhs == lhs; }
 inline bool operator!=(const char* lhs, const Data& rhs) { return !(rhs == lhs); }
 inline bool operator>(const char* lhs, const Data& rhs) { return rhs < lhs; }
 inline bool operator<=(const char* lhs, const Data& rhs) { return !(rhs < lhs); }
 inline bool operator>=(const char* lhs, const Data& rhs) { return !(lhs < rhs); }
+
+inline bool operator!=(const Data& lhs, const std::string& rhs) noexcept { return !(lhs == rhs); }
+inline bool operator>(const Data& lhs, const std::string& rhs) { return rhs < lhs; }
+inline bool operator<=(const Data& lhs, const std::string& rhs) { return !(rhs < lhs); }
+inline bool operator>=(const Data& lhs, const std::string& rhs) { return !(lhs < rhs); }
+
+inline bool operator==(const std::string& lhs, const Data& rhs) noexcept { return rhs == lhs; }
+inline bool operator!=(const std::string& lhs, const Data& rhs) noexcept { return !(rhs == lhs); }
+inline bool operator>(const std::string& lhs, const Data& rhs) { return rhs < lhs; }
+inline bool operator<=(const std::string& lhs, const Data& rhs) { return !(rhs < lhs); }
+inline bool operator>=(const std::string& lhs, const Data& rhs) { return !(lhs < rhs); }
+
+#if RESIP_HAVE_STRING_VIEW
+inline bool operator!=(const Data& lhs, const std::string_view rhs) noexcept { return !(lhs == rhs); }
+inline bool operator>(const Data& lhs, const std::string_view rhs) { return rhs < lhs; }
+inline bool operator<=(const Data& lhs, const std::string_view rhs) { return !(rhs < lhs); }
+inline bool operator>=(const Data& lhs, const std::string_view rhs) { return !(lhs < rhs); }
+
+inline bool operator==(const std::string_view lhs, const Data& rhs) noexcept { return rhs == lhs; }
+inline bool operator!=(const std::string_view lhs, const Data& rhs) noexcept { return !(rhs == lhs); }
+inline bool operator>(const std::string_view lhs, const Data& rhs) { return rhs < lhs; }
+inline bool operator<=(const std::string_view lhs, const Data& rhs) { return !(rhs < lhs); }
+inline bool operator>=(const std::string_view lhs, const Data& rhs) { return !(lhs < rhs); }
+#endif
+
 #ifndef  RESIP_USE_STL_STREAMS
 EncodeStream& operator<<(EncodeStream& strm, const Data& d);
 #endif
@@ -1116,6 +1200,22 @@ operator+(const char* c, const Data& d)
    return Data(c) + d;
 }
 
+bool operator==(const Data& lhs, const Data& rhs);
+bool operator==(const Data& lhs, const char* rhs);
+bool operator==(const Data& lhs, const std::string& rhs) noexcept;
+#if RESIP_HAVE_STRING_VIEW
+bool operator==(const Data& lhs, const std::string_view rhs) noexcept;
+#endif
+
+bool operator<(const Data& lhs, const Data& rhs);
+bool operator<(const Data& lhs, const char* rhs);
+bool operator<(const char* lhs, const Data& rhs);
+bool operator<(const Data& lhs, const std::string& rhs) noexcept;
+bool operator<(const std::string& lhs, const Data& rhs) noexcept;
+#if RESIP_HAVE_STRING_VIEW
+bool operator<(const Data& lhs, const std::string_view rhs) noexcept;
+bool operator<(const std::string_view lhs, const Data& rhs) noexcept;
+#endif
 }
 
 HashValue(resip::Data);
@@ -1125,6 +1225,7 @@ HashValue(resip::Data);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

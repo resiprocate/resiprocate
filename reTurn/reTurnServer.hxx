@@ -11,12 +11,9 @@ namespace reTurn
 class ReTurnServerProcess : public resip::ServerProcess
 {
 public:
-   ReTurnServerProcess();
-   virtual ~ReTurnServerProcess();
+	ReTurnServerProcess() = default;
 
    virtual int main(int argc, char *argv[]);
-
-protected:
 };
 
 }

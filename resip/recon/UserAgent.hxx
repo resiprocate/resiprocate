@@ -1,23 +1,23 @@
 #if !defined(UserAgent_hxx)
 #define UserAgent_hxx
 
-#include <boost/function.hpp>
-
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "UserAgentMasterProfile.hxx"
 #include "HandleTypes.hxx"
 
-#include <resip/stack/InterruptableStackThread.hxx>
+#include <resip/stack/EventStackThread.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <resip/dum/RegistrationHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 #include <resip/dum/DumShutdownHandler.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
+#include <resip/dum/PublicationHandler.hxx>
 #include <rutil/SelectInterruptor.hxx>
 #include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/Mutex.hxx>
+
+#include <memory>
 
 namespace recon
 {
@@ -25,6 +25,7 @@ namespace recon
 class UserAgentShutdownCmd;
 class SetActiveConversationProfileCmd;
 class UserAgentClientSubscription;
+class UserAgentClientPublication;
 class UserAgentRegistration;
 
 /**
@@ -49,6 +50,7 @@ class UserAgentRegistration;
 
 class UserAgent : public resip::ClientRegistrationHandler,
                   public resip::ClientSubscriptionHandler,
+                  public resip::ClientPublicationHandler,
                   public resip::DumShutdownHandler,
                   public resip::Postable
 {
@@ -74,7 +76,7 @@ public:
                                 connected.  To enable this behavior call:
                                 Connection::setEnablePostConnectSocketFuncCall();
    */
-   UserAgent(ConversationManager* conversationManager, resip::SharedPtr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0);
+   UserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0);
    virtual ~UserAgent();
 
    /**
@@ -94,7 +96,7 @@ public:
                       Application can do some work, but should call
                       process again ASAP.
    */
-   void process(int timeoutMs); // call this in a loop
+   virtual void process(int timeoutMs); // call this in a loop
 
    /**
      Used to initiate a shutdown of the useragent.  This function blocks 
@@ -160,7 +162,7 @@ public:
      @param defaultOutgoing Set to true to set this profile as the default 
                             profile to use for outbound calls.
    */
-   ConversationProfileHandle addConversationProfile(resip::SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing=true); // thread safe
+   ConversationProfileHandle addConversationProfile(std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing=true); // thread safe
 
    /**
      Sets an existing Conversation Profile to the default profile to 
@@ -190,12 +192,12 @@ public:
      order to use application timers.
 
      @param timerId Id representing the timers purpose
-     @param durationMs the duration of the timer in ms
+     @param duration the duration of the timer in ms
      @param seqNumber Can be used by the application to differentiate 
                       "active" from "non-active" timers, since timers
                       cannot be stopped
    */
-   virtual void startApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber);
+   virtual void startApplicationTimer(unsigned int timerId, std::chrono::duration<double> duration, unsigned int seqNumber);
 
    /**
      Requests that the user agent create and manage an event subscription.  
@@ -222,6 +224,9 @@ public:
    */
    void destroySubscription(SubscriptionHandle handle); 
 
+   PublicationHandle createPublication(const resip::Data& eventType, const resip::NameAddr& target, const resip::Data& status, unsigned int publicationTime, const resip::Mime& mimeType);
+   void destroyPublication(PublicationHandle handle);
+
    ////////////////////////////////////////////////////////////////////
    // UserAgent Handlers //////////////////////////////////////////////
    ////////////////////////////////////////////////////////////////////
@@ -233,12 +238,12 @@ public:
            startApplicaitonTimer.
 
      @param timerId Id representing the timers purpose
-     @param durationMs the duration of the timer in ms
+     @param duration the duration of the timer in ms
      @param seqNumber Can be used by the application to differentiate 
                       "active" from "non-active" timers, since timers
                       cannot be stopped
    */
-   virtual void onApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber);
+   virtual void onApplicationTimer(unsigned int timerId, std::chrono::duration<double> duration, unsigned int seqNumber);
 
    /**
      Callback used when a subscription has received an event notification 
@@ -264,7 +269,17 @@ public:
    */
    virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode);   
 
+   /**
+      Used to send a MESSAGE SIP message.
+    */
+   const char* sendMessage(const resip::NameAddr& destination, const resip::Data& msg, const resip::Mime& mimeType);
+
+   std::shared_ptr<UserAgentMasterProfile> getUserAgentMasterProfile() const noexcept;
+
 protected:
+   resip::SipStack& getSipStack() { return mStack; };
+   resip::DialogUsageManager& getDialogUsageManager();
+
    // Shutdown Handler ////////////////////////////////////////////////////////////
    void onDumCanBeDeleted();
 
@@ -285,8 +300,20 @@ protected:
    virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
    virtual int  onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
-private:
+   // ClientPublicationHandler ///////////////////////////////////////////////////
+   virtual void onSuccess(resip::ClientPublicationHandle h, const resip::SipMessage& status);
+   virtual void onRemove(resip::ClientPublicationHandle h, const resip::SipMessage& status);
+   virtual int onRequestRetry(resip::ClientPublicationHandle h, int retrySeconds, const resip::SipMessage& status);
+   virtual void onFailure(resip::ClientPublicationHandle h, const resip::SipMessage& status);
+
+   // UserProfile selection for incoming and outgoing calls, override to customize
+   std::shared_ptr<ConversationProfile> getDefaultOutgoingConversationProfile();
+   // Returns the ConversationProfile for a specific media address
+   std::shared_ptr<ConversationProfile> getConversationProfileByMediaAddress(const resip::Data& mediaAddress);
+   virtual std::shared_ptr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
+
    friend class ConversationManager;
+   friend class SipXMediaStackAdapter;
    friend class UserAgentShutdownCmd;
    friend class AddConversationProfileCmd;
    friend class SetDefaultOutgoingConversationProfileCmd;
@@ -294,26 +321,31 @@ private:
    friend class CreateSubscriptionCmd;
    friend class DestroySubscriptionCmd;
    friend class MediaResourceParticipant;
+   friend class CreatePublicationCmd;
+   friend class DestroyPublicationCmd;
 
    // Note:  In general the following fns are not thread safe and must be called from dum process 
    //        loop only
    friend class UserAgentServerAuthManager;
    friend class RemoteParticipant;
+   friend class RemoteIMPagerParticipant;
+   friend class SipXRemoteParticipant;
+   friend class RemoteIMSessionParticipant;
    friend class DefaultDialogSet;
    friend class RemoteParticipantDialogSet;
-   resip::SharedPtr<ConversationProfile> getDefaultOutgoingConversationProfile();
-   resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
-   resip::SharedPtr<UserAgentMasterProfile> getUserAgentMasterProfile();
-   resip::DialogUsageManager& getDialogUsageManager();
+   friend class SipXRemoteParticipantDialogSet;
+   friend class RemoteIMSessionParticipantDialogSet;
 
    void addTransports();
-   void post(resip::ApplicationMessage& message, unsigned int ms=0);
+   void post(resip::ApplicationMessage& message, std::chrono::duration<double> duration);
    void shutdownImpl(); 
-   void addConversationProfileImpl(ConversationProfileHandle handle, resip::SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing=true);
+   void addConversationProfileImpl(ConversationProfileHandle handle, std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing=true);
    void setDefaultOutgoingConversationProfileImpl(ConversationProfileHandle handle);
    void destroyConversationProfileImpl(ConversationProfileHandle handle);
    void createSubscriptionImpl(SubscriptionHandle handle, const resip::Data& eventType, const resip::NameAddr& target, unsigned int subscriptionTime, const resip::Mime& mimeType);
    void destroySubscriptionImpl(SubscriptionHandle handle);
+   void createPublicationImpl(PublicationHandle handle, const resip::Data& status, const resip::Data& eventType, const resip::NameAddr& target, unsigned int publicationTime, const resip::Mime& mimeType);
+   void destroyPublicationImpl(PublicationHandle handle);
 
    // Subscription storage
    friend class UserAgentClientSubscription;
@@ -325,8 +357,18 @@ private:
    void registerSubscription(UserAgentClientSubscription *);
    void unregisterSubscription(UserAgentClientSubscription *);
 
+   // Publication storage
+   friend class UserAgentClientPublication;
+   typedef std::map<PublicationHandle, UserAgentClientPublication *> PublicationMap;
+   PublicationMap mPublications;
+   resip::Mutex mPublicationHandleMutex;
+   PublicationHandle mCurrentPublicationHandle;
+   PublicationHandle getNewPublicationHandle(); // thread safe
+   void registerPublication(UserAgentClientPublication *);
+   void unregisterPublication(UserAgentClientPublication *);
+
    // Conversation Profile Storage
-   typedef std::map<ConversationProfileHandle, resip::SharedPtr<ConversationProfile> > ConversationProfileMap;
+   typedef std::map<ConversationProfileHandle, std::shared_ptr<ConversationProfile> > ConversationProfileMap;
    ConversationProfileMap mConversationProfiles;
    resip::Mutex mConversationProfileHandleMutex;
    ConversationProfileHandle mCurrentConversationProfileHandle;
@@ -340,13 +382,15 @@ private:
    void unregisterRegistration(UserAgentRegistration *);
 
    ConversationManager* mConversationManager;
-   resip::SharedPtr<UserAgentMasterProfile> mProfile;
+   std::shared_ptr<UserAgentMasterProfile> mProfile;
    resip::Security* mSecurity;
-   resip::SelectInterruptor mSelectInterruptor;
+   resip::FdPollGrp *mPollGrp;
+   resip::EventThreadInterruptor *mEventInterruptor;
    resip::SipStack mStack;
    resip::DialogUsageManager mDum;
-   resip::InterruptableStackThread mStackThread;
+   resip::EventStackThread mStackThread;
    volatile bool mDumShutdown;
+   volatile bool mUserAgentShutdown;
 };
  
 }
@@ -356,8 +400,9 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2016-2022, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2016, SIP Spectrum, Inc.
 
  All rights reserved.
 

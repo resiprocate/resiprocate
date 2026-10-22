@@ -29,7 +29,7 @@ class DefaultDialogSet : public resip::AppDialogSet
       DefaultDialogSet(ConversationManager& conversationManager);  
 
    protected:
-      resip::SharedPtr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage&); 
+      std::shared_ptr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage&); 
 
    private:       
       ConversationManager &mConversationManager;
@@ -42,6 +42,7 @@ class DefaultDialogSet : public resip::AppDialogSet
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

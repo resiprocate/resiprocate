@@ -62,9 +62,13 @@ TcpConnection::read( char* buf, int count )
             break;
       }
 
-      InfoLog (<< "Failed read on " << getSocket() << " " << strerror(e));
-      Transport::error(e);
-      setFailureReason(TransportFailure::ConnectionException, e+2000);
+      Data failureString;
+      {
+         DataStream ds(failureString);
+         ds << "Failed read on " << getSocket() << ", errNum=" << e << ", err=" << Transport::errorToString(e);
+      }
+      InfoLog (<< failureString);
+      setFailureReason(TransportFailure::ConnectionException, e+2000, failureString);
       return -1;
    }
    else if (bytesRead == 0)
@@ -100,7 +104,7 @@ TcpConnection::write( const char* buf, const int count )
           // TCP buffers are backed up - we couldn't write anything - but we shouldn't treat this an error - return we wrote 0 bytes
           return 0;
       }
-      InfoLog (<< "Failed write on " << getSocket() << " " << strerror(e));
+      InfoLog (<< "Failed write on " << getSocket() << " " << strError(e));
       Transport::error(e);
       return -1;
    }

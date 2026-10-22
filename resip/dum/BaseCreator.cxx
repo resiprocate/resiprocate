@@ -6,22 +6,21 @@
 #include "resip/dum/DumHelper.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
-BaseCreator::BaseCreator(DialogUsageManager& dum, 
-                         const SharedPtr<UserProfile>& userProfile)
-   : mLastRequest(new SipMessage),
+BaseCreator::BaseCreator(DialogUsageManager& dum, std::shared_ptr<UserProfile> userProfile)
+   : mLastRequest(std::make_shared<SipMessage>()),
      mDum(dum),
      mUserProfile(userProfile)
-{}
+{
+}
 
-BaseCreator::~BaseCreator()
-{}
-
-SharedPtr<SipMessage>
-BaseCreator::getLastRequest()
+std::shared_ptr<SipMessage>
+BaseCreator::getLastRequest() const noexcept
 {
    return mLastRequest;
 }
@@ -34,8 +33,8 @@ BaseCreator::getLastRequest() const
 }
 */
 
-SharedPtr<UserProfile>
-BaseCreator::getUserProfile()
+std::shared_ptr<UserProfile>
+BaseCreator::getUserProfile() const noexcept
 {
    return mUserProfile;
 }
@@ -106,7 +105,19 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
       {
          contact.uri() = mUserProfile->getOverrideHostAndPort();
       }
-      contact.uri().user() = from.uri().user();
+      // Contact header will always have a sip: scheme so it's safe to copy
+      // the user part from sip:, sips: and tel: but not from others like urn:
+      // (RFC 8141's NID:NSS has nothing to do with a sip: user's ABNF).
+      // When skipped, contact.uri().user() keeps whatever it already had:
+      // empty by default, or whatever getOverrideHostAndPort() set above --
+      // i.e. for a urn: "from" (e.g. an emergency-services From), an
+      // override profile's own user is now preserved instead of being
+      // clobbered by the (incompatible) urn: user. Legal either way; see
+      // the analogous comment in Dialog.cxx for the To/Request-URI case.
+      if (from.uri().isUserRelevant())
+      {
+         contact.uri().user() = from.uri().user();
+      }
 
       // .jjg. there isn't anything in the outbound [11] draft that says we 
       // aren't allowed to include p_Instance in this case...  
@@ -145,7 +156,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
 
    //DumHelper::setOutgoingEncryptionLevel(mLastRequest, mEncryptionLevel);
 
-   DebugLog ( << "BaseCreator::makeInitialRequest: " << std::endl << std::endl << mLastRequest);
+   DebugLog ( << "BaseCreator::makeInitialRequest: " << std::endl << std::endl << *mLastRequest);
 }
 
 

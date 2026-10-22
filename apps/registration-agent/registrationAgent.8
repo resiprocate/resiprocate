@@ -1,0 +1,41 @@
+.TH registrationAgent 8 "April 2012"
+.SH NAME
+registrationAgent \- registrationAgent SIP registration client
+.SH SYNOPSIS
+.B
+registrationAgent [OPTIONS...]
+
+.SH DESCRIPTION
+.B registrationAgent
+is a process that can maintain one or more SIP registrations,
+typically sending a Contact header to the registrar telling it to send incoming
+calls to a local SIP proxy or other gateway device that is unable to send
+a registration request itself.
+
+.SH OPTIONS
+.TP
+\fB\-l\fR, \fB\-\-log\-type\fR=\fBcout\fR|\fBsyslog\fR|\fBcerr\fR
+Set where to send logging messages. The default \fBcout\fR sends the
+messages to standard output, \fBcerr\fR uses the standard error pipe.
+With \fBsyslog\fR the messages are send to the system log using the logging
+facility \fBlocal6\fR. See
+.BR syslogd (8)
+or
+.BR syslog.conf (5)
+for more information.
+.TP
+\fB\-v\fR, \fB\-\-log\-level\fR=\fBSTACK\fR|\fBDEBUG\fR|\fBINFO\fR|\fBWARNING\fR|\fBALERT\fR
+Set the minimum level a logging message needs to have in order to by
+written. The severity rises from left to right in the above order. The
+default is to log messages with level \fBINFO\fR or above.
+
+.SH SEE ALSO
+reSIProcate web site at
+.B https://www.resiprocate.org
+
+.\".SH AUTHORS
+
+.\".SH BUGS
+
+
+

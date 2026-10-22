@@ -1,0 +1,10 @@
+
+G.722 notes
+-----------
+
+Earlier versions of the sipXtapi code (and packages) don't fully support
+G.722 sample rate specification in the SDP.  This is a special case explained
+in RFC 3551.
+
+Use sipXtapi package version 3.3.0~test14 or later to have this work correctly.
+

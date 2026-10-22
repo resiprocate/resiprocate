@@ -37,7 +37,7 @@ class DataBuffer :
       virtual size_t putbuf(char ch);
       virtual void flushbuf(void)
       {}
-      virtual UInt64 tellpbuf(void);
+      virtual uint64_t tellpbuf(void);
 #endif
       Data& mStr;
    private:

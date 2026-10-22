@@ -13,6 +13,7 @@
 
 #ifdef USE_SSL
 #include <openssl/evp.h>
+#include <openssl/opensslv.h>
 #endif
 
 using namespace std;
@@ -69,11 +70,13 @@ class HashThread : public ThreadIf
          if( 0 == pDigest)
             return;
 
-         EVP_MD_CTX cCtx;
-         EVP_DigestInit(&cCtx, pDigest);
-         EVP_DigestUpdate(&cCtx, pBuf, strlen(pBuf));
-         EVP_DigestFinal(&cCtx, MD5_digest, &iDigest);
-         EVP_MD_CTX_cleanup(&cCtx);
+         EVP_MD_CTX* pCtx = EVP_MD_CTX_new();
+         if(!pCtx)
+            return;
+         EVP_DigestInit(pCtx, pDigest);
+         EVP_DigestUpdate(pCtx, pBuf, strlen(pBuf));
+         EVP_DigestFinal(pCtx, MD5_digest, &iDigest);
+         EVP_MD_CTX_free(pCtx);
 
 //         cout << "Your digest is: " << MD5_digest << endl;
 #else
@@ -114,21 +117,36 @@ main(int argc, const char** argv)
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
    assert(Security::parseSSLType("TLSv1") == SecurityTypes::TLSv1);
    assert(Security::parseSSLType("SSLv23") == SecurityTypes::SSLv23);
+   assert(Security::parseSSLType("DynamicTLS") == SecurityTypes::DynamicTLS);
    try
    {
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
       SecurityTypes::SSLType val = BaseSecurity::parseSSLType("BigBrotherIsWatching");
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
       assert(0); // should have thrown an exception
    }
-   catch (const invalid_argument& ia) { } // ignore, expected exception
+   catch (const invalid_argument&) { } // ignore, expected exception
 
    assert(Security::parseOpenSSLCTXOption("SSL_OP_NO_SSLv2") == SSL_OP_NO_SSLv2);
    assert(Security::parseOpenSSLCTXOption("SSL_OP_NO_SSLv3") == SSL_OP_NO_SSLv3);
    try
    {
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
       SecurityTypes::SSLType val = BaseSecurity::parseSSLType("BigBrotherIsWatching");
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
       assert(0); // should have thrown an exception
    }
-   catch (const invalid_argument& ia) { } // ignore, expected exception
+   catch (const invalid_argument&) { } // ignore, expected exception
 
 #if 0
    testMultiple();
@@ -142,6 +160,7 @@ main(int argc, const char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. http://sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

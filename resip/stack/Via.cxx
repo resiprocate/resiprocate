@@ -3,6 +3,7 @@
 #endif
 
 #include "resip/stack/Via.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -27,7 +28,10 @@ Via::Via()
 {
    // insert a branch in all Vias (default constructor)
    this->param(p_branch);
-   this->param(p_rport); // add the rport parameter by default as per rfc 3581
+   if(InteropHelper::getRportEnabled())
+   {
+      this->param(p_rport); // add the rport parameter by default as per rfc 3581
+   }
 }
 
 Via::Via(const HeaderFieldValue& hfv, 
@@ -305,7 +309,7 @@ Via::param(const _enum##_Param& paramType) const                                
 
 defineParam(branch, "branch", BranchParameter, "RFC 3261");
 defineParam(comp, "comp", DataParameter, "RFC 3486");
-defineParam(received, "received", DataParameter, "RFC 3261");
+defineParam(received, "received", ReceivedParameter, "RFC 3261");
 defineParam(rport, "rport", RportParameter, "RFC 3581");
 defineParam(ttl, "ttl", UInt32Parameter, "RFC 3261");
 defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "RFC 5049");

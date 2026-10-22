@@ -17,7 +17,7 @@ class DialogEventPred : public ExpectPredicate
 {
    public:
       DialogEventPred(const resip::DialogEventInfo& dialogEventInfo);
-      virtual bool passes(boost::shared_ptr<Event>);
+      virtual bool passes(std::shared_ptr<Event>);
       virtual const resip::Data& explainMismatch() const;
 
    private:

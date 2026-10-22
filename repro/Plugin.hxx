@@ -1,6 +1,7 @@
-#ifndef PLUGIN_HXX
-#define PLUGIN_HXX
+#ifndef REPRO_PLUGIN_HXX
+#define REPRO_PLUGIN_HXX
 
+#include "rutil/Plugin.hxx"
 #include "rutil/ResipAssert.h"
 
 #include "resip/stack/SipStack.hxx"
@@ -34,12 +35,12 @@
  */
 
 // If the API changes, this number changes too:
-#define REPRO_DSO_PLUGIN_API_VERSION 2
+#define REPRO_DSO_PLUGIN_API_VERSION 3
 
 namespace repro
 {
 
-class Plugin
+class Plugin : public resip::Plugin
 {
    public:
       Plugin(){};
@@ -59,26 +60,39 @@ class Plugin
       /* called after the target processor chain has been populated */
       virtual void onTargetProcessorChainPopulated(ProcessorChain& chain) = 0;
 
-      /* called when a reload signal (HUP) is received */
-      virtual void onReload() = 0;
-
 };
-}
 
-extern "C" {
-typedef repro::Plugin* (*PluginCreationFunc)();
-typedef struct ReproPluginDescriptor
+class ReproPluginManager : public resip::PluginManager
 {
-   int mPluginApiVersion;
-   PluginCreationFunc creationFunc;
-} ReproPluginDescriptor;
+   public:
+      ReproPluginManager(resip::SipStack& sipStack, ProxyConfig *proxyConfig);
+      virtual ~ReproPluginManager();
+
+      /* called after the request processor chain has been populated */
+      virtual void onRequestProcessorChainPopulated(ProcessorChain& chain);
+
+      /* called after the response processor chain has been populated */
+      virtual void onResponseProcessorChainPopulated(ProcessorChain& chain);
+
+      /* called after the target processor chain has been populated */
+      virtual void onTargetProcessorChainPopulated(ProcessorChain& chain);
+
+   protected:
+      virtual bool onPluginLoaded(std::shared_ptr<resip::Plugin> plugin) override;
+
+   private:
+      resip::SipStack& mSipStack;
+      ProxyConfig *mProxyConfig;
 };
+
+}
 
 #endif
 
 /* ====================================================================
  *
- * Copyright 2013 Daniel Pocock.  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2013-2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

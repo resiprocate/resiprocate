@@ -7,7 +7,8 @@
 #include "resip/dum/ClientInviteSession.hxx"
 #include "resip/dum/ServerInviteSession.hxx"
 #include "resip/dum/Handles.hxx"
-#include <boost/shared_ptr.hpp>
+
+#include <memory>
 
 class DumUserAgent;
 
@@ -18,10 +19,10 @@ class DumEvent : public Event
       DumEvent(DumUserAgent* dua, const resip::SipMessage* msg);
       DumEvent(DumUserAgent* dua, const resip::SipMessage& msg);
       
-      bool hasMessage() const { return mMessage.get() != 0; }
-      boost::shared_ptr<resip::SipMessage> const getMessage() { return mMessage; }
+      bool hasMessage() const noexcept { return mMessage.get() != 0; }
+      std::shared_ptr<resip::SipMessage> getMessage() const noexcept { return mMessage; }
    private:
-      boost::shared_ptr<resip::SipMessage> mMessage;
+      std::shared_ptr<resip::SipMessage> mMessage;
 };
 
 /*
@@ -52,7 +53,7 @@ class ClientPagerMessageEvent : public DumEvent
       }
 
       ClientPagerMessageEvent(DumUserAgent* dua, Type type, resip::ClientPagerMessageHandle h, const resip::SipMessage& msg, 
-                              std::auto_ptr<resip::Contents> constents)
+                              std::unique_ptr<resip::Contents> constents)
          : DumEvent(dua, msg),
            mType(type),
            mHandle(h)

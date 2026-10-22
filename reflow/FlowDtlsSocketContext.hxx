@@ -9,11 +9,7 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp/srtp.h>
-#endif
+#include "Srtp2Helper.hxx"
 
 #include "dtls_wrapper/DtlsSocket.hxx"
 #include "Flow.hxx"
@@ -40,21 +36,27 @@ public:
    virtual void write(const unsigned char* data, unsigned int len);
    virtual void handshakeCompleted();
    virtual void handshakeFailed(const char *err);
+   virtual std::shared_ptr<std::mutex> timerLock();
 
    srtp_t* getSrtpSessionIn() { return &mSRTPSessionIn; }
    srtp_t* getSrtpSessionOut() { return &mSRTPSessionOut; }
    bool isSrtpInitialized() { return mSrtpInitialized; }
-   void fingerprintMismatch();
 
-   err_status_t srtpProtect(void* data, int* size, bool rtcp);
-   err_status_t srtpUnprotect(void* data, int* size, bool rtcp);
+   // Checks the peer's certificate against the remote SDP fingerprint: sets up SRTP if it
+   // matches, and tears it down if it doesn't.  Does nothing until the handshake has completed,
+   // or while there is no fingerprint.  Called with the Flow's mutex held.
+   void checkRemoteFingerprint(const resip::Data& hashFunction, const resip::Data& fingerprint);
 
-private:   
+   srtp_err_status_t srtpProtect(void* data, int* size, bool rtcp);
+   srtp_err_status_t srtpUnprotect(void* data, int* size, bool rtcp);
+
+private:
+   bool createSrtpSessions();
+   void destroySrtpSessions();
+
    Flow& mFlow;
    asio::ip::address mAddress;
    unsigned short mPort;
-   srtp_policy_t mSRTPPolicyIn;
-   srtp_policy_t mSRTPPolicyOut;
    srtp_t mSRTPSessionIn;
    srtp_t mSRTPSessionOut;
    volatile bool mSrtpInitialized;
@@ -65,6 +67,7 @@ private:
 #endif
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

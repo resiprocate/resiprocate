@@ -149,8 +149,8 @@ ClientSubscription::processResponse(const SipMessage& msg)
       if (msg.exists(h_Expires))
       {
          // grab the expires from the 2xx in case there is not one on the NOTIFY .mjf.
-         UInt32 expires = msg.header(h_Expires).value();
-         UInt32 lastExpires = mLastRequest->header(h_Expires).value();
+         uint32_t expires = msg.header(h_Expires).value();
+         uint32_t lastExpires = mLastRequest->header(h_Expires).value();
          if (expires < lastExpires)
          {
             mLastRequest->header(h_Expires).value() = expires;
@@ -179,9 +179,10 @@ ClientSubscription::processResponse(const SipMessage& msg)
    }
    else if (!mEnded &&
             statusCode == 481 &&
+            msg.header(h_To).exists(p_tag) &&  // Only do this if we were re-subscribing
             msg.exists(h_Expires) && msg.header(h_Expires).value() > 0)
    {
-      InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
+      InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (subscription server probably restarted) "
                << mLastRequest->header(h_To));
 
       reSubscribe();  // will delete "this"
@@ -282,7 +283,7 @@ ClientSubscription::processNextNotify()
    bool setRefreshTimer=false; 
    if (!qn->outOfOrder())
    {
-      UInt32 expires = 0;
+      uint32_t expires = 0;
       //default to 3600 seconds so non-compliant endpoints don't result in leaked usages
       if (qn->notify().exists(h_SubscriptionState) && qn->notify().header(h_SubscriptionState).exists(p_expires))
       {
@@ -312,7 +313,7 @@ ClientSubscription::processNextNotify()
          !isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Terminated))
       {
          // Don't do this stuff for a NOTIFY terminated.
-         UInt64 now = Timer::getTimeSecs();
+         uint64_t now = Timer::getTimeSecs();
          refreshInterval = Helper::aBitSmallerThan((signed long)expires);
          
          if (mNextRefreshSecs == 0 || now + refreshInterval < mNextRefreshSecs)
@@ -462,17 +463,23 @@ ClientSubscription::dispatch(const DumTimeout& timer)
       if(timer.type() == DumTimeout::WaitForNotify)
       {
          ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-         if(mEnded)
+         if (mEnded)
          {
             InfoLog(<< "ClientSubscription: received NOTIFY timeout when trying to end, terminating...");
-            // NOTIFY terminated didn't come in
-            handler->onTerminated(getHandle(),0);
+            if (handler)
+            {
+               // NOTIFY terminated didn't come in
+               handler->onTerminated(getHandle(), 0);
+            }
             delete this;
             return;
          }
 
-         // Initial NOTIFY never came in; let app decide what to do
-         handler->onNotifyNotReceived(getHandle());
+         if (handler)
+         {
+            // Initial NOTIFY never came in; let app decide what to do
+            handler->onNotifyNotReceived(getHandle());
+         }
       }
       else if (timer.type() == DumTimeout::SubscriptionRetry)
       {
@@ -506,7 +513,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 }
 
 void
-ClientSubscription::requestRefresh(UInt32 expires)
+ClientSubscription::requestRefresh(uint32_t expires)
 {
    if (!mEnded)
    {
@@ -541,13 +548,14 @@ ClientSubscription::requestRefresh(UInt32 expires)
 class ClientSubscriptionRefreshCommand : public DumCommandAdapter
 {
 public:
-   ClientSubscriptionRefreshCommand(const ClientSubscriptionHandle& clientSubscriptionHandle, UInt32 expires)
+   ClientSubscriptionRefreshCommand(const ClientSubscriptionHandle& clientSubscriptionHandle, uint32_t expires)
       : mClientSubscriptionHandle(clientSubscriptionHandle),
         mExpires(expires)
    {
 
    }
-   virtual void executeCommand()
+
+   void executeCommand() override
    {
       if(mClientSubscriptionHandle.isValid())
       {
@@ -555,17 +563,17 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientSubscriptionRefreshCommand";
    }
 private:
    ClientSubscriptionHandle mClientSubscriptionHandle;
-   UInt32 mExpires;
+   uint32_t mExpires;
 };
 
 void
-ClientSubscription::requestRefreshCommand(UInt32 expires)
+ClientSubscription::requestRefreshCommand(uint32_t expires)
 {
    mDum.post(new ClientSubscriptionRefreshCommand(getHandle(), expires));
 }
@@ -616,7 +624,7 @@ public:
 
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientSubscriptionHandle.isValid())
       {
@@ -624,7 +632,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientSubscriptionEndCommand";
    }
@@ -671,7 +679,7 @@ public:
 
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientSubscriptionHandle.isValid())
       {
@@ -679,7 +687,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientSubscriptionAcceptUpdateCommand";
    }
@@ -700,14 +708,14 @@ ClientSubscription::reSubscribe()
 {
    NameAddr target(mLastRequest->header(h_To));
    target.remove(p_tag);  // ensure To tag is removed
-   SharedPtr<SipMessage> sub = mDum.makeSubscription(target, getUserProfile(), getEventType(), getAppDialogSet()->reuse());
+   auto sub = mDum.makeSubscription(target, getUserProfile(), getEventType(), getAppDialogSet()->reuse());
    mDum.send(sub);
 
    delete this;
 }
 
 void 
-ClientSubscription::send(SharedPtr<SipMessage> msg)
+ClientSubscription::send(std::shared_ptr<SipMessage> msg)
 {
    DialogUsage::send(msg);
 
@@ -782,7 +790,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientSubscriptionHandle.isValid())
       {
@@ -790,7 +798,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientSubscriptionRejectUpdateCommand";
    }

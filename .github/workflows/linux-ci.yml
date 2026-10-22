@@ -1,0 +1,139 @@
+name: Linux-CI
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build with ${{ matrix.c-compiler }}
+    runs-on: ubuntu-24.04
+    container:
+      # Debian 12.  Bullseye (11) left LTS in August 2026 and its security
+      # archive is being pruned, which broke dependency installation outright.
+      # Trixie (13) no longer ships libpcre3-dev, which sipXtapi still needs.
+      image: debian:bookworm-slim
+      options: --ulimit memlock=-1
+    strategy:
+      fail-fast: false
+      matrix:
+        c-compiler: [gcc-12, clang-16]
+        include:
+          - c-compiler: gcc-12
+            cxx-compiler: g++-12
+          - c-compiler: clang-16
+            cxx-compiler: clang++-16
+    env:
+      CC: /usr/bin/${{ matrix.c-compiler }}
+      CXX: /usr/bin/${{ matrix.cxx-compiler }}
+    steps:
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v1.1.0
+        id: cpu-cores
+
+      - name: Install Dependencies
+        run: |
+          # sipXtapi is no longer taken from a package: CMake builds it from
+          # source at the commit pinned in build/sipxtapi-commit.txt (see
+          # build/build_sipxtapi.sh).  autoconf through libasound2-dev below
+          # are what that build needs.
+          PACKAGES=" \
+            autoconf \
+            automake \
+            ca-certificates \
+            clang-16 \
+            clang-tidy-16 \
+            cmake \
+            default-libmysqlclient-dev \
+            g++-12 \
+            git \
+            gperf \
+            libasio-dev \
+            libasound2-dev \
+            libboost-all-dev \
+            libc-ares-dev \
+            libcppunit-dev \
+            libdb++-dev \
+            libfmt-dev \
+            libgeoip-dev \
+            libgloox-dev \
+            libgstreamermm-1.0-dev \
+            libpcre3-dev \
+            libpopt-dev \
+            libpq-dev \
+            postgresql-server-dev-all \
+            libqpid-proton-cpp12-dev \
+            libradcli-dev \
+            libsnmp-dev \
+            libsoci-dev \
+            libsrtp2-dev \
+            libssl-dev \
+            libtelepathy-qt5-dev \
+            libtool \
+            libwebsocketpp-dev \
+            libxerces-c-dev \
+            lld-16 \
+            make \
+            patch \
+            perl \
+            pkg-config \
+            python3-cxx-dev \
+            python3-dev \
+            sox \
+            wget \
+            xxd"
+          # deb.debian.org resets connections mid-download often enough to red
+          # a run on its own ("Error reading from server ... 104"), and one bad
+          # .deb fails the whole job.  Retry the update and install a few
+          # times; $PACKAGES is deliberately unquoted so it word splits into
+          # arguments.
+          attempt=1
+          until apt-get update -qq && apt-get install -qq $PACKAGES
+          do
+            if [ "$attempt" -ge 3 ]
+            then
+              echo "::error::apt-get install failed $attempt times"
+              exit 1
+            fi
+            echo "apt-get install failed, retrying (attempt $attempt)"
+            attempt=$((attempt + 1))
+            sleep 10
+          done
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # Cache the built sipXtapi ExternalProject tree so it is only rebuilt when
+      # the pinned commit or the build script changes.  tar preserves the
+      # ExternalProject stamp mtimes, so on a hit the build sees sipXtapi as up
+      # to date and skips it.  sipXtapi is built with the job's compiler, so
+      # each matrix entry has its own entry.  Bump the trailing salt (v1) to
+      # force a rebuild, e.g. after changing the container image.
+      - name: Cache sipXtapi
+        uses: actions/cache@v4
+        with:
+          path: sipXtapi-prefix
+          key: sipxtapi-bookworm-${{ matrix.c-compiler }}-${{ hashFiles('build/sipxtapi-commit.txt', 'build/build_sipxtapi.sh') }}-v1
+
+      - name: Upgrade CMake
+        run: ./build/travis/upgradecmake
+
+      - name: Bootstrap
+        run: ./build/travis/bootstrap
+
+      - name: Configure
+        run: ./build/travis/configure
+
+      - name: Build
+        run: ./build/travis/build
+
+      - name: Analyse
+        if: ${{ matrix.c-compiler == 'clang-16' }}
+        run: run-clang-tidy-16 -j ${{ steps.cpu-cores.outputs.count }} -quiet
+
+      # A failing test is run once more before failing the job.  The TFM suites
+      # (sanityTests, dumTests) depend on timing, and CI runners occasionally
+      # stall the whole process for seconds; a genuine regression fails both runs.
+      - name: Test
+        run: make -j1 CTEST_OUTPUT_ON_FAILURE=1 ARGS="--repeat until-pass:2" test

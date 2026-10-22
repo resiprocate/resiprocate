@@ -58,8 +58,7 @@ static const Data QUESTION_RA_QUOTE("?>");
 // 1. lazier parsing
 // 2. embedded weirdnesses like <! > and <? >
 XMLCursor::XMLCursor(const ParseBuffer& pb)
-   : mRoot(0),
-     mCursor(0),
+   : mCursor(nullptr),
      mAttributesSet(false)
 {
    ParseBuffer lPb(pb);
@@ -72,7 +71,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
    {
       StackLog(<< "removing comments");
       lPb.reset(start);
-      mData.reserve(lPb.end() - lPb.start());
+      mData.reserve((Data::size_type)(lPb.end() - lPb.start()));
 
       const char* anchor = start;
       {
@@ -95,13 +94,13 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
             }
          }
       }
-      mRoot = new Node(ParseBuffer(mData.data(), mData.size()));
+      mRoot.reset(new Node(ParseBuffer(mData.data(), mData.size())));
    }
    else
    {
-      mRoot = new Node(ParseBuffer(start, pb.end() - start));
+      mRoot.reset(new Node(ParseBuffer(start, pb.end() - start)));
    }
-   mCursor = mRoot;
+   mCursor = mRoot.get();
 
    if (mRoot->extractTag())
    {
@@ -138,7 +137,6 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
 
 XMLCursor::~XMLCursor()
 {
-   delete mRoot;
 }
 
 void
@@ -258,7 +256,7 @@ XMLCursor::nextSibling()
    }
 
    StackLog(<< "XMLCursor::nextSibling" << *this->mCursor << " " << *this->mCursor->mParent);
-   if (mCursor->mParent == mRoot)
+   if (mCursor->mParent == mRoot.get())
    {
       parseNextRootChild();
    }
@@ -315,14 +313,14 @@ XMLCursor::parent()
 void
 XMLCursor::reset()
 {
-   mCursor = mRoot;
+   mCursor = mRoot.get();
    mAttributesSet = false;
 }
 
 bool
 XMLCursor::atRoot() const
 {
-   return mCursor == mRoot;
+   return mCursor == mRoot.get();
 }
 
 bool
@@ -361,6 +359,7 @@ XMLCursor::getAttributes() const
       Data value;
 
       pb.skipToOneOf(ParseBuffer::Whitespace, RA_QUOTE_SLASH);
+      pb.skipWhitespace();
 
       while (!pb.eof() && 
              *pb.position() != RA_QUOTE[0] &&
@@ -619,7 +618,7 @@ XMLCursor::Node::skipComments(ParseBuffer& pb)
 EncodeStream&
 resip::operator<<(EncodeStream& str, const XMLCursor::Node& node)
 {
-   Data::size_type size = node.mPb.end() - node.mPb.start();
+   Data::size_type size = (Data::size_type)(node.mPb.end() - node.mPb.start());
 
    static const Data::size_type showSize(35);
 

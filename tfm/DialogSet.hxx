@@ -2,25 +2,26 @@
 #define DialogSet_hxx
 
 #include <vector>
-#include <boost/shared_ptr.hpp>
 
 #include "resip/stack/DeprecatedDialog.hxx"
+
+#include <memory>
 
 class TestSipEndPoint;
 
 class DialogSet
 {
    public:
-      DialogSet(boost::shared_ptr<resip::SipMessage> msg,const TestSipEndPoint& testSipEndPoint);
-      bool isMatch(boost::shared_ptr<resip::SipMessage> msg) const;
+      DialogSet(std::shared_ptr<resip::SipMessage> msg,const TestSipEndPoint& testSipEndPoint);
+      bool isMatch(std::shared_ptr<resip::SipMessage> msg) const;
 
       // find or create Dialog
-      void dispatch(boost::shared_ptr<resip::SipMessage> msg);
-      boost::shared_ptr<resip::SipMessage> getMessage() const;
+      void dispatch(std::shared_ptr<resip::SipMessage> msg);
+      std::shared_ptr<resip::SipMessage> getMessage() const noexcept;
       std::vector<resip::DeprecatedDialog>& getDialogs();
          
    private:
-      boost::shared_ptr<resip::SipMessage> mMsg;
+      std::shared_ptr<resip::SipMessage> mMsg;
       std::vector<resip::DeprecatedDialog> mDialogs;
       const TestSipEndPoint* mTestSipEndPoint;
 };

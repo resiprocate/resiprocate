@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 
+#include <ctype.h>
 
 #include "rutil/ResipAssert.h"
 
@@ -14,13 +15,13 @@ using namespace resip;
 
 char fromHex(char h1, char h2)
 {
-   h1 = toupper(h1);
-   h2 = toupper(h2);
+   h1 = toupper(static_cast< unsigned char >(h1));
+   h2 = toupper(static_cast< unsigned char >(h2));
 
    int i1;
    int i2;
 
-   if (isdigit(h1))
+   if (isdigit(static_cast< unsigned char >(h1)))
    {
       i1 = h1 - '0';
    }
@@ -29,7 +30,7 @@ char fromHex(char h1, char h2)
       i1 = h1 - 'A' + 10;
    }
 
-   if (isdigit(h2))
+   if (isdigit(static_cast< unsigned char >(h2)))
    {
       i2 = h2 - '0';
    }

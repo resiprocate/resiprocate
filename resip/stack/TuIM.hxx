@@ -12,7 +12,7 @@
 namespace resip
 {
 
-class Pidf;
+class GenericPidfContents;
 
 class TuIM
 {
@@ -113,7 +113,7 @@ public:
             Uri uri;
             Data group;
             DeprecatedDialog* presDialog; 
-            UInt64 mNextTimeToSubscribe;
+            uint64_t mNextTimeToSubscribe;
             bool online;
             Data status;
             
@@ -168,11 +168,11 @@ public:
       typedef std::list<Page>::iterator PageIterator;
 
       // Current pres info
-      Pidf* mPidf;
+      GenericPidfContents* mPidf;
 
       // registration information
       DeprecatedDialog mRegistrationDialog;
-      UInt64 mNextTimeToRegister;
+      uint64_t mNextTimeToRegister;
       Data   mRegistrationPassword;
       unsigned int mLastAuthCSeq; // This is the CSeq of the last registration message
                             // sent that included digest authorization information 

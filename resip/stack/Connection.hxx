@@ -111,9 +111,13 @@ class Connection : public ConnectionBase,
       virtual int write(const char* /* buffer */, const int /* count */) { return 0; }
       virtual void onDoubleCRLF();
       virtual void onSingleCRLF();
+      virtual void onWsClose(const Data& payload);
+      virtual void onWsPing(const Data& payload);
 
       /* callback method of FdPollItemIf */
       virtual void processPollEvent(FdPollEventMask mask);
+
+      virtual void invokeAfterSocketCreationFunc() const;
 
    private:
       ConnectionManager& getConnectionManager() const;
@@ -140,6 +144,7 @@ operator<<(EncodeStream& strm, const resip::Connection& c);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without

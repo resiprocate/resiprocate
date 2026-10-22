@@ -5,6 +5,8 @@
 #include "ReconSubsystem.hxx"
 #include "ConversationProfile.hxx"
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -20,26 +22,32 @@ ConversationProfile::ConversationProfile() :
    mAllowPriorityAutoAnswer(false),
    mChallengeAutoAnswerRequests(false),
    mChallengeOODReferRequests(true),
+   mDelayedMediaOutboundMode(false),
    mSecureMediaMode(Srtp),
    mSecureMediaRequired(false),
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
-   mNatTraversalServerPort(0)
+   mForceCOMedia(true),
+   mNatTraversalServerPort(0),
+   mMaximumVideoBandwidth(0)
 {
 }
 
-ConversationProfile::ConversationProfile(SharedPtr<Profile> baseProfile) :
+ConversationProfile::ConversationProfile(std::shared_ptr<Profile> baseProfile) :
    UserProfile(baseProfile),
    mHandle(0),
    mAllowAutoAnswer(false),
    mAllowPriorityAutoAnswer(false),
    mChallengeAutoAnswerRequests(false),
    mChallengeOODReferRequests(true),
+   mDelayedMediaOutboundMode(false),
    mSecureMediaMode(Srtp),
    mSecureMediaRequired(false),
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
-   mNatTraversalServerPort(0)
+   mForceCOMedia(true),
+   mNatTraversalServerPort(0),
+   mMaximumVideoBandwidth(0)
 {
 }
 
@@ -118,6 +126,8 @@ ConversationProfile::shouldAutoAnswer(const SipMessage& inviteRequest, bool *req
 
 /* ====================================================================
 
+ Copyright (c) 2022, SIP Spectrum, Inc. http://sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

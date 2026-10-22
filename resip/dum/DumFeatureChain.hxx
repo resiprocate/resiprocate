@@ -1,8 +1,8 @@
 #ifndef RESIP_DumFeatureChain_HXX
 #define RESIP_DumFeatureChain_HXX 
 
+#include <memory>
 #include <vector>
-#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
@@ -12,7 +12,7 @@ class DumFeature;
 class DumFeatureChain
 {
    public: 
-      typedef std::vector<SharedPtr<DumFeature> > FeatureList;
+      typedef std::vector<std::shared_ptr<DumFeature>> FeatureList;
       
       enum ProcessingResultMask
       {
@@ -28,7 +28,7 @@ class DumFeatureChain
          ChainDoneAndEventTaken = ChainDoneBit | EventTakenBit
       };
 
-      DumFeatureChain(DialogUsageManager& dum, const FeatureList& features, TargetCommand::Target& target);
+      DumFeatureChain(DialogUsageManager& dum, FeatureList features, TargetCommand::Target& target);
      
       ProcessingResult process(Message* msg);      
 

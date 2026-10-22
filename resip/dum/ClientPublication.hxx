@@ -9,17 +9,22 @@ namespace resip
 class ClientPublication : public NonDialogUsage
 {
    public:
-      ClientPublication(DialogUsageManager& dum, DialogSet& dialogSet, SharedPtr<SipMessage> pub);
+      ClientPublication(DialogUsageManager& dum, DialogSet& dialogSet, std::shared_ptr<SipMessage> pub);
+      ClientPublication(const ClientPublication&) = delete;
+      ClientPublication(ClientPublication&&) = delete;
+
+      ClientPublication& operator=(const ClientPublication&) = delete;
+      ClientPublication& operator=(ClientPublication&&) = delete;
 
       typedef Handle<ClientPublication> ClientPublicationHandle;
       ClientPublicationHandle getHandle();
-      const Data& getEventType() { return mEventType; }
-      const Contents* getContents() const { return mDocument; }
+      const Data& getEventType() const noexcept { return mEventType; }
+      const Contents* getContents() const noexcept { return mDocument; }
 
       //0 means the last value of Expires will be used.
       void refresh(unsigned int expiration=0);
       void update(const Contents* body);
-      virtual void end();
+      void end() override;
       void end(bool immediate); // If immediate is true then usage is destroyed with no further messaging
 
       /**
@@ -29,14 +34,14 @@ class ClientPublication : public NonDialogUsage
       void refreshCommand(unsigned int expiration=0);
       virtual void endCommand(bool immediate=false);  // If immediate is true then usage is destroyed with no further messaging
 
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
+      void dispatch(const SipMessage& msg) override;
+      void dispatch(const DumTimeout& timer) override;
 
-      virtual EncodeStream& dump(EncodeStream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const override;
 
    protected:
       virtual ~ClientPublication();
-      virtual void send(SharedPtr<SipMessage> request);
+      void send(std::shared_ptr<SipMessage> request) override;
       
    private:
       friend class DialogSet;
@@ -46,14 +51,10 @@ class ClientPublication : public NonDialogUsage
       bool mPendingPublish;
       bool mPendingEnd;
       
-      SharedPtr<SipMessage> mPublish;
+      std::shared_ptr<SipMessage> mPublish;
       Data mEventType;
       unsigned int mTimerSeq; // expected timer seq (all < are stale)
       const Contents* mDocument;
-      
-      // disabled
-      ClientPublication(const ClientPublication&);
-      ClientPublication& operator=(const ClientPublication&);
 };
  
 }

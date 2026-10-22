@@ -15,7 +15,7 @@ SequenceSetThread::loop()
    DebugLog(<< "exec loop start: " << mActiveSet.size() << " " << mFailed);
    while (!isShutdown() && !mActiveSet.empty() && !mFailed)
    {
-      handle(mEventFifo.getNext());
+      handle(nextEvent());
    }
 
    if (isShutdown())
@@ -27,7 +27,8 @@ SequenceSetThread::loop()
    return !mFailed;
 }
 /*
-  Copyright (c) 2005, PurpleComm, Inc. 
+  Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
+  Copyright (c) 2005, PurpleComm, Inc.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without modification,

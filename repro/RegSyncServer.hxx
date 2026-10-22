@@ -14,7 +14,7 @@ namespace repro
 {
 class RegSyncServer;
 
-class RegSyncServer: public XmlRpcServerBase, 
+class RegSyncServer: public XmlRpcHandler,
                      public resip::InMemorySyncRegDbHandler,
                      public resip::InMemorySyncPubDbHandler
 {
@@ -23,6 +23,11 @@ public:
                  int port, 
                  resip::IpVersion version,
                  resip::InMemorySyncPubDb* pubDb = 0);
+#ifdef BUILD_QPID_PROTON
+   RegSyncServer(resip::InMemorySyncRegDb* regDb,
+                 const resip::Data& brokerQueue,
+                 resip::InMemorySyncPubDb* pubDb = 0);
+#endif
    virtual ~RegSyncServer();
 
    // thread safe
@@ -35,8 +40,8 @@ public:
    // Use connectionId == 0 to send to all connections
    virtual void sendRegistrationModifiedEvent(unsigned int connectionId, const resip::Uri& aor);
    virtual void sendRegistrationModifiedEvent(unsigned int connectionId, const resip::Uri& aor, const resip::ContactList& contacts);
-   virtual void sendDocumentModifiedEvent(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
-   virtual void sendDocumentRemovedEvent(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
+   virtual void sendDocumentModifiedEvent(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
+   virtual void sendDocumentRemovedEvent(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t lastUpdated);
 
 protected:
    virtual void handleRequest(unsigned int connectionId, unsigned int requestId, const resip::Data& request); 
@@ -46,9 +51,9 @@ protected:
    virtual void onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const resip::ContactList& contacts);
 
    // InMemorySyncPubDbHandler methods
-   virtual void onDocumentModified(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
-   virtual void onDocumentRemoved(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
-   virtual void onInitialSyncDocument(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
+   virtual void onDocumentModified(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
+   virtual void onDocumentRemoved(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t lastUpdated);
+   virtual void onInitialSyncDocument(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
 
 private: 
    void handleInitialSyncRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
@@ -67,6 +72,8 @@ private:
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (c) 2022 Software Freedom Institute LLC https://softwarefreedom.institute
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -8,6 +8,8 @@
 #include "p2p/Message.hxx"
 #include "p2p/Candidate.hxx"
 
+#include <utility>
+
 namespace p2p
 {
 
@@ -37,16 +39,16 @@ class SendP2pCommand : public TransporterCommand
    public:
       SendP2pCommand(Transporter *transporter,
                         NodeId nodeId,
-                        std::auto_ptr<p2p::Message> message)
+                        std::unique_ptr<p2p::Message> message)
         : TransporterCommand(transporter), 
           mNodeId(nodeId),
-          mMessage(message) {;}
+          mMessage(std::move(message)) {}
 
       void operator()() { mTransporter->sendImpl(mNodeId, mMessage); }
 
    private:
       NodeId mNodeId;
-      std::auto_ptr<p2p::Message> mMessage;
+      std::unique_ptr<p2p::Message> mMessage;
 };
 
 class SendApplicationCommand : public TransporterCommand
@@ -54,23 +56,23 @@ class SendApplicationCommand : public TransporterCommand
    public:
       SendApplicationCommand(Transporter *transporter,
                              FlowId flowId,
-                             std::auto_ptr<resip::Data> message)
+                             std::unique_ptr<resip::Data> message)
         : TransporterCommand(transporter), 
           mFlowId(flowId),
-          mMessage(message) {;}
+          mMessage(std::move(message)) {}
 
       void operator()() { mTransporter->sendImpl(mFlowId, mMessage); }
 
    private:
       FlowId mFlowId;
-      std::auto_ptr<resip::Data> mMessage;
+      std::unique_ptr<resip::Data> mMessage;
 };
 
 class CollectCandidatesCommand : public TransporterCommand
 {
    public:
       CollectCandidatesCommand(Transporter *transporter,
-                               UInt64 tid,
+                               uint64_t tid,
                                NodeId &nodeId,
                                unsigned short appId)
          : TransporterCommand(transporter), mTransactionId(tid), 
@@ -79,7 +81,7 @@ class CollectCandidatesCommand : public TransporterCommand
       void operator()() { mTransporter->collectCandidatesImpl(mTransactionId, mNodeId, mAppId); }
 
    private:
-      UInt64 mTransactionId;
+      uint64_t mTransactionId;
       NodeId mNodeId;
       unsigned short mAppId;
 };
@@ -163,19 +165,19 @@ Transporter::addListener(resip::TransportType transport,
 }
 
 void
-Transporter::send(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
+Transporter::send(NodeId nodeId, std::unique_ptr<p2p::Message> msg)
 {
-  mCmdFifo.add(new SendP2pCommand(this, nodeId, msg));
+  mCmdFifo.add(new SendP2pCommand(this, nodeId, std::move(msg)));
 }
 
 void
-Transporter::send(FlowId flowId, std::auto_ptr<resip::Data> msg)
+Transporter::send(FlowId flowId, std::unique_ptr<resip::Data> msg)
 {
-  mCmdFifo.add(new SendApplicationCommand(this, flowId, msg));
+  mCmdFifo.add(new SendApplicationCommand(this, flowId, std::move(msg)));
 }
   
 void
-Transporter::collectCandidates(const UInt64 tid, NodeId nodeId, unsigned short appId)
+Transporter::collectCandidates(const uint64_t tid, NodeId nodeId, unsigned short appId)
 {
    mCmdFifo.add(new CollectCandidatesCommand(this, tid, nodeId, appId));
 }

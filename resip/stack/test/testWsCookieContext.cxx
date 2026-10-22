@@ -29,7 +29,7 @@ int main()
 
    BasicWsCookieContextFactory factory;
    Uri uri("/");
-   SharedPtr<WsCookieContext> ctx = factory.makeCookieContext(cookies, uri);
+   std::shared_ptr<WsCookieContext> ctx = factory.makeCookieContext(cookies, uri);
 
    assert(ctx->getExpiresTime() == 1987814798);
 

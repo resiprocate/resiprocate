@@ -92,7 +92,7 @@ class ParserCategory : public LazyParser
       // CommasAllowedOutputCommas: multi headers can be received with commas
       //                            and will always output with commas when
       //                            parsed.  
-      enum {NoCommaTokenizing = 0, CommasAllowedOutputMulti = 1, CommasAllowedOutputCommas = 3};
+      enum CommaHandlingMode {NoCommaTokenizing = 0, CommasAllowedOutputMulti = 1, CommasAllowedOutputCommas = 3};
 
       /**
          @internal
@@ -202,13 +202,13 @@ class ParserCategory : public LazyParser
       /**
          @brief Exception class used by ParserCategory.
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, const int line)
                : BaseException(msg, file, line) {}
 
-            const char* name() const { return "ParserCategory::Exception"; }
+            const char* name() const noexcept override { return "ParserCategory::Exception"; }
       };
 
       /**
@@ -265,6 +265,22 @@ class ParserCategory : public LazyParser
 
    protected:
       ParserCategory(PoolBase* pool=0);
+
+      /**
+         @internal
+         @brief Adds a recognised parameter to the internal ParameterList.
+         @param param The parameter to add.
+         @note Skips duplicate parameters.
+      */
+      bool addParameter(Parameter* param);
+
+      /**
+         @internal
+         @brief Adds an unrecognised parameter to the internal ParameterList.
+         @param unknownParam The parameter to add.
+         @note Skips duplicate parameters.
+      */
+      bool addParameter(UnknownParameter* unknownParam);
 
       Parameter* getParameterByData(const Data& data) const;
       void removeParameterByData(const Data& data);

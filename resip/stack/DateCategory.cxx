@@ -1,6 +1,4 @@
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
-#endif
+#include "rutil/compat.hxx"
 
 #include <string.h>
 #include <ctype.h>
@@ -26,9 +24,9 @@ struct days { const char *name; DayOfWeek type; };
 class DayOfWeekHash
 {
 private:
-  static inline unsigned int hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, GPERF_SIZE_TYPE len);
 public:
-  static const struct days *in_word_set (const char *str, unsigned int len);
+  static const struct days *in_word_set (const char *str, GPERF_SIZE_TYPE len);
 };
 
 // Implemented in gen/MonthHash.cxx
@@ -36,9 +34,9 @@ struct months { const char *name; Month type; };
 class MonthHash
 {
 private:
-  static inline unsigned int hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, GPERF_SIZE_TYPE len);
 public:
-  static const struct months *in_word_set (const char *str, unsigned int len);
+  static const struct months *in_word_set (const char *str, GPERF_SIZE_TYPE len);
 };
 }
 
@@ -91,7 +89,7 @@ DateCategory::DateCategory()
    if (now == ((time_t)-1))
    {
       int e = getErrno();
-      DebugLog (<< "Failed to get time: " << strerror(e));
+      DebugLog (<< "Failed to get time: " << strError(e));
       Transport::error(e);
       return;
    }
@@ -158,24 +156,23 @@ bool
 DateCategory::setDatetime(time_t datetime)
 {
    struct tm gmt;
-#if defined(WIN32) || defined(__sun)
-   struct tm *gmtp = gmtime(&datetime);
-   if (gmtp == 0)
+#if defined(WIN32)
+   if (gmtime_s(&gmt, &datetime) != 0)
    {
-        int e = getErrno();
-        DebugLog (<< "Failed to convert to gmt: " << strerror(e));
-        Transport::error(e);
-        return false;
+      int e = getErrno();
+      DebugLog(<< "Failed to convert to gmt: " << strError(e));
+      Transport::error(e);
+      return false;
    }
-   memcpy(&gmt,gmtp,sizeof(gmt));
 #else
-  if (gmtime_r(&datetime, &gmt) == 0)
-  {
-     int e = getErrno();
-     DebugLog (<< "Failed to convert to gmt: " << strerror(e));
-     Transport::error(e);
-     return false;
-  }
+   // gmtime_r is available on Linux, Solaris, and other POSIX platforms
+   if (gmtime_r(&datetime, &gmt) == 0)
+   {
+      int e = getErrno();
+      DebugLog(<< "Failed to convert to gmt: " << strError(e));
+      Transport::error(e);
+      return false;
+   }
 #endif
 
    mDayOfWeek = static_cast<DayOfWeek>(gmt.tm_wday);
@@ -195,8 +192,8 @@ DateCategory::setDatetime(time_t datetime)
 DayOfWeek
 DateCategory::DayOfWeekFromData(const Data& dow)
 {
-   register const char *str = dow.data();
-   register Data::size_type len = dow.size();
+   const char *str = dow.data();
+   Data::size_type len = dow.size();
 
    const struct days* _day = DayOfWeekHash::in_word_set(str, len);
    if(_day != 0)
@@ -212,8 +209,8 @@ DateCategory::DayOfWeekFromData(const Data& dow)
 Month
 DateCategory::MonthFromData(const Data& mon)
 {
-   register const char *str = mon.data();
-   register Data::size_type len = mon.size();
+   const char *str = mon.data();
+   Data::size_type len = mon.size();
 
    const struct months* _month = MonthHash::in_word_set(str, len);
    if(_month != 0)
@@ -321,15 +318,25 @@ void
 DateCategory::parse(ParseBuffer& pb)
 {
    // Mon, 04 Nov 2002 17:34:15 GMT
+   // Note: Day of Week is optional, so this is also valid: 04 Nov 2002 17:34:15 GMT
 
    const char* anchor = pb.skipWhitespace();
 
+   // If comma is present, then DayOfWeek is present
    pb.skipToChar(Symbols::COMMA[0]);
-   Data dayOfWeek;
-   pb.data(dayOfWeek, anchor);
-   mDayOfWeek = DateCategory::DayOfWeekFromData(dayOfWeek);
+   if (!pb.eof())
+   {
+      Data dayOfWeek;
+      pb.data(dayOfWeek, anchor);
+      mDayOfWeek = DateCategory::DayOfWeekFromData(dayOfWeek);
 
-   pb.skipChar(Symbols::COMMA[0]);
+      pb.skipChar(Symbols::COMMA[0]);
+   }
+   else
+   {
+      pb.reset(pb.start());
+      mDayOfWeek = DayOfWeek::NA;
+   }
 
    pb.skipWhitespace();
 
@@ -392,8 +399,11 @@ static void pad2(const int x, EncodeStream& str)
 EncodeStream& 
 DateCategory::encodeParsed(EncodeStream& str) const
 {
-   str << DayOfWeekData[mDayOfWeek] // Mon
-       << Symbols::COMMA[0] << Symbols::SPACE[0];
+   if (mDayOfWeek != DayOfWeek::NA)
+   {
+      str << DayOfWeekData[mDayOfWeek] // Mon
+         << Symbols::COMMA[0] << Symbols::SPACE[0];
+   }
    
    pad2(mDayOfMonth, str);  //  04
 

@@ -72,7 +72,7 @@ class OverrideContact : public DumFeature
          OutgoingEvent* og = dynamic_cast<OutgoingEvent*>(msg);
          if (og)
          {
-            SharedPtr<SipMessage> sip = og->message();
+            auto sip = og->message();
             if (sip->isRequest() && 
                 sip->exists(h_Contacts) && 
                 sip->header(h_Contacts).size() == 1)
@@ -93,10 +93,10 @@ class OverrideContact : public DumFeature
 class MyApp : public RegEventClient
 {
    public:
-      MyApp(resip::SharedPtr<resip::MasterProfile> profile) : RegEventClient(profile)
+      MyApp(std::shared_ptr<resip::MasterProfile> profile) : RegEventClient(std::move(profile))
       {
-         SharedPtr<DumFeature> f1(new FixMissingContact(mDum, mDum.dumIncomingTarget()));
-         mDum.addIncomingFeature(f1);
+         auto f1 = std::make_shared<FixMissingContact>(mDum, mDum.dumIncomingTarget());
+         mDum.addIncomingFeature(std::move(f1));
       }
 
       // optionally call this method once to override the host/port of contact
@@ -104,8 +104,8 @@ class MyApp : public RegEventClient
       void overrideContact(const resip::Uri& contact)
       {
          // This is only necessary if the user agent is running behind a NAT. 
-         SharedPtr<DumFeature> f2(new OverrideContact(contact, mDum, mDum.dumOutgoingTarget()));
-         mDum.addOutgoingFeature(f2);
+         auto f2 = std::make_shared<OverrideContact>(contact, mDum, mDum.dumOutgoingTarget());
+         mDum.addOutgoingFeature(std::move(f2));
       }
       
       virtual void onRegEvent(const resip::Data& aor, const resip::Data& reg)
@@ -125,7 +125,7 @@ main(int argc, char** argv)
    CommandLineParser clp(argc, argv);
    Log::initialize(clp.mLogType, clp.mLogLevel, argv[0]);
    
-   SharedPtr<MasterProfile> profile(new MasterProfile);
+   auto profile = std::make_shared<MasterProfile>();
 
    NameAddr from(clp.mAor);
    profile->setDefaultFrom(from);

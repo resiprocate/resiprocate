@@ -1,4 +1,5 @@
 #include "RequestHandler.hxx"
+#include <ctype.h>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -40,7 +41,7 @@ RequestHandler::RequestHandler(TurnManager& turnManager,
    {
       mRFC3489SupportEnabled = false;
    }
-   mPrivateNonceKey = Random::getRandomHex(24);
+   mPrivateNonceKey = Random::getCryptoRandomHex(24);
 }
 
 RequestHandler::ProcessResult 
@@ -52,11 +53,11 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationMa
 
    if(handleAuthentication(request, response))  
    {
-      // Check if there were unknown require attributes
+      // Check if there were unknown required attributes
       if(request.mUnknownRequiredAttributes.numAttributes > 0)
       {
          InfoLog(<< "Received Request with unknown comprehension-required attributes. Sending 420. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 420, "Unknown attribute", getConfig().mAuthenticationRealm.c_str());  
+         buildErrorResponse(response, 420, "Unknown attribute");
          response.mHasUnknownAttributes = true;
          response.mUnknownAttributes = request.mUnknownRequiredAttributes;
       }
@@ -157,40 +158,45 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationMa
 }
 
 void
-RequestHandler::buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg, const char* realm)
+RequestHandler::buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg)
 {
    response.mClass = StunMessage::StunClassErrorResponse;
    response.setErrorCode(errorCode, msg);
-   if(realm)
-   {
-      response.setRealm(realm);
+}
 
-      // Add a random nonce value that is expirable
-      Data nonce(100, Data::Preallocate);
-      Data timestamp(Timer::getTimeMs()/1000);
-      generateNonce(timestamp, nonce);
-      response.setNonce(nonce.c_str());
-   }
+void
+RequestHandler::buildErrorResponseWithRealmAndNonce(StunMessage& response, unsigned short errorCode, const char* msg, const Data& realm, const StunMessage& request)
+{
+   response.mClass = StunMessage::StunClassErrorResponse;
+   response.setErrorCode(errorCode, msg);
+   response.setRealm(realm.c_str());
+   // Add a random nonce value that is expirable
+   Data nonce(100, Data::Preallocate);
+   Data timestamp(Timer::getTimeMs() / 1000);
+   generateNonce(timestamp, nonce, request);
+   response.setNonce(nonce.c_str());
 }
 
 void 
-RequestHandler::generateNonce(const Data& timestamp, Data& nonce)
+RequestHandler::generateNonce(const Data& timestamp, Data& nonce, const StunMessage& request)
 {
    nonce += timestamp;
    nonce += ":";
    Data noncePrivate(100, Data::Preallocate);
-   noncePrivate += timestamp;
-   noncePrivate += ":";
-   //noncePrivate += user;  // ?slg? What could we put here
-   noncePrivate += mPrivateNonceKey;
+   {
+      DataStream ds(noncePrivate);
+      ds << timestamp
+         << ":" << request.getRemoteTuple()
+         << ":" << mPrivateNonceKey;
+   }
    nonce += noncePrivate.md5();
 }
 
 RequestHandler::CheckNonceResult
-RequestHandler::checkNonce(const Data& nonce)
+RequestHandler::checkNonce(const Data& nonce, const StunMessage& request)
 {
    ParseBuffer pb(nonce.data(), nonce.size());
-   if (!pb.eof() && !isdigit(*pb.position()))
+   if (!pb.eof() && !isdigit(static_cast< unsigned char >(*pb.position())))
    {
       DebugLog(<< "Invalid nonce.  Expected timestamp.");
       return NotValid;
@@ -202,16 +208,16 @@ RequestHandler::checkNonce(const Data& nonce)
       DebugLog(<< "Invalid nonce. Expected timestamp terminator.");
       return NotValid;
    }
-   UInt64 now = Timer::getTimeMs()/1000;
+   uint64_t now = Timer::getTimeMs()/1000;
    Data creationTimeData;
-   UInt64 creationTime;
+   uint64_t creationTime;
    pb.data(creationTimeData, anchor);
    creationTime = creationTimeData.convertUInt64();
    if((now-creationTime) <= getConfig().mNonceLifetime)
    {
       // If nonce hasn't expired yet - ensure this is a nonce we generated
       Data nonceToMatch(100, Data::Preallocate);
-      generateNonce(creationTimeData, nonceToMatch);
+      generateNonce(creationTimeData, nonceToMatch, request);
       if(nonceToMatch == nonce)
       {
          return Valid;
@@ -232,10 +238,10 @@ RequestHandler::checkNonce(const Data& nonce)
 bool 
 RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response)
 {
-   // Don't authenticate shared secret requests, Binding Requests or Indications (if LongTermCredentials are used)
-   if((request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretMethod) ||
-      (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::BindMethod) ||
-      (request.mClass == StunMessage::StunClassIndication))
+   // Don't authenticate indications/responses, or, shared secret and binding requests
+   if((request.mClass != StunMessage::StunClassRequest) ||
+      (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretMethod) ||
+      (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::BindMethod))
    {
       return true;
    }
@@ -243,7 +249,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
    if (!request.mHasMessageIntegrity)
    {
       InfoLog(<< "Received Request with no Message Integrity. Sending 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Unauthorized (no MessageIntegrity)", getConfig().mAuthenticationRealm.c_str());  
+      buildErrorResponseWithRealmAndNonce(response, 401, "Unauthorized (no MessageIntegrity)", getConfig().mAuthenticationRealm, request);
       return false;
    }
    else
@@ -267,14 +273,14 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
          buildErrorResponse(response, 400, "Bad Request (No Nonce and contains Realm)");
          return false;
       }
-      switch(checkNonce(*request.mNonce))
+      switch(checkNonce(*request.mNonce, request))
       {
       case Valid:
          // Do nothing
          break;
       case Expired:
          WarningLog(<< "Nonce expired. Sending 438. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 438, "Stale Nonce", getConfig().mAuthenticationRealm.c_str());
+         buildErrorResponseWithRealmAndNonce(response, 438, "Stale Nonce", getConfig().mAuthenticationRealm, request);
          return false;
          break;
       case NotValid:
@@ -292,7 +298,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       if (!getConfig().isUserNameValid(*request.mUsername, *request.mRealm))
       {
          WarningLog(<< "Invalid username '" << *request.mUsername << "' or realm '" << *request.mRealm << "' (username unknown or potential AuthorizationRealm mismatch). Sending 401. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationRealm.c_str());
+         buildErrorResponseWithRealmAndNonce(response, 401, "Unauthorized", getConfig().mAuthenticationRealm, request);
          return false;
       }
 
@@ -308,7 +314,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       if(!request.checkMessageIntegrity(hmacKey))
       {
          WarningLog(<< "MessageIntegrity is bad. Sending 401. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationRealm.c_str());
+         buildErrorResponseWithRealmAndNonce(response, 401, "Unauthorized", getConfig().mAuthenticationRealm, request);
          return false;
       }
 
@@ -357,7 +363,7 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
       changeTuple.setTransportType(request.mLocalTuple.getTransportType());
       changeTuple.setAddress(request.mLocalTuple.getAddress() == mPrim3489Address ? mAlt3489Address : mPrim3489Address);
       changeTuple.setPort(request.mLocalTuple.getPort() == mPrim3489Port ? mAlt3489Port : mPrim3489Port);
-      UInt32 changeRequest = request.mHasChangeRequest ? request.mChangeRequest : 0;
+      uint32_t changeRequest = request.mHasChangeRequest ? request.mChangeRequest : 0;
 
       if(changeRequest & StunMessage::ChangeIpFlag && changeRequest & StunMessage::ChangePortFlag)
       {
@@ -448,7 +454,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn allocate request without authentication.  Sending 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str());  
+      buildErrorResponseWithRealmAndNonce(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm, request);
       return RespondFromReceiving;
    }
 
@@ -464,8 +470,13 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
       return RespondFromReceiving;
    }
 
-   // TODO - add a check that a per-user quota for number of allowed TurnAllocations 
-   // has not been exceeded - if so send 486 (Allocation Quota Reached)
+   // The user may only have so many allocations at once (MaxAllocationsPerUser)
+   if(mTurnManager.allocationQuotaReached(*request.mUsername))
+   {
+      WarningLog(<< "User " << *request.mUsername << " already has " << getConfig().mMaxAllocationsPerUser << " allocations.  Sending 486. Sender=" << request.mRemoteTuple);
+      buildErrorResponse(response, 486, "Allocation Quota Reached");
+      return RespondFromReceiving;
+   }
 
    // Build the Allocation Tuple
    StunTuple allocationTuple(request.mLocalTuple.getTransportType(), // Default to receiving transport
@@ -494,7 +505,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
    if(request.mHasTurnDontFragment)
    {
       WarningLog(<< "Turn allocate request with Don't Fragment requested, not yet implemented.  Sending 420. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 420, "Don't Fragment not yet implemented", getConfig().mAuthenticationRealm.c_str());  
+      buildErrorResponse(response, 420, "Don't Fragment not yet implemented");
       return RespondFromReceiving;
    }
 
@@ -504,64 +515,14 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
       // TODO - bandwidth check - if insufficient send 507 (Insufficient Bandwidth Capacity)
    }
                                 
-   unsigned short port = 0;  // Default to Any free port
-   if(request.mHasTurnEvenPort)
+   if(request.mHasTurnEvenPort && request.mHasTurnReservationToken)
    {
-      if(request.mHasTurnReservationToken)
-      {
-         WarningLog(<< "Both Even Port and Reservation Token attributes are present.  Sending 400. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 400, "Bad request - both Even Port and Reservation Token present");  
-         return RespondFromReceiving;
-      }
-      if(request.mTurnEvenPort.propType == StunMessage::PropsPortEven)
-      {
-         // Attempt to allocate an even port
-         port = mTurnManager.allocateEvenPort(allocationTuple.getTransportType());
-      }
-      else if(request.mTurnEvenPort.propType == StunMessage::PropsPortPair)
-      {
-         // Attempt to allocate an even port, with a free adjacent odd port
-         port = mTurnManager.allocateEvenPortPair(allocationTuple.getTransportType());
-
-         // Add Reservation Token to response - for now just use reserved port number as token
-         response.mHasTurnReservationToken = true;
-         response.mTurnReservationToken = port + 1;
-      }
-      if(port == 0)
-      {
-         WarningLog(<< "Unable to allocate requested port.  Sending 508. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 508, "Insufficient Port Capacity");  
-         return RespondFromReceiving;
-      }
+      WarningLog(<< "Both Even Port and Reservation Token attributes are present.  Sending 400. Sender=" << request.mRemoteTuple);
+      buildErrorResponse(response, 400, "Bad request - both Even Port and Reservation Token present");
+      return RespondFromReceiving;
    }
 
-   if(request.mHasTurnReservationToken)
-   {
-      // Try to allocate reserved port - for now reservation token is reserved port number
-      port = (unsigned short)request.mTurnReservationToken;
-      if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), port, true /* allocate reserved */))
-      {
-         WarningLog(<< "Unable to allocate requested port - bad reservation token.  Sending 508. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 508, "Insufficient Port Capacity");  
-         return RespondFromReceiving;
-      }      
-   }
-
-   if(port == 0)
-   {
-      // Allocate any available port
-      port = mTurnManager.allocateAnyPort(allocationTuple.getTransportType());      
-      if(port == 0)
-      {
-         WarningLog(<< "Unable to allocate port.  Sending 508. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 508, "Insufficient Port Capacity");  
-         return RespondFromReceiving;
-      }      
-   }
-
-   allocationTuple.setPort(port);
-
-   UInt32 lifetime = getConfig().mDefaultAllocationLifetime;
+   uint32_t lifetime = getConfig().mDefaultAllocationLifetime;
    if(request.mHasTurnLifetime)
    {
       // Check if the requested value is greater than the server max
@@ -576,32 +537,98 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
       }
    }
 
-   // We now have an internal 5-Tuple and an allocation tuple - create the allocation
-
-   try
+   // If the relay can't be bound to the port (eg. another program uses it, or the OS has excluded
+   // it), the port is freed and the next one tried, until each in the range has been - except a
+   // reserved port, which the reservation token names
+   const unsigned int portsInRange = getConfig().mAllocationPortRangeMax - getConfig().mAllocationPortRangeMin + 1;
+   for(unsigned int attempt = 1; ; ++attempt)
    {
-      allocation = new TurnAllocation(mTurnManager,
-                                      turnAllocationManager,
-                                      turnSocket, 
-                                      request.mLocalTuple, 
-                                      request.mRemoteTuple, 
-                                      StunAuth(*request.mUsername, response.mHmacKey), // The HMAC is already calculated and added to the response in handleAuthentication
-                                      allocationTuple, 
-                                      lifetime);
-      if(!allocation->startRelay())
+      unsigned short port = 0;  // Default to Any free port
+      if(request.mHasTurnEvenPort)
       {
-         // TODO - we could handle this better perhaps try to allocate a new port
-         ErrLog(<< "Error starting allocation relay.  Sending 500. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 500, "Server Error");  
+         if(request.mTurnEvenPort.propType == StunMessage::PropsPortEven)
+         {
+            // Attempt to allocate an even port
+            port = mTurnManager.allocateEvenPort(allocationTuple.getTransportType());
+         }
+         else if(request.mTurnEvenPort.propType == StunMessage::PropsPortPair)
+         {
+            // Attempt to allocate an even port, with a free adjacent odd port
+            port = mTurnManager.allocateEvenPortPair(allocationTuple.getTransportType());
+
+            // Add Reservation Token to response - for now just use reserved port number as token
+            response.mHasTurnReservationToken = port != 0;
+            response.mTurnReservationToken = port + 1;
+         }
+         if(port == 0)
+         {
+            WarningLog(<< "Unable to allocate requested port.  Sending 508. Sender=" << request.mRemoteTuple);
+            buildErrorResponse(response, 508, "Insufficient Port Capacity");
+            return RespondFromReceiving;
+         }
+      }
+
+      if(request.mHasTurnReservationToken)
+      {
+         // Try to allocate reserved port - for now reservation token is reserved port number
+         port = (unsigned short)request.mTurnReservationToken;
+         if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), port, true /* allocate reserved */))
+         {
+            WarningLog(<< "Unable to allocate requested port - bad reservation token.  Sending 508. Sender=" << request.mRemoteTuple);
+            buildErrorResponse(response, 508, "Insufficient Port Capacity");
+            return RespondFromReceiving;
+         }
+      }
+
+      if(port == 0)
+      {
+         // Allocate any available port
+         port = mTurnManager.allocateAnyPort(allocationTuple.getTransportType());
+         if(port == 0)
+         {
+            WarningLog(<< "Unable to allocate port.  Sending 508. Sender=" << request.mRemoteTuple);
+            buildErrorResponse(response, 508, "Insufficient Port Capacity");
+            return RespondFromReceiving;
+         }
+      }
+
+      allocationTuple.setPort(port);
+
+      // We now have an internal 5-Tuple and an allocation tuple - create the allocation
+      try
+      {
+         allocation = new TurnAllocation(mTurnManager,
+                                         turnAllocationManager,
+                                         turnSocket,
+                                         request.mLocalTuple,
+                                         request.mRemoteTuple,
+                                         StunAuth(*request.mUsername, response.mHmacKey), // The HMAC is already calculated and added to the response in handleAuthentication
+                                         allocationTuple,
+                                         lifetime);
+      }
+      catch (const asio::system_error&)
+      {
+         mTurnManager.deallocatePort(allocationTuple.getTransportType(), port);
+         ErrLog(<< "Error allocating socket for allocation.  Sending 500. Sender=" << request.mRemoteTuple);
+         response.mHasTurnReservationToken = false;
+         buildErrorResponse(response, 500, "Server Error");
          return RespondFromReceiving;
       }
-   }
-   catch(asio::system_error e)
-   {
-      // TODO - handle port in use error better - try to allocate a new port or something?
-      ErrLog(<< "Error allocating socket for allocation.  Sending 500. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 500, "Server Error");  
-      return RespondFromReceiving;
+
+      if(allocation->startRelay())
+      {
+         break;
+      }
+      delete allocation;  // frees its port (and a port reserved with it), and its place in the user's quota
+      allocation = 0;
+      if(request.mHasTurnReservationToken || attempt >= portsInRange)
+      {
+         ErrLog(<< "Unable to start an allocation relay.  Sending 508. Sender=" << request.mRemoteTuple);
+         response.mHasTurnReservationToken = false;
+         buildErrorResponse(response, 508, "Insufficient Port Capacity");
+         return RespondFromReceiving;
+      }
+      WarningLog(<< "Unable to start an allocation relay on port " << port << ", trying another.  Sender=" << request.mRemoteTuple);
    }
 
    // Add the new allocation to be managed
@@ -635,7 +662,7 @@ RequestHandler::processTurnRefreshRequest(TurnAllocationManager& turnAllocationM
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn refresh request without authentication.  Sending 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str());  
+      buildErrorResponseWithRealmAndNonce(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm, request);
       return RespondFromReceiving;
    }
 
@@ -680,7 +707,7 @@ RequestHandler::processTurnRefreshRequest(TurnAllocationManager& turnAllocationM
       return RespondFromReceiving;
    }
 
-   UInt32 lifetime = getConfig().mDefaultAllocationLifetime;
+   uint32_t lifetime = getConfig().mDefaultAllocationLifetime;
    if(request.mHasTurnLifetime)
    {
       // Check if the requested value is greater than the server max
@@ -720,7 +747,7 @@ RequestHandler::processTurnCreatePermissionRequest(TurnAllocationManager& turnAl
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn create permission request without authentication.  Send 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str());  
+      buildErrorResponseWithRealmAndNonce(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm, request);
       return RespondFromReceiving;
    }
 
@@ -779,7 +806,7 @@ RequestHandler::processTurnChannelBindRequest(TurnAllocationManager& turnAllocat
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn channel bind request without authentication.  Send 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str() );  
+      buildErrorResponseWithRealmAndNonce(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm, request);
       return RespondFromReceiving;
    }
 
@@ -876,12 +903,12 @@ RequestHandler::processTurnSendIndication(TurnAllocationManager& turnAllocationM
    // Shouldn't have more than one xor-peer-address attribute in this request
    StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress[0]);
 
-   boost::shared_ptr<DataBuffer> data(new DataBuffer(request.mTurnData->data(), request.mTurnData->size()));
+   const auto data = std::make_shared<DataBuffer>(request.mTurnData->data(), request.mTurnData->size());
    allocation->sendDataToPeer(remoteAddress, data, false /* isFramed? */);
 }
 
 void 
-RequestHandler::processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data)
+RequestHandler::processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, const std::shared_ptr<DataBuffer>& data)
 {
    TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(localTuple, remoteTuple));
 
@@ -899,6 +926,7 @@ RequestHandler::processTurnData(TurnAllocationManager& turnAllocationManager, un
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

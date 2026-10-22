@@ -64,7 +64,7 @@ class InMemorySyncRegDb : public RegistrationPersistenceManager
       virtual void addAor(const Uri& aor, const ContactList& contacts);
       virtual void removeAor(const Uri& aor);
       virtual bool aorIsRegistered(const Uri& aor);
-      virtual bool aorIsRegistered(const Uri& aor, UInt64* maxExpires);
+      virtual bool aorIsRegistered(const Uri& aor, uint64_t* maxExpires);
       
       virtual void lockRecord(const Uri& aor);
       virtual void unlockRecord(const Uri& aor);

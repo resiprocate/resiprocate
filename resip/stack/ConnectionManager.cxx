@@ -19,8 +19,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-UInt64 ConnectionManager::MinimumGcAge = 1;  // in milliseconds
-UInt64 ConnectionManager::MinimumGcHeadroom = 0;
+uint64_t ConnectionManager::MinimumGcAge = 1;  // in milliseconds
+uint64_t ConnectionManager::MinimumGcHeadroom = 0;
 bool ConnectionManager::EnableAgressiveGc = false;
 
 ConnectionManager::ConnectionManager() : 
@@ -241,10 +241,11 @@ ConnectionManager::removeConnection(Connection* connection)
 
 // release excessively old connections (free up file descriptors)
 unsigned int
-ConnectionManager::gc(UInt64 relThreshold, unsigned int maxToRemove)
+ConnectionManager::gc(uint64_t relThreshold, unsigned int maxToRemove)
 {
-   UInt64 curTimeMs = Timer::getTimeMs();
-   UInt64 threshold = curTimeMs - relThreshold;
+   uint64_t curTimeMs = Timer::getTimeMs();
+   uint64_t threshold = curTimeMs > relThreshold ? curTimeMs - relThreshold : 0;  // Ensure we don't underflow
+
    DebugLog(<< "recycling connections not used in last " << relThreshold/1000.0 << " seconds");
 
    // Look through non-flow-timer connections and close those using the passed in relThreshold
@@ -272,7 +273,8 @@ ConnectionManager::gc(UInt64 relThreshold, unsigned int maxToRemove)
    // value + the configured grace period as a threshold
    if(mFlowTimerLRUHead->begin() != mFlowTimerLRUHead->end())
    {
-      threshold = curTimeMs - ((InteropHelper::getFlowTimerSeconds() + InteropHelper::getFlowTimerGracePeriodSeconds()) * 1000);
+      uint64_t flowTimerPeriodMs = (InteropHelper::getFlowTimerSeconds() + InteropHelper::getFlowTimerGracePeriodSeconds()) * 1000;
+      threshold = curTimeMs > flowTimerPeriodMs ? curTimeMs - flowTimerPeriodMs : 0;
       for (FlowTimerLruList::iterator i2 = mFlowTimerLRUHead->begin();
          i2 != mFlowTimerLRUHead->end() &&
          (maxToRemove == 0 || numRemoved != maxToRemove);)
@@ -301,7 +303,7 @@ ConnectionManager::gc(UInt64 relThreshold, unsigned int maxToRemove)
       struct rlimit rlim;
       if(getrlimit(RLIMIT_NOFILE, &rlim) != 0)
       {
-         ErrLog(<<"Call to getrlimit() for RLIMIT_NOFILE failed: " << strerror(errno));
+         ErrLog(<<"Call to getrlimit() for RLIMIT_NOFILE failed: " << strError(errno));
       }
       else
       {
@@ -346,16 +348,16 @@ ConnectionManager::gcWithTarget(unsigned int target)
       }
       else
       {
-         if(i2 == mFlowTimerLRUHead->end() ||
+         if (i2 == mFlowTimerLRUHead->end() ||
             (*i)->whenLastUsed() < (*i2)->whenLastUsed())
          {
-                  discard = *i;
-                  ++i;
+            discard = *i;
+            ++i;
          }
          else
          {
-                  discard = *i2;
-                  ++i2;
+            discard = *i2;
+            ++i2;
          }
       }
       resip_assert(discard);
@@ -410,7 +412,10 @@ ConnectionManager::process(FdSet& fdset)
 
       if (fdset.readyToWrite(currConnection->getSocket()))
       {
-         currConnection->performWrites();
+         if (!currConnection->performWrites())
+         {
+            delete currConnection;
+         }
       }
       else if (fdset.hasException(currConnection->getSocket()))
       {
@@ -460,6 +465,15 @@ ConnectionManager::setPollGrp(FdPollGrp *grp)
     // anyway.
     closeConnections();
     mPollGrp = grp;
+}
+
+void 
+ConnectionManager::invokeAfterSocketCreationFunc() const
+{
+    for (AddrMap::const_iterator it = mAddrMap.begin(); it != mAddrMap.end(); it++)
+    {
+        it->second->invokeAfterSocketCreationFunc();
+    }
 }
 
 /* ====================================================================

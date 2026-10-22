@@ -1,6 +1,10 @@
 #include "StunTuple.hxx"
+#include "rutil/Logger.hxx"
+#include "ReTurnSubsystem.hxx"
 
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 namespace reTurn {
 
@@ -54,6 +58,37 @@ StunTuple::operator<(const StunTuple& rhs) const
       return mPort < rhs.mPort;
    }
    return false;
+}
+
+void
+StunTuple::toSockaddr(sockaddr* addr) const
+{
+   resip_assert(!mAddress.is_unspecified());
+   if(mAddress.is_v4())
+   {
+      memset(addr, 0, sizeof(sockaddr_in));
+      sockaddr_in* sa = reinterpret_cast<sockaddr_in*>(addr);
+      sa->sin_family = AF_INET;
+      sa->sin_port = htons(mPort);
+      asio::ip::address_v4::bytes_type buf = mAddress.to_v4().to_bytes();
+      memcpy(&sa->sin_addr.s_addr, buf.data(), buf.size());
+   }
+#ifdef USE_IPV6
+   else if(mAddress.is_v6())
+   {
+      memset(addr, 0, sizeof(sockaddr_in6));
+      sockaddr_in6* sa6 = reinterpret_cast<sockaddr_in6*>(addr);
+      sa6->sin6_family = AF_INET6;
+      sa6->sin6_port = htons(mPort);
+      asio::ip::address_v6::bytes_type buf = mAddress.to_v6().to_bytes();
+      memcpy(&sa6->sin6_addr.s6_addr, buf.data(), buf.size());
+   }
+#endif
+   else
+   {
+      ErrLog(<<"mAddress is not a supported address family");
+      resip_assert(1); // FIXME
+   }
 }
 
 EncodeStream&

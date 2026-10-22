@@ -26,7 +26,7 @@ using namespace resip;
 using namespace std;
 
 const Data Data::Empty("", 0);
-const Data::size_type Data::npos = UINT_MAX;
+const Data::size_type Data::npos = std::string::npos;
 
 Data::PreallocateType::PreallocateType(int)
 {}
@@ -322,7 +322,7 @@ Data::Data(ShareEnum se, const char* buffer, size_type length, size_type capacit
 
 Data::Data(ShareEnum se, const char* buffer)
    : mBuf(const_cast<char*>(buffer)),
-     mSize(strlen(buffer)),
+     mSize((Data::size_type)strlen(buffer)),
      mCapacity(mSize),
      mShareEnum(se)
 {
@@ -344,36 +344,42 @@ Data::Data(ShareEnum se, const Data& staticData)
 
 Data::Data(const char* str)
 {
-   initFromString(str, str ? strlen(str) : 0);
+   initFromString(str, str ? (Data::size_type)strlen(str) : 0);
 }
 
 Data::Data(const string& str)
 {
-   initFromString(str.c_str(), str.size());
+   initFromString(str.c_str(), (Data::size_type)str.size());
 }
+
+#if RESIP_HAVE_STRING_VIEW
+/**
+  Creates a data with the contents of the string_view.
+*/
+ Data::Data(const std::string_view sv)
+{
+   initFromString(sv.data(), (Data::size_type)sv.size());
+}
+#endif
 
 Data::Data(const Data& data) 
 {
    initFromString(data.mBuf, data.mSize);
 }
 
-#ifdef RESIP_HAS_RVALUE_REFS
-Data::Data(Data &&data)
+Data::Data(Data &&data) noexcept
    : mBuf(mPreBuffer),mSize(0),mCapacity(LocalAlloc),mShareEnum(Borrow)
 {
    *this = std::move(data);
 }
-#endif
 
 // -2147483646
 static const int Int32MaxSize = 11;
 
-static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*Int32MaxSize;
-
 // 18446744073709551615
 static const int UInt64MaxSize = 20;
 
-Data::Data(Int32 val)
+Data::Data(int32_t val)
    : mBuf(Int32MaxSize > LocalAlloc 
           ? new char[Int32MaxSize + 1]
           : mPreBuffer),
@@ -393,7 +399,7 @@ Data::Data(Int32 val)
 
    bool neg = false;
    
-   Int32 value = val;
+   int32_t value = val;
    if (value < 0)
    {
       value = -value;
@@ -401,7 +407,7 @@ Data::Data(Int32 val)
    }
 
    int c = 0;
-   Int32 v = value;
+   int32_t v = value;
    while (v /= 10)
    {
       ++c;
@@ -452,7 +458,7 @@ Data::Data(double value,
       v = -v;
    }
 
-   Data m((UInt64)v);
+   Data m((uint64_t)v);
 
    // remainder
    v = v - floor(v);
@@ -517,7 +523,7 @@ Data::Data(double value,
 }
 #endif
 
-Data::Data(UInt32 value)
+Data::Data(uint32_t value)
    : mBuf(Int32MaxSize > LocalAlloc 
           ? new char[Int32MaxSize + 1]
           : mPreBuffer),
@@ -536,7 +542,7 @@ Data::Data(UInt32 value)
    }
 
    int c = 0;
-   UInt32 v = value;
+   uint32_t v = value;
    while (v /= 10)
    {
       ++c;
@@ -555,7 +561,7 @@ Data::Data(UInt32 value)
    }
 }
 
-Data::Data(UInt64 value)
+Data::Data(uint64_t value)
    : mBuf(UInt64MaxSize > LocalAlloc 
           ? new char[UInt64MaxSize + 1]
           : mPreBuffer),
@@ -574,7 +580,7 @@ Data::Data(UInt64 value)
    }
 
    int c = 0;
-   UInt64 v = value;
+   uint64_t v = value;
    while (v /= 10)
    {
       ++c;
@@ -586,7 +592,7 @@ Data::Data(UInt64 value)
    v = value;
    while (v)
    {
-      UInt64 digit = v%10;
+      uint64_t digit = v%10;
       unsigned char d = (char)digit;
       mBuf[c--] = '0' + d;
       v /= 10;
@@ -630,7 +636,7 @@ Data::setBuf(ShareEnum se, const char* buffer, size_type length)
 }
 
 Data&
-Data::takeBuf(Data& other)
+Data::takeBuf(Data& other) noexcept
 {
    if ( &other == this )
       return *this;
@@ -749,12 +755,22 @@ resip::operator==(const Data& lhs, const char* rhs)
    {
       return false;
    }
-   else
-   {
-      // make sure the string terminates at size
-      return (rhs[lhs.mSize] == 0);
-   }
+   return strlen(rhs) == lhs.mSize;
 }
+
+bool
+resip::operator==(const Data& lhs, const std::string& rhs) noexcept
+{
+   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.c_str(), rhs.size()) == 0;
+}
+
+#if RESIP_HAVE_STRING_VIEW
+bool
+resip::operator==(const Data& lhs, const std::string_view rhs) noexcept
+{
+   return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), rhs.size()) == 0;
+}
+#endif
 
 bool
 resip::operator<(const Data& lhs, const Data& rhs)
@@ -779,7 +795,7 @@ bool
 resip::operator<(const Data& lhs, const char* rhs)
 {
    resip_assert(rhs);
-   Data::size_type l = strlen(rhs);
+   Data::size_type l = (Data::size_type)strlen(rhs);
    int res = memcmp(lhs.mBuf, rhs, resipMin(lhs.mSize, l));
 
    if (res < 0)
@@ -800,7 +816,7 @@ bool
 resip::operator<(const char* lhs, const Data& rhs)
 {
    resip_assert(lhs);
-   Data::size_type l = strlen(lhs);
+   Data::size_type l = (Data::size_type)strlen(lhs);
    int res = memcmp(lhs, rhs.mBuf, resipMin(l, rhs.mSize));
 
    if (res < 0)
@@ -817,6 +833,51 @@ resip::operator<(const char* lhs, const Data& rhs)
    }
 }
 
+bool
+resip::operator<(const Data& lhs, const std::string& rhs) noexcept
+{
+   const Data::size_type l = rhs.size();
+   if (lhs.mSize != l)
+   {
+      return lhs.mSize < l;
+   }
+   return memcmp(lhs.mBuf, rhs.c_str(), lhs.mSize) < 0;
+}
+
+bool
+resip::operator<(const std::string& lhs, const Data& rhs) noexcept
+{
+   const Data::size_type lhsSize = lhs.size();
+   if (lhsSize != rhs.mSize)
+   {
+      return lhsSize < rhs.mSize;
+   }
+   return memcmp(lhs.c_str(), rhs.mBuf, lhsSize) < 0;
+}
+
+#if RESIP_HAVE_STRING_VIEW
+bool
+resip::operator<(const Data& lhs, const std::string_view rhs) noexcept
+{
+   const Data::size_type rhsSize = rhs.size();
+   if (lhs.mSize != rhsSize)
+   {
+      return lhs.mSize < rhsSize;
+   }
+   return memcmp(lhs.mBuf, rhs.data(), lhs.mSize) < 0;
+}
+
+bool
+resip::operator<(const std::string_view lhs, const Data& rhs) noexcept
+{
+   const Data::size_type lhsSize = lhs.size();
+   if (lhsSize != rhs.mSize)
+   {
+      return lhsSize < rhs.mSize;
+   }
+   return memcmp(lhs.data(), rhs.mBuf, lhsSize) < 0;
+}
+#endif
 
 
 #if 0
@@ -852,29 +913,14 @@ Data::operator=(const Data& data)
 }
 #endif
 
-#ifdef RESIP_HAS_RVALUE_REFS
-Data& Data::operator=(Data &&data)
+Data& Data::operator=(Data &&data) noexcept
 {
-   if (&data != this)
-   {
-      if (data.mPreBuffer != data.mBuf)
-      {
-         //data is not using the local buffer, take ownership of data.
-         mBuf = data.mBuf;
-         mCapacity = data.mCapacity;
-         mShareEnum = data.mShareEnum;
-         mSize = data.mSize;
-         data.mShareEnum = Borrow; //don't delete the transferred buffer in data's destructor.
-      }
-      else
-      {
-         *this = data; //lvalue assignment operator will be called for named rvalue.
-      }
-   }
-   
-   return *this;
+   // Delegate to takeBuf(), which releases any buffer currently owned by *this,
+   // steals data's buffer (or copies when data uses its local buffer), and
+   // leaves data in a valid empty state. The earlier hand-rolled implementation
+   // leaked *this's heap buffer and left data aliasing the stolen buffer.
+   return takeBuf(data);
 }
-#endif
 
 Data::size_type
 Data::truncate(size_type len)
@@ -987,7 +1033,7 @@ Data
 Data::operator+(const char* str) const
 {
    resip_assert(str);
-   size_t l = strlen(str);
+   Data::size_type l = (Data::size_type)strlen(str);
    Data tmp(mSize + l, Data::Preallocate);
    tmp.mSize = mSize + l;
    tmp.mCapacity = tmp.mSize;
@@ -1056,6 +1102,20 @@ Data::c_str() const
    mBuf[mSize] = 0;
    return mBuf;
 }
+
+std::string 
+Data::toString() const
+{
+   return std::string(c_str(), size());
+}
+
+#if RESIP_HAVE_STRING_VIEW
+std::string_view 
+Data::toStringView() const
+{
+   return std::string_view(c_str(), size());
+}
+#endif
 
 void
 Data::own() const
@@ -1236,8 +1296,8 @@ Data::charUnencoded() const
       {
          if ( i+2 < size())
          {
-            const char* high = strchr(hexmap, tolower(*p++));
-            const char* low = strchr(hexmap, tolower(*p++));
+            const char* high = strchr(hexmap, tolower(static_cast< unsigned char >(*p++)));
+            const char* low = strchr(hexmap, tolower(static_cast< unsigned char >(*p++)));
 
             // !rwm! changed from high==0 || low==0
             if (high == 0 && low == 0)
@@ -1246,7 +1306,7 @@ Data::charUnencoded() const
                // ugh
                return ret;
             }
-            
+
             int highInt = int(high - hexmap);
             int lowInt = int(low - hexmap);
             ret += char(highInt<<4 | lowInt);
@@ -1576,7 +1636,7 @@ Data::lowercase()
    char* p = mBuf;
    for (size_type i=0; i < mSize; ++i)
    {
-      *p = tolower(*p);
+      *p = tolower(static_cast< unsigned char >(*p));
       ++p;
    }
    return *this;
@@ -1589,7 +1649,7 @@ Data::uppercase()
    char* p = mBuf;
    for (size_type i=0; i < mSize; ++i)
    {
-      *p = toupper(*p);
+      *p = toupper(static_cast< unsigned char >(*p));
       ++p;
    }
    return *this;
@@ -1628,7 +1688,7 @@ Data::convertInt() const
 
    for (; p != end; ++p)
    {
-      if (!isspace(*p))
+      if (!isspace(static_cast< unsigned char >(*p)))
       {
          goto sign_char;
       }
@@ -1648,7 +1708,7 @@ sign_char:
 
    for(; p != end; ++p)
    {
-      if (!isdigit(*p))
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          break;
       }
@@ -1667,7 +1727,7 @@ Data::convertUnsignedLong() const
 
    for (; p != end; ++p)
    {
-      if (!isspace(*p))
+      if (!isspace(static_cast< unsigned char >(*p)))
       {
          goto sign_char;
       }
@@ -1682,7 +1742,7 @@ sign_char:
 
    for(; p != end; ++p)
    {
-      if (!isdigit(*p))
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          break;
       }
@@ -1692,16 +1752,16 @@ sign_char:
    return val;
 }
 
-UInt64
+uint64_t
 Data::convertUInt64() const
 {
-   UInt64 val = 0;
+   uint64_t val = 0;
    char* p = mBuf;
    const char* const end = mBuf + mSize;
 
    for (; p != end; ++p)
    {
-      if (!isspace(*p))
+      if (!isspace(static_cast< unsigned char >(*p)))
       {
          goto sign_char;
       }
@@ -1716,7 +1776,7 @@ sign_char:
 
    for(; p != end; ++p)
    {
-      if (!isdigit(*p))
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          break;
       }
@@ -1735,7 +1795,7 @@ Data::convertSize() const
 
    for (; p != end; ++p)
    {
-      if (!isspace(*p))
+      if (!isspace(static_cast< unsigned char >(*p)))
       {
          goto sign_char;
       }
@@ -1750,7 +1810,7 @@ sign_char:
 
    for(; p != end; ++p)
    {
-      if (!isdigit(*p))
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          break;
       }
@@ -1771,7 +1831,7 @@ Data::convertDouble() const
 
    for (; p != end; ++p)
    {
-      if (!isspace(*p))
+      if (!isspace(static_cast< unsigned char >(*p)))
       {
          goto sign_char;
       }
@@ -1795,7 +1855,7 @@ sign_char:
       {
          goto decimals;
       }
-      if (!isdigit(*p))
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          return s*val;
       }
@@ -1810,7 +1870,7 @@ decimals:
    double div = 1.0;
    for(; p != end; ++p)
    {
-      if (!isdigit(*p)) 
+      if (!isdigit(static_cast< unsigned char >(*p)))
       {
          break;
       }
@@ -1823,7 +1883,7 @@ decimals:
 #endif
 
 bool
-Data::prefix(const Data& pre) const
+Data::prefix(const Data& pre) const noexcept
 {
    if (pre.size() > size())
    {
@@ -1834,7 +1894,18 @@ Data::prefix(const Data& pre) const
 }
 
 bool
-Data::postfix(const Data& post) const
+Data::prefixNoCase(const Data& pre) const noexcept
+{
+   if (pre.size() > size())
+   {
+      return false;
+   }
+
+   return strncasecmp(data(), pre.data(), pre.size()) == 0;
+}
+
+bool
+Data::postfix(const Data& post) const noexcept
 {
    if (post.size() > size())
    {
@@ -1842,6 +1913,17 @@ Data::postfix(const Data& post) const
    }
 
    return memcmp(data() + (size()-post.size()), post.data(), post.size()) == 0;
+}
+
+bool
+Data::postfixNoCase(const Data& post) const noexcept
+{
+   if (post.size() > size())
+   {
+      return false;
+   }
+
+   return strncasecmp(data() + (size() - post.size()), post.data(), post.size()) == 0;
 }
 
 Data 
@@ -1869,7 +1951,7 @@ Data::find(const Data& match,
       pb.skipToChars(match);
       if (!pb.eof())
       {
-         return pb.position() - pb.start() + start;
+         return (Data::size_type)(pb.position() - pb.start() + start);
       }
    }
 
@@ -2002,8 +2084,8 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
 #if defined(RESIP_BIG_ENDIAN) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
 
 #if !defined (get16bits)
-#define get16bits(d) ((((UInt32)(((const UInt8 *)(d))[0])) << 8)\
-                       +(UInt32)(((const UInt8 *)(d))[1]) )
+#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[0])) << 8)\
+                       +(uint32_t)(((const uint8_t *)(d))[1]) )
 #endif
 
 #if !defined (get32bits)
@@ -2015,18 +2097,18 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
 #undef get16bits
 #if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
   || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
-#define get16bits(d) (*((const UInt16 *) (d)))
+#define get16bits(d) (*((const uint16_t *) (d)))
 #endif
 
 #if !defined (get16bits)
-#define get16bits(d) ((((UInt32)(((const UInt8 *)(d))[1])) << 8)\
-                       +(UInt32)(((const UInt8 *)(d))[0]) )
+#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)\
+                       +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif
 
 #undef get32bits
 #if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
   || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
-#define get32bits(d) (*((const UInt32 *) (d)))
+#define get32bits(d) (*((const uint32_t *) (d)))
 #endif
 
 #if !defined (get32bits)
@@ -2047,7 +2129,7 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
 {
    // .bwc. Hsieh hash, with some bitmasking to get the case-insensitive 
    // property (this is what all the "0x2020 |" business is about.)
-   UInt32 hash = len, tmp;
+   uint32_t hash = (uint32_t)len, tmp;
    int rem;
 
     if (len <= 0 || data == NULL) return 0;
@@ -2057,8 +2139,8 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
 
     union 
     {
-          UInt32 masked;
-          UInt16 ui16[2];
+          uint32_t masked;
+          uint16_t ui16[2];
     };
 
     /* Main loop */
@@ -2067,9 +2149,9 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
         // mask out bit 6 for case-insensitivity
         masked = (0x20202020 | get32bits(data));
         hash  += ui16[0];
-        tmp    = ((UInt32)ui16[1] << 11) ^ hash;
+        tmp    = ((uint32_t)ui16[1] << 11) ^ hash;
         hash   = (hash << 16) ^ tmp;
-        data  += 2*sizeof (UInt16);
+        data  += 2*sizeof (uint16_t);
         hash  += hash >> 11;
     }
 
@@ -2078,7 +2160,7 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
     {
         case 3: hash += (0x2020 | get16bits (data));
                 hash ^= hash << 16;
-                hash ^= (0x20 | data[sizeof (UInt16)]) << 18;
+                hash ^= (0x20 | data[sizeof (uint16_t)]) << 18;
                 hash += hash >> 11;
                 break;
         case 2: hash += (0x2020 | get16bits (data));
@@ -2116,8 +2198,8 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
 //   {
 //       union
 //       {
-//         UInt32 temp;
-//         UInt8 cccc[4];
+//         uint32_t temp;
+//         uint8_t cccc[4];
 //       };
 //       // .bwc. Mask out bit 6, use a multiplication op to write the 
 //       // resulting byte to each of the 4 bytes in temp, and xor the whole 
@@ -2214,14 +2296,14 @@ Data::sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const
    compUnalignedRemainder(d1, d2, unalignedPrefix);
 
    // We are now on a 32-bit boundary with d1.
-   UInt32* wd1((UInt32*)(d1));
+   uint32_t* wd1((uint32_t*)(d1));
    size_t wordLen=(mSize-unalignedPrefix)>>2;
    int rem=(mSize-unalignedPrefix)&3;
 
    if((ptrdiff_t)(d2)%4==0)
    {
       // d2 is aligned too. Happy day!
-      UInt32* wd2((UInt32*)(d2));
+      uint32_t* wd2((uint32_t*)(d2));
       for (;wordLen > 0; wordLen--)
       {
          // bitwise xor is zero iff equal, but we only really care about bits 
@@ -2241,7 +2323,7 @@ Data::sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const
       {
          // bitwise xor is zero iff equal, but we only really care about bits 
          // other than bit 6, so we mask out bit 6 after the xor.
-         UInt32 test=get32bits(d2);
+         uint32_t test=get32bits(d2);
          if( (*wd1 ^ test) & 0xDFDFDFDF)
          {
             return false;
@@ -2325,8 +2407,7 @@ Data::fromFile(const Data& filename)
    is.open(filename.c_str(), ios::binary );
    if ( !is.is_open() )
    {
-      throw DataException("Could not read file ",
-                                    __FILE__,__LINE__);
+      throw DataException("Could not read file " + filename, __FILE__,__LINE__);
    }
 
    resip_assert(is.is_open());
@@ -2535,6 +2616,7 @@ Data::base64encode(bool useSafeSet) const
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -41,8 +41,6 @@ _enum##_Param::_enum##_Param()                                                  
 }                                                                               \
 _enum##_Param resip::p_##_enum
 
-int strncasecmp(char*,char*,int);
-
 using namespace std;
 
 using namespace resip;
@@ -64,7 +62,7 @@ defineParam(language, "language", QuotedDataParameter, NameAddr, "RFC 3840"); //
 defineParam(type, "type", QuotedDataParameter, NameAddr, "RFC 3840"); // list
 defineParam(isFocus, "isfocus", ExistsParameter, NameAddr, "RFC 3840");
 defineParam(actor, "actor", QuotedDataParameter, NameAddr, "RFC 3840"); // principal|msg-taker|attendant|information
-defineParam2(text, "text", ExistsOrDataParameter, NameAddr, Token, "RFC 3326/3840");
+defineParam2(text, "text", ExistsOrQuotedDataParameter, NameAddr, Token, "RFC 3326/3840");
 defineParam(cause, "cause", UInt32Parameter, Token, "RFC3326");
 defineParam(extensions, "extensions", QuotedDataParameter, NameAddr, "RFC 3840"); //list
 defineParam(Instance, "+sip.instance", QuotedDataParameter, NameAddr, "RFC 5626");  // <> quoted
@@ -107,8 +105,8 @@ defineParam(protocol, "protocol", QuotedDataParameter, Mime, "RFC 1847");
 defineParam2(purpose, "purpose", DataParameter, GenericUri, TokenOrQuotedStringCategory, "RFC 3261, draft-ietf-cuss-sip-uui-17");
 defineParam3(q, "q", QValueParameter, NameAddr, Token, Mime, "RFC 3261");
 defineParam(realm, "realm", QuotedDataParameter, Auth, "RFC 2617");
-defineParam(reason, "reason", DataParameter, Token, "RFC 3265");
-defineParam(received, "received", DataParameter, Via, "RFC 3261");
+defineParam2(reason, "reason", DataParameter, Token, NameAddr, "RFC 3265, 5806");
+defineParam(received, "received", ReceivedParameter, Via, "RFC 3261");
 defineParam(require, "require", ExistsParameter, Token, "RFC 5373");
 defineParam(response, "response", QuotedDataParameter, Auth, "RFC 3261");
 defineParam(retryAfter, "retry-after", UInt32Parameter, Token, "RFC 3265");
@@ -161,6 +159,15 @@ defineParam(termIoi, "term-ioi", DataParameter, Token, "RFC 3455"); // P-Chargin
 defineParam(content, "content", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"); // User-to-User
 defineParam(encoding, "encoding", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"); // User-to-User
 
+defineParam(info, "info", UriParameter, IdentityCategory, "RFC 8224");
+defineParam(alg, "alg", DataParameter, GenericUri, "RFC 8224");
+defineParam(ppt, "ppt", DataParameter, GenericUri, "RFC 8224");
+
+defineParam(counter, "counter", UInt32Parameter, NameAddr, "RFC 5806");
+defineParam(limit, "limit", UInt32Parameter, NameAddr, "RFC 5806");
+defineParam(privacy, "privacy", DataParameter, NameAddr, "RFC 5806");
+defineParam(screen, "screen", DataParameter, NameAddr, "RFC 5806");
+
 // Internal use only
 defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");
 defineParam(addTransport, "addTransport", ExistsParameter, Uri, "RESIP INTERNAL");
@@ -170,7 +177,7 @@ defineParam(wsSrcPort, "ws-src-port", UInt32Parameter, Uri, "RESIP INTERNAL (Web
 #include "resip/stack/ParameterHash.hxx"
 
 ParameterTypes::Type
-ParameterTypes::getType(const char* pname, unsigned int len)
+ParameterTypes::getType(const char* pname, size_t len)
 {
    const struct params* p;
    p = ParameterHash::in_word_set(pname, len);
@@ -181,6 +188,7 @@ ParameterTypes::getType(const char* pname, unsigned int len)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

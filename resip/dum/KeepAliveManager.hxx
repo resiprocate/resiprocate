@@ -37,7 +37,7 @@ class KeepAliveManager
 
       KeepAliveManager() : mCurrentId(0) {}
       virtual ~KeepAliveManager() {}
-      void setDialogUsageManager(DialogUsageManager* dum) { mDum = dum; }
+      void setDialogUsageManager(DialogUsageManager* dum) noexcept { mDum = dum; }
       virtual void add(const Tuple& target, int keepAliveInterval, bool targetSupportsOutbound);
       virtual void remove(const Tuple& target);
       virtual void process(KeepAliveTimeout& timeout);

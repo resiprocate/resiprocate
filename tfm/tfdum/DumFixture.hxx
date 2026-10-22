@@ -13,13 +13,15 @@
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/Uri.hxx"
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "tfm/SequenceSet.hxx"
 #include "tfm/TestUser.hxx"
 #include "tfm/repro/TestReproUser.hxx"
 #include "tfm/Source.hxx"
 #include "tfm/TestSipEndPoint.hxx"
 #include "tfm/tfdum/TfdTestSipEndPoint.hxx"
+
+#include <memory>
 
 class DumFixture : public CppUnit::TestFixture
 {
@@ -35,7 +37,7 @@ class DumFixture : public CppUnit::TestFixture
 
       static DumUserAgent* createUserAgentForFailoverTest(const resip::Data& user, const resip::Data&);
       
-      static std::auto_ptr<resip::Pidf> makePidf(const DumUserAgent* dua);
+      static std::unique_ptr<resip::GenericPidfContents> makePidf(const DumUserAgent* dua, bool online = true);
 
       static resip::ExternalDns* createExternalDns();
 

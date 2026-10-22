@@ -138,7 +138,7 @@ RendExpireTracker::pushDlg(RendSession& sess, RendTimeUs when_abs)
 {
    resip_assert( when_abs >= mEpoch );
    RendTimeUs when = when_abs - mEpoch;
-   unsigned bIdx = REND_US2S(when) / mSecsPerBucket;
+   unsigned bIdx = (unsigned)REND_US2S(when) / mSecsPerBucket;
    if ( bIdx < mHeadIdx ) 
    {
       WarningLog(<<"Tracker "<<mDesc<<": Got time that is early.");
@@ -165,7 +165,7 @@ RendExpireTracker::popDlg(RendTimeUs now_abs)
 {
    resip_assert( now_abs >= mEpoch );
    RendTimeUs now = now_abs - mEpoch;
-   unsigned nowIdx = REND_US2S(now) / mSecsPerBucket;
+   unsigned nowIdx = (unsigned)REND_US2S(now) / mSecsPerBucket;
    if ( nowIdx < mHeadIdx ) 
    {
       ErrLog(<<"NOW jumped backwards. Ignoring.");
@@ -299,11 +299,11 @@ RendTroopBase::addTroopReport(RendTroopReport& rpt)
    }
 #else
    rpt.add(mRpt);
-   rpt.mMoodIdleCnt += mMoods[REND_SM_Idle].mChain.size();
-   rpt.mMoodOpenCnt += mMoods[REND_SM_Open].mChain.size();
-   rpt.mMoodPendReqCnt += mMoods[REND_SM_PendReq].mChain.size();
-   rpt.mMoodPendNotifyCnt += mMoods[REND_SM_PendNotify].mChain.size();
-   rpt.mMoodWaveCnt += mMoods[REND_SM_Wave].mChain.size();
+   rpt.mMoodIdleCnt += (int)mMoods[REND_SM_Idle].mChain.size();
+   rpt.mMoodOpenCnt += (int)mMoods[REND_SM_Open].mChain.size();
+   rpt.mMoodPendReqCnt += (int)mMoods[REND_SM_PendReq].mChain.size();
+   rpt.mMoodPendNotifyCnt += (int)mMoods[REND_SM_PendNotify].mChain.size();
+   rpt.mMoodWaveCnt += (int)mMoods[REND_SM_Wave].mChain.size();
 #endif
 }
 
@@ -630,7 +630,7 @@ RendTroopBase::doWork(RendTimeUs now, int minWork, int maxWork)
    // clean-up any left-over wave dialogs
    changeDlgCnt( now, 1000*1000, REND_SM_Wave, REND_SM_GROUP_ByDlgState);
 
-   int curLevel = mMoods[REND_SM_Open].mChain.size() + mMoods[REND_SM_PendReq].mChain.size();
+   int curLevel = (int)mMoods[REND_SM_Open].mChain.size() + (int)mMoods[REND_SM_PendReq].mChain.size();
 
    // if tgt negative, disable level-seeking logic
    int moreCalls = mTgtOpenDlgs>=0 ? mTgtOpenDlgs - curLevel : 0;
@@ -1052,7 +1052,7 @@ RendTroopDlg::handleResponse(RendTimeUs now, const resip::SipMessage *msg, const
    if ( sess->mMood!=REND_SM_PendReq ) 
    {
       RendDlgAcctKey key = troop.cvtIdxToKey(mTroopSessionIdx);
-      int delaySec = REND_US2S(now-mReqSendTime);
+      int delaySec = (int)REND_US2S(now-mReqSendTime);
       WarningLog(<<"Bad response: Got response when not pending:"
          <<" key="<<key
          <<" mood=" <<(sess->mMood)

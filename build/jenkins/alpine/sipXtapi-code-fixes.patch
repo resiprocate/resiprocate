@@ -1,0 +1,225 @@
+--- sipXmediaLib/src/mp/MpOss.cpp.bak
++++ sipXmediaLib/src/mp/MpOss.cpp
+@@ -310,8 +310,7 @@
+    mfdDevice = open(devname, O_RDWR);
+    if (mfdDevice == -1)
+    {
+-      char temp[1024];
+-      char* ptr = strerror_r(errno, temp, 1024);
++      char* ptr = strerror(errno);
+
+       //Trying only input device
+       mfdDevice = open(devname, O_RDONLY);
+@@ -847,7 +846,7 @@
+    {
+       OsSysLog::add(FAC_MP, PRI_EMERG,
+                     "OSS: could not set OSS trigger fd=%d. ioctl returned: %d (%s)\n",
+-                    mfdDevice, errno, sys_errlist[errno]); 
++                    mfdDevice, errno, strerror(errno));
+    }
+    return res;
+ }
+--- sipXmediaLib/src/mp/MprToSpkr.cpp.bak
++++ sipXmediaLib/src/mp/MprToSpkr.cpp
+@@ -18,8 +18,8 @@
+
+ #ifdef __pingtel_on_posix__
+ #  ifdef __linux__
+-#     include <stdlib.h>
+-      typedef __int64_t __int64;
++#     include <cstdint>
++      typedef int64_t __int64;
+ #  elif defined(sun)
+ #     include <sys/int_types.h>
+       typedef int64_t __int64;
+--- sipXmediaAdapterLib/sipXmediaMediaProcessing/include/CpPhoneMediaInterface.h.bak
++++ sipXmediaAdapterLib/sipXmediaMediaProcessing/include/CpPhoneMediaInterface.h
+@@ -127,6 +127,13 @@
+    virtual OsStatus setNotificationsEnabled(bool enabled, 
+                                             const UtlString& resourceName);
+
++   virtual OsStatus setMediaPassThrough(int connectionId,
++                                        MEDIA_STREAM_TYPE mediaType,
++                                        int mediaTypeStreamIndex,
++                                        UtlString& receiveAddress,
++                                        int rtpPort,
++                                        int rtcpPort);
++
+    virtual OsStatus setConnectionDestination(int connectionId,
+                                              const char* rtpHostAddress, 
+                                              int rtpAudioPort,
+@@ -134,6 +141,15 @@
+                                              int rtpVideoPort,
+                                              int rtcpVideoPort);
+
++   virtual OsStatus setConnectionDestination(int connectionId,
++                                             CpMediaInterface::MEDIA_STREAM_TYPE mediaType,
++                                             int streamIndex,
++                                             const char* rtpHostAddress,
++                                             int rtpPort,
++                                             int rtcpPort);
++
++   virtual OsStatus copyPayloadIds(int connectionId, int numCodecs, SdpCodec* remoteCodecs[]);
++
+    virtual OsStatus startRtpSend(int connectionId, 
+                                  int numCodecs,
+                                  SdpCodec* sendCodec[]);
+@@ -145,6 +161,8 @@
+    virtual OsStatus stopRtpSend(int connectionId);
+    virtual OsStatus stopRtpReceive(int connectionId);
+
++   virtual const SdpCodecList* getConnectionCodecList(int connectionId);
++
+    virtual OsStatus deleteConnection(int connectionId);
+
+    virtual OsStatus startTone(int toneId, UtlBoolean local, UtlBoolean remote);
+@@ -157,8 +175,20 @@
+                                       int timeOffset);
+
+    virtual OsStatus startChannelTone(int connectionId, int toneId, UtlBoolean local, UtlBoolean remote);
++
++   virtual OsStatus startChannelTone(int connectionId,
++                                     int toneId,
++                                     UtlBoolean local,
++                                     UtlBoolean remote,
++                                     UtlBoolean inband,
++                                     UtlBoolean rtc4733payload);
++
+    virtual OsStatus stopChannelTone(int connectionId);
+
++   virtual OsStatus stopChannelTone(int connectionId,
++                                    UtlBoolean inband,
++                                    UtlBoolean rfc4733payload);
++
+    virtual OsStatus playAudio(const char* url, 
+                               UtlBoolean repeat,
+                               UtlBoolean local, 
+@@ -258,6 +288,8 @@
+      /// @brief Rebuild the codec factory on the fly
+    virtual OsStatus setAudioCodecBandwidth(int connectionId, int bandWidth);
+
++   virtual OsStatus limitCodecs(int connectionId, const SdpCodecList& includeOnlyCodecList);
++
+    virtual OsStatus rebuildCodecFactory(int connectionId, 
+                                         int audioBandwidth, 
+                                         int videoBandwidth, 
+@@ -299,6 +331,8 @@
+    virtual OsStatus generateVoiceQualityReport(int connectiond,
+                                                const char* callId,
+                                                UtlString& report);
++
++   virtual OsStatus setMixWeightForOutput(int bridgeOutputPort, float weight);
+
+    /// @copydoc CpMediaInterface::setMixWeightsForOutput()
+    virtual OsStatus setMixWeightsForOutput(int bridgeOutputPort, int numWeights, float weights[]);
+--- sipXmediaAdapterLib/sipXmediaMediaProcessing/src/CpPhoneMediaInterface.cpp.bak
++++ sipXmediaAdapterLib/sipXmediaMediaProcessing/src/CpPhoneMediaInterface.cpp
+@@ -643,6 +643,16 @@
+    return((CpPhoneMediaConnection*) mMediaConnections.find(&matchConnectionId));
+ }
+
++OsStatus CpPhoneMediaInterface::setMediaPassThrough(int connectionId,
++                                                    MEDIA_STREAM_TYPE mediaType,
++                                                    int mediaTypeStreamIndex,
++                                                    UtlString& receiveAddress,
++                                                    int rtpPort,
++                                                    int rtcpPort)
++{
++   return OS_NOT_YET_IMPLEMENTED;
++}
++
+ OsStatus CpPhoneMediaInterface::setConnectionDestination(int connectionId,
+                                                          const char* remoteRtpHostAddress,
+                                                          int remoteAudioRtpPort,
+@@ -757,6 +767,16 @@
+    return(returnCode);
+ }
+
++OsStatus CpPhoneMediaInterface::setConnectionDestination(int connectionId,
++                                                         CpMediaInterface::MEDIA_STREAM_TYPE mediaType,
++                                                         int streamIndex,
++                                                         const char* rtpHostAddress,
++                                                         int rtpPort,
++                                                         int rtcpPort)
++{
++   return OS_NOT_YET_IMPLEMENTED;
++}
++
+ OsStatus CpPhoneMediaInterface::addAudioRtpConnectionDestination(int         connectionId,
+                                                                  int         iPriority,
+                                                                  const char* candidateIp, 
+@@ -913,6 +933,12 @@
+     return returnCode ;    
+ }
+
++OsStatus CpPhoneMediaInterface::copyPayloadIds(int connectionId,
++                                               int numCodecs,
++                                               SdpCodec* remoteCodecs[])
++{
++   return OS_NOT_YET_IMPLEMENTED;
++}
+
+ OsStatus CpPhoneMediaInterface::startRtpSend(int connectionId,
+                                              int numCodecs,
+@@ -1091,6 +1117,11 @@
+    return(returnCode);
+ }
+
++OsStatus CpPhoneMediaInterface::setMixWeightForOutput(int bridgeOutputPort, float weight)
++{
++   return(OS_NOT_YET_IMPLEMENTED);
++}
++
+ OsStatus CpPhoneMediaInterface::setMixWeightsForOutput(int bridgeOutputPort, int numWeights, float weights[])
+ {
+    return(OS_NOT_YET_IMPLEMENTED);
+@@ -1112,6 +1143,11 @@
+    return returnCode;
+ }
+
++const SdpCodecList* CpPhoneMediaInterface::getConnectionCodecList(int connectionId)
++{
++   return nullptr;
++}
++
+ OsStatus CpPhoneMediaInterface::deleteConnection(int connectionId)
+ {
+    OsStatus returnCode = OS_NOT_FOUND;
+@@ -1566,11 +1602,25 @@
+     return startTone(toneId, local, remote) ;
+ }
+
++OsStatus CpPhoneMediaInterface::startChannelTone(int connectionId,
++                                                 int toneId,
++                                                 UtlBoolean local,
++                                                 UtlBoolean remote,
++                                                 UtlBoolean inband,
++                                                 UtlBoolean rfc4733payload)
++{
++    return OS_NOT_YET_IMPLEMENTED;
++}
++
+ OsStatus CpPhoneMediaInterface::stopChannelTone(int connectionId)
+ {
+     return stopTone() ;
+ }
+
++OsStatus CpPhoneMediaInterface::stopChannelTone(int connectionId, UtlBoolean inband, UtlBoolean rfc4733payload)
++{
++    return OS_NOT_YET_IMPLEMENTED;
++}
+
+ OsStatus CpPhoneMediaInterface::giveFocus()
+ {
+@@ -1662,6 +1712,11 @@
+ OsStatus CpPhoneMediaInterface::setAudioCodecBandwidth(int connectionId, int bandWidth) 
+ {
+     return OS_NOT_SUPPORTED ;
++}
++
++OsStatus CpPhoneMediaInterface::limitCodecs(int connectionId, const SdpCodecList& includeOnlyCodecList)
++{
++    return OS_NOT_YET_IMPLEMENTED;
+ }
+
+ OsStatus CpPhoneMediaInterface::rebuildCodecFactory(int connectionId, 

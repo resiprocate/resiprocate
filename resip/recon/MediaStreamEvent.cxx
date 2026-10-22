@@ -1,6 +1,7 @@
 #include "MediaStreamEvent.hxx"
 
 #include "RemoteParticipantDialogSet.hxx"
+#include "RemoteParticipant.hxx"
 
 #include <rutil/Logger.hxx>
 
@@ -9,19 +10,38 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-MediaStreamReadyEvent::MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, 
-                                             const reTurn::StunTuple& rtpTuple, 
-                                             const reTurn::StunTuple& rtcpTuple) : 
-   mRemoteParticipantDialogSet(remoteParticipantDialogSet),
-   mRtpTuple(rtpTuple),
-   mRtcpTuple(rtcpTuple)
+namespace recon {
+
+EncodeStream&
+MediaStreamReadyEvent::ReTurnParams::encode(EncodeStream& strm) const
+{
+   strm << "MediaStreamReadyEvent::ReTurnParams: rtpTuple: " << mRtpTuple << " rtcpTuple=" << mRtcpTuple;
+   return strm;
+}
+
+EncodeStream&
+MediaStreamReadyEvent::ReTurnParams::encodeBrief(EncodeStream& strm) const
+{
+   return encode(strm);
+}
+
+MediaStreamReadyEvent::MediaStreamReadyEvent(ConversationManager* conversationManager, 
+                                             ParticipantHandle partHandle,
+                                             std::shared_ptr<StreamParams> streamParams) :
+   mConversationManager(conversationManager),
+   mPartHandle(partHandle),
+   mStreamParams(streamParams)
 {
 }
 
 void 
 MediaStreamReadyEvent::executeCommand()
 {
-   mRemoteParticipantDialogSet.processMediaStreamReadyEvent(mRtpTuple, mRtcpTuple);
+   RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+   if (remoteParticipant)
+   {
+      remoteParticipant->getDialogSet().processMediaStreamReadyEvent(mStreamParams);
+   }
 }
 
 resip::Message* 
@@ -34,7 +54,7 @@ MediaStreamReadyEvent::clone() const
 EncodeStream& 
 MediaStreamReadyEvent::encode(EncodeStream& strm) const
 {
-   strm << "MediaStreamReadyEvent: rtpTuple: " << mRtpTuple << " rtcpTuple=" << mRtcpTuple;
+   strm << "MediaStreamReadyEvent: streamParams: " << mStreamParams;
    return strm;
 }
 
@@ -44,10 +64,11 @@ MediaStreamReadyEvent::encodeBrief(EncodeStream& strm) const
    return encode(strm);
 }
 
-
-MediaStreamErrorEvent::MediaStreamErrorEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, 
-                                             unsigned int errorCode) : 
-   mRemoteParticipantDialogSet(remoteParticipantDialogSet),
+MediaStreamErrorEvent::MediaStreamErrorEvent(ConversationManager* conversationManager,
+                                             ParticipantHandle partHandle,
+                                             unsigned int errorCode) :
+   mConversationManager(conversationManager),
+   mPartHandle(partHandle),
    mErrorCode(errorCode)
 {
 }
@@ -55,7 +76,11 @@ MediaStreamErrorEvent::MediaStreamErrorEvent(RemoteParticipantDialogSet& remoteP
 void 
 MediaStreamErrorEvent::executeCommand()
 {
-   mRemoteParticipantDialogSet.processMediaStreamErrorEvent(mErrorCode);
+   RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+   if (remoteParticipant)
+   {
+      remoteParticipant->getDialogSet().processMediaStreamErrorEvent(mErrorCode);
+   }
 }
 
 resip::Message* 
@@ -78,9 +103,18 @@ MediaStreamErrorEvent::encodeBrief(EncodeStream& strm) const
    return encode(strm);
 }
 
+EncodeStream&
+operator<<(EncodeStream& strm, const MediaStreamReadyEvent::StreamParams& params)
+{
+   return params.encode(strm);
+}
+
+}
 
 /* ====================================================================
 
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

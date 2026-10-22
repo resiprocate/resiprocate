@@ -1,6 +1,8 @@
 #include <openssl/ssl.h>
 #include <openssl/pem.h>
 #include <openssl/ossl_typ.h>
+#include <openssl/bn.h>
+#include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/err.h>
@@ -29,18 +31,24 @@ int main(int argc, char* argv[])
  
    Log::initialize(Log::Cerr, Log::Err, argv[0]);
    Log::setLevel(Log::Debug);
-   SSL_library_init();
-   SSL_load_error_strings();
-   OpenSSL_add_all_algorithms();
-   //OpenSSL_add_ssl_algorithms() is insufficient here...
+   // OpenSSL 1.1.0+ initializes itself automatically; explicit calls to
+   // SSL_library_init(), SSL_load_error_strings() and OpenSSL_add_all_algorithms()
+   // are no longer needed (and are deprecated).
 
    // make sure that necessary algorithms exist:
    assert(EVP_des_ede3_cbc());
 
    Random::initialize();
 
-   rsa = RSA_generate_key(1024, RSA_F4, NULL, NULL);
-   assert(rsa);    // couldn't make key pair
+   {
+      BIGNUM* e = BN_new();
+      assert(e);
+      assert(BN_set_word(e, RSA_F4));
+      rsa = RSA_new();
+      assert(rsa);
+      assert(RSA_generate_key_ex(rsa, 1024, e, NULL));
+      BN_free(e);
+   }
    
    // TODO: remove this once we've tested this
    stat = PEM_write_RSAPrivateKey( stdout, rsa, NULL, NULL, 0, NULL, NULL); // Write this out for debugging
@@ -133,8 +141,8 @@ int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type 
   stat = X509_set_subject_name(selfcert, subject);
   assert(stat);
 
-  X509_gmtime_adj(X509_get_notBefore(selfcert),0);
-  X509_gmtime_adj(X509_get_notAfter(selfcert), duration);
+  X509_gmtime_adj(X509_getm_notBefore(selfcert),0);
+  X509_gmtime_adj(X509_getm_notAfter(selfcert), duration);
 
   stat = X509_set_pubkey(selfcert, privkey);
   assert(stat);
@@ -165,7 +173,8 @@ int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type 
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

@@ -13,12 +13,12 @@ class ConnectBase : public Message, protected s2c::ConnectReqAnsStruct
 public:
 	friend class Message;
 
-	ConnectBase(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates);
+	ConnectBase(const resip::Data &frag, const resip::Data &password, uint16_t application, const resip::Data &role, const std::vector<Candidate> &candidates);
 	virtual void getEncodedPayload(resip::DataStream &dataStream);
 
    const resip::Data& getUfrag();
    const resip::Data& getPassword();
-   UInt16 getApplication();
+   uint16_t getApplication();
    const resip::Data& getRole();
    std::vector<Candidate> getCandidates();
 

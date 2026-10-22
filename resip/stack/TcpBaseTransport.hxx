@@ -35,6 +35,8 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
       ConnectionManager& getConnectionManager() {return mConnectionManager;}
       const ConnectionManager& getConnectionManager() const {return mConnectionManager;}
 
+      virtual void invokeAfterSocketCreationFunc() const;
+
    protected:
       /** Performs constructor activities that depend on virtual
        *  functions specified by derived classes.  Derived classes
@@ -68,6 +70,20 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
    private:
       static const int MaxBufferSize;
       ConnectionManager mConnectionManager;
+      
+      /** Helper to bind client socket for outbound connections.
+       * Behavior depends on RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS:
+       * - If flag is set: binds to the same port as the listening transport (symmetric mode)
+       *   to ensure TCP source port matches advertised SIP port for connection reuse.
+       * - If flag is not set: binds to ephemeral port (default behavior).
+       * @param sock The socket to bind
+       * @param failReason Output parameter for failure reason
+       * @param failSubCode Output parameter for failure sub-code
+       * @return true if bind succeeded, false otherwise
+       */
+      bool bindClientSocket(Socket sock, 
+                            TransportFailure::FailureReason &failReason, 
+                            int &failSubCode);
 };
 
 }

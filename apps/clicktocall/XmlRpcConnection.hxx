@@ -18,7 +18,7 @@ class XmlRpcConnection
       
 public:
    XmlRpcConnection(XmlRpcServerBase& server, resip::Socket sock);
-   ~XmlRpcConnection();
+   virtual ~XmlRpcConnection();
    
    unsigned int getConnectionId() const { return mConnectionId; }
    void buildFdSet(resip::FdSet& fdset);

@@ -59,7 +59,7 @@ public:
       mStore.setIntValue(mIntValueKey, testInt);
       unsigned int testUInt = 4294967295UL;
       mStore.setUIntValue(mUIntValueKey, testUInt);
-      UInt64 testUInt64 = 18446744073709551615ULL;
+      uint64_t testUInt64 = 18446744073709551615ULL;
       mStore.setUInt64Value(mUInt64ValueKey, testUInt64);
 
       assert(mStore.getDataValue(mDataValueKey) == "test");
@@ -104,7 +104,7 @@ public:
       mStore.getIntValue(mIntValueKey) = testInt;
       unsigned int testUInt = 4294967294UL;
       mStore.getUIntValue(mUIntValueKey) = testUInt;
-      UInt64 testUInt64 = 18446744073709551614ULL;
+      uint64_t testUInt64 = 18446744073709551614ULL;
       mStore.getUInt64Value(mUInt64ValueKey) = testUInt64;
 
       assert(mStore.getDataValue(newDataValueKey) == "newDataValue");

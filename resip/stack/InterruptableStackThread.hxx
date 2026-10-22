@@ -28,7 +28,7 @@ class SelectInterruptor;
 class InterruptableStackThread : public ThreadIf
 {
    public:
-      InterruptableStackThread(SipStack& stack, SelectInterruptor& si);
+      RESIP_DEPRECATED(InterruptableStackThread(SipStack& stack, SelectInterruptor& si));
       virtual ~InterruptableStackThread();
       
       virtual void thread();

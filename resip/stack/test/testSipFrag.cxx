@@ -10,7 +10,7 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/SipFrag.hxx"
 #include "resip/stack/MultipartMixedContents.hxx"
-#include "resip/stack/Pidf.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "TestSupport.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/test/tassert.h"
@@ -48,7 +48,7 @@ main(int argc, char* argv[])
 
      try
      {
-        auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+        unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
         Contents* body = msg->getContents();
 
         assert(body != 0);
@@ -58,7 +58,7 @@ main(int argc, char* argv[])
         assert(frag->message().header(h_ContentLength).value() == 11);
         assert(!(frag->message().isRequest() ||frag->message().isResponse()));
      }
-     catch (BaseException& e)
+     catch (BaseException&)
      {
         assert(false);
      }
@@ -81,9 +81,9 @@ main(int argc, char* argv[])
         
         try
         {
-           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+           unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -105,9 +105,9 @@ main(int argc, char* argv[])
 
         try
         {
-           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+           unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -132,9 +132,9 @@ main(int argc, char* argv[])
 
         try
         {
-           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+           unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -157,9 +157,9 @@ main(int argc, char* argv[])
         
         try
         {
-           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+           unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -186,9 +186,9 @@ main(int argc, char* argv[])
 
         try
         {
-           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+           unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -223,9 +223,9 @@ main(int argc, char* argv[])
                  "a=rtpmap:32 MPV/90000");
         try
         {
-           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+           unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
         }
-        catch (BaseException& e)
+        catch (BaseException&)
         {
            assert(false);
         }
@@ -248,7 +248,7 @@ main(int argc, char* argv[])
                "\r\n"
                "INVITE sip:bob@biloxi.com SIP/2.0\r\n");
       std::cout << "hiya " << std::endl;
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       Contents* body = msg->getContents();
 
@@ -289,7 +289,7 @@ main(int argc, char* argv[])
                // .dlb. this is correct: message-header is terminated with CRLF.
 
                CRLF);
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       Contents* body = msg->getContents();
 
@@ -322,7 +322,7 @@ main(int argc, char* argv[])
                "Call-ID: a84b4c76e66710\r\n"
                "Cseq: 314159 INVITE");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       Contents* body = msg->getContents();
 
@@ -357,7 +357,7 @@ main(int argc, char* argv[])
                "INVITE sip:bob@biloxi.com SIP/2.0"
         );
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       Contents* body = msg->getContents();
 
@@ -435,10 +435,10 @@ main(int argc, char* argv[])
                "Max-Forwards: 70\r\n"
                "Content-Type: multipart/mixed;type=\"message/sipfrag\";\r\n"
                "    start=\"<foo@example.com>\";boundary=\"ncpq7w94hfb\"\r\n"
-               "Content-Length: " + Data(contents.size()) + "\r\n"
+               "Content-Length: " + std::to_string(contents.size()) + "\r\n"
                "\r\n" + contents;
                
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(msg.c_str()));
+      unique_ptr<SipMessage> message(TestSupport::makeMessage(msg.c_str()));
       
       SipMessage* copy=0;
       {
@@ -465,7 +465,7 @@ main(int argc, char* argv[])
             frag->encode(resipCout);
          }
          
-         Pidf* pidf=dynamic_cast<Pidf*>(parts.back());
+         GenericPidfContents* pidf=dynamic_cast<GenericPidfContents*>(parts.back());
          tassert(pidf);
          if(pidf)
          {
@@ -498,7 +498,7 @@ main(int argc, char* argv[])
             frag->encode(resipCout);
          }
          
-         Pidf* pidf=dynamic_cast<Pidf*>(parts.back());
+         GenericPidfContents* pidf=dynamic_cast<GenericPidfContents*>(parts.back());
          tassert(pidf);
          if(pidf)
          {

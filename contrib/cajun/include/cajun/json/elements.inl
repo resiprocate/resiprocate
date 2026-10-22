@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "reader.h"
 #include <cassert>
 #include <algorithm>
+#include <functional>
 #include <map>
 
 /*  
@@ -251,7 +252,11 @@ inline bool Object::Member::operator == (const Member& member) const
           element == member.element;
 }
 
+#if _HAS__CXX17 || __cplusplus >= 201703L
+class Object::Finder
+#else
 class Object::Finder : public std::unary_function<Object::Member, bool>
+#endif
 {
 public:
    Finder(const std::string& name) : m_name(name) {}

@@ -20,7 +20,7 @@ class TestClientRegistration : public TestUsage
       resip::Data getName() const { return "TestClientRegistration"; }
       
       CommonAction* addBinding(const resip::NameAddr& contact);
-      CommonAction* addBinding(const resip::NameAddr& contact, int registrationTime);
+      CommonAction* addBinding(const resip::NameAddr& contact, uint32_t registrationTime);
       CommonAction* removeBinding(const resip::NameAddr& contact);
       CommonAction* removeAll(bool stopRegisteringWhenDone=false);
       CommonAction* removeMyBindings(bool stopRegisteringWhenDone=false);

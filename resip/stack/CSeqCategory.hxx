@@ -18,7 +18,7 @@ namespace resip
 class CSeqCategory : public ParserCategory
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      static constexpr CommaHandlingMode commaHandling = NoCommaTokenizing;
       
       CSeqCategory();
       CSeqCategory(const HeaderFieldValue& hfv, 

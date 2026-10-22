@@ -164,24 +164,29 @@ RRDecorator::singleRecordRoute(resip::SipMessage& request,
    }
 #endif
 
-   static ExtensionParameter p_drr("drr");
-   rt.uri().param(p_drr);
-
-   resip::NameAddrs* routes=0;
-   if(mDoPath)
+   resip::NameAddrs* routes = 0;
+   if (mDoPath)
    {
-      routes=&(request.header(resip::h_Paths));
+      routes = &(request.header(resip::h_Paths));
       InfoLog(<< "Adding outbound Path: " << rt);
    }
    else
    {
-      routes=&(request.header(resip::h_RecordRoutes));
+      routes = &(request.header(resip::h_RecordRoutes));
       InfoLog(<< "Adding outbound Record-Route: " << rt);
    }
 
-   resip_assert(routes->size() > 0);
-   routes->front().uri().param(p_drr);
-   routes->push_front(rt);
+   if (routes->empty())
+   {
+      routes->push_front(rt);
+   }
+   else
+   {
+      static ExtensionParameter p_drr("drr");
+      rt.uri().param(p_drr);
+      routes->front().uri().param(p_drr);
+      routes->push_front(rt);
+   }
    ++mAddedRecordRoute;
 }
 
@@ -244,25 +249,24 @@ RRDecorator::outboundFlowTokenNeeded(resip::SipMessage &msg,
 void 
 RRDecorator::rollbackMessage(resip::SipMessage& request) 
 {
-   resip::NameAddrs* routes=0;
-   if(mDoPath)
+   resip::NameAddrs* routes = mDoPath ?
+      &(request.header(resip::h_Paths)) :
+      &(request.header(resip::h_RecordRoutes));
+
+   if (mAddedRecordRoute < 0)
    {
-      routes=&(request.header(resip::h_Paths));
-   }
-   else
-   {
-      routes=&(request.header(resip::h_RecordRoutes));
+      ErrLog(<< "RRDecorator::rollbackMessage: mAddedRecordRoute=" << mAddedRecordRoute << " is < 0, logic error, resetting to 0");
+      mAddedRecordRoute = 0;
    }
 
-   while(mAddedRecordRoute--)
+   while (mAddedRecordRoute > 0 && !routes->empty())
    {
-      resip_assert(!routes->empty());
       routes->pop_front();
+      --mAddedRecordRoute;
    }
 
-   if(mAlreadySingleRecordRouted)
+   if (mAlreadySingleRecordRouted && !routes->empty())
    {
-      // Make sure we remove the drr param if it is there.
       static ExtensionParameter p_drr("drr");
       routes->front().uri().remove(p_drr);
    }

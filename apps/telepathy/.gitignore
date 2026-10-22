@@ -1,0 +1,9 @@
+
+/Makefile.in
+/Makefile
+/.deps
+/.libs
+
+/moc_*.cxx
+
+/telepathy-resiprocate

@@ -21,7 +21,31 @@ class Message;
 class MediaStreamReadyEvent : public resip::DumCommand
 {
    public:
-      MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, const reTurn::StunTuple& rtpTuple, const reTurn::StunTuple& rtcpTuple);
+
+      class StreamParams
+      {
+      public:
+         StreamParams() {};
+         virtual ~StreamParams() {};
+         virtual EncodeStream& encode(EncodeStream& strm) const = 0;
+      };
+
+      class ReTurnParams : public StreamParams
+      {
+      public:
+         ReTurnParams(const reTurn::StunTuple& rtpTuple, const reTurn::StunTuple& rtcpTuple)
+          : mRtpTuple(rtpTuple), mRtcpTuple(rtcpTuple) {};
+         virtual ~ReTurnParams() {};
+         const reTurn::StunTuple& getRtpTuple() { return mRtpTuple; };
+         const reTurn::StunTuple& getRtcpTuple() { return mRtcpTuple; };
+         EncodeStream& encode(EncodeStream& strm) const;
+         EncodeStream& encodeBrief(EncodeStream& strm) const;
+      private:
+         reTurn::StunTuple mRtpTuple;
+         reTurn::StunTuple mRtcpTuple;
+      };
+
+      MediaStreamReadyEvent(ConversationManager* conversationManager, ParticipantHandle partHandle, std::shared_ptr<StreamParams> streamParams);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -29,15 +53,15 @@ class MediaStreamReadyEvent : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
-      RemoteParticipantDialogSet& mRemoteParticipantDialogSet;
-      reTurn::StunTuple mRtpTuple;
-      reTurn::StunTuple mRtcpTuple;
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+      std::shared_ptr<StreamParams> mStreamParams;
 };
 
 class MediaStreamErrorEvent : public resip::DumCommand
 {
    public:
-      MediaStreamErrorEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, unsigned int errorCode);
+      MediaStreamErrorEvent(ConversationManager* conversationManager, ParticipantHandle partHandle, unsigned int errorCode);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -45,9 +69,13 @@ class MediaStreamErrorEvent : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
-      RemoteParticipantDialogSet& mRemoteParticipantDialogSet;
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
       unsigned int mErrorCode;
 };
+
+EncodeStream& operator<<(EncodeStream& strm, const MediaStreamReadyEvent::StreamParams& params);
+
 }
 
 #endif
@@ -55,6 +83,8 @@ class MediaStreamErrorEvent : public resip::DumCommand
 
 /* ====================================================================
 
+ Copyright (c) 2021-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

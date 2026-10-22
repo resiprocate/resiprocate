@@ -1,7 +1,7 @@
 #if !defined(TFM_SubscribeExpires_hxx)
 #define TFM_SubscribeExpires_hxx
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace resip
 {
@@ -15,8 +15,8 @@ class SubscribeExpires
    public:
       SubscribeExpires(int expireSecs);
 
-      bool operator()(boost::shared_ptr<resip::SipMessage> msg);
-      bool operator()(boost::shared_ptr<Event> event);
+      bool operator()(std::shared_ptr<resip::SipMessage> msg);
+      bool operator()(std::shared_ptr<Event> event);
 
    private:
       int mExpireSecs;

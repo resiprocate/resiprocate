@@ -2,7 +2,6 @@
 #define REQUEST_HANDLER_HXX
 
 #include <string>
-#include <boost/noncopyable.hpp>
 
 #include "DataBuffer.hxx"
 #include "StunMessage.hxx"
@@ -15,12 +14,17 @@ class AsyncSocketBase;
 
 /// The common handler for all incoming requests.
 class RequestHandler
-  : private boost::noncopyable
 {
 public:
    explicit RequestHandler(TurnManager& turnManager, 
                            const asio::ip::address* prim3489Address = 0, unsigned short* prim3489Port = 0,
                            const asio::ip::address* alt3489Address = 0, unsigned short* alt3489Port = 0);
+
+   RequestHandler(const RequestHandler&) = delete;
+   RequestHandler(RequestHandler&&) = delete;
+
+   RequestHandler& operator=(const RequestHandler&) = delete;
+   RequestHandler& operator=(RequestHandler&&) = delete;
 
    typedef enum
    {
@@ -34,9 +38,10 @@ public:
    /// Process a received StunMessage, and produce a reply
    /// Returns true if the response message is to be sent
    ProcessResult processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer=false);
-   void processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data);
+   void processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, const std::shared_ptr<DataBuffer>& data);
 
    const ReTurnConfig& getConfig() { return mTurnManager.getConfig(); }
+   TurnManager& getTurnManager() { return mTurnManager; }
 
 private:
 
@@ -66,10 +71,11 @@ private:
    void processTurnSendIndication(TurnAllocationManager& turnAllocationManager, StunMessage& request);
 
    // Utility methods
-   void buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg, const char* realm = 0);
-   void generateNonce(const resip::Data& timestamp, resip::Data& nonce);
+   void buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg);
+   void buildErrorResponseWithRealmAndNonce(StunMessage& response, unsigned short errorCode, const char* msg, const resip::Data& realm, const StunMessage& request);
+   void generateNonce(const resip::Data& timestamp, resip::Data& nonce, const StunMessage& request);
    enum CheckNonceResult { Valid, NotValid, Expired };
-   CheckNonceResult checkNonce(const resip::Data& nonce);
+   CheckNonceResult checkNonce(const resip::Data& nonce, const StunMessage& request);
 };
 
 } 
@@ -79,6 +85,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

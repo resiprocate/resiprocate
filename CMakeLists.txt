@@ -1,0 +1,1163 @@
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules")
+
+# For Visual Studio Solution Generation
+ set(CMAKE_MAP_IMPORTED_CONFIG_RELEASE Release)
+ set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+ set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+
+if(POLICY CMP0077)
+   CMAKE_POLICY(SET CMP0077 NEW)
+endif(POLICY CMP0077)
+
+# https://cmake.org/cmake/help/latest/variable/PROJECT_VERSION.html
+project(resiprocate VERSION 1.15.0)
+
+# Specifies the pre-release tag, such as alphaN or betaN.
+set(RESIPROCATE_VERSION_PRE_RELEASE "")
+
+# Warning: CMAKE_BUILD_TYPE
+#
+# Using CMAKE_BUILD_TYPE=Debug will create a build without the NDEBUG flag
+#
+# Any other CMAKE_BUILD_TYPE appears to set NDEBUG sometimes
+# Some documentation suggest that CMAKE_BUILD_TYPE=RelWithDebInfo will
+# not set the NDEBUG flag but this appears to be inconsistent.
+#
+# reSIProcate makes extensive use of assert()
+# assert() is disabled by NDEBUG
+# Application code should not rely on NDEBUG for any purpose, its only
+# purpose is for disabling assert()
+#
+# https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html#variable:CMAKE_BUILD_TYPE
+#
+
+# shared library versioning
+
+#set(SO_ABI "0.0.0")
+set(SO_RELEASE "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
+
+include(GNUInstallDirs)
+include(Utilities)
+include(CheckCXXSourceCompiles)
+include(CheckStructHasMember)
+include(ExternalProject)
+
+# Library version file generation.
+add_definitions(-DHAVE_VERSION_H)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version.h.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/version.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/resip/)
+
+# check for .git existence
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
+    set(ENABLE_LOG_REPOSITORY_DETAILS_DEFAULT ON)
+else ()
+    set(ENABLE_LOG_REPOSITORY_DETAILS_DEFAULT OFF)
+endif ()
+option(ENABLE_LOG_REPOSITORY_DETAILS "Log repository revision and branch" ${ENABLE_LOG_REPOSITORY_DETAILS_DEFAULT})
+if(ENABLE_LOG_REPOSITORY_DETAILS)
+   find_package(Git REQUIRED)
+   execute_process(
+      COMMAND ${GIT_EXECUTABLE} describe --match="" --always --abbrev=40 --dirty
+      OUTPUT_VARIABLE RESIPROCATE_GIT_ID
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+   )
+   execute_process(
+      COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+      OUTPUT_VARIABLE RESIPROCATE_BRANCH_NAME
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+   )
+endif()
+
+# https://cmake.org/cmake/help/latest/module/FindThreads.html
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+find_package(Threads REQUIRED)
+if(NOT Threads_FOUND)
+   exit()
+endif()
+if(CMAKE_USE_PTHREADS_INIT)
+   add_definitions(-D__REENTRANT)
+   add_definitions(-pthread)
+endif()
+
+set(REPRO_BUILD_REV ${PACKAGE_VERSION})
+set(RESIP_SIP_MSG_MAX_BYTES 10485760)
+
+# https://cmake.org/cmake/help/latest/module/TestBigEndian.html
+# see also
+# https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_BYTE_ORDER.html
+include (TestBigEndian)
+test_big_endian(RESIP_BIG_ENDIAN)
+
+check_cxx_source_compiles("
+#include <string_view>
+int main() {
+    std::string_view sv = \"test\";
+    return 0;
+}
+" RESIP_HAVE_STRING_VIEW)
+
+CHECK_STRUCT_HAS_MEMBER(sockaddr_in sin_len arpa/inet.h HAVE_sockaddr_in_len)
+if(HAVE_sockaddr_in_len)
+   add_definitions(-DHAVE_sockaddr_in_len)
+endif()
+
+# Top-level user-settable variables (with defaults)
+# Those can be queried from the command line using "cmake -LH" and can be
+# specified on the command line, using cmake-gui or ccmake.
+option(WITH_SSL "Link against SSL libraries" TRUE)
+option(USE_POPT "Link against POPT libraries" TRUE)
+option(USE_SIGCOMP "Use OpenSigComp" FALSE)
+option(USE_FMT "Link against fmt library" FALSE)
+option(USE_FQDN_FOR_JSON_CEE_HOSTNAME "Use canonical hostnames in JSON CEE log output" FALSE)
+option(VERSIONED_SONAME "Include Major.Minor version in SONAME" TRUE)
+option(ENABLE_ANDROID "Enable Android build" FALSE)
+option(USE_IPV6 "Enable IPv6" TRUE)
+option(USE_DTLS "Enable DTLS" TRUE)
+option(PEDANTIC_STACK "Enable pedantic behavior (fully parse all messages)" FALSE)
+option(USE_MYSQL "Link against MySQL client libraries" FALSE)
+# some systems may have a newer version of libpq that is not
+# compatible with the packaged version of soci_postgresql
+option(USE_SOCI_POSTGRESQL "Build recon with SOCI PostgreSQL support" FALSE)
+# can't have both MariaDB C client and SOCI MySQL at the same
+# time in some environments, e.g. CentOS 8.1
+option(USE_SOCI_MYSQL "Build recon with SOCI MySQL support" FALSE)
+option(USE_POSTGRESQL "Link against PostgreSQL client libraries" FALSE)
+option(USE_MAXMIND_GEOIP "Link against MaxMind GeoIP libraries" TRUE)
+option(RESIP_HAVE_RADCLI "Link against radcli RADIUS client library" FALSE)
+option(USE_NETSNMP "Link against NetSNMP client libraries" FALSE)
+option(BUILD_REPRO "Build repro SIP proxy" TRUE)
+option(BUILD_RETURN "Build reTurn server" TRUE)
+option(BUILD_REFLOW "Build reflow library" TRUE)
+option(BUILD_MEDIA "Build resipmedia library" TRUE)
+option(BUILD_REND "Build rend" TRUE)
+option(BUILD_TFM "Build TFM, requires Netxx and cppunit" TRUE)
+option(BUILD_CLICKTOCALL "Build Click to call application" FALSE)
+option(BUILD_ICHAT_GW "Build iChat gateway, requires gloox" FALSE)
+option(BUILD_TELEPATHY_CM "Build Telepathy connection manager" FALSE)
+option(BUILD_RECON "Build reCon Conversation Manager library" TRUE)
+option(USE_SRTP1 "Use srtp 1.x instead of current version" FALSE)
+option(BUILD_RECONSERVER "Build reConServer" FALSE)
+option(USE_SIPXTAPI "Link against sipXtapi" FALSE)
+option(USE_SYSTEM_SIPXTAPI "Non-Windows: link against an installed sipXtapi (e.g. Debian libsipxtapi-dev) instead of building it from source" FALSE)
+option(SIPXTAPI_PROJS_IN_VS_GUI "Surface the sipXtapi projects in the Visual Studio GUI (not compatible when building from cmake or ninja)" FALSE)
+option(USE_KURENTO "Build Kurento client (requires websocketpp)" FALSE)
+option(USE_GSTREAMER "Link against Gstreamer" FALSE)
+option(USE_LIBWEBRTC "Link against LibWebRTC" FALSE)
+option(RECON_LOCAL_HW_TESTS "Attempt to use local audio hardware in unit tests" FALSE)
+option(BUILD_P2P "Build P2P, links against S2C and SSL, unfinished" FALSE)
+option(BUILD_PYTHON "Build components requiring Python" FALSE)
+option(BUILD_TESTING "Build manual & unit tests" TRUE)
+
+# Enable/disable linux based settings appropriately
+if(WIN32)
+   set(WITH_C_ARES_DEFAULT OFF)
+   set(BUILD_QPID_PROTON_DEFAULT OFF)
+   set(RESIP_ASSERT_SYSLOG_DEFAULT OFF)
+   set(REGENERATE_MEDIA_SAMPLES_DEFAULT OFF)
+   set(BUILD_DSO_PLUGINS_DEFAULT OFF)
+else()
+   set(WITH_C_ARES_DEFAULT ON)  # Needed for TFM to build correctly on linux
+   set(BUILD_QPID_PROTON_DEFAULT ON)
+   set(RESIP_ASSERT_SYSLOG_DEFAULT ON)
+   set(REGENERATE_MEDIA_SAMPLES_DEFAULT ON)
+   set(BUILD_DSO_PLUGINS_DEFAULT ON)
+endif()
+option(WITH_C_ARES "Link against libc-ares (rather than rutil/dns/ares)" ${WITH_C_ARES_DEFAULT})
+option(BUILD_QPID_PROTON "Build components requiring qpid-proton (AMQP)" ${BUILD_QPID_PROTON_DEFAULT})
+option(RESIP_ASSERT_SYSLOG "Log assertion failures with Syslog" ${RESIP_ASSERT_SYSLOG_DEFAULT})
+option(REGENERATE_MEDIA_SAMPLES "Regenerate the header files containing raw audio samples (requires sox, xxd)" ${REGENERATE_MEDIA_SAMPLES_DEFAULT})
+option(BUILD_DSO_PLUGINS "Build DSO plugins" ${BUILD_DSO_PLUGINS_DEFAULT})
+
+# recon's bridge size must match the value sipXtapi was compiled with.  When
+# sipXtapi is built from source it is compiled with this value, so it is free to
+# choose (e.g. -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20).  A prebuilt sipXtapi package
+# has its value baked in, and the Debian package uses 20.
+set(_bridge_doc "recon: Maximum connections on bridge (must match value sipXtapi was compiled with)")
+if(USE_SIPXTAPI AND USE_SYSTEM_SIPXTAPI AND NOT WIN32)
+    set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20 CACHE STRING "${_bridge_doc}")
+    if(NOT DEFAULT_BRIDGE_MAX_IN_OUTPUTS EQUAL 20)
+        message(FATAL_ERROR "DEFAULT_BRIDGE_MAX_IN_OUTPUTS is ${DEFAULT_BRIDGE_MAX_IN_OUTPUTS}, but USE_SYSTEM_SIPXTAPI requires 20, the value the prebuilt sipXtapi package was compiled with.  Pass -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20, or turn USE_SYSTEM_SIPXTAPI off to build sipXtapi from source with a different value.")
+    endif()
+else()
+    set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 10 CACHE STRING "${_bridge_doc}")
+endif()
+if(NOT DEFAULT_BRIDGE_MAX_IN_OUTPUTS MATCHES "^[1-9][0-9]*$")
+    message(FATAL_ERROR "DEFAULT_BRIDGE_MAX_IN_OUTPUTS must be a positive integer, not '${DEFAULT_BRIDGE_MAX_IN_OUTPUTS}'")
+endif()
+
+# This must be enabled when building with the Android ndkports tools.
+# It should not be enabled for any other case.
+option(USE_NDKPORTS_HACKS "Android ndkports build: use hardcoded paths to dependencies" FALSE)
+
+#
+# Libtool / autotools is able to build both the static and shared
+# version of a library based on a single definition of the library.
+#
+# CMake is trying to support platforms like Windows that do not
+# allow both the static and shared library to share the same target
+# name.
+#
+# Therefore, with our initial CMake implementation, we only support
+# one type of build or the other.
+#
+# People who need both static and shared libraries can run the build
+# twice with alternate values of BUILD_SHARED_LIBS
+#
+# FIXME - can we replicate one of the hacks for building both static
+#         and shared?
+#       - it is a good idea to ask the CMake developers and ask the
+#         packaging system maintainers (debhelper, rpmbuild)
+#
+# Example hacks:
+#  https://stackoverflow.com/questions/2152077/is-it-possible-to-get-cmake-to-build-both-a-static-and-shared-library-at-the-sam
+#  https://github.com/baresip/rem/pull/84/files
+#
+if(WIN32)
+   set(BUILD_SHARED_LIBS_DEFAULT OFF)
+   set(USE_CONTRIB_DEFAULT ON)
+   set(USE_NUGET_DEFAULT ON)
+else()
+   set(BUILD_SHARED_LIBS_DEFAULT ON)
+   set(USE_CONTRIB_DEFAULT OFF)
+   set(USE_NUGET_DEFAULT OFF)
+endif()
+option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT})
+option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
+option(USE_NUGET "Use NuGet package manager" ${USE_NUGET_DEFAULT})
+
+# Netxx is not packaged for modern distributions (the old libnetxx-dev is no
+# longer available), so build it from the contrib folder by default on all
+# platforms.  Set this OFF to use a system-provided Netxx via find_package.
+option(USE_CONTRIB_NETXX "Build Netxx from the contrib folder instead of using a system copy" ON)
+
+if(BUILD_TESTING)
+    enable_testing()
+endif()
+
+########################
+### Helper functions ###
+########################
+
+function(option_def)
+   if(${ARGV0})
+      add_definitions(-D${ARGV0})
+   endif()
+endfunction()
+
+function(set_def)
+   set(${ARGV0} TRUE)
+   add_definitions(-D${ARGV0})
+endfunction()
+
+function(do_fail_win32)
+   message(FATAL_ERROR "please complete Win32 support for ${ARGV0} in CMakeLists.txt")
+endfunction()
+
+# See
+#   https://cmake.org/cmake/help/latest/prop_tgt/SOVERSION.html
+#   https://cmake.org/cmake/help/latest/prop_tgt/VERSION.html
+function(version_libname)
+   if(SO_ABI)
+      set_target_properties(${ARGV0} PROPERTIES SOVERSION ${SO_ABI})
+   endif()
+   # This logic tries to replicate the libtool -release X.Y ...
+   # but it doesn't create the same symlink that libtool creates.
+   # FIXME
+   # Other people have complained about the same problem, e.g.
+   # https://discourse.libsdl.org/t/patches-dynamic-library-name-should-it-be-libsdl2-2-0-so-or-libsdl2-so/19400/8
+   if(VERSIONED_SONAME AND BUILD_SHARED_LIBS)
+      set_target_properties(${ARGV0} PROPERTIES OUTPUT_NAME ${ARGV0}-${SO_RELEASE})
+      file(CREATE_LINK lib${ARGV0}-${SO_RELEASE}.so ${CMAKE_CURRENT_BINARY_DIR}/lib${ARGV0}.so RESULT ${ARGV0}-IGNORE SYMBOLIC)
+      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib${ARGV0}.so DESTINATION ${CMAKE_INSTALL_LIBDIR})
+   endif()
+endfunction()
+
+if(NOT VERSIONED_SONAME)
+   set(CMAKE_PLATFORM_NO_VERSIONED_SONAME True)
+endif()
+
+################################
+### Per-program dependencies ###
+################################
+
+set(USE_WEBSOCKETPP FALSE)
+
+if(BUILD_REPRO)
+   set(USE_BDB TRUE)
+   set(USE_CAJUN TRUE)
+endif()
+
+if(BUILD_RECON)
+   set(USE_SRTP TRUE)
+   set(BUILD_RELOW TRUE)
+   set(BUILD_MEDIA TRUE)
+   set(BUILD_RETURN TRUE)
+endif()
+
+if(BUILD_REFLOW)
+   set(USE_SRTP TRUE)
+   set(BUILD_RETURN TRUE)
+endif()
+
+if(BUILD_RETURN)
+   set(USE_ASIO TRUE)
+endif()
+
+if(BUILD_TFM)
+   set(USE_NETXX TRUE)
+   set(USE_CPPUNIT TRUE)
+   set(USE_POPT TRUE)
+endif()
+
+if(BUILD_REND)
+   set(USE_BOOST TRUE)
+   set(USE_POPT TRUE)
+endif()
+
+if(USE_KURENTO)
+   set(USE_ASIO TRUE)
+   set(USE_WEBSOCKETPP TRUE)
+endif()
+
+
+####################
+### Dependencies ###
+####################
+
+if(NOT USE_CONTRIB)
+   find_package(PkgConfig REQUIRED)
+endif()
+
+# ares
+if(WITH_C_ARES)
+   # Don't use built-in ares
+   pkg_check_modules(cares libcares REQUIRED IMPORTED_TARGET)
+
+   set(USE_CARES true)
+   add_definitions(-DUSE_CARES)
+
+   set(ARES_LIBRARIES PkgConfig::cares)
+else()
+   # Use built-in ares
+   set(USE_ARES true)
+   add_definitions(-DUSE_ARES)
+
+   # Put the resip ares include dir before the system ones to not conflict with
+   # c-ares if also present.
+   include_directories(BEFORE rutil/dns/ares)
+   
+   set(ARES_LIBRARIES resipares)
+endif()
+
+if("${CMAKE_EXE_LINKER_FLAGS}" STREQUAL "/machine:x64")
+   set(WIN_ARCH "x64")
+else()
+   set(WIN_ARCH "Win32")
+endif()
+
+# Download NuGet Package Manager and ensure it is in %PATH%
+# before running CMake
+if(USE_NUGET)
+   find_program(NUGET_EXE NAMES nuget.exe REQUIRED)
+endif()
+
+function(nuget_inst)
+   execute_process(
+      COMMAND ${NUGET_EXE} install "${ARGV1}" -Version ${ARGV2} -ExcludeVersion -OutputDirectory ${CMAKE_BINARY_DIR}/packages
+      COMMAND_ERROR_IS_FATAL ANY
+      )
+   set(${ARGV0}_PKG_DIR "${CMAKE_BINARY_DIR}/packages/${ARGV1}" PARENT_SCOPE)
+endfunction()
+
+# OpenSSL
+if(WITH_SSL)
+   if(USE_NUGET)
+      nuget_inst(OPENSSL "openssl-native" "3.5.5")
+      # this is an argument to FindOpenSSL
+      # https://cmake.org/cmake/help/latest/module/FindOpenSSL.html
+      set(OPENSSL_ROOT_DIR ${OPENSSL_PKG_DIR})
+      set(OPENSSL_USE_STATIC_LIBS True)
+      set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT_DIR}/include)
+      set(OPENSSL_LIBRARIES OPENSSL OPENSSL_CRYPTO)
+      set(OPENSSL_FOUND TRUE)
+
+      message("Using ${OPENSSL_ROOT_DIR} and ${OPENSSL_LIBRARIES_DIR} ${WIN_ARCH}")
+
+      add_library(OPENSSL SHARED IMPORTED GLOBAL)
+      add_library(OPENSSL_CRYPTO SHARED IMPORTED GLOBAL)
+
+      set_target_properties(OPENSSL_CRYPTO PROPERTIES
+         IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/win-${WIN_ARCH}/native/libcrypto.lib"
+         IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/win-${WIN_ARCH}/native/libcrypto.lib"
+         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libcrypto-3-${WIN_ARCH}.dll"
+         IMPORTED_LOCATION_DEBUG "${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libcrypto-3-${WIN_ARCH}.dll"
+         INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_ROOT_DIR}/include"
+      )
+
+      # Note: We are adding the crypto library to the OPENSSL IMPORTED_LOCATION so that custom PostBuild copy steps only need to specify OPENSSL targets
+      set_target_properties(OPENSSL PROPERTIES
+         IMPORTED_IMPLIB_RELEASE "${OPENSSL_ROOT_DIR}/lib/win-${WIN_ARCH}/native/libssl.lib"
+         IMPORTED_IMPLIB_DEBUG "${OPENSSL_ROOT_DIR}/lib/win-${WIN_ARCH}/native/libssl.lib"
+         IMPORTED_LOCATION_RELEASE "${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libssl-3-${WIN_ARCH}.dll;${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libcrypto-3-${WIN_ARCH}.dll"
+         IMPORTED_LOCATION_DEBUG "${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libssl-3-${WIN_ARCH}.dll;${OPENSSL_ROOT_DIR}/runtimes/win-${WIN_ARCH}/native/libcrypto-3-${WIN_ARCH}.dll"
+         IMPORTED_LINK_INTERFACE_LIBRARIES "OPENSSL_CRYPTO"
+         INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_ROOT_DIR}/include"
+      )
+
+      install(IMPORTED_RUNTIME_ARTIFACTS OPENSSL_CRYPTO OPENSSL RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})
+      install(IMPORTED_RUNTIME_ARTIFACTS OPENSSL_CRYPTO OPENSSL RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+      install(IMPORTED_RUNTIME_ARTIFACTS OPENSSL_CRYPTO OPENSSL RUNTIME DESTINATION tfm)
+   elseif(USE_NDKPORTS_HACKS)
+      if(NOT ANDROID_ABI)
+         message(FATAL_ERROR "ndkports hack requested but ANDROID_ABI not set")
+      endif()
+      #set(distribution_DIR ${CMAKE_SOURCE_DIR}/../../../../distribution)
+      #set(OPENSSL_ROOT_DIR ${distribution_DIR}/openssl/${ANDROID_ABI})
+      set(OPENSSL_ROOT_DIR /src/openssl/build/port/aar/prefab/modules)
+
+      set(CRYPTO_LIBRARIES_DIR "${OPENSSL_ROOT_DIR}/crypto/libs/android.${ANDROID_ABI}")
+      set(SSL_LIBRARIES_DIR "${OPENSSL_ROOT_DIR}/ssl/libs/android.${ANDROID_ABI}")
+      set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT_DIR}/ssl/include)
+      set(OPENSSL_LIBRARIES
+            "${SSL_LIBRARIES_DIR}/libssl.so"
+            "${CRYPTO_LIBRARIES_DIR}/libcrypto.so")
+      # FIXME - check if those libraries and headers really exist
+      set(OPENSSL_FOUND TRUE)
+   else()
+      # SSL support is requested, so make it mandatory when calling find_package
+      find_package(OpenSSL 1.1.1 REQUIRED) # HINTS ${OPENSSL_LIBRARIES})
+   endif()
+   # Oldest OpenSSL API to target (1.1.1)
+   add_compile_definitions(OPENSSL_API_COMPAT=0x10101000L)
+   set_def(USE_SSL)
+else()
+   # Explicitly set OPENSSL_FOUND to false since we didn't even run
+   # find_package on it. It needs to be set to false for other CMake scripts to
+   # know it is not being used.
+   set(OPENSSL_FOUND FALSE)
+endif()
+
+# popt
+# Debian: libpopt-dev
+if(USE_POPT)
+   if(USE_CONTRIB)
+      add_subdirectory(contrib/popt)
+      set(POPT_LIBRARIES popt)
+      set(POPT_INCLUDE_DIRS contrib/popt)
+   else()
+      find_package(popt REQUIRED)
+   endif()
+   set(HAVE_POPT_H true)
+   add_definitions(-DHAVE_POPT_H)
+endif()
+
+# OpenSigComp
+if(USE_SIGCOMP)
+   if(USE_CONTRIB)
+      add_subdirectory(contrib/opensigcomp)
+      set(opensigcomp_LIBRARIES opensigcomp)
+   else()
+      find_package(opensigcomp REQUIRED)
+   endif()
+endif()
+
+# fmt
+# Debian: libfmt-dev
+if(USE_FMT)
+   if(USE_CONTRIB)
+      add_subdirectory(contrib/fmt)
+   else()
+      find_package(fmt REQUIRED)
+   endif()
+   set_def(USE_FMT)
+endif()
+
+option_def(USE_IPV6)
+option_def(USE_DTLS)
+option_def(PEDANTIC_STACK)
+
+# MySQL
+# Debian: default-libmysqlclient-dev
+if(USE_MYSQL)
+   if(USE_CONTRIB)
+      # There is a pre-compiled MySQL client binary in contrib
+      # so we hardcode the paths to the headers and binary
+      # artifacts.
+      #add_subdirectory(contrib/MySQLConnectorC)
+      set(MySQL_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/contrib/MySQLConnectorC")
+      set(MySQL_INCLUDE_DIRS "${MySQL_ROOT}/include")
+      set(MySQL_LIBRARIES "${MySQL_ROOT}/lib/Release/libmysql.lib") # TODO Fix this
+      set(MySQL_FOUND TRUE)
+   else()
+      find_package(MySQL REQUIRED)
+   endif()
+endif()
+
+# soci (MySQL, PostgreSQL)
+# Debian: libsoci-dev
+# FIXME - hardcoded
+# FIXME - MySQL, PostgreSQL
+# reConServer's B2BCallManager includes soci.h unconditionally, so soci_core
+# is needed whenever BUILD_RECONSERVER is on, even without a specific backend.
+if(USE_SOCI_POSTGRESQL OR USE_SOCI_MYSQL OR BUILD_RECONSERVER)
+   find_library(SOCI_LIBRARIES soci_core REQUIRED)
+   # FIXME include path
+   set(SOCI_INCLUDE_DIRS "/usr/include/soci")
+   option_def(USE_SOCI_POSTGRESQL)
+   option_def(USE_SOCI_MYSQL)
+endif()
+
+# PostgreSQL
+# Debian: libpq-dev postgresql-server-dev-all
+if(USE_POSTGRESQL)
+   if(USE_CONTRIB)
+      add_subdirectory(contrib/psql)
+   else()
+      find_package(PostgreSQL REQUIRED)
+   endif()
+endif()
+
+# GeoIP
+# Debian: libgeoip-dev
+if(USE_MAXMIND_GEOIP)
+   if(USE_CONTRIB)
+      # FIXME - update reSIProcate for libmaxminddb - successor to GeoIP
+      # message(FATAL_ERROR "GeoIP has been deprecated upstream, see https://github.com/maxmind/geoip-api-c")
+      add_subdirectory(contrib/GeoIP)
+      set(GEOIP_LIBRARIES libGeoIP)
+      set(GEOIP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/GeoIP/libGeoIP")
+   else()
+      find_package(GeoIP REQUIRED)
+   endif()
+endif()
+
+# radcli (RADIUS client)
+# Debian: libradcli-dev
+# FIXME: do we need to support alternatives like
+# freeradius-client and radiusclient-ng?
+if(RESIP_HAVE_RADCLI)
+   if(USE_CONTRIB)
+      do_fail_win32("radcli")
+   else()
+      pkg_check_modules(LIBRADIUS radcli REQUIRED)
+   endif()
+   option_def(RESIP_HAVE_RADCLI)
+   set_def(USE_RADIUS_CLIENT)
+endif()
+
+# NetSNMP
+# Debian: libsnmp-dev
+if(USE_NETSNMP)
+   if(USE_CONTRIB)
+      do_fail_win32("netsnmp")
+   else()
+      # net-snmp-config --agent-libs
+      pkg_check_modules(NETSNMP_AGENT netsnmp-agent REQUIRED)
+   endif()
+   set_def(USE_NETSNMP)
+endif()
+
+option_def(BUILD_REPRO)
+
+set(CMAKE_INSTALL_PKGLIBDIR ${CMAKE_INSTALL_LIBDIR}/${CMAKE_PROJECT_NAME})
+set(CMAKE_INSTALL_MIBDIR ${CMAKE_INSTALL_DATAROOTDIR}/snmp/mibs)
+
+if(BUILD_DSO_PLUGINS)
+   add_definitions(-DDSO_PLUGINS)
+   set(INSTALL_REPRO_PLUGIN_DIR ${CMAKE_INSTALL_PKGLIBDIR}/repro/plugins)
+endif()
+
+set(INSTALL_RETURN_PKGLIB_DIR ${CMAKE_INSTALL_PKGLIBDIR}/reTurnServer)
+
+option_def(BUILD_RETURN)
+
+option_def(BUILD_REND)
+
+option_def(BUILD_TFM)
+
+# BUILD_APPS has been omitted
+
+option_def(BUILD_ICHAT_GW)
+
+# Netxx
+# The old Debian libnetxx-dev package is no longer available on modern
+# distributions, so we build Netxx from contrib by default (see
+# USE_CONTRIB_NETXX above).
+if(USE_NETXX)
+   if(USE_CONTRIB OR USE_CONTRIB_NETXX)
+      add_subdirectory(contrib/Netxx-0.3.2)
+      set(NETXX_LIBRARIES Netxx)
+   else()
+      find_package(Netxx REQUIRED)
+   endif()
+endif()
+
+# cppunit
+# Debian: libcppunit-dev
+if(USE_CPPUNIT)
+   if(USE_CONTRIB)
+      add_subdirectory(contrib/cppunit/src/cppunit)
+      set(CPPUNIT_LIBRARIES cppunit)
+   else()
+      pkg_check_modules(CPPUNIT cppunit REQUIRED)
+   endif()
+endif()
+
+# BerkeleyDb
+# Debian: libdb++-dev
+if(USE_BDB)
+   if(USE_NUGET)
+      # https://www.nuget.org/packages/berkeley.db.v140
+      nuget_inst(BERKELEYDB "berkeley.db.v140" "5.3.28.3")
+      set(BERKELEYDB_ROOT_DIR "${BERKELEYDB_PKG_DIR}/build/native")
+      set(BERKELEYDB_INCLUDE_DIRS "${BERKELEYDB_ROOT_DIR}/include")
+      set(BERKELEYDB_FOUND TRUE)
+
+      add_library(BERKELEYDB SHARED IMPORTED GLOBAL)
+      set_target_properties(BERKELEYDB PROPERTIES
+         IMPORTED_IMPLIB_RELEASE "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/Release/libdb53.lib"
+         IMPORTED_IMPLIB_DEBUG "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/Debug/libdb53d.lib"
+         IMPORTED_LOCATION_RELEASE "${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Release/libdb53.dll"
+         IMPORTED_LOCATION_DEBUG "${BERKELEYDB_ROOT_DIR}/bin/${WIN_ARCH}/Debug/libdb53d.dll"
+         INTERFACE_INCLUDE_DIRECTORIES "${BERKELEYDB_ROOT_DIR}/include"
+      )
+
+      install(IMPORTED_RUNTIME_ARTIFACTS BERKELEYDB RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})
+      install(IMPORTED_RUNTIME_ARTIFACTS BERKELEYDB RUNTIME DESTINATION tfm)
+   elseif(USE_CONTRIB)
+      add_subdirectory(contrib/db)
+   else()
+      find_package(BerkeleyDb REQUIRED)
+   endif()
+   set(DB_HEADER "db_cxx.h")
+endif()
+
+# Cajun
+if(USE_CAJUN)
+   set(CAJUN_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun/include")
+endif()
+
+# ASIO
+# Debian: libasio-dev
+# modern ASIO requires C++11
+if(USE_ASIO)
+   if(USE_CONTRIB)
+      # FIXME: include asio as a Git submodule or NuGet
+      set(ASIO_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/asio")
+   else()
+      find_package(ASIO REQUIRED)
+   endif()
+endif()
+
+# Boost
+# Debian: libboost-all-dev
+if(USE_BOOST)
+   if(USE_NUGET)
+      nuget_inst(BOOST "boost" "1.80.0")
+      message("Using ${BOOST_PKG_DIR}")
+      set(BOOST_INCLUDE_DIRS "${BOOST_PKG_DIR}/lib/native/include")
+      set(BOOST_FOUND TRUE)
+   else()
+      find_package(Boost REQUIRED)
+   endif()
+endif()
+
+if(BUILD_TELEPATHY_CM)
+   option_def(BUILD_TELEPATHY_CM)
+   set(USE_QT5)
+endif()
+
+# Telepathy-Qt
+# Debian: libtelepathy-qt5-dev
+if(USE_QT5)
+   # PKG_CHECK_MODULES([QT5], [Qt5Core, Qt5DBus Qt5Network])
+   # PKG_CHECK_MODULES([TP_QT5], [TelepathyQt5, TelepathyQt5Service])])
+   find_package(TelepathyQt5 REQUIRED)
+endif()
+
+option_def(BUILD_RECON)
+
+# SRTP2
+# Debian: libsrtp2-dev
+if(USE_SRTP)
+   if(USE_SRTP1)
+      find_package(srtp REQUIRED)
+   else()
+      if(USE_CONTRIB)
+         add_subdirectory("contrib/srtp")
+
+         set(SRTP2_INCLUDE_DIRS "${libsrtp2_SOURCE_DIR}/include")
+         set_property(TARGET srtp2 PROPERTY IMPORTED_IMPLIB_RELEASE "${libsrtp2_BINARY_DIR}/Release/srtp2.lib")
+         set_property(TARGET srtp2 PROPERTY IMPORTED_IMPLIB_DEBUG "${libsrtp2_BINARY_DIR}/Debug/srtp2.lib")
+
+         set(SRTP_FOUND TRUE)
+      else()
+         find_package(srtp2 REQUIRED)
+      endif()
+   endif()
+endif()
+
+# sipXtapi
+# By default sipXtapi is cloned from GitHub and built from source (msbuild on
+# Windows, autotools via build/build_sipxtapi.sh elsewhere).  Elsewhere,
+# USE_SYSTEM_SIPXTAPI=ON uses an installed copy instead - Debian:
+# libsipxtapi-dev.
+if(USE_SIPXTAPI)
+   option_def(USE_SIPXTAPI)
+   if(NOT WIN32 AND USE_SYSTEM_SIPXTAPI)
+      find_package(sipXtapi REQUIRED)
+      # Packaged sipXtapi builds predate the recording and log callback APIs
+      set(SIPX_NO_RECORD true)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__pingtel_on_posix__")
+   else()
+      # Pin sipXtapi to a specific commit for reproducible builds and to give CI
+      # a stable cache key.  The commit lives in build/sipxtapi-commit.txt so the
+      # CMake pin and the CI cache key share a single source of truth; bump that
+      # file to move sipXtapi forward.  If no SHA is present there, the default
+      # branch HEAD is used (previous behaviour).
+      set(_sipxtapi_commit_file "${CMAKE_CURRENT_SOURCE_DIR}/build/sipxtapi-commit.txt")
+      set(SIPXTAPI_GIT_TAG_DEFAULT "")
+      if(EXISTS "${_sipxtapi_commit_file}")
+        file(STRINGS "${_sipxtapi_commit_file}" _sipxtapi_commit_lines REGEX "^[0-9a-fA-F]+$")
+        if(_sipxtapi_commit_lines)
+          list(GET _sipxtapi_commit_lines 0 SIPXTAPI_GIT_TAG_DEFAULT)
+        endif()
+      endif()
+      # Use the pin file as the source of truth on every configure, but still
+      # allow an explicit -DSIPXTAPI_GIT_TAG=<ref> to override it.
+      if(NOT DEFINED SIPXTAPI_GIT_TAG)
+        set(SIPXTAPI_GIT_TAG "${SIPXTAPI_GIT_TAG_DEFAULT}")
+      endif()
+      if(SIPXTAPI_GIT_TAG)
+        set(_sipxtapi_git_tag_arg GIT_TAG "${SIPXTAPI_GIT_TAG}")
+        message(STATUS "sipXtapi pinned to ${SIPXTAPI_GIT_TAG}")
+      else()
+        set(_sipxtapi_git_tag_arg "")
+        message(WARNING "sipXtapi is not pinned (building default branch HEAD). Set a commit SHA in build/sipxtapi-commit.txt for reproducible builds and CI caching.")
+      endif()
+   endif()
+
+   if(WIN32)
+      # arg0 - cmake library reference name
+      # arg1 - lib filename (without .lib appended)
+      # arg2 - OPTIONAL configuration directory postfix
+      function(add_sipx_lib)
+        add_library(${ARGV0} SHARED IMPORTED GLOBAL)
+        set_target_properties(${ARGV0} PROPERTIES
+            IMPORTED_CONFIGURATIONS "Release;Debug"
+            IMPORTED_IMPLIB_RELEASE "${SIPXTAPI_ROOT_DIR}/x64/Release${ARGV2}/${ARGV1}.lib"
+            IMPORTED_IMPLIB_DEBUG "${SIPXTAPI_ROOT_DIR}/x64/Debug${ARGV2}/${ARGV1}.lib")
+        add_dependencies(${ARGV0} sipXtapi)
+        set(SIPXTAPI_LIBRARIES ${SIPXTAPI_LIBRARIES} ${ARGV0} PARENT_SCOPE)
+      endfunction()
+
+      # The sipXtapi projects hard-code DEFAULT_BRIDGE_MAX_IN_OUTPUTS, so rewrite
+      # it to our value.  This is the configure step because ExternalProject
+      # re-runs a configure step whose command line changes, so changing the
+      # value re-applies it (and msbuild then rebuilds what it affects).
+      set(_sipxtapi_configure_step
+          CONFIGURE_COMMAND ${CMAKE_COMMAND}
+                            -DSIPXTAPI_SOURCE_DIR=<SOURCE_DIR>
+                            -DVALUE=${DEFAULT_BRIDGE_MAX_IN_OUTPUTS}
+                            -P ${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules/SetSipXtapiBridgeSize.cmake)
+
+      if(SIPXTAPI_PROJS_IN_VS_GUI)
+        # No need to build in this config - VS GUI will do it
+        ExternalProject_Add(sipXtapi
+          GIT_REPOSITORY https://github.com/sipXtapi/sipXtapi.git
+          ${_sipxtapi_git_tag_arg}
+          ${_sipxtapi_configure_step}
+          BUILD_COMMAND ""
+          UPDATE_COMMAND ""
+          INSTALL_COMMAND ""
+        )
+        set(SIPXTAPI_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+      else()
+        # When VS GUI is not used we build the requested configurations and link
+        # to the output manually.  SIPXTAPI_CONFIGURATIONS defaults to building
+        # both Debug and Release for local/dev use; CI overrides it with
+        # -DSIPXTAPI_CONFIGURATIONS=Debug to build only the config it tests
+        # (roughly halving the sipXtapi build time).
+        # TODO Detect VS version and use other .sln versions appropriately
+        set(SIPXTAPI_CONFIGURATIONS "Debug;Release" CACHE STRING "sipXtapi msbuild configurations to build")
+        set(_sipxtapi_build_step BUILD_COMMAND)
+        foreach(_cfg IN LISTS SIPXTAPI_CONFIGURATIONS)
+          list(APPEND _sipxtapi_build_step
+               msbuild sipX-msvc17.sln /p:Configuration=${_cfg} /p:Platform=x64 /m
+               COMMAND)
+        endforeach()
+        list(POP_BACK _sipxtapi_build_step)  # drop the trailing COMMAND keyword
+        ExternalProject_Add(sipXtapi
+          GIT_REPOSITORY https://github.com/sipXtapi/sipXtapi.git
+          ${_sipxtapi_git_tag_arg}
+          ${_sipxtapi_configure_step}
+          BUILD_IN_SOURCE TRUE
+          ${_sipxtapi_build_step}
+          UPDATE_COMMAND ""
+          INSTALL_COMMAND ""
+        )
+        set(SIPXTAPI_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/sipXtapi-prefix/src/sipXtapi")
+      endif()
+
+      set(SIPXTAPI_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}/sipXtapi-prefix/src/sipXtapi")
+      message("Using SIPXTAPI_ROOT_DIR=${SIPXTAPI_ROOT_DIR}")
+
+      # Setup libraries
+      add_sipx_lib(sipXtapi-pcre pcre)
+      add_sipx_lib(sipXportLib sipXportLib)
+      add_sipx_lib(sipXsdpLib sipXsdpLib)
+      add_sipx_lib(sipXmediaLib sipXmediaLib)
+      add_sipx_lib(sipXmediaAdapterLib sipXmediaAdapterLib)
+      add_sipx_lib(libspeexdsp libspeexdsp _RTL_dll)
+      add_sipx_lib(opusenc opusenc)
+      add_sipx_lib(opus opus)
+      add_sipx_lib(opusfile opusfile -NoHTTP)
+      add_sipx_lib(libogg libogg)
+
+      # Setup Includes
+      set(SIPXTAPI_INCLUDE_DIRS 
+          "${SIPXTAPI_ROOT_DIR}/sipXportLib/include"
+          "${SIPXTAPI_ROOT_DIR}/sipXsdpLib/include"
+          "${SIPXTAPI_ROOT_DIR}/sipXmediaLib/include"
+          "${SIPXTAPI_ROOT_DIR}/sipXtackLib/include"
+          "${SIPXTAPI_ROOT_DIR}/sipXcallLib/include"
+          "${SIPXTAPI_ROOT_DIR}/sipXmediaAdapterLib/interface"
+          "${SIPXTAPI_ROOT_DIR}/sipXmediaAdapterLib/sipXmediaMediaProcessing/include"
+      )
+
+      # Setup sipXtapi codec plugins so that they can be copied to binary locations for running
+      function(add_sipx_codec_plugin)
+        set(SIPXTAPI_CODEC_PLUGINS_DEBUG ${SIPXTAPI_CODEC_PLUGINS_DEBUG} "${SIPXTAPI_OUTPUT_DIR}/x64/Debug/${ARGV0}.dll" PARENT_SCOPE)
+        set(SIPXTAPI_CODEC_PLUGINS_RELEASE ${SIPXTAPI_CODEC_PLUGINS_RELEASE} "${SIPXTAPI_OUTPUT_DIR}/x64/Release/${ARGV0}.dll" PARENT_SCOPE)
+      endfunction()
+
+      add_library(SIPXTAPI_CODEC_PLUGINS SHARED IMPORTED GLOBAL)
+      add_sipx_codec_plugin(codec_gsm)
+      add_sipx_codec_plugin(codec_g729)
+      add_sipx_codec_plugin(codec_ilbc)
+      add_sipx_codec_plugin(codec_l16)
+      add_sipx_codec_plugin(codec_opus)
+      add_sipx_codec_plugin(codec_pcmapcmu)
+      add_sipx_codec_plugin(codec_speex)
+      add_sipx_codec_plugin(codec_tones)
+      set_target_properties(SIPXTAPI_CODEC_PLUGINS PROPERTIES
+        IMPORTED_LOCATION_RELEASE "${SIPXTAPI_CODEC_PLUGINS_RELEASE}"
+        IMPORTED_LOCATION_DEBUG "${SIPXTAPI_CODEC_PLUGINS_DEBUG}"
+      )
+
+      if(SIPXTAPI_PROJS_IN_VS_GUI)
+        function(add_sipx_msproject)
+          include_external_msproject(${ARGV0} ${SIPXTAPI_ROOT_DIR}/${ARGV1})
+          # Setup VS folder
+          set_target_properties(${ARGV0} PROPERTIES FOLDER ${ARGV2})
+          set(SIPXTAPI_VSPROJ_DEPS ${SIPXTAPI_VSPROJ_DEPS} "${ARGV0}" PARENT_SCOPE)
+        endfunction()
+
+        # Add sipXtapi projects to Visual Studio solution (useful when deveoping in Visual Studio GUI)
+        # If this is enabled then building from the command line (cmake or ninja) will not work.
+        # TODO Detect VS version and use other .vcxproj versions appropriately
+        add_sipx_msproject(sipXtapi-pcre-proj sipXportLib/contrib/pcre/pcre_17_0.vcxproj sipXtapi)
+        add_sipx_msproject(sipXportLib-proj sipXportLib/sipXportLib-msvc17.vcxproj sipXtapi)
+        add_sipx_msproject(sipXsdpLib-proj sipXsdpLib/sipXsdpLib-msvc17.vcxproj sipXtapi)
+        add_sipx_msproject(sipXmediaLib-proj sipXmediaLib/sipXmediaLib-msvc17.vcxproj sipXtapi)
+        add_sipx_msproject(sipXmediaAdapterLib-proj sipXmediaAdapterLib/sipXmediaAdapterLib-msvc17.vcxproj sipXtapi)
+    
+        # Codec contrib projects
+        add_sipx_msproject(libg729a-proj sipXmediaLib/contrib/libg729a/libg729a-msvc17.vcxproj sipXtapi/ThirdPartyCodecs)
+        add_sipx_msproject(libgsm-proj sipXmediaLib/contrib/libgsm/libgsm-msvc17.vcxproj sipXtapi/ThirdPartyCodecs)
+        add_sipx_msproject(libilbc-proj sipXmediaLib/contrib/libilbc/VS2022/libilbc-msvc17.vcxproj sipXtapi/ThirdPartyCodecs)
+        add_sipx_msproject(libogg-proj sipXmediaLib/contrib/libopus/libogg/win32/VS2022/libogg.vcxproj sipXtapi/ThirdPartyCodecs)
+        add_sipx_msproject(libspeex-proj sipXmediaLib/contrib/libspeex/win32/VS2022/libspeex/libspeex.vcxproj sipXtapi/ThirdPartyCodecs)
+        add_sipx_msproject(libspeexdsp-proj sipXmediaLib/contrib/libspeex/win32/VS2022/libspeexdsp/libspeexdsp.vcxproj sipXtapi/ThirdPartyCodecs)
+        add_sipx_msproject(opus-proj sipXmediaLib/contrib/libopus/opus/win32/VS2022/opus.vcxproj sipXtapi/ThirdPartyCodecs)
+        add_sipx_msproject(opusenc-proj sipXmediaLib/contrib/libopus/libopusenc/win32/VS2022/opusenc.vcxproj sipXtapi/ThirdPartyCodecs)
+        add_sipx_msproject(opusfile-proj sipXmediaLib/contrib/libopus/opusfile/win32/VS2022/opusfile.vcxproj sipXtapi/ThirdPartyCodecs)
+        # Make sure we pickup the NoHTTP versions of these projects
+        set_property(TARGET opusfile-proj PROPERTY MAP_IMPORTED_CONFIG_RELEASE "Release-NoHTTP")
+        set_property(TARGET opusfile-proj PROPERTY MAP_IMPORTED_CONFIG_DEBUG "Debug-NoHTTP")
+
+        # Codec plugin projects
+        add_sipx_msproject(plgg729-proj sipXmediaLib/src/mp/codecs/plgg729/plgg729-msvc17.vcxproj sipXtapi/CodecPlugins)
+        add_sipx_msproject(plggsm-proj sipXmediaLib/src/mp/codecs/plggsm/plggsm-msvc17.vcxproj sipXtapi/CodecPlugins)
+        add_sipx_msproject(plgilbc-proj sipXmediaLib/src/mp/codecs/plgilbc/plgilbc-msvc17.vcxproj sipXtapi/CodecPlugins)
+        add_sipx_msproject(plgl16-proj sipXmediaLib/src/mp/codecs/plgl16/plgl16-msvc17.vcxproj sipXtapi/CodecPlugins)
+        add_sipx_msproject(plgopus-proj sipXmediaLib/src/mp/codecs/plgopus/plgopus-msvc17.vcxproj sipXtapi/CodecPlugins)
+        add_sipx_msproject(plgpcmapcmu-proj sipXmediaLib/src/mp/codecs/plgpcmapcmu/plgpcmapcmu-msvc17.vcxproj sipXtapi/CodecPlugins)
+        add_sipx_msproject(plgspeex-proj sipXmediaLib/src/mp/codecs/plgspeex/plgspeex-msvc17.vcxproj sipXtapi/CodecPlugins)
+        add_sipx_msproject(plgtones-proj sipXmediaLib/src/mp/codecs/plgtones/plgtones-msvc17.vcxproj sipXtapi/CodecPlugins)
+      endif()
+   elseif(NOT USE_SYSTEM_SIPXTAPI)
+      # ExternalProject clones sipXtapi and build_sipxtapi.sh runs its autotools
+      # build, installing into the ExternalProject prefix.  Building needs git,
+      # autoconf, automake, libtool, patch, pkg-config and the development
+      # packages for pcre (1.x), OpenSSL and ALSA.
+      set(SIPXTAPI_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/sipXtapi-prefix")
+      set(_sipxtapi_libs sipXport sipXsdp sipXmedia sipXmediaProcessing)
+      set(_sipxtapi_byproducts "")
+      foreach(_lib IN LISTS _sipxtapi_libs)
+        list(APPEND _sipxtapi_byproducts
+             "${SIPXTAPI_INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${_lib}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+      endforeach()
+      ExternalProject_Add(sipXtapi
+        GIT_REPOSITORY https://github.com/sipXtapi/sipXtapi.git
+        ${_sipxtapi_git_tag_arg}
+        UPDATE_COMMAND ""
+        # The build is all in BUILD_COMMAND; this only names the value sipXtapi
+        # is built with.  ExternalProject re-runs a configure step whose command
+        # line changes, and the build step after it, so changing
+        # DEFAULT_BRIDGE_MAX_IN_OUTPUTS rebuilds sipXtapi with the new value.
+        CONFIGURE_COMMAND ${CMAKE_COMMAND} -E echo
+                          "sipXtapi DEFAULT_BRIDGE_MAX_IN_OUTPUTS=${DEFAULT_BRIDGE_MAX_IN_OUTPUTS}"
+        BUILD_IN_SOURCE TRUE
+        BUILD_COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/build/build_sipxtapi.sh
+                      <SOURCE_DIR> <INSTALL_DIR> ${DEFAULT_BRIDGE_MAX_IN_OUTPUTS}
+        INSTALL_COMMAND ""
+        BUILD_BYPRODUCTS ${_sipxtapi_byproducts}
+      )
+
+      # The include directory must exist at configure time for it to be used
+      # in a target's interface.
+      file(MAKE_DIRECTORY "${SIPXTAPI_INSTALL_DIR}/include/sipxtapi")
+      set(SIPXTAPI_INCLUDE_DIRS "${SIPXTAPI_INSTALL_DIR}/include/sipxtapi")
+
+      set(SIPXTAPI_LIBRARIES "")
+      foreach(_lib _byproduct IN ZIP_LISTS _sipxtapi_libs _sipxtapi_byproducts)
+        add_library(sipXtapi_${_lib} SHARED IMPORTED GLOBAL)
+        set_target_properties(sipXtapi_${_lib} PROPERTIES IMPORTED_LOCATION "${_byproduct}")
+        add_dependencies(sipXtapi_${_lib} sipXtapi)
+        list(APPEND SIPXTAPI_LIBRARIES sipXtapi_${_lib})
+      endforeach()
+
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__pingtel_on_posix__")
+   endif()
+endif()
+
+option_def(USE_KURENTO)
+
+# gstreamermm
+# Debian: libgstreamermm-1.0-dev
+if(USE_GSTREAMER)
+   option_def(USE_GSTREAMER)
+   pkg_check_modules(GSTREAMERMM_1_0 gstreamermm-1.0 REQUIRED)
+
+   # gstwebrtc-1.0
+   # Debian: libgstreamer-plugins-bad1.0-dev
+   pkg_check_modules(GST_WEBRTC gstreamer-webrtc-1.0 REQUIRED)
+endif()
+
+option_def(USE_LIBWEBRTC)
+
+option_def(RECON_LOCAL_HW_TESTS)
+
+# Python
+# Debian: python3-dev python3-cxx-dev
+if(BUILD_PYTHON)
+   find_package(Python3 COMPONENTS Development REQUIRED)
+   pkg_check_modules(PYCXX PyCXX REQUIRED)
+   if(NOT PYCXX_SRCDIR)
+      pkg_get_variable(PYCXX_SRCDIR PyCXX srcdir)
+      if(NOT PYCXX_SRCDIR)
+         message(FATAL_ERROR "Failed to obtain PyCXX srcdir automatically, please set it manually or disable BUILD_PYTHON")
+      endif()
+   endif()
+   add_definitions(-DPy_LIMITED_API=0x03090000)
+endif()
+
+# Apache Qpid Proton
+# Debian: libqpid-proton-cpp12-dev
+if(BUILD_QPID_PROTON)
+   pkg_check_modules(QPIDPROTON libqpid-proton-cpp)
+   if(NOT QPIDPROTON_FOUND)
+      # Debian 12's libqpid-proton-cpp.pc requires libqpid-proton-core.pc and
+      # libqpid-proton-proactor.pc, which no Debian 12 package ships, so
+      # pkg-config fails even though the library is installed.
+      find_path(QPIDPROTON_INCLUDE_DIRS proton/container.hpp)
+      find_library(QPIDPROTON_LIBRARIES qpid-proton-cpp)
+      if(NOT QPIDPROTON_INCLUDE_DIRS OR NOT QPIDPROTON_LIBRARIES)
+         message(FATAL_ERROR "Qpid Proton C++ (libqpid-proton-cpp) not found; install it or disable BUILD_QPID_PROTON")
+      endif()
+      message(STATUS "Found Qpid Proton C++ without pkg-config: ${QPIDPROTON_LIBRARIES}")
+   endif()
+   option_def(BUILD_QPID_PROTON)
+endif()
+
+option_def(RESIP_ASSERT_SYSLOG)
+
+# FIXME
+# The AC_SEARCH_LIBS macro from autotools doesn't
+# appear to have an equivalent in CMake.
+# If we need to link against nsl or socket then it
+# needs to be specified manuall on the CMake command line.
+# AC_SEARCH_LIBS(gethostbyname, nsl)
+# AC_SEARCH_LIBS(socket, socket)
+
+# websocketpp
+# Debian: libwebsocketpp-dev
+if(USE_WEBSOCKETPP)
+   if(USE_NUGET)
+      nuget_inst(WEBSOCKETPP "websocketpp-mtk.repack" "0.7.0-mtk19")
+      message("Using ${WEBSOCKETPP_PKG_DIR}")
+      set(WEBSOCKETPP_INCLUDE_DIRS "${PKG_DIR}/build/native/include")
+      set(WEBSOCKETPP_FOUND TRUE)
+   else()
+      find_package(websocketpp REQUIRED)
+   endif()
+endif()
+
+# monotonic clock
+include(CheckCSourceRuns)
+
+check_c_source_runs("
+   #include <time.h>
+   int main() {
+      struct timespec ts;
+      clock_gettime(CLOCK_MONOTONIC, &ts);
+      return 0;
+   }" HAVE_CLOCK_GETTIME_MONOTONIC)
+
+if(HAVE_CLOCK_GETTIME_MONOTONIC)
+   add_definitions(-DHAVE_CLOCK_GETTIME_MONOTONIC)
+endif()
+
+# epoll
+include(CheckIncludeFiles)
+check_include_files(sys/epoll.h HAVE_EPOLL)
+
+include(CheckSymbolExists)
+check_symbol_exists(SOCK_CLOEXEC "sys/socket.h" HAVE_SOCK_CLOEXEC)
+
+# HAVE_LIBDL from autotools obsolete,
+# now we use CMAKE_DL_LIBS to include the library
+# when necessary
+
+# gperf
+set(GPERF_SIZE_TYPE "size_t")
+
+if(WIN32)
+   add_definitions(-DNOMINMAX)
+   add_compile_definitions(_WIN32_WINNT=0x0601)
+endif()
+
+##############################
+### Generation of config.h ###
+##############################
+# TODO - Bring more values from autotools
+add_definitions(-DHAVE_CONFIG_H)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/resip/)
+
+# Used to group targets together when CMake generates projects for IDEs
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# Present each target's files as a single flat list in generated IDE projects
+# (e.g. Visual Studio) instead of the default "Source Files" / "Header Files"
+# folders, with .config/.txt/.pem files collected under one "Config and Text
+# Files" folder.
+#
+# source_group() only affects the directory scope in which it is called and is
+# NOT inherited by subdirectories, so a single call here would not reach targets
+# defined under add_subdirectory().  Instead we wrap add_library()/
+# add_executable() -- which run in the caller's directory scope -- so the
+# grouping is applied wherever a target is defined.  Redefining the default
+# groups with a regex that never matches ("^$") leaves their files unmatched, so
+# they fall back to the project root.
+function(_resip_flatten_source_groups)
+   source_group("Source Files"          REGULAR_EXPRESSION "^$")
+   source_group("Header Files"          REGULAR_EXPRESSION "^$")
+   source_group("Resource Files"        REGULAR_EXPRESSION "^$")
+   source_group("Config and Text Files" REGULAR_EXPRESSION "\\.(config|txt|pem)$")
+endfunction()
+
+function(add_library)
+   _add_library(${ARGV})
+   _resip_flatten_source_groups()
+endfunction()
+
+function(add_executable)
+   _add_executable(${ARGV})
+   _resip_flatten_source_groups()
+endfunction()
+
+if(MSVC)
+    add_compile_options(/W3 /sdl)
+endif()
+
+add_subdirectory(rutil)
+
+add_subdirectory(resip)
+
+if(BUILD_REPRO)
+   add_subdirectory(repro)
+endif()
+
+if(BUILD_TFM)
+   add_subdirectory(tfm)
+endif()
+
+if(BUILD_MEDIA)
+   add_subdirectory(media)
+endif()
+
+if(BUILD_RETURN)
+   add_subdirectory(reTurn)
+endif()
+
+if(BUILD_REFLOW)
+   add_subdirectory(reflow)
+endif()
+
+if(BUILD_P2P)
+   add_subdirectory(p2p)
+endif()
+
+add_subdirectory(apps)
+
+# Create spec file for RPM packaging
+# The tarball containing a spec file can be fed directly
+# to the rpmbuild command.
+configure_file(
+   resiprocate.spec.in
+   resiprocate.spec
+   @ONLY)
+
+# Add 'make dist' command for creating release tarball
+set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set (CPACK_SOURCE_GENERATOR "TGZ")
+set (CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CPACK_PACKAGE_VERSION}")
+
+# pax appears to be the default, we need it due to some filenames
+#set (COMPRESSION_OPTIONS --format=pax)
+
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/\\\\.git/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.gitignore")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/CMakeFiles/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/_CPack_Packages/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.deps/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.libs/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/.*\\\\.gz")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/.*\\\\.zip")
+list(APPEND CPACK_SOURCE_IGNORE_FILES ".*\\\\.o")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "lib.*\\\\.so*")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/CMakeCache.txt")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/contrib/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/debian/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "Makefile")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/config.h$")
+
+include (CPack)
+add_custom_target (dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
+
+###############
+### Summary ###
+###############
+
+include(FeatureSummary)
+feature_summary(WHAT ALL)

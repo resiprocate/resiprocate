@@ -31,14 +31,14 @@ class TransactionState
       TransactionState(TransactionController& controller, 
                        Machine m, 
                        State s, 
-                       UInt64 tid);
+                       uint64_t tid);
       
       void processClientRequest(Message* msg);
       void processServerRequest(Message* msg);
       
       bool isClient() const;
-      void add(UInt64 tid);
-      void erase(UInt64 tid);
+      void add(uint64_t tid);
+      void erase(uint64_t tid);
       
    private:
       
@@ -49,7 +49,7 @@ class TransactionState
 
       Message* mMsgToRetransmit;
 
-      UInt64 mTid;
+      uint64_t mTid;
       
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
       friend class TransactionController;

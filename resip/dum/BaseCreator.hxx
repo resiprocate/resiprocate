@@ -5,6 +5,8 @@
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 
+#include <memory>
+
 namespace resip
 {
 
@@ -13,21 +15,27 @@ class DialogUsageManager;
 class BaseCreator
 {
    public:
-      BaseCreator(DialogUsageManager& dum, const SharedPtr<UserProfile>& userProfile);
-      virtual ~BaseCreator();
-      SharedPtr<SipMessage> getLastRequest();
-      SharedPtr<UserProfile> getUserProfile();
+      BaseCreator(DialogUsageManager& dum, std::shared_ptr<UserProfile> userProfile);
+      BaseCreator(const BaseCreator&) = delete;
+      BaseCreator(BaseCreator&&) = delete;
+      virtual ~BaseCreator() = default;
+
+      BaseCreator& operator=(const BaseCreator&) = delete;
+      BaseCreator& operator=(BaseCreator&&) = delete;
+
+      std::shared_ptr<SipMessage> getLastRequest() const noexcept;
+      std::shared_ptr<UserProfile> getUserProfile() const noexcept;
       //const SipMessage& getLastRequest() const;
 
    protected:
       void makeInitialRequest(const NameAddr& target, MethodTypes method);
       void makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodTypes method);
-      
+
       // this will get updated when an initial request is challenged. where we
       // store the credentials and last cseq
-      SharedPtr<SipMessage> mLastRequest;
+      std::shared_ptr<SipMessage> mLastRequest;
       DialogUsageManager& mDum;
-      SharedPtr<UserProfile> mUserProfile;
+      std::shared_ptr<UserProfile> mUserProfile;
 };
 
 }

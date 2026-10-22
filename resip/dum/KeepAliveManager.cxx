@@ -48,10 +48,10 @@ KeepAliveManager::add(const Tuple& target, int keepAliveInterval, bool targetSup
    else
    {
       it->second.refCount++;
-      if(keepAliveInterval < it->second.keepAliveInterval || targetSupportsOutbound)  // if targetSupportsOutbound, then always update the interval, as value may be from Flow-Timer header
+      if(keepAliveInterval < it->second.keepAliveInterval)
       {
-         // ?slg? only allow value to be shortened???  What if 2 different profiles 
-         // with different keepAliveTime settings are sharing this network association?         
+         // Only allow value to be shortened.  This can happen if 2 different profiles 
+         // with different keepAliveTime settings are sharing this network association.
          it->second.keepAliveInterval = keepAliveInterval;  
       }
       if(targetSupportsOutbound)

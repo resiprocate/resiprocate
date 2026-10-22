@@ -53,7 +53,7 @@ public:
    virtual void thread()
    {
       asio::error_code rc;
-      TurnUdpSocket turnSocket(asio::ip::address::from_string(address.c_str()), 2000);
+      TurnUdpSocket turnSocket(asio::ip::make_address(address.c_str()), 2000);
 
       char buffer[1024];
       unsigned int size = sizeof(buffer);
@@ -130,7 +130,7 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").  serverTuple=" << stunServerTuple);
    }
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, uint64_t reservationToken)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onAllocationSuccess: socketDest=" << socketDesc << 
               ", reflexive=" << reflexiveTuple << 
@@ -142,11 +142,11 @@ public:
        // Test Data sending and receiving over allocation
        resip::Data turnData("This test is for wrapped Turn Data!");
        InfoLog( << "CLIENT: Sending: " << turnData);
-       mTurnAsyncSocket->sendTo(asio::ip::address::from_string(address.c_str()), 2000, turnData.c_str(), turnData.size()+1);
+       mTurnAsyncSocket->sendTo(asio::ip::make_address(address.c_str()), 2000, turnData.c_str(), turnData.size()+1);
 
        turnData = "This test should be in ChannelData message in TCP/TLS but not in UDP - since ChannelBindResponse is not yet received.";
        InfoLog( << "CLIENT: Sending: " << turnData);
-       mTurnAsyncSocket->setActiveDestination(asio::ip::address::from_string(address.c_str()), 2000);
+       mTurnAsyncSocket->setActiveDestination(asio::ip::make_address(address.c_str()), 2000);
        mTurnAsyncSocket->send(turnData.c_str(), turnData.size()+1);       
    }
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e)
@@ -205,7 +205,7 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onSendFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onReceiveSuccess: socketDest=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", data=" << data->data());
 
@@ -281,26 +281,29 @@ int main(int argc, char* argv[])
     char password[256] = "1234";
     TurnPeer turnPeer;
     turnPeer.run();
-    asio::io_service ioService;
+    asio::io_context ioService;
     MyTurnAsyncSocketHandler handler;
 
 #ifdef USE_SSL
     // Setup SSL context
-    asio::ssl::context sslContext(ioService, asio::ssl::context::tlsv1);
+    asio::ssl::context sslContext(asio::ssl::context::tls_client);  // any TLS version reTurn accepts
     // Enable certificate validation
     sslContext.set_verify_mode(asio::ssl::context::verify_peer |   // Verify the peer.
                                asio::ssl::context::verify_fail_if_no_peer_cert);  // Fail verification if the peer has no certificate.
     sslContext.load_verify_file("ca.pem");
 #endif
 
-    boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
+    const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, &handler, asio::ip::make_address(address.c_str()), 0);
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, &handler, asio::ip::make_address(address.c_str()), 0);
 #ifdef USE_SSL
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, false /* validateServerCertificateHostname */, &handler, asio::ip::address::from_string(address.c_str()), 0));
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, false /* validateServerCertificateHostname */, &handler, asio::ip::make_address(address.c_str()), 0);
 #endif
     //port=5349;
 
     handler.setTurnAsyncSocket(turnSocket.get());
+
+    // Set software attributes
+    turnSocket->setSoftware("My Async Client");
 
     // Connect to Stun/Turn Server
     turnSocket->connect(argv[1], port);
@@ -313,7 +316,7 @@ int main(int argc, char* argv[])
     turnPeer.shutdown();
     turnPeer.join();
   }
-  catch (std::exception& e)
+  catch (const std::exception& e)
   {
     std::cerr << "Exception: " << e.what() << "\n";
   }
@@ -324,6 +327,7 @@ int main(int argc, char* argv[])
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

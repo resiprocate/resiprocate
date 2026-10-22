@@ -12,7 +12,7 @@ class SipMessage;
 class PagerMessageCreator: public BaseCreator
 {
    public:
-      PagerMessageCreator(DialogUsageManager& dum, const NameAddr& target, SharedPtr<UserProfile> userProfile);
+      PagerMessageCreator(DialogUsageManager& dum, const NameAddr& target, std::shared_ptr<UserProfile> userProfile);
 };
  
 }

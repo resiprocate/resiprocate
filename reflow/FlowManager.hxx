@@ -5,14 +5,21 @@
 #include "config.h"
 #endif
 
+#include "FlowContext.hxx"
 #include "MediaStream.hxx"
 #include "FlowManagerException.hxx"
+#include "RTCPEventLoggingHandler.hxx"
 
 #include "dtls_wrapper/DtlsFactory.hxx"
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 
+#include <asio.hpp>
+#include <asio/ssl.hpp>
+
 #include <map>
+#include <memory>
+#include <utility>
 
 using namespace reTurn;
 
@@ -30,6 +37,7 @@ namespace flowmanager
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 class IOServiceThread;
+class FlowDtlsTimerContext;
 
 class FlowManager
 {
@@ -46,26 +54,51 @@ public:
                                   const char* natTraversalServerHostname = 0, 
                                   unsigned short natTraversalServerPort = 0, 
                                   const char* stunUsername = 0,
-                                  const char* stunPassword = 0);
+                                  const char* stunPassword = 0,
+                                  bool forceCOMedia = false,
+                                  std::shared_ptr<FlowContext> context = nullptr);
 
    void initializeDtlsFactory(const char* certAor);
+#ifdef USE_SSL
+   // Creates the self-signed RSA certificate initializeDtlsFactory uses, for the AOR sip:<pAor>,
+   // signed with SHA-256.  Returns non-zero on success.
+   static int createCert(const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey);
+#endif
    dtls::DtlsFactory* getDtlsFactory() { return mDtlsFactory; }
+
+#ifdef USE_SSL
+   /// Adds the root (CA) certificates in a PEM file to those TURN servers' TLS certificates are
+   /// verified with.  "ca.pem" in the working directory is loaded at construction, if it exists.
+   /// Returns false if the file can't be loaded.
+   bool addTlsRootCertificates(const resip::Data& rootCertificatesFile);
+#endif
+
+   /// Whether flows using TURN over TLS check that the server's certificate is for the TURN
+   /// server's host name (or IP address) - default true.  Applies to media streams created after
+   /// the call.
+   void setValidateTlsServerHostname(bool validate) { mValidateTlsServerHostname = validate; }
+
+   void setRTCPEventLoggingHandler(std::shared_ptr<RTCPEventLoggingHandler> handler) noexcept { mRtcpEventLoggingHandler = handler; }
+   RTCPEventLoggingHandler* getRTCPEventLoggingHandler() const noexcept { return 0 != mRtcpEventLoggingHandler.get() ? mRtcpEventLoggingHandler.get() : 0; }
 
 protected: 
 
 private:
    static void srtpEventHandler(srtp_event_data_t *data);
 
+   std::shared_ptr<RTCPEventLoggingHandler> mRtcpEventLoggingHandler;
+
    // Member variables used to manager asio io service thread
-   asio::io_service mIOService;
+   asio::io_context mIOService;
    IOServiceThread* mIOServiceThread;
-   asio::io_service::work* mIOServiceWork;
-   static int createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey );
+   asio::executor_work_guard<asio::io_context::executor_type>* mIOServiceWork;
    asio::ssl::context mSslContext;
    
    X509* mClientCert;
    EVP_PKEY* mClientKey;
    dtls::DtlsFactory* mDtlsFactory;
+   FlowDtlsTimerContext* mDtlsTimerContext;  // owned by mDtlsFactory
+   bool mValidateTlsServerHostname = true;
 };
 
 }
@@ -75,6 +108,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -65,7 +65,7 @@ main(int argc, char* argv[])
    {
       FdSet fdset;
        
-      UInt64 t = Timer::getTimeMicroSec();
+      uint64_t t = Timer::getTimeMicroSec();
 
       for( int port=startPort; port<endPort; port++)
       {

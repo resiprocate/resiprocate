@@ -12,9 +12,9 @@ using namespace resip;
 using namespace std;
 
 bool
-isNear(UInt64 value, UInt64 reference, UInt64 epsilon=250)
+isNear(uint64_t value, uint64_t reference, uint64_t epsilon=250)
 {
-    UInt64  diff = value > reference ? value - reference : reference - value;
+    uint64_t  diff = value > reference ? value - reference : reference - value;
 
     return (diff < epsilon);
 }

@@ -1,6 +1,6 @@
 #include "UdpServer.hxx"
 #include "StunMessage.hxx"
-#include <boost/bind.hpp>
+#include <functional>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
@@ -10,9 +10,16 @@
 using namespace std;
 using namespace resip;
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+#include <chrono>
+using namespace std::chrono;
+#endif
+
 namespace reTurn {
 
-UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
+UdpServer::UdpServer(asio::io_context& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : AsyncUdpSocketBase(ioService),
   mRequestHandler(requestHandler),
   mAlternatePortUdpServer(0),
@@ -74,7 +81,7 @@ UdpServer::getSocket()
 }
 
 void 
-UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    if (data->size() > 4)
    {
@@ -93,7 +100,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
          // Try to parse stun message
          StunMessage request(StunTuple(StunTuple::UDP, mLocalAddress, mLocalPort),
                              StunTuple(StunTuple::UDP, address, port),
-                             (char*)&(*data)[0], data->size());
+                             (char*)&(*data)[0], (unsigned int)data->size());
          if(request.isValid())
          {
             StunMessage* response;
@@ -136,8 +143,8 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
                responseUdpServer = it->second->mResponseUdpServer;
             }
 
-#define RESPONSE_BUFFER_SIZE 1024
-            boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+            constexpr size_t RESPONSE_BUFFER_SIZE = 1024;
+            const auto buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
             unsigned int responseSize;
             responseSize = response->stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
             buffer->truncate(responseSize);  // set size to real size
@@ -209,8 +216,8 @@ UdpServer::ResponseEntry::ResponseEntry(UdpServer* requestUdpServer, UdpServer* 
    mCleanupTimer(requestUdpServer->mIOService)
 {
    // start timer
-   mCleanupTimer.expires_from_now(boost::posix_time::seconds(10));  // Transaction Responses are cached for 10 seconds
-   mCleanupTimer.async_wait(boost::bind(&UdpServer::cleanupResponseMap, requestUdpServer, asio::placeholders::error, responseMessage->mHeader.magicCookieAndTid));
+   mCleanupTimer.expires_after(seconds(10));  // Transaction Responses are cached for 10 seconds
+   mCleanupTimer.async_wait(std::bind(&UdpServer::cleanupResponseMap, requestUdpServer, std::placeholders::_1, responseMessage->mHeader.magicCookieAndTid));
 }
 
 UdpServer::ResponseEntry::~ResponseEntry() 

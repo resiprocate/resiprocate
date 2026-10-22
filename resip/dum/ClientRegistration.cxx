@@ -17,11 +17,13 @@
 #include "rutil/TransportType.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
-static const UInt32 UnreasonablyLowExpirationThreshold = 7;  // The threshold before which we consider a contacts expiry to be unreasonably low
+static const uint32_t UnreasonablyLowExpirationThreshold = 7;  // The threshold before which we consider a contacts expiry to be unreasonably low
 
 ClientRegistrationHandle
 ClientRegistration::getHandle()
@@ -31,7 +33,7 @@ ClientRegistration::getHandle()
 
 ClientRegistration::ClientRegistration(DialogUsageManager& dum,
                                        DialogSet& dialogSet,
-                                       SharedPtr<SipMessage> request)
+                                       std::shared_ptr<SipMessage> request)
    : NonDialogUsage(dum, dialogSet),
      mLastRequest(request),
      mTimerSeq(0),
@@ -43,7 +45,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
      mExpires(0),
      mRefreshTime(0),
      mQueuedState(None),
-     mQueuedRequest(new SipMessage)
+     mQueuedRequest(std::make_shared<SipMessage>())
 {
    // If no Contacts header, this is a query
    if (mLastRequest->exists(h_Contacts))
@@ -69,7 +71,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
 ClientRegistration::~ClientRegistration()
 {
    DebugLog ( << "ClientRegistration::~ClientRegistration" );
-   mDialogSet.mClientRegistration = 0;
+   mDialogSet.mClientRegistration = nullptr;
 
    // !dcm! Will not interact well with multiple registrations from the same AOR
    mDialogSet.mUserProfile->setServiceRoute(NameAddrs());
@@ -81,7 +83,7 @@ ClientRegistration::addBinding(const NameAddr& contact)
    addBinding(contact, mDialogSet.mUserProfile->getDefaultRegistrationTime());
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ClientRegistration::tryModification(ClientRegistration::State state)
 {
    if (mState != Registered)
@@ -112,9 +114,9 @@ ClientRegistration::tryModification(ClientRegistration::State state)
 }
 
 void
-ClientRegistration::addBinding(const NameAddr& contact, UInt32 registrationTime)
+ClientRegistration::addBinding(const NameAddr& contact, uint32_t registrationTime)
 {
-   SharedPtr<SipMessage> next = tryModification(Adding);
+   auto next = tryModification(Adding);
    mMyContacts.push_back(contact);
    tagContact(mMyContacts.back());
 
@@ -139,7 +141,7 @@ ClientRegistration::removeBinding(const NameAddr& contact)
       throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
 
-   SharedPtr<SipMessage> next = tryModification(Removing);
+   auto next = tryModification(Removing);
    for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
    {
       if (i->uri() == contact.uri())
@@ -172,7 +174,7 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
       throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
 
-   SharedPtr<SipMessage> next = tryModification(Removing);
+   auto next = tryModification(Removing);
 
    mAllContacts.clear();
    mMyContacts.clear();
@@ -208,16 +210,16 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
       throw UsageUseException("No bindings to remove", __FILE__,__LINE__);
    }
 
-   SharedPtr<SipMessage> next = tryModification(Removing);
+   auto next = tryModification(Removing);
 
    next->header(h_Contacts) = mMyContacts;
    mMyContacts.clear();
 
    NameAddrs& myContacts = next->header(h_Contacts);
 
-   for (NameAddrs::iterator i=myContacts.begin(); i != myContacts.end(); i++)
+   for (auto& myContact : myContacts)
    {
-      i->param(p_expires) = 0;
+      myContact.param(p_expires) = 0;
    }
 
    next->remove(h_Expires);
@@ -248,7 +250,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientRegistrationHandle.isValid())
       {
@@ -256,7 +258,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientRegistrationRemoveMyBindings";
    }
@@ -279,7 +281,7 @@ ClientRegistration::stopRegistering()
 }
 
 void
-ClientRegistration::requestRefresh(UInt32 expires)
+ClientRegistration::requestRefresh(uint32_t expires)
 {
     // Set flag so that handlers get called for success/failure
     mUserRefresh = true;
@@ -287,7 +289,7 @@ ClientRegistration::requestRefresh(UInt32 expires)
 }
 
 void
-ClientRegistration::internalRequestRefresh(UInt32 expires)
+ClientRegistration::internalRequestRefresh(uint32_t expires)
 {
    if(mState == RetryAdding || mState == RetryRefreshing)
    {
@@ -297,6 +299,14 @@ ClientRegistration::internalRequestRefresh(UInt32 expires)
    else if (mState != Registered)
    {
       InfoLog (<< "a request is already in progress, no need to refresh " << *this);
+      return;
+   }
+
+   // check if refresh really required
+   if(!mDum.mClientRegistrationHandler->onRefreshRequired(getHandle(), *mLastRequest))
+   {
+      InfoLog (<< "application doesn't want to refresh " << *this);
+      end();
       return;
    }
 
@@ -315,24 +325,24 @@ ClientRegistration::internalRequestRefresh(UInt32 expires)
 }
 
 const NameAddrs&
-ClientRegistration::myContacts()
+ClientRegistration::myContacts() const noexcept
 {
    return mMyContacts;
 }
 
 const NameAddrs&
-ClientRegistration::allContacts()
+ClientRegistration::allContacts() const noexcept
 {
    return mAllContacts;
 }
 
-UInt32
+uint32_t
 ClientRegistration::whenExpires() const
 {
-   UInt64 now = Timer::getTimeSecs();
+   const auto now = Timer::getTimeSecs();
    if(mExpires > now)
    {
-       return (UInt32)(mExpires - now);
+       return static_cast<uint32_t>(mExpires - now);
    }
    else
    {
@@ -358,7 +368,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientRegistrationHandle.isValid())
       {
@@ -366,7 +376,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientRegistrationEndCommand";
    }
@@ -419,7 +429,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
             }
          }
-         catch(BaseException&e)
+         catch(const BaseException& e)
          {
             ErrLog(<<"Error parsing Path or Requires:" << e);
          }
@@ -427,15 +437,19 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
       if(msg.isFromWire())
       {
-         resip::TransportType receivedTransport = toTransportType(
-            msg.header(h_Vias).front().transport());
-         if(keepAliveTime == 0)
+         resip::TransportType receivedTransport = toTransportType(msg.header(h_Vias).front().transport());
+         if(isReliable(receivedTransport))
          {
-            if(isReliable(receivedTransport))
+            // Allow FlowTimer keepalive time to be lowered by configured value - this is legal in RFC5626
+            if (keepAliveTime == 0 || mDialogSet.mUserProfile->getKeepAliveTimeForStream() < keepAliveTime)
             {
                keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
             }
-            else
+         }
+         else
+         {
+            // Allow FlowTimer keepalive time to be lowered by configured value - this is legal in RFC5626
+            if (keepAliveTime == 0 || mDialogSet.mUserProfile->getKeepAliveTimeForDatagram() < keepAliveTime)
             {
                keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForDatagram();
             }
@@ -467,7 +481,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                mDialogSet.mUserProfile->setServiceRoute(NameAddrs());
             }
          }
-         catch(BaseException &e)
+         catch(const BaseException& e)
          {
             ErrLog(<< "Error Parsing Service Route:" << e);
          }    
@@ -495,7 +509,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
             }
          }
-         catch(BaseException&e)
+         catch(const BaseException& e)
          {
             ErrLog(<<"Error parsing GRUU:" << e);
          }
@@ -504,8 +518,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
          // make timers to re-register
-         UInt64 nowSecs = Timer::getTimeSecs();
-         UInt32 expiry = calculateExpiry(msg);
+         uint64_t nowSecs = Timer::getTimeSecs();
+         uint32_t expiry = calculateExpiry(msg);
          mExpires = nowSecs + expiry;
          if(msg.exists(h_Contacts))
          {
@@ -612,7 +626,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          {
             if (code == 423) // interval too short
             {
-               UInt32 maxRegistrationTime = mDialogSet.mUserProfile->getDefaultMaxRegistrationTime();
+               uint32_t maxRegistrationTime = mDialogSet.mUserProfile->getDefaultMaxRegistrationTime();
                if (msg.exists(h_MinExpires) && 
                    (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {
@@ -686,7 +700,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          delete this;
       }
    }
-   catch(BaseException& e)
+   catch(const BaseException& e)
    {
       InfoLog( << "Exception in ClientRegistration::dispatch: "  <<  e.getMessage());
       mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
@@ -701,7 +715,7 @@ ClientRegistration::tagContact(NameAddr& contact) const
 }
 
 void 
-ClientRegistration::tagContact(NameAddr& contact, DialogUsageManager& dum, SharedPtr<UserProfile>& userProfile)
+ClientRegistration::tagContact(NameAddr& contact, DialogUsageManager& dum, const std::shared_ptr<UserProfile>& userProfile)
 {
    if(contact.uri().host().empty() || 
       dum.getSipStack().isMyDomain(contact.uri().host(), contact.uri().port()))
@@ -834,7 +848,7 @@ ClientRegistration::calculateExpiry(const SipMessage& reg200) const
       // especially if there aren't contacts from other endpoints laying around.     
       if(c->isWellFormed() && c->exists(p_expires))
       {
-         unsigned long contactExpires = c->param(p_expires);
+         const unsigned long contactExpires = c->param(p_expires);
          if((contactExpires < expiry ||
              contactExpires < reasonableExpiry) &&
             contactIsMine(*c))
@@ -940,7 +954,7 @@ ClientRegistration::checkProfileRetry(const SipMessage& msg)
          break;
       }
 
-      if(mDum.mClientAuthManager.get()) mDum.mClientAuthManager.get()->clearAuthenticationState(DialogSetId(*mLastRequest));
+      if(mDum.mClientAuthManager) mDum.mClientAuthManager->clearAuthenticationState(DialogSetId(*mLastRequest));
       mDum.addTimer(DumTimeout::RegistrationRetry,
          retryInterval,
          getBaseHandle(),

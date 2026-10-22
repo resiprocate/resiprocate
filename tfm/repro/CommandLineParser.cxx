@@ -6,6 +6,10 @@
 #include "rutil/ParseException.hxx"
 #include "resip/stack/InteropHelper.hxx"
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4996)
+#endif
+
 using namespace resip;
 using namespace std;
 

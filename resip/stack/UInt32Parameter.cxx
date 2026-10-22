@@ -41,7 +41,7 @@ UInt32Parameter::UInt32Parameter(ParameterTypes::Type type,
    }
 }
 
-UInt32Parameter::UInt32Parameter(ParameterTypes::Type type, UInt32 value)
+UInt32Parameter::UInt32Parameter(ParameterTypes::Type type, uint32_t value)
    : Parameter(type),
      mValue(value)
 {}

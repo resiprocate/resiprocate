@@ -137,8 +137,7 @@ extern "C" { void processTimeouts(int arg); }
 void
 processTimeouts(int arg)
 {
-    client->buildFdSet(clientFdSet);
-    client->process(clientFdSet);
+    client->process(5);
 
     if (WaitQueue.empty())
     {

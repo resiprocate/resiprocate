@@ -59,7 +59,7 @@ ServerSubscriptionHandler::hasDefaultExpires() const
    return false;
 }
 
-UInt32 
+uint32_t 
 ServerSubscriptionHandler::getDefaultExpires() const
 {
    return 0;
@@ -71,7 +71,7 @@ ServerSubscriptionHandler::hasMinExpires() const
    return false;
 }
 
-UInt32 
+uint32_t 
 ServerSubscriptionHandler::getMinExpires() const
 {
    return 0;
@@ -82,14 +82,14 @@ ServerSubscriptionHandler::hasMaxExpires() const
    return false;
 }
 
-UInt32 
+uint32_t 
 ServerSubscriptionHandler::getMaxExpires() const
 {
    return 0;
 }
 
 void
-ServerSubscriptionHandler::getExpires(const SipMessage &msg, UInt32 &expires, int &errorResponseCode)
+ServerSubscriptionHandler::getExpires(const SipMessage &msg, uint32_t &expires, int &errorResponseCode)
 {
    if (msg.exists(h_Expires))
    {         

@@ -33,7 +33,7 @@ class Client
            mWaitingForBye200(false)
       {
          mStack.addTransport(transport, contact.uri().port());
-         auto_ptr<SipMessage> message(Helper::makeInvite( target, mContact, mContact));
+         unique_ptr<SipMessage> message(Helper::makeInvite( target, mContact, mContact));
          mStack.send(*message);
       }
 
@@ -46,7 +46,7 @@ class Client
          {
             InfoLog (<< "Client received: " << received->brief());
             
-            auto_ptr<SipMessage> forDel(received);
+            unique_ptr<SipMessage> forDel(received);
             if ( (received->isResponse()) )
             {
                if ( received->header(h_StatusLine).responseCode() == 200 )
@@ -60,11 +60,11 @@ class Client
                      dlog.createDialogAsUAC(*received);
                      
                      DebugLog(<< "making ack.");
-                     auto_ptr<SipMessage> ack(dlog.makeAck(*received) );
+                     unique_ptr<SipMessage> ack(dlog.makeAck(*received) );
                      DebugLog(<< *ack);
 
                      DebugLog(<< "making bye.");
-                     auto_ptr<SipMessage> bye(dlog.makeBye());
+                     unique_ptr<SipMessage> bye(dlog.makeBye());
                      
                      DebugLog(<< "Sending ack: << " << endl << *ack);
                      mStack.send(*ack);
@@ -75,7 +75,7 @@ class Client
                   }
                   else
                   {
-                     auto_ptr<SipMessage> message(Helper::makeInvite( mTarget, mContact, mContact));
+                     unique_ptr<SipMessage> message(Helper::makeInvite( mTarget, mContact, mContact));
                      mStack.send(*message);
                      mWaitingForBye200 = false;
                   }

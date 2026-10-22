@@ -1,0 +1,86 @@
+#!/bin/sh 
+#set -x
+
+if [  $# == 1  ]; then
+  DAYS=1095
+elif [ $# == 2 ]; then
+  DAYS=$2
+else
+  echo "Usage: makeEllipticCert test.example.org [days]" 
+  echo "       makeEllipticCert alice@example.org [days]"
+  echo "days is how long the certificate is valid"
+  echo "days set to 0 generates an invalid certificate"
+  exit 0
+fi
+
+DOMAIN=`echo $1 | perl -ne '{print "$1\n" if (/\.(.*)$/)}'   ` 
+ADDR=$1
+
+echo "making cert for ${DOMAIN} ${ADDR}"
+
+rm -f ${ADDR}_ec*.pem
+rm -f ${ADDR}_ec.p12
+
+case ${ADDR} in
+*:*) ALTNAME="URI:${ADDR}" ;;
+*@*) ALTNAME="URI:sip:${ADDR},URI:im:${ADDR},URI:pres:${ADDR}" ;;
+*)   ALTNAME="DNS:${DOMAIN},DNS:${ADDR},URI:sip:${ADDR}" ;;
+esac
+ 
+#ALTNAME="URI:sip:pekka.nrc.sipit.net,URI:sip:nrc.sipit.net"
+
+rm -f demoEllipticCA/index.txt
+touch demoEllipticCA/index.txt
+rm -f demoEllipticCA/newcerts/*
+
+export ALTNAME
+
+openssl ecparam -genkey -name prime256v1 -out ${ADDR}_ec_key.pem
+
+openssl req -config openssl.cnf -reqexts cj_req \
+     -new -key ${ADDR}_ec_key.pem \
+     -passin pass:password -passout pass:password \
+     -sha256 -out ${ADDR}.csr -days ${DAYS} <<EOF
+US
+CA
+San Jose
+SIPit
+
+${ADDR}
+
+
+
+EOF
+
+# openssl req -noout -text -in ${ADDR}.csr
+
+if [ $DAYS == 0 ]; then
+openssl ca -extensions cj_cert -config openssl.cnf \
+    -name CA_EC_default \
+    -passin pass:password -policy policy_anything \
+    -md sha256 -batch -notext -out ${ADDR}_ec_cert.pem \
+    -startdate 990101000000Z \
+    -enddate 000101000000Z \
+    -infiles ${ADDR}.csr
+else
+openssl ca -extensions cj_cert -config openssl.cnf \
+    -name CA_EC_default \
+    -passin pass:password -policy policy_anything \
+    -md sha256 -days ${DAYS} -batch -notext -out ${ADDR}_ec_cert.pem \
+    -infiles ${ADDR}.csr
+fi
+
+openssl pkcs12 -passin pass:password \
+    -passout pass:password -export \
+    -out ${ADDR}_ec.p12 -in ${ADDR}_ec_cert.pem \
+    -inkey ${ADDR}_ec_key.pem -name ${ADDR} \
+    -certfile demoEllipticCA/cacert.pem
+
+# openssl x509 -in ${ADDR}_cert.pem -noout -text
+
+case ${ADDR} in
+*@*) mv ${ADDR}_ec_key.pem user_ec_key_${ADDR}.pem; \
+     mv ${ADDR}_ec_cert.pem user_ec_cert_${ADDR}.pem ;;
+*)   mv ${ADDR}_ec_key.pem domain_ec_key_${ADDR}.pem; \
+     mv ${ADDR}_ec_cert.pem domain_ec_cert_${ADDR}.pem ;;
+esac

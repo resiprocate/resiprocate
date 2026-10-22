@@ -11,7 +11,8 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/bind.hpp>
+#include <deque>
+#include <functional>
 
 #include <vector>
 
@@ -47,6 +48,9 @@ public:
    // Set the username and password for all future requests
    void setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth=false);
 
+   // Software attribute
+   void setSoftware(const char* software);
+
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    asio::error_code bindRequest();
 
@@ -54,7 +58,7 @@ public:
    asio::error_code createAllocation(unsigned int lifetime = UnspecifiedLifetime,
                                      unsigned int bandwidth = UnspecifiedBandwidth,
                                      unsigned char requestedProps = StunMessage::PropsNone, 
-                                     UInt64 reservationToken = UnspecifiedToken,
+                                     uint64_t reservationToken = UnspecifiedToken,
                                      StunTuple::TransportType requestedTransportType = StunTuple::None);
    asio::error_code refreshAllocation();
    asio::error_code destroyAllocation();
@@ -94,11 +98,14 @@ protected:
    resip::Data mRealm;
    resip::Data mNonce;
 
+   // Attributes
+   resip::Data mSoftware;
+
    // Turn Allocation Properties used in request
    unsigned int mRequestedLifetime;
    unsigned int mRequestedBandwidth;
    unsigned char mRequestedProps;
-   UInt64 mReservationToken;
+   uint64_t mReservationToken;
    StunTuple::TransportType mRequestedTransportType;
 
    // Turn Allocation Properties from response
@@ -114,10 +121,10 @@ protected:
    ChannelBindingRefreshTimeMap mChannelBindingRefreshTimes;
    RemotePeer* mActiveDestination;
 
-   asio::io_service mIOService;
+   asio::io_context mIOService;
 
    // handlers and timers required to do a timed out read
-   asio::deadline_timer mReadTimer;
+   asio::steady_timer mReadTimer;
    size_t mBytesRead;
    asio::error_code mReadErrorCode;
    void startReadTimer(unsigned int timeout);
@@ -129,8 +136,16 @@ protected:
    char mWriteBuffer[8192];
    bool mConnected;
 
+   // Peers' data (ChannelData, and Data indications) that arrived while waiting for a response,
+   // for receive() - the size of mReadBuffer that holds one is passed to queueReceived()
+   std::deque<std::vector<char>> mReceivedWhileWaiting;
+   static const size_t MaxReceivedWhileWaiting = 100;
+   void queueReceived(unsigned int size);
+
 private:
-   resip::Mutex mMutex;
+   // Recursive: eg. destroyAllocation() calls refreshAllocation(), and sendTo() and receive() refresh
+   // the allocation when it is due
+   resip::RecursiveMutex mMutex;
    asio::error_code channelBind(RemotePeer& remotePeer);
    asio::error_code checkIfAllocationRefreshRequired();
    asio::error_code checkIfChannelBindingRefreshRequired();
@@ -147,6 +162,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

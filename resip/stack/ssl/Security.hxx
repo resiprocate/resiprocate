@@ -40,22 +40,23 @@ class Security;
 class MultipartSignedContents;
 class SipMessage;
 
-
 class BaseSecurity
 {
    public:
-      class Exception : public BaseException
+      static int getResipConnectionExDataIdx();
+
+      class Exception final : public BaseException
       {
          public:
-            Exception(const Data& msg, const Data& file, const int line);
-            const char* name() const { return "SecurityException"; }
+            Exception(const Data& msg, const Data& file, int line);
+            const char* name() const noexcept override { return "SecurityException"; }
       };
 
       class CipherList
       {
          public:
             CipherList(){}
-            CipherList(const Data& cipherList) : mCipherList(cipherList) {}            
+            CipherList(const Data& cipherList) : mCipherList(cipherList) {}
             Data cipherList() const { return mCipherList; }
          private:
             Data mCipherList;
@@ -67,7 +68,7 @@ class BaseSecurity
       {
          SubjectAltName,
          CommonName
-      }NameType;
+      } NameType;
 
       struct PeerName
       {
@@ -90,7 +91,9 @@ class BaseSecurity
       static long OpenSSLCTXSetOptions;
       static long OpenSSLCTXClearOptions;
 
-      BaseSecurity(const CipherList& cipherSuite = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty, const Data& dHParamsFilename = Data::Empty);
+      BaseSecurity(const CipherList& cipherSuite = StrongestSuite, 
+                   const Data& defaultPrivateKeyPassPhrase = Data::Empty, 
+                   const Data& dHParamsFilename = Data::Empty);
       virtual ~BaseSecurity();
 
       // used to initialize the openssl library
@@ -130,7 +133,7 @@ class BaseSecurity
 
       void addDomainCertPEM(const Data& domainName, const Data& certPEM);
       void addDomainCertDER(const Data& domainName, const Data& certDER);
-      bool hasDomainCert(const Data& domainName) const;
+      bool hasDomainCert(const Data& domainName, bool logErrors = true) const;
       void removeDomainCert(const Data& domainName);
       Data getDomainCertDER(const Data& domainName) const;
 
@@ -157,7 +160,9 @@ class BaseSecurity
       Data getUserPrivateKeyPEM(const Data& aor) const;
       Data getUserPrivateKeyDER(const Data& aor) const;
 
-      void generateUserCert(const Data& aor, int expireDays=365, int keyLen=1024);
+      // Generates a self-signed certificate (SHA-256) and RSA key of keyLen bits for aor, and adds
+      // them as its user certificate and private key - throws if the key can't be generated
+      void generateUserCert(const Data& aor, int expireDays=365, int keyLen=2048);
 
       // Produces a detached signature
       MultipartSignedContents* sign(const Data& senderAor, Contents* );
@@ -218,12 +223,12 @@ class BaseSecurity
        * Adding more non-static fields like mTlsCtx for subsequent
        * versions (e.g. for OpenSSL TLSv1_1_method()) breaks ABI
        * compatability and is therefore difficult to backport onto
-       * release branches.  Better to use SSLv23_method and use OpenSSL
+       * release branches.  Better to use DynamicTLS and use OpenSSL
        * options flags to specify the exact protocol versions to support.
        */
-      SSL_CTX*       mTlsCtx;
-      SSL_CTX*       mSslCtx;
-      static void dumpAsn(char*, Data);
+      SSL_CTX*       mTlsCtx;  // Context locked to TLSv1 (1.0 only)
+      SSL_CTX*       mSslCtx;  // Context that supports Dynamic TLS version negotiation
+      static void dumpAsn(const char*, Data);
 
       CipherList mCipherList;
       Data mDefaultPrivateKeyPassPhrase;
@@ -243,7 +248,7 @@ class BaseSecurity
 
       void addCertPEM (PEMType type, const Data& name, const Data& certPEM, bool write);
       void addCertDER (PEMType type, const Data& name, const Data& certDER, bool write);
-      bool hasCert    (PEMType type, const Data& name) const;
+      bool hasCert    (PEMType type, const Data& name, bool logErrors = true) const;
       void removeCert (PEMType type, const Data& name);
       Data getCertDER (PEMType type, const Data& name) const;
       void addCertX509(PEMType type, const Data& name, X509* cert, bool write);
@@ -275,8 +280,15 @@ class Security : public BaseSecurity
       void loadCADirectory(const Data& directoryName);
       void loadCAFile(const Data& fileName);
       virtual void preload();
-      virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, 
+      /// Throws BaseSecurity::Exception if the certificate or private key can't
+      /// be loaded; nothing is left allocated in that case.
+      virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename,
                                        const Data& privateKeyFilename, const Data& privateKeyPassPhrase);
+      /// Loads the domain's certificate chain and private key into ctx.  Throws
+      /// BaseSecurity::Exception if either can't be loaded.  ctx stays owned by
+      /// the caller, but may hold a partial update after a failure, so a context
+      /// that is in use should be replaced by one from createDomainCtx() instead.
+      virtual void updateDomainCtx(SSL_CTX* ctx, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename, const Data& privateKeyPassPhrase);
 
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;
@@ -295,6 +307,7 @@ class Security : public BaseSecurity
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

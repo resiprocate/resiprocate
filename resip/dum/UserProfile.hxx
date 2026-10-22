@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include <set>
+#include "rutil/DigestStream.hxx"
 #include "resip/stack/Headers.hxx"
 #include "resip/stack/MethodTypes.hxx"
 #include "resip/stack/Tuple.hxx"
@@ -17,22 +18,22 @@ class UserProfile : public Profile
 {
    public:  
       UserProfile();
-      UserProfile(SharedPtr<Profile> baseProfile);
+      explicit UserProfile(std::shared_ptr<Profile> baseProfile);
       virtual ~UserProfile();
       
       virtual void setDefaultFrom(const NameAddr& from);
-      virtual NameAddr& getDefaultFrom();
+      virtual NameAddr& getDefaultFrom() noexcept;
 
       virtual void setServiceRoute(const NameAddrs& sRoute);
-      virtual NameAddrs& getServiceRoute();
+      virtual NameAddrs& getServiceRoute() noexcept;
       
       virtual void setImsAuthUser(const Data& userName, const Data& host) { mImsAuthUserName = userName; mImsAuthHost = host; }      
-      virtual Data& getImsAuthUserName() { return mImsAuthUserName; }      
-      virtual Data& getImsAuthHost() { return mImsAuthHost; }
+      virtual Data& getImsAuthUserName() noexcept { return mImsAuthUserName; }      
+      virtual Data& getImsAuthHost() noexcept { return mImsAuthHost; }
 
       // Returns a UserProfile that will return a UserProfile that can be used
       // to send requests according to RFC 3323 and RFC 3325
-      virtual SharedPtr<UserProfile> getAnonymousUserProfile() const;      
+      virtual std::shared_ptr<UserProfile> getAnonymousUserProfile() const;
       bool isAnonymous() const;
       
       // !cj! - this GRUU stuff looks very suspect
@@ -48,15 +49,15 @@ class UserProfile : public Profile
       virtual NameAddr& getGruu(const Data& aor, const NameAddr& contact);
 
       //should do Supported wrangling--but what if required is desired? Same as 100rel?
-      virtual bool& gruuEnabled() { return mGruuEnabled; }
-      virtual bool gruuEnabled() const { return mGruuEnabled; }
+      virtual bool& gruuEnabled() noexcept { return mGruuEnabled; }
+      virtual bool gruuEnabled() const noexcept { return mGruuEnabled; }
 
       virtual bool hasPublicGruu() const { return !mPubGruu.host().empty(); }
-      virtual const Uri& getPublicGruu() { return mPubGruu; }
+      virtual const Uri& getPublicGruu() const noexcept { return mPubGruu; }
       virtual void setPublicGruu(const Uri& gruu) { mPubGruu = gruu; }
 
       virtual bool hasTempGruu() const { return !mTempGruu.host().empty(); }
-      virtual const Uri& getTempGruu() { return mTempGruu; }
+      virtual const Uri& getTempGruu() const noexcept { return mTempGruu; }
       virtual void setTempGruu(const Uri& gruu) { mTempGruu = gruu; }
       
       struct DigestCredential
@@ -67,26 +68,33 @@ class UserProfile : public Profile
                              const Data& pwd,
                              bool isPasswordA1Hash);
             DigestCredential(const Data& realm);
-                             
+
             Data realm;
             Data user;
-            Data password;            
+            Data password;
             bool isPasswordA1Hash;
 
             bool operator<(const DigestCredential& rhs) const;
       };
       
       /// The following functions deal with clearing, setting and getting of digest credentals 
-      virtual void clearDigestCredentials();
+      virtual void clearDigestCredentials() noexcept;
       /// For the password you may either provide the plain text password (isPasswordA1Hash = false)
-      /// or the Digest A1 MD5 Hash (isPasswordA1Hash = true).  Note:  If the A1 hash is provided
-      /// then the realm MUST match the realm in the challenge or authentication will fail.  If the
-      /// plain text password is provided, then we will form the A1 hash using the realm from
-      /// the challenge.
-      virtual void setDigestCredential( const Data& realm, 
-                                        const Data& user, 
-                                        const Data& password,
-                                        bool isPasswordA1Hash=false);
+      /// or the Digest A1 MD5 Hash (isPasswordA1Hash = true).  
+      ///
+      /// For isPasswordA1Hash=true and non-MD5 support you should supply the A1 hash in the resip custom 
+      /// format that accepts hashes for different digest algorithm types.
+      /// Format: [<algorithm_name>]<hex_encoded_A1_hash>[<algorithm2_name>]<hex_encoded_A1_hash2>....
+      /// Example: [MD5]5f4dcc3b5aa765d61d8327deb882cf99[SHA-256]6bb4837eb74329105ee4568dda7dc67ed2ca2ad9e59fcbfbcde5e7f8c1b6d9d1
+      /// You can use Helper::createResipA1HashString to help you create this format.
+      ///
+      /// Note:  If the A1 hash is provided then the realm MUST match the realm in the challenge or 
+      ///        authentication will fail.  If the plain text password is provided, then we will form the 
+      ///        A1 hash using the realm from the challenge.
+      virtual void setDigestCredential(const Data& realm, 
+                                       const Data& user, 
+                                       const Data& password,
+                                       bool isPasswordA1Hash=false);
       virtual const DigestCredential& getDigestCredential( const Data& realm  );
       // DigestCacheUseLimit is used to indicate the maximum number of times a particular Proxy or WWW Authorization
       // header will be used in requests within a dialogset.  When this limit is reached then the
@@ -96,8 +104,8 @@ class UserProfile : public Profile
       // have the same cached Authorization header on them, until they are re-challenged by the far end.  A setting of 
       // 1 disables caching entirely and future requests within the dialog set will go out without any authorization 
       // headers.
-      virtual void setDigestCacheUseLimit(unsigned long digestCacheUseLimit) { mDigestCacheUseLimit = digestCacheUseLimit; }
-      virtual unsigned long getDigestCacheUseLimit() { return mDigestCacheUseLimit; }
+      virtual void setDigestCacheUseLimit(unsigned long digestCacheUseLimit) noexcept { mDigestCacheUseLimit = digestCacheUseLimit; }
+      virtual unsigned long getDigestCacheUseLimit() const noexcept { return mDigestCacheUseLimit; }
 
       // Enable this to enable RFC5626 support in DUM - adds regId to registrations, and 
       // ;ob parameter to Path, Route, and Contact headers
@@ -106,21 +114,21 @@ class UserProfile : public Profile
       // options:
       // profile->addSupportedOptionTag(Token(Symbols::Outbound));  // RFC 5626 - outbound
       // profile->addSupportedOptionTag(Token(Symbols::Path));      // RFC 3327 - path
-      virtual bool& clientOutboundEnabled() { return mClientOutboundEnabled; }
-      virtual bool clientOutboundEnabled() const { return mClientOutboundEnabled; }
+      virtual bool& clientOutboundEnabled() noexcept { return mClientOutboundEnabled; }
+      virtual bool clientOutboundEnabled() const noexcept { return mClientOutboundEnabled; }
 
       // Outbound (RFC5626) instanceId used in contact headers
       virtual bool hasInstanceId();
       virtual void setInstanceId(const Data& id);
-      virtual const Data& getInstanceId() const;
+      virtual const Data& getInstanceId() const noexcept;
 
       // Outbound (RFC5626) regId used in registrations
-      virtual void setRegId(int regId) { mRegId = regId; }
-      virtual int getRegId() { return mRegId; }
+      virtual void setRegId(int regId) noexcept { mRegId = regId; }
+      virtual int getRegId() noexcept { return mRegId; }
 
       // Returns the current Flow Tuple that is being used for communication on usages
       // that use this profile
-      const Tuple& getClientOutboundFlowTuple() const { return mClientOutboundFlowTuple; }
+      const Tuple& getClientOutboundFlowTuple() const noexcept { return mClientOutboundFlowTuple; }
       void clearClientOutboundFlowTuple() { mClientOutboundFlowTuple = Tuple(); }
       void setClientOutboundFlowTuple(const Tuple& outboundFlowTuple) { mClientOutboundFlowTuple = outboundFlowTuple; }  // Only for advanced users
 
@@ -165,6 +173,7 @@ operator<<(EncodeStream&, const UserProfile::DigestCredential& cred);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -5,23 +5,20 @@
 
 #include "RendAcct.hxx"
 
+#include <stdexcept>
+
 namespace resip
 {
    class SipStack;
 }
 
-class RendWaveAbortException : public std::exception 
+class RendWaveAbortException final : public std::runtime_error 
 {
 public:
-   RendWaveAbortException(const std::string what) throw() 
+   explicit RendWaveAbortException(const std::string& msg)
+      : std::runtime_error(msg)
    {
-      mWhat = what;
    }
-   virtual ~RendWaveAbortException() throw();
-   // const char *name() const { return "RendWaveAbortException"; }
-   virtual const char *what() const throw() { return mWhat.c_str(); }
-
-   std::string mWhat;
 };
 
 class RendWavePresIf 

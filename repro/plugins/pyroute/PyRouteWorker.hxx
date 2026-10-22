@@ -16,9 +16,9 @@
 #include "repro/Processor.hxx"
 #include "repro/ProcessorMessage.hxx"
 #include "repro/RequestContext.hxx"
-#include "repro/Worker.hxx"
+#include "resip/stack/Worker.hxx"
 
-#include "PyThreadSupport.hxx"
+#include "rutil/PyExtensionBase.hxx"
 
 namespace repro
 {
@@ -46,21 +46,40 @@ class PyRouteWork : public ProcessorMessage
       bool hasResponse() { return mResponseCode >= 0; };
 };
 
-class PyRouteWorker : public Worker
+class PyRouteMessageHandlerWork : public resip::ApplicationMessage
 {
    public:
-      PyRouteWorker(PyInterpreterState* interpreterState, Py::Callable& action);
+      PyRouteMessageHandlerWork(const resip::SipMessage& message);
+
+      virtual ~PyRouteMessageHandlerWork();
+
+      std::shared_ptr<resip::SipMessage> mMessage;
+
+      virtual PyRouteMessageHandlerWork* clone() const;
+
+      virtual EncodeStream& encode(EncodeStream& ostr) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const;
+};
+
+class PyRouteWorker : public resip::Worker
+{
+   public:
+      PyRouteWorker(resip::PyExtensionBase& py, Py::Callable& action, Py::Callable& messageHandlerAction);
       virtual ~PyRouteWorker();
 
-      virtual PyRouteWorker* clone() const;
+      virtual PyRouteWorker* clone() const override;
 
-      virtual void onStart();
-      virtual bool process(resip::ApplicationMessage* msg);
+      virtual void onStart() override;
+      virtual bool process(resip::ApplicationMessage* msg) override;
+
+      bool processWork(PyRouteWork* work);
+      bool processMessageHandlerWork(PyRouteMessageHandlerWork* work);
 
    protected:
-      PyInterpreterState* mInterpreterState;
-      PyExternalUser* mPyUser;
+      resip::PyExtensionBase& mPy;
+      std::unique_ptr<resip::PyExternalUser> mPyUser;
       Py::Callable& mAction;
+      Py::Callable& mMessageHandlerAction;
 };
 
 }
@@ -70,7 +89,8 @@ class PyRouteWorker : public Worker
 
 /* ====================================================================
  *
- * Copyright 2013 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2013-2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

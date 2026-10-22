@@ -3,6 +3,8 @@
 
 #include "p2p/EventConsumer.hxx"
 
+#include <memory>
+
 namespace p2p
 {
 
@@ -15,10 +17,10 @@ class StoreSet : public EventConsumer,
   public:
       StoreSet(Dispatcher& dispatcher,
                TopologyApi& topology,
-               std::vector<auto_ptr<StoreReq> > stores);
+               std::vector<std::unique_ptr<StoreReq>> stores);
 
       virtual void consume(EventWrapper<StoreAns>& event);
-      virtual void post(std::auto_ptr<Event> event)
+      virtual void post(std::unique_ptr<Event> event)
       {
          event->dispatch(this);
       }

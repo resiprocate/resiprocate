@@ -24,11 +24,11 @@ class DnsRawSink;
 class DnsInterface
 {
    public:
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, const int line) : BaseException(msg,file,line){}
-            const char* name() const { return "DnsInterface::Exception"; }
+            const char* name() const noexcept override { return "DnsInterface::Exception"; }
       };
 
       // Used to create an asynchronous Dns Interface. Any lookup requests will
@@ -36,7 +36,7 @@ class DnsInterface
       // DnsResult be in the same thread that is processing the async results
       // since there is no locking on the DnsResult
       // Will throw DnsInterface::Exception if the Dns provider fails to initialize
-      DnsInterface(DnsStub& dnsStub);
+      DnsInterface(DnsStub& dnsStub, bool useDnsVip=false);
 
       virtual ~DnsInterface();
 

@@ -5,7 +5,7 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "TurnSocket.hxx"
 
@@ -17,11 +17,15 @@ public:
    explicit TurnTcpSocket(const asio::ip::address& address = UnspecifiedIpAddress, 
                           unsigned short port = 0);
 
-   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.native(); }
+   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.native_handle(); }
 
    // To use this socket without a Turn Relay, use this connect call to connect directly
    // to endpoint
    virtual asio::error_code connect(const std::string& address, unsigned short port);
+
+   /// Milliseconds the TCP connect to each address connect() tries may take - and, for TLS, the
+   /// handshake - before it fails with asio::error::timed_out.  Default 10 seconds.
+   void setConnectTimeout(unsigned int milliseconds) { mConnectTimeout = milliseconds; }
 
 protected:
    virtual asio::error_code rawWrite(const char* buffer, unsigned int size);
@@ -35,6 +39,22 @@ protected:
    /// Handle completion of a read operation for first 32 bits
    virtual void handleReadHeader(const asio::error_code& e);
 
+   /// Opens socket and binds it to the local binding (address and port), for a connection
+   /// attempt.  The socket isn't opened before connect(), which makes a new one for each address
+   /// it tries.
+   asio::error_code openAndBind(asio::ip::tcp::socket& socket);
+   /// The protocol (IPv4 or IPv6) of the local binding
+   asio::ip::tcp protocol() const;
+
+   /// For a step of connect() started as an asynchronous operation that sets result (initially
+   /// asio::error::would_block) when it completes: runs the io_context until it does, or until the
+   /// connect timeout passes - when cancel() is called (eg. to close the socket), and timed_out is
+   /// returned
+   asio::error_code waitForConnectStep(asio::error_code& result, const std::function<void()>& cancel);
+   unsigned int mConnectTimeout = 10000;
+
+   size_t mPadding = 0;  // after the ChannelData message being read
+
 private:
 
    asio::ip::tcp::socket mSocket;
@@ -47,6 +67,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

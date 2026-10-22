@@ -3,9 +3,10 @@
 #include "rutil/ResipAssert.h"
 
 #include "rutil/Data.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/DataStream.hxx"
 #include "resip/stack/Symbols.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/dum/UserAuthInfo.hxx"
@@ -20,6 +21,8 @@ using namespace repro;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+const resip::Data UserStore::SEPARATOR("@");
 
 UserStore::UserStore(AbstractDb& db ) : mDb(db)
 { 
@@ -59,26 +62,13 @@ UserStore::addUser( const Data& username,
    rec.realm = realm;
    if(applyA1HashToPassword)
    {
-      MD5Stream a1;
-      a1 << username
-         << Symbols::COLON
-         << realm
-         << Symbols::COLON
-         << password;
-      a1.flush();
-      rec.passwordHash = a1.getHex();
+      rec.passwordHash = Helper::createResipA1HashString(username, realm, password);
 
       // Some UAs might calculate A1
       // using user@domain:realm:password
       // so we store the hash of that permutation too
-      MD5Stream a1b;
-      a1b << username << Symbols::AT_SIGN << domain
-         << Symbols::COLON
-         << realm
-         << Symbols::COLON
-         << password;
-      a1b.flush();
-      rec.passwordHashAlt = a1b.getHex();
+      Data userAtDomain = username + Symbols::AT_SIGN + domain;
+      rec.passwordHashAlt = Helper::createResipA1HashString(userAtDomain, realm, password);
    }
    else
    {
@@ -134,14 +124,27 @@ UserStore::getNextKey()
 UserStore::Key
 UserStore::buildKey( const resip::Data& user, const resip::Data& realm)
 {
-   Data ret = user + Data("@") + realm;
+   Data ret = user + Data(SEPARATOR) + realm;
    return ret;
+}
+
+void
+UserStore::getUserAndDomainFromKey(const Key& key, Data& user, Data& domain)
+{
+   ParseBuffer pb(key);
+   const char* start = pb.position();
+   pb.skipToOneOf(SEPARATOR);
+   pb.data(user, start);
+   const char* anchor = pb.skipChar();
+   pb.skipToEnd();
+   pb.data(domain, anchor);
 }
 
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

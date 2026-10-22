@@ -3,10 +3,14 @@
 
 #include <sys/types.h>
 
+#include <cstddef>
 #include <list>
 #include <vector>
+#include <limits>
+#include <memory>
 #include <utility>
-#include <memory> 
+#include <iterator>
+#include <type_traits>
 
 #include "resip/stack/Contents.hxx"
 #include "resip/stack/Headers.hxx"
@@ -18,14 +22,30 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/MessageDecorator.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/ConnectionInfo.hxx"
 #include "resip/stack/WsCookieContext.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/ResipAssert.h"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DinkyPool.hxx"
 #include "rutil/StlPoolAllocator.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
+#pragma intrinsic(_BitScanForward)
+#if defined(_M_X64) || defined(_M_ARM64)
+#pragma intrinsic(_BitScanForward64)
+#endif
+#if defined(_M_IX86) || defined(_M_X64)
+#pragma intrinsic(_tzcnt_u32)
+#endif
+#if defined(_M_X64)
+#pragma intrinsic(_tzcnt_u64)
+#endif
+#endif
 
 namespace resip
 {
@@ -161,6 +181,454 @@ class SipMessage : public TransactionMessage
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
 #endif
 
+      /**
+       * @brief List of known SIP headers, searchable by header type.
+       *
+       * This container provides access to headers of the SIP message that are known to libresiprocate.
+       * The headers can be searched by `Headers::Type` enum values and iterated over. The list of headers
+       * is unordered, and any modifications of the container may invalidate iterators, pointers and references
+       * into the container. The container does not own the `HeaderFieldValueList` objects, which must be
+       * explicitly freed on removal (which is handled by `SipMessage`).
+       *
+       * Elements of the container can be in an "unused" state, which is when the element was removed but
+       * not disposed of. "Unused" elements do not participate in the publicly visible set of elements observed
+       * by users (e.g. they are not found by searching or exposed during iteration). "Unused" elements can be
+       * reused if the user attempts to insert an element with the matching header type. After that, the reused
+       * element becomes publicly accessible again.
+       *
+       * The container can produce a read-only ordered view over its elements. When iterating over the view
+       * elements, headers are ordered by their types, i.e. `Headers::Type` enum values. The view does not
+       * expose "unused" elements. The view does not own or manage container elements and is invalidated
+       * on the parent container modifications.
+       *
+       * @note Ordering headers facilitates deterministic SIP message serialization. See the comment in
+       *       `HeaderTypes.hxx`: "The Type enum controls the order of output of the headers in the encoded
+       *       SipMessage". The leading entries of that enum follow the recommendation in RFC 3261 section 7.3.1,
+       *       that headers needed for proxy processing appear towards the top of the message to facilitate
+       *       rapid parsing.
+       */
+      class KnownHeaders
+      {
+         private:
+            /// Small index type that is used to map header type ids onto vector elements
+            using HeaderIndex = unsigned char;
+            /// Header index value that indicates invalid index
+            static constexpr HeaderIndex InvalidHeaderIndex = static_cast<HeaderIndex>(-1);
+            static_assert(Headers::MAX_HEADERS <= InvalidHeaderIndex, "HeaderIndex type is too small to cover all SIP header types");
+
+            /// Type of the word to use for "used" bit mask. Chosen as the "natural" unsigned integer type for the current target.
+            using UsedBitMaskWord = std::size_t;
+            /// Number of bits in the "used" bit mask word
+            static constexpr unsigned int UsedBitMaskWordBits = static_cast<unsigned int>(std::numeric_limits<UsedBitMaskWord>::digits);
+            /// Number of words in the "used" bit mask
+            static constexpr unsigned int UsedBitMaskWordCount = (static_cast<unsigned int>(Headers::MAX_HEADERS) + UsedBitMaskWordBits - 1u) / UsedBitMaskWordBits;
+
+         public:
+            /// Publicly accessible information about a header
+            class HeaderInfo
+            {
+                  friend class KnownHeaders;
+
+               private:
+                  /// Pointer to header values
+                  HeaderFieldValueList* mValues;
+                  /// Header type. If `Headers::UNKNOWN`, indicates that this entry is in the "unused" state.
+                  Headers::Type mType;
+
+               public:
+                  constexpr HeaderInfo() noexcept : mValues(nullptr), mType(Headers::UNKNOWN) {}
+                  explicit constexpr HeaderInfo(Headers::Type type, HeaderFieldValueList* values = nullptr) noexcept : mValues(values), mType(type) {}
+
+                  /// Returns header type
+                  Headers::Type getType() const noexcept { return mType; }
+
+                  /// Returns header values
+                  HeaderFieldValueList* getValues() const noexcept { return mValues; }
+                  /// Sets header values
+                  void setValues(HeaderFieldValueList* values) noexcept { mValues = values; }
+
+               private:
+                  /// Sets header type. Only supposed to be used by `KnownHeaders` implementation.
+                  void setType(Headers::Type type) noexcept { mType = type; }
+            };
+
+         private:
+            /// Internal list of header info entries
+            using TypedHeaders = std::vector<HeaderInfo, StlPoolAllocator<HeaderInfo, PoolBase> >;
+
+            /// Iterator over used entries in the list
+            template<typename AdoptedIterator>
+            class UsedIterator
+            {
+                  friend class KnownHeaders;
+
+               public:
+                  using iterator_category = std::forward_iterator_tag;
+                  using difference_type = typename std::iterator_traits<AdoptedIterator>::difference_type;
+                  using value_type = typename std::iterator_traits<AdoptedIterator>::value_type;
+                  using reference = typename std::iterator_traits<AdoptedIterator>::reference;
+                  using pointer = typename std::iterator_traits<AdoptedIterator>::pointer;
+
+               private:
+                  /// Adopted iterator into the list of headers
+                  AdoptedIterator mIterator;
+                  /// Iterator to the end of the list of headers
+                  AdoptedIterator mEnd;
+
+               public:
+                  constexpr UsedIterator() noexcept : mIterator(), mEnd(mIterator) {}
+                  UsedIterator(UsedIterator const&) = default;
+
+                  /// Initializing constructor
+                  template<
+                     typename OtherAdoptedIterator1,
+                     typename OtherAdoptedIterator2,
+                     typename = typename std::enable_if<
+                        std::is_constructible<AdoptedIterator, OtherAdoptedIterator1&&>::value && std::is_constructible<AdoptedIterator, OtherAdoptedIterator2&&>::value
+                     >::type
+                  >
+                  explicit constexpr UsedIterator(OtherAdoptedIterator1&& iter, OtherAdoptedIterator2&& end)
+                     noexcept(std::is_nothrow_constructible<AdoptedIterator, OtherAdoptedIterator1&&>::value &&
+                        std::is_nothrow_constructible<AdoptedIterator, OtherAdoptedIterator2&&>::value) :
+                     mIterator(std::forward<OtherAdoptedIterator1>(iter)),
+                     mEnd(std::forward<OtherAdoptedIterator2>(end))
+                  {
+                  }
+
+                  /// Convering constructor for mutable -> const iterator conversion
+                  template<
+                     typename OtherAdoptedIterator,
+                     typename = typename std::enable_if<
+                        !std::is_same<OtherAdoptedIterator, AdoptedIterator>::value && std::is_constructible<AdoptedIterator, OtherAdoptedIterator const&>::value
+                     >::type
+                  >
+                  constexpr UsedIterator(UsedIterator<OtherAdoptedIterator> const& that)
+                     noexcept(std::is_nothrow_constructible<AdoptedIterator, OtherAdoptedIterator const&>::value) :
+                     mIterator(that.mIterator),
+                     mEnd(that.mEnd)
+                  {
+                  }
+
+                  reference operator*() const noexcept { return *mIterator; }
+                  pointer operator->() const noexcept { return mIterator.operator->(); }
+                  UsedIterator& operator++() { increment(); return *this; }
+                  UsedIterator operator++(int) { UsedIterator copy(*this); increment(); return copy; }
+
+                  friend bool operator==(UsedIterator const& left, UsedIterator const& right) noexcept { return left.mIterator == right.mIterator; }
+                  friend bool operator!=(UsedIterator const& left, UsedIterator const& right) noexcept { return !(left == right); }
+
+               private:
+                  /// Increments the iterator to the next used entry or end of the list
+                  void increment() noexcept
+                  {
+                     ++mIterator;
+                     advanceToNextUsedEntry();
+                  }
+
+                  /// Advances to the next used entry in the list
+                  void advanceToNextUsedEntry() noexcept
+                  {
+                     while (mIterator != mEnd && mIterator->getType() == Headers::UNKNOWN)
+                        ++mIterator;
+                  }
+            };
+
+         public:
+            using iterator = UsedIterator<TypedHeaders::iterator>;
+            using const_iterator = UsedIterator<TypedHeaders::const_iterator>;
+            using value_type = TypedHeaders::value_type;
+            using reference = TypedHeaders::reference;
+            using const_reference = TypedHeaders::const_reference;
+            using pointer = TypedHeaders::pointer;
+            using const_pointer = TypedHeaders::const_pointer;
+            using size_type = TypedHeaders::size_type;
+            using difference_type = TypedHeaders::difference_type;
+            using allocator_type = TypedHeaders::allocator_type;
+
+            /// Ordered view over headers. The headers are produced in the order of `Headers::Type` enum values.
+            class OrderedView
+            {
+                  friend class KnownHeaders;
+
+               public:
+                  using value_type = KnownHeaders::value_type;
+                  using reference = KnownHeaders::reference;
+                  using const_reference = KnownHeaders::const_reference;
+                  using pointer = KnownHeaders::pointer;
+                  using const_pointer = KnownHeaders::const_pointer;
+                  using size_type = KnownHeaders::size_type;
+                  using difference_type = KnownHeaders::difference_type;
+
+               private:
+                  /// Iterator type
+                  class Iterator
+                  {
+                        friend class OrderedView;
+
+                     public:
+                        using iterator_category = std::forward_iterator_tag;
+                        using difference_type = std::ptrdiff_t;
+                        using value_type = KnownHeaders::value_type;
+                        using reference = value_type const&;
+                        using pointer = const value_type*;
+
+                     private:
+                        using size_type = OrderedView::size_type;
+
+                     private:
+                        /// Pointer to the parent container
+                        const KnownHeaders* mKnownHeaders;
+                        /// Iterator position
+                        size_type mPos;
+
+                     public:
+                        constexpr Iterator() noexcept : mKnownHeaders(nullptr), mPos(0u) {}
+                        Iterator(Iterator const&) = default;
+
+                        /// Initializing constructor
+                        explicit constexpr Iterator(const KnownHeaders* knownHeaders, size_type pos) noexcept :
+                           mKnownHeaders(knownHeaders),
+                           mPos(pos)
+                        {
+                        }
+
+                        reference operator*() const noexcept { return dereference(); }
+                        pointer operator->() const noexcept { return &dereference(); }
+                        Iterator& operator++() { increment(); return *this; }
+                        Iterator operator++(int) { Iterator copy(*this); increment(); return copy; }
+
+                        friend bool operator==(Iterator const& left, Iterator const& right) noexcept
+                        {
+                           resip_assert(left.mKnownHeaders == right.mKnownHeaders);
+                           return left.mPos == right.mPos;
+                        }
+                        friend bool operator!=(Iterator const& left, Iterator const& right) noexcept
+                        {
+                           resip_assert(left.mKnownHeaders == right.mKnownHeaders);
+                           return left.mPos != right.mPos;
+                        }
+
+                     private:
+                        /// Obtains reference to the element
+                        reference dereference() const noexcept
+                        {
+                           resip_assert(mKnownHeaders != nullptr);
+                           return mKnownHeaders->mHeaders[mKnownHeaders->mHeaderIndices[mPos]];
+                        }
+
+                        /// Increments the iterator to the next used entry or end of the list
+                        void increment() noexcept
+                        {
+                           resip_assert(mPos < Headers::MAX_HEADERS);
+                           ++mPos;
+                           advanceToNextUsedEntry();
+                        }
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(push)
+// unary minus operator applied to unsigned type, result still unsigned
+#pragma warning(disable: 4146)
+#endif
+
+                        /// Advances to the next used entry in the list
+                        void advanceToNextUsedEntry() noexcept
+                        {
+                           resip_assert(mKnownHeaders != nullptr);
+
+                           size_type mask_pos = mPos / UsedBitMaskWordBits;
+                           size_type bit_pos = mPos % UsedBitMaskWordBits;
+                           for (; mask_pos < UsedBitMaskWordCount; ++mask_pos)
+                           {
+                              const UsedBitMaskWord mask =
+                                 mKnownHeaders->mUsedBitMask[mask_pos] & static_cast<UsedBitMaskWord>(-(static_cast<UsedBitMaskWord>(1u) << bit_pos));
+                              if (mask != 0u)
+                              {
+                                 bit_pos = countrZeroNz(mask);
+                                 break;
+                              }
+                              bit_pos = 0u;
+                           }
+
+                           mPos = mask_pos * UsedBitMaskWordBits + bit_pos;
+
+                           resip_assert(mPos < Headers::MAX_HEADERS || mPos == (static_cast<size_type>(UsedBitMaskWordCount) * UsedBitMaskWordBits));
+                        }
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(pop)
+#endif
+
+                        /**
+                         * @brief Returns the number of trailing zero bits in a non-zero integer.
+                         *
+                         * This function is similar to C++20 `std::countr_zero`, except that it requires its input
+                         * argument to be non-zero. This allows it to compile to a single `bsf` instruction on x86
+                         * CPUs without BMI1, while `std::countr_zero` would require an extra branch.
+                         */
+#if defined(__GNUC__) || defined(__clang__)
+                        static unsigned int countrZeroNz(unsigned int bitmask) noexcept { return __builtin_ctz(bitmask); }
+                        static unsigned int countrZeroNz(unsigned long bitmask) noexcept { return __builtin_ctzl(bitmask); }
+                        static unsigned int countrZeroNz(unsigned long long bitmask) noexcept { return __builtin_ctzll(bitmask); }
+#elif defined(_MSC_VER)
+                        static unsigned int countrZeroNz(uint32_t bitmask) noexcept
+                        {
+                           // On modern CPUs, tzcnt is slightly faster than bsf. CPUs without BMI1 will execute tzcnt
+                           // and produce the same result as bsf for non-zero input.
+#if defined(_M_IX86) || defined(_M_X64)
+                           return static_cast<unsigned int>(_tzcnt_u32(bitmask));
+#else
+                           unsigned long res;
+                           _BitScanForward(&res, bitmask);
+                           return static_cast<unsigned int>(res);
+#endif
+                        }
+
+                        static unsigned int countrZeroNz(uint64_t bitmask) noexcept
+                        {
+#if defined(_M_X64)
+                           return static_cast<unsigned int>(_tzcnt_u64(bitmask));
+#elif defined(_M_ARM64)
+                           unsigned long res;
+                           _BitScanForward64(&res, bitmask);
+                           return static_cast<unsigned int>(res);
+#else
+                           unsigned int base_count = 0u;
+                           uint32_t bitmask32 = static_cast<uint32_t>(bitmask);
+                           if (bitmask32 == 0u)
+                           {
+                              base_count = 32u;
+                              bitmask32 = static_cast<uint32_t>(bitmask >> 32u);
+                           }
+                           return base_count + countrZeroNz(bitmask32);
+#endif
+                        }
+#else
+                        static unsigned int countrZeroNz(UsedBitMaskWord bitmask) noexcept
+                        {
+                           unsigned int res = 0u;
+                           for (unsigned int bits = UsedBitMaskWordBits >> 1u; bits > 0u && (bitmask & 1u) == 0u; bits >>= 1u)
+                           {
+                              if ((bitmask & ((static_cast<UsedBitMaskWord>(1u) << bits) - 1u)) == 0u)
+                              {
+                                 bitmask >>= bits;
+                                 res += bits;
+                              }
+                           }
+                           return res;
+                        }
+#endif
+                  };
+
+               public:
+                  using iterator = Iterator;
+                  using const_iterator = Iterator;
+
+               private:
+                  /// Pointer to the parent container
+                  const KnownHeaders* mKnownHeaders;
+
+               private:
+                  explicit OrderedView(KnownHeaders const& knownHeaders) noexcept : mKnownHeaders(&knownHeaders)
+                  {
+                  }
+
+               public:
+                  /// Returns `true` if the container is empty. Does not consider "unused" elements.
+                  bool empty() const noexcept { return mKnownHeaders->empty(); }
+                  /// Returns the number of elements in the container. Does not consider "unused" elements.
+                  size_type size() const noexcept { return mKnownHeaders->size(); }
+
+                  /// Iterator access
+                  const_iterator cbegin() const noexcept { return begin(); }
+                  const_iterator cend() const noexcept { return end(); }
+
+                  const_iterator begin() const noexcept { const_iterator it(mKnownHeaders, 0u); it.advanceToNextUsedEntry(); return it; }
+                  const_iterator end() const noexcept { return const_iterator(mKnownHeaders, static_cast<size_type>(UsedBitMaskWordCount) * UsedBitMaskWordBits); }
+            };
+
+            friend class OrderedView::Iterator;
+
+         private:
+            /// Information about headers
+            TypedHeaders mHeaders;
+            /// Number of non-"unused" elements in the container
+            HeaderIndex mSize;
+            /// Indices into `mHeaders`. If an element is `InvalidHeaderIndex` it means the corresponding header has no entry in the list.
+            HeaderIndex mHeaderIndices[Headers::MAX_HEADERS];
+            /// Bit mask indicating non-"unused" elements in `mHeaders`. Bit positions correspond to `Headers::Type` enum values.
+            UsedBitMaskWord mUsedBitMask[UsedBitMaskWordCount];
+
+         public:
+            KnownHeaders() noexcept : mSize(0u) { resetIndices(); }
+            explicit KnownHeaders(const allocator_type& alloc)
+               noexcept(std::is_nothrow_constructible<TypedHeaders, const allocator_type&>::value) :
+               mHeaders(alloc),
+               mSize(0u)
+            {
+               resetIndices();
+            }
+
+            // Not copyable or moveable since the container elements may be associated with a memory pool
+            KnownHeaders(const KnownHeaders&) = delete;
+            KnownHeaders& operator=(const KnownHeaders&) = delete;
+
+            /// Returns `true` if the container is empty. Does not consider "unused" elements.
+            bool empty() const noexcept { return mSize == 0u; }
+            /// Returns the number of elements in the container. Does not consider "unused" elements.
+            size_type size() const noexcept { return static_cast<size_type>(mSize); }
+            /// Clears the container. Does not free `HeaderFieldValueList` objects but clears them and marks as "unused".
+            void clear() noexcept;
+            /**
+             * @brief Clears the container and invokes the dispose function on every element.
+             *
+             * The `disposer` function will be called on all entries, including "unused" ones. It is expected to free any resources
+             * associated with the entry and must not throw.
+             */
+            template<typename Disposer>
+            void clearAndDispose(Disposer&& disposer) noexcept;
+
+            /// Iterator access
+            const_iterator cbegin() const noexcept { return begin(); }
+            const_iterator cend() const noexcept { return end(); }
+
+            const_iterator begin() const noexcept { const_iterator it(mHeaders.begin(), mHeaders.end()); it.advanceToNextUsedEntry(); return it; }
+            const_iterator end() const noexcept { return const_iterator(mHeaders.end(), mHeaders.end()); }
+
+            iterator begin() noexcept { iterator it(mHeaders.begin(), mHeaders.end()); it.advanceToNextUsedEntry(); return it; }
+            iterator end() noexcept { return iterator(mHeaders.end(), mHeaders.end()); }
+
+            /// Reserves internal storage for the given number of entries
+            void reserve(size_type capacity) { mHeaders.reserve(capacity); }
+            /// Returns capacity of the internal storage
+            size_type capacity() const noexcept { return mHeaders.capacity(); }
+
+            /// Finds header information, if present in the list. Returns `end()` if not found. Does not produce "unused" entries.
+            iterator find(Headers::Type type) noexcept;
+            const_iterator find(Headers::Type type) const noexcept { return const_cast<KnownHeaders*>(this)->find(type); }
+
+            /// Erases an element. Does not free the `HeaderFieldValueList` object but clears it and marks as "unused".
+            void erase(iterator it) noexcept;
+
+            /**
+             * @brief Constructs or reuses a previously erased element for a given header type.
+             *
+             * If the header with the given type was previously erased and is in the "unused" state, this call reuses this element.
+             * Otherwise, the call constructs a new element with the given header type and a pointer to the `HeaderFieldValueList` object
+             * returned by the `valuesFactory()` function call.
+             *
+             * @returns An iterator to the inserted element.
+             */
+            template<typename ValuesFactory>
+            iterator insert(Headers::Type type, ValuesFactory&& valuesFactory);
+
+            /// Returns an ordered view over the list of headers
+            OrderedView ordered() const noexcept { return OrderedView(*this); }
+
+         private:
+            /// Resets all header indices to `InvalidHeaderIndex` and clears the "used" bit mask
+            void resetIndices() noexcept;
+      };
+
       explicit SipMessage(const Tuple *receivedTransport = 0);
       /// @todo .dlb. public, allows pass by value to compile.
       SipMessage(const SipMessage& message);
@@ -199,7 +667,7 @@ class SipMessage : public TransactionMessage
       /**
       @brief Base exception for SipMessage related exceptions
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             /**
@@ -212,20 +680,14 @@ class SipMessage : public TransactionMessage
             @brief returns the class name of the exception instance
             @return the class name of the instance
             */
-            const char* name() const { return "SipMessage::Exception"; }
+            const char* name() const noexcept override { return "SipMessage::Exception"; }
       };
 
       /// Mark message as internally generated
-      inline void setFromTU() 
-      {
-         mIsExternal = false;
-      }
+      inline void setFromTU() { mIsExternal = false; }
 
       /// Mark message as externally generated
-      inline void setFromExternal()
-      {
-         mIsExternal = true;
-      }
+      inline void setFromExternal() { mIsExternal = true; }
       
       /** 
          @brief Check if SipMessage is to be treated as it came off the wire.
@@ -234,10 +696,7 @@ class SipMessage : public TransactionMessage
                  an internally generated response to an internally generated 
                  request (ie: 408), false otherwise.
       */
-      inline bool isExternal() const
-      {
-         return mIsExternal;
-      }
+      inline bool isExternal() const { return mIsExternal; }
 
       /** 
          @brief Check if SipMessage came off the wire.
@@ -249,10 +708,7 @@ class SipMessage : public TransactionMessage
 
          @return true if the message came from an IP interface, false otherwise.
       */
-      inline bool isFromWire() const
-      {
-         return mReceivedTransportTuple.getType() != UNKNOWN_TRANSPORT;
-      }
+      inline bool isFromWire() const { return mReceivedTransportTuple.getType() != UNKNOWN_TRANSPORT; }
       
       /// @brief Check if SipMessage is a client transaction
       /// @return true if the message is external and is a response or
@@ -263,7 +719,7 @@ class SipMessage : public TransactionMessage
       
       @return string representation of a SIP message.
       */
-      virtual EncodeStream& encode(EncodeStream& str) const;      
+      virtual EncodeStream& encode(EncodeStream& str) const;
       //sipfrags will not output Content Length if there is no body--introduce
       //friendship to hide this?
       virtual EncodeStream& encodeSipFrag(EncodeStream& str) const;
@@ -276,8 +732,8 @@ class SipMessage : public TransactionMessage
       inline bool isRequest() const {return mRequest;}
       /// Returns true if message is a response, false otherwise
       inline bool isResponse() const {return mResponse;}
-      /// Returns true if message failed to parse, false otherwise      
-      inline bool isInvalid() const{return mInvalid;}
+      /// Returns true if message failed to parse, false otherwise
+      inline bool isInvalid() const {return mInvalid;}
       
       /// @brief returns the method type of the message
       /// @see MethodTypes
@@ -286,35 +742,23 @@ class SipMessage : public TransactionMessage
       const Data& methodStr() const;
       
       /// Returns a string containing the response reason text
-      const resip::Data* getReason() const{return mReason;}
+      const resip::Data* getReason() const { return mReason; }
       
       /// Returns the RequestLine.  This is only valid for request messages.
-      const RequestLine& 
-      header(const RequestLineType& l) const;
+      const RequestLine& header(const RequestLineType& l) const;
 
       /// Returns the RequestLine.  This is only valid for request messages.
-      RequestLine& 
-      header(const RequestLineType& l);
+      RequestLine& header(const RequestLineType& l);
 
-      inline const RequestLine& 
-      const_header(const RequestLineType& l) const
-      {
-         return header(l);
-      }
+      inline const RequestLine& const_header(const RequestLineType& l) const { return header(l); }
 
       /// Returns the StatusLine.  This is only valid for response messages.
-      const StatusLine& 
-      header(const StatusLineType& l) const;
+      const StatusLine& header(const StatusLineType& l) const;
 
       /// Returns the StatusLine.  This is only valid for response messages.
-      StatusLine& 
-      header(const StatusLineType& l);
+      StatusLine& header(const StatusLineType& l);
 
-      inline const StatusLine& 
-      const_header(const StatusLineType& l) const
-      {
-         return header(l);
-      }
+      inline const StatusLine& const_header(const StatusLineType& l) const { return header(l); }
 
       /// Returns true if the given header field is present, false otherwise
       bool exists(const HeaderBase& headerType) const;
@@ -323,10 +767,7 @@ class SipMessage : public TransactionMessage
       /// @brief Prevents a header field from being present when the message is prepared
       /// for sending to a transport.  This does not free the memory that was 
       /// used by the header.
-      inline void remove(const HeaderBase& headerType)
-      {
-         remove(headerType.getTypeNum());
-      }
+      inline void remove(const HeaderBase& headerType) { remove(headerType.getTypeNum()); }
 
       void remove(Headers::Type type);
 
@@ -357,7 +798,7 @@ class SipMessage : public TransactionMessage
       defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
       defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
       defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
-      defineHeader(Identity, "Identity", StringCategory, "RFC 4474");
+      defineMultiHeader(Identity, "Identity", IdentityCategory, "RFC 8224");   // Originally defined in RFC 4474 as a single header, but later modified by RFC8224 to be a multiheader
       defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC 3261");
       defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC 3261");
       defineMultiHeader(Allow, "Allow", Token, "RFC 3261");
@@ -403,6 +844,7 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
       defineMultiHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
       defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244");
+      defineMultiHeader(Diversion, "Diversion", NameAddr, "RFC 5806");
 
       defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC 1521");
       defineHeader(Organization, "Organization", StringCategory, "RFC 3261");
@@ -449,7 +891,7 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(Via, "Via", Via, "RFC 3261");
       defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 
-      defineHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 3455");
+      defineMultiHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 7315"); // section 5.4.
       defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455");
       defineHeader(PChargingFunctionAddresses, "P-Charging-Function-Addresses", Token, "RFC 3455");
       defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", TokenOrQuotedStringCategory, "RFC 3455");
@@ -457,7 +899,18 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
 
       /// unknown header interface
+      /**
+       * @brief Retrieves extension header values.
+       *
+       * Throws an exception if the header is not found.
+       */
       const StringCategories& header(const ExtensionHeader& symbol) const;
+
+      /**
+       * @brief Retrieves extension header values.
+       *
+       * Adds an empty list of header values if the header is not found.
+       */
       StringCategories& header(const ExtensionHeader& symbol);
       bool exists(const ExtensionHeader& symbol) const;
       void remove(const ExtensionHeader& symbol);
@@ -465,7 +918,9 @@ class SipMessage : public TransactionMessage
       /// typeless header interface
       const HeaderFieldValueList* getRawHeader(Headers::Type headerType) const;
       void setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerType);
-      const UnknownHeaders& getRawUnknownHeaders() const {return mUnknownHeaders;}
+      const KnownHeaders& getRawHeaders() const noexcept { return mKnownHeaders; }
+      const UnknownHeaders& getRawUnknownHeaders() const noexcept { return mUnknownHeaders; }
+
       /**
          Return the raw body string (if it exists). The returned HFV
          and its underlying memory is owned by the SipMessage, and may
@@ -473,7 +928,7 @@ class SipMessage : public TransactionMessage
 
          This is a low-level interface; see getContents() for higher level.
       **/
-      const HeaderFieldValue& getRawBody() const {return mContentsHfv;}
+      const HeaderFieldValue& getRawBody() const noexcept { return mContentsHfv; }
 
       /**
          Remove any existing body/contents, and (if non-empty)
@@ -494,25 +949,24 @@ class SipMessage : public TransactionMessage
         * @return pointer to the contents of the SIP message
         **/
       Contents* getContents() const;
+
       /// Removes the contents from the message
-      std::auto_ptr<Contents> releaseContents();
+      std::unique_ptr<Contents> releaseContents();
 
       /// @brief Set the contents of the message
       /// @param contents to store in the message
       void setContents(const Contents* contents);
-      /// @brief Set the contents of the message
-      /// @param contents to store in the message
-      void setContents(std::auto_ptr<Contents> contents);
+      void setContents(std::unique_ptr<Contents> contents);
 
       /// @internal transport interface
-      void setStartLine(const char* start, int len); 
+      void setStartLine(const char* start, uint32_t len);
 
-      void setBody(const char* start, UInt32 len); 
+      void setBody(const char* start, uint32_t len); 
       
-      /// Add HeaderFieldValue given enum, header name, pointer start, content length
+      /// Add HeaderFieldValue given enum, header name and value
       void addHeader(Headers::Type header,
-                     const char* headerName, int headerLen, 
-                     const char* start, int len);
+                     const char* headerName, uint32_t headerNameLen,
+                     const char* value, uint32_t valuelen);
 
       // Returns the source tuple for the transport that the message was received from
       // only makes sense for messages received from the wire.  Differs from Source
@@ -536,7 +990,7 @@ class SipMessage : public TransactionMessage
 
       void addBuffer(char* buf);
 
-      UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
+      uint64_t getCreatedTimeMicroSec() const { return mCreatedTime; }
 
       /// deal with a notion of an "out-of-band" forced target for SIP routing
       void setForceTarget(const Uri& uri);
@@ -547,25 +1001,38 @@ class SipMessage : public TransactionMessage
       const Data& getTlsDomain() const { return mTlsDomain; }
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
 
-      const std::list<Data>& getTlsPeerNames() const { return mTlsPeerNames; }
-      void setTlsPeerNames(const std::list<Data>& tlsPeerNames) { mTlsPeerNames = tlsPeerNames; }
+      /// TLS and WebSocket details of the connection this message was received
+      /// on, shared by every message received on that connection.  Null if the
+      /// message did not arrive on a TLS or WebSocket connection.
+      const std::shared_ptr<const ConnectionInfo>& getConnectionInfo() const noexcept { return mConnectionInfo; }
+      void setConnectionInfo(std::shared_ptr<const ConnectionInfo> connectionInfo) noexcept { mConnectionInfo = std::move(connectionInfo); }
 
-      const CookieList& getWsCookies() const { return mWsCookies; }
-      void setWsCookies(const CookieList& wsCookies) { mWsCookies = wsCookies; }
+      // Shortcuts to the fields of getConnectionInfo(); empty if there is none.
+      const std::list<Data>& getTlsPeerNames() const;
+      /// SNI (TLS server_name) the peer sent in its ClientHello.  Only set for
+      /// messages received on a TLS/WSS connection that we accepted (server mode);
+      /// empty if the peer did not send one.
+      const Data& getTlsSni() const;
+      const CookieList& getWsCookies() const;
+      std::shared_ptr<WsCookieContext> getWsCookieContext() const noexcept;
 
-      SharedPtr<WsCookieContext> getWsCookieContext() const { return mWsCookieContext; }
-      void setWsCookieContext(SharedPtr<WsCookieContext> wsCookieContext) { mWsCookieContext = wsCookieContext; }
+      // Each of these gives this message its own copy of the ConnectionInfo with
+      // the one field changed, so other messages from the same connection keep
+      // theirs.
+      void setTlsPeerNames(const std::list<Data>& tlsPeerNames);
+      void setWsCookies(const CookieList& wsCookies);
+      void setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext);
 
       Data getCanonicalIdentityString() const;
-      
-      SipMessage& mergeUri(const Uri& source);      
+ 
+      SipMessage& mergeUri(const Uri& source);
 
-      void setSecurityAttributes(std::auto_ptr<SecurityAttributes>);
-      const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
+      void setSecurityAttributes(std::unique_ptr<SecurityAttributes>) noexcept;
+      const SecurityAttributes* getSecurityAttributes() const noexcept { return mSecurityAttributes.get(); }
 
       /// @brief Call a MessageDecorator to process the message before it is
       /// sent to the transport
-      void addOutboundDecorator(std::auto_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
+      void addOutboundDecorator(std::unique_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
       void clearOutboundDecorators();
       void callOutboundDecorators(const Tuple &src, 
                                     const Tuple &dest,
@@ -594,31 +1061,15 @@ class SipMessage : public TransactionMessage
       void compute2543TransactionHash() const;
 
       EncodeStream& 
-      encode(EncodeStream& str, bool isSipFrag) const;      
+      encode(EncodeStream& str, bool isSipFrag) const;
 
       void copyFrom(const SipMessage& message);
 
       HeaderFieldValueList* ensureHeaders(Headers::Type type);
-      inline HeaderFieldValueList* ensureHeaders(Headers::Type type) const // throws if not present
-      {
-         if(mHeaderIndices[type]>0)
-         {
-            return mHeaders[mHeaderIndices[type]];
-         }
-         throwHeaderMissing(type);
-         return 0;
-      }
+      HeaderFieldValueList* ensureHeaders(Headers::Type type) const; // throws if not present
 
       HeaderFieldValueList* ensureHeader(Headers::Type type);
-      inline HeaderFieldValueList* ensureHeader(Headers::Type type) const // throws if not present
-      {
-         if(mHeaderIndices[type]>0)
-         {
-            return mHeaders[mHeaderIndices[type]];
-         }
-         throwHeaderMissing(type);
-         return 0;
-      }
+      HeaderFieldValueList* ensureHeader(Headers::Type type) const; // throws if not present
 
       void throwHeaderMissing(Headers::Type type) const;
 
@@ -669,15 +1120,9 @@ class SipMessage : public TransactionMessage
       // allocations are occuring and how much of the pool is used.
       DinkyPool<3732> mPool;
 
-      typedef std::vector<HeaderFieldValueList*, 
-                           StlPoolAllocator<HeaderFieldValueList*, 
-                                          PoolBase > > TypedHeaders;
       // raw text corresponding to each typed header (not yet parsed)
-      TypedHeaders mHeaders;
+      KnownHeaders mKnownHeaders;
       
-      // !bwc! Indices into mHeaders
-      short mHeaderIndices[Headers::MAX_HEADERS];
-
       // raw text corresponding to each unknown header
       UnknownHeaders mUnknownHeaders;
 
@@ -716,7 +1161,7 @@ class SipMessage : public TransactionMessage
       bool mInvalid;
       resip::Data* mReason;
       
-      UInt64 mCreatedTime;
+      uint64_t mCreatedTime;
 
       // used when next element is a strict router OR 
       // client forces next hop OOB
@@ -725,16 +1170,11 @@ class SipMessage : public TransactionMessage
       // domain associated with this message for tls cert
       Data mTlsDomain;
 
-      // peers domain associate with this message (MTLS)
-      std::list<Data> mTlsPeerNames;
+      // TLS peer names, SNI and WebSocket cookies of the connection the message
+      // was received on, shared with every other message from that connection
+      std::shared_ptr<const ConnectionInfo> mConnectionInfo;
 
-      // cookies associated with this message from the WebSocket Upgrade request
-      CookieList mWsCookies;
-
-      // parsed cookie authentication elements associated with this message from the WebSocket Upgrade request
-      SharedPtr<WsCookieContext> mWsCookieContext;
-
-      std::auto_ptr<SecurityAttributes> mSecurityAttributes;
+      std::unique_ptr<SecurityAttributes> mSecurityAttributes;
 
       std::vector<MessageDecorator*> mOutboundDecorators;
 
@@ -754,6 +1194,7 @@ class SipMessage : public TransactionMessage
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

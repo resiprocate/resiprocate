@@ -38,6 +38,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalContact(),
      mLocalCSeq(0),
      mRemoteCSeq(0),
+     mPendingRemoteTargetCSeq(0),
      mRemoteTarget(),
      mLocalNameAddr(),
      mRemoteNameAddr(),
@@ -122,11 +123,32 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                      }
                      if(request.header(h_RequestLine).uri().user().empty())
                      {
-                        mLocalContact.uri().user() = request.header(h_To).uri().user(); 
+                        // Contact header will always have a sip: scheme so it's safe to copy
+                        // the user part from sip:, sips: and tel: but not from others like urn:
+                        // (RFC 8141's NID:NSS has nothing to do with a sip: user's ABNF).
+                        // When skipped, mLocalContact.uri().user() keeps whatever
+                        // getOverrideHostAndPort() set above (or stays empty) --
+                        // e.g. for a urn: To (an incoming request targeting an
+                        // emergency-services URN), the local Contact ends up with
+                        // no user part at all: "sip:host:port". Legal per RFC 3261
+                        // (Contact only needs a valid sip:/sips: URI), and arguably
+                        // the only sane choice here, since there is no sip:-shaped
+                        // user to carry over from a urn: To.
+                        if (request.header(h_To).uri().isUserRelevant())
+                        {
+                           mLocalContact.uri().user() = request.header(h_To).uri().user();
+                        }
                      }
                      else
                      {
-                        mLocalContact.uri().user() = request.header(h_RequestLine).uri().user(); 
+                        // Same reasoning as above, for the case where the
+                        // Request-URI (rather than To) carries the user to copy
+                        // -- e.g. a urn: Request-URI (RFC 5031 emergency call)
+                        // also leaves mLocalContact.uri().user() untouched.
+                        if (request.header(h_RequestLine).uri().isUserRelevant())
+                        {
+                           mLocalContact.uri().user() = request.header(h_RequestLine).uri().user();
+                        }
                      }
                      const Data& instanceId = mDialogSet.mUserProfile->getInstanceId();
                      if (!contact.uri().exists(p_gr) && !instanceId.empty())
@@ -230,9 +252,9 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                         throw Exception("BaseCreator is null for DialogSet", __FILE__, __LINE__);
                      }
 
-                     SharedPtr<SipMessage> lastRequest(creator->getLastRequest());
+                     auto lastRequest = creator->getLastRequest();
 
-                     if( 0 == lastRequest.get() ||
+                     if (!lastRequest ||
                         !lastRequest->exists(h_Contacts) ||
                         lastRequest->header(h_Contacts).empty())
                      {
@@ -240,7 +262,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                         InfoLog(<< response);
                         throw Exception("lastRequest does not contain a valid contact.", __FILE__, __LINE__);
                      }
-                     mLocalContact = creator->getLastRequest()->header(h_Contacts).front();
+                     mLocalContact = lastRequest->header(h_Contacts).front();
                      mRemoteTarget = contact;
                   }
                   else
@@ -300,37 +322,43 @@ Dialog::~Dialog()
 }
 
 const DialogId&
-Dialog::getId() const
+Dialog::getId() const noexcept
 {
    return mId;
 }
 
 const NameAddr&
-Dialog::getLocalNameAddr() const
+Dialog::getLocalNameAddr() const noexcept
 {
    return mLocalNameAddr;
 }
 
 const NameAddr&
-Dialog::getLocalContact() const
+Dialog::getLocalContact() const noexcept
 {
    return mLocalContact;
 }
 
 const NameAddr&
-Dialog::getRemoteNameAddr() const
+Dialog::getRemoteNameAddr() const noexcept
 {
    return mRemoteNameAddr;
 }
 
 const NameAddr&
-Dialog::getRemoteTarget() const
+Dialog::getRemoteTarget() const noexcept
 {
    return mRemoteTarget;
 }
 
+const NameAddr&
+Dialog::getPendingRemoteTarget() const
+{
+   return mPendingRemoteTarget;
+}
+
 const NameAddrs&
-Dialog::getRouteSet() const
+Dialog::getRouteSet() const noexcept
 {
    return mRouteSet;
 }
@@ -338,18 +366,32 @@ Dialog::getRouteSet() const
 void
 Dialog::cancel()
 {
-   resip_assert(mType == Invitation);
    ClientInviteSession* uac = dynamic_cast<ClientInviteSession*>(mInviteSession);
-   resip_assert (uac);
-   uac->cancel();
+   if (uac)
+   {
+      uac->cancel();
+   }
 }
 
 void
-Dialog::end()
+Dialog::end(const Data& endReason, const ParserContainer<Token>& endReasons)
 {
    if (mInviteSession)
    {
-      mInviteSession->end();
+      // Currently End reasons are only passed to Invite sessions
+      if (endReasons.size() > 0)
+      {
+         mInviteSession->end(endReasons);
+
+      }
+      else if (endReason.size() > 0)
+      {
+         mInviteSession->end(endReason);
+      }
+      else
+      {
+         mInviteSession->end();
+      }
    }
 
    // End Subscriptions
@@ -375,27 +417,59 @@ Dialog::end()
 void
 Dialog::handleTargetRefresh(const SipMessage& msg)
 {
-   switch(msg.header(h_CSeq).method())
+   if (msg.exists(h_Contacts))
    {
-      case INVITE:
-      case UPDATE:
-      case SUBSCRIBE: // RFC6665 - Note: target refreshes via NOTIFY requests are handled via 
-                      //           ClientSubscription usage after NOTIFY ordering is confirmed
-         if (msg.isRequest() || (msg.isResponse() && msg.header(h_StatusLine).statusCode()/100 == 2))
-         {
-            //?dcm? modify local target; 12.2.2 of 3261 implies that the remote
-            //target is immediately modified.  Should we wait until a 2xx class
-            //reponse is sent to a re-invite(easy when all send requests go
-            //through Dialog)
-            if (msg.exists(h_Contacts))
+      switch (msg.header(h_CSeq).method())
+      {
+         case INVITE:
+         case UPDATE:
+         case SUBSCRIBE: // RFC6665 - Note: target refreshes via NOTIFY requests are handled via 
+                         //           ClientSubscription usage after NOTIFY ordering is confirmed
+            if (msg.isRequest())
             {
-               //.dcm. replace or check then replace
+               // If the RemoteTarget is different, then pend changing it until a success response
+               // is generated by the application
+               // RFC3261 12.2.2 - "If a particular request is accepted by the UAS, all the state changes
+               //               associated with it are performed.If the request is rejected, none
+               //               of the state changes are performed."
+               if (!(mRemoteTarget == msg.header(h_Contacts).front()))
+               {
+                  mPendingRemoteTarget = msg.header(h_Contacts).front();
+                  mPendingRemoteTargetCSeq = msg.header(h_CSeq).sequence();
+               }
+            }
+            else if (msg.isResponse() && msg.header(h_StatusLine).statusCode() / 100 == 2)
+            {
                mRemoteTarget = msg.header(h_Contacts).front();
             }
+            break;
+
+         default:
+            return;
+      }
+   }
+}
+
+void
+Dialog::handlePendingTargetRefresh(const SipMessage& msg)
+{
+   // If we have a final response (ie: response code >= 200)
+   if (msg.isResponse() && msg.header(h_StatusLine).statusCode() / 100 >= 2)
+   {
+      // And our CSeq matches a pending remote target refresh 
+      if (mPendingRemoteTargetCSeq == msg.header(h_CSeq).sequence())
+      {
+         // And the response is a success response, then promote the PendingRemoteTarget to be 
+         // the RemoteTarget
+         if (msg.header(h_StatusLine).statusCode() / 100 == 2)
+         {
+            mRemoteTarget = mPendingRemoteTarget;
          }
-         break;
-      default:
-         return;
+
+         // We have received a final response, let's clear out the pending stuff now
+         mPendingRemoteTargetCSeq = 0;
+         mPendingRemoteTarget = NameAddr();
+      }
    }
 }
 
@@ -485,6 +559,17 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(request);
             }
             break;
+         case OPTIONS:
+            if (mInviteSession == 0)
+            {
+               InfoLog ( << "Spurious OPTIONS" );
+               return;
+            }
+            else
+            {
+               mInviteSession->dispatch(request);
+            }
+            break;
          case PRACK:
             if (mInviteSession == 0)
             {
@@ -539,17 +624,7 @@ Dialog::dispatch(const SipMessage& msg)
          break;
          case REFER:
          {
-//             if (mInviteSession == 0)
-//             {
-//                InfoLog (<< "Received an in dialog refer in a non-invite dialog: " << request.brief());
-//                SipMessage failure;
-//                makeResponse(failure, request, 603);
-//                mDum.sendResponse(failure);
-//                return;
-//             }
-//             else 
-
-            if  (!request.exists(h_ReferTo))
+            if (!request.exists(h_ReferTo))
             {
                InfoLog (<< "Received refer w/out a Refer-To: " << request.brief());
                SipMessage failure;
@@ -565,10 +640,17 @@ Dialog::dispatch(const SipMessage& msg)
                      (request.exists(h_Requires) &&
                      request.header(h_Requires).find(Token("norefersub"))))
                {
-                  resip_assert(mInviteSession);
+                  if (mInviteSession == 0)
+                  {
+                     InfoLog(<< "Received an in dialog refer with no subscription in a non-invite dialog: " << request.brief());
+                     SipMessage failure;
+                     makeResponse(failure, request, 603);
+                     mDum.sendResponse(failure);
+                     return;
+                  }
                   mInviteSession->referNoSub(msg);
                }
-               else
+               else  // else we need a subscription
                {
                   ServerSubscription* server = findMatchingServerSub(request);
                   ServerSubscriptionHandle serverHandle;
@@ -626,7 +708,7 @@ Dialog::dispatch(const SipMessage& msg)
                      }
                      else
                      {
-                        SharedPtr<SipMessage> response(new SipMessage);
+                        auto response = std::make_shared<SipMessage>();
                         makeResponse(*response, msg, 406);
                         send(response);
                      }
@@ -678,8 +760,21 @@ Dialog::dispatch(const SipMessage& msg)
          }
          else
          {
-            // Ensure that if the route-set in the 200 is empty, then we overwrite any existing route-sets
-            mRouteSet.clear();
+            // Note:  This is code to facilitate Dialog recovery, and works in conjunction with the 
+            //        makeInviteSession API that takes a DialogSetId parameter.
+            // If our original outbound request contained a to tag, then we are attempting to restore a previously
+            // existing (outside this process) dialog.  Some clients will send the routeset to use as Record-Routes 
+            // in the response, in which case the code above will store them.  However clients are not mandated to 
+            // do so, so if our outbound INVITE had routes on it, then store these as the routeset for the dialog.
+            if (creator->getLastRequest()->header(h_To).exists(p_tag) && creator->getLastRequest()->exists(h_Routes))
+            {
+                mRouteSet = creator->getLastRequest()->header(h_Routes);
+            }
+            else
+            {
+               // Ensure that if the route-set in the 200 is empty, then we overwrite any existing route-sets
+               mRouteSet.clear();
+            }
          }
       }
 
@@ -714,6 +809,7 @@ Dialog::dispatch(const SipMessage& msg)
          case MESSAGE:
          case UPDATE:
          case PRACK:
+         case OPTIONS:
             if (mInviteSession)
             {
                mInviteSession->dispatch(response);
@@ -1001,6 +1097,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method, bool incrementCSeq)
 
    if (mDialogSet.mUserProfile->isAnonymous())
    {
+      request.remove(h_Privacys);
       request.header(h_Privacys).push_back(PrivacyCategory(Symbols::id));
    }
 
@@ -1098,12 +1195,13 @@ Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
 
 
 void
-Dialog::send(SharedPtr<SipMessage> msg)
+Dialog::send(std::shared_ptr<SipMessage> msg)
 {
    if (msg->isRequest() && msg->header(h_CSeq).method() != ACK)
    {
       mRequests[msg->header(h_CSeq).sequence()] = msg;
    }
+   handlePendingTargetRefresh(*msg);
    mDum.send(msg);
 }
 

@@ -94,7 +94,7 @@ class InviteSessionHandler
          LocalCancel,
          RemoteCancel,
          Rejected, //Only as UAS, UAC has distinct onFailure callback
-         Referred
+         Referred  //!slg! - This is really Redirected - not sure why it is called Referred.  Only gets used when we send a redirect (ie: 302).
       };
             
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;

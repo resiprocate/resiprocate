@@ -191,7 +191,7 @@ XmlRpcConnection::processSomeWrites()
    {
       int e = getErrno();
       XmlRpcServerBase::logSocketError(e);
-      InfoLog (<< "XmlRpcConnection::processSomeWrites - failed write on " << mSock << " " << strerror(e));
+      InfoLog (<< "XmlRpcConnection::processSomeWrites - failed write on " << mSock << " " << strError(e));
 
       return false;
    }
@@ -264,7 +264,7 @@ XmlRpcConnection::sendResponse(unsigned int requestId, const Data& responseData,
 
 /* ====================================================================
 
- Copyright (c) 2009, SIP Spectrum, Inc.
+ Copyright (c) 2009-2026, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

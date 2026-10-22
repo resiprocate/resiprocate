@@ -20,6 +20,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
+// TODO !SLG!  RFC4474 has been deprecated by RFC8224 (Authenticated Identity Management).  We should remove/adjust this code.
+
 IdentityHandler::IdentityHandler(DialogUsageManager& dum, TargetCommand::Target& target)
    : DumFeature(dum, target)
 {
@@ -63,7 +65,8 @@ bool
 IdentityHandler::queueForIdentityCheck(SipMessage* sipMsg)
 {
 #if defined(USE_SSL)
-   if (sipMsg->exists(h_Identity) &&
+   if (sipMsg->exists(h_Identities) &&
+       sipMsg->header(h_Identities).size() > 0 &&
        sipMsg->exists(h_IdentityInfo) &&
        sipMsg->exists(h_Date))
    {
@@ -98,10 +101,10 @@ IdentityHandler::queueForIdentityCheck(SipMessage* sipMsg)
    }
 #endif
 
-   std::auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
+   std::unique_ptr<SecurityAttributes> sec(new SecurityAttributes);
    sec->setIdentity(sipMsg->header(h_From).uri().getAor());
    sec->setIdentityStrength(SecurityAttributes::From);
-   sipMsg->setSecurityAttributes(sec);
+   sipMsg->setSecurityAttributes(std::move(sec));
    return false;
 }
 
@@ -114,7 +117,7 @@ IdentityHandler::processIdentityCheckResponse(const HttpGetMessage& msg)
    if (it != mRequiresCerts.end())
    {
       mDum.getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
-      postCommand(auto_ptr<Message>(it->second));
+      postCommand(unique_ptr<Message>(it->second));
       mRequiresCerts.erase(it);
    }
 #endif

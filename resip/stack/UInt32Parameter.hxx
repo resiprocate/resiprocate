@@ -22,10 +22,10 @@ class ParseBuffer;
 class UInt32Parameter : public Parameter
 {
    public:
-      typedef UInt32 Type;
+      typedef uint32_t Type;
 
       UInt32Parameter(ParameterTypes::Type, ParseBuffer& pb, const std::bitset<256>& terminators);
-      explicit UInt32Parameter(ParameterTypes::Type type, UInt32 value = 0);
+      explicit UInt32Parameter(ParameterTypes::Type type, uint32_t value = 0);
       
       static Parameter* decode(ParameterTypes::Type type, 
                                  ParseBuffer& pb, 
@@ -41,7 +41,7 @@ class UInt32Parameter : public Parameter
       Type& value() {return mValue;}
 
    private:
-      UInt32 mValue;
+      uint32_t mValue;
 };
  
 }

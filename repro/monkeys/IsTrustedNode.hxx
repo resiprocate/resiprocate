@@ -20,7 +20,7 @@ namespace repro
 
       virtual processor_action_t process(RequestContext &);
 
-  private:
+     protected:
        AclStore& mAclStore;
   };
 }

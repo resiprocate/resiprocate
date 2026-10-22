@@ -6,6 +6,8 @@
 #include "rutil/Logger.hxx"
 #include "p2p/Message.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
 using namespace p2p;
@@ -36,18 +38,18 @@ Dispatcher::registerPostable(Message::MessageType type,
 }
 
 void 
-Dispatcher::send(std::auto_ptr<Message> message, Postable<Event>& postable)
+Dispatcher::send(std::unique_ptr<Message> message, Postable<Event>& postable)
 {
    //.dcm. more with timers
    
    mTidMap[message->getTransactionId()] = Entry(postable);
-   mForwardingLayer->forward(message);
+   mForwardingLayer->forward(std::move(message));
 }
 
 static const resip::Data NO_HANDLER("Message not understood");
 
 void 
-Dispatcher::post(std::auto_ptr<Message> message)
+Dispatcher::post(std::unique_ptr<Message> message)
 {
    DebugLog(<<"Dispatcher received " << message->brief());
    
@@ -56,7 +58,7 @@ Dispatcher::post(std::auto_ptr<Message> message)
    {
       if (message->isRequest())
       {
-         mForwardingLayer->forward(std::auto_ptr<Message>(
+         mForwardingLayer->forward(std::unique_ptr<Message>(
                                       message->makeErrorResponse(Message::Error::Forbidden, 
                                                                  NO_HANDLER)));
       } 

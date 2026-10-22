@@ -56,8 +56,7 @@ using resip::RWMutex;
 using resip::Lock;
 
 RWMutex::RWMutex()
-   :   Lockable(),
-       mReaderCount(0),
+   :   mReaderCount(0),
        mWriterHasLock(false),
        mPendingWriterCount(0)
 {
@@ -76,7 +75,7 @@ RWMutex::readlock()
 
    while ( mWriterHasLock || mPendingWriterCount > 0 )
    {
-      mReadCondition.wait(mMutex);
+      mReadCondition.wait(lock);
    }
 
    mReaderCount++;
@@ -92,7 +91,7 @@ RWMutex::writelock()
 
    while ( mWriterHasLock || mReaderCount > 0 )
    {
-      mPendingWriteCondition.wait(mMutex);
+      mPendingWriteCondition.wait(lock);
    }
 
    mPendingWriterCount--;
@@ -125,14 +124,14 @@ RWMutex::unlock()
       //
       if ( mPendingWriterCount > 0 )
       {
-         mPendingWriteCondition.signal();
+         mPendingWriteCondition.notify_one();
       }
 
       // No writer, no pending writers, so all the readers can go.
       //
       else
       {
-         mReadCondition.broadcast();
+         mReadCondition.notify_all();
       }
 
    }
@@ -147,7 +146,7 @@ RWMutex::unlock()
 
       if ( mReaderCount == 0 && mPendingWriterCount > 0 )
       {
-         mPendingWriteCondition.signal();
+         mPendingWriteCondition.notify_one();
       }
    }
 }

@@ -24,13 +24,13 @@ class SpecifySingle :public DataSpecifier
 class SpecifyArray :public DataSpecifier
 {
    public:
-      const static UInt32 Last = INT_MAX;
+      const static uint32_t Last = INT_MAX;
       
       class Range
       {
          public:
-            UInt32 first;
-            UInt32 last;
+            uint32_t first;
+            uint32_t last;
       };
       
       std::vector<Range>& ranges();

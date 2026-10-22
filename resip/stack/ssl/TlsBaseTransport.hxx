@@ -13,6 +13,8 @@
 
 #include <openssl/ssl.h>
 
+#include <atomic>
+
 namespace resip
 {
 
@@ -42,7 +44,9 @@ class TlsBaseTransport : public TcpBaseTransport
                    const Data& privateKeyPassPhrase = "");
       virtual  ~TlsBaseTransport();
 
-      SSL_CTX* getCtx() const;
+      void onReload();
+
+      SSL_CTX* getCtx();
 
       SecurityTypes::TlsClientVerificationMode getClientVerificationMode() 
          { return mClientVerificationMode; };
@@ -85,6 +89,19 @@ class TlsBaseTransport : public TcpBaseTransport
          as if it were a SIP URI.  This is convenient because many commercial
          CAs offer email certificates but not sip: certificates */
       bool mUseEmailAsSIP;
+      const Data mCertificateFilename;
+      const Data mPrivateKeyFilename;
+      const Data mPrivateKeyPassPhrase;
+      // Set by onReload(), which runs on another thread than the transport's
+      std::atomic<bool> mReloadCertificate;
+
+   private:
+      SSL_CTX* createDomainCtx();
+      void reloadDomainCtx();
+
+      // Kept so that a reloaded mDomainCtx gets the callback too
+      int (*mCertVerifyCallback)(X509_STORE_CTX*, void*) = nullptr;
+      void* mCertVerifyCallbackArg = nullptr;
 };
 
 }
@@ -94,6 +111,7 @@ class TlsBaseTransport : public TcpBaseTransport
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

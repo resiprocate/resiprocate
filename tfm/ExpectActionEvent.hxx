@@ -1,16 +1,17 @@
 #if !defined(TFM_ExpectActionEvent_hxx)
 #define TFM_ExpectActionEvent_hxx
 
-#include <boost/shared_ptr.hpp>
 #include "rutil/Data.hxx"
 #include "tfm/Event.hxx"
+
+#include <memory>
 
 class ActionBase;
 
 class ExpectActionEvent : public Event
 {
    public:
-      ExpectActionEvent(ActionBase* action, boost::shared_ptr<Event> event);
+      ExpectActionEvent(ActionBase* action, std::shared_ptr<Event> event);
       ExpectActionEvent(ActionBase* action, TestEndPoint* endPoint);
 
       virtual resip::Data toString() const;
@@ -20,7 +21,7 @@ class ExpectActionEvent : public Event
 
    private:
       ActionBase* mAction;
-      boost::shared_ptr<Event> mEvent;
+      std::shared_ptr<Event> mEvent;
       bool mHasEvent;
 };
 

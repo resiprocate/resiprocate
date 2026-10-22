@@ -29,13 +29,13 @@ class RequestContext;
 class ResponseContext
 {
    public:
-      class CompareStatus  : public std::binary_function<const resip::SipMessage&, const resip::SipMessage&, bool>  
+      class CompareStatus
       {
          public:
             bool operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const;
       };      
       
-      ~ResponseContext();
+      virtual ~ResponseContext();
 
       /**
          Adds this Target as a SimpleTarget to the collection of Targets.
@@ -70,7 +70,7 @@ class ResponseContext
          @note Targets are not checked for duplicate uris until an attempt 
             is made to start them.
       */
-      bool addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately = false, bool checkDuplicates = true);
+      bool addTarget(std::unique_ptr<repro::Target> target, bool beginImmediately = false, bool checkDuplicates = true);
 
       /**
          Adds a batch of Targets. 
@@ -115,37 +115,49 @@ class ResponseContext
       
       /**
          Cancels all active client transactions. Does not clear Candidate
-         transactions.
+         transactions.  
+         
+         @param reasons Optional reasons header to be added to any
+                        resulting CANCEL requests.
          
          @returns true iff any transaction was placed in either the
          WaitingToCancel or Cancelled state.
       */ 
-      bool cancelActiveClientTransactions();
+      bool cancelActiveClientTransactions(const resip::Tokens* reasons = 0);
       
       /**
          Cancels all active client transactions. Also clears Candidate
-         transactions (they are transitioned directly to Terminated)
-         
+         transactions (they are transitioned directly to Terminated).
+
+         @param reasons Optional reasons header to be added to any
+         resulting CANCEL requests.
+
          @returns true iff any transaction was placed in either the
          WaitingToCancel, Cancelled, or Terminated state.
       */ 
-      bool cancelAllClientTransactions();
+      bool cancelAllClientTransactions(const resip::Tokens* reasons = 0);
       
       /**
-         Removes all Candidate transactions.
-         
+         Removes all Candidate transactions. 
+
+         @param reasons Optional reasons header to be added to any
+         resulting CANCEL requests.
+
          @returns true iff at least one Candidate transaction was removed.
       */
-      bool clearCandidateTransactions();
+      bool clearCandidateTransactions(const resip::Tokens* reasons = 0);
       
       /**
          Cancels this client transaction if active, or Terminates it if
-         Candidate.
-         
-         @returns true iff this transaction was placed in either the 
+         Candidate.    
+
+         @param reasons Optional reasons header to be added to any
+         resulting CANCEL requests.
+
+         @returns true iff this transaction was placed in either the
          WaitingToCancel, Cancelled, or Terminated state.
       */
-      bool cancelClientTransaction(const resip::Data& serial);
+      bool cancelClientTransaction(const resip::Data& serial, const resip::Tokens* reasons = 0);
             
       /**
          Self-explanatory
@@ -216,7 +228,7 @@ class ResponseContext
       std::list<std::list<resip::Data> > mTransactionQueueCollection;
       resip::Data mCurrentResponseTid;
 
-   private:
+   protected:
       // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
 
@@ -229,11 +241,11 @@ class ResponseContext
       // call this from RequestContext after the lemur chain for any response 
       void processResponse(resip::SipMessage& response);
 
-      void processTimerC();
+      void updateTimerC(const resip::Data &tid);
+      void processTimerC(const resip::Data &tid, int serial);
 
       void beginClientTransaction(repro::Target* target);
-      void cancelClientTransaction(repro::Target* target);
-
+      void cancelClientTransaction(repro::Target* target, const resip::Tokens* reasons = 0);
 
       void terminateClientTransaction(const resip::Data& tid);
       void removeClientTransaction(const resip::Data& transactionId); 
@@ -252,6 +264,7 @@ class ResponseContext
       bool needsFlowTokenToWork(const resip::NameAddr& contact) const;
       bool sendingToSelf(Target* target);
 
+      std::unique_ptr<resip::SipMessage> buildTargetRequest(Target *target);
       void sendRequest(resip::SipMessage& request);
       
       TransactionMap mCandidateTransactionMap; //Targets with status Candidate.
@@ -268,8 +281,11 @@ class ResponseContext
       int mBestPriority;
       bool mSecure;
       bool mIsClientBehindNAT;  // Only set if InteropHelper::getClientNATDetectionEnabled() is true
+      
+      static const int TimerCSerialInit = 0;
+      std::unordered_map<resip::Data, int> mTimerCSerial; // Keeping track of the latest TimerC for each of the client TXs
 
-      void forwardBestResponse();
+      virtual void forwardBestResponse();
 
       friend class RequestContext;
       friend EncodeStream& operator<<(EncodeStream& strm, const repro::ResponseContext& rc);

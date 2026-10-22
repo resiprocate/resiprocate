@@ -1,10 +1,12 @@
 #include "PagerMessageCreator.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 PagerMessageCreator::PagerMessageCreator(DialogUsageManager& dum, 
                                          const NameAddr& target, 
-                                         SharedPtr<UserProfile> userProfile)
+                                         std::shared_ptr<UserProfile> userProfile)
    : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, MESSAGE);

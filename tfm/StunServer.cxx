@@ -9,7 +9,6 @@
 
 using namespace resip;
 using namespace std;
-using namespace boost;
 
 #define TURN_MAGIC_COOKIE      0x72c64bc6
 #define TURN_MAX_BANDWIDTH     1000
@@ -101,7 +100,7 @@ StunServer::process(FdSet& fdset)
    bool ok = false;
    char msg[STUN_MAX_MESSAGE_SIZE];
    int msgLen = sizeof(msg);
-   boost::shared_ptr<StunRequestContext> request = boost::shared_ptr<StunRequestContext>(new StunRequestContext());
+   auto request = std::make_shared<StunRequestContext>();
 
    resip_assert(mEventSink);
 
@@ -182,12 +181,12 @@ StunServer::process(FdSet& fdset)
 }
 
 void
-StunServer::sendStunResponse(boost::shared_ptr<StunRequestContext> request, const resip::Uri& mappedAddr)
+StunServer::sendStunResponse(std::shared_ptr<StunRequestContext> request, const resip::Uri& mappedAddr)
 {
    Lock autoLock(mMutexLock);
    resip_assert(mEventSink);
 
-   boost::shared_ptr<StunResponseContext> response = boost::shared_ptr<StunResponseContext>(new StunResponseContext());
+   auto response = std::make_shared<StunResponseContext>();
 
    if( !createResponse(request, response) )
    {
@@ -207,10 +206,10 @@ StunServer::sendStunResponse(boost::shared_ptr<StunRequestContext> request, cons
 }
 
 void
-StunServer::sendTurnAllocateErrorResponse(boost::shared_ptr<StunRequestContext> request, int code)
+StunServer::sendTurnAllocateErrorResponse(std::shared_ptr<StunRequestContext> request, int code)
 {
    Lock autoLock(mMutexLock);
-   boost::shared_ptr<StunResponseContext> response = boost::shared_ptr<StunResponseContext>(new StunResponseContext());
+   auto response = std::make_shared<StunResponseContext>();
 
    response->msg.msgHdr.msgType = TurnAllocateErrorResponse;
    for ( int i=0; i<16; i++ )
@@ -223,8 +222,8 @@ StunServer::sendTurnAllocateErrorResponse(boost::shared_ptr<StunRequestContext> 
    response->msg.errorCode.errorClass = code / 100;
    response->msg.errorCode.number = code % 100;
    Data reason = getReason(code);
-   response->msg.errorCode.sizeReason = reason.size();
-   strcpy(response->msg.errorCode.reason, reason.c_str());
+   response->msg.errorCode.sizeReason = (uint16_t)reason.size();
+   snprintf(response->msg.errorCode.reason, sizeof(response->msg.errorCode.reason), "%s", reason.c_str());
 
    response->dest = request->from;
 
@@ -232,10 +231,10 @@ StunServer::sendTurnAllocateErrorResponse(boost::shared_ptr<StunRequestContext> 
 }
 
 void
-StunServer::sendTurnAllocateErrorResponse300(boost::shared_ptr<StunRequestContext> request, const Data& ip, int port)
+StunServer::sendTurnAllocateErrorResponse300(std::shared_ptr<StunRequestContext> request, const Data& ip, int port)
 {
    Lock autoLock(mMutexLock);
-   boost::shared_ptr<StunResponseContext> response = boost::shared_ptr<StunResponseContext>(new StunResponseContext());
+   auto response = std::make_shared<StunResponseContext>();
 
    response->msg.msgHdr.msgType = TurnAllocateErrorResponse;
    for ( int i=0; i<16; i++ )
@@ -248,9 +247,8 @@ StunServer::sendTurnAllocateErrorResponse300(boost::shared_ptr<StunRequestContex
    response->msg.errorCode.errorClass = 3;
    response->msg.errorCode.number = 0;
    Data reason = getReason(300);
-   response->msg.errorCode.sizeReason = reason.size();
-   strcpy(response->msg.errorCode.reason, reason.c_str());
-
+   response->msg.errorCode.sizeReason = (uint16_t)reason.size();
+   snprintf(response->msg.errorCode.reason, sizeof(response->msg.errorCode.reason), "%s", reason.c_str());
 
    response->msg.hasTurnAlternateServer = true;
    response->msg.turnAlternateServer.family = IPv4Family;
@@ -265,11 +263,11 @@ StunServer::sendTurnAllocateErrorResponse300(boost::shared_ptr<StunRequestContex
 }
 
 void
-StunServer::sendTurnAllocateResponse(boost::shared_ptr<StunRequestContext> request, int iPort)
+StunServer::sendTurnAllocateResponse(std::shared_ptr<StunRequestContext> request, int iPort)
 {
    Lock autoLock(mMutexLock);
    DebugLog(<< "sending Turn Allocate Reponse");
-   boost::shared_ptr<StunResponseContext> response = boost::shared_ptr<StunResponseContext>(new StunResponseContext());
+   auto response = std::make_shared<StunResponseContext>();
 
    response->msg.msgHdr.msgType = TurnAllocateResponse;
    for ( int i=0; i<16; i++ )
@@ -306,24 +304,24 @@ StunServer::sendTurnAllocateResponse(boost::shared_ptr<StunRequestContext> reque
 }
 
 void
-StunServer::sendTurnSendResponse(boost::shared_ptr<StunRequestContext> request)
+StunServer::sendTurnSendResponse(std::shared_ptr<StunRequestContext> request)
 {
    Lock autoLock(mMutexLock);
    sendTurnResponse(request, TurnSendResponse);
 }
 
 void
-StunServer::sendTurnSetActiveDestinationResponse(boost::shared_ptr<StunRequestContext> request)
+StunServer::sendTurnSetActiveDestinationResponse(std::shared_ptr<StunRequestContext> request)
 {
    Lock autoLock(mMutexLock);
    sendTurnResponse(request, TurnSetActiveDestinationResponse);
 }
 
 void
-StunServer::sendTurnResponse(boost::shared_ptr<StunRequestContext> request, UInt16 messageType)
+StunServer::sendTurnResponse(std::shared_ptr<StunRequestContext> request, uint16_t messageType)
 {
    Lock autoLock(mMutexLock);
-   boost::shared_ptr<StunResponseContext> response = boost::shared_ptr<StunResponseContext>(new StunResponseContext());
+   auto response = std::make_shared<StunResponseContext>();
 
    response->msg.msgHdr.msgType = messageType;
    for ( int i=0; i<16; i++ )
@@ -338,12 +336,12 @@ StunServer::sendTurnResponse(boost::shared_ptr<StunRequestContext> request, UInt
 }
 
 void 
-StunServer::sendStunResponse(boost::shared_ptr<StunRequestContext> request)
+StunServer::sendStunResponse(std::shared_ptr<StunRequestContext> request)
 {
    Lock autoLock(mMutexLock);
    resip_assert(mEventSink);
 
-   boost::shared_ptr<StunResponseContext> response = boost::shared_ptr<StunResponseContext>(new StunResponseContext());
+   auto response = std::make_shared<StunResponseContext>();
 
    if( !createResponse(request, response) )
    {
@@ -355,7 +353,7 @@ StunServer::sendStunResponse(boost::shared_ptr<StunRequestContext> request)
 }
 
 bool
-StunServer::createResponse(boost::shared_ptr<StunRequestContext> request, boost::shared_ptr<StunResponseContext> response)
+StunServer::createResponse(std::shared_ptr<StunRequestContext> request, std::shared_ptr<StunResponseContext> response)
 {
    Lock autoLock(mMutexLock);
    response->changePort = false;
@@ -367,7 +365,7 @@ StunServer::createResponse(boost::shared_ptr<StunRequestContext> request, boost:
    response->secondary.addr = 0;
 
    return stunServerProcessMsg((char*)request->data.data(), 
-                               request->data.size(), 
+                               (unsigned int)request->data.size(), 
                                request->from, 
                                response->secondary,
                                request->recvAltIp ? mInfo.altAddr : mInfo.myAddr,
@@ -381,7 +379,7 @@ StunServer::createResponse(boost::shared_ptr<StunRequestContext> request, boost:
 }
 
 void 
-StunServer::send(boost::shared_ptr<StunResponseContext> response, boost::shared_ptr<StunRequestContext> request)
+StunServer::send(std::shared_ptr<StunResponseContext> response, std::shared_ptr<StunRequestContext> request)
 {
    Lock autoLock(mMutexLock);
    char buf[STUN_MAX_MESSAGE_SIZE];

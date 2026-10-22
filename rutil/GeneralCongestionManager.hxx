@@ -51,7 +51,7 @@ class GeneralCongestionManager : public CongestionManager
             - >100 percent of max tolerance -> REJECTING_NON_ESSENTIAL
       */
       GeneralCongestionManager(MetricType defaultMetric,
-                                 UInt32 defaultMaxTolerance);
+                                 uint32_t defaultMaxTolerance);
       virtual ~GeneralCongestionManager();
 
       /**
@@ -84,7 +84,7 @@ class GeneralCongestionManager : public CongestionManager
       */
       virtual bool updateFifoTolerances(const resip::Data& fifoDescription,
                                           MetricType metric,
-                                          UInt32 maxTolerance );
+                                          uint32_t maxTolerance );
 
       /**
          Add a fifo to the collection of fifos monitored by this 
@@ -107,7 +107,7 @@ class GeneralCongestionManager : public CongestionManager
       */
       virtual void registerFifo(resip::FifoStatsInterface* fifo,
                                  MetricType metric,
-                                 UInt32 maxTolerance );
+                                 uint32_t maxTolerance );
 
       /**
          Add a fifo to the collection of fifos monitored by this 
@@ -134,15 +134,17 @@ class GeneralCongestionManager : public CongestionManager
          For how this function determines congestion-state, see registerFifo().       */
       virtual RejectionBehavior getRejectionBehavior(const FifoStatsInterface *fifo) const;
 
+      /**
+         @brief Returns the percent of maximum tolerances that this queue is at.
+      */
+      virtual uint16_t getCongestionPercent(const FifoStatsInterface* fifo) const;
+
       virtual void logCurrentState() const;
       virtual EncodeStream& encodeCurrentState(EncodeStream& strm) const;
 
    private:
-      /**
-         @brief Returns the percent of maximum tolerances that this queue is at.
-      */
-      virtual UInt16 getCongestionPercent(const FifoStatsInterface* fifo) const;
       virtual RejectionBehavior getRejectionBehaviorInternal(const FifoStatsInterface *fifo) const;
+      uint16_t getCongestionPercentInternal(const FifoStatsInterface* fifo) const;
 
       virtual EncodeStream& encodeFifoStats(const FifoStatsInterface& fifoStats, EncodeStream& strm) const;
 
@@ -150,7 +152,7 @@ class GeneralCongestionManager : public CongestionManager
       {
          FifoStatsInterface* fifo;
          volatile MetricType metric;
-         volatile UInt32 maxTolerance;
+         volatile uint32_t maxTolerance;
       } FifoInfo; // !bwc! TODO pick a better name
 
       std::vector<FifoInfo> mFifos;
@@ -159,9 +161,9 @@ class GeneralCongestionManager : public CongestionManager
       //       additions are safe (ie: registerFifo and unregisterFifo being called 
       //       when the fifos are in full motion.
       mutable Mutex mFifosMutex;
-      UInt16 mRejectionThresholds[REJECTING_NON_ESSENTIAL+1];
+      uint16_t mRejectionThresholds[REJECTING_NON_ESSENTIAL+1];
       MetricType mDefaultMetric;
-      UInt32 mDefaultMaxTolerance;
+      uint32_t mDefaultMaxTolerance;
 
       // disabled
       GeneralCongestionManager();

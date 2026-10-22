@@ -27,8 +27,7 @@ class TransactionController
       static unsigned int MaxTUFifoSize;
       static unsigned int MaxTUFifoTimeDepthSecs;
 
-      TransactionController(SipStack& stack, 
-                              AsyncProcessHandler* handler);
+      TransactionController(SipStack& stack, AsyncProcessHandler* handler, bool useDnsVip);
       ~TransactionController();
 
       void process(int timeout=0);
@@ -96,13 +95,16 @@ class TransactionController
       }
 
       void abandonServerTransaction(const Data& tid);
-      void cancelClientInviteTransaction(const Data& tid);
-      void addTransport(std::auto_ptr<Transport> transport);
+      void cancelClientInviteTransaction(const Data& tid, const resip::Tokens* reasons);
+      void addTransport(std::unique_ptr<Transport> transport);
       void removeTransport(unsigned int transportKey);
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
       void setInterruptor(AsyncProcessHandler* handler);
+
+      void invokeAfterSocketCreationFunc(TransportType type);
+
    private:
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);

@@ -1,0 +1,73 @@
+#if !defined(RTPPortManager_hxx)
+#define RTPPortManager_hxx
+
+#include <deque>
+
+#include "rutil/Data.hxx"
+
+namespace resip
+{
+
+// FIXME - consider making this a singleton or detect and warn if the
+//         application attempts to create overlapping instances
+
+class RTPPortManager
+{
+public:
+   RTPPortManager(int portRangeMin = 17000, int portRangeMax = 18000);
+   /// Allocates an RTP port (even - the RTCP port is the one after it).  Returns 0 if none is free.
+   unsigned int allocateRTPPort();
+   /// Allocates an RTP port that UDP sockets can be bound to on address, with the RTCP port after it:
+   /// a port another socket has (eg. another application's) is skipped - a media stream can't share
+   /// it - and put back at the end of the free list.  Returns 0 if no free port can be bound.
+   unsigned int allocateRTPPort(const resip::Data& address);
+   void freeRTPPort(unsigned int port);
+   unsigned int getNumAllocatedPortPairs() { return mTotalPortPairs - (unsigned int)mRTPPortFreeList.size(); }
+   unsigned int getNumFreePortPairs() { return (unsigned int)mRTPPortFreeList.size(); }
+
+private:
+   unsigned int mPortRangeMin;
+   unsigned int mPortRangeMax;
+   std::deque<unsigned int> mRTPPortFreeList;
+   unsigned int mTotalPortPairs;
+};
+
+}
+
+#endif
+
+/* ====================================================================
+
+ Copyright (c) 2010-2026, SIP Spectrum, Inc. http://www.sipspectrum.com
+ Copyright (c) 2014 Daniel Pocock http://danielpocock.com
+ Copyright (c) 2007-2008, Plantronics, Inc.
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are
+ met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+ 3. Neither the name of Plantronics nor the names of its contributors
+    may be used to endorse or promote products derived from this
+    software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+ ==================================================================== */

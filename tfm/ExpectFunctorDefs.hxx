@@ -10,8 +10,8 @@
                  mEndPoint(endPoint)                            \
             {}                                                  \
                                                                 \
-            virtual boost::shared_ptr<resip::SipMessage>        \
-            go(boost::shared_ptr<resip::SipMessage>);           \
+            virtual std::shared_ptr<resip::SipMessage>          \
+            go(std::shared_ptr<resip::SipMessage>);             \
             _class_& mEndPoint;                                 \
       }
 
@@ -24,8 +24,8 @@
                  mEndPoint(endPoint)                                                    \
             {}                                                                          \
                                                                                         \
-            virtual boost::shared_ptr<resip::SipMessage>                                \
-            go(boost::shared_ptr<resip::SipMessage> msg)                                \
+            virtual std::shared_ptr<resip::SipMessage>                                  \
+            go(std::shared_ptr<resip::SipMessage> msg)                                  \
             {                                                                           \
                /* !jf! use the dialog */                                                \
                if (msg->isRequest() && _code_ != 487)                                   \
@@ -34,7 +34,7 @@
                }                                                                        \
                else                                                                     \
                {                                                                        \
-                   boost::shared_ptr<resip::SipMessage> invite;                         \
+                   std::shared_ptr<resip::SipMessage> invite;                           \
                    invite = mEndPoint.getReceivedInvite(msg->header(resip::h_CallId));  \
                    if (invite == NULL) \
                      return mEndPoint.makeResponse(*msg, _code_);                          \
@@ -56,14 +56,14 @@
                    mTarget(target)                                      \
             {}                                                          \
                                                                         \
-            virtual boost::shared_ptr<resip::SipMessage>                \
-            go(boost::shared_ptr<resip::SipMessage> msg)                \
+            virtual std::shared_ptr<resip::SipMessage>                  \
+            go(std::shared_ptr<resip::SipMessage> msg)                  \
             {                                                           \
                return go(msg, mTarget);                                 \
             }                                                           \
                                                                         \
-            boost::shared_ptr<resip::SipMessage>                        \
-            go(boost::shared_ptr<resip::SipMessage> msg,                \
+            std::shared_ptr<resip::SipMessage>                          \
+            go(std::shared_ptr<resip::SipMessage> msg,                  \
                                  const resip::Uri& target);        \
                                                                         \
             _class_& mEndPoint;                                         \

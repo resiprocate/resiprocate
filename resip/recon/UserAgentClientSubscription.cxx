@@ -16,7 +16,6 @@ using namespace std;
 UserAgentClientSubscription::UserAgentClientSubscription(UserAgent& userAgent, DialogUsageManager& dum, unsigned int handle)
 : AppDialogSet(dum),
   mUserAgent(userAgent),
-  mDum(dum),
   mSubscriptionHandle(handle),
   mLastNotifyHash(0),
   mEnded(false)
@@ -113,13 +112,21 @@ UserAgentClientSubscription::onTerminated(ClientSubscriptionHandle h, const SipM
    unsigned int statusCode = 0;
    if(msg)
    {
-      InfoLog(<< "onTerminated(ClientSubscriptionHandle): handle=" << mSubscriptionHandle << ", " << msg->brief());
       if(msg->isResponse())
       {
          statusCode = msg->header(h_StatusLine).responseCode();
+         if (statusCode >= 300)
+         {
+            WarningLog(<< "onTerminated(ClientSubscriptionHandle): handle=" << mSubscriptionHandle << ", " << msg->brief());
+         }
+         else
+         {
+            InfoLog(<< "onTerminated(ClientSubscriptionHandle): handle=" << mSubscriptionHandle << ", " << msg->brief());
+         }
       }
       else
       {
+         InfoLog(<< "onTerminated(ClientSubscriptionHandle): handle=" << mSubscriptionHandle << ", " << msg->brief());
          if(msg->getContents())
          {
             notifyReceived(msg->getContents()->getBodyData());
@@ -128,7 +135,7 @@ UserAgentClientSubscription::onTerminated(ClientSubscriptionHandle h, const SipM
    }
    else
    {
-      InfoLog(<< "onTerminated(ClientSubscriptionHandle): handle=" << mSubscriptionHandle);
+      WarningLog(<< "onTerminated(ClientSubscriptionHandle): handle=" << mSubscriptionHandle);
       statusCode = 408;  // timedout waiting for notify after subscribe
    }
    mUserAgent.onSubscriptionTerminated(mSubscriptionHandle, statusCode);
@@ -150,6 +157,7 @@ UserAgentClientSubscription::onRequestRetry(ClientSubscriptionHandle h, int retr
 
 /* ====================================================================
 
+ Copyright (c) 2023, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

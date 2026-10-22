@@ -5,6 +5,9 @@
 #include <resip/stack/Symbols.hxx>
 #include <resip/stack/Tuple.hxx>
 #include <resip/stack/SipStack.hxx>
+#if defined(USE_SSL)
+#include <resip/stack/ssl/Security.hxx>
+#endif
 #include <rutil/GeneralCongestionManager.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/DnsUtil.hxx>
@@ -18,6 +21,7 @@
 #include "repro/XmlRpcConnection.hxx"
 #include "repro/ReproRunner.hxx"
 #include "repro/CommandServer.hxx"
+#include "repro/WebAdmin.hxx"
 
 using namespace repro;
 using namespace resip;
@@ -28,11 +32,25 @@ using namespace std;
 CommandServer::CommandServer(ReproRunner& reproRunner,
                              Data ipAddr,
                              int port, 
-                             IpVersion version) :
-   XmlRpcServerBase(port, version, ipAddr),
-   mReproRunner(reproRunner)
+                             IpVersion version,
+                             WebAdmin* webAdmin) :
+   XmlRpcHandler(std::make_shared<XmlRpcSocketServer>(*this, port, version, ipAddr)),
+   mReproRunner(reproRunner),
+   mWebAdmin(webAdmin)
 {
 }
+
+#ifdef BUILD_QPID_PROTON
+CommandServer::CommandServer(ReproRunner& reproRunner,
+                             const resip::Data& brokerUrl,
+                             bool broadcast,
+                             WebAdmin* webAdmin) :
+   XmlRpcHandler(std::make_shared<XmlRpcProtonServer>(*this, brokerUrl, broadcast)),
+   mReproRunner(reproRunner),
+   mWebAdmin(webAdmin)
+{
+}
+#endif
 
 CommandServer::~CommandServer()
 {
@@ -54,7 +72,7 @@ CommandServer::sendResponse(unsigned int connectionId,
       ss << responseData.xmlCharDataEncode();
       ss << "    </Data>" << Symbols::CRLF;
    }
-   XmlRpcServerBase::sendResponse(connectionId, requestId, ss.str().c_str(), resultCode >= 200 /* isFinal */);
+   mRpc->sendResponse(connectionId, requestId, ss.str().c_str(), resultCode >= 200 /* isFinal */);
 }
 
 void 
@@ -124,6 +142,10 @@ CommandServer::handleRequest(unsigned int connectionId, unsigned int requestId, 
       else if(isEqualNoCase(xml.getTag(), "RemoveTransport"))
       {
          handleRemoveTransportRequest(connectionId, requestId, xml);
+      }
+      else if(isEqualNoCase(xml.getTag(), "HttpRequest"))
+      {
+         handleHttpRequest(connectionId, requestId, xml);
       }
       else 
       {
@@ -398,11 +420,11 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
    IpVersion ipVersion=V4;
    Data ipInterface;
    Data recordRouteUri;
-   UInt32 rcvBufLen = 0;
+   uint32_t rcvBufLen = 0;
    bool stunEnabled = false;
    Data sipDomainname;
-   SecurityTypes::SSLType sslType = SecurityTypes::TLSv1;
-   UInt32 transportFlags = 0;
+   SecurityTypes::SSLType sslType = SecurityTypes::DynamicTLS;
+   uint32_t transportFlags = 0;
    Data certificateFilename;
    Data privateKeyFilename;
    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
@@ -499,10 +521,16 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
                {
                   if(xml.firstChild())
                   {
-                     if(isEqualNoCase(xml.getValue(), "SSLv23"))
+#if defined(USE_SSL)
+                     try
                      {
-                         sslType = SecurityTypes::SSLv23;
+                        sslType = BaseSecurity::parseSSLType(xml.getValue());
                      }
+                     catch (invalid_argument& e)
+                     {
+                        WarningLog(<< e.what());
+                     }
+#endif
                      xml.parent();
                   }
                }
@@ -631,10 +659,10 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
       transportInfoText += ", rruri=" + Data::from(rr);
    }
    transportInfoText += ", stun=" + Data((stunEnabled ? "YES" : "NO"));
-   transportInfoText += ", flags=" + Data((UInt32)transportFlags);
+   transportInfoText += ", flags=" + Data((uint32_t)transportFlags);
    if(rcvBufLen)
    {
-      transportInfoText += ", udprcvbuflen=" + Data((UInt32)rcvBufLen);
+      transportInfoText += ", udprcvbuflen=" + Data((uint32_t)rcvBufLen);
    }
    if(isSecure(type))
    {
@@ -642,7 +670,7 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
       {
          transportInfoText += ", domain=" + sipDomainname;
       }
-      transportInfoText += ", ssltype=" + Data((sslType == SecurityTypes::TLSv1 ? "TLSv1" : "SSLv23"));
+      transportInfoText += ", ssltype=" + Data((sslType == SecurityTypes::TLSv1 ? "TLSv1" : "DynamicTLS"));
       if(!certificateFilename.empty())
       {
          transportInfoText += ", cert=" + certificateFilename;
@@ -745,13 +773,112 @@ CommandServer::handleRemoveTransportRequest(unsigned int connectionId, unsigned 
    sendResponse(connectionId, requestId, Data::Empty, 200, text);
 }
 
+void
+CommandServer::handleHttpRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml)
+{
+   InfoLog(<< "CommandServer::handleHttpRequest");
+
+   // Check for Parameters
+   std::map<Data, Data> m;
+   std::set<Data> keys;
+   xmlToMap(m, keys, xml);
+
+   if(!mWebAdmin)
+   {
+      // FIXME - do this without binding the WebAdmin instance to a port
+      ErrLog(<<"at least one WebAdmin instance must be configured, even if it is only bound to localhost");
+      sendResponse(connectionId, requestId, Data::Empty, 400, "WebAdmin not available.");
+      return;
+   }
+
+   try
+   {
+      Data& user = m["User"];
+      Data& password = m["Password"];
+      Data uri;
+      DataStream s(uri);
+      s << "/" << m["Page"] << ".html";
+      bool firstParam = true;
+      for(const auto& n : m)
+      {
+         const Data& k = n.first;
+         const Data& v = n.second;
+         if(k == "User" || k == "Password" || k == "Page")
+         {
+            continue;
+         }
+         s << (firstParam ? "?" : "&") << k << "=";
+         v.urlEncode(s);
+         firstParam = false;
+      }
+      s.flush();
+      int pageNumber = -1; // FIXME - add logic for handling response
+      mWebAdmin->buildPage("GET", uri, pageNumber, user, password);
+      sendResponse(connectionId, requestId, Data::Empty, 200, "HTTP Request processed, response ignored");
+   }
+   catch(std::exception&)
+   {
+      sendResponse(connectionId, requestId, Data::Empty, 400, "Exception.");
+      return;
+   }
+}
+
+void
+CommandServer::xmlToMap(std::map<Data, Data>& m, std::set<Data> keys, resip::XMLCursor& xml)
+{
+   // Check for Parameters
+   if(xml.firstChild())
+   {
+      if(isEqualNoCase(xml.getTag(), "request"))
+      {
+         if(xml.firstChild())
+         {
+            while(true)
+            {
+               const Data& key = xml.getTag();
+               if(!keys.empty() && keys.find(key) == keys.end())
+               {
+                  ErrLog(<<"unexpected key: " << key);
+                  m.clear();
+                  return;
+               }
+               if(xml.firstChild())
+               {
+                  const Data& value = xml.getValue();
+                  m[key] = value;
+                  xml.parent();
+               }
+               else
+               {
+                  ErrLog(<<"no value for key: " << key);
+               }
+               if(!xml.nextSibling())
+               {
+                  // break on no more sibilings
+                  break;
+               }
+            }
+            xml.parent();
+         }
+      }
+      xml.parent();
+   }
+   if(!keys.empty() && (m.size() < keys.size()))
+   {
+      ErrLog(<<"some keys not found");
+      m.clear();
+   }
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
- * 
+ * Copyright (c) 2010-2026 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (c) 2022 Software Freedom Institute LLC https://softwarefreedom.institute
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

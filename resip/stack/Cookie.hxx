@@ -34,6 +34,8 @@ class Cookie
 
 typedef std::vector<Cookie> CookieList;
 
+EncodeStream& operator<<(EncodeStream& strm, const Cookie& c);
+
 }
 
 #endif

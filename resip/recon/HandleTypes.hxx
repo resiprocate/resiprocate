@@ -7,6 +7,7 @@ namespace recon
 typedef unsigned int ConversationHandle;
 typedef unsigned int ParticipantHandle;
 typedef unsigned int SubscriptionHandle;
+typedef unsigned int PublicationHandle;
 
 }
 

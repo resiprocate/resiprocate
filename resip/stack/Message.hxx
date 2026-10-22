@@ -32,7 +32,7 @@ class Message
       };
 
       /// return a facet for brief encoding of message
-      Brief brief() const;
+      virtual Brief brief() const;
       virtual Message* clone() const = 0;
       /// output the entire message to stream
       virtual EncodeStream& encode(EncodeStream& strm) const = 0;
@@ -50,7 +50,7 @@ class Message
       TransactionUser* mTu;      
 };
 
-//always need std streams where things are encoded to cout, cerr, MD5Stream, etc...
+//always need std streams where things are encoded to cout, cerr, DigestStream, etc...
 #ifndef  RESIP_USE_STL_STREAMS
 EncodeStream& 
 operator<<(EncodeStream& strm, const Message& msg);

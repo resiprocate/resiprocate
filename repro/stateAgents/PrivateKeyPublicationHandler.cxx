@@ -16,7 +16,7 @@ PrivateKeyPublicationHandler::onInitial(ServerPublicationHandle h,
                                         const SipMessage& pub, 
                                         const Contents* contents,
                                         const SecurityAttributes* attrs, 
-                                        UInt32 expires)
+                                        uint32_t expires)
 {
    add(h, contents);
 }
@@ -33,7 +33,7 @@ PrivateKeyPublicationHandler::onRefresh(ServerPublicationHandle h,
                                         const SipMessage& pub, 
                                         const Contents* contents,
                                         const SecurityAttributes* attrs,
-                                        UInt32 expires)
+                                        uint32_t expires)
 {
    if (h->getDocumentKey() == h->getPublisher())
    {
@@ -51,13 +51,13 @@ PrivateKeyPublicationHandler::onUpdate(ServerPublicationHandle h,
                                        const SipMessage& pub, 
                                        const Contents* contents,
                                        const SecurityAttributes* attrs,
-                                       UInt32 expires)
+                                       uint32_t expires)
 {
    add(h, contents);
 }
 
 void 
-PrivateKeyPublicationHandler::onRemoved(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, UInt32 expires)
+PrivateKeyPublicationHandler::onRemoved(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, uint32_t expires)
 {
    mSecurity.removeUserPrivateKey(h->getPublisher());
 }

@@ -1,7 +1,5 @@
 #include "TcpConnection.hxx"
 #include <vector>
-#include <boost/bind.hpp>
-#include <rutil/SharedPtr.hxx>
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
 #include <rutil/Logger.hxx>
@@ -14,7 +12,7 @@ using namespace resip;
 
 namespace reTurn {
 
-TcpConnection::TcpConnection(asio::io_service& ioService,
+TcpConnection::TcpConnection(asio::io_context& ioService,
     ConnectionManager& manager, RequestHandler& handler)
   : AsyncTcpSocketBase(ioService),
     mConnectionManager(manager),
@@ -41,12 +39,16 @@ TcpConnection::start()
    asio::error_code ec;
    mLocalAddress = mSocket.local_endpoint(ec).address();
    mLocalPort = mSocket.local_endpoint(ec).port();
+   // Closed if it goes TcpConnectionIdleTimeout without receiving anything while it carries no
+   // allocation
+   startIdleTimer(mRequestHandler.getConfig().mTcpConnectionIdleTimeout, [this]() { return !mTurnAllocationManager.empty(); });
    doFramedReceive();
 }
 
 void 
 TcpConnection::stop()
 {
+   stopIdleTimer();
    asio::error_code ec;
    mSocket.close(ec);
 }
@@ -58,8 +60,9 @@ TcpConnection::close()
 }
 
 void 
-TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
+   noteReceived();
    if (data->size() > 4)
    {
       /*
@@ -77,7 +80,7 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
          // Try to parse stun message
          StunMessage request(StunTuple(StunTuple::TCP, mLocalAddress, mLocalPort),
                              StunTuple(StunTuple::TCP, address, port),
-                             (char*)&(*data)[0], data->size());
+                             (char*)&(*data)[0], (unsigned int)data->size());
          if(request.isValid())
          {
             StunMessage response;
@@ -99,8 +102,8 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
             default:
                break;
             }
-#define RESPONSE_BUFFER_SIZE 1024
-            boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+            constexpr size_t RESPONSE_BUFFER_SIZE = 1024;
+            const auto buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
             unsigned int responseSize;
             responseSize = response.stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
             buffer->truncate(responseSize);  // set size to real size
@@ -165,6 +168,7 @@ TcpConnection::onSendFailure(const asio::error_code& error)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

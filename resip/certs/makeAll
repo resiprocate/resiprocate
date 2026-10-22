@@ -3,6 +3,7 @@
 foreach nm ( ` cat hosts.txt ` )
         echo $nm
         ./makeCert $nm
+        ./makeEllipticCert $nm
 end
 
 tar cvfz allCerts.tgz domain*pem *.p12

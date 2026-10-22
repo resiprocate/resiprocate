@@ -34,7 +34,7 @@
 #include "DumEvent.hxx"
 #include "DumExpect.hxx"
 
-#include "rutil/SharedPtr.hxx"
+#include <memory>
 
 class TestProxy;
 class DumUaAction;
@@ -53,9 +53,9 @@ class DumUserAgent : public EndPoint,
                      public resip::DialogEventHandler
 {
    public:
-      DumUserAgent(resip::SharedPtr<resip::MasterProfile> profile);
+      DumUserAgent(std::shared_ptr<resip::MasterProfile> profile);
 
-      DumUserAgent(resip::SharedPtr<resip::MasterProfile> profile,
+      DumUserAgent(std::shared_ptr<resip::MasterProfile> profile,
                    TestProxy* proxy);
 
       ~DumUserAgent();
@@ -84,16 +84,16 @@ class DumUserAgent : public EndPoint,
 
       void handleEvent(Event* eventRaw);
 
-      void buildFdSet(resip::FdSet& fdset);
+      void buildFdSet(resip::FdSet& fdset) override;
 
-      void process(resip::FdSet& fdset);
+      void process(resip::FdSet& fdset) override;
 
       const resip::Data& getInstanceId() const;
       resip::Uri getContact() const;
 
-      static resip::SharedPtr<resip::MasterProfile> makeProfile(const resip::Uri& aor, const resip::Data& password);
+      static std::shared_ptr<resip::MasterProfile> makeProfile(const resip::Uri& aor, const resip::Data& password);
 
-      resip::SharedPtr<resip::MasterProfile> getProfile() const 
+      std::shared_ptr<resip::MasterProfile> getProfile() const noexcept
       {
          return mProfile;
       }
@@ -102,7 +102,7 @@ class DumUserAgent : public EndPoint,
 
       // special handling required for UAC Prack scenario - must call provideOffer from 
       // onAnswer callback in order to get Offer to be provided in first PRACK
-      ExpectAction* setOfferToProvideInNextOnAnswerCallback(boost::shared_ptr<resip::SdpContents> offer);
+      ExpectAction* setOfferToProvideInNextOnAnswerCallback(std::shared_ptr<resip::SdpContents> offer);
 
 //      DumUaAction* start();
       DumUaAction* shutdownUa();
@@ -133,7 +133,7 @@ class DumUserAgent : public EndPoint,
       DumUaAction* referNoReferSub(const resip::NameAddr& target, const resip::NameAddr& referTo);
       DumUaAction* referNoReferSubWithoutReferSubHeader(const resip::NameAddr& target, const resip::NameAddr& referTo);
 
-      DumUaAction* send(resip::SharedPtr<resip::SipMessage> msg);
+      DumUaAction* send(std::shared_ptr<resip::SipMessage> msg);
 
       class From : public MessageMatcher
       {
@@ -142,7 +142,7 @@ class DumUserAgent : public EndPoint,
             From(TestProxy* proxy);
             //From(const resip::Uri& contact);
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
 
          private:
@@ -157,7 +157,7 @@ class DumUserAgent : public EndPoint,
          public:
             HasInstanceId() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
 
          private:
@@ -168,7 +168,7 @@ class DumUserAgent : public EndPoint,
          public:
             NoInstanceId() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
       };
       */
@@ -177,7 +177,7 @@ class DumUserAgent : public EndPoint,
       {
          public:
             FindMatchingDialogToReplace(DumUserAgent& dua);
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
 
          private:
@@ -189,7 +189,7 @@ class DumUserAgent : public EndPoint,
          public:
             HasRinstance() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
 
          private:
@@ -200,7 +200,7 @@ class DumUserAgent : public EndPoint,
          public:
             NoRinstance() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
       };
 
@@ -209,7 +209,7 @@ class DumUserAgent : public EndPoint,
          public:
             HasMethodsParam() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
 
          private:
@@ -220,7 +220,7 @@ class DumUserAgent : public EndPoint,
          public:
             NoMethodsParam() {}
 
-            bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const;
+            bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const;
             resip::Data toString() const;
       };
 
@@ -452,14 +452,14 @@ class DumUserAgent : public EndPoint,
       /*
       //actions from ClintPagerMessage
       DumUaAction* getMessageRequest();
-      DumUaAction* page(std::auto_ptr<resip::Contents> contenst, resip::DialogUsageManager::EncryptionLevel level=resip::DialogUsageManager::None);
+      DumUaAction* page(std::unique_ptr<resip::Contents> contenst, resip::DialogUsageManager::EncryptionLevel level=resip::DialogUsageManager::None);
       DumUaAction* endClientPagerMsg();
       
       //actions from ServerPagerMessage
       DumUaAction* acceptServerPagerMsg(int statusCode = 200);
       DumUaAction* rejectServerPagerMsg(int statusCode);
       DumUaAction* endServerPagerMsg();
-      DumUaAction* sendServerPagerMsg(resip::SharedPtr<resip::SipMessage> msg);
+      DumUaAction* sendServerPagerMsg(std::shared_ptr<resip::SipMessage> msg);
       */
 
       //actions from ClientOutOfDialogReq
@@ -471,11 +471,11 @@ class DumUserAgent : public EndPoint,
       DumUaAction* rejectServerOutOfDialogReq(int statusCode);
       DumUaAction* endServerOutOfDialogReq();
       DumUaAction* answerOptions();
-	  DumUaAction* sendServerOutOfDialogReq(resip::SharedPtr<resip::SipMessage>
+	  DumUaAction* sendServerOutOfDialogReq(std::shared_ptr<resip::SipMessage>
       msg);
       */
 
-      virtual resip::Data getName() const;
+      virtual resip::Data getName() const override;
 
       //resip::ClientPagerMessageHandle mClientPagerMessage;
       //resip::ServerPagerMessageHandle mServerPagerMessage;
@@ -486,7 +486,7 @@ class DumUserAgent : public EndPoint,
       const resip::Data& getIp() const { return mIp; }
       int getPort() const { return mPort; }
 
-      virtual void clean();
+      virtual void clean() override;
 
       resip::ServerSubscriptionHandle& getServerSubscription() { return mServerSubscription; }
       resip::SipMessage& getReferMessage() { return mReferMessage; }
@@ -494,103 +494,103 @@ class DumUserAgent : public EndPoint,
    protected:
 
       // resip::Client Registration Handler
-      virtual void onSuccess(resip::ClientRegistrationHandle, const resip::SipMessage& response);
-      virtual void onRemoved(resip::ClientRegistrationHandle, const resip::SipMessage& response);
-      virtual void onFailure(resip::ClientRegistrationHandle, const resip::SipMessage& response);      
+      virtual void onSuccess(resip::ClientRegistrationHandle, const resip::SipMessage& response) override;
+      virtual void onRemoved(resip::ClientRegistrationHandle, const resip::SipMessage& response) override;
+      virtual void onFailure(resip::ClientRegistrationHandle, const resip::SipMessage& response) override;
 
-      virtual int onRequestRetry(resip::ClientRegistrationHandle, int retrySeconds, const resip::SipMessage& response) 
+      virtual int onRequestRetry(resip::ClientRegistrationHandle, int retrySeconds, const resip::SipMessage& response) override
       {
          return -1;
       }
 
       // InviteSessionHandler
-      virtual void onNewSession(resip::ClientInviteSessionHandle, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
-      virtual void onNewSession(resip::ServerInviteSessionHandle, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
-      virtual void onFailure(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onEarlyMedia(resip::ClientInviteSessionHandle, const resip::SipMessage&, const resip::SdpContents&);
-      virtual void onProvisional(resip::ClientInviteSessionHandle, const resip::SipMessage&);
-      virtual void onConnected(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onConnected(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onStaleCallTimeout(resip::ClientInviteSessionHandle h);
-      virtual void onTerminated(resip::InviteSessionHandle, resip::InviteSessionHandler::TerminatedReason reason, const resip::SipMessage* related=0);
-      virtual void onForkDestroyed(resip::ClientInviteSessionHandle);
-      virtual void onRedirected(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);
-      //virtual void onReadyToSend(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onAnswer(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents&);
-      virtual void onOffer(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents&);
-      virtual void onRemoteSdpChanged(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents&);
-      virtual void onOfferRequestRejected(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onOfferRequired(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onOfferRejected(resip::InviteSessionHandle, const resip::SipMessage* msg);
-      virtual void onInfo(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onInfoSuccess(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onInfoFailure(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onMessage(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onMessageSuccess(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onMessageFailure(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onRefer(resip::InviteSessionHandle, resip::ServerSubscriptionHandle, const resip::SipMessage& msg);
-      virtual void onReferRejected(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onReferAccepted(resip::InviteSessionHandle, resip::ClientSubscriptionHandle, const resip::SipMessage& msg);
-//      virtual void onAckNotReceived(resip::InviteSessionHandle);
-      virtual void onIllegalNegotiation(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onSessionExpired(resip::InviteSessionHandle);
-      virtual void onReferNoSub(resip::InviteSessionHandle, const resip::SipMessage& msg);
-      virtual void onPrack(resip::ServerInviteSessionHandle, const resip::SipMessage &msg);
+      virtual void onNewSession(resip::ClientInviteSessionHandle, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg) override;
+      virtual void onNewSession(resip::ServerInviteSessionHandle, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg) override;
+      virtual void onFailure(resip::ClientInviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onEarlyMedia(resip::ClientInviteSessionHandle, const resip::SipMessage&, const resip::SdpContents&) override;
+      virtual void onProvisional(resip::ClientInviteSessionHandle, const resip::SipMessage&) override;
+      virtual void onConnected(resip::ClientInviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onConnected(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onStaleCallTimeout(resip::ClientInviteSessionHandle h) override;
+      virtual void onTerminated(resip::InviteSessionHandle, resip::InviteSessionHandler::TerminatedReason reason, const resip::SipMessage* related=0) override;
+      virtual void onForkDestroyed(resip::ClientInviteSessionHandle) override;
+      virtual void onRedirected(resip::ClientInviteSessionHandle, const resip::SipMessage& msg) override;
+      //virtual void onReadyToSend(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onAnswer(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents&) override;
+      virtual void onOffer(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents&) override;
+      virtual void onRemoteSdpChanged(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents&) override;
+      virtual void onOfferRequestRejected(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onOfferRequired(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onOfferRejected(resip::InviteSessionHandle, const resip::SipMessage* msg) override;
+      virtual void onInfo(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onInfoSuccess(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onInfoFailure(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onMessage(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onMessageSuccess(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onMessageFailure(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onRefer(resip::InviteSessionHandle, resip::ServerSubscriptionHandle, const resip::SipMessage& msg) override;
+      virtual void onReferRejected(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onReferAccepted(resip::InviteSessionHandle, resip::ClientSubscriptionHandle, const resip::SipMessage& msg) override;
+//      virtual void onAckNotReceived(resip::InviteSessionHandle) override;
+      virtual void onIllegalNegotiation(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onSessionExpired(resip::InviteSessionHandle) override;
+      virtual void onReferNoSub(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
+      virtual void onPrack(resip::ServerInviteSessionHandle, const resip::SipMessage &msg) override;
 
       // ClientPublicationHandler
-      virtual void onSuccess(resip::ClientPublicationHandle, const resip::SipMessage&);
-      virtual void onRemove(resip::ClientPublicationHandle, const resip::SipMessage&);
-      virtual void onFailure(resip::ClientPublicationHandle, const resip::SipMessage&);
-      virtual int onRequestRetry(resip::ClientPublicationHandle, int, const resip::SipMessage&) { return -1; }
-      virtual void onStaleUpdate(resip::ClientPublicationHandle, const resip::SipMessage&);
+      virtual void onSuccess(resip::ClientPublicationHandle, const resip::SipMessage&) override;
+      virtual void onRemove(resip::ClientPublicationHandle, const resip::SipMessage&) override;
+      virtual void onFailure(resip::ClientPublicationHandle, const resip::SipMessage&) override;
+      virtual int onRequestRetry(resip::ClientPublicationHandle, int, const resip::SipMessage&) override { return -1; }
+      virtual void onStaleUpdate(resip::ClientPublicationHandle, const resip::SipMessage&) override;
 
 
       // ClientSubscriptionHandler
-      //virtual void onRefreshRejected(resip::ClientSubscriptionHandle, const resip::SipMessage& rejection);
-      virtual void onUpdatePending(resip::ClientSubscriptionHandle, const resip::SipMessage& notify, bool outOfOrder);
-      virtual void onUpdateActive(resip::ClientSubscriptionHandle, const resip::SipMessage& notify, bool outOfOrder);
-      virtual void onUpdateExtension(resip::ClientSubscriptionHandle, const resip::SipMessage& notify, bool outOfOurde);
-      virtual int onRequestRetry(resip::ClientSubscriptionHandle, int retrySeconds, const resip::SipMessage& notify) { return -1; }
-      virtual void onTerminated(resip::ClientSubscriptionHandle,const resip::SipMessage *);
-      virtual void onNewSubscription(resip::ClientSubscriptionHandle, const resip::SipMessage& notify);
-      //virtual void onReadyToSend(resip::ClientSubscriptionHandle, resip::SipMessage& msg);
+      //virtual void onRefreshRejected(resip::ClientSubscriptionHandle, const resip::SipMessage& rejection) override;
+      virtual void onUpdatePending(resip::ClientSubscriptionHandle, const resip::SipMessage& notify, bool outOfOrder) override;
+      virtual void onUpdateActive(resip::ClientSubscriptionHandle, const resip::SipMessage& notify, bool outOfOrder) override;
+      virtual void onUpdateExtension(resip::ClientSubscriptionHandle, const resip::SipMessage& notify, bool outOfOurde) override;
+      virtual int onRequestRetry(resip::ClientSubscriptionHandle, int retrySeconds, const resip::SipMessage& notify) override { return -1; }
+      virtual void onTerminated(resip::ClientSubscriptionHandle,const resip::SipMessage *) override;
+      virtual void onNewSubscription(resip::ClientSubscriptionHandle, const resip::SipMessage& notify) override;
+      //virtual void onReadyToSend(resip::ClientSubscriptionHandle, resip::SipMessage& msg) override;
 
       // ServerSubscriptionHandler
-      virtual void onNewSubscription(resip::ServerSubscriptionHandle, const resip::SipMessage& sub);
-      virtual void onNewSubscriptionFromRefer(resip::ServerSubscriptionHandle, const resip::SipMessage& sub);
-      virtual void onTerminated(resip::ServerSubscriptionHandle);
-      virtual bool hasDefaultExpires() const { return true; }
-      virtual UInt32 getDefaultExpires() const { return 60; }
+      virtual void onNewSubscription(resip::ServerSubscriptionHandle, const resip::SipMessage& sub) override;
+      virtual void onNewSubscriptionFromRefer(resip::ServerSubscriptionHandle, const resip::SipMessage& sub) override;
+      virtual void onTerminated(resip::ServerSubscriptionHandle) override;
+      virtual bool hasDefaultExpires() const override { return true; }
+      virtual uint32_t getDefaultExpires() const override { return 60; }
 
       // ClientPagerMessageHandler
-      virtual void onSuccess(resip::ClientPagerMessageHandle, const resip::SipMessage& status);
-      virtual void onFailure(resip::ClientPagerMessageHandle, const resip::SipMessage& status, std::auto_ptr<resip::Contents> contents);
+      virtual void onSuccess(resip::ClientPagerMessageHandle, const resip::SipMessage& status) override;
+      virtual void onFailure(resip::ClientPagerMessageHandle, const resip::SipMessage& status, std::unique_ptr<resip::Contents> contents) override;
 
       // ServerPagerMessageHandler
-      virtual void onMessageArrived(resip::ServerPagerMessageHandle, const resip::SipMessage& message);
+      virtual void onMessageArrived(resip::ServerPagerMessageHandle, const resip::SipMessage& message) override;
 
       // ClientOutOfDialogReqHandler
-      virtual void onSuccess(resip::ClientOutOfDialogReqHandle, const resip::SipMessage& success);
-      virtual void onFailure(resip::ClientOutOfDialogReqHandle, const resip::SipMessage& error);
+      virtual void onSuccess(resip::ClientOutOfDialogReqHandle, const resip::SipMessage& success) override;
+      virtual void onFailure(resip::ClientOutOfDialogReqHandle, const resip::SipMessage& error) override;
 
       // ServerOutOfDialogReqHandler
-      virtual void onReceivedRequest(resip::ServerOutOfDialogReqHandle, const resip::SipMessage& request);
+      virtual void onReceivedRequest(resip::ServerOutOfDialogReqHandle, const resip::SipMessage& request) override;
 
       // DialogSetHandler
-      virtual void onTrying(resip::AppDialogSetHandle h, const resip::SipMessage& msg);
-      virtual void onNonDialogCreatingProvisional(resip::AppDialogSetHandle, const resip::SipMessage&) {}
+      virtual void onTrying(resip::AppDialogSetHandle h, const resip::SipMessage& msg) override;
+      virtual void onNonDialogCreatingProvisional(resip::AppDialogSetHandle, const resip::SipMessage&) override {}
 
       // DialogEventHandler
-      virtual void onTrying(const resip::TryingDialogEvent &);
-      virtual void onProceeding(const resip::ProceedingDialogEvent &);
-      virtual void onEarly(const resip::EarlyDialogEvent &);
-      virtual void onConfirmed(const resip::ConfirmedDialogEvent &);
-      virtual void onTerminated(const resip::TerminatedDialogEvent &);
-      virtual void onMultipleEvents(const resip::MultipleEventDialogEvent &);
+      virtual void onTrying(const resip::TryingDialogEvent &) override;
+      virtual void onProceeding(const resip::ProceedingDialogEvent &) override;
+      virtual void onEarly(const resip::EarlyDialogEvent &) override;
+      virtual void onConfirmed(const resip::ConfirmedDialogEvent &) override;
+      virtual void onTerminated(const resip::TerminatedDialogEvent &) override;
+      virtual void onMultipleEvents(const resip::MultipleEventDialogEvent &) override;
 
-      //void handleEvent(Event* eventRaw);      
+      //void handleEvent(Event* eventRaw);
 
-      resip::SharedPtr<resip::MasterProfile> mProfile;
+      std::shared_ptr<resip::MasterProfile> mProfile;
       resip::Security* mSecurity;
       resip::FdPollGrp* mPollGrp;
       resip::EventThreadInterruptor* mInterruptor;
@@ -619,7 +619,7 @@ private:
 
       // special handling required for UAC Prack scenario - must call provideOffer from 
       // onAnswer callback in order to get Offer to be provided in first PRACK
-      boost::shared_ptr<resip::SdpContents> mOfferToProvideInNextOnAnswerCallback;
+      std::shared_ptr<resip::SdpContents> mOfferToProvideInNextOnAnswerCallback;
 
       typedef std::set<TestUsage*> TestUsages;
       TestUsages mTestUsages;

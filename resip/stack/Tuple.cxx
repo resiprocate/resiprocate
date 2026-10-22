@@ -22,13 +22,12 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/HashMap.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/Logger.hxx"
 #ifdef USE_NETNS
 #   include "rutil/NetNs.hxx"
 #endif
 
-using std::auto_ptr;
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DNS
@@ -271,7 +270,7 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const
    // bytes for V6, and 14 extra bytes for V4. 
    // V6: sin6_len(1), sin6_flowinfo(4), flowId(4), onlyUseExistingConnection(1)
    // V4: sin_family(2 instead of 1), sin_zero(8), flowId(4), onlyUseExistingConnection(1)
-   UInt32 rawToken[TOKEN_SIZE];
+   uint32_t rawToken[TOKEN_SIZE];
    memset(&rawToken, 0, TOKEN_SIZE * 4);
 
    rawToken[0] = tuple.mFlowKey;
@@ -317,8 +316,8 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const
 
    if(!salt.empty())
    {
-      // TODO - potentially use SHA1 HMAC if USE_SSL is defined for stronger encryption
-      MD5Stream ms;
+      // TODO - potentially use SHA1 HMAC for stronger encryption
+      DigestStream ms;
       ms << container << salt;
       container += ms.getHex();
    }
@@ -339,7 +338,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
       return Tuple();
    }
 
-   const UInt32* rawToken=reinterpret_cast<const UInt32*>(binaryFlowToken.data());
+   const uint32_t* rawToken=reinterpret_cast<const uint32_t*>(binaryFlowToken.data());
 
    FlowKey mFlowKey=rawToken[0];
    TransportKey transportKey=rawToken[1];
@@ -348,7 +347,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
 
    bool isRealFlow = (rawToken[2] & 0x00000010 ? true : false);
 
-   UInt8 temp = (TransportType)((rawToken[2] & 0x00000F00) >> 8);
+   uint8_t temp = (TransportType)((rawToken[2] & 0x00000F00) >> 8);
    if(temp >= MAX_TRANSPORT)
    {
       DebugLog(<<"Garbage transport type in flow token: " << temp );
@@ -356,7 +355,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    }
    TransportType type = (TransportType)temp;
 
-   UInt16 port= (rawToken[2] >> 16);
+   uint16_t port= (rawToken[2] >> 16);
 
    // Now that we have the version we can do a more accurate check on the size
    if(!((version==V4 && salt.empty() && binaryFlowToken.size()==(TOKEN_SIZE-3)*4) ||
@@ -374,7 +373,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
       unsigned int tokenSizeLessHMAC = version == V4 ? (TOKEN_SIZE-3)*4 : TOKEN_SIZE*4;
       Data flowTokenLessHMAC(Data::Share, binaryFlowToken.data(), tokenSizeLessHMAC);
       Data flowTokenHMAC(Data::Share, binaryFlowToken.data()+tokenSizeLessHMAC, 32);
-      MD5Stream ms;
+      DigestStream ms;
       ms << flowTokenLessHMAC << salt;
       if(ms.getHex() != flowTokenHMAC)
       {
@@ -390,7 +389,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    {
       netNs = NetNs::getNetNsName(netNsId);
    }
-   catch(NetNs::Exception e)
+   catch (const NetNs::Exception& e)
    {
        ErrLog(<< "Tuple binary token contained netns id: " << netNsId << "which does not exist." 
                << e);
@@ -543,6 +542,7 @@ Tuple::ipVersion() const
 static Tuple v4privateaddrbase1("10.0.0.0",0,UNKNOWN_TRANSPORT);
 static Tuple v4privateaddrbase2("172.16.0.0",0,UNKNOWN_TRANSPORT);
 static Tuple v4privateaddrbase3("192.168.0.0",0,UNKNOWN_TRANSPORT);
+static Tuple v4sharedaddrbase1("100.64.0.0",0,UNKNOWN_TRANSPORT);
 
 #ifdef USE_IPV6
 static Tuple v6privateaddrbase("fc00::",0,UNKNOWN_TRANSPORT);
@@ -553,10 +553,11 @@ Tuple::isPrivateAddress() const
 {
    if(ipVersion()==V4)
    {
-      // RFC 1918
+      // RFC 1918 & RFC 6598
       return isEqualWithMask(v4privateaddrbase1,8,true,true) ||  // 10.0.0.0        -   10.255.255.255  (10/8 prefix)
              isEqualWithMask(v4privateaddrbase2,12,true,true) || // 172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
              isEqualWithMask(v4privateaddrbase3,16,true,true) || // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
+             isEqualWithMask(v4sharedaddrbase1,10,true,true) ||  // 100.64.0.0      -   100.127.255.255 (100.64/110 prefix)
              isLoopback();
    }
 #ifdef USE_IPV6
@@ -573,6 +574,80 @@ Tuple::isPrivateAddress() const
       resip_assert(0);
    }
    
+   return false;
+}
+
+static Tuple v4thishostonthisnetwork("0.0.0.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4llinklocal("169.254.0.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4ietfprotocol("192.0.0.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4documentation1("192.0.2.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4documentation2("198.51.100.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4documentation3("203.0.113.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v46to5relayanycast("192.88.99.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4benchmarking("198.18.0.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4reserved("240.0.0.0", 0, UNKNOWN_TRANSPORT);
+static Tuple v4broadcast("255.255.255.255", 0, UNKNOWN_TRANSPORT);
+static Tuple v4multicast("224.0.0.0", 0, UNKNOWN_TRANSPORT);
+
+#ifdef USE_IPV6
+static Tuple v6unspecified("::", 0, UNKNOWN_TRANSPORT);
+static Tuple v64to6translation("64:ff9b::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6v4mappedaddress("::ffff:0:0", 0, UNKNOWN_TRANSPORT);
+static Tuple v6discardonly("100::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6ietfprotocol("2001::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6benchmarking("2001:2::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6documentation("2001:db8::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6orchid("2001:10::", 0, UNKNOWN_TRANSPORT);
+static Tuple v66to4("2002::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6uniquelocal("fc00::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6linkedscopedunicast("fe80::", 0, UNKNOWN_TRANSPORT);
+static Tuple v6multicast("ff00::", 0, UNKNOWN_TRANSPORT);
+#endif
+
+// Returns true if this is an address that is specified as a special address in RFC 6890, which includes:
+// private addresses, loopback addresses, link-local addresses, and multicast addresses.  These are all 
+// address types that are not expected to be routable on the public internet.
+bool 
+Tuple::isSpecialPurposeAddress() const
+{
+   if (isPrivateAddress()) return true;  // Covers loopback
+
+   if (ipVersion() == V4)
+   {
+      return isEqualWithMask(v4thishostonthisnetwork, 8, true, true) ||  // "This host on this network"
+         isEqualWithMask(v4llinklocal, 16, true, true) ||            // Link Local
+         isEqualWithMask(v4ietfprotocol, 24, true, true) ||          // IETF Protocol assignments, also covers DS-Lite (192.0.0.0/29)
+         isEqualWithMask(v4documentation1, 24, true, true) ||        // Documentation (TEST-NET-1)
+         isEqualWithMask(v4documentation2, 24, true, true) ||        // Documentation (TEST-NET-2)
+         isEqualWithMask(v4documentation3, 24, true, true) ||        // Documentation (TEST-NET-3)
+         isEqualWithMask(v46to5relayanycast, 24, true, true) ||      // 6to4 Relay Anycast
+         isEqualWithMask(v4benchmarking, 15, true, true) ||          // Benchmarking
+         isEqualWithMask(v4reserved, 4, true, true) ||               // Reserved
+         isEqualWithMask(v4broadcast, 32, true, true) ||             // Limited Broadcast
+         isEqualWithMask(v4multicast, 4, true, true);                // Multicast
+   }
+#ifdef USE_IPV6
+   else if (ipVersion() == V6)
+   {
+      return isEqualWithMask(v6unspecified, 128, true, true) ||      // Unspecified address
+         isEqualWithMask(v64to6translation, 96, true, true) ||       // IPv4-IPv6 translation
+         isEqualWithMask(v6v4mappedaddress, 96, true, true) ||       // IPv4-mapped address
+         isEqualWithMask(v6discardonly, 64, true, true) ||           // Discard-only address
+         isEqualWithMask(v6ietfprotocol, 23, true, true) ||          // IETF Protocol assignments, also covers TEREDO (2001::/32)
+         isEqualWithMask(v6benchmarking, 48, true, true) ||          // Benchmarking
+         isEqualWithMask(v6documentation, 32, true, true) ||         // Documentation
+         isEqualWithMask(v6orchid, 28, true, true) ||                // ORCHID
+         isEqualWithMask(v66to4, 16, true, true) ||                  // 6to4
+         isEqualWithMask(v6uniquelocal, 7, true, true) ||            // Unique local address
+         isEqualWithMask(v6linkedscopedunicast, 10, true, true) ||   // Link-Scoped Unicast
+         isEqualWithMask(v6multicast, 8, true, true);                // Multicast
+   }
+#endif
+   else
+   {
+      resip_assert(0);
+   }
+
    return false;
 }
 
@@ -595,36 +670,41 @@ Tuple::length() const
 }
 
 
-bool Tuple::operator==(const Tuple& rhs) const
+bool
+Tuple::operator==(const Tuple& rhs) const
 {
-   if (mSockaddr.sa_family == rhs.mSockaddr.sa_family)
+   return isEqual(rhs);
+}
+
+bool
+Tuple::isEqual(const Tuple& compare, bool ignorePort, bool ignoreTransport) const
+{
+   if (ignoreTransport || getType() == compare.getType())  // check if transport type matches
    {
-      if (mSockaddr.sa_family == AF_INET) // v4
+      if (mSockaddr.sa_family == compare.mSockaddr.sa_family)
       {
-         return (m_anonv4.sin_port == rhs.m_anonv4.sin_port &&
-                 mTransportType == rhs.mTransportType &&
-                 memcmp(&m_anonv4.sin_addr, &rhs.m_anonv4.sin_addr, sizeof(in_addr)) == 0 &&
-                 rhs.mNetNs == mNetNs);
-      }
-      else // v6
-      {
+         if (mSockaddr.sa_family == AF_INET) // v4
+         {
+            return ((ignorePort || m_anonv4.sin_port == compare.m_anonv4.sin_port) &&
+               memcmp(&m_anonv4.sin_addr, &compare.m_anonv4.sin_addr, sizeof(in_addr)) == 0 &&
+               compare.mNetNs == mNetNs);
+         }
+         else // v6
+         {
 #ifdef USE_IPV6
-         return (m_anonv6.sin6_port == rhs.m_anonv6.sin6_port &&
-                 mTransportType == rhs.mTransportType &&
-                 memcmp(&m_anonv6.sin6_addr, &rhs.m_anonv6.sin6_addr, sizeof(in6_addr)) == 0 &&
-                 rhs.mNetNs == mNetNs);
+            return ((ignorePort || m_anonv6.sin6_port == compare.m_anonv6.sin6_port) &&
+               memcmp(&m_anonv6.sin6_addr, &compare.m_anonv6.sin6_addr, sizeof(in6_addr)) == 0 &&
+               compare.mNetNs == mNetNs);
 #else
-         resip_assert(0);
-         return false;
+            resip_assert(0);
 #endif
+         }
       }
-   }
-   else
-   {
-      return false;
    }
 
    // !dlb! don't include connection 
+
+   return false;
 }
 
 bool
@@ -767,6 +847,42 @@ resip::operator<<(EncodeStream& ostrm, const Tuple& tuple)
    return ostrm;
 }
 
+EncodeStream&
+resip::operator<<(EncodeStream& ostrm, const AddressMask& addressMask)
+{
+   ostrm << addressMask.mAddress << "/" << addressMask.mMaskBits;
+   return ostrm;
+}
+
+bool
+Tuple::isAddressAllowed(const std::vector<AddressMask>& allowed,
+                        const std::vector<AddressMask>& denied) const
+{
+   // Deny wins.
+   for (const AddressMask& entry : denied)
+   {
+      if (entry.mAddress.isEqualWithMask(*this, entry.mMaskBits, true /*ignorePort*/, true /*ignoreTransport*/))
+      {
+         return false;
+      }
+   }
+
+   // If an allow list is configured, this address must match one of its entries.
+   if (!allowed.empty())
+   {
+      for (const AddressMask& entry : allowed)
+      {
+         if (entry.mAddress.isEqualWithMask(*this, entry.mMaskBits, true /*ignorePort*/, true /*ignoreTransport*/))
+         {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   return true;
+}
+
 size_t 
 Tuple::hash() const
 {
@@ -836,7 +952,6 @@ Tuple::inet_ntop(const Tuple& tuple)
    }
 }
 
-
 bool
 Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool ignoreTransport) const
 {
@@ -859,8 +974,8 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
 
          if(ignorePort || addr1->sin6_port == addr2->sin6_port)
          {
-            UInt32 mask6part;
-            UInt32 temp;
+            uint32_t mask6part;
+            uint32_t temp;
             bool match=true;
             for(int i = 3; i >= 0; i--)
             {
@@ -892,8 +1007,8 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
                if((*((unsigned long*)&addr1->sin6_addr.__u6_addr.__u6_addr32[i]) & htonl(mask6part)) != 
                   (*((unsigned long*)&addr2->sin6_addr.__u6_addr.__u6_addr32[i]) & htonl(mask6part)))				  
 #else
-               if((*((UInt32*)&addr1->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)) != 
-                  (*((UInt32*)&addr2->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)))
+               if((*((uint32_t*)&addr1->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)) != 
+                  (*((uint32_t*)&addr2->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)))
 #endif
                {
                   match=false;
@@ -910,7 +1025,6 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
    }
    return false;
 }
-
 
 // special comparitors
 bool
@@ -1104,6 +1218,7 @@ Tuple::AnyPortAnyInterfaceCompare::operator()(const Tuple& lhs,
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -1,6 +1,9 @@
 #include "rutil/Socket.hxx"
 
 #include "rutil/ResipAssert.h"
+#include <atomic>
+#include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -21,35 +24,42 @@
 #include "rutil/SysLogStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#ifdef USE_FMT
+#include <fmt/format.h>
+#endif
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#ifdef HAVE_VERSION_H
+#include "version.h"
+#endif
+
 using namespace resip;
 using namespace std;
 
 const Data Log::delim(" | ");
 Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
+Data Log::mInstanceName;
 Data Log::mHostname;
+Data Log::mFqdn;
 #ifndef WIN32
 int Log::mSyslogFacility = LOG_DAEMON;
 #else
 int Log::mSyslogFacility = -1;
 #endif
-unsigned int Log::MaxLineCount = 0; // no limit by default
-unsigned int Log::MaxByteCount = 0; // no limit by default
+#define RESIP_LOG_MAX_LINE_COUNT_DEFAULT 0
+#define RESIP_LOG_MAX_BYTE_COUNT_DEFAULT 0
+unsigned int Log::MaxLineCount = RESIP_LOG_MAX_LINE_COUNT_DEFAULT; // no limit by default
+unsigned int Log::MaxByteCount = RESIP_LOG_MAX_BYTE_COUNT_DEFAULT; // no limit by default
+bool Log::KeepAllLogFiles = false;  // do not keep all log files by default
 
-#ifdef WIN32
-int Log::mPid=0;
-#else 
-pid_t Log::mPid=0;
-#endif
-
-volatile short Log::touchCount = 0;
+std::atomic<unsigned int> Log::touchCount{0};
 
 
 /// DEPRECATED! Left for backward compatibility - use localLoggers instead
 #ifdef LOG_ENABLE_THREAD_SETTING
-#if defined(__APPLE__) || defined(__CYGWIN__)
-HashValueImp(ThreadIf::Id, (size_t)data);
-#endif
 HashMap<ThreadIf::Id, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
 HashMap<int, std::set<ThreadIf::Id> > Log::mServiceToThreads;
 ThreadIf::TlsKey* Log::mLevelKey;
@@ -61,6 +71,22 @@ ThreadIf::TlsKey* Log::mLocalLoggerKey;
 
 const char
 Log::mDescriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "STACK", "CERR", ""}; 
+
+const char
+Log::mCEEPri[][32] = {      "",     "CRIT",  "CRIT",  "CRIT", "ERROR", "WARN",  "DEBUG", "DEBUG", "DEBUG", "DEBUG", "ERROR", ""};
+
+#ifdef WIN32
+#define LOG_EMERG   0 /* system is unusable */
+#define LOG_ALERT   1 /* action must be taken immediately */
+#define LOG_CRIT    2 /* critical conditions */
+#define LOG_ERR     3 /* error conditions */
+#define LOG_WARNING 4 /* warning conditions */
+#define LOG_NOTICE  5 /* normal but significant condition */
+#define LOG_INFO    6 /* informational */
+#define LOG_DEBUG   7 /* debug-level messages */
+#endif
+const int
+Log::mSyslogPriority[] = { 0, LOG_CRIT, LOG_CRIT, LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG, LOG_DEBUG, LOG_ERR, 0 };
 
 Mutex Log::_mutex;
 
@@ -111,15 +137,17 @@ LogStaticInitializer::~LogStaticInitializer()
 }
 
 void
-Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger, const char* syslogFacilityName)
+Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger, const char* syslogFacilityName, const char* messageStructure, const char* instanceName)
 {
-   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName);
+   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName, Data(messageStructure), Data(instanceName));
 }
 
 void
 Log::initialize(const Data& typed, const Data& leveld, const Data& appName, 
                 const char *logFileName, ExternalLogger* externalLogger,
-                const Data& syslogFacilityName)
+                const Data& syslogFacilityName,
+                const Data& messageStructure,
+                const Data& instanceName)
 {
    Type type = Log::Cout;
    if (isEqualNoCase(typed, "cout")) type = Log::Cout;
@@ -132,7 +160,13 @@ Log::initialize(const Data& typed, const Data& leveld, const Data& appName,
    Level level = Log::Info;
    level = toLevel(leveld);
 
-   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName);
+   MessageStructure _messageStructure = Unstructured;
+   if (isEqualNoCase(messageStructure, "JSON_CEE"))
+   {
+      _messageStructure = JSON_CEE;
+   }
+
+   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName, _messageStructure, instanceName);
 }
 
 int
@@ -234,51 +268,110 @@ void
 Log::initialize(Type type, Level level, const Data& appName, 
                 const char * logFileName,
                 ExternalLogger* externalLogger,
-                const Data& syslogFacilityName)
+                const Data& syslogFacilityName,
+                MessageStructure messageStructure,
+                const Data& instanceName)
 {
-   Lock lock(_mutex);
-   mDefaultLoggerData.reset();   
-   
-   mDefaultLoggerData.set(type, level, logFileName, externalLogger);
+   {
+      Lock lock(_mutex);
+      mDefaultLoggerData.reset();   
 
-   ParseBuffer pb(appName);
-   pb.skipToEnd();
+      mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure, instanceName);
+
+      ParseBuffer pb(appName);
+      pb.skipToEnd();
 #ifdef _WIN32
-   pb.skipBackToChar('\\');
+      pb.skipBackToChar('\\');
 #else
-   pb.skipBackToChar('/');
+      pb.skipBackToChar('/');
 #endif
-   mAppName = pb.position();
+      mAppName = pb.position();
+
+      mInstanceName = instanceName;
 
 #ifndef WIN32
-   if (!syslogFacilityName.empty())
-   {
-      mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
-      if(mSyslogFacility == -1)
+      if (!syslogFacilityName.empty())
       {
-         mSyslogFacility = LOG_DAEMON;
-         if(type == Log::Syslog)
+         mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
+         if(mSyslogFacility == -1)
          {
-            syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
+            mSyslogFacility = LOG_DAEMON;
+            if(type == Log::Syslog)
+            {
+               syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
+            }
          }
       }
-   }
 #else
-   if (type == Syslog)
-   {
-       std::cerr << "syslog not supported on windows, using cout!" << std::endl;
-       type = Cout;
-   }
+      if (type == Syslog)
+      {
+         std::cerr << "syslog not supported on windows, using cout!" << std::endl;
+         type = Cout;
+      }
 #endif
 
-   char buffer[1024];  
-   gethostname(buffer, sizeof(buffer));
-   mHostname = buffer;
-#ifdef WIN32 
-   mPid = (int)GetCurrentProcess();
+      char buffer[1024];  
+      buffer[1023] = '\0';
+      if(gethostname(buffer, sizeof(buffer)) == -1)
+      {
+         mHostname = "?";
+      }
+      else
+      {
+         mHostname = buffer;
+      }
+
+#ifdef USE_FQDN_FOR_JSON_CEE_HOSTNAME
+      // Note: for Windows users, you must call initNetwork to initialize WinSock before calling 
+      //       Log::initialize in order for getaddrinfo to be successful
+      {
+         struct addrinfo hints;
+         struct addrinfo* info = nullptr;
+
+         memset (&hints, 0, sizeof (hints));
+         hints.ai_family = AF_UNSPEC;    /*either IPV4 or IPV6 */
+         hints.ai_socktype = SOCK_STREAM;
+         hints.ai_flags = AI_CANONNAME;
+
+         if (getaddrinfo(buffer, 0, &hints, &info) == 0
+             && info != nullptr) 
+         {
+            mFqdn = info->ai_canonname;
+            freeaddrinfo(info);
+         }
+         else
+         {
+            mFqdn = mHostname;
+         }
+      }
 #else
-   mPid = getpid();
+      mFqdn = mHostname;
 #endif
+
+   }
+
+   // pre declare to prevent msvc build error C2121
+#ifdef RESIPROCATE_VERSION_STR
+#define STREAM_RESIPROCATE_VERSION_STR << RESIPROCATE_VERSION_STR
+#else 
+#define STREAM_RESIPROCATE_VERSION_STR << "UNKNOWN"
+#endif  // RESIPROCATE_VERSION_STR
+#ifdef ENABLE_LOG_REPOSITORY_DETAILS
+#define STREAM_ENABLE_LOG_REPOSITORY_DETAILS << " git-commit=" << RESIPROCATE_GIT_ID << " git-branch=" << RESIPROCATE_BRANCH_NAME
+#else
+#define STREAM_ENABLE_LOG_REPOSITORY_DETAILS << " git repository details unknown"
+#endif  // ENABLE_LOG_REPOSITORY_DETAILS
+
+   GenericLog(resip::Subsystem::NONE,
+              resip::Log::Info,
+              << "logger initialized app=" << appName
+              << " version="
+              STREAM_RESIPROCATE_VERSION_STR
+              STREAM_ENABLE_LOG_REPOSITORY_DETAILS
+              );
+
+#undef LOG_ENABLE_LOG_REPOSITORY_DETAILS
+#undef LOG_RESIPROCATE_VERSION_STR
 }
 
 void
@@ -286,9 +379,44 @@ Log::initialize(Type type,
                 Level level,
                 const Data& appName,
                 ExternalLogger& logger,
-                const Data& syslogFacilityName)
+                const Data& syslogFacilityName,
+                MessageStructure messageStructure,
+                const Data& instanceName)
 {
-   initialize(type, level, appName, 0, &logger, syslogFacilityName);
+   initialize(type, level, appName, 0, &logger, syslogFacilityName, messageStructure, instanceName);
+}
+
+void
+Log::initialize(const ConfigParse& configParse, const Data& appName, ExternalLogger* externalLogger)
+{
+   Log::setMaxByteCount(configParse.getConfigUnsignedLong("LogFileMaxBytes", RESIP_LOG_MAX_BYTE_COUNT_DEFAULT));
+
+   Log::setKeepAllLogFiles(configParse.getConfigBool("KeepAllLogFiles", false));
+
+   Data loggingType = configParse.getConfigData("LoggingType", "cout", true);
+   Data syslogFacilityName = configParse.getConfigData("SyslogFacility", "LOG_DAEMON", true);
+   // Most applications now use LogLevel
+   // Some applications had been using LoggingLevel, that is not deprecated
+   Data loggingLevel = configParse.getConfigData("LogLevel",
+      configParse.getConfigData("LoggingLevel", "INFO", true), true);
+   Data loggingFilename = configParse.getConfigData("LogFilename",
+      configParse.getConfigData("LoggingFilename", appName + Data(".log")), true);
+   configParse.AddBasePathIfRequired(loggingFilename);
+   Data loggingMessageStructure = configParse.getConfigData("LogMessageStructure", "Unstructured", true);
+   Data loggingInstanceName = configParse.getConfigData("LoggingInstanceName", "", true);
+
+   Log::initialize(
+      loggingType,
+      loggingLevel,
+      appName.c_str(),
+      loggingFilename.c_str(),
+      externalLogger,
+      syslogFacilityName,
+      loggingMessageStructure,
+      loggingInstanceName);
+
+   unsigned int loggingFileMaxLineCount = configParse.getConfigUnsignedLong("LogFileMaxLines", RESIP_LOG_MAX_LINE_COUNT_DEFAULT);
+   Log::setMaxLineCount(loggingFileMaxLineCount);
 }
 
 void
@@ -410,6 +538,36 @@ Log::setMaxByteCount(unsigned int maxByteCount, Log::LocalLoggerId loggerId)
    }
 }
 
+void
+Log::setKeepAllLogFiles(bool keepAllLogFiles)
+{
+    Lock lock(_mutex);
+    getLoggerData().setKeepAllLogFiles(keepAllLogFiles);
+}
+
+void
+Log::setKeepAllLogFiles(bool keepAllLogFiles, Log::LocalLoggerId loggerId)
+{
+    if (loggerId)
+    {
+        ThreadData *pData = mLocalLoggerMap.getData(loggerId);
+        if (pData)
+        {
+            // Local logger found. Set logging level.
+            pData->setKeepAllLogFiles(keepAllLogFiles);
+
+            // We don't need local logger instance anymore.
+            mLocalLoggerMap.decreaseUseCount(loggerId);
+            pData = NULL;
+        }
+    }
+    else
+    {
+        Lock lock(_mutex);
+        mDefaultLoggerData.setKeepAllLogFiles(keepAllLogFiles);
+    }
+}
+
 const static Data log_("LOG_");
 
 Data
@@ -463,18 +621,18 @@ Log::tags(Log::Level level,
           const Subsystem& subsystem,
           const char* pfile,
           int line,
-          EncodeStream& strm)
+          const char* methodName,
+          EncodeStream& strm,
+          MessageStructure messageStructure)
 {
-   char buffer[256];
+   char buffer[256] = "";
    Data ts(Data::Borrow, buffer, sizeof(buffer));
 #if defined( __APPLE__ )
-  strm << mDescriptions[level+1] << Log::delim
-        << timestamp(ts) << Log::delim  
-        << mAppName << Log::delim
-        << subsystem << Log::delim 
-        << pthread_self() << Log::delim
-        << pfile << ":" << line;
+   uint64_t threadId;
+   pthread_threadid_np(nullptr, &threadId);
+   const char* file = pfile;
 #elif defined( WIN32 )
+   int threadId = (int)GetCurrentThreadId();
    const char* file = pfile + strlen(pfile);
    while (file != pfile &&
           *file != '\\')
@@ -485,41 +643,96 @@ Log::tags(Log::Level level,
    {
       ++file;
    }
-   strm << mDescriptions[level+1] << Log::delim
-        << timestamp(ts) << Log::delim  
-        << mAppName << Log::delim
-        << subsystem << Log::delim 
-        << GetCurrentThreadId() << Log::delim
-        << file << ":" << line;
 #else // #if defined( WIN32 ) || defined( __APPLE__ )
-   if(resip::Log::getLoggerData().type() == Syslog)
-   {
-      strm // << mDescriptions[level+1] << Log::delim
-   //        << timestamp(ts) << Log::delim
-   //        << mHostname << Log::delim
-   //        << mAppName << Log::delim
-           << subsystem << Log::delim
-   //        << mPid << Log::delim
-           << pthread_self() << Log::delim
-           << pfile << ":" << line;
-   }
-   else
-      strm << mDescriptions[level+1] << Log::delim
-           << timestamp(ts) << Log::delim  
-   //        << mHostname << Log::delim  
-           << mAppName << Log::delim
-           << subsystem << Log::delim 
-   //        << mPid << Log::delim
-           << pthread_self() << Log::delim
-           << pfile << ":" << line;
+   std::make_unsigned<pthread_t>::type threadId = pthread_self();
+   const char* file = pfile;
 #endif
+
+   switch(messageStructure)
+   {
+   case JSON_CEE:
+      {
+         auto now = std::chrono::high_resolution_clock::now();
+         std::time_t now_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+         auto now_ns = now.time_since_epoch().count() % 1000000000;
+
+         std::tm now_tm = {};
+         // Note the argument order is intentionally reversed between the two
+#ifdef _MSC_VER
+         gmtime_s(&now_tm, &now_t);
+#else
+         gmtime_r(&now_t, &now_tm);
+#endif
+         if(resip::Log::getLoggerData().type() == Syslog)
+         {
+            strm << "@cee: ";
+         }
+         strm << "{";
+         strm << "\"hostname\":\"" << mFqdn << "\",";
+         strm << "\"pri\":\"" << mCEEPri[level+1] << "\",";
+         strm << "\"syslog\":{";
+         strm << "\"level\":" << mSyslogPriority[level+1];
+         strm << "},"; // "syslog"
+         strm << "\"time\":\"" << std::put_time(&now_tm, "%FT%T.")
+              << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\",";
+         strm << "\"pname\":\"" << mAppName << "\",";
+         if(!mInstanceName.empty())
+         {
+            strm << "\"appname\":\"" << mInstanceName << "\",";
+         }
+         strm << "\"subsys\":\"" << subsystem << "\",";
+         strm << "\"proc\":{";
+#ifdef WIN32
+         strm << "\"id\":\"" << GetCurrentProcessId() << "\",";
+#else
+         strm << "\"id\":\"" << getpid() << "\",";
+#endif
+         strm << "\"tid\":" << threadId;
+         strm << "},"; // "proc"
+         strm << "\"file\":{";
+         strm << "\"name\":\"" << file << "\",";
+         strm << "\"line\":" << line;
+         strm << "},"; // "file"
+         strm << "\"native\":{";
+         strm << "\"function\":\"" << methodName << "\"";
+         strm << "},"; // "native"
+         strm << "\"msg\":\"";
+      }
+      break;
+   case Unstructured:
+   default:
+      if(resip::Log::getLoggerData().type() == Syslog)
+      {
+         strm // << mDescriptions[level+1] << Log::delim
+      //        << timestamp(ts) << Log::delim
+      //        << mHostname << Log::delim
+      //        << mAppName << Log::delim
+              << subsystem << Log::delim
+              << "0x" << std::hex << threadId << std::dec << Log::delim
+              << file << ":" << line;
+      }
+      else
+      {
+         strm << mDescriptions[level+1] << Log::delim
+              << timestamp(ts) << Log::delim
+              << mAppName;
+         if(!mInstanceName.empty())
+         {
+            strm << '[' << mInstanceName << ']';
+         }
+         strm << Log::delim
+              << subsystem << Log::delim
+              << "0x" << std::hex << threadId << std::dec << Log::delim
+              << file << ":" << line;
+      }
+   }
    return strm;
 }
 
 Data
 Log::timestamp()
 {
-   char buffer[256];
+   char buffer[256] = "";
    Data result(Data::Borrow, buffer, sizeof(buffer));
    return timestamp(result);
 }
@@ -539,7 +752,6 @@ Log::timestamp(Data& res)
    GetLocalTime(&systemTime);
    tv.tv_usec = systemTime.wMilliseconds * 1000; 
 #else 
-   struct tm localTimeResult;
    struct timeval tv; 
    int result = gettimeofday (&tv, NULL);
 #endif   
@@ -556,37 +768,39 @@ Log::timestamp(Data& res)
    {
       /* The tv_sec field represents the number of seconds passed since
          the Epoch, which is exactly the argument gettimeofday needs. */
+      struct tm localTimeResult = {};
       const time_t timeInSeconds = (time_t) tv.tv_sec;
+#ifdef WIN32
+      localtime_s(&localTimeResult, &timeInSeconds);  // Thread safe call on Windows
+#else
+      localtime_r(&timeInSeconds, &localTimeResult);  // Thread safe version of localtime on linux
+#endif
       strftime (datebuf,
                 datebufSize,
                 "%Y%m%d-%H%M%S", /* guaranteed to fit in 256 chars,
                                     hence don't check return code */
-#ifdef WIN32
-                localtime (&timeInSeconds));  // Thread safe call on Windows
-#else
-                localtime_r (&timeInSeconds, &localTimeResult));  // Thread safe version of localtime on linux
-#endif
+                &localTimeResult);  // Thread safe version of localtime on linux
    }
    
    char msbuf[5];
    /* Dividing (without remainder) by 1000 rounds the microseconds
       measure to the nearest millisecond. */
-   snprintf(msbuf, 5, ".%3.3ld", long(tv.tv_usec / 1000));
+   result = snprintf(msbuf, 5, ".%3.3ld", long(tv.tv_usec / 1000));
+   if(result < 0)
+   {
+      // snprint can error (negative return code) and the compiler now generates a warning
+      // if we don't act on the return code
+      memcpy(msbuf, "0000", 5);
+   }
 
    int datebufCharsRemaining = datebufSize - (int)strlen(datebuf);
-#if defined(WIN32) && defined(_M_ARM)
-   // There is a bug under ARM with strncat - we use strcat instead - buffer is plenty large accomdate our timestamp, no
-   // real need to be safe here anyway.
-   strcat(datebuf, msbuf);
-#else
-   strncat (datebuf, msbuf, datebufCharsRemaining - 1);
-#endif
+   snprintf(datebuf + strlen(datebuf), datebufCharsRemaining, "%s", msbuf);
    datebuf[datebufSize - 1] = '\0'; /* Just in case strncat truncated msbuf,
                                        thereby leaving its last character at
                                        the end, instead of a null terminator */
 
    // ugh, resize the Data
-   res.at(strlen(datebuf)-1);
+   res.at((Data::size_type)strlen(datebuf)-1);
    return res;
 }
 
@@ -616,7 +830,7 @@ Log::getThreadSetting()
    {
       return 0;
    }
-   if (Log::touchCount > 0)
+   if (Log::touchCount.load(std::memory_order_relaxed) > 0)
    {
       Lock lock(_mutex);
       ThreadIf::Id thread = ThreadIf::selfId();
@@ -626,8 +840,8 @@ Log::getThreadSetting()
       {
          setting->mLevel = res->second.first.mLevel;
          res->second.second = false;
-         touchCount--;
-//         cerr << "**Log::getThreadSetting:touchCount: " << Log::touchCount << "**" << endl;
+         touchCount.fetch_sub(1, std::memory_order_relaxed);
+//         cerr << "**Log::getThreadSetting:touchCount: " << Log::touchCount.load(std::memory_order_relaxed) << "**" << endl;
 
          //cerr << "touchcount decremented" << endl;
       }
@@ -663,7 +877,7 @@ Log::setThreadSetting(ThreadSetting info)
    {
       if (Log::mThreadToLevel[thread].second == true)
       {
-         touchCount--;
+         touchCount.fetch_sub(1, std::memory_order_relaxed);
       }
    }
    Log::mThreadToLevel[thread].first = info;
@@ -686,26 +900,28 @@ Log::setServiceLevel(int service, Level l)
       Log::mThreadToLevel[*i].first.mLevel = l;
       Log::mThreadToLevel[*i].second = true;
    }
-   Log::touchCount += (short)threads.size();
+   Log::touchCount.fetch_add((unsigned int)threads.size(), std::memory_order_relaxed);
 #endif
-//   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount << "**" << endl;
+//   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount.load(std::memory_order_relaxed) << "**" << endl;
 }
 
 Log::LocalLoggerId Log::localLoggerCreate(Log::Type type,
                                           Log::Level level,
                                           const char * logFileName,
-                                          ExternalLogger* externalLogger)
+                                          ExternalLogger* externalLogger,
+                                          MessageStructure messageStructure)
 {
-   return mLocalLoggerMap.create(type, level, logFileName, externalLogger);
+   return mLocalLoggerMap.create(type, level, logFileName, externalLogger, messageStructure);
 }
 
 int Log::localLoggerReinitialize(Log::LocalLoggerId loggerId,
                                  Log::Type type,
                                  Log::Level level,
                                  const char * logFileName,
-                                 ExternalLogger* externalLogger)
+                                 ExternalLogger* externalLogger,
+                                 MessageStructure messageStructure)
 {
-   return mLocalLoggerMap.reinitialize(loggerId, type, level, logFileName, externalLogger);
+   return mLocalLoggerMap.reinitialize(loggerId, type, level, logFileName, externalLogger, messageStructure);
 }
 
 int Log::localLoggerRemove(Log::LocalLoggerId loggerId)
@@ -782,12 +998,13 @@ Log::OutputToWin32DebugWindow(const Data& result)
 Log::LocalLoggerId Log::LocalLoggerMap::create(Log::Type type,
                                                     Log::Level level,
                                                     const char * logFileName,
-                                                    ExternalLogger* externalLogger)
+                                                    ExternalLogger* externalLogger,
+                                                    MessageStructure messageStructure)
 {
    Lock lock(mLoggerInstancesMapMutex);
    Log::LocalLoggerId id = ++mLastLocalLoggerId;
    Log::ThreadData *pNewData = new Log::ThreadData(id, type, level, logFileName,
-                                                   externalLogger);
+                                                   externalLogger, messageStructure);
    mLoggerInstancesMap[id].first = pNewData;
    mLoggerInstancesMap[id].second = 0;
    return id;
@@ -797,7 +1014,8 @@ int Log::LocalLoggerMap::reinitialize(Log::LocalLoggerId loggerId,
                                       Log::Type type,
                                       Log::Level level,
                                       const char * logFileName,
-                                      ExternalLogger* externalLogger)
+                                      ExternalLogger* externalLogger,
+                                      MessageStructure messageStructure)
 {
    Lock lock(mLoggerInstancesMapMutex);
    LoggerInstanceMap::iterator it = mLoggerInstancesMap.find(loggerId);
@@ -808,7 +1026,7 @@ int Log::LocalLoggerMap::reinitialize(Log::LocalLoggerId loggerId,
       return 1;
    }
    it->second.first->reset();
-   it->second.first->set(type, level, logFileName, externalLogger);
+   it->second.first->set(type, level, logFileName, externalLogger, messageStructure);
    return 0;
 }
 
@@ -861,20 +1079,26 @@ void Log::LocalLoggerMap::decreaseUseCount(Log::LocalLoggerId loggerId)
 Log::Guard::Guard(resip::Log::Level level,
                   const resip::Subsystem& subsystem,
                   const char* file,
-                  int line) :
+                  int line,
+                  const char* methodName) :
    mLevel(level),
    mSubsystem(subsystem),
    mFile(file),
    mLine(line),
+   mMethodName(methodName),
    mData(Data::Borrow, mBuffer, sizeof(mBuffer)),
    mStream(mData.clear())
 {
 	
    if (resip::Log::getLoggerData().mType != resip::Log::OnlyExternalNoHeaders)
    {
-      Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
-      mStream << resip::Log::delim;
-      mStream.flush();
+      MessageStructure messageStructure = resip::Log::getLoggerData().mMessageStructure;
+      if(messageStructure == Unstructured)
+      {
+         Log::tags(mLevel, mSubsystem, mFile, mLine, mMethodName, mStream, messageStructure);
+         mStream << resip::Log::delim;
+         mStream.flush();
+      }
 
       mHeaderLength = mData.size();
    }
@@ -886,6 +1110,47 @@ Log::Guard::Guard(resip::Log::Level level,
 
 Log::Guard::~Guard()
 {
+   MessageStructure messageStructure = resip::Log::getLoggerData().mMessageStructure;
+   if(messageStructure == JSON_CEE)
+   {
+      mStream.flush();
+      Data msg;
+      oDataStream o(msg);
+      // add the JSON message attributes
+      Log::tags(mLevel, mSubsystem, mFile, mLine, mMethodName, o, messageStructure);
+
+      // JSON encode the message body
+      // FIXME - this could be done on the fly in DataStream
+
+      static const char *json_special = "\"\\/\b\f\n\r\t";
+      static const char *json_special_replace = "\"\\/bfnrt";
+      const char* _data = mData.data();
+      for(Data::size_type i = 0; i < mData.size(); i++)
+      {
+         const char& c = _data[i];
+         const char *special = strchr (json_special, c);
+         if (special != NULL)
+         {
+            const char *replace = json_special_replace + (special - json_special);
+            o << '\\' << *replace;
+         }
+         else if (c < 0x20)
+         {
+            /* Everything below 0x20 must be escaped */
+            o << "\\u00" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)c;
+         }
+         else
+         {
+            o << _data[i];
+         }
+      }
+      // add the trailing JSON
+      o << "\"}";
+      o.flush();
+
+      mData.takeBuf(msg);
+   }
+
    mStream.flush();
 
    if (resip::Log::getExternal())
@@ -899,7 +1164,8 @@ Log::Guard::~Guard()
                                         mFile,
                                         mLine, 
                                         rest, 
-                                        mData))
+                                        mData,
+                                        mInstanceName))
       {
          return;
       }
@@ -953,18 +1219,32 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
 
       case Log::File:
          if (mLogger == 0 ||
-             (maxLineCount() && mLineCount >= maxLineCount()) ||
-             (maxByteCount() && ((unsigned int)mLogger->tellp()+bytesToWrite) >= maxByteCount()))
+            (maxLineCount() && mLineCount >= maxLineCount()) ||
+            (maxByteCount() && ((unsigned int)mLogger->tellp() + bytesToWrite) >= maxByteCount()))
          {
             Data logFileName(mLogFileName != "" ? mLogFileName : "resiprocate.log");
             if (mLogger)
             {
-               Data oldLogFileName(logFileName + ".old");
-               delete mLogger;
-               // Keep one backup file: Delete .old file, Rename log file to .old
-               // Could be expanded in the future to keep X backup log files
-               remove(oldLogFileName.c_str());
-               rename(logFileName.c_str(), oldLogFileName.c_str());
+               if (keepAllLogFiles())
+               {
+                  char buffer[256];
+                  Data ts(Data::Borrow, buffer, sizeof(buffer));
+                  Data oldLogFileName(logFileName + "_" + timestamp(ts));
+
+                  delete mLogger;
+
+                  // Keep all log files, rename the log file with timestamp
+                  rename(logFileName.c_str(), oldLogFileName.c_str());
+               }
+               else
+               {
+                  Data oldLogFileName(logFileName + ".old");
+                  delete mLogger;
+                  // Keep one backup file: Delete .old file, Rename log file to .old
+                  // Could be expanded in the future to keep X backup log files
+                  remove(oldLogFileName.c_str());
+                  rename(logFileName.c_str(), oldLogFileName.c_str());
+               }
             }
             mLogger = new std::ofstream(logFileName.c_str(), std::ios_base::out | std::ios_base::app);
             mLineCount = 0;
@@ -975,6 +1255,48 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
          resip_assert(0);
          return std::cout;
    }
+}
+
+void 
+Log::ThreadData::set(Type type, Level level,
+                     const char* logFileName,
+                     ExternalLogger* pExternalLogger,
+                     MessageStructure messageStructure,
+                     const Data& instanceName)
+{
+   mType = type;
+   mLevel = level;
+
+   if (logFileName)
+   {
+#ifdef USE_FMT
+      fmt::memory_buffer _loggingFilename;
+      fmt::format_to(std::back_inserter(_loggingFilename),
+                     logFileName,
+#ifdef WIN32
+                     fmt::arg("pid", (int)GetCurrentProcess()),
+#else
+                     fmt::arg("pid", getpid()),
+#endif
+                     fmt::arg("timestamp", time(0)));
+      mLogFileName = Data(_loggingFilename.data(), _loggingFilename.size());
+#else
+      mLogFileName = logFileName;
+      mLogFileName.replace("{timestamp}", Data((uint64_t)time(0)));
+#ifdef WIN32
+      mLogFileName.replace("{pid}", Data((uint64_t)GetCurrentProcess()));
+#else
+      mLogFileName.replace("{pid}", Data(getpid()));
+#endif
+#endif
+   }
+   else
+   {
+      mLogFileName.clear();
+   }
+   mExternalLogger = pExternalLogger;
+   mMessageStructure = messageStructure;
+   mInstanceName = instanceName;
 }
 
 void 

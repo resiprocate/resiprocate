@@ -9,13 +9,17 @@
 
 #include <sys/stat.h>
 
-#include <boost/bind.hpp>
-
+#include <asio/placeholders.hpp>
+#include <functional>
 #include "ReTurnConfig.hxx"
 
 #include "ReTurnSubsystem.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include <rutil/Logger.hxx>
+#ifdef USE_SSL
+#include <openssl/ssl.h>
+#include "rutil/ssl/OpenSSLOptions.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -28,6 +32,13 @@
 using namespace std;
 using namespace resip;
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+#include <chrono>
+using namespace std::chrono;
+#endif
+
 namespace reTurn {
 
 ReTurnConfig::ReTurnConfig() :
@@ -36,9 +47,9 @@ ReTurnConfig::ReTurnConfig() :
    mTurnPort(3478),
    mTlsTurnPort(5349),
    mAltStunPort(0), // Note:  The default is to disable RFC3489 binding support
-   mTurnAddress(asio::ip::address::from_string("0.0.0.0")),
-   mTurnV6Address(asio::ip::address::from_string("::0")),
-   mAltStunAddress(asio::ip::address::from_string("0.0.0.0")),
+   mTurnAddress(asio::ip::make_address("0.0.0.0")),
+   mTurnV6Address(asio::ip::make_address("::0")),
+   mAltStunAddress(asio::ip::make_address("0.0.0.0")),
    mAuthenticationRealm("reTurn"),
    mUserDatabaseCheckInterval(60),
    mNonceLifetime(3600),            // 1 hour - at least 1 hours is recommended by the RFC
@@ -51,13 +62,18 @@ ReTurnConfig::ReTurnConfig() :
    mTlsServerPrivateKeyFilename(""),
    mTlsTempDhFilename("dh2048.pem"),
    mTlsPrivateKeyPassword(""),
+   mTlsHandshakeTimeout(30),
+   mTcpConnectionIdleTimeout(60),
+   mMaxTcpConnectionsPerIp(0),      // 0 - no max
+#ifdef USE_SSL
+   // The same defaults as repro (resip::BaseSecurity::OpenSSLCTXSetOptions)
+   mOpenSSLCTXSetOptions(SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION),
+#else
+   mOpenSSLCTXSetOptions(0),
+#endif
+   mOpenSSLCTXClearOptions(0),
    mUsersDatabaseFilename(""),
    mUserDatabaseHashedPasswords(false),
-   mLoggingType("cout"),
-   mSyslogFacility("LOG_DAEMON"),
-   mLoggingLevel("INFO"),
-   mLoggingFilename("reTurnServer.log"),
-   mLoggingFileMaxLineCount(50000),  // 50000 about 5M size
    mDaemonize(false),
    mPidFile(""),
    mRunAsUser(""),
@@ -74,9 +90,9 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mTurnPort = getConfigUnsignedShort("TurnPort", mTurnPort);
    mTlsTurnPort = getConfigUnsignedShort("TlsTurnPort", mTlsTurnPort);
    mAltStunPort = getConfigUnsignedShort("AltStunPort", mAltStunPort);
-   mTurnAddress = asio::ip::address::from_string(getConfigData("TurnAddress", "0.0.0.0").c_str());
-   mTurnV6Address = asio::ip::address::from_string(getConfigData("TurnV6Address", "::0").c_str());
-   mAltStunAddress = asio::ip::address::from_string(getConfigData("AltStunAddress", "0.0.0.0").c_str());
+   mTurnAddress = asio::ip::make_address(getConfigData("TurnAddress", "0.0.0.0").c_str());
+   mTurnV6Address = asio::ip::make_address(getConfigData("TurnV6Address", "::0").c_str());
+   mAltStunAddress = asio::ip::make_address(getConfigData("AltStunAddress", "0.0.0.0").c_str());
    mAuthenticationRealm = getConfigData("AuthenticationRealm", mAuthenticationRealm);
    mUserDatabaseCheckInterval = getConfigUnsignedShort("UserDatabaseCheckInterval", 60);
    mNonceLifetime = getConfigUnsignedLong("NonceLifetime", mNonceLifetime);
@@ -89,12 +105,26 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mTlsServerPrivateKeyFilename = getConfigData("TlsServerPrivateKeyFilename", mTlsServerPrivateKeyFilename);
    mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);
    mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", mTlsPrivateKeyPassword);
+   mTlsHandshakeTimeout = getConfigUnsignedLong("TlsHandshakeTimeout", mTlsHandshakeTimeout);
+   mTcpConnectionIdleTimeout = getConfigUnsignedLong("TcpConnectionIdleTimeout", mTcpConnectionIdleTimeout);
+   mMaxTcpConnectionsPerIp = getConfigUnsignedLong("MaxTcpConnectionsPerIp", mMaxTcpConnectionsPerIp);
+#ifdef USE_SSL
+   // As repro: a list of SSL_OP_* names replaces the default
+   for (const char* name : { "OpenSSLCTXSetOptions", "OpenSSLCTXClearOptions" })
+   {
+      std::set<Data> values;
+      if (getConfigValue(name, values))
+      {
+         long& options = (Data(name) == "OpenSSLCTXSetOptions") ? mOpenSSLCTXSetOptions : mOpenSSLCTXClearOptions;
+         options = 0;
+         for (const Data& value : values)
+         {
+            options |= parseOpenSSLCTXOption(value);  // throws std::invalid_argument for an unknown name
+         }
+      }
+   }
+#endif
    mUserDatabaseHashedPasswords = getConfigBool("UserDatabaseHashedPasswords", mUserDatabaseHashedPasswords);
-   mLoggingType = getConfigData("LoggingType", mLoggingType);
-   mSyslogFacility = getConfigData("SyslogFacility", "LOG_DAEMON");
-   mLoggingLevel = getConfigData("LoggingLevel", mLoggingLevel);
-   mLoggingFilename = getConfigData("LogFilename", mLoggingFilename);
-   mLoggingFileMaxLineCount = getConfigUnsignedLong("LogFileMaxLines", mLoggingFileMaxLineCount);
    mDaemonize = getConfigBool("Daemonize", mDaemonize);
    mPidFile = getConfigData("PidFile", mPidFile);
    mRunAsUser = getConfigData("RunAsUser", mRunAsUser);
@@ -109,14 +139,6 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
       }
    }
 
-   // fork is not possible on Windows
-#ifdef WIN32
-   if(mDaemonize)
-   {
-      throw ConfigParse::Exception("Unable to fork/daemonize on Windows, please check the config", __FILE__, __LINE__);
-   }
-#endif
-
    // TODO: For ShortTermCredentials use mAuthenticationCredentials[username] = password;
 
 
@@ -127,7 +149,6 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
       throw ConfigParse::Exception("Missing user database option! Expected \"UserDatabaseFile = file location\".", __FILE__, __LINE__);
    }
 
-   AddBasePathIfRequired(mLoggingFilename);
    AddBasePathIfRequired(mTlsServerCertificateFilename);
    AddBasePathIfRequired(mTlsServerPrivateKeyFilename);
    AddBasePathIfRequired(mTlsTempDhFilename);
@@ -248,7 +269,9 @@ ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
       }
 
       anchor = pb.position();
-      pb.skipToOneOf(" \t\n");
+      // Include the CR: getline only strips the LF, so a file with CRLF line
+      // endings would otherwise leave a trailing CR on this last field.
+      pb.skipToOneOf(" \t\r\n");
 
       pb.data(state, anchor);
       state.lowercase();
@@ -330,11 +353,11 @@ ReTurnConfig::getHa1ForUsername(const Data& username, const resip::Data& realm) 
    }
 }
 
-std::auto_ptr<UserAuthData>
+std::unique_ptr<UserAuthData>
 ReTurnConfig::getUser(const resip::Data& userName, const resip::Data& realm) const
 {
    ReadLock lock(mUserDataMutex);
-   std::auto_ptr<UserAuthData> ret(0);
+   std::unique_ptr<UserAuthData> ret;
    std::map<resip::Data,RealmUsers>::const_iterator it = mUsers.find(realm);
    if(it == mUsers.end())
       return ret;
@@ -344,17 +367,17 @@ ReTurnConfig::getUser(const resip::Data& userName, const resip::Data& realm) con
    if(it2 == realmUsers.end())
       return ret;
 
-   return std::auto_ptr<UserAuthData>(new UserAuthData(it2->second));
+   return std::unique_ptr<UserAuthData>(new UserAuthData(it2->second));
 }
 
 bool ReTurnUserFileScanner::mHup = false;
 
-ReTurnUserFileScanner::ReTurnUserFileScanner(asio::io_service& ioService, ReTurnConfig& reTurnConfig)
+ReTurnUserFileScanner::ReTurnUserFileScanner(asio::io_context& ioService, ReTurnConfig& reTurnConfig)
  : mLoadedTime(time(0)),
    mReTurnConfig(reTurnConfig),
    mLoopInterval(3),
    mNextFileCheck(mLoadedTime + reTurnConfig.mUserDatabaseCheckInterval),
-   mTimer(ioService, boost::posix_time::seconds(mLoopInterval))
+   mTimer(ioService, seconds(mLoopInterval))
 {
    mHup = false;
 #ifndef WIN32
@@ -372,8 +395,8 @@ ReTurnUserFileScanner::start()
 
    if(timerInterval > 0)
    {
-      mTimer.expires_from_now(boost::posix_time::seconds(timerInterval));
-      mTimer.async_wait(boost::bind(&ReTurnUserFileScanner::timeout, this, asio::placeholders::error));
+      mTimer.expires_after(seconds(timerInterval));
+      mTimer.async_wait(std::bind(&ReTurnUserFileScanner::timeout, this, std::placeholders::_1));
    }
 }
 
@@ -427,7 +450,7 @@ ReTurnUserFileScanner::timeout(const asio::error_code& e)
          mLoadedTime = time(0);
          mNextFileCheck = mLoadedTime + mReTurnConfig.mUserDatabaseCheckInterval;
       }
-      catch (ReTurnConfig::Exception& ex)
+      catch (ReTurnConfig::Exception&)
       {
          WarningLog(<<"user reload failed, will check again in " << mReTurnConfig.mUserDatabaseCheckInterval << " second(s).");
          mNextFileCheck = time(0) + mReTurnConfig.mUserDatabaseCheckInterval;
@@ -464,6 +487,7 @@ ReTurnUserFileScanner::onSignal(int signum)
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

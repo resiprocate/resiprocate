@@ -26,6 +26,7 @@
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/SipMessage.hxx>
 #include <resip/stack/Tuple.hxx>
+#include <resip/stack/Pidf.hxx>
 #include <resip/recon/ReconSubsystem.hxx>
 
 #include "MyMessageDecorator.hxx"
@@ -99,6 +100,7 @@ TelepathyMasterProfile::TelepathyMasterProfile(const QVariantMap &parameters)
    addSupportedMimeType(UPDATE, Mime("multipart", "signed"));
    addSupportedMimeType(UPDATE, Mime("multipart", "alternative"));
    addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));
+   addSupportedMimeType(NOTIFY, Pidf::getStaticType());
    addSupportedMimeType(INFO, Mime("application", "dtmf-relay"));
 
    clearSupportedMethods();
@@ -152,7 +154,6 @@ TelepathyMasterProfile::TelepathyMasterProfile(const QVariantMap &parameters)
    rtpPortRangeMax() = mediaPortStart + 101; // Allows 100 media streams
 
    // This should only be used when there is no NAT traversal mode
-   SharedPtr<MessageDecorator> md(new MyMessageDecorator());
-   setOutboundDecorator(md);
+   setOutboundDecorator(std::make_shared<MyMessageDecorator>());
 }
 

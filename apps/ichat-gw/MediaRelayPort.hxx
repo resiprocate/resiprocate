@@ -19,10 +19,10 @@ public:
 
    resip::Tuple mTuple;
    unsigned int mSsrc;
-   std::auto_ptr<char> mRelayDatagram;
+   std::unique_ptr<char[]> mRelayDatagram;
    int mRelayDatagramLen;
-   UInt64 mSendTimeMs;
-   UInt64 mRecvTimeMs;
+   uint64_t mSendTimeMs;
+   uint64_t mRecvTimeMs;
    bool mKeepaliveMode;
 
    void reset() 

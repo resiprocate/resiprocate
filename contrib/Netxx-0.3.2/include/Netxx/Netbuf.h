@@ -42,6 +42,7 @@
 
 // standard includes
 #include <streambuf>
+#include <iostream>
 #include <algorithm>
 #include <cstring>
 
@@ -113,8 +114,8 @@ template<std::streamsize bufsize, class charT, class traits>
 Netbuf<bufsize, charT, traits>::Netbuf (StreamBase &stream)
     : stream_(stream)
 {
-    setp(putbuf_, putbuf_ + bufsize);
-    setg(getbuf_+PUTBACK_SIZE, getbuf_+PUTBACK_SIZE, getbuf_+PUTBACK_SIZE);
+    this->setp(putbuf_, putbuf_ + bufsize);
+    this->setg(getbuf_+PUTBACK_SIZE, getbuf_+PUTBACK_SIZE, getbuf_+PUTBACK_SIZE);
 }
 //#############################################################################
 template<std::streamsize bufsize, class charT, class traits>
@@ -127,7 +128,7 @@ typename Netbuf<bufsize, charT, traits>::int_type Netbuf<bufsize, charT, traits>
     if (buffer_out() < 0) {
 	return traits::eof();
     } else if (!traits::eq_int_type(c, traits::eof())) {
-	return sputc(c);
+	return this->sputc(c);
     } else {
 	return traits::not_eof(c);
     }

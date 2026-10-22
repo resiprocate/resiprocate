@@ -17,7 +17,7 @@ class PoolBase;
 class Via : public ParserCategory
 {
    public:
-      enum {commaHandling = CommasAllowedOutputMulti};
+      static constexpr CommaHandlingMode commaHandling = CommasAllowedOutputMulti;
 
       Via();
       Via(const HeaderFieldValue& hfv, 
@@ -61,7 +61,7 @@ class Via : public ParserCategory
 
 defineParam(branch, "branch", BranchParameter, "RFC 3261");
 defineParam(comp, "comp", DataParameter, "RFC 3486");
-defineParam(received, "received", DataParameter, "RFC 3261");
+defineParam(received, "received", ReceivedParameter, "RFC 3261");
 defineParam(rport, "rport", RportParameter, "RFC 3581");
 defineParam(ttl, "ttl", UInt32Parameter, "RFC 3261");
 defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "RFC 5049");

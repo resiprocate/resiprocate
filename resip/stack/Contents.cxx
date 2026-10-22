@@ -8,7 +8,7 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/OctetContents.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
@@ -453,7 +453,7 @@ void
 Contents::preParseHeaders(ParseBuffer& pb)
 {
    const char* start = pb.position();
-   Data all( start, pb.end()-start);
+   Data all( start, (Data::size_type)(pb.end()-start));
 
    Data headerName;
 
@@ -471,7 +471,7 @@ Contents::preParseHeaders(ParseBuffer& pb)
       anchor = pb.skipWhitespace();
       pb.skipToTermCRLF();
 
-      Headers::Type type = Headers::getType(headerName.data(), (int)headerName.size());
+      Headers::Type type = Headers::getType(headerName.data(), headerName.size());
       ParseBuffer subPb(anchor, pb.position() - anchor);
 
       switch (type)
@@ -666,9 +666,9 @@ Contents::addBuffer(char* buf)
 bool
 resip::operator==(const Contents& lhs, const Contents& rhs)
 {
-   MD5Stream lhsStream;
+   DigestStream lhsStream;
    lhsStream << lhs;
-   MD5Stream rhsStream;
+   DigestStream rhsStream;
    rhsStream << rhs;
    return lhsStream.getHex() == rhsStream.getHex();
 }
@@ -682,6 +682,7 @@ resip::operator!=(const Contents& lhs, const Contents& rhs)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -1,11 +1,7 @@
 #ifndef CHANNELMANAGER_HXX
 #define CHANNELMANAGER_HXX
 
-#include <asio.hpp>
-#ifdef USE_SSL
-#include <asio/ssl.hpp>
-#endif
-
+#include <map>
 #include "RemotePeer.hxx"
 
 namespace reTurn {
@@ -19,6 +15,7 @@ public:
    explicit ChannelManager();
    ~ChannelManager();
 
+   void clear();
    RemotePeer* createChannelBinding(const StunTuple& peerTuple);
    RemotePeer* createChannelBinding(const StunTuple& peerTuple, unsigned short channel);
 
@@ -42,6 +39,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2024 SIP Spectrum, Inc http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

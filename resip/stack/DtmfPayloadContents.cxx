@@ -100,8 +100,8 @@ DtmfPayloadContents::DtmfPayload::operator=(const DtmfPayload& rhs)
 bool
 DtmfPayloadContents::DtmfPayload::isValidButton(const char c)
 {
-   static const char* permittedChars = "ABCD*#";
-   if(isdigit(c))
+   static const char permittedChars[] = "ABCD*#";
+   if(c >= '0' && c <= '9')
    {
       return true;
    }
@@ -169,17 +169,17 @@ unsigned short
 DtmfPayloadContents::DtmfPayload::getEventCode() const
 {
    resip_assert(mButton);
-   unsigned short eventCode;
-   if(isdigit(mButton))
+   unsigned short eventCode = 0;
+   if(mButton >= '0' && mButton <= '9')
    {
       eventCode = mButton - '0';
    }
    else if(mButton == '*')
-   {      
+   {
       eventCode = 10;
-   }      
+   }
    else if(mButton == '#')
-   {      
+   {
       eventCode = 11;
    }
    else if(mButton >= 'A' && mButton <= 'D')

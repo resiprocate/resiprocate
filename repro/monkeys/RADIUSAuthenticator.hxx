@@ -5,7 +5,9 @@
   #include "config.h"
 #endif
 
+#include <vector>
 #include "rutil/Data.hxx"
+#include "rutil/DigestStream.hxx"
 #include "rutil/RADIUSDigestAuthenticator.hxx"
 #include "repro/Processor.hxx"
 #include "repro/ProxyConfig.hxx"
@@ -25,7 +27,10 @@ namespace repro
 class RADIUSAuthenticator : public DigestAuthenticator
 {
    public:
-      RADIUSAuthenticator(ProxyConfig& config, const resip::Data& configurationFile, const resip::Data& staticRealm);
+      RADIUSAuthenticator(ProxyConfig& config, 
+                          const resip::Data& configurationFile, 
+                          const resip::Data& staticRealm,
+                          const std::vector<resip::DigestType>& challengeDigestTypes = std::vector<resip::DigestType>());
       ~RADIUSAuthenticator();
 
    protected:
@@ -54,6 +59,7 @@ class ReproRADIUSDigestAuthListener : public resip::RADIUSDigestAuthListener
 
 /* ====================================================================
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright 2013 Daniel Pocock http://danielpocock.com
  * All rights reserved.
  *

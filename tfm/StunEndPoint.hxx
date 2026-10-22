@@ -10,6 +10,7 @@
 #include "tfm/StunEvent.hxx"
 
 #include <deque>
+#include <memory>
 
 class ActionBase;
 class StunAction;
@@ -82,15 +83,15 @@ class StunEndPoint: public EndPoint,
 
    private:
       // StunSink interface
-      virtual void onBindingRequest(boost::shared_ptr<StunRequestContext> request);
+      virtual void onBindingRequest(std::shared_ptr<StunRequestContext> request);
 
-      virtual void onAllocateRequest(boost::shared_ptr<StunRequestContext> request);
+      virtual void onAllocateRequest(std::shared_ptr<StunRequestContext> request);
 
-      virtual void onSendRequest(boost::shared_ptr<StunRequestContext> request);
+      virtual void onSendRequest(std::shared_ptr<StunRequestContext> request);
 
-      virtual void onSetActiveDestinationRequest(boost::shared_ptr<StunRequestContext> request);
+      virtual void onSetActiveDestinationRequest(std::shared_ptr<StunRequestContext> request);
 
-      virtual void onUnknownRequest(boost::shared_ptr<StunRequestContext> request);
+      virtual void onUnknownRequest(std::shared_ptr<StunRequestContext> request);
 
       virtual void onParseMessageFailed();
 
@@ -101,7 +102,7 @@ class StunEndPoint: public EndPoint,
    private:
       StunServer mStunServer;
 
-      std::deque<boost::shared_ptr<StunRequestContext> > mRequests;
+      std::deque<std::shared_ptr<StunRequestContext>> mRequests;
 
       resip::Uri mAddr;
       resip::Uri mResponseAddr;

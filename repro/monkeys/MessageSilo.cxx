@@ -15,6 +15,8 @@
 
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
@@ -75,9 +77,15 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
    Data mimeTypeFilterRegex = config.getConfigData("MessageSiloMimeTypeFilterRegex", "application\\/im\\-iscomposing\\+xml", false);
    if(!destFilterRegex.empty())
    {
-      mDestFilterRegex= new regex_t;
-      int ret = regcomp(mDestFilterRegex, destFilterRegex.c_str(), REG_EXTENDED | REG_NOSUB);
-      if( ret != 0 )
+      try
+      {
+         // Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+         // of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+         // std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+         // use the EMCAScript syntax.
+         mDestFilterRegex = new std::regex(destFilterRegex.c_str(), std::regex_constants::ECMAScript | std::regex_constants::nosubs);
+      }
+      catch (std::regex_error&)
       {
          delete mDestFilterRegex;
          ErrLog( << "MessageSilo has invalid destination filter regular expression: " << destFilterRegex);
@@ -86,9 +94,15 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
    }
    if(!mimeTypeFilterRegex.empty())
    {
-      mMimeTypeFilterRegex= new regex_t;
-      int ret = regcomp(mMimeTypeFilterRegex, mimeTypeFilterRegex.c_str(), REG_EXTENDED | REG_NOSUB);
-      if( ret != 0 )
+      try
+      {
+         // Note: this code originally used the PCRE (Perl Compatible) regular expression library. The ECMAScript standard is a subset
+         // of the Perl regular expression syntax.  Posix regular expression syntax is quite a bit different (ie: std::regex_contacts::basic or 
+         // std::regex_contacts::extended).  To be as backwards compatible with existing regular expressions as possible, we want to 
+         // use the EMCAScript syntax.
+         mMimeTypeFilterRegex= new std::regex(mimeTypeFilterRegex.c_str(), std::regex_constants::ECMAScript | std::regex_constants::nosubs);
+      }
+      catch (std::regex_error&)
       {
          delete mMimeTypeFilterRegex;
          ErrLog( << "MessageSilo has invalid mime-type filter regular expression: " << mimeTypeFilterRegex);
@@ -99,16 +113,14 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
 
 MessageSilo::~MessageSilo()
 {
-   // Clean up pcre memory
+   // Clean up regex memory
    if(mDestFilterRegex)
    {
-      regfree(mDestFilterRegex);
       delete mDestFilterRegex;
       mDestFilterRegex = 0;
    }
    if(mMimeTypeFilterRegex)
    {
-      regfree(mMimeTypeFilterRegex);
       delete mMimeTypeFilterRegex;
       mMimeTypeFilterRegex = 0;
    }
@@ -136,7 +148,7 @@ MessageSilo::process(RequestContext& context)
       {
          // Create async message now, so we can use it's storage and avoid some copies
          AsyncAddToSiloMessage* async = new AsyncAddToSiloMessage(*this, context.getTransactionId(), &context.getProxy());
-         std::auto_ptr<ApplicationMessage> async_ptr(async);
+         std::unique_ptr<ApplicationMessage> async_ptr(async);
 
          // Check Max ContentLength setting
          async->mMessageBody = contents->getBodyData();
@@ -153,8 +165,9 @@ MessageSilo::process(RequestContext& context)
          async->mMimeType = Data::from(contents->getType());
          if (mMimeTypeFilterRegex)
          {
-            int ret = regexec(mMimeTypeFilterRegex, async->mMimeType.c_str(), 0, 0, 0/*eflags*/);
-            if (ret == 0)
+            // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+            //        the string, this is backwards compatible with the previous regexec PCRE implementation
+            if(std::regex_search(async->mMimeType.c_str(), *mMimeTypeFilterRegex))
             {
                // match 
                DebugLog( << " MESSAGE not silo'd due to Mime-Type filter: " << async->mMimeType);
@@ -176,8 +189,9 @@ MessageSilo::process(RequestContext& context)
          async->mDestUri = originalRequest.header(h_To).uri().getAOR(false /* addPort? */);
          if (mDestFilterRegex)
          {
-            int ret = regexec(mDestFilterRegex, async->mDestUri.c_str(), 0, 0, 0/*eflags*/);
-            if (ret == 0)
+            // Note:  Using regex_search instead of regex_match, so that we don't need to fully match 
+            //        the string, this is backwards compatible with the previous regexec PCRE implementation
+            if(std::regex_search(async->mDestUri.c_str(), *mDestFilterRegex))
             {
                // match 
                DebugLog( << " MESSAGE not silo'd due to destination filter: " << async->mDestUri);
@@ -257,9 +271,9 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
                   ContactInstanceRecord& rec = *contactIt;
 
                   // Removed contacts can be in the list, but they will be expired, don't send to them
-                  if(rec.mRegExpires > (UInt64)now)  
+                  if(rec.mRegExpires > (uint64_t)now)  
                   {
-                     std::auto_ptr<SipMessage> msg(new SipMessage);
+                     std::unique_ptr<SipMessage> msg(new SipMessage);
                      RequestLine rLine(MESSAGE);
                      rLine.uri() = rec.mContact.uri();
                      msg->header(h_RequestLine) = rLine;
@@ -306,7 +320,7 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
                      PlainContents contents(hfv, type);
                      msg->setContents(&contents);  // need to clone since body data isn't owned by message yet
 
-                     mAsyncDispatcher->mStack->send(msg);
+                     mAsyncDispatcher->mStack->send(std::move(msg));
                   }
                }
             }
@@ -331,7 +345,7 @@ MessageSilo::onAdd(resip::ServerRegistrationHandle h, const resip::SipMessage& r
    AsyncDrainSiloMessage* async = new AsyncDrainSiloMessage(*this, Data::Empty, 0);  // tid and tu not needed since no response expected
    async->mAor = reg.header(h_To).uri().getAOR(false /* addPort? */);
    async->mRequestContacts = h->getRequestContacts();
-   std::auto_ptr<ApplicationMessage> async_ptr(async);
+   std::unique_ptr<ApplicationMessage> async_ptr(async);
    mAsyncDispatcher->post(async_ptr);
    return true;
 }

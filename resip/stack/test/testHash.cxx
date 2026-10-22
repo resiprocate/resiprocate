@@ -136,7 +136,7 @@ main()
 {
    bool failure = false;
    
-   register unsigned int i = 0;
+   unsigned int i = 0;
 
    // Load up the main table
    unsigned short nKeywords =    InitHeaderInfo();
@@ -190,13 +190,13 @@ main()
    i=0;
    InfoLog(<<"Starting timing loop");
 
-   register int totalTime=30;
-   register int interval=5;
-   register int timer=totalTime;
-   register int elapsed=0;
+   int totalTime=30;
+   int interval=5;
+   int timer=totalTime;
+   int elapsed=0;
    
    signal(SIGALRM, tick);
-   register unsigned long long counter = 0;
+   unsigned long long counter = 0;
 
    assert(totalTime/interval*interval == totalTime);
    
@@ -206,7 +206,7 @@ main()
       while (!signalled)
       {
 
-         volatile register Headers::Type hdr = 
+         volatile Headers::Type hdr =
             Headers::getType(headerInfo[randomList[i]].keyword,
                              headerInfo[randomList[i]].len);
 

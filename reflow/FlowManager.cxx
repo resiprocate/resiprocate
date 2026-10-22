@@ -2,27 +2,27 @@
 #include "config.h"
 #endif
 
+// !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO includes since inlined shared_from_this has 
+// a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
+#include <memory>
+
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/function.hpp>
 #include <map>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/ThreadIf.hxx>
 #include <rutil/Random.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/Timer.hxx>
 
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp/srtp.h>
-#endif
+#include "Srtp2Helper.hxx"
 
 #ifdef USE_SSL  
+#include <openssl/evp.h>
+#include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include "FlowDtlsTimerContext.hxx"
@@ -40,12 +40,14 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
+#define DTLS_CERT_KEY_LENGTH 4096
+
 namespace flowmanager
 {
 class IOServiceThread : public ThreadIf
 {
 public:
-   IOServiceThread(asio::io_service& ioService) : mIOService(ioService) {}
+   IOServiceThread(asio::io_context& ioService) : mIOService(ioService) {}
 
    virtual ~IOServiceThread() {}
 
@@ -54,39 +56,43 @@ public:
       mIOService.run();
    }
 private:
-   asio::io_service& mIOService;
+   asio::io_context& mIOService;
 };
 }
 
 FlowManager::FlowManager()
 #ifdef USE_SSL
    : 
-   mSslContext(mIOService, asio::ssl::context::tlsv1),
+   mSslContext(asio::ssl::context::sslv23), // Generic SSL/TLS - despite the sslv23 name, this uses dynamic negotiation to select the best protocol version
    mClientCert(0),
    mClientKey(0),
-   mDtlsFactory(0)
-#endif  
+   mDtlsFactory(0),
+   mDtlsTimerContext(0)
+#endif
 {
-   mIOServiceWork = new asio::io_service::work(mIOService);
+   mIOServiceWork = new asio::executor_work_guard<asio::io_context::executor_type>(mIOService.get_executor());
    mIOServiceThread = new IOServiceThread(mIOService);
    mIOServiceThread->run();
 
 #ifdef USE_SSL
    // Setup SSL context
    asio::error_code ec; 
-   mSslContext.set_verify_mode(asio::ssl::context::verify_peer | 
+   mSslContext.set_verify_mode(asio::ssl::context::verify_peer |
                                asio::ssl::context::verify_fail_if_no_peer_cert);
+
+   // More can be added with addTlsRootCertificates()
 #define VERIFY_FILE "ca.pem"
-   mSslContext.load_verify_file(VERIFY_FILE, ec);   // TODO make a setting
+   mSslContext.load_verify_file(VERIFY_FILE, ec);
    if(ec)
    {
-      ErrLog(<< "Unable to load verify file: " << VERIFY_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
+      // App may not use TURN over TLS - log as Info only
+      InfoLog(<< "Unable to load verify file: " << VERIFY_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
    }
 #endif 
 
    // Initialize SRTP 
-   err_status_t status = srtp_init();
-   if(status && status != err_status_bad_param)  // Note: err_status_bad_param happens if srtp_init is called twice - we allow this for test programs
+   srtp_err_status_t status = srtp_init();
+   if(status && status != srtp_err_status_bad_param)  // Note: err_status_bad_param happens if srtp_init is called twice - we allow this for test programs
    {
       ErrLog(<< "Unable to initialize SRTP engine, error code=" << status);
       throw FlowManagerException("Unable to initialize SRTP engine", __FILE__, __LINE__);
@@ -97,6 +103,11 @@ FlowManager::FlowManager()
 
 FlowManager::~FlowManager()
 {
+#ifdef USE_SSL
+   // The io thread runs until it has nothing left to do: don't leave it waiting for DTLS
+   // retransmission timers (up to a minute away) of sockets that are gone
+   if(mDtlsTimerContext) mDtlsTimerContext->stop();
+#endif
    delete mIOServiceWork;
    mIOServiceThread->join();
    delete mIOServiceThread;
@@ -119,10 +130,10 @@ FlowManager::initializeDtlsFactory(const char* certAor)
    }
 
    Data aor(certAor);  
-   if(createCert(aor, 365 /* expireDays */, 1024 /* keyLen */, mClientCert, mClientKey))
+   if(createCert(aor, 365 /* expireDays */, DTLS_CERT_KEY_LENGTH /* keyLen */, mClientCert, mClientKey))
    {
-      FlowDtlsTimerContext* timerContext = new FlowDtlsTimerContext(mIOService);
-      mDtlsFactory = new DtlsFactory(std::auto_ptr<DtlsTimerContext>(timerContext), mClientCert, mClientKey);
+      mDtlsTimerContext = new FlowDtlsTimerContext(mIOService);
+      mDtlsFactory = new DtlsFactory(std::unique_ptr<DtlsTimerContext>(mDtlsTimerContext), mClientCert, mClientKey);
       resip_assert(mDtlsFactory);
    }
    else
@@ -161,7 +172,9 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                const char* natTraversalServerHostname, 
                                unsigned short natTraversalServerPort, 
                                const char* stunUsername,
-                               const char* stunPassword)
+                               const char* stunPassword,
+                               bool forceCOMedia,
+                               std::shared_ptr<FlowContext> context)
 {
    MediaStream* newMediaStream = 0;
    if(rtcpEnabled)
@@ -181,7 +194,11 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        natTraversalServerHostname, 
                                        natTraversalServerPort, 
                                        stunUsername, 
-                                       stunPassword);
+                                       stunPassword,
+                                       forceCOMedia,
+                                       mRtcpEventLoggingHandler,
+                                       context,
+                                       mValidateTlsServerHostname);
    }
    else
    {
@@ -200,13 +217,30 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        natTraversalServerHostname, 
                                        natTraversalServerPort, 
                                        stunUsername, 
-                                       stunPassword);
+                                       stunPassword,
+                                       forceCOMedia,
+                                       nullptr,
+                                       context,
+                                       mValidateTlsServerHostname);
    }
    return newMediaStream;
 }
 
-#ifdef USE_SSL 
-int 
+#ifdef USE_SSL
+bool
+FlowManager::addTlsRootCertificates(const resip::Data& rootCertificatesFile)
+{
+   asio::error_code ec;
+   mSslContext.load_verify_file(rootCertificatesFile.c_str(), ec);
+   if(ec)
+   {
+      ErrLog(<< "Unable to load TLS root certificates from " << rootCertificatesFile << ", error=" << ec.value() << "(" << ec.message() << ")");
+      return false;
+   }
+   return true;
+}
+
+int
 FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey )
 {
    int ret;
@@ -214,21 +248,27 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    Data aor = "sip:" + pAor;
    
    // Make sure that necessary algorithms exist:
-   resip_assert(EVP_sha1());
+   resip_assert(EVP_sha256());
 
-   RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
-   resip_assert(rsa);    // couldn't make key pair
-   
-   EVP_PKEY* privkey = EVP_PKEY_new();
-   resip_assert(privkey);
-   ret = EVP_PKEY_set1_RSA(privkey, rsa);
-   resip_assert(ret);
+   // An RSA key (the default public exponent is 65537): ECDSA would be quicker to generate,
+   // but older endpoints may only support RSA
+   EVP_PKEY* privkey = NULL;
+   EVP_PKEY_CTX* keyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+   ret = keyCtx &&
+         EVP_PKEY_keygen_init(keyCtx) == 1 &&
+         EVP_PKEY_CTX_set_rsa_keygen_bits(keyCtx, keyLen) == 1 &&
+         EVP_PKEY_keygen(keyCtx, &privkey) == 1;
+   EVP_PKEY_CTX_free(keyCtx);
+   if(!ret)
+   {
+      return 0;  // couldn't make key pair
+   }
 
    X509* cert = X509_new();
    resip_assert(cert);
    
    X509_NAME* subject = X509_NAME_new();
-   X509_EXTENSION* ext = X509_EXTENSION_new();
+   X509_EXTENSION* ext;
    
    // set version to X509v3 (starts from 0)
    X509_set_version(cert, 2L);
@@ -242,7 +282,7 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
 //                                      -1, 0);
    resip_assert(ret);
    ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_ASC, 
-                                     (unsigned char *) aor.data(), aor.size(), 
+                                     (unsigned char *) aor.data(), (int)aor.size(), 
                                      -1, 0);
    resip_assert(ret);
    
@@ -250,10 +290,11 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    resip_assert(ret);
    ret = X509_set_subject_name(cert, subject);
    resip_assert(ret);
+   X509_NAME_free(subject);  // the certificate holds copies
    
    const long duration = 60*60*24*expireDays;   
-   X509_gmtime_adj(X509_get_notBefore(cert),0);
-   X509_gmtime_adj(X509_get_notAfter(cert), duration);
+   X509_gmtime_adj(X509_getm_notBefore(cert),0);
+   X509_gmtime_adj(X509_getm_notAfter(cert), duration);
    
    ret = X509_set_pubkey(cert, privkey);
    resip_assert(ret);
@@ -274,7 +315,8 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    
    // TODO add extensions NID_subject_key_identifier and NID_authority_key_identifier
    
-   ret = X509_sign(cert, privkey, EVP_sha1());
+   // SHA-256, the hash function of the fingerprint we advertise (RFC 4572 required them to match)
+   ret = X509_sign(cert, privkey, EVP_sha256());
    resip_assert(ret);
 
    outCert = cert;
@@ -285,6 +327,7 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
 
 /* ====================================================================
 
+ Copyright (c) 2008-2026, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

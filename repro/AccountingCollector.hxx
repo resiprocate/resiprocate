@@ -71,7 +71,7 @@ private:
    resip::TimeLimitFifo<FifoEvent> mFifo;
    PersistentMessageEnqueue* initializeEventQueue(FifoEventType type, bool destroyFirst=false);
    void pushEventObjectToQueue(json::Object& object, FifoEventType type);
-   void internalProcess(std::auto_ptr<FifoEvent> eventData);
+   void internalProcess(std::unique_ptr<FifoEvent> eventData);
 };
 
 }

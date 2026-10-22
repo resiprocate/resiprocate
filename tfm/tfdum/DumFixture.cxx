@@ -15,7 +15,6 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/MD5Stream.hxx"
 #include "tfm/repro/CommandLineParser.hxx"
 #include "tfm/DnsUtils.hxx"
 #include "tfm/PortAllocator.hxx"
@@ -27,6 +26,8 @@
 #endif
 
 #include "DumFixture.hxx"
+
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -77,7 +78,7 @@ static DumUserAgent* createDumUserAgent(const Data& user, const Data& host = "lo
    aor.host() = host;
    aor.port() = port;
    aor.user() = user;
-   SharedPtr<MasterProfile> prof = DumUserAgent::makeProfile(aor, user);
+   auto prof = DumUserAgent::makeProfile(aor, user);
    DumUserAgent* ua = new DumUserAgent(prof, DumFixture::proxy);
    ua->init();
    return ua;
@@ -90,10 +91,10 @@ static DumUserAgent* createAnonDumUserAgent(const Data& user, const Data& host =
    aor.host() = host;
    aor.port() = port;
    aor.user() = user;
-   SharedPtr<MasterProfile> prof = DumUserAgent::makeProfile(aor, user);
+   auto prof = DumUserAgent::makeProfile(aor, user);
    //!dcm! -- truly terrible hack. Should be banned by the geneva convention,
    //clean up post-haste.
-   SharedPtr<MasterProfile> anonProf = resip::shared_dynamic_cast<MasterProfile, UserProfile>(DumUserAgent::makeProfile(aor, user)->getAnonymousUserProfile());   
+   auto anonProf = std::dynamic_pointer_cast<MasterProfile>(DumUserAgent::makeProfile(aor, user)->getAnonymousUserProfile());
    DumUserAgent* ua = new DumUserAgent(anonProf, DumFixture::proxy);
    ua->init();
    return ua;
@@ -111,7 +112,7 @@ DumFixture::~DumFixture()
 void
 DumFixture::initialize(int argc, char** argv)
 {
-   //ExternalDnsFactory::set(auto_ptr<ExternalDns>(createExternalDns()));
+   //ExternalDnsFactory::set(std::unique_ptr<ExternalDns>(createExternalDns()));
 
    InfoLog(<< "Setting up proxy");
 #ifdef USE_SSL
@@ -120,8 +121,7 @@ DumFixture::initialize(int argc, char** argv)
    // enable for TLS testing
    //security = new resip::Security(getenv("PWD"));
    CommandLineParser args(argc, argv);
-   proxy = new TestRepro("proxy", "localhost", args, Data::Empty, security);
-
+   proxy = new TestRepro("proxy", "localhost", args, Data::Empty, security, 180 /* timerC */);
    {
       Data offer("v=0\r\n"
                  "o=dumTfm 2087 3916 IN IP4 127.0.0.1\r\n"
@@ -369,15 +369,20 @@ DumFixture::destroyStatic()
    }
 }
 
-auto_ptr<Pidf>
-DumFixture::makePidf(const DumUserAgent* dua)
+std::unique_ptr<GenericPidfContents>
+DumFixture::makePidf(const DumUserAgent* dua, bool online)
 {
-   std::auto_ptr<Pidf> pidf(new Pidf);
+   std::unique_ptr<GenericPidfContents> pidf(new GenericPidfContents);
    
-   pidf->setSimpleStatus(true, "online", Data::from(dua->getAor().uri()));
-   pidf->getTuples().front().id = dua->getProfile()->getDefaultFrom().uri().getAor();
-   pidf->getTuples().front().attributes["displayName"] = "displayName";
    pidf->setEntity(dua->getAor().uri());
+   if (online)
+   {
+      pidf->setSimplePresenceTupleNode(dua->getProfile()->getDefaultFrom().uri().getAor() /* Use AOR as id */, true, Data::Empty, "online", Data::from(dua->getAor().uri()), Data(1.0));
+   }
+   else
+   {
+      pidf->setSimplePresenceTupleNode(dua->getProfile()->getDefaultFrom().uri().getAor() /* Use AOR as id */, false, Data::Empty, "offline", Data::from(dua->getAor().uri()), Data(1.0));
+   }
 
    return pidf;
 }
@@ -428,7 +433,7 @@ DumFixture::createUserAgentForFailoverTest(const Data& user, const Data& hostDom
    aor.user() = user;
    aor.host() = hostDomain;
 
-   resip::SharedPtr<MasterProfile> prof = DumUserAgent::makeProfile(aor, user);
+   auto prof = DumUserAgent::makeProfile(aor, user);
    DumUserAgent* agent  = new DumUserAgent(prof);
    agent->init();
 
