@@ -361,6 +361,10 @@ DnsStub::createOverlay(const unsigned char* abuf,
    }
    free(name);
    aptr += len;
+   if (aptr + RRFIXEDSZ > abuf + alen)
+   {
+      throw DnsStubException("Failed overlay creation", __FILE__, __LINE__);
+   }
    int type = DNS_RR_TYPE(aptr);
    int dlen = DNS_RR_LEN(aptr);
    if (!supportedType(type))

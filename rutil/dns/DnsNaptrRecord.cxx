@@ -106,12 +106,20 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
    free(name);
    mTTL = overlay.ttl();
 
+   // order and preference, followed by the flags length
+   if (overlay.dataLength() < 5)
+   {
+      throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
+   }
+
    mOrder = DNS__16BIT(overlay.data());
    mPreference = DNS__16BIT(overlay.data() + 2);
    const unsigned char* pPos = overlay.data() + 4;
    len = *pPos;
 
-   if (pPos + len + 1 > overlay.data() + overlay.dataLength())
+   // flags, service and regexp are each followed by at least one more byte:
+   // the next length, or the replacement
+   if (pPos + len + 1 >= overlay.data() + overlay.dataLength())
    {
       throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
    }
@@ -120,7 +128,7 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
    pPos += len + 1;
    len = *pPos;
 
-   if (pPos + len + 1 > overlay.data() + overlay.dataLength())
+   if (pPos + len + 1 >= overlay.data() + overlay.dataLength())
    {
       throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
    }
@@ -128,7 +136,7 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
    pPos += len + 1;
    len = *pPos;
 
-   if (pPos + len + 1 > overlay.data() + overlay.dataLength())
+   if (pPos + len + 1 >= overlay.data() + overlay.dataLength())
    {
       throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
    }
@@ -145,6 +153,12 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
       }
       mReplacement = name;
       free(name);
+
+      // ares_expand_name stops at the end of the message, not the record
+      if (pPos + len > overlay.data() + overlay.dataLength())
+      {
+         throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
+      }
    }
 }
 

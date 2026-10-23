@@ -37,6 +37,10 @@ DnsAAAARecord::DnsAAAARecord(const RROverlay& overlay)
    mName = name;
    free(name);
    mTTL = overlay.ttl();
+   if (overlay.dataLength() != (int)sizeof(in6_addr))
+   {
+      throw AaaaException("Failed parse of AAAA record", __FILE__, __LINE__);
+   }
    memcpy(&mAddr, overlay.data(), sizeof(in6_addr));
 #else
    resip_assert(0);

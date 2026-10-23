@@ -35,6 +35,12 @@ DnsSrvRecord::DnsSrvRecord(const RROverlay& overlay)
    free(name);
    mTTL = overlay.ttl();
 
+   // priority, weight and port, followed by at least one byte of target
+   if (overlay.dataLength() < 7)
+   {
+      throw SrvException("Failed parse of SRV record", __FILE__, __LINE__);
+   }
+
    mPriority = DNS__16BIT(overlay.data());
    mWeight = DNS__16BIT(overlay.data() + 2);
    mPort = DNS__16BIT(overlay.data() + 4);
@@ -45,6 +51,12 @@ DnsSrvRecord::DnsSrvRecord(const RROverlay& overlay)
    }
    mTarget = name;
    free(name);
+
+   // ares_expand_name stops at the end of the message, not the record
+   if (6 + len > overlay.dataLength())
+   {
+      throw SrvException("Failed parse of SRV record", __FILE__, __LINE__);
+   }
 }
 
 bool DnsSrvRecord::isSameValue(const Data& value) const

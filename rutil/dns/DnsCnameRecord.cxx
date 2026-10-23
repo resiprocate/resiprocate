@@ -43,6 +43,12 @@ DnsCnameRecord::DnsCnameRecord(const RROverlay& overlay)
    
    mCname = name;
    free(name);
+
+   // ares_expand_name stops at the end of the message, not the record
+   if (len > overlay.dataLength())
+   {
+      throw CnameException("Failed parse of CNAME record", __FILE__, __LINE__);
+   }
 }
 
 bool DnsCnameRecord::isSameValue(const Data& value) const
