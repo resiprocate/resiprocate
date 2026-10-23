@@ -1,5 +1,7 @@
 #include "resip/stack/GenericPidfContents.hxx"
+#include "resip/stack/HeaderFieldValue.hxx"
 #include <iostream>
+#include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/HashMap.hxx"
 #include "TestSupport.hxx"
@@ -143,6 +145,42 @@ main(int argc, char** argv)
        {
           cerr << e << endl;
           assert(false);
+       }
+   }
+
+   {
+       // Namespaces and attributes encode back out in document order
+       Data txt(
+           "<?xml version='1.0' encoding='UTF-8'?>" CRLF
+           "<presence xmlns='urn:ietf:params:xml:ns:pidf'" CRLF
+           "          xmlns:zz='urn:example:zz'" CRLF
+           "          xmlns:dm='urn:ietf:params:xml:ns:pidf:data-model'" CRLF
+           "          xmlns:aa='urn:example:aa'" CRLF
+           "        entity='sip:5000@example.com'>" CRLF
+           "  <tuple id='t1' zeta='1' alpha='2' mid='3'>" CRLF
+           "    <status><basic>open</basic></status>" CRLF
+           "  </tuple>" CRLF
+           "</presence>" CRLF
+           );
+       HeaderFieldValue hfv(txt.data(), txt.size());
+       GenericPidfContents parsed(hfv, GenericPidfContents::getStaticType());
+       parsed.checkParsed();
+       GenericPidfContents pidf(parsed);  // copies go through merge
+       for (int i = 0; i < 2; ++i)
+       {
+          const GenericPidfContents& p = i == 0 ? parsed : pidf;
+          Data encoded;
+          {
+             DataStream ds(encoded);
+             p.encodeParsed(ds);
+          }
+          size_t pidfNs = encoded.find("xmlns=\"urn:ietf:params:xml:ns:pidf\"");
+          size_t zz = encoded.find("xmlns:zz=");
+          size_t dm = encoded.find("xmlns:dm=");
+          size_t aa = encoded.find("xmlns:aa=");
+          assert(pidfNs != Data::npos && zz != Data::npos && dm != Data::npos && aa != Data::npos);
+          assert(pidfNs < zz && zz < dm && dm < aa);
+          assert(encoded.find("<tuple id=\"t1\" zeta=\"1\" alpha=\"2\" mid=\"3\">") != Data::npos);
        }
    }
 
@@ -861,7 +899,7 @@ main(int argc, char** argv)
 
 /* ====================================================================
 *
-* Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
+* Copyright (c) 2015-2026 SIP Spectrum, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions

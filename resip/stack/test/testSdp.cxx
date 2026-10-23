@@ -799,12 +799,51 @@ main(int argc, char* argv[])
       assert(frag.media().size() == 2);
    }
 
+   {
+      // Distinct attribute names per section are limited; repeated names are not
+      const size_t limit = AttributeHelper::MaxParsedAttributeNames;
+      for (size_t names = limit; names <= limit + 1; ++names)
+      {
+         Data txt("v=0\r\n"
+                  "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
+                  "s=-\r\n"
+                  "c=IN IP4 pc33.atlanta.com\r\n"
+                  "t=0 0\r\n");
+         for (size_t i = 0; i < names; ++i)
+         {
+            txt += "a=x-attr" + Data((uint64_t)i) + ":v\r\n";
+         }
+         txt += "m=audio 3456 RTP/AVP 0\r\n";
+         for (int i = 0; i < 2000; ++i)
+         {
+            txt += "a=candidate:" + Data(i) + " 1 UDP 2130706431 192.0.2.1 9998 typ host\r\n";
+         }
+         txt += "a=rtpmap:0 PCMU/8000\r\n";
+
+         HeaderFieldValue hfv(txt.data(), txt.size());
+         Mime type("application", "sdp");
+         SdpContents sdp(hfv, type);
+         if (names <= limit)
+         {
+            assert(sdp.isWellFormed());
+            assert(sdp.session().exists("x-attr0"));
+            assert(sdp.session().getValues("x-attr" + Data((uint64_t)(names - 1))).front() == "v");
+            assert(sdp.session().media().front().getValues("candidate").size() == 2000);
+         }
+         else
+         {
+            assert(!sdp.isWellFormed());
+         }
+      }
+   }
+
    return 0;   
 }
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

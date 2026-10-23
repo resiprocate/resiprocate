@@ -176,6 +176,49 @@ main()
    }
 
    {
+      cerr << "test attributes keep document order" << endl;
+      Data contents("<?xml version=\"1.0\"?><root><foo zeta=\"1\" alpha='2' mid=\"3\" beta=\"4\"/></root>");
+      XMLCursor xmlc(ParseBuffer(contents.data(), contents.size()));
+      assert(xmlc.firstChild());
+      const XMLCursor::AttributeMap& attrs = xmlc.getAttributes();
+      assert(attrs.size() == 4);
+      assert(attrs.find("alpha")->second == "2");
+      Data encoded;
+      {
+         DataStream ds(encoded);
+         XMLCursor::encode(ds, attrs);
+      }
+      assert(encoded == "zeta=\"1\" alpha=\"2\" mid=\"3\" beta=\"4\"");
+   }
+
+   {
+      cerr << "test attribute limit" << endl;
+      for (size_t count = XMLCursor::MaxAttributes; count <= XMLCursor::MaxAttributes + 1; ++count)
+      {
+         Data contents("<?xml version=\"1.0\"?><root><foo");
+         for (size_t i = 0; i < count; ++i)
+         {
+            contents += " a" + Data((uint64_t)i) + "=\"v\"";
+         }
+         contents += "/></root>";
+         XMLCursor xmlc(ParseBuffer(contents.data(), contents.size()));
+         assert(xmlc.firstChild());
+         for (int attempt = 0; attempt < 2; ++attempt)  // a failure must not leave a partial map behind
+         {
+            try
+            {
+               assert(xmlc.getAttributes().size() == count);
+               assert(count == XMLCursor::MaxAttributes);
+            }
+            catch (ParseException&)
+            {
+               assert(count > XMLCursor::MaxAttributes);
+            }
+         }
+      }
+   }
+
+   {
       cerr << "test empty root" << endl;
       Data contents("<?xml version=\"1.0\"?><foo/>");
       try
@@ -391,6 +434,7 @@ main()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

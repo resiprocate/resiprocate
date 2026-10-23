@@ -25,6 +25,9 @@ class AttributeHelper
 {
    public:
       RESIP_HeapCount(AttributeHelper);
+      /// parse() fails a section with more distinct attribute names than this
+      static constexpr size_t MaxParsedAttributeNames = 256;
+
       AttributeHelper();
       AttributeHelper(const AttributeHelper& rhs);
       AttributeHelper& operator=(const AttributeHelper& rhs);
@@ -37,7 +40,10 @@ class AttributeHelper
       void clearAttribute(const Data& key);
    private:
       std::list<std::pair<Data, Data> > mAttributeList;  // used to ensure attribute ordering on encode
-      HashMap< Data, std::list<Data> > mAttributes;
+      // Attribute names come from the remote party's SDP.  With a plain HashMap a sender
+      // could pick names that all hash alike, so that parsing one large body takes
+      // quadratic time; the keyed hash prevents that (see KeyedDataHash).
+      HashMap< Data, std::list<Data>, KeyedDataHash > mAttributes;
 };
 
 /**

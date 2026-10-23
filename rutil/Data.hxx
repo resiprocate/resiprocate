@@ -917,7 +917,11 @@ class Data
       static size_t rawHash(const unsigned char* c, size_t size);
 
       /**
-        Creates a 32-bit hash based on the contents of this Data.
+        Creates a 32-bit hash based on the contents of this Data.  This is
+        the default std::hash<Data> used by HashMap<Data, ...>.
+        @note Fixed and predictable: don't use it for containers keyed by data
+            a remote party chooses, as they can make all keys collide.  See
+            KeyedDataHash.
       */
       size_t hash() const;
 
@@ -954,6 +958,41 @@ class Data
             rawCaseInsensitiveHash.
       */
       size_t caseInsensitiveTokenHash() const;
+
+      /**
+        Creates a hash based on the contents of the indicated buffer, using
+        SipHash-1-3 with a key chosen randomly once per process.  Unlike
+        rawHash, colliding inputs cannot be precomputed, so use this for hash
+        containers keyed by data received from the network (see
+        KeyedDataHash).  Values differ from one process run to the next, so
+        never store them or send them to another process.
+
+        @param c Pointer to the buffer to hash
+        @param size Number of bytes to be hashed
+      */
+      static size_t rawKeyedHash(const unsigned char* c, size_t size);
+
+      /**
+        As rawKeyedHash, after normalizing ASCII alphabetic characters to
+        lowercase; consistent with isEqualNoCase.
+
+        @param c Pointer to the buffer to hash
+        @param size Number of bytes to be hashed
+      */
+      static size_t rawKeyedCaseInsensitiveHash(const unsigned char* c, size_t size);
+
+      /**
+        Creates a keyed hash based on the contents of this Data.
+        @see rawKeyedHash
+      */
+      size_t keyedHash() const;
+
+      /**
+        Creates a keyed hash based on the contents of this Data, after
+        normalizing ASCII alphabetic characters to lowercase.
+        @see rawKeyedCaseInsensitiveHash
+      */
+      size_t keyedCaseInsensitiveHash() const;
 
       inline bool caseInsensitiveTokenCompare(const Data& rhs) const
       {
@@ -1216,6 +1255,48 @@ bool operator<(const std::string& lhs, const Data& rhs) noexcept;
 bool operator<(const Data& lhs, const std::string_view rhs) noexcept;
 bool operator<(const std::string_view lhs, const Data& rhs) noexcept;
 #endif
+
+/**
+   Hasher for hash containers keyed by data received from the network, e.g.
+   HashMap<Data, Data, KeyedDataHash>.
+
+   Why not a plain HashMap<Data, ...>: the default std::hash<Data> is
+   Data::hash(), a fixed Pearson hash with no secret.  Anyone can compute it
+   offline and generate as many distinct keys with the same hash as they like
+   (a few seconds of work gives thousands).  All such keys land in one bucket,
+   so each insert compares against every key already there and filling the map
+   becomes quadratic.  This is hash flooding: in testing, 65536 colliding SDP
+   attribute names - about 8 MB, one SIP message over TCP - took 30 s of CPU
+   to insert, against 0.06 s for random names.  Whichever thread does the
+   parsing (the stack or DUM thread) stalls for that long.
+
+   KeyedDataHash uses Data::keyedHash(), which mixes in a random key chosen
+   once per process.  Without the key nobody can predict which inputs collide,
+   so insertion stays linear whatever the input.
+
+   Use it (or Data::keyedCaseInsensitiveHash() / hashCombine() for
+   case-insensitive or composite keys) whenever a remote party chooses the
+   keys: header and parameter values, tags, Call-IDs, branches, body contents.
+   The fixed hash is fine for keys the application chooses itself.
+   @see Data::keyedHash
+*/
+struct KeyedDataHash
+{
+   size_t operator()(const Data& data) const { return data.keyedHash(); }
+};
+
+/**
+   Combines the hashes of the parts of a composite key, eg.
+   hashCombine(callId.keyedHash(), tag.keyedHash()).  Don't combine with XOR:
+   H(x) ^ H(x) is 0 and H(x) ^ H(y) equals H(y) ^ H(x), so a remote peer
+   could make every key collide (eg. by sending Call-ID == tag) even though
+   each part's hash is keyed.  This mix keeps equal and swapped parts apart.
+   @see KeyedDataHash
+*/
+inline size_t hashCombine(size_t seed, size_t hash)
+{
+   return seed ^ (hash + (size_t)0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
+}
 }
 
 HashValue(resip::Data);

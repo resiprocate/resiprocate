@@ -148,6 +148,12 @@ AttributeHelper::parse(ParseBuffer& pb)
 
       if(!pb.eof()) skipEol(pb);
 
+      // Repeated names (eg. candidate) share one entry, so this only limits junk
+      if (mAttributes.size() >= MaxParsedAttributeNames && !exists(key))
+      {
+         pb.fail(__FILE__, __LINE__, "Too many distinct SDP attribute names");
+      }
+
       mAttributeList.push_back(std::make_pair(key, value));
       mAttributes[key].push_back(value);
    }

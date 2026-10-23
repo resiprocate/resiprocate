@@ -6,6 +6,7 @@
 #include "resip/stack/Contents.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/HashMap.hxx"
+#include "rutil/LinkedHashMap.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/QValue.hxx"
@@ -66,7 +67,8 @@ class Pidf : public Contents
             QValue contactPriority;
             Data note;
             Data timeStamp;
-            HashMap<Data, Data> attributes;
+            // Same type as XMLCursor::AttributeMap, which explains the keyed hash
+            LinkedHashMap<Data, Data, KeyedDataHash> attributes;
       };
 
       std::vector<Tuple>& getTuples();

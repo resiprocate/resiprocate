@@ -7,6 +7,7 @@
 #include "resip/stack/Contents.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/HashMap.hxx"
+#include "rutil/LinkedHashMap.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/QValue.hxx"
@@ -47,7 +48,10 @@ public:
    const Uri& getEntity() const;
 
    void addNamespace(const Data& uri, const Data& prefix);
-   typedef HashMap<Data, Data> NamespaceMap;  // first is Uri, second is prefix (which includes a trailing ":")
+   // first is Uri, second is prefix (which includes a trailing ":").  In document
+   // order; keyed hash as the Uris come from the network (see XMLCursor::AttributeMap
+   // and KeyedDataHash).
+   typedef LinkedHashMap<Data, Data, KeyedDataHash> NamespaceMap;
    const NamespaceMap& getNamespaces() const { checkParsed(); return mNamespaces; }
    // Note:  you set the RootPidfNamesapces prefix by adding the generic Pidf 
    //        namespace urn:ietf:params:xml:ns:pidf via addNamespace
@@ -60,12 +64,13 @@ public:
    public:
       Data mNamespacePrefix;
       Data mTag;
-      typedef HashMap<Data, Data> AttributeMap;
+      // Same type as XMLCursor::AttributeMap, which explains the keyed hash
+      typedef LinkedHashMap<Data, Data, KeyedDataHash> AttributeMap;
       AttributeMap mAttributes;
       Data mValue;
       NodeList mChildren;
 
-      void copy(const Node& rhs, HashMap<Data, Data>* namespacePrefixCorrections);
+      void copy(const Node& rhs, HashMap<Data, Data, KeyedDataHash>* namespacePrefixCorrections);
 
       EncodeStream& encodeAttributes(EncodeStream& str) const;
       EncodeStream& encode(EncodeStream& str, Data indent) const;
@@ -145,7 +150,7 @@ static bool invokeGenericPidfContentsInit = GenericPidfContents::init();
 
 /* ====================================================================
 *
-* Copyright (c) 2015-2025 SIP Spectrum, Inc.  All rights reserved.
+* Copyright (c) 2015-2026 SIP Spectrum, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions

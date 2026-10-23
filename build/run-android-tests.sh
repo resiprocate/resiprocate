@@ -29,6 +29,7 @@ RUTIL_TEST="testCoders \
         testFileSystem \
         testInserter \
         testIntrusiveList \
+        testLinkedHashMap \
         testLogger \
         testMD5Stream \
         testParseBuffer \

@@ -21,6 +21,7 @@
 /testFileSystem
 /testInserter
 /testIntrusiveList
+/testLinkedHashMap
 /testLogger
 /testMD5Stream
 /testNetNs

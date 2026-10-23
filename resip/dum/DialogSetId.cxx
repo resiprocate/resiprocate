@@ -105,7 +105,12 @@ DialogSetId::operator>(const DialogSetId& rhs) const
 
 size_t DialogSetId::hash() const
 {
-    return mCallId.hash() ^ mTag.hash();
+    // Call-IDs and tags are chosen by remote peers.  With fixed hashes a sender
+    // could make every dialog set collide in DUM's DialogSetMap, so that each
+    // new request scans all of them; keyed hashes prevent that (see
+    // KeyedDataHash).  hashCombine rather than XOR, which would cancel out
+    // when Call-ID == tag.
+    return hashCombine(mCallId.keyedHash(), mTag.keyedHash());
 }
 
 
@@ -120,6 +125,7 @@ HashValueImp(resip::DialogSetId, data.hash());
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

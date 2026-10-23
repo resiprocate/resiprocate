@@ -316,12 +316,12 @@ GenericPidfContents::Node::encode(EncodeStream& str, Data indent) const
 }
 
 void 
-GenericPidfContents::Node::copy(const Node& rhs, HashMap<Data, Data>* namespacePrefixCorrections)
+GenericPidfContents::Node::copy(const Node& rhs, HashMap<Data, Data, KeyedDataHash>* namespacePrefixCorrections)
 {
    if (namespacePrefixCorrections)
    {
       // Check if namespace should be corrected
-      HashMap<Data, Data>::iterator itNsCorr = namespacePrefixCorrections->find(rhs.mNamespacePrefix);
+      HashMap<Data, Data, KeyedDataHash>::iterator itNsCorr = namespacePrefixCorrections->find(rhs.mNamespacePrefix);
       if (itNsCorr != namespacePrefixCorrections->end())
       {
          mNamespacePrefix = itNsCorr->second;
@@ -394,7 +394,7 @@ GenericPidfContents::mergeNoCheckParse(const GenericPidfContents& other)
       return false;
    }
 
-   HashMap<Data, Data> namespacePrefixCorrections;  // other/old prefix name, new/dest prefix name
+   HashMap<Data, Data, KeyedDataHash> namespacePrefixCorrections;  // other/old prefix name, new/dest prefix name
 
    // Copy over namespaces - looking for mismatched prefixes
    bool checkNamespaceMismatches = mNamespaces.size() > 0;
@@ -863,7 +863,7 @@ resip::operator<<(EncodeStream& strm, const GenericPidfContents::SimplePresenceI
 
 /* ====================================================================
 *
-* Copyright (c) 2015-2025 SIP Spectrum, Inc.  All rights reserved.
+* Copyright (c) 2015-2026 SIP Spectrum, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions

@@ -13,6 +13,7 @@
 #include "rutil/ResipAssert.h"
 
 #include "rutil/compat.hxx"
+#include "rutil/LinkedHashMap.hxx"
 #include "rutil/resipfaststreams.hxx"
 
 /* 
@@ -198,6 +199,25 @@ insert(EncodeStream& s, const std::unordered_set<V,H>& c)
          s << commaspace;
       }
       insert(s, *i);
+   }
+   s << rightsqbracket;
+   return s;
+}
+
+template <class K, class V, class H, class P>
+EncodeStream&
+insert(EncodeStream& s, const LinkedHashMap<K,V,H,P>& c)
+{
+   s << leftsqbracket;
+   for (auto i = c.begin(); i != c.end(); i++)
+   {
+      if (i != c.begin())
+      {
+         s << commaspace;
+      }
+      insert(s, i->first);
+      s << sparrowsp;
+      insert(s, i->second);
    }
    s << rightsqbracket;
    return s;
@@ -547,6 +567,7 @@ InserterP(const T& t)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -67,6 +67,7 @@ set(INCLUDES
    NetNs.hxx
    GenericTimerQueue.hxx
    IntrusiveListElement.hxx
+   LinkedHashMap.hxx
    ssl/SHA1Stream.hxx
    ssl/OpenSSLDeleter.hxx
    ssl/OpenSSLInit.hxx

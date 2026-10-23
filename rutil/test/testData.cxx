@@ -1407,6 +1407,77 @@ class TestData
             }
          }
 
+         {
+            // These collide under the fixed (unkeyed) hash; the keyed hash
+            // must still tell them apart.
+            Data a("-pWyvp9g");
+            Data b("onkPTbDx");
+            assert(a.hash() == b.hash());
+            assert(a.keyedHash() != b.keyedHash());
+
+            // Stable within the process, and consistent with isEqualNoCase
+            assert(a.keyedHash() == Data("-pWyvp9g").keyedHash());
+            assert(Data::rawKeyedHash((const unsigned char*)a.data(), a.size()) == a.keyedHash());
+            assert(Data("z9g4hK2-Branch.X").keyedCaseInsensitiveHash() == Data("Z9G4HK2-bRANCH.x").keyedCaseInsensitiveHash());
+            assert(Data("z9g4hK2-Branch.X").keyedHash() != Data("Z9G4HK2-bRANCH.x").keyedHash());
+            // only ASCII letters are folded: '@' and '`' differ by the case bit but are not letters
+            assert(Data("a@").keyedCaseInsensitiveHash() != Data("a`").keyedCaseInsensitiveHash());
+
+            // Lengths 0..17 cover every tail size of the 8-byte blocks
+            const char* text = "abcdefghijklmnopq";
+            for (size_t len = 0; len <= 17; ++len)
+            {
+               Data d(text, len);
+               assert(d.keyedHash() == Data(text, len).keyedHash());
+               if (len > 0)
+               {
+                  assert(d.keyedHash() != Data(text, len - 1).keyedHash());
+               }
+            }
+
+            HashMap<Data, int, KeyedDataHash> map;
+            map[a] = 1;
+            map[b] = 2;
+            assert(map.size() == 2 && map[a] == 1 && map[b] == 2);
+         }
+
+         {
+            // Hash flooding: each pair collides from the hash state the pairs
+            // before it leave, so any choice of one block from each pair gives
+            // the same hash().  Here that is 4096 keys sharing one bucket in a
+            // HashMap<Data, ...> - quadratic insertion.  The keyed hash spreads them.
+            static const char* const blocks[][2] = {
+               { "f6aw3fs", "f93onta" }, { "1w7m2tc", "3vd8lmn" }, { "nftuhdl", "8uzwq-f" },
+               { "8xzz6oq", "t978ndy" }, { "kjrw56n", "maqv8-t" }, { "ud0x07z", "j7x6n99" },
+               { "k4to6wl", "uburvew" }, { "npq8lut", "39t-oef" }, { "7wz8yn0", "uoz43hq" },
+               { "rhx0sor", "ve7zbme" }, { "9h4-h7i", "ish3elg" }, { "3zqz6-b", "tey2hxt" },
+            };
+            const unsigned numBlocks = sizeof(blocks) / sizeof(blocks[0]);
+            HashMap<Data, int, KeyedDataHash> map;
+            size_t floodHash = 0;
+            for (unsigned choice = 0; choice < (1u << numBlocks); ++choice)
+            {
+               Data key;
+               for (unsigned i = 0; i < numBlocks; ++i)
+               {
+                  key += blocks[i][(choice >> i) & 1];
+               }
+               if (choice == 0)
+               {
+                  floodHash = key.hash();
+               }
+               assert(key.hash() == floodHash);
+               map[key] = (int)choice;
+            }
+            assert(map.size() == (1u << numBlocks));
+            size_t largestBucket = 0;
+            for (size_t i = 0; i < map.bucket_count(); ++i)
+            {
+               largestBucket = resipMax(largestBucket, map.bucket_size(i));
+            }
+            assert(largestBucket < 16);
+         }
+
          for(int i=0; i<4; ++i)
          {
             const char* buf1="5d7a9b7c02034b5b";
@@ -1455,6 +1526,24 @@ class TestData
             assert(d1.caseInsensitiveTokenHash() == u2.caseInsensitiveTokenHash());
             assert(d1.caseInsensitiveTokenHash() == u3.caseInsensitiveTokenHash());
             assert(d1.caseInsensitiveTokenHash() == u4.caseInsensitiveTokenHash());
+
+            assert(d1.keyedHash() == d2.keyedHash());
+            assert(d1.keyedHash() == d3.keyedHash());
+            assert(d1.keyedHash() == d4.keyedHash());
+
+            assert(d1.keyedHash() != u1.keyedHash());
+            assert(d1.keyedHash() != u2.keyedHash());
+            assert(d1.keyedHash() != u3.keyedHash());
+            assert(d1.keyedHash() != u4.keyedHash());
+
+            assert(d1.keyedCaseInsensitiveHash() == d2.keyedCaseInsensitiveHash());
+            assert(d1.keyedCaseInsensitiveHash() == d3.keyedCaseInsensitiveHash());
+            assert(d1.keyedCaseInsensitiveHash() == d4.keyedCaseInsensitiveHash());
+
+            assert(d1.keyedCaseInsensitiveHash() == u1.keyedCaseInsensitiveHash());
+            assert(d1.keyedCaseInsensitiveHash() == u2.keyedCaseInsensitiveHash());
+            assert(d1.keyedCaseInsensitiveHash() == u3.keyedCaseInsensitiveHash());
+            assert(d1.keyedCaseInsensitiveHash() == u4.keyedCaseInsensitiveHash());
 
             assert(d1.caseInsensitiveTokenCompare(d1));
             assert(d1.caseInsensitiveTokenCompare(d2));

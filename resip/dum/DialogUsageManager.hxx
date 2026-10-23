@@ -498,7 +498,10 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
             
-      typedef std::unordered_map<Data, DialogSet*> CancelMap;
+      // Keyed by transaction id, which remote peers choose.  With the default hash a
+      // sender could make every entry collide, so each lookup scans them all; the
+      // keyed hash prevents that (see KeyedDataHash).
+      typedef std::unordered_map<Data, DialogSet*, KeyedDataHash> CancelMap;
       CancelMap mCancelMap;
       
       typedef HashMap<DialogSetId, DialogSet*> DialogSetMap;

@@ -1,4 +1,6 @@
 #include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/DialogId.hxx"
+#include "resip/dum/DialogSetId.hxx"
 
 #include "resip/dum/Profile.hxx"
 #include "rutil/Log.hxx"
@@ -38,6 +40,48 @@ main (int argc, char** argv)
     assert( a.hash() == a.hash() );
     assert( a.hash() == e.hash() );
 
+    // Swapped or equal parts must not cancel out (they did with XOR)
+    assert( b.hash() != c.hash() );
+    assert( a.hash() != d.hash() );
+    assert( DialogSetId("x", "x").hash() != DialogSetId("y", "y").hash() );
+    assert( DialogId(b, "c").hash() != DialogId(c, "b").hash() );
+    assert( DialogId(b, "c").hash() == DialogId(DialogSetId("a", "b"), "c").hash() );
+
+    {
+       // Hash flooding: each pair collides under Data::hash() from the state
+       // the pairs before it leave, so these 4096 Call-IDs share one hash()
+       // value.  With Call-ID == tag the old XOR hash was 0 for any id.  The
+       // keyed hash must spread both kinds of id out.
+       static const char* const blocks[][2] = {
+          { "f6aw3fs", "f93onta" }, { "1w7m2tc", "3vd8lmn" }, { "nftuhdl", "8uzwq-f" },
+          { "8xzz6oq", "t978ndy" }, { "kjrw56n", "maqv8-t" }, { "ud0x07z", "j7x6n99" },
+          { "k4to6wl", "uburvew" }, { "npq8lut", "39t-oef" }, { "7wz8yn0", "uoz43hq" },
+          { "rhx0sor", "ve7zbme" }, { "9h4-h7i", "ish3elg" }, { "3zqz6-b", "tey2hxt" },
+       };
+       const unsigned numBlocks = sizeof(blocks) / sizeof(blocks[0]);
+       for (int sameTag = 0; sameTag < 2; ++sameTag)
+       {
+          HashMap<DialogSetId, int> dialogSets;
+          for (unsigned choice = 0; choice < (1u << numBlocks); ++choice)
+          {
+             Data callId;
+             for (unsigned i = 0; i < numBlocks; ++i)
+             {
+                callId += blocks[i][(choice >> i) & 1];
+             }
+             dialogSets[DialogSetId(callId, sameTag ? callId : Data("tag"))] = (int)choice;
+          }
+          assert( dialogSets.size() == (1u << numBlocks) );
+          size_t largestBucket = 0;
+          for (size_t i = 0; i < dialogSets.bucket_count(); ++i)
+          {
+             largestBucket = resipMax(largestBucket, dialogSets.bucket_size(i));
+          }
+          cout << "largest bucket (same tag " << sameTag << ")= " << largestBucket << endl;
+          assert( largestBucket < 16 );
+       }
+    }
+
     cout << "test passed." << endl;
 
 }
@@ -45,6 +89,7 @@ main (int argc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -136,8 +136,12 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
           transaction and client transactions in this map. The
           TransactionTerminated events from the stack will be passed to the
           RequestContext
+
+          Transaction ids come from the wire (the Via branch), so the map uses a
+          keyed hash: with the default hash a sender could make every entry
+          collide, so each lookup scans them all (see resip::KeyedDataHash).
       */
-      typedef HashMap<resip::Data, RequestContext*> RequestContextMap;
+      typedef HashMap<resip::Data, RequestContext*, resip::KeyedDataHash> RequestContextMap;
       RequestContextMap mClientRequestContexts;
       RequestContextMap mServerRequestContexts;
       
@@ -159,6 +163,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

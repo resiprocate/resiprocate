@@ -1,10 +1,12 @@
 #include <algorithm>
 #include "rutil/ResipAssert.h"
+#include <chrono>
 #include <ctype.h>
 #include <fstream>
 #include <math.h>
 #include <limits>
 #include <limits.h>
+#include <random>
 #include <stdexcept>
 
 #if defined(HAVE_CONFIG_H)
@@ -2081,6 +2083,127 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
    return ntohl((u_long)st);
 }
 
+// SipHash-1-3 (Aumasson and Bernstein), the keyed hash Python and Rust use for
+// their hash tables.  The key is chosen randomly once per process, so remote
+// peers cannot precompute keys that collide (hash flooding).  See KeyedDataHash
+// in Data.hxx for why containers keyed by network data need this.
+namespace
+{
+
+struct SipHashKey
+{
+   uint64_t k0;
+   uint64_t k1;
+};
+
+const SipHashKey&
+sipHashKey()
+{
+   static const SipHashKey key = []()
+   {
+      // Mix in the clock and an address as well, in case random_device is weak
+      // or unavailable on this platform.
+      uint64_t seed[4] = { (uint64_t)std::chrono::high_resolution_clock::now().time_since_epoch().count(),
+                           (uint64_t)(uintptr_t)&seed,
+                           0, 0 };
+      try
+      {
+         std::random_device rd;
+         for (uint64_t& s : seed)
+         {
+            s ^= ((uint64_t)rd() << 32) ^ rd();
+         }
+      }
+      catch (const std::exception&)
+      {
+      }
+      SipHashKey k = { seed[0] ^ seed[2], seed[1] ^ seed[3] };
+      return k;
+   }();
+   return key;
+}
+
+inline uint64_t
+rotl64(uint64_t x, int b)
+{
+   return (x << b) | (x >> (64 - b));
+}
+
+inline void
+sipRound(uint64_t& v0, uint64_t& v1, uint64_t& v2, uint64_t& v3)
+{
+   v0 += v1; v1 = rotl64(v1, 13); v1 ^= v0; v0 = rotl64(v0, 32);
+   v2 += v3; v3 = rotl64(v3, 16); v3 ^= v2;
+   v0 += v3; v3 = rotl64(v3, 21); v3 ^= v0;
+   v2 += v1; v1 = rotl64(v1, 17); v1 ^= v2; v2 = rotl64(v2, 32);
+}
+
+template <bool NoCase>
+inline uint64_t
+sipByte(unsigned char c)
+{
+   // ASCII-only folding, to agree with strncasecmp in the C locale
+   if (NoCase && (unsigned char)(c - 'A') < 26)
+   {
+      c |= 0x20;
+   }
+   return c;
+}
+
+template <bool NoCase>
+size_t
+sipHash13(const unsigned char* c, size_t size)
+{
+   const SipHashKey& key = sipHashKey();
+   uint64_t v0 = 0x736f6d6570736575ULL ^ key.k0;
+   uint64_t v1 = 0x646f72616e646f6dULL ^ key.k1;
+   uint64_t v2 = 0x6c7967656e657261ULL ^ key.k0;
+   uint64_t v3 = 0x7465646279746573ULL ^ key.k1;
+
+   const unsigned char* end = c + (size & ~(size_t)7);
+   for ( ; c != end; c += 8)
+   {
+      uint64_t m = 0;
+      for (int i = 7; i >= 0; --i)
+      {
+         m = (m << 8) | sipByte<NoCase>(c[i]);  // little-endian load
+      }
+      v3 ^= m;
+      sipRound(v0, v1, v2, v3);
+      v0 ^= m;
+   }
+
+   uint64_t b = (uint64_t)size << 56;
+   for (int i = (int)(size & 7) - 1; i >= 0; --i)
+   {
+      b |= sipByte<NoCase>(c[i]) << (8 * i);
+   }
+   v3 ^= b;
+   sipRound(v0, v1, v2, v3);
+   v0 ^= b;
+
+   v2 ^= 0xff;
+   sipRound(v0, v1, v2, v3);
+   sipRound(v0, v1, v2, v3);
+   sipRound(v0, v1, v2, v3);
+
+   return (size_t)(v0 ^ v1 ^ v2 ^ v3);
+}
+
+}
+
+size_t
+Data::rawKeyedHash(const unsigned char* c, size_t size)
+{
+   return sipHash13<false>(c, size);
+}
+
+size_t
+Data::rawKeyedCaseInsensitiveHash(const unsigned char* c, size_t size)
+{
+   return sipHash13<true>(c, size);
+}
+
 #if defined(RESIP_BIG_ENDIAN) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
 
 #if !defined (get16bits)
@@ -2244,6 +2367,18 @@ size_t
 Data::caseInsensitiveTokenHash() const
 {
    return rawCaseInsensitiveTokenHash((const unsigned char*)(this->data()), this->size());
+}
+
+size_t
+Data::keyedHash() const
+{
+   return rawKeyedHash((const unsigned char*)(this->data()), this->size());
+}
+
+size_t
+Data::keyedCaseInsensitiveHash() const
+{
+   return rawKeyedCaseInsensitiveHash((const unsigned char*)(this->data()), this->size());
 }
 
 #define compUnalignedRemainder(d1, d2, size) \

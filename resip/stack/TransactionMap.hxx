@@ -41,7 +41,11 @@ class TransactionMap
          public:
             inline size_t operator()(const Data& branch) const
             {
-               return branch.caseInsensitiveTokenHash();
+               // Branches are chosen by remote peers.  With a fixed hash a sender
+               // could pick branches that all collide, making every transaction
+               // lookup on the stack thread scan all of them; the keyed hash
+               // prevents that (see KeyedDataHash).
+               return branch.keyedCaseInsensitiveHash();
             }
       };
 
@@ -66,6 +70,7 @@ class TransactionMap
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

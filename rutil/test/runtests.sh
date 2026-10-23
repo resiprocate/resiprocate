@@ -19,6 +19,7 @@ for i in \
 	testFileSystem \
 	testInserter \
 	testIntrusiveList \
+	testLinkedHashMap \
 	testKeyValueStore \
 	testLogger \
 	testMD5Stream \

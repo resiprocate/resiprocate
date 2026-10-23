@@ -569,6 +569,7 @@
     <ClInclude Include="KeyValueStore.hxx" />
     <ClInclude Include="Inserter.hxx" />
     <ClInclude Include="IntrusiveListElement.hxx" />
+    <ClInclude Include="LinkedHashMap.hxx" />
     <ClInclude Include="dns\LocalDns.hxx" />
     <ClInclude Include="Lock.hxx" />
     <ClInclude Include="Log.hxx" />
