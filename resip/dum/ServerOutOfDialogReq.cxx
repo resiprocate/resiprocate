@@ -84,6 +84,7 @@ std::shared_ptr<SipMessage>
 ServerOutOfDialogReq::answerOptions()
 {
    mDum.makeResponse(*mResponse, mRequest, 200);
+   applyLocalContact(*mResponse, mRequest);
 
    // Add in Allow, Accept, Accept-Encoding, Accept-Language, and Supported Headers from Profile
    mResponse->header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
@@ -109,6 +110,7 @@ ServerOutOfDialogReq::accept(int statusCode)
 {   
    //!dcm! -- should any responses should include a contact?
    mDum.makeResponse(*mResponse, mRequest, statusCode);
+   applyLocalContact(*mResponse, mRequest);
    return mResponse;
 }
 
@@ -138,6 +140,7 @@ ServerOutOfDialogReq::dump(EncodeStream& strm) const
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. http://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -36,7 +36,13 @@ class NonDialogUsage : public BaseUsage
    protected:
       NonDialogUsage(DialogUsageManager& dum, DialogSet& dialogSet);
       virtual ~NonDialogUsage();
-      
+
+      // Fills in the empty Contact that Helper::makeResponse adds to 2xx
+      // responses, from this usage's UserProfile (GRUU or override host and
+      // port), the same way Dialog builds a UAS local Contact.  Leaves the
+      // response alone if it has no Contact, or one that already has a host.
+      void applyLocalContact(SipMessage& response, const SipMessage& request) const;
+
       DialogSet& mDialogSet;
 };
  
@@ -47,6 +53,7 @@ class NonDialogUsage : public BaseUsage
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. http://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

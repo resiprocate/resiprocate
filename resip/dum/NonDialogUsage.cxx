@@ -2,6 +2,7 @@
 #include "resip/dum/NonDialogUsage.hxx"
 #include "resip/dum/DialogSet.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 
@@ -43,6 +44,65 @@ std::shared_ptr<UserProfile>
 NonDialogUsage::getUserProfile() const noexcept
 {
    return mDialogSet.mUserProfile;
+}
+
+void
+NonDialogUsage::applyLocalContact(SipMessage& response, const SipMessage& request) const
+{
+   // Only touch the single empty Contact created by Helper::makeResponse -
+   // anything else was put there by the application.  An empty host is what
+   // the TransportSelector fills in with the address of the outgoing transport.
+   if (!response.exists(h_Contacts) ||
+       response.header(h_Contacts).size() != 1 ||
+       !response.header(h_Contacts).front().uri().host().empty())
+   {
+      return;
+   }
+
+   const std::shared_ptr<UserProfile> profile = getUserProfile();
+   NameAddr& contact = response.header(h_Contacts).front();
+   if (profile->hasUserAgentCapabilities())
+   {
+      contact = profile->getUserAgentCapabilities();
+   }
+   if (!profile->isAnonymous() && profile->hasPublicGruu())
+   {
+      contact.uri() = profile->getPublicGruu();
+   }
+   else if (profile->isAnonymous() && profile->hasTempGruu())
+   {
+      contact.uri() = profile->getTempGruu();
+   }
+   else
+   {
+      if (profile->hasOverrideHostAndPort())
+      {
+         contact.uri() = profile->getOverrideHostAndPort();
+      }
+      // See Dialog.cxx for why the user part is only copied from sip:, sips:
+      // and tel: URIs.
+      if (request.header(h_RequestLine).uri().user().empty())
+      {
+         if (request.header(h_To).uri().isUserRelevant())
+         {
+            contact.uri().user() = request.header(h_To).uri().user();
+         }
+      }
+      else if (request.header(h_RequestLine).uri().isUserRelevant())
+      {
+         contact.uri().user() = request.header(h_RequestLine).uri().user();
+      }
+      const Data& instanceId = profile->getInstanceId();
+      if (!contact.uri().exists(p_gr) && !instanceId.empty())
+      {
+         contact.param(p_Instance) = instanceId;
+      }
+   }
+   if (profile->clientOutboundEnabled())
+   {
+      // Add ;ob parm to non-register requests - RFC5626 pg17
+      contact.uri().param(p_ob);
+   }
 }
 
 void 
@@ -103,6 +163,7 @@ NonDialogUsage::sendCommand(std::shared_ptr<SipMessage> message)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. http://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

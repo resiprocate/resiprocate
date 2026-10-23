@@ -29,7 +29,7 @@ class ServerOutOfDialogReq : public NonDialogUsage
       void dispatch(const DumTimeout& timer) override;
 
 	  // Return Options response based on current MasterProfile settings - application may need to add SDP Contents before
-	  // sending
+	  // sending.  The Contact is built from this usage's UserProfile (GRUU or override host and port).
       virtual std::shared_ptr<SipMessage> answerOptions();
       void send(std::shared_ptr<SipMessage> msg) override;
 
