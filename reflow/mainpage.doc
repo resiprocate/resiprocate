@@ -1,0 +1,47 @@
+/**
+   @page reflow_main The Flow Manager library (reflow)
+
+   reflow sends and receives media for @ref recon_main "recon", and handles
+   the NAT traversal and media security for it. It is built on asio and the
+   @ref return_main "reTurn client library".
+
+   @section reflow_classes Main Classes
+      - flowmanager::FlowManager : Creates media streams, and owns the thread
+      that runs all of their asynchronous socket operations. For DTLS-SRTP,
+      initializeDtlsFactory() creates the client certificate that every
+      stream uses.
+      - flowmanager::MediaStream : One media stream, created with
+      flowmanager::FlowManager::createMediaStream(). An RTP stream has two
+      components, one for RTP and one for RTCP (unless RTCP is disabled), each
+      carried by its own flow. The application learns that the stream is
+      ready, or has failed, through flowmanager::MediaStreamHandler.
+      - flowmanager::Flow : One component of a media stream: a UDP, TCP or
+      TLS socket, possibly relayed through a TURN allocation. Its send() and
+      receive() functions send and wait for packets, and getLocalTuple(),
+      getReflexiveTuple() and getRelayTuple() give the addresses to put in
+      SDP.
+
+   @section reflow_nat NAT Traversal
+      Each media stream uses one of the flowmanager::MediaStream::NatTraversalMode
+      modes:
+      - NoNatTraversal : use the local address and port as they are;
+      - StunBindDiscovery : learn the public address and port with a STUN
+      binding request to the configured server;
+      - TurnAllocation : relay media through a TURN server, over the
+      transport of the stream's local binding (UDP, TCP or TLS).
+
+      reflow does not implement ICE.
+
+   @section reflow_security Media Security
+      - SRTP keyed through SDP (SDES) : the application gives each stream its
+      keys with flowmanager::MediaStream::createOutboundSRTPSession() and
+      flowmanager::MediaStream::createInboundSRTPSession().
+      - DTLS-SRTP : each flow runs a DTLS handshake on its media port (see
+      reflow/dtls_wrapper) and checks the peer's certificate against the
+      fingerprint from SDP, set with
+      flowmanager::Flow::setRemoteSDPFingerprint(). SRTP keys come from the
+      handshake.
+
+      SRTP itself is provided by libsrtp: version 2, or version 1 with the
+      CMake option USE_SRTP1.
+*/

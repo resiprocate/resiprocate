@@ -1,0 +1,66 @@
+/**
+   @page repro_main repro: SIP Proxy, Registrar and Presence Server
+
+   repro is a SIP proxy server built on the @ref resip_main "SIP stack" and the
+   @ref dum_main "Dialog Usage Manager". It is configured with repro.config
+   and through its web administration pages. Most of it is in the reprolib
+   library, so applications can embed and extend it.
+
+   @section repro_structure Structure
+      - repro::ReproRunner : Reads the configuration, then creates and runs
+      everything else: the SIP stack, the datastore, the proxy, the DUM-based
+      registrar and presence server, and the administration interfaces.
+      Applications can subclass it and override its create...() and
+      make...ProcessorChain() functions.
+      - repro::Proxy : The proxy core, a resip::TransactionUser running in its
+      own thread. Each request it receives gets a repro::RequestContext,
+      which holds the request, its targets and their responses
+      (repro::ResponseContext) until the transaction completes.
+      - repro::Registrar : Handles REGISTER requests, through DUM's
+      resip::ServerRegistration, and stores bindings in DUM's
+      registration database.
+      - repro::PresenceServer : Handles PUBLISH and SUBSCRIBE for presence.
+
+   @section repro_chains Processor Chains
+      A request is handled by three chains of repro::Processor objects, each
+      returning a repro::Processor::processor_action_t (Continue,
+      WaitingForEvent, SkipThisChain or SkipAllChains):
+      - The request chain (the "monkeys", in repro/monkeys) decides where a
+      request goes. As built by ReproRunner, it fixes strict routes
+      (StrictRouteFixup), recognizes trusted peers (IsTrustedNode),
+      authenticates the sender (CertificateAuthenticator for TLS client
+      certificates; DigestAuthenticator, or RADIUSAuthenticator when a
+      RADIUS server is configured; or CookieAuthenticator for WebSocket
+      clients), checks that it is responsible for the request
+      (AmIResponsible), applies request filters (RequestFilter), applies
+      static routes (StaticRoute, or SimpleStaticRoute when the Routes
+      setting is used), looks up registered contacts (LocationServer), and,
+      if enabled, stores MESSAGE requests for offline users (MessageSilo).
+      - The response chain (the "lemurs") handles responses: moving on to the
+      next registered flow when an Outbound (RFC 5626) flow has failed
+      (OutboundTargetHandler) and, if enabled, following 3xx redirects
+      (RecursiveRedirect).
+      - The target chain (the "baboons") decides the order in which targets
+      are tried: optionally by distance (GeoProximityTargetSorter), by q-value
+      (QValueTargetHandler), and finally SimpleTargetHandler.
+
+   @section repro_data Datastore
+      repro::Store gives access to users, routes, ACLs, request filters,
+      static registrations, stored messages, TLS peer identities and
+      settings, kept through a repro::AbstractDb: repro::BerkeleyDb by
+      default, or repro::MySqlDb or repro::PostgreSqlDb.
+
+   @section repro_admin Administration and Extensions
+      - repro::WebAdmin : The HTML administration pages, served by
+      repro's own HTTP server. repro::RestAdmin serves a JSON REST API under
+      /api/v1/ on the same listener.
+      - repro::CommandServer : A simple XML command interface over TCP, used by
+      the reprocmd tool.
+      - repro::RegSyncServer and repro::RegSyncClient : Replicate
+      registrations between two repro servers.
+      - repro::AccountingCollector : Writes session and registration
+      accounting events to persistent queues for other processes to read.
+      - repro::Plugin : Loadable plugins can add processors to any of the
+      chains (see repro/plugins/example, and repro/plugins/pyroute for
+      routing in Python).
+*/

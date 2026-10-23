@@ -34,13 +34,6 @@ using namespace reTurn;
 namespace flowmanager
 {
 
-/**
-  This class represents a media stream, that consists of a series of componenets 
-  or flows.  For media streams based on RTP, there are two components per media 
-  stream - one for RTP, and one for RTCP.
-
-  Author: Scott Godin (sgodin AT SipSpectrum DOT com)
-*/
 class MediaStreamHandler
 {
 public:
@@ -54,6 +47,13 @@ public:
 #define RTP_COMPONENT_ID   1
 #define RTCP_COMPONENT_ID  2
 
+/**
+  This class represents a media stream, that consists of a series of componenets 
+  or flows.  For media streams based on RTP, there are two components per media 
+  stream - one for RTP, and one for RTCP.
+
+  Author: Scott Godin (sgodin AT SipSpectrum DOT com)
+*/
 class MediaStream
 {
 public:

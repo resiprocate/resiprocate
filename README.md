@@ -167,6 +167,20 @@ You can set them on the command line like:
 $ cmake -DWITH_C_ARES=true .
 ```
 
+## API Documentation
+
+The API documentation for the master branch is published at
+https://resiprocate.github.io/resiprocate/.
+
+To build it yourself, install Doxygen (and optionally Graphviz, for class
+diagrams), then either run `doxygen` from the top of the source tree, which
+writes HTML to `doxygen/html`, or build the CMake `doc` target, which writes
+it to `doxygen/html` in the build directory:
+
+```
+$ cmake --build . --target doc
+```
+
 # Future Considerations
 
 ## Installation Packages

@@ -1125,6 +1125,30 @@ endif()
 
 add_subdirectory(apps)
 
+# API documentation: "cmake --build . --target doc" runs Doxygen with the
+# top-level Doxyfile and writes HTML to doxygen/html in the build directory.
+# The Doxyfile's relative paths need Doxygen to run from the source tree, so
+# a small wrapper config in the build directory includes it and overrides
+# only the output location.
+find_package(Doxygen OPTIONAL_COMPONENTS dot)
+if(DOXYGEN_FOUND)
+   set(RESIP_DOXYFILE "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile.doc")
+   set(RESIP_DOXYFILE_CONTENT
+      "@INCLUDE = \"${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile\"\nOUTPUT_DIRECTORY = \"${CMAKE_CURRENT_BINARY_DIR}/doxygen\"\n")
+   if(TARGET Doxygen::dot)
+      get_filename_component(RESIP_DOT_DIR "${DOXYGEN_DOT_EXECUTABLE}" DIRECTORY)
+      string(APPEND RESIP_DOXYFILE_CONTENT "DOT_PATH = \"${RESIP_DOT_DIR}\"\n")
+   else()
+      string(APPEND RESIP_DOXYFILE_CONTENT "HAVE_DOT = NO\n")
+   endif()
+   file(WRITE "${RESIP_DOXYFILE}" "${RESIP_DOXYFILE_CONTENT}")
+   add_custom_target(doc
+      COMMAND Doxygen::doxygen "${RESIP_DOXYFILE}"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+      COMMENT "Generating API documentation with Doxygen"
+      VERBATIM)
+endif()
+
 # Create spec file for RPM packaging
 # The tarball containing a spec file can be fed directly
 # to the rpmbuild command.

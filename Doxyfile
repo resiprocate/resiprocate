@@ -1,0 +1,70 @@
+# Doxygen configuration for the reSIProcate API documentation.
+#
+# Run "doxygen" from the top of the source tree (HTML goes to doxygen/html),
+# or build the CMake "doc" target (HTML goes to doxygen/html in the build
+# directory).  The Docs GitHub workflow publishes the master branch build to
+# GitHub Pages.
+#
+# Only settings that differ from Doxygen's defaults are listed here.
+
+PROJECT_NAME           = reSIProcate
+PROJECT_BRIEF          = "SIP stack, Dialog Usage Manager and related libraries"
+OUTPUT_DIRECTORY       = doxygen
+
+JAVADOC_AUTOBRIEF      = YES
+BUILTIN_STL_SUPPORT    = YES
+
+# Most of the code has no doxygen comments, so document everything rather
+# than only commented entities.
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+
+INPUT                  = doc/mainpage.dox \
+                         rutil \
+                         resip/stack \
+                         resip/dum \
+                         resip/recon \
+                         repro \
+                         reTurn \
+                         reflow \
+                         media
+FILE_PATTERNS          = *.hxx \
+                         *.h \
+                         *.cxx \
+                         *.cpp \
+                         *.c \
+                         *.doc \
+                         *.dox
+RECURSIVE              = YES
+# Tests, dead platform ports, and the output of in-source CMake and Visual
+# Studio builds.
+EXCLUDE_PATTERNS       = */test/* \
+                         */tests/* \
+                         */wince/* \
+                         */CMakeFiles/* \
+                         */*.dir/* \
+                         */Debug/* \
+                         */Release/* \
+                         */x64/* \
+                         */.vs/*
+
+SOURCE_BROWSER         = YES
+
+GENERATE_TREEVIEW      = YES
+GENERATE_LATEX         = NO
+
+# Document the TLS, DTLS and IPv6 code, which is compiled in by default.
+PREDEFINED             = USE_SSL \
+                         USE_DTLS \
+                         USE_IPV6
+
+# Class inheritance diagrams only; include and collaboration graphs for a
+# tree this size add a lot of build time and output for little benefit.
+HAVE_DOT               = YES
+COLLABORATION_GRAPH    = NO
+INCLUDE_GRAPH          = NO
+INCLUDED_BY_GRAPH      = NO
+DOT_IMAGE_FORMAT       = svg

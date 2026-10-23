@@ -1,0 +1,84 @@
+/**
+   @page dum_main The Dialog Usage Manager library (dum)
+
+   The Dialog Usage Manager (DUM) sits on top of the @ref resip_main "SIP stack"
+   as its resip::TransactionUser, and gives applications a much higher-level
+   API for building SIP user agents and servers. DUM tracks dialogs and
+   dialog sets, generates requests and responses with the correct headers,
+   handles authentication challenges, refreshes registrations and
+   subscriptions, and runs the INVITE offer/answer state machine. It does no
+   media handling; see @ref recon_main for that.
+
+   @section dum_concepts Concepts
+      - Usages : Each thing an application does over SIP is a usage, with a
+      client side and a server side: resip::ClientInviteSession and
+      resip::ServerInviteSession (calls), resip::ClientRegistration and
+      resip::ServerRegistration, resip::ClientSubscription and
+      resip::ServerSubscription (SUBSCRIBE/NOTIFY and REFER),
+      resip::ClientPublication and resip::ServerPublication,
+      resip::ClientPagerMessage and resip::ServerPagerMessage (MESSAGE), and
+      resip::ClientOutOfDialogReq and resip::ServerOutOfDialogReq (OPTIONS
+      and other requests outside a dialog).
+      - Handles : Applications refer to usages through handles, such as
+      resip::InviteSessionHandle and resip::ClientRegistrationHandle (see
+      Handles.hxx). A handle can outlive its usage; check isValid() before
+      using one that was stored.
+      - Handlers : Applications learn about events by implementing handler
+      interfaces, such as resip::InviteSessionHandler,
+      resip::ClientRegistrationHandler, resip::ClientSubscriptionHandler,
+      resip::ServerSubscriptionHandler and resip::OutOfDialogHandler, and
+      registering them with the resip::DialogUsageManager.
+      - Profiles : resip::MasterProfile holds the settings for the whole DUM
+      (supported methods, MIME types, options tags and so on), and
+      resip::UserProfile holds per-user settings such as the From address,
+      digest credentials and registration time. Most make functions accept a
+      resip::UserProfile, and use the master profile when one is not given.
+      - Application dialog sets : Subclass resip::AppDialogSet and
+      resip::AppDialog, and set a resip::AppDialogSetFactory, to attach
+      application state to each dialog set and dialog.
+
+   @section dum_usage Usage
+      - Create a resip::SipStack and add transports to it (see
+      @ref resip_usage).
+      - Create a resip::DialogUsageManager for the stack.
+      - Give it a resip::MasterProfile with
+      resip::DialogUsageManager::setMasterProfile().
+      - Add a resip::ClientAuthManager, to answer digest challenges, and, on
+      the server side, a resip::ServerAuthManager.
+      - Register your handlers with the set...Handler() and add...Handler()
+      functions.
+      - Start usages with the make functions, such as
+      resip::DialogUsageManager::makeInviteSession(),
+      resip::DialogUsageManager::makeRegistration() and
+      resip::DialogUsageManager::makeSubscription(), and pass the request
+      they return to resip::DialogUsageManager::send().
+      - Give DUM processing cycles, either by calling
+      resip::DialogUsageManager::process() in a loop after
+      the stack's process(unsigned int timeoutMs), or by running a resip::DumThread
+      alongside the stack's own thread.
+      - Shut down with resip::DialogUsageManager::shutdown(), which reports
+      completion through resip::DumShutdownHandler.
+
+      resip/dum/test/basicRegister.cxx is a short, complete example, and
+      basicClient (basicClientUserAgent.cxx and basicClientCall.cxx in the
+      same directory) is a fuller user agent.
+
+   @section dum_threads Threads
+      DUM is not thread-safe. Handlers are called from the thread that runs
+      resip::DialogUsageManager::process(), and the application must call
+      DUM, and use handles, only from that thread. To act from another thread,
+      post a resip::DumCommand to the resip::DialogUsageManager; its
+      executeCommand() runs on the DUM thread.
+
+   @section dum_extending Extending DUM
+      - resip::DumFeature : Plug-in processing for incoming and outgoing
+      messages, added with resip::DialogUsageManager::addIncomingFeature()
+      and resip::DialogUsageManager::addOutgoingFeature().
+      - resip::RegistrationPersistenceManager : Storage for registrations
+      received by resip::ServerRegistration.
+      resip::InMemoryRegistrationDatabase keeps them in memory, and
+      resip::InMemorySyncRegDb also supports replicating them to a peer
+      server (repro uses it for registration sync).
+      - resip::KeepAliveManager : Sends periodic keepalives to the servers the
+      application talks to, keeping connections and NAT bindings open.
+*/

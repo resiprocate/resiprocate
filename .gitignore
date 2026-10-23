@@ -102,3 +102,7 @@ media/samples/record_prompt.h
 /_build
 /sipXtapi-prefix
 /cov-int
+
+# Doxygen output (Doxyfile, CMake "doc" target)
+/doxygen
+/Doxyfile.doc

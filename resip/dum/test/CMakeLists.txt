@@ -51,6 +51,7 @@ test(testDialogSetId testDSI.cxx)
 test(testPubDocument testPubDocument.cxx)
 test(testRedirectManager testRedirectManager.cxx)
 test(testUrnContact testUrnContact.cxx)
+test(testOptionsContact testOptionsContact.cxx)
 #test(testSMIMEInvite testSMIMEInvite.cxx)   #deprecated
 #test(testSMIMEMessage testSMIMEMessage.cxx) #deprecated
 

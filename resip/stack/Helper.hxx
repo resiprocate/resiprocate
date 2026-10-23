@@ -26,6 +26,7 @@ class Security;
 
 /**
    @ingroup resip_crit
+   @ingroup make_sip
    @brief An aggregation of useful static functions.
 
    These are mostly involved with

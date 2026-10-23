@@ -2,3 +2,4 @@
 /** @defgroup sip_grammar SIP Grammar Elements */
 /** @defgroup sip_parse SIP Parsing Infrastructure */
 /** @defgroup make_sip SIP Message Generation Functions */
+/** @defgroup resip_config Stack Configuration */

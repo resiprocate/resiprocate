@@ -1,8 +1,65 @@
 /**
-@mainpage The reSIProcate Utility Library (rutil)
+@page rutil_main The reSIProcate Utility Library (rutil)
 
-The reSIProcate Utility (rutil) library provides various utility classes for use by the resip stack and Dialog Usage Manager. In some cases, these utility classes are used to provide cross-platform implementations of important system-level stuff; see resip::ThreadIf, resip::Mutex, resip::Lock, resip::Condition, resip::Random, and resip::Timer. In other cases, these classes are an alternative to commonly used classes defined in the stl (resip::Data being an alternative for a std::string). In addition, reSIProcate's DNS subsystem is part of rutil.
+rutil holds the general-purpose code that the SIP stack, the Dialog Usage
+Manager and the other reSIProcate libraries are built on.  Very little of it
+is SIP-specific; for SIP, see @ref resip_main and @ref dum_main.
 
-Generally speaking, you will not find anything even tangentially related to SIP in rutil. For this, you need to look at the reSIProcate stack, or Dialog Usage Manager.
+@section rutil_strings Strings and Parsing
+   - resip::Data is reSIProcate's string and byte-buffer class, used in place
+     of std::string throughout the libraries.  It can share or borrow
+     buffers instead of copying them, and has helpers for hex, base64,
+     URL and XML encoding, and number conversion.
+   - resip::ParseBuffer is a bounds-checked cursor over a buffer, used by
+     all of the parsers.
+   - resip::Inserter streams any container whose elements have operator<<.
 
+@section rutil_threads Threads and Queues
+   - resip::Mutex, resip::RecursiveMutex, resip::Lock and resip::Condition
+     are now typedefs of std::mutex, std::recursive_mutex, std::unique_lock
+     and std::condition_variable; resip::RWMutex, resip::ReadLock and
+     resip::WriteLock provide reader/writer locking.
+   - resip::ThreadIf wraps a std::thread with run(), shutdown() and join().
+     It is kept for existing code; new code should use std::thread
+     directly.
+   - resip::Fifo and resip::TimeLimitFifo are the thread-safe message
+     queues that the libraries use to pass messages between threads.
+
+@section rutil_io Sockets and Event Loops
+   - resip::FdPollGrp waits for socket events using epoll, poll() (WSAPoll()
+     on Windows) or select(); resip::FdPollItemIf is the interface for a
+     socket registered with it.
+   - resip::SelectInterruptor wakes up a thread that is blocked waiting
+     for socket events.
+   - resip::GenericIPAddress, resip::DnsUtil and the cross-platform socket
+     functions in Socket.hxx handle IPv4 and IPv6 addresses and sockets.
+
+@section rutil_dns DNS
+   The asynchronous DNS resolver used by the SIP stack lives in rutil/dns.
+   resip::DnsStub caches results and runs queries for A, AAAA, SRV, NAPTR
+   and CNAME records; it talks to the network through the resip::ExternalDns
+   interface, which resip::AresDns implements using either c-ares or the
+   bundled copy of ares.
+
+@section rutil_logging Logging
+   resip::Log is configured with resip::Log::initialize(), which can log to
+   the console, syslog, a file or an application-supplied
+   resip::ExternalLogger, with per-thread and per-subsystem levels.  Code
+   logs through the StackLog, DebugLog, InfoLog, WarningLog, ErrLog and
+   CritLog macros in Logger.hxx, each tagged with a resip::Subsystem.
+
+@section rutil_misc Other Utilities
+   - resip::Timer: millisecond and microsecond clocks and the SIP T1, T2
+     and T4 timer values.
+   - resip::Random: pseudo-random and cryptographically secure random
+     values, in raw, hex and base64 form.
+   - resip::ConfigParse: reads the command line and name = value
+     configuration files used by repro, reTurn and the other servers.
+   - resip::ServerProcess: daemonizing, PID files, signal handling and
+     dropping privileges for those servers.
+   - resip::DigestStream: computes MD5 and SHA digests through a
+     std::ostream.
+   - resip::OpenSSLInit: one-time OpenSSL setup, when built with OpenSSL.
+   - resip::HepAgent: sends copies of SIP and RTCP traffic to a HEP
+     (Homer) capture server.
 */

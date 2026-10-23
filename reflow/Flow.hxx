@@ -30,6 +30,9 @@ using namespace reTurn;
 namespace flowmanager
 {
 
+class MediaStream;
+class Flow;
+
 /**
   This class represents a Flow that is created by the Flow Manager.  A flow is a
   bi-directional stream of data for communicating with an endpoint, that may use
@@ -38,9 +41,6 @@ namespace flowmanager
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
-class MediaStream;
-class Flow;
-
 class Flow : public TurnAsyncSocketHandler
 {
 public:

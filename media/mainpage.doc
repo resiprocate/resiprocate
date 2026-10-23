@@ -1,0 +1,27 @@
+/**
+   @page media_main The Media Support library (resipmedia)
+
+   resipmedia holds media code shared by @ref recon_main "recon" and its media
+   stacks. recon requires it, so it is always built along with recon.
+
+   @section media_classes Contents
+      - sdpcontainer::Sdp : A structured model of an SDP session description,
+      with sdpcontainer::SdpMediaLine, sdpcontainer::SdpCodec,
+      sdpcontainer::SdpCandidate and sdpcontainer::SdpCandidatePair. Its media
+      lines cover what recon negotiates beyond plain RTP, such as SRTP crypto
+      attributes, DTLS fingerprints, transport capabilities and ICE
+      candidates. @ref SdpHelper builds an sdpcontainer::Sdp from a
+      resip::SdpContents.
+      - resip::RTPPortManager : Hands out RTP ports (even numbers, with RTCP on
+      the next port up) from a configured range.
+      - media/samples : Sample audio (music, and playback and record prompts)
+      as headers of raw 8 kHz, 16-bit samples, which testUA and reConServer
+      load into recon's media cache.
+
+   @section media_optional Optional Components
+      - media/gstreamer (CMake option USE_GSTREAMER) : GStreamer helpers used
+      by recon's GStreamer media stack, in the resipgst namespace.
+      - media/kurento (CMake option USE_KURENTO) : A client for the Kurento
+      media server's JSON-RPC API over WebSockets, in the kurento namespace,
+      used by recon's Kurento media stack.
+*/

@@ -1,0 +1,54 @@
+name: Docs
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# A deployment that is cut short can leave Pages half updated, so only
+# superseded pull request builds are cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build API documentation
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends doxygen graphviz
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Doxygen
+        run: doxygen Doxyfile
+
+      # Only the main repository's master branch is published, so forks and
+      # private copies of this repository never publish docs of their own.
+      - name: Upload Pages artifact
+        if: github.repository == 'resiprocate/resiprocate' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: doxygen/html
+
+  deploy:
+    name: Publish to GitHub Pages
+    if: github.repository == 'resiprocate/resiprocate' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

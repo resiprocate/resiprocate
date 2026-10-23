@@ -1,0 +1,45 @@
+/**
+   @page return_main reTurn: STUN/TURN Server and Client Library
+
+   reTurn is a STUN server (RFC 5389, with RFC 3489 compatibility for binding
+   requests), a TURN relay server (RFC 5766), and a client library for both.
+   It is built on asio and @ref rutil_main "rutil", and needs OpenSSL for
+   message integrity and TLS.
+
+   @section return_client Client Library
+      The client library lives in reTurn/client, in the reTurn namespace.
+      - reTurn::TurnAsyncSocket : The asynchronous client, with
+      reTurn::TurnAsyncUdpSocket, reTurn::TurnAsyncTcpSocket and
+      reTurn::TurnAsyncTlsSocket for each transport. Its functions, such as
+      bindRequest(), createAllocation(), refreshAllocation(),
+      setActiveDestination() and send(), return at once; results and
+      received data are delivered to a reTurn::TurnAsyncSocketHandler. It
+      runs on an asio::io_context supplied by the application, and is what
+      @ref reflow_main "reflow" uses.
+      - reTurn::TurnSocket : A simpler, blocking client, with
+      reTurn::TurnUdpSocket, reTurn::TurnTcpSocket and reTurn::TurnTlsSocket.
+
+      A typical TURN client sets credentials with setUsernameAndPassword(),
+      calls createAllocation(), adds its peer with setActiveDestination(),
+      and then exchanges data with send() and the handler's onReceiveSuccess()
+      callback, calling refreshAllocation() before the allocation expires.
+
+   @section return_server Server
+      The reTurnServer application (reTurn/reTurnServer.cxx) listens for STUN
+      and TURN over UDP, TCP and TLS, and relays allocations over UDP, for
+      IPv4 and IPv6 (RFC 6156). It is configured with reTurnServer.config
+      (see reTurn::ReTurnConfig), and authenticates TURN users with the
+      long-term credential mechanism against a user database file, which can
+      hold plain or hashed passwords.
+
+      The main server classes are reTurn::TurnManager, which allocates relay
+      ports and enforces the per-user allocation and per-address connection
+      limits; reTurn::TurnAllocationManager, which tracks allocations;
+      reTurn::RequestHandler, which processes STUN and TURN requests;
+      reTurn::TurnAllocation, a single relayed allocation and its
+      permissions and channels; and reTurn::UdpServer, reTurn::TcpServer
+      and reTurn::TlsServer, the listening sockets.
+
+      reTurn::StunMessage encodes and decodes STUN and TURN messages, and is
+      shared by the client and the server.
+*/

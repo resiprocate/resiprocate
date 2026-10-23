@@ -1,0 +1,82 @@
+/**
+   @page recon_main The Conversation Manager library (recon)
+
+   recon is a SIP user agent library with media support, built on the
+   @ref dum_main "Dialog Usage Manager". Applications work with
+   conversations (audio mixes) and the participants in them, and recon takes
+   care of the SIP signalling, SDP offer/answer, NAT traversal and media
+   for them. The MOHParkServer (resip/recon/MOHParkServer) and reConServer
+   (apps/reConServer) applications are built on it.
+
+   @section recon_classes Main Classes
+      An application subclasses two classes:
+      - recon::UserAgent : Startup, the process loop and shutdown; user agent
+      settings (recon::UserAgentMasterProfile); application timers;
+      conversation profiles and registrations; and subscriptions.
+      - recon::ConversationManager : Creating and destroying conversations
+      and participants, placing and answering calls, playing tones and
+      files, and recording. The application implements its on...()
+      callbacks, such as onIncomingParticipant(), onParticipantAlerting(),
+      onParticipantConnected() and onParticipantTerminated().
+
+      recon::ConversationProfile extends resip::UserProfile with per-identity
+      settings, such as the SDP to offer, the NAT traversal mode (STUN, or a
+      TURN allocation over UDP, TCP or TLS) and the secure media mode (SRTP
+      keyed through SDP, or DTLS-SRTP).
+
+   @section recon_model Conversations and Participants
+      A conversation is a set of participants whose audio is mixed together.
+      A participant can be in more than one conversation (with some limits,
+      depending on the media stack). Participants are:
+      - remote participants : SIP calls, created with
+      recon::ConversationManager::createRemoteParticipant() or reported
+      through onIncomingParticipant();
+      - the local participant : the local microphone and speaker, created with
+      recon::ConversationManager::createLocalParticipant();
+      - media resource participants : tones, files and recordings, created with
+      recon::ConversationManager::createMediaResourceParticipant() from URLs
+      such as tone:ringback, file:prompt.wav;repeat, cache:welcome and
+      record:call.wav;
+      - IM participants : instant messaging, either in pager mode (standalone
+      SIP MESSAGE requests, createRemoteIMPagerParticipant()) or in session
+      mode (MESSAGE requests inside an INVITE dialog that offers a
+      Microsoft-style "message" media line,
+      createRemoteIMSessionParticipant()). Messages are sent with
+      sendIMToParticipant().
+
+      Participants are moved between conversations with addParticipant(),
+      removeParticipant() and moveParticipant(), and
+      modifyParticipantContribution() sets a participant's input and output
+      gain in each conversation.
+
+   @section recon_media Media Stacks
+      Media is handled by a recon::MediaStackAdapter, set on the
+      ConversationManager. recon::SipXMediaStackAdapter uses sipXtapi
+      (CMake option USE_SIPXTAPI), and there are adapters for GStreamer
+      (USE_GSTREAMER), Kurento (USE_KURENTO) and LibWebRTC (USE_LIBWEBRTC).
+      With sipXtapi, @ref reflow_main "reflow" carries the RTP, and provides
+      STUN, TURN, SRTP and DTLS-SRTP.
+
+   @section recon_usage Usage
+      - Subclass recon::ConversationManager and recon::UserAgent.
+      - Create the ConversationManager, then its media stack adapter (which
+      takes the ConversationManager), and set the adapter with
+      setMediaStackAdapter().
+      - Create a recon::UserAgentMasterProfile, and a recon::UserAgent with it
+      and the ConversationManager.
+      - Add at least one recon::ConversationProfile with
+      recon::UserAgent::addConversationProfile(), with one set as the
+      default for outgoing calls.
+      - Call recon::UserAgent::startup(), then recon::UserAgent::process() in
+      a loop, and recon::UserAgent::shutdown() when done.
+
+      resip/recon/test/testUA.cxx is a complete example.
+
+   @section recon_threads Threads
+      The ConversationManager's on...() callbacks are called from the thread
+      that runs recon::UserAgent::process(). Most ConversationManager
+      functions, such as createConversation() and addParticipant(), do not
+      act immediately: they return a handle at once, post a command to the
+      Dialog Usage Manager's queue and do the work when that thread next
+      runs.
+*/

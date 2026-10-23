@@ -26,6 +26,9 @@ using namespace reTurn;
 namespace flowmanager
 {
 
+class IOServiceThread;
+class FlowDtlsTimerContext;
+
 /**
   This class represents the Flow Manager.  It is responsible for sending/receiving
   media and performing the necessary NAT traversal.  
@@ -36,9 +39,6 @@ namespace flowmanager
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
-class IOServiceThread;
-class FlowDtlsTimerContext;
-
 class FlowManager
 {
 public:  

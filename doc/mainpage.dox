@@ -1,0 +1,41 @@
+/**
+@mainpage reSIProcate API Documentation
+
+reSIProcate is a set of C++ libraries and applications for building SIP
+endpoints, proxies and media servers.  Source code, issues and the wiki are at
+https://github.com/resiprocate/resiprocate.
+
+@section main_libraries Libraries
+
+- @ref rutil_main "rutil": utility classes used by everything else, including
+  resip::Data, logging and the DNS resolver.
+- @ref resip_main "resip": the RFC 3261 SIP stack (resip::SipStack).  It parses
+  and builds SIP messages and handles transactions, transports and RFC 3263 DNS
+  lookups.
+- @ref dum_main "dum": the Dialog Usage Manager (resip::DialogUsageManager), a
+  higher-level API above the stack for building SIP user agents and servers
+  (no media).
+- @ref recon_main "recon": a SIP user agent library with media support above
+  dum (recon::ConversationManager, recon::UserAgent).
+- @ref reflow_main "reflow": media flows for recon, with STUN, TURN, SRTP and
+  DTLS-SRTP (flowmanager::FlowManager).
+- @ref media_main "resipmedia": SDP and RTP port helpers shared by recon's
+  media stacks.
+- @ref return_main "reTurn client": a STUN/TURN client library
+  (reTurn::TurnAsyncSocket).
+
+@section main_applications Applications
+
+- @ref repro_main "repro": a SIP proxy, registrar and presence server
+  (repro::Proxy, repro::ReproRunner).
+- @ref return_main "reTurn server": a STUN/TURN server.
+
+@section main_grouped Grouped Classes
+
+The SIP stack tags its most important classes with these groups:
+- @ref resip_crit
+- @ref sip_grammar
+- @ref sip_parse
+- @ref make_sip
+- @ref resip_config
+*/
