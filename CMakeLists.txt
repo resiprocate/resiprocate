@@ -1142,8 +1142,11 @@ if(DOXYGEN_FOUND)
       string(APPEND RESIP_DOXYFILE_CONTENT "HAVE_DOT = NO\n")
    endif()
    file(WRITE "${RESIP_DOXYFILE}" "${RESIP_DOXYFILE_CONTENT}")
+   # Not the Doxygen::doxygen imported target: it only has IMPORTED_LOCATION,
+   # and the CMAKE_MAP_IMPORTED_CONFIG_* settings at the top of this file make
+   # multi-config generators look for IMPORTED_LOCATION_RELEASE instead.
    add_custom_target(doc
-      COMMAND Doxygen::doxygen "${RESIP_DOXYFILE}"
+      COMMAND "${DOXYGEN_EXECUTABLE}" "${RESIP_DOXYFILE}"
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
       COMMENT "Generating API documentation with Doxygen"
       VERBATIM)

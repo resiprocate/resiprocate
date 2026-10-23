@@ -56,10 +56,14 @@ SOURCE_BROWSER         = YES
 GENERATE_TREEVIEW      = YES
 GENERATE_LATEX         = NO
 
-# Document the TLS, DTLS and IPv6 code, which is compiled in by default.
+# Document the TLS, DTLS and IPv6 code, which is compiled in by default, and
+# unwrap RESIP_DEPRECATED(declaration), which Doxygen cannot otherwise parse.
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
 PREDEFINED             = USE_SSL \
                          USE_DTLS \
-                         USE_IPV6
+                         USE_IPV6 \
+                         "RESIP_DEPRECATED(x)=x"
 
 # Class inheritance diagrams only; include and collaboration graphs for a
 # tree this size add a lot of build time and output for little benefit.
