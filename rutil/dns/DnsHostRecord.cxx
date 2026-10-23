@@ -35,7 +35,7 @@ DnsHostRecord::DnsHostRecord(const RROverlay& overlay)
    mName = name;
    free(name);
    mTTL = overlay.ttl();
-   if (overlay.dataLength() < (int)sizeof(in_addr))
+   if (overlay.dataLength() != (int)sizeof(in_addr))
    {
       throw HostException("Failed parse of Host record", __FILE__, __LINE__);
    }

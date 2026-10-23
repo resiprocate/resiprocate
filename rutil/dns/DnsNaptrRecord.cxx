@@ -153,6 +153,12 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
       }
       mReplacement = name;
       free(name);
+
+      // ares_expand_name stops at the end of the message, not the record
+      if (pPos + len > overlay.data() + overlay.dataLength())
+      {
+         throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
+      }
    }
 }
 

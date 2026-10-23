@@ -10,6 +10,8 @@
 #include "rutil/dns/DnsAAAARecord.hxx"
 #include "rutil/dns/DnsSrvRecord.hxx"
 #include "rutil/dns/DnsNaptrRecord.hxx"
+#include "rutil/dns/DnsCnameRecord.hxx"
+#include "rutil/dns/RRCache.hxx"
 
 using namespace resip;
 using namespace std;
@@ -18,11 +20,13 @@ using namespace std;
 
 // Builds a DNS message holding one resource record for "a." with the given
 // type and RDATA, ending exactly where the RDATA ends, so that reading past
-// the RDATA reads past the message.
+// the RDATA reads past the message. A trailer, if given, follows the RDATA,
+// standing in for the next record in the answer.
 class RRMessage
 {
    public:
-      RRMessage(int type, const vector<unsigned char>& rdata)
+      RRMessage(int type, const vector<unsigned char>& rdata,
+                const vector<unsigned char>& trailer = vector<unsigned char>())
       {
          static const unsigned char header[] = { 0, 1, 0x81, 0x80, 0, 0, 0, 1, 0, 0, 0, 0 };
          vector<unsigned char> msg(header, header + sizeof(header));
@@ -33,6 +37,7 @@ class RRMessage
          msg.push_back(0); msg.push_back(0); msg.push_back(0x0e); msg.push_back(0x10);
          msg.push_back((unsigned char)(rdata.size() >> 8)); msg.push_back((unsigned char)rdata.size());
          msg.insert(msg.end(), rdata.begin(), rdata.end());
+         msg.insert(msg.end(), trailer.begin(), trailer.end());
 
          // exactly sized heap copy, so an over-read is visible to AddressSanitizer
          mLen = (int)msg.size();
@@ -49,6 +54,9 @@ class RRMessage
       }
 
    private:
+      RRMessage(const RRMessage&);
+      RRMessage& operator=(const RRMessage&);
+
       unsigned char* mBuf;
       int mLen;
       size_t mRecordOffset;
@@ -56,9 +64,10 @@ class RRMessage
 
 template<class T>
 static bool
-parses(int type, const vector<unsigned char>& rdata)
+parses(int type, const vector<unsigned char>& rdata,
+       const vector<unsigned char>& trailer = vector<unsigned char>())
 {
-   RRMessage msg(type, rdata);
+   RRMessage msg(type, rdata, trailer);
    try
    {
       T record(msg.overlay());
@@ -69,6 +78,21 @@ parses(int type, const vector<unsigned char>& rdata)
       resipCerr << "rejected: " << e << endl;
       return false;
    }
+}
+
+// Feeds an SOA record with the given RDATA to RRCache::cacheTTL and reports
+// whether a negative entry for "a" was cached, which only happens when
+// getTTL managed to read the minimum field.
+static bool
+cachesTTL(const vector<unsigned char>& rdata)
+{
+   RRMessage msg(6, rdata);
+   RRCache cache;
+   cache.cacheTTL("a", 1, 4 /* ARES_ENOTFOUND */, msg.overlay());
+
+   RRCache::Result records;
+   int status = 0;
+   return cache.lookup("a", 1, RRList::Protocol::Sip, records, status);
 }
 
 static vector<unsigned char>
@@ -86,12 +110,14 @@ main(int argc, char* argv[])
    assert(parses<DnsHostRecord>(1, bytes("\x7f\x00\x00\x01", 4)));
    assert(!parses<DnsHostRecord>(1, bytes("", 0)));
    assert(!parses<DnsHostRecord>(1, bytes("\x7f\x00", 2)));
+   assert(!parses<DnsHostRecord>(1, bytes("\x7f\x00\x00\x01\x7f\x00\x00\x02", 8)));
 
 #ifdef USE_IPV6
    // AAAA
    assert(parses<DnsAAAARecord>(28, bytes("\x20\x01\x0d\xb8\0\0\0\0\0\0\0\0\0\0\0\x01", 16)));
    assert(!parses<DnsAAAARecord>(28, bytes("", 0)));
    assert(!parses<DnsAAAARecord>(28, bytes("\x20\x01\x0d\xb8", 4)));
+   assert(!parses<DnsAAAARecord>(28, bytes("\x20\x01\x0d\xb8\0\0\0\0\0\0\0\0\0\0\0\x01\0\0\0\0", 20)));
 #endif
 
    // SRV: priority, weight, port, target
@@ -99,6 +125,8 @@ main(int argc, char* argv[])
    assert(!parses<DnsSrvRecord>(33, bytes("", 0)));
    assert(!parses<DnsSrvRecord>(33, bytes("\x00\x0a\x00\x05", 4)));
    assert(!parses<DnsSrvRecord>(33, bytes("\x00\x0a\x00\x05\x13\xc4", 6)));
+   // target runs past RDLENGTH into the next record
+   assert(!parses<DnsSrvRecord>(33, bytes("\x00\x0a\x00\x05\x13\xc4\x01x", 8), bytes("\x00", 1)));
 
    // NAPTR: order, preference, flags, service, regexp, replacement
    assert(parses<DnsNaptrRecord>(35, bytes("\x00\x0a\x00\x05\x01s\x07SIP+D2U\x00\x01x\x00", 18)));
@@ -108,6 +136,19 @@ main(int argc, char* argv[])
    assert(!parses<DnsNaptrRecord>(35, bytes("\x00\x0a\x00\x05\x01s", 6)));
    assert(!parses<DnsNaptrRecord>(35, bytes("\x00\x0a\x00\x05\x01s\x00", 7)));
    assert(!parses<DnsNaptrRecord>(35, bytes("\x00\x0a\x00\x05\x01s\x00\x00", 8)));
+   // replacement runs past RDLENGTH into the next record
+   assert(!parses<DnsNaptrRecord>(35, bytes("\x00\x0a\x00\x05\x01s\x07SIP+D2U\x00\x01x", 17), bytes("\x00", 1)));
+
+   // CNAME
+   assert(parses<DnsCnameRecord>(5, bytes("\x01x\x00", 3)));
+   assert(!parses<DnsCnameRecord>(5, bytes("", 0)));
+   assert(!parses<DnsCnameRecord>(5, bytes("\x01x", 2), bytes("\x00", 1)));
+
+   // SOA: mname, rname, serial, refresh, retry, expire, minimum
+   assert(cachesTTL(bytes("\x01m\x00\x01r\x00\0\0\0\x01\0\0\0\x02\0\0\0\x03\0\0\0\x04\0\0\x0e\x10", 26)));
+   assert(!cachesTTL(bytes("\x01m\x00\x01r\x00", 6)));
+   assert(!cachesTTL(bytes("\x01m\x00\x01r\x00\0\0\0\x01\0\0\0\x02\0\0\0\x03\0\0\0\x04", 22)));
+   assert(!cachesTTL(bytes("\x01m\x00\x01r\x00\0\0\0\x01\0\0\0\x02\0\0\0\x03\0\0\0\x04\0\0", 24)));
 
    resipCerr << "All OK" << endl;
    return 0;

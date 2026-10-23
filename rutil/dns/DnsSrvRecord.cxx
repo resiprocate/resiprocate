@@ -51,6 +51,12 @@ DnsSrvRecord::DnsSrvRecord(const RROverlay& overlay)
    }
    mTarget = name;
    free(name);
+
+   // ares_expand_name stops at the end of the message, not the record
+   if (6 + len > overlay.dataLength())
+   {
+      throw SrvException("Failed parse of SRV record", __FILE__, __LINE__);
+   }
 }
 
 bool DnsSrvRecord::isSameValue(const Data& value) const

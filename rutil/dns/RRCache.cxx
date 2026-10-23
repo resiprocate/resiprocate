@@ -284,7 +284,8 @@ RRCache::getTTL(const RROverlay& overlay)
       {
          free(name);
          pPos += len;
-         if (pPos + 20 > overlay.data() + overlay.dataLength())
+         // serial, refresh, retry and expire, then minimum
+         if (pPos + 16 + 4 > overlay.data() + overlay.dataLength())
          {
             return -1;
          }
