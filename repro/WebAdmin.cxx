@@ -1971,11 +1971,11 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             const Data& instanceId = r.mInstance;
             int regId = r.mRegId;
 
-            s << contact.uri();
+            s << Data::from(contact.uri()).xmlCharDataEncode();
             s << "</td>" << endl
                 << "  <td>";
 
-            s << r.mUserAgent;
+            s << r.mUserAgent.xmlCharDataEncode();
 
             s <<"</td>" << endl 
                << "<td>" << instanceId.xmlCharDataEncode() 
@@ -1990,7 +1990,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             NameAddrs::const_iterator naIt = r.mSipPath.begin();
             for(;naIt != r.mSipPath.end(); naIt++)
             {
-               s << naIt->uri() << "<br>" << endl;
+               s << Data::from(naIt->uri()).xmlCharDataEncode() << "<br>" << endl;
             }
 
             bool staticRegContact = r.mRegExpires == NeverExpire;
