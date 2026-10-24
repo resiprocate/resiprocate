@@ -413,7 +413,7 @@ StunMessage::stunParseAtrAddress(char* body, unsigned int hdrLen, StunAtrAddress
    }
    else
    {
-      WarningLog(<< "bad address family: " << result.family);
+      WarningLog(<< "bad address family/length: family=" << int(result.family) << " hdrLen=" << hdrLen);
    }
 
    return false;

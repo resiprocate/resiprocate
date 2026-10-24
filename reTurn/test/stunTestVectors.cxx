@@ -182,7 +182,9 @@ try
       assert(!msg.isValid());
    }
    {
-      // 2 bytes after the header, too short for an attribute header
+      // 2 bytes after the header, too short for an attribute header.
+      // The old code also rejected this, so it only catches a regression
+      // (the 2-byte header over-read) when built with ASan
       const unsigned char shortAttr[] =
         "\x00\x01\x00\x02"
         "\x21\x12\xa4\x42"
