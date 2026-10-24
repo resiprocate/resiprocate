@@ -209,8 +209,8 @@ WebAdmin::buildActiveCallsSubPage(DataStream& s)
    for (CallInfoList::iterator it = callInfos.begin(); it != callInfos.end(); ++it )
    {
       s << "<tr>" << endl
-        << "  <td>" << it->mHeldUri << "</td>" << endl
-        << "  <td>" << it->mInvokingUri << "</td>" << endl
+        << "  <td>" << Data::from(it->mHeldUri).xmlCharDataEncode() << "</td>" << endl
+        << "  <td>" << Data::from(it->mInvokingUri).xmlCharDataEncode() << "</td>" << endl
         << "  <td>" << it->mHoldType << "</td>" << endl
         << "  <td>" << it->mParticipantId << "</td>" << endl
         << "  <td>" << it->mConversationId << "</td>" << endl
