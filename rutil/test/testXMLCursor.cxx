@@ -427,6 +427,33 @@ main()
       assert(tree.getTag() == "resource");
    }
 
+   {
+      cerr << "test nesting depth limit" << endl;
+      // Deeply nested XML must fail the parse rather than recurse without
+      // bound (see XMLCursor::Node::skipToEndTag()).  A shallow document still
+      // parses; one well past the limit raises ParseException.  The boundary
+      // value itself is skipped so the assert does not depend on the exact
+      // off-by-one of the depth count.
+      for (unsigned int nest = 8; nest <= 8u + 4000; nest += 4000)
+      {
+         Data contents("<?xml version=\"1.0\"?><presence>");
+         for (unsigned int i = 0; i < nest; ++i) { contents += "<a>"; }
+         for (unsigned int i = 0; i < nest; ++i) { contents += "</a>"; }
+         contents += "</presence>";
+
+         XMLCursor xmlc(ParseBuffer(contents.data(), contents.size()));
+         try
+         {
+            xmlc.firstChild();   // forces the nested subtree to parse
+            assert(nest <= XMLCursor::MaxNestingDepth);
+         }
+         catch (ParseException&)
+         {
+            assert(nest > XMLCursor::MaxNestingDepth);
+         }
+      }
+   }
+
    cerr << "All OK" << endl;
       
    return 0;

@@ -504,9 +504,16 @@ Contents::preParseHeaders(ParseBuffer& pb)
             subPb.skipWhitespace();
             while (!subPb.eof() && *subPb.position() != Symbols::COMMA[0])
             {
+               // Append to mLanguages directly.  The header(h_ContentLanguages)
+               // accessor calls checkParsed(), which would parse this object's
+               // whole body while we are still pre-parsing its headers -- for a
+               // multipart part that means eagerly descending into every nested
+               // level instead of leaving it for lazy parsing.  Every other
+               // header case here sets its member without parsing the body;
+               // this one should too.  mLanguages is non-null by now.
                H_ContentLanguages::Type::value_type tmp;
-               header(h_ContentLanguages).push_back(tmp);
-               header(h_ContentLanguages).back().parse(subPb);
+               mLanguages->push_back(tmp);
+               mLanguages->back().parse(subPb);
                subPb.skipLWS();
             }
             break;	// .kw. added -- this is needed, right?

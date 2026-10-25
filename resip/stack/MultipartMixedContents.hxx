@@ -81,6 +81,14 @@ class MultipartMixedContents : public Contents
 
       void setBoundary(const Data& boundary);
 
+      /// parse() fails (Exception) a body nested more than this many multipart
+      /// levels below the outermost one.  Each level costs a stack frame in
+      /// anything that walks the tree (Helper::getSdp(), copying, destruction),
+      /// so the depth of the tree that can be built has to be bounded.  Real
+      /// bodies (multipart/signed wrapping multipart/mixed, etc.) nest only a
+      /// handful of levels.
+      static constexpr unsigned int MaxNestingDepth = 32;
+
       /**
       @brief Thrown when there is an error parsing a multi-part mixed contents envelope.
       @sa resip::BaseException
@@ -106,6 +114,10 @@ class MultipartMixedContents : public Contents
       // parsed from, not a copy of it.  Empty unless this object was parsed,
       // see getRawFirstPart().
       Data mRawFirstPart;
+      // Multipart levels above this one: 0 for the outermost body.  parse()
+      // stamps each multipart part it creates with its own depth + 1, so the
+      // limit holds however late, and by whom, a nested part is parsed.
+      unsigned int mDepth;
 };
 
 static bool invokeMultipartMixedContentsInit = MultipartMixedContents::init();
@@ -117,6 +129,7 @@ static bool invokeMultipartMixedContentsInit = MultipartMixedContents::init();
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

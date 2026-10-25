@@ -507,8 +507,19 @@ XMLCursor::Node::addChild(Node* child)
 //                   ^child sub 
 //                                      ^child
 void
-XMLCursor::Node::skipToEndTag()
+XMLCursor::Node::skipToEndTag(unsigned int depth)
 {
+   // Bound the recursion.  Each nested element adds a stack frame here, and
+   // another in ~Node() when the tree is torn down, so without a limit a
+   // document with very deep nesting (many thousands of elements) would recurse
+   // until the stack is exhausted.  Failing the parse throws ParseException,
+   // which callers already treat as a malformed body.
+   if (depth > MaxNestingDepth)
+   {
+      InfoLog(<< "XML: nesting too deep");
+      mPb.fail(__FILE__, __LINE__, "XML nesting too deep");
+   }
+
    extractTag();
    StackLog(<< "XMLCursor::Node::skipToEndTag(" <<  mTag << ")");
    //StackLog(<< "XMLCursor::Node::skipToEndTag(" << Data(mPb.position(), mPb.end() - mPb.position()) << ")");
@@ -593,7 +604,7 @@ XMLCursor::Node::skipToEndTag()
       //^
       Node* child = new Node(mPb);
       addChild(child);
-      child->skipToEndTag();
+      child->skipToEndTag(depth + 1);
       mPb.reset(child->mPb.end());
       XMLCursor::decodeName(child->mTag);
       StackLog(<< mTag << "(" << child->mTag << ")");

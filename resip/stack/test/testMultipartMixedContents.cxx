@@ -1,15 +1,114 @@
 #include <iostream>
 #include <memory>
+#include <cassert>
+#include <cstdio>
 
+#include "resip/stack/Helper.hxx"
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/MultipartRelatedContents.hxx"
 #include "resip/stack/PlainContents.hxx"
+#include "resip/stack/SdpContents.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/test/TestSupport.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/BaseException.hxx"
 
 using namespace resip;
 using namespace std;
+
+// Fixed-width boundary tokens, so that one is never a prefix of another.
+static Data
+nestedBoundary(unsigned int level)
+{
+   char buf[20];
+   snprintf(buf, sizeof(buf), "bnd%08u", level);
+   return Data(buf);
+}
+
+// A body of `levels` multipart/mixed levels, each inside the one before, whose
+// innermost level holds a single SDP part.  Every part carries
+// Content-Language, which used to make the enclosing parse descend into the
+// part right away.  The outermost boundary is nestedBoundary(0).
+static Data
+makeNestedMultipart(unsigned int levels)
+{
+   Data body;
+   for (unsigned int k = 0; k < levels; ++k)
+   {
+      body += "--" + nestedBoundary(k) + "\r\n";
+      if (k + 1 < levels)
+      {
+         body += "Content-Type: multipart/mixed; boundary=" + nestedBoundary(k + 1) + "\r\n";
+      }
+      else
+      {
+         body += "Content-Type: application/sdp\r\n";
+      }
+      body += "Content-Language: en\r\n"
+              "\r\n";
+   }
+   body += "v=0\r\n"
+           "o=- 0 0 IN IP4 127.0.0.1\r\n"
+           "s=-\r\n"
+           "c=IN IP4 127.0.0.1\r\n"
+           "t=0 0\r\n"
+           "m=audio 4000 RTP/AVP 0\r\n";
+   for (unsigned int k = levels; k-- > 0; )
+   {
+      body += "\r\n--" + nestedBoundary(k) + "--";
+   }
+   return body;
+}
+
+// withinLimit: whether every level is within MaxNestingDepth, so the SDP at
+// the bottom can be reached.
+static void
+checkNesting(unsigned int levels, bool withinLimit)
+{
+   const Data body(makeNestedMultipart(levels));
+   const Data typeTxt("multipart/mixed; boundary=" + nestedBoundary(0));
+   ParseBuffer typePb(typeTxt.data(), typeTxt.size());
+   Mime contentType;
+   contentType.parse(typePb);
+   HeaderFieldValue hfv(body.data(), (unsigned int)body.size());
+
+   {
+      // Parsing the outermost level must not descend into the next one.
+      MultipartMixedContents mpc(hfv, contentType);
+      assert(mpc.parts().size() == 1);
+
+      // Helper::getSdp() walks the whole tree.  Past the limit the parse
+      // exception stops the walk (getSdpRecurse() catches it), so there is
+      // no SDP rather than one stack frame per level.
+      unique_ptr<SdpContents> sdp(Helper::getSdp(&mpc));
+      assert((sdp.get() != nullptr) == withinLimit);
+   }
+
+   {
+      // Walk down one level at a time.  Each parts() call parses one level
+      // and returns before the next begins, so the limit has to hold however
+      // late a nested part is parsed.
+      MultipartMixedContents mpc(hfv, contentType);
+      Contents* c = &mpc;
+      unsigned int parsed = 0;
+      try
+      {
+         while (MultipartMixedContents* m = dynamic_cast<MultipartMixedContents*>(c))
+         {
+            c = m->parts().front();
+            ++parsed;
+         }
+         assert(withinLimit);
+         assert(parsed == levels);
+         assert(dynamic_cast<SdpContents*>(c));
+      }
+      catch (BaseException&)
+      {
+         assert(!withinLimit);
+         assert(parsed == MultipartMixedContents::MaxNestingDepth + 1);
+      }
+   }
+}
 
 int
 main()
@@ -143,6 +242,15 @@ main()
       }
    }
 
+   {
+      cerr << "test multipart nesting depth limit" << endl;
+      const unsigned int maxDepth = MultipartMixedContents::MaxNestingDepth;
+      checkNesting(4, true);
+      checkNesting(maxDepth + 1, true);    // deepest allowed: levels 0..maxDepth
+      checkNesting(maxDepth + 2, false);   // one level too deep
+      checkNesting(1000, false);
+   }
+
    cerr << endl << "All OK" << endl;
    return 0;
 }
@@ -150,6 +258,7 @@ main()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

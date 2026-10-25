@@ -15,7 +15,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
 
-bool 
+bool
 MultipartMixedContents::init()
 {
    static ContentsFactory<MultipartMixedContents> factory;
@@ -26,7 +26,8 @@ MultipartMixedContents::init()
 MultipartMixedContents::MultipartMixedContents()
    : Contents(getStaticType()),
      mContents(),
-     mRawFirstPart()
+     mRawFirstPart(),
+     mDepth(0)
 {
    setBoundary();
 }
@@ -34,7 +35,8 @@ MultipartMixedContents::MultipartMixedContents()
 MultipartMixedContents::MultipartMixedContents(const Mime& contentsType)
    : Contents(contentsType),
      mContents(),
-     mRawFirstPart()
+     mRawFirstPart(),
+     mDepth(0)
 {
    if (!mType.exists(p_boundary))
    {
@@ -45,7 +47,8 @@ MultipartMixedContents::MultipartMixedContents(const Mime& contentsType)
 MultipartMixedContents::MultipartMixedContents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mContents(),
-     mRawFirstPart()
+     mRawFirstPart(),
+     mDepth(0)
 {
    if (!mType.exists(p_boundary))
    {
@@ -64,7 +67,8 @@ MultipartMixedContents::MultipartMixedContents(const HeaderFieldValue& hfv, cons
 MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs)
    : Contents(rhs),
      mContents(),
-     mRawFirstPart()
+     mRawFirstPart(),
+     mDepth(rhs.mDepth)
 {
    vector<Contents*>::const_iterator j;
 
@@ -136,6 +140,7 @@ MultipartMixedContents::operator=(const MultipartMixedContents& rhs)
       mRawFirstPart = Data();
       Contents::operator=(rhs);
       clear();
+      mDepth = rhs.mDepth;
 
       for (vector<Contents*>::const_iterator i = rhs.mContents.begin(); 
            i != rhs.mContents.end(); ++i)
@@ -195,9 +200,17 @@ MultipartMixedContents::encodeParsed(EncodeStream& str) const
 // The boundary delimiter MUST occur at the beginning of a line, i.e., following
 // a CRLF, and the initial CRLF is considered to be attached to the boundary
 // delimiter line rather than part of the preceding part.
-void 
+void
 MultipartMixedContents::parse(ParseBuffer& pb)
 {
+   // The depth is stamped on this object when the enclosing part created it
+   // (below), so this holds whether the parse runs right away or much later
+   // from a tree walk such as Helper::getSdp().
+   if (mDepth > MaxNestingDepth)
+   {
+      throw Exception("Multipart nesting too deep", __FILE__, __LINE__);
+   }
+
    const Data& boundaryToken = mType.param(p_boundary);
    
    Data boundary(boundaryToken.size() + 4, Data::Preallocate);
@@ -289,6 +302,12 @@ MultipartMixedContents::parse(ParseBuffer& pb)
       }
       // create contents against body
       mContents.push_back(createContents(contentType, tmp));
+      // A nested multipart part (of any subtype) sits one level deeper.
+      MultipartMixedContents* nested = dynamic_cast<MultipartMixedContents*>(mContents.back());
+      if (nested)
+      {
+         nested->mDepth = mDepth + 1;
+      }
       // pre-parse headers
       ParseBuffer headersPb(headerStart, bodyStart-4-headerStart);
       mContents.back()->preParseHeaders(headersPb);
@@ -314,6 +333,7 @@ MultipartMixedContents::parse(ParseBuffer& pb)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
