@@ -310,28 +310,37 @@ PostgreSqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& 
       DataStream ds(command);
       // Use two queries together to simulate UPSERT
       // Real UPSERT is coming in PostgreSQL 9.5
+      Data eUser, eDomain, eRealm, ePwHash, ePwHashAlt, eName, eEmail, eFwd;
+      escapeString(rec.user, eUser);
+      escapeString(rec.domain, eDomain);
+      escapeString(rec.realm, eRealm);
+      escapeString(rec.passwordHash, ePwHash);
+      escapeString(rec.passwordHashAlt, ePwHashAlt);
+      escapeString(rec.name, eName);
+      escapeString(rec.email, eEmail);
+      escapeString(rec.forwardAddress, eFwd);
       ds << "UPDATE " << tableName(UserTable) << " SET"
-         << " realm='" << rec.realm
-         << "', passwordHash='" << rec.passwordHash
-         << "', passwordHashAlt='" << rec.passwordHashAlt
-         << "', name='" << rec.name
-         << "', email='" << rec.email
-         << "', forwardAddress='" << rec.forwardAddress
-         << "' WHERE username = '" << rec.user
-         << "' AND domain='" << rec.domain
+         << " realm='" << eRealm
+         << "', passwordHash='" << ePwHash
+         << "', passwordHashAlt='" << ePwHashAlt
+         << "', name='" << eName
+         << "', email='" << eEmail
+         << "', forwardAddress='" << eFwd
+         << "' WHERE username = '" << eUser
+         << "' AND domain='" << eDomain
          << "'; "
          << "INSERT INTO " << tableName(UserTable) << " (username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
-         << " SELECT '" 
-         << rec.user << "', '"
-         << rec.domain << "', '"
-         << rec.realm << "', '"
-         << rec.passwordHash << "', '"
-         << rec.passwordHashAlt << "', '"
-         << rec.name << "', '"
-         << rec.email << "', '"
-         << rec.forwardAddress << "'"
+         << " SELECT '"
+         << eUser << "', '"
+         << eDomain << "', '"
+         << eRealm << "', '"
+         << ePwHash << "', '"
+         << ePwHashAlt << "', '"
+         << eName << "', '"
+         << eEmail << "', '"
+         << eFwd << "'"
          << " WHERE NOT EXISTS (SELECT 1 FROM " << tableName(UserTable) << " WHERE "
-         << "username = '" << rec.user << "' AND domain = '" << rec.domain << "')";
+         << "username = '" << eUser << "' AND domain = '" << eDomain << "')";
    }
    return query(command, 0) == 0;
 }
@@ -391,16 +400,22 @@ PostgreSqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
       Data user;
       Data domain;
       UserStore::getUserAndDomainFromKey(key, user, domain);
-      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE username = '" << user << "' AND domain = '" << domain << "' ";
-   
-      // Note: domain is empty when querying for HTTP admin user - for this special user, 
+      // user comes straight from the Proxy-Authorization/Authorization username
+      // of an unauthenticated request, so it has to be escaped before it goes
+      // into the query (here and in the $user substitution below)
+      Data eUser, eDomain;
+      escapeString(user, eUser);
+      escapeString(domain, eDomain);
+      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE username = '" << eUser << "' AND domain = '" << eDomain << "' ";
+
+      // Note: domain is empty when querying for HTTP admin user - for this special user,
       // we will only check the repro db, by not adding the UNION statement below
-      if(!mCustomUserAuthQuery.empty() && !domain.empty())  
+      if(!mCustomUserAuthQuery.empty() && !domain.empty())
       {
          ds << " UNION " << mCustomUserAuthQuery;
          ds.flush();
-         command.replace("$user", user);
-         command.replace("$domain", domain);
+         command.replace("$user", eUser);
+         command.replace("$domain", eDomain);
       }
    }
 
@@ -478,17 +493,20 @@ PostgreSqlDb::addTlsPeerIdentity(const AbstractDb::Key& key, const AbstractDb::T
       DataStream ds(command);
       // Use two queries together to simulate UPSERT
       // Real UPSERT is coming in PostgreSQL 9.5
+      Data ePeerName, eAuthId;
+      escapeString(rec.peerName, ePeerName);
+      escapeString(rec.authorizedIdentity, eAuthId);
       ds /* << "UPDATE " << tableName(TlsPeerIdentityTable) << " SET"
          << "' foo='" << rec.foo
-         << "' WHERE peerName = '" << rec.peerName
-         << "' AND authorizedIdentity ='" << rec.authorizedIdentity
+         << "' WHERE peerName = '" << ePeerName
+         << "' AND authorizedIdentity ='" << eAuthId
          << "'; " */
          << "INSERT INTO " << tableName(TlsPeerIdentityTable) << " (peerName, authorizedIdentity)"
          << " SELECT '"
-         << rec.peerName << "', '"
-         << rec.authorizedIdentity << "'"
+         << ePeerName << "', '"
+         << eAuthId << "'"
          << " WHERE NOT EXISTS (SELECT 1 FROM " << tableName(TlsPeerIdentityTable) << " WHERE "
-         << "peerName = '" << rec.peerName << "' AND authorizedIdentity = '" << rec.authorizedIdentity << "')";
+         << "peerName = '" << ePeerName << "' AND authorizedIdentity = '" << eAuthId << "')";
    }
    return query(command, 0) == 0;
 }
@@ -803,9 +821,12 @@ PostgreSqlDb::userWhereClauseToDataStream(const Key& key, DataStream& ds) const
    Data user;
    Data domain;
    UserStore::getUserAndDomainFromKey(key, user, domain);
-   ds << " WHERE username='" << user
-      << "' AND domain='" << domain
-      << "'";      
+   Data eUser, eDomain;
+   escapeString(user, eUser);
+   escapeString(domain, eDomain);
+   ds << " WHERE username='" << eUser
+      << "' AND domain='" << eDomain
+      << "'";
 }
 
 void
@@ -814,8 +835,11 @@ PostgreSqlDb::tlsPeerIdentityWhereClauseToDataStream(const Key& key, DataStream&
    Data peerName;
    Data authorizedIdentity;
    TlsPeerIdentityStore::getTlsPeerIdentityFromKey(key, peerName, authorizedIdentity);
-   ds << " WHERE peerName='" << peerName
-      << "' AND authorizedIdentity='" << authorizedIdentity
+   Data ePeerName, eAuthId;
+   escapeString(peerName, ePeerName);
+   escapeString(authorizedIdentity, eAuthId);
+   ds << " WHERE peerName='" << ePeerName
+      << "' AND authorizedIdentity='" << eAuthId
       << "'";
 }
    
