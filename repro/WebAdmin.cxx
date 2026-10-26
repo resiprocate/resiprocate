@@ -1960,7 +1960,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
               << "  <td>" ;
             if (first) 
             { 
-               s << aor;
+               s << Data::from(aor).xmlCharDataEncode();
                first = false;
             }
             s << "</td>" << endl
@@ -2005,7 +2005,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                s << "</td><td>Never</td>" << endl;
             }
             s << "  <td>"
-               << "<input type=\"checkbox\" name=\"remove." << aor << "\" value=\"" << Data::from(contact.uri()).urlEncoded() 
+               << "<input type=\"checkbox\" name=\"remove." << Data::from(aor).xmlCharDataEncode() << "\" value=\"" << Data::from(contact.uri()).urlEncoded() 
                                                             << "|" << instanceId.urlEncoded() 
                                                             << "|" << regId
                                                             << "|" << (staticRegContact ? "1" : "0")
