@@ -26,11 +26,11 @@ nestedBoundary(unsigned int level)
 }
 
 // A body of `levels` multipart/mixed levels, each inside the one before, whose
-// innermost level holds a single SDP part.  Every part carries
-// Content-Language, which used to make the enclosing parse descend into the
-// part right away.  The outermost boundary is nestedBoundary(0).
+// innermost level holds a single SDP part.  withLanguage puts Content-Language
+// on every part, which used to make the enclosing parse descend into the part
+// right away.  The outermost boundary is nestedBoundary(0).
 static Data
-makeNestedMultipart(unsigned int levels)
+makeNestedMultipart(unsigned int levels, bool withLanguage)
 {
    Data body;
    for (unsigned int k = 0; k < levels; ++k)
@@ -44,8 +44,11 @@ makeNestedMultipart(unsigned int levels)
       {
          body += "Content-Type: application/sdp\r\n";
       }
-      body += "Content-Language: en\r\n"
-              "\r\n";
+      if (withLanguage)
+      {
+         body += "Content-Language: en\r\n";
+      }
+      body += "\r\n";
    }
    body += "v=0\r\n"
            "o=- 0 0 IN IP4 127.0.0.1\r\n"
@@ -60,12 +63,71 @@ makeNestedMultipart(unsigned int levels)
    return body;
 }
 
+// The same body in an INVITE.  Content-Disposition makes SipMessage::
+// getContents() parse the outermost level as soon as it creates the body, so
+// parseAllHeaders() goes through the same path a stack takes for a request it
+// has just received.
+static SipMessage*
+makeNestedMessage(unsigned int levels, bool withLanguage)
+{
+   const Data body(makeNestedMultipart(levels, withLanguage));
+   Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+            "Via: SIP/2.0/TCP 192.0.2.1:5060;branch=z9hG4bK776asdhds\r\n"
+            "To: <sip:bob@biloxi.com>\r\n"
+            "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+            "Call-ID: 314159\r\n"
+            "CSeq: 14 INVITE\r\n"
+            "Content-Type: multipart/mixed; boundary=" + nestedBoundary(0) + "\r\n"
+            "Content-Disposition: session\r\n"
+            "Content-Length: ");
+   txt += Data((uint64_t)body.size());
+   txt += "\r\n\r\n";
+   txt += body;
+   return TestSupport::makeMessage(txt);
+}
+
+// Walks down one level at a time.  Each parts() call parses one level and
+// returns before the next begins, so the limit has to hold however late a
+// nested part is parsed.
+static void
+checkWalk(Contents* top, unsigned int levels, bool withinLimit)
+{
+   Contents* c = top;
+   unsigned int parsed = 0;
+   try
+   {
+      while (MultipartMixedContents* m = dynamic_cast<MultipartMixedContents*>(c))
+      {
+         c = m->parts().front();
+         ++parsed;
+      }
+      assert(withinLimit);
+      assert(parsed == levels);
+      assert(dynamic_cast<SdpContents*>(c));
+   }
+   catch (BaseException&)
+   {
+      assert(!withinLimit);
+      assert(parsed == MultipartMixedContents::MaxNestingDepth + 1);
+   }
+}
+
+// Helper::getSdp() walks the whole tree.  Past the limit the parse exception
+// stops the walk (getSdpRecurse() catches it), so there is no SDP rather than
+// one stack frame per level.
+static void
+checkGetSdp(Contents* top, bool withinLimit)
+{
+   unique_ptr<SdpContents> sdp(Helper::getSdp(top));
+   assert((sdp.get() != nullptr) == withinLimit);
+}
+
 // withinLimit: whether every level is within MaxNestingDepth, so the SDP at
 // the bottom can be reached.
 static void
-checkNesting(unsigned int levels, bool withinLimit)
+checkNesting(unsigned int levels, bool withLanguage, bool withinLimit)
 {
-   const Data body(makeNestedMultipart(levels));
+   const Data body(makeNestedMultipart(levels, withLanguage));
    const Data typeTxt("multipart/mixed; boundary=" + nestedBoundary(0));
    ParseBuffer typePb(typeTxt.data(), typeTxt.size());
    Mime contentType;
@@ -76,37 +138,23 @@ checkNesting(unsigned int levels, bool withinLimit)
       // Parsing the outermost level must not descend into the next one.
       MultipartMixedContents mpc(hfv, contentType);
       assert(mpc.parts().size() == 1);
-
-      // Helper::getSdp() walks the whole tree.  Past the limit the parse
-      // exception stops the walk (getSdpRecurse() catches it), so there is
-      // no SDP rather than one stack frame per level.
-      unique_ptr<SdpContents> sdp(Helper::getSdp(&mpc));
-      assert((sdp.get() != nullptr) == withinLimit);
+      checkGetSdp(&mpc, withinLimit);
+   }
+   {
+      MultipartMixedContents mpc(hfv, contentType);
+      checkWalk(&mpc, levels, withinLimit);
    }
 
+   // A failed level stays failed, so each check gets a message of its own.
    {
-      // Walk down one level at a time.  Each parts() call parses one level
-      // and returns before the next begins, so the limit has to hold however
-      // late a nested part is parsed.
-      MultipartMixedContents mpc(hfv, contentType);
-      Contents* c = &mpc;
-      unsigned int parsed = 0;
-      try
-      {
-         while (MultipartMixedContents* m = dynamic_cast<MultipartMixedContents*>(c))
-         {
-            c = m->parts().front();
-            ++parsed;
-         }
-         assert(withinLimit);
-         assert(parsed == levels);
-         assert(dynamic_cast<SdpContents*>(c));
-      }
-      catch (BaseException&)
-      {
-         assert(!withinLimit);
-         assert(parsed == MultipartMixedContents::MaxNestingDepth + 1);
-      }
+      unique_ptr<SipMessage> msg(makeNestedMessage(levels, withLanguage));
+      msg->parseAllHeaders();
+      checkGetSdp(msg->getContents(), withinLimit);
+   }
+   {
+      unique_ptr<SipMessage> msg(makeNestedMessage(levels, withLanguage));
+      msg->parseAllHeaders();
+      checkWalk(msg->getContents(), levels, withinLimit);
    }
 }
 
@@ -245,10 +293,13 @@ main()
    {
       cerr << "test multipart nesting depth limit" << endl;
       const unsigned int maxDepth = MultipartMixedContents::MaxNestingDepth;
-      checkNesting(4, true);
-      checkNesting(maxDepth + 1, true);    // deepest allowed: levels 0..maxDepth
-      checkNesting(maxDepth + 2, false);   // one level too deep
-      checkNesting(1000, false);
+      for (int withLanguage = 0; withLanguage < 2; ++withLanguage)
+      {
+         checkNesting(4, withLanguage != 0, true);
+         checkNesting(maxDepth + 1, withLanguage != 0, true);    // deepest allowed: levels 0..maxDepth
+         checkNesting(maxDepth + 2, withLanguage != 0, false);   // one level too deep
+         checkNesting(20000, withLanguage != 0, false);
+      }
    }
 
    cerr << endl << "All OK" << endl;

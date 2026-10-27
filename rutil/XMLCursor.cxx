@@ -232,13 +232,16 @@ XMLCursor::parseNextRootChild()
    }
    else
    {
-      Node* child = new Node(mRoot->mPb);
-      child->skipToEndTag();
+      // Owned here until it is attached to the root: the nodes parsed below
+      // it are already attached to it, so if the parse fails, freeing the
+      // child frees the whole partly parsed subtree.
+      std::unique_ptr<Node> child(new Node(mRoot->mPb));
+      child->skipToEndTag(1);   // a child of the root is one level down
 
       // leave the parse buffer after the child
       mRoot->mPb.reset(child->mPb.end());
 
-      mRoot->addChild(child);
+      mRoot->addChild(child.release());
    }
 
    // mNext always points at cursored child

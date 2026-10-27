@@ -121,7 +121,8 @@ class XMLCursor
       typedef LinkedHashMap<Data, Data, KeyedDataHash> AttributeMap;
       /// getAttributes() fails (ParseException) an element with more attributes than this
       static constexpr size_t MaxAttributes = 256;
-      /// skipToEndTag() fails (ParseException) a document nested deeper than this.
+      /// Parsing fails (ParseException) a document with elements nested more
+      /// than this many levels below the root element.
       /// Each nested element costs a stack frame while parsing and another while
       /// the tree is destroyed, so without a bound very deep nesting would recurse
       /// until the stack is exhausted.  Real bodies (PIDF, dialog-info, ...) nest
@@ -176,7 +177,8 @@ public:
             void addChild(Node*);
             // return true if <foo/>
             bool extractTag();
-            void skipToEndTag(unsigned int depth = 0);
+            // depth: levels below the root element, 1 for a child of the root
+            void skipToEndTag(unsigned int depth);
             static const char* skipComments(ParseBuffer& pb);
 
             ParseBuffer mPb;

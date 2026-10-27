@@ -427,30 +427,86 @@ main()
       assert(tree.getTag() == "resource");
    }
 
+   // Nesting depth limit (see XMLCursor::Node::skipToEndTag()).  firstChild()
+   // on the root parses the root's first child and everything below it.
    {
-      cerr << "test nesting depth limit" << endl;
-      // Deeply nested XML must fail the parse rather than recurse without
-      // bound (see XMLCursor::Node::skipToEndTag()).  A shallow document still
-      // parses; one well past the limit raises ParseException.  The boundary
-      // value itself is skipped so the assert does not depend on the exact
-      // off-by-one of the depth count.
-      for (unsigned int nest = 8; nest <= 8u + 4000; nest += 4000)
+      cerr << "test nesting at the depth limit" << endl;
+      Data contents("<presence>");
+      for (unsigned int i = 0; i < XMLCursor::MaxNestingDepth; ++i)
       {
-         Data contents("<?xml version=\"1.0\"?><presence>");
-         for (unsigned int i = 0; i < nest; ++i) { contents += "<a>"; }
-         for (unsigned int i = 0; i < nest; ++i) { contents += "</a>"; }
-         contents += "</presence>";
+         contents += "<a>";
+      }
+      contents += "deep";
+      for (unsigned int i = 0; i < XMLCursor::MaxNestingDepth; ++i)
+      {
+         contents += "</a>";
+      }
+      contents += "</presence>";
 
+      try
+      {
          XMLCursor xmlc(ParseBuffer(contents.data(), contents.size()));
+         unsigned int depth = 0;
+         while (xmlc.firstChild() && !xmlc.atLeaf())
+         {
+            ++depth;
+            assert(xmlc.getTag() == "a");
+         }
+         assert(depth == XMLCursor::MaxNestingDepth);
+         assert(xmlc.atLeaf());
+         assert(xmlc.getValue() == "deep");
+      }
+      catch (ParseException& e)
+      {
+         cerr << e << endl;
+         assert(false);
+      }
+   }
+
+   {
+      cerr << "test nesting one level over the depth limit" << endl;
+      Data contents("<presence>");
+      for (unsigned int i = 0; i <= XMLCursor::MaxNestingDepth; ++i)
+      {
+         contents += "<a>";
+      }
+      for (unsigned int i = 0; i <= XMLCursor::MaxNestingDepth; ++i)
+      {
+         contents += "</a>";
+      }
+      contents += "</presence>";
+
+      XMLCursor xmlc(ParseBuffer(contents.data(), contents.size()));
+      for (int attempt = 0; attempt < 2; ++attempt)  // a failed parse fails again
+      {
          try
          {
-            xmlc.firstChild();   // forces the nested subtree to parse
-            assert(nest <= XMLCursor::MaxNestingDepth);
+            xmlc.firstChild();
+            assert(false);
          }
          catch (ParseException&)
          {
-            assert(nest > XMLCursor::MaxNestingDepth);
          }
+      }
+   }
+
+   {
+      cerr << "test deeply nested unclosed elements" << endl;
+      // Fails at the depth limit, long before running out of input.
+      Data contents("<presence>");
+      for (int i = 0; i < 20000; ++i)
+      {
+         contents += "<a>";
+      }
+
+      XMLCursor xmlc(ParseBuffer(contents.data(), contents.size()));
+      try
+      {
+         xmlc.firstChild();
+         assert(false);
+      }
+      catch (ParseException&)
+      {
       }
    }
 
