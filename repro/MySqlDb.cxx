@@ -302,25 +302,34 @@ MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
    Data command;
    {
       DataStream ds(command);
+      Data eUser, eDomain, eRealm, ePwHash, ePwHashAlt, eName, eEmail, eFwd;
+      escapeString(rec.user, eUser);
+      escapeString(rec.domain, eDomain);
+      escapeString(rec.realm, eRealm);
+      escapeString(rec.passwordHash, ePwHash);
+      escapeString(rec.passwordHashAlt, ePwHashAlt);
+      escapeString(rec.name, eName);
+      escapeString(rec.email, eEmail);
+      escapeString(rec.forwardAddress, eFwd);
       ds << "INSERT INTO " << tableName(UserTable) << " (user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
-         << " VALUES('" 
-         << rec.user << "', '"
-         << rec.domain << "', '"
-         << rec.realm << "', '"
-         << rec.passwordHash << "', '"
-         << rec.passwordHashAlt << "', '"
-         << rec.name << "', '"
-         << rec.email << "', '"
-         << rec.forwardAddress << "')"
+         << " VALUES('"
+         << eUser << "', '"
+         << eDomain << "', '"
+         << eRealm << "', '"
+         << ePwHash << "', '"
+         << ePwHashAlt << "', '"
+         << eName << "', '"
+         << eEmail << "', '"
+         << eFwd << "')"
          << " ON DUPLICATE KEY UPDATE"
-         << " user='" << rec.user 
-         << "', domain='" << rec.domain
-         << "', realm='" << rec.realm
-         << "', passwordHash='" << rec.passwordHash
-         << "', passwordHashAlt='" << rec.passwordHashAlt
-         << "', name='" << rec.name
-         << "', email='" << rec.email
-         << "', forwardAddress='" << rec.forwardAddress
+         << " user='" << eUser
+         << "', domain='" << eDomain
+         << "', realm='" << eRealm
+         << "', passwordHash='" << ePwHash
+         << "', passwordHashAlt='" << ePwHashAlt
+         << "', name='" << eName
+         << "', email='" << eEmail
+         << "', forwardAddress='" << eFwd
          << "'";
    }
    return query(command, 0) == 0;
@@ -382,16 +391,22 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
       Data user;
       Data domain;
       UserStore::getUserAndDomainFromKey(key, user, domain);
-      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE user = '" << user << "' AND domain = '" << domain << "' ";
-   
-      // Note: domain is empty when querying for HTTP admin user - for this special user, 
+      // user comes straight from the Proxy-Authorization/Authorization username
+      // of an unauthenticated request, so it has to be escaped before it goes
+      // into the query (here and in the $user substitution below)
+      Data eUser, eDomain;
+      escapeString(user, eUser);
+      escapeString(domain, eDomain);
+      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE user = '" << eUser << "' AND domain = '" << eDomain << "' ";
+
+      // Note: domain is empty when querying for HTTP admin user - for this special user,
       // we will only check the repro db, by not adding the UNION statement below
-      if(!mCustomUserAuthQuery.empty() && !domain.empty())  
+      if(!mCustomUserAuthQuery.empty() && !domain.empty())
       {
          ds << " UNION " << mCustomUserAuthQuery;
          ds.flush();
-         command.replace("$user", user);
-         command.replace("$domain", domain);
+         command.replace("$user", eUser);
+         command.replace("$domain", eDomain);
       }
    }
 
@@ -465,13 +480,16 @@ MySqlDb::addTlsPeerIdentity(const AbstractDb::Key& key, const AbstractDb::TlsPee
    Data command;
    {
       DataStream ds(command);
+      Data ePeerName, eAuthId;
+      escapeString(rec.peerName, ePeerName);
+      escapeString(rec.authorizedIdentity, eAuthId);
       ds << "INSERT INTO " << tableName(TlsPeerIdentityTable) << " (peerName, tlsPeerIdentity)"
          << " VALUES('"
-         << rec.peerName << "', '"
-         << rec.authorizedIdentity << "')"
+         << ePeerName << "', '"
+         << eAuthId << "')"
          << " ON DUPLICATE KEY UPDATE"
-         << " peerName='" << rec.peerName
-         << "', authorizedIdentity ='" << rec.authorizedIdentity
+         << " peerName='" << ePeerName
+         << "', authorizedIdentity ='" << eAuthId
          << "'";
    }
    return query(command, 0) == 0;
@@ -773,9 +791,12 @@ MySqlDb::userWhereClauseToDataStream(const Key& key, DataStream& ds) const
    Data user;
    Data domain;
    UserStore::getUserAndDomainFromKey(key, user, domain);
-   ds << " WHERE user='" << user
-      << "' AND domain='" << domain
-      << "'";      
+   Data eUser, eDomain;
+   escapeString(user, eUser);
+   escapeString(domain, eDomain);
+   ds << " WHERE user='" << eUser
+      << "' AND domain='" << eDomain
+      << "'";
 }
 
 void
@@ -784,8 +805,11 @@ MySqlDb::tlsPeerIdentityWhereClauseToDataStream(const Key& key, DataStream& ds) 
    Data peerName;
    Data authorizedIdentity;
    TlsPeerIdentityStore::getTlsPeerIdentityFromKey(key, peerName, authorizedIdentity);
-   ds << " WHERE peerName='" << peerName
-      << "' AND authorizedIdentity='" << authorizedIdentity
+   Data ePeerName, eAuthId;
+   escapeString(peerName, ePeerName);
+   escapeString(authorizedIdentity, eAuthId);
+   ds << " WHERE peerName='" << ePeerName
+      << "' AND authorizedIdentity='" << eAuthId
       << "'";
 }
    

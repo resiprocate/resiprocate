@@ -64,7 +64,10 @@ SqlDb::setToData(const std::set<resip::Data>& items, resip::Data& result, const 
       }
       if(quote != 0)
       {
-         ds << quote << *it << quote;
+         // these come from TLS certificate names and the From URI, so they
+         // have to be escaped before going inside the quotes
+         Data escaped;
+         ds << quote << escapeString(*it, escaped) << quote;
       }
       else
       {
