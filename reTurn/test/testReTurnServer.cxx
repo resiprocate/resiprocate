@@ -26,6 +26,7 @@
 #include "../TcpServer.hxx"
 #include "../TurnManager.hxx"
 #include "../UdpServer.hxx"
+#include "../client/ErrorCode.hxx"
 #include "../client/TurnAsyncSocketHandler.hxx"
 #include "../client/TurnAsyncTcpSocket.hxx"
 #include "../client/TurnAsyncUdpSocket.hxx"
@@ -1144,6 +1145,44 @@ testChannelDataPadding()
          parsesAsTurnFraming(recorder.fromServer(), fromServer) && fromServer == 5);
 }
 
+// A message longer than the sync TCP client's read buffer (8192 bytes), from a server answering a
+// bind with it, is refused with FrameError rather than read past the end of the buffer
+static void
+testOversizedFrame()
+{
+   cerr << "-- a message too long for the sync TCP client" << endl;
+   // A STUN Binding success response announcing 0xFFE0 bytes of attributes, and ChannelData
+   // announcing 0xFFFF bytes of data
+   for (const std::string& header : { std::string("\x01\x01\xFF\xE0", 4), std::string("\x40\x00\xFF\xFF", 4) })
+   {
+      const std::string what = header[0] == 0x01 ? "STUN" : "ChannelData";
+      asio::io_context io;
+      asio::ip::tcp::acceptor acceptor(io, asio::ip::tcp::endpoint(localhost, 0));
+      std::thread server([&acceptor, &header]()
+      {
+         asio::ip::tcp::socket socket(acceptor.get_executor());
+         asio::error_code ec;
+         acceptor.accept(socket, ec);
+         char buffer[1024];
+         socket.read_some(asio::buffer(buffer), ec);  // the bind request
+         // The header, then at least as much as it announces
+         asio::write(socket, asio::buffer(header + std::string(0x10000 + 16, 'x')), ec);
+         while (!ec)
+         {
+            socket.read_some(asio::buffer(buffer), ec);  // until the client closes
+         }
+      });
+      {
+         // On the heap: a write past it shows as such under ASan, rather than overwriting this stack
+         std::unique_ptr<TurnTcpSocket> client(new TurnTcpSocket(localhost, 0));
+         check(("oversized " + what + ": connects").c_str(), !client->connect("127.0.0.1", acceptor.local_endpoint().port()));
+         check(("oversized " + what + ": refused with FrameError").c_str(),
+               client->bindRequest() == asio::error_code(reTurn::FrameError, asio::error::misc_category));
+      }
+      server.join();
+   }
+}
+
 // Runs test with a server configured from configFile
 static void
 runWithServer(const char* configFile, const std::function<void()>& test)
@@ -1195,6 +1234,7 @@ main(int argc, char** argv)
             testChannelNumbers();
             testUdpAndTcp();
             testChannelDataPadding();
+            testOversizedFrame();
 #ifdef USE_SSL
             testTls();
 
