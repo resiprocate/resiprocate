@@ -68,8 +68,14 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
       static const size_t MaxReadSize;
 
    private:
+      /** Accepts queued connections until accept() reports the queue empty.
+       *  Stops early at any other accept() error and sets mListenQueuePending.
+       */
+      void drainListenQueue();
+
       static const int MaxBufferSize;
       ConnectionManager mConnectionManager;
+      bool mListenQueuePending; //!< an accept() error may have left connections queued; process() retries while set
       
       /** Helper to bind client socket for outbound connections.
        * Behavior depends on RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS:
