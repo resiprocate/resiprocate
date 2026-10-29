@@ -27,7 +27,8 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
                                    Compression &compression,
                                    unsigned transportFlags,
                                    const Data& netNs)
-   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags, netNs)
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags, netNs),
+     mListenQueuePending(false)
 {
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)==0 )
    {
@@ -454,6 +455,10 @@ TcpBaseTransport::process()
    if (mPollGrp)
    {
        processAllWriteRequests();
+       if (mListenQueuePending)
+       {
+          drainListenQueue();
+       }
    }
    mStateMachineFifo.flush();
 }
@@ -484,8 +489,19 @@ TcpBaseTransport::processPollEvent(FdPollEventMask mask)
 {
    if (mask & FPEM_Read)
    {
-      while(processListen() > 0);
+      drainListenQueue();
    }
+}
+
+void
+TcpBaseTransport::drainListenQueue()
+{
+   // In an epoll group the listener is edge-triggered: connections an error
+   // leaves in the queue raise no new event, and while the queue is full no
+   // new connection can.
+   int result;
+   while((result = processListen()) > 0);
+   mListenQueuePending = (result < 0);
 }
 
 void
