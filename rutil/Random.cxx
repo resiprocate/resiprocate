@@ -49,7 +49,7 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 Mutex Random::mMutex;
-bool Random::mIsInitialized = false;
+std::atomic<bool> Random::mIsInitialized(false);
 
 #ifdef WIN32
 Random::Initializer Random::mInitializer;
@@ -182,7 +182,6 @@ Random::initialize()
       Lock lock(mMutex);
       if (!Random::mIsInitialized)
       {
-         mIsInitialized = true;
          Timer::setupTimeOffsets();
 
          unsigned seed = getSimpleSeed();
@@ -252,6 +251,9 @@ Random::initialize()
          {
             ::close(fd);
          }
+
+         // Set last, so that a caller that skips the lock sees a seeded generator.
+         mIsInitialized = true;
       }
    }
 #endif  // not WIN32
