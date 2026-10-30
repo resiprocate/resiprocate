@@ -1350,7 +1350,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
                                                      msg->getTransactionId(),
                                                      remoteSigcompId));
 
-         send->data.reserve(mAvgBufferSize + mAvgBufferSize/4);
+         const int avgBufferSize = mAvgBufferSize.load(std::memory_order_relaxed);
+         send->data.reserve(avgBufferSize + avgBufferSize/4);
 
          DataStream str(send->data);
          msg->encode(str);
@@ -1359,7 +1360,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          // !bwc! Moving average of message size. (Used to intelligently
          // predict how much space to reserve in the buffer, to minimize
          // dynamic resizing.)
-         mAvgBufferSize = (255*mAvgBufferSize + (int)send->data.size()+128)/256;
+         mAvgBufferSize.store((255*avgBufferSize + (int)send->data.size()+128)/256,
+                              std::memory_order_relaxed);
 
          resip_assert(!send->data.empty());
          DebugLog (<< "Transmitting to " << target
