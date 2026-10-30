@@ -5,6 +5,9 @@
 #include "rutil/Data.hxx"
 #include "rutil/ThreadIf.hxx"     // for ThreadLocalStorage
 #include "rutil/ResipAssert.h"
+
+#include <atomic>
+
 struct random_data;
 
 /**
@@ -92,7 +95,7 @@ class Random
 
    private:
       static Mutex mMutex;
-      static bool  mIsInitialized;
+      static std::atomic<bool> mIsInitialized;
       
 #ifdef WIN32
       // ensure each thread is initialized since windows requires you to call srand for each thread
