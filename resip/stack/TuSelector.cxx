@@ -7,6 +7,7 @@
 
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/AsyncProcessHandler.hxx"
+#include "rutil/Lock.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
@@ -41,6 +42,7 @@ TuSelector::process()
    if (mShutdownFifo.messageAvailable())
    {
       TransactionUserMessage* msg = mShutdownFifo.getNext();
+      Lock lock(mTuListMutex);
       
       switch (msg->type())
       {
@@ -65,16 +67,19 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
 {
    if (msg->hasTransactionUser())
    {
-      if (exists(msg->getTransactionUser()))
       {
-         DebugLog (<< "Send to " << *(msg->getTransactionUser()) << " " << std::endl << std::endl << *msg);
-         msg->getTransactionUser()->postToTransactionUser(msg, usage);
+         // Hold the lock until the message is posted, so that remove() cannot
+         // confirm the removal to the TU before this message is in its fifo.
+         Lock lock(mTuListMutex);
+         if (exists(msg->getTransactionUser()))
+         {
+            DebugLog (<< "Send to " << *(msg->getTransactionUser()) << " " << std::endl << std::endl << *msg);
+            msg->getTransactionUser()->postToTransactionUser(msg, usage);
+            return;
+         }
       }
-      else
-      {
-         WarningLog (<< "Send to TU that no longer exists: " << std::endl << std::endl << *msg);
-         delete msg;
-      }
+      WarningLog (<< "Send to TU that no longer exists: " << std::endl << std::endl << *msg);
+      delete msg;
    }
    else
    {
@@ -101,6 +106,7 @@ TuSelector::add(ConnectionTerminated* term)
 {
    InfoLog (<< "Sending " << term->brief() << " to TUs");
    
+   Lock lock(mTuListMutex);
    for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
    {
       if (!it->shuttingDown && it->tu->isRegisteredForConnectionTermination())
@@ -115,6 +121,7 @@ TuSelector::add(KeepAlivePong* pong)
 {
    //InfoLog (<< "Sending " << *pong << " to TUs");
    
+   Lock lock(mTuListMutex);
    for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
    {
       if (!it->shuttingDown && it->tu->isRegisteredForKeepAlivePongs())
@@ -127,6 +134,7 @@ TuSelector::add(KeepAlivePong* pong)
 bool
 TuSelector::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
 {
+   Lock lock(mTuListMutex);
    if (mTuSelectorMode)
    {
       for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
@@ -147,6 +155,7 @@ TuSelector::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
 unsigned int 
 TuSelector::size() const      
 {
+   Lock lock(mTuListMutex);
    if (mTuSelectorMode)
    {
       unsigned int total=0;   
@@ -162,9 +171,17 @@ TuSelector::size() const
    }
 }
 
+bool
+TuSelector::haveTransactionUsers() const
+{
+   Lock lock(mTuListMutex);
+   return mTuSelectorMode;
+}
+
 void 
 TuSelector::registerTransactionUser(TransactionUser& tu, const bool front)
 {
+   Lock lock(mTuListMutex);
    mTuSelectorMode = true;
    if(front)
    {
@@ -194,6 +211,7 @@ TransactionUser*
 TuSelector::selectTransactionUser(const SipMessage& msg)
 {
    DebugLog(<< "TuSelector::selectTransactionUser: Checking which TU message belongs to:" << std::endl << std::endl << msg);
+   Lock lock(mTuListMutex);
    for(TuList::iterator it = mTuList.begin(); it != mTuList.end(); it++)
    {
       if (it->tu->isForMe(msg))
@@ -261,15 +279,18 @@ TuSelector::getTimeTillNextProcessMS()
 } 
 
 bool
-TuSelector::isTransactionUserStillRegistered(const TransactionUser* tu) const
+TuSelector::isRegisteredForTransactionTermination(const TransactionUser* tu) const
 {
+   // Check the flag under the lock too: once the TU is removed, its owner
+   // may delete it.
+   Lock lock(mTuListMutex);
    if (mTuSelectorMode)
    {
       for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
       {
          if (!it->shuttingDown  && it->tu == tu)
          {
-            return true;
+            return tu->isRegisteredForTransactionTermination();
          }
       }
    }
@@ -279,6 +300,7 @@ TuSelector::isTransactionUserStillRegistered(const TransactionUser* tu) const
 void 
 TuSelector::setCongestionManager(CongestionManager* manager)
 {
+   Lock lock(mTuListMutex);
    for(TuList::iterator i=mTuList.begin(); i!=mTuList.end();++i)
    {
       i->tu->setCongestionManager(manager);

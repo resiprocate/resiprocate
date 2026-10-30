@@ -6,6 +6,7 @@
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Fifo.hxx"
+#include "rutil/Mutex.hxx"
 
 namespace resip
 {
@@ -30,13 +31,13 @@ class TuSelector
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
   
       TransactionUser* selectTransactionUser(const SipMessage& msg);
-      bool haveTransactionUsers() const { return mTuSelectorMode; }
+      bool haveTransactionUsers() const;
       void registerTransactionUser(TransactionUser&, const bool front = false);
       void requestTransactionUserShutdown(TransactionUser&);
       void unregisterTransactionUser(TransactionUser&);
       void process();
       unsigned int getTimeTillNextProcessMS();
-      bool isTransactionUserStillRegistered(const TransactionUser* ) const;
+      bool isRegisteredForTransactionTermination(const TransactionUser* ) const;
 
       // Handler is notified when a message is posted
       // to the default application receive queue.
@@ -61,6 +62,11 @@ class TuSelector
       };
       
       typedef std::vector<Item> TuList;
+      // Guards mTuList and mTuSelectorMode: TUs are registered from application
+      // threads and removed in process(), while the list is read from the
+      // transaction controller (possibly on its own thread) and from threads
+      // that post to the stack.
+      mutable Mutex mTuListMutex;
       TuList mTuList;
       TimeLimitFifo<Message>& mFallBackFifo;
       CongestionManager* mCongestionManager;

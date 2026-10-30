@@ -2970,8 +2970,7 @@ void
 TransactionState::terminateClientTransaction(const Data& tid)
 {
    mState = Terminated;
-   if (mController.mTuSelector.isTransactionUserStillRegistered(mTransactionUser) && 
-       mTransactionUser->isRegisteredForTransactionTermination())
+   if (mController.mTuSelector.isRegisteredForTransactionTermination(mTransactionUser))
    {
       //StackLog (<< "Terminate client transaction " << tid);
       sendToTU(new TransactionTerminated(tid, true, mTransactionUser));
@@ -2982,8 +2981,7 @@ void
 TransactionState::terminateServerTransaction(const Data& tid)
 {
    mState = Terminated;
-   if (mController.mTuSelector.isTransactionUserStillRegistered(mTransactionUser) && 
-       mTransactionUser->isRegisteredForTransactionTermination())
+   if (mController.mTuSelector.isRegisteredForTransactionTermination(mTransactionUser))
    {
       //StackLog (<< "Terminate server transaction " << tid);
       sendToTU(new TransactionTerminated(tid, false, mTransactionUser));
