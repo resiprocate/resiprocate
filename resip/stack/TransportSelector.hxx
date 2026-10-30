@@ -5,6 +5,7 @@
 #include <sys/select.h>
 #endif
 
+#include <atomic>
 #include <map>
 #include <vector>
 #include <list>
@@ -236,7 +237,7 @@ class TransportSelector
       // epoll support, for sharedprocess transports
       FdPollGrp* mPollGrp;
 
-      int mAvgBufferSize;
+      std::atomic<int> mAvgBufferSize;
       Fifo<Transport> mTransportsToAddRemove;
       std::unique_ptr<SelectInterruptor> mSelectInterruptor;
       FdPollItemHandle mInterruptorHandle;
