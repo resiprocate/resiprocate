@@ -4,6 +4,8 @@
 
 #include "rutil/ResipAssert.h"
 #include <stdlib.h>
+#include <new>
+#include <stdexcept>
 
 #ifdef WIN32
 #include "rutil/Socket.hxx"
@@ -125,19 +127,6 @@ void
 Random::initialize()
 {  
 #ifdef WIN32
-//#if defined(USE_SSL)
-#if 0 //!dcm! - this shouldn't be per thread for win32, and this is slow. Going
-      //to re-work openssl initialization
-   if ( !Random::mIsInitialized)
-   {
-      Lock lock(mMutex);
-      if (!Random::mIsInitialized)
-      {
-         mIsInitialized = true;
-         RAND_screen ();
-      }
-   }
-#else      
    if (!Random::mInitializer.isInitialized())
    {
       Lock lock(mMutex);      
@@ -172,11 +161,10 @@ Random::initialize()
          mIsInitialized = true;
       }
    }
-#endif  // not dead code
 
 #else   // WIN32
-   // ?dcm? -- OpenSSL will transparently initialize PRNG if /dev/urandom is
-   // present. In any case, will move into OpenSSLInit
+   // OpenSSL's own PRNG needs no seeding here: OpenSSL 1.1.1 and later seed
+   // it from the OS. This seeds resip's random()/random_r() generator only.
    if ( !Random::mIsInitialized)
    {
       Lock lock(mMutex);
@@ -211,46 +199,35 @@ Random::initialize()
             ErrLog( << "Could not open /dev/urandom" );
          }
 
+         if (fd != -1 )
+         {
+            ::close(fd);
+         }
+
+         // Set up the generator state last, so that a failure here throws
+         // with nothing leaked and leaves initialize() free to be retried.
 #if defined(RESIP_RANDOM_THREAD_LOCAL)
+         int err = ThreadIf::tlsKeyCreate(sRandomStateKey, ::free);
+         if (err != 0)
+         {
+            ErrLog( << "Could not create thread-local key for random state, error=" << err );
+            throw std::runtime_error("Random: could not create thread-local key");
+         }
          sThreadSeedBase = seed;
-         ThreadIf::tlsKeyCreate(sRandomStateKey, ::free);
 #elif defined(RESIP_RANDOM_THREAD_MUTEX)
          struct random_data *buf;
          size_t sz = sizeof(*buf)+RANDOM_STATE_SIZE;
          buf = (struct random_data*) ::malloc(sz);
+         if (buf == 0)
+         {
+            throw std::bad_alloc();
+         }
          memset( buf, 0, sz);      // .kw. strange segfaults without this
          initstate_r(seed, ((char*)buf)+sizeof(*buf), RANDOM_STATE_SIZE, buf);
          sRandomState = buf;
 #else
          srandom(seed);
 #endif
-
-#if defined(USE_SSL)
-         if (fd == -1 )
-         {
-            // really bad sign - /dev/random does not exist so need to intialize
-            // OpenSSL some other way
-
-            // !cj! need to fix         assert(0);
-         }
-         else
-         {
-            char buf[1024/8]; // size is number byes used for OpenSSL init 
-
-            int s = read( fd,&buf,sizeof(buf) );
-
-            if ( s != sizeof(buf) )
-            {
-               ErrLog( << "System is short of randomness" );
-            }
-         
-            RAND_add(buf,sizeof(buf),double(s*8));
-         }
-#endif   // SSL
-         if (fd != -1 )
-         {
-            ::close(fd);
-         }
 
          // Set last, so that a caller that skips the lock sees a seeded generator.
          mIsInitialized = true;
@@ -302,6 +279,10 @@ Random::getRandom()
    if ( buf==NULL ) {
       size_t sz = sizeof(*buf)+RANDOM_STATE_SIZE;
       buf = (struct random_data*) ::malloc(sz);
+      if ( buf==NULL )
+      {
+         throw std::bad_alloc();
+      }
       memset( buf, 0, sz);      // .kw. strange segfaults without this
       // Mix in the /dev/urandom-derived base captured at initialize() time so
       // per-thread seeds are not derived solely from time+pid (CWE-338).
@@ -518,6 +499,7 @@ Random::Initializer::isInitialized()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2005.   All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
