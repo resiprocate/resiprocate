@@ -920,9 +920,10 @@ class SipStack : public FdSetIOObserver
           receiveAny, the SipStack will call postToTu on the appropriate
           Tu. Messages not associated with a registered TU go into SipStack::mTuFifo.
 
-          Once processing has started, the TU receives new requests only after
-          the TransactionController applies the registration; messages posted
-          to it are delivered from this call on.
+          The TransactionController applies the registration, so the TU
+          receives new requests only after that; a TU registered before
+          processing starts is applied before any SIP message is handled.
+          Messages posted to the TU are delivered from this call on.
       */
       void registerTransactionUser(TransactionUser&, const bool front = false);
 
@@ -1227,9 +1228,7 @@ class SipStack : public FdSetIOObserver
       /// Responsible for routing messages to the correct TU based on installed rules
       TuSelector mTuSelector;
 
-      /** @brief Protection for AppTimerQueue, and for mInternalThreadsRunning
-          and mProcessingHasStarted when registerTransactionUser() chooses
-          how to register a TU **/
+      /** @brief Protection for AppTimerQueue **/
       mutable Mutex mAppTimerMutex;
       
       /** @details timers associated with the application. When a timer fires, it is

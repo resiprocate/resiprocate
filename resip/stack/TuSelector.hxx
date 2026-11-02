@@ -19,8 +19,7 @@ class AsyncProcessHandler;
 // Members that read or change the TU list are for the thread that runs the
 // TransactionController, except addFromAnyThread(),
 // addPendingTransactionUser() and setCongestionManager(), which any thread
-// may call, and registerTransactionUser(), which is only for use before
-// processing starts.
+// may call.
 class TuSelector
 {
    public:
@@ -37,7 +36,6 @@ class TuSelector
   
       TransactionUser* selectTransactionUser(const SipMessage& msg);
       bool haveTransactionUsers() const { return mTuSelectorMode; }
-      void registerTransactionUser(TransactionUser&, const bool front = false);
       // Messages from addFromAnyThread() reach the TU from this call on. The
       // caller must queue a RegisterTransactionUser(AtFront) message for the
       // TU, which process() applies.
@@ -55,7 +53,6 @@ class TuSelector
 
    private:
       void activatePendingTransactionUser(TransactionUser& tu, const bool front);
-      void insert(TransactionUser& tu, const bool front);
       void remove(TransactionUser* tu);
       void markShuttingDown(TransactionUser* tu);
       bool exists(TransactionUser* tu) const;
@@ -90,6 +87,7 @@ class TuSelector
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

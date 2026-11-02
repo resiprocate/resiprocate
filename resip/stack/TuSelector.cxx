@@ -187,13 +187,6 @@ TuSelector::size() const
    }
 }
 
-void 
-TuSelector::registerTransactionUser(TransactionUser& tu, const bool front)
-{
-   Lock lock(mTuListMutex);
-   insert(tu, front);
-}
-
 void
 TuSelector::addPendingTransactionUser(TransactionUser& tu)
 {
@@ -215,12 +208,7 @@ TuSelector::activatePendingTransactionUser(TransactionUser& tu, const bool front
    {
       ErrLog (<< "Registration applied for a TU that is not pending: " << tu);
    }
-   insert(tu, front);
-}
 
-void
-TuSelector::insert(TransactionUser& tu, const bool front)
-{
    mTuSelectorMode = true;
    if(front)
    {
@@ -356,6 +344,7 @@ TuSelector::getExpectedWait(TransactionUser* tu) const
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

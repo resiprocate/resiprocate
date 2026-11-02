@@ -257,16 +257,12 @@ SipStack::~SipStack()
 void 
 SipStack::run()
 {
-   // registerTransactionUser() reads the flag under the same lock.
+   if(mInternalThreadsRunning)
    {
-      Lock lock(mAppTimerMutex);
-      if(mInternalThreadsRunning)
-      {
-         return;
-      }
-      mInternalThreadsRunning=true;
+      return;
    }
 
+   mInternalThreadsRunning=true;
    delete mDnsThread;
    mDnsThread=new DnsThread(*mDnsStub);
    mDnsThread->run();
@@ -314,8 +310,6 @@ SipStack::shutdownAndJoinThreads()
       mTransportSelectorThread->shutdown();
       mTransportSelectorThread->join();
    }
-
-   Lock lock(mAppTimerMutex);
    mInternalThreadsRunning=false;
 }
 
@@ -1122,13 +1116,6 @@ SipStack::setFallbackPostNotify(AsyncProcessHandler *handler)
 void
 SipStack::processTimers()
 {
-   // registerTransactionUser() reads the flag under the same lock; it must
-   // be set before the TransactionController runs here.
-   {
-      Lock lock(mAppTimerMutex);
-      mProcessingHasStarted = true;
-   }
-
    if(!mTransactionControllerThread)
    {
       mTransactionController->process();
@@ -1228,16 +1215,9 @@ SipStack::pollStatistics()
 void
 SipStack::registerTransactionUser(TransactionUser& tu, const bool front)
 {
-   Lock lock(mAppTimerMutex);
-   if(mInternalThreadsRunning || mProcessingHasStarted)
-   {
-      // The TransactionController may be reading the TU list.
-      mTransactionController->registerTransactionUser(tu, front);
-   }
-   else
-   {
-      mTuSelector.registerTransactionUser(tu, front);
-   }
+   // Queued even before processing starts, so that only the thread that runs
+   // the TransactionController changes the TU list.
+   mTransactionController->registerTransactionUser(tu, front);
 }
 
 void
