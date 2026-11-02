@@ -4,6 +4,7 @@
 
 #include "TurnTcpSocket.hxx"
 #include "../AsyncSocketBase.hxx"
+#include "ErrorCode.hxx"
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
 
@@ -171,6 +172,13 @@ TurnTcpSocket::cancelSocket()
    mSocket.cancel(ec);
 }
 
+void
+TurnTcpSocket::closeSocket()
+{
+   asio::error_code ec;
+   mSocket.close(ec);
+}
+
 void 
 TurnTcpSocket::handleReadHeader(const asio::error_code& e)
 {
@@ -186,9 +194,9 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
       */
 
       // Note:  For both StunMessages and ChannelData messages the length in bytes 3 and 4
-      uint16_t dataLen;
-      memcpy(&dataLen, &mReadBuffer[2], 2);
-      dataLen = ntohs(dataLen);
+      uint16_t length;
+      memcpy(&length, &mReadBuffer[2], 2);
+      unsigned int dataLen = ntohs(length);  // wider than 16 bits, so adding the rest of a STUN header can't wrap
 
       // ChannelData's padding is read with it, but not counted in what rawRead reports
       mPadding = 0;
@@ -199,6 +207,20 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
       else
       {
          mPadding = AsyncSocketBase::channelDataPadding(dataLen);
+      }
+
+      // The rest of the message is read into mReadBuffer after the 4 bytes already there.  One
+      // that doesn't fit is left unread in the stream, so the connection is closed, as the async
+      // socket bases do: a later read would take a header from the middle of its body.
+      if(4 + dataLen + mPadding > sizeof(mReadBuffer))
+      {
+         WarningLog(<< "Read buffer (" << sizeof(mReadBuffer) << ") is not large enough to accommodate incoming framed data (" << dataLen+4 << ") closing connection.");
+         closeSocket();
+         mConnected = false;
+         mBytesRead = 0;
+         mReadErrorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);
+         mReadTimer.cancel();
+         return;
       }
 
       readBody(dataLen + (unsigned int)mPadding);

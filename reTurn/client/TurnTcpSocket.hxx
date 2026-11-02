@@ -35,6 +35,7 @@ protected:
    virtual void readHeader();
    virtual void readBody(unsigned int len);
    virtual void cancelSocket();
+   virtual void closeSocket();
 
    /// Handle completion of a read operation for first 32 bits
    virtual void handleReadHeader(const asio::error_code& e);

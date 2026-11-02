@@ -26,6 +26,7 @@
 #include "../TcpServer.hxx"
 #include "../TurnManager.hxx"
 #include "../UdpServer.hxx"
+#include "../client/ErrorCode.hxx"
 #include "../client/TurnAsyncSocketHandler.hxx"
 #include "../client/TurnAsyncTcpSocket.hxx"
 #include "../client/TurnAsyncUdpSocket.hxx"
@@ -1144,6 +1145,97 @@ testChannelDataPadding()
          parsesAsTurnFraming(recorder.fromServer(), fromServer) && fromServer == 5);
 }
 
+// Answers the first thing the client sends on stream (its bind request) with header and then at
+// least as much as it announces, and reads until the client closes the connection
+template <typename Stream>
+static void
+answerWithOversizedFrame(Stream& stream, const std::string& header)
+{
+   char buffer[1024];
+   asio::error_code ec;
+   stream.read_some(asio::buffer(buffer), ec);  // the bind request
+   asio::write(stream, asio::buffer(header + std::string(0x10000 + 16, 'x')), ec);
+   while (!ec)
+   {
+      stream.read_some(asio::buffer(buffer), ec);
+   }
+}
+
+// A client from makeClient connects to host, to a server on a thread that passes the connection
+// to serve, which answers its bind with a message longer than the client's read buffer (8192
+// bytes): the bind fails with FrameError rather than reading past the end of the buffer, and the
+// client closes the connection rather than leaving the rest of the message to be read as framing
+static void
+checkOversizedFrame(const std::string& what, const std::function<TurnTcpSocket*()>& makeClient, const char* host,
+                    const std::function<void(asio::ip::tcp::socket&)>& serve)
+{
+   asio::io_context io;
+   asio::ip::tcp::acceptor acceptor(io, asio::ip::tcp::endpoint(localhost, 0));
+   asio::ip::tcp::socket socket(io);
+   std::atomic<bool> closed{false};
+   acceptor.async_accept(socket, [&socket, &serve, &closed](const asio::error_code& ec)
+   {
+      if (!ec)
+      {
+         serve(socket);
+         closed = true;
+      }
+   });
+   std::thread server([&io]() { io.run(); });
+   {
+      // On the heap: a write past it shows as such under ASan, rather than overwriting this stack
+      std::unique_ptr<TurnTcpSocket> client(makeClient());
+      check(("oversized " + what + ": connects").c_str(), !client->connect(host, acceptor.local_endpoint().port()));
+      check(("oversized " + what + ": refused with FrameError").c_str(),
+            client->bindRequest() == asio::error_code(reTurn::FrameError, asio::error::misc_category));
+      check(("oversized " + what + ": and no longer connected").c_str(),
+            client->bindRequest() == asio::error_code(reTurn::NotConnected, asio::error::misc_category));
+      const auto start = std::chrono::steady_clock::now();
+      while (!closed && std::chrono::steady_clock::now() - start < std::chrono::seconds(5))
+      {
+         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      }
+      check(("oversized " + what + ": the client closes the connection").c_str(), closed);
+   }
+   // On the server's thread, so a pending accept (the client didn't connect) is cancelled and the
+   // thread ends
+   asio::post(io, [&acceptor]() { asio::error_code ignored; acceptor.close(ignored); });
+   server.join();
+}
+
+static void
+testOversizedFrame()
+{
+   cerr << "-- a message too long for the sync TCP and TLS clients" << endl;
+#ifdef USE_SSL
+   asio::ssl::context context(asio::ssl::context::tls_server);
+   context.use_certificate_chain_file(certFile);
+   context.use_private_key_file(keyFile, asio::ssl::context::pem);
+#endif
+   // A STUN Binding success response announcing 0xFFE0 bytes of attributes, and ChannelData
+   // announcing 0xFFFF bytes of data
+   for (const std::string& header : { std::string("\x01\x01\xFF\xE0", 4), std::string("\x40\x00\xFF\xFF", 4) })
+   {
+      const std::string what = header[0] == 0x01 ? "STUN" : "ChannelData";
+      checkOversizedFrame("TCP " + what, []() { return new TurnTcpSocket(localhost, 0); }, "127.0.0.1",
+                          [&header](asio::ip::tcp::socket& socket) { answerWithOversizedFrame(socket, header); });
+#ifdef USE_SSL
+      // TurnTlsSocket reads with TurnTcpSocket's handleReadHeader, and closes its own socket
+      checkOversizedFrame("TLS " + what, []() { return new TurnTlsSocket(true, localhost, 0, caFile); }, "localhost",
+                          [&context, &header](asio::ip::tcp::socket& socket)
+      {
+         asio::ssl::stream<asio::ip::tcp::socket&> stream(socket, context);
+         asio::error_code ec;
+         stream.handshake(asio::ssl::stream_base::server, ec);
+         if (!ec)
+         {
+            answerWithOversizedFrame(stream, header);
+         }
+      });
+#endif
+   }
+}
+
 // Runs test with a server configured from configFile
 static void
 runWithServer(const char* configFile, const std::function<void()>& test)
@@ -1195,6 +1287,7 @@ main(int argc, char** argv)
             testChannelNumbers();
             testUdpAndTcp();
             testChannelDataPadding();
+            testOversizedFrame();
 #ifdef USE_SSL
             testTls();
 
