@@ -100,6 +100,8 @@ class ClientRegistration: public NonDialogUsage
       std::shared_ptr<SipMessage> tryModification(ClientRegistration::State state);
       void internalRequestRefresh(uint32_t expires = 0);  // 0 defaults to using original expires value (to remove use removeXXX() instead)
       unsigned int checkProfileRetry(const SipMessage& msg);
+      bool sendQueuedRequest();  // returns false if this usage was destroyed
+      bool restoreAfterFailedRemoval();  // returns false if the bindings cannot be restored
       void tagContact(NameAddr& contact) const;
       unsigned long calculateExpiry(const SipMessage& reg200) const;
       bool contactIsMine(const NameAddr& contact) const;
@@ -113,6 +115,10 @@ class ClientRegistration: public NonDialogUsage
       std::shared_ptr<SipMessage> mLastRequest;
       NameAddrs mMyContacts; // Contacts that this UA is requesting 
       NameAddrs mAllContacts; // All the contacts Registrar knows about 
+      // State saved by removeBinding/removeAll/removeMyBindings, so that it can be
+      // restored if the registrar rejects the removal (the bindings still exist)
+      NameAddrs mRemovedMyContacts; // My contacts that the pending removal takes out of mMyContacts
+      NameAddrs mPreRemovalAllContacts; // mAllContacts as it was before the pending removal
       unsigned int mTimerSeq; // expected timer seq (all < are stale)
 
       State mState;
@@ -135,6 +141,7 @@ class ClientRegistration: public NonDialogUsage
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -156,6 +156,10 @@ ClientRegistration::removeBinding(const NameAddr& contact)
             send(next);
          }
 
+         // Remember what is being removed, so it can be restored if the registrar rejects the removal
+         mRemovedMyContacts.clear();
+         mRemovedMyContacts.push_back(*i);
+         mPreRemovalAllContacts = mAllContacts;
          mMyContacts.erase(i);
          return;
       }
@@ -176,6 +180,11 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 
    auto next = tryModification(Removing);
 
+   // Remember what is being removed, so it can be restored if the registrar rejects the removal.
+   // Note: NameAddrs (ParserContainer) has no move constructor or move assignment, so std::move
+   // would only make a copy here - copy explicitly, then clear.
+   mRemovedMyContacts = mMyContacts;
+   mPreRemovalAllContacts = mAllContacts;
    mAllContacts.clear();
    mMyContacts.clear();
 
@@ -213,6 +222,10 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
    auto next = tryModification(Removing);
 
    next->header(h_Contacts) = mMyContacts;
+   // Remember what is being removed, so it can be restored if the registrar rejects the removal
+   // (see removeAll for why this is a copy and clear rather than std::move)
+   mRemovedMyContacts = mMyContacts;
+   mPreRemovalAllContacts = mAllContacts;
    mMyContacts.clear();
 
    NameAddrs& myContacts = next->header(h_Contacts);
@@ -568,6 +581,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
                break;
 
             case Removing:
+               mRemovedMyContacts.clear();
+               mPreRemovalAllContacts.clear();
                //mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
                mDum.mClientRegistrationHandler->onRemoved(getHandle(), msg);
                InfoLog (<< "Finished removing registration " << *this << " mEndWhenDone=" << mEndWhenDone);
@@ -604,21 +619,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                break;
          }
 
-         if (mQueuedState != None)
-         {
-            if(mQueuedState == Removing && mEnding && whenExpires() == 0)
-            {
-               resip_assert(mEndWhenDone);  // will always be true when mEnding is true
-               // We are not actually registered, and we are ending - no need to send un-register - just terminate now
-               stopRegistering();
-               return;
-            }
-            InfoLog (<< "Sending queued request: " << *mQueuedRequest);
-            mState = mQueuedState;
-            mQueuedState = None;
-            *mLastRequest = *mQueuedRequest;
-            send(mLastRequest);
-         }
+         sendQueuedRequest();
       }
       else
       {
@@ -680,7 +681,23 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
             }
          }
-         
+
+         // If a removal that is not ending this usage fails, for any reason, then the registrar
+         // has not removed the bindings - restore them and remain registered.  This is done before
+         // calling onFailure, so that the handler sees the restored contacts and can retry the
+         // removal from within onFailure.  Any queued request is sent first, so that a removal
+         // requested from onFailure is queued behind it.
+         if (mState == Removing && !mEndWhenDone && restoreAfterFailedRemoval())
+         {
+            InfoLog(<< "Removing bindings failed with " << code << ", bindings remain registered " << *this);
+            mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
+            if (sendQueuedRequest())  // false if this usage was destroyed
+            {
+               mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
+            }
+            return;
+         }
+
          mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
          mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
 
@@ -964,6 +981,58 @@ ClientRegistration::checkProfileRetry(const SipMessage& msg)
    return 0;
 }
 
+bool
+ClientRegistration::sendQueuedRequest()
+{
+   if (mQueuedState != None)
+   {
+      if(mQueuedState == Removing && mEnding && whenExpires() == 0)
+      {
+         resip_assert(mEndWhenDone);  // will always be true when mEnding is true
+         // We are not actually registered, and we are ending - no need to send un-register - just terminate now
+         stopRegistering();
+         return false;
+      }
+      InfoLog (<< "Sending queued request: " << *mQueuedRequest);
+      mState = mQueuedState;
+      mQueuedState = None;
+      *mLastRequest = *mQueuedRequest;
+      send(mLastRequest);
+   }
+   return true;
+}
+
+bool
+ClientRegistration::restoreAfterFailedRemoval()
+{
+   // Only fall back to being registered if we hold a registration with a refresh scheduled.  If the
+   // removal was requested while waiting to retry an add or refresh (mRefreshTime is 0), then there
+   // is no registration to fall back to.
+   const uint64_t nowSecs = Timer::getTimeSecs();
+   if (mRefreshTime <= nowSecs)
+   {
+      return false;
+   }
+
+   // Add back (rather than assign) the removed contacts, so that contacts added by a request queued
+   // behind the removal are kept
+   for (const auto& contact : mRemovedMyContacts)
+   {
+      mMyContacts.push_back(contact);
+   }
+   mAllContacts = mPreRemovalAllContacts;
+   mRemovedMyContacts.clear();
+   mPreRemovalAllContacts.clear();
+   mState = Registered;
+
+   // Re-arm the refresh timer, since tryModification cancels pending timers when called from a retry state
+   mDum.addTimer(DumTimeout::Registration,
+                 static_cast<unsigned long>(mRefreshTime - nowSecs),
+                 getBaseHandle(),
+                 ++mTimerSeq);
+   return true;
+}
+
 void
 ClientRegistration::dispatch(const DumTimeout& timer)
 {
@@ -1024,6 +1093,7 @@ ClientRegistration::flowTerminated()
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

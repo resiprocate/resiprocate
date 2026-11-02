@@ -28,8 +28,13 @@ class ClientRegistrationHandler
       /// return values: -1 = fail, 0 = retry immediately, N = retry in N seconds
       virtual int onRequestRetry(ClientRegistrationHandle, int retrySeconds, const SipMessage& response)=0;
       
-      /// Called if registration fails, usage will be destroyed (unless a 
-      /// Registration retry interval is enabled in the Profile)
+      /// Called if registration fails, usage will be destroyed (unless a
+      /// Registration retry interval is enabled in the Profile).  If a request to
+      /// remove bindings fails (and is not ending the registration), while the
+      /// bindings are still registered, then the usage is not destroyed - the
+      /// bindings are restored and it remains registered.  In that case the
+      /// contacts are already restored when onFailure is called, so myContacts()
+      /// and allContacts() reflect them, and the removal may be retried from here.
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)=0;
 
       /// Called when a TCP or TLS flow to the server has terminated.  This can be caused by socket
