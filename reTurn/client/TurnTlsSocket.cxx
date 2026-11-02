@@ -154,6 +154,13 @@ TurnTlsSocket::cancelSocket()
    mSocket->lowest_layer().cancel(ec);
 }
 
+void
+TurnTlsSocket::closeSocket()
+{
+   asio::error_code ec;
+   mSocket->lowest_layer().close(ec);
+}
+
 } // namespace
 #endif
 

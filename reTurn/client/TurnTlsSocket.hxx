@@ -37,6 +37,7 @@ protected:
    virtual void readHeader();
    virtual void readBody(unsigned int len);
    virtual void cancelSocket();
+   virtual void closeSocket();
 
 private:
    asio::ssl::context mSslContext;

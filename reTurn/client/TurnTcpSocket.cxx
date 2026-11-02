@@ -172,6 +172,13 @@ TurnTcpSocket::cancelSocket()
    mSocket.cancel(ec);
 }
 
+void
+TurnTcpSocket::closeSocket()
+{
+   asio::error_code ec;
+   mSocket.close(ec);
+}
+
 void 
 TurnTcpSocket::handleReadHeader(const asio::error_code& e)
 {
@@ -202,10 +209,14 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
          mPadding = AsyncSocketBase::channelDataPadding(dataLen);
       }
 
-      // The rest of the message is read into mReadBuffer after the 4 bytes already there
+      // The rest of the message is read into mReadBuffer after the 4 bytes already there.  One
+      // that doesn't fit is left unread in the stream, so the connection is closed, as the async
+      // socket bases do: a later read would take a header from the middle of its body.
       if(4 + dataLen + mPadding > sizeof(mReadBuffer))
       {
-         WarningLog(<< "Read buffer (" << sizeof(mReadBuffer) << ") is not large enough to accommodate incoming framed data (" << dataLen+4 << ")");
+         WarningLog(<< "Read buffer (" << sizeof(mReadBuffer) << ") is not large enough to accommodate incoming framed data (" << dataLen+4 << ") closing connection.");
+         closeSocket();
+         mConnected = false;
          mBytesRead = 0;
          mReadErrorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);
          mReadTimer.cancel();
