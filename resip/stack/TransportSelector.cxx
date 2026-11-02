@@ -1726,7 +1726,18 @@ TransportSelector::findTlsTransport(const Data& domainname, const Tuple& search)
 unsigned int
 TransportSelector::getTimeTillNextProcessMS()
 {
-   return hasDataToSend() ? 0 : INT_MAX;
+   if (hasDataToSend())
+   {
+      return 0;
+   }
+
+   unsigned int ms = INT_MAX;
+   for (TransportList::iterator t = mSharedProcessTransports.begin(); t != mSharedProcessTransports.end(); ++t)
+   {
+      ms = resipMin(ms, (*t)->getTimeTillNextProcessMS());
+   }
+
+   return ms;
 }
 
 void

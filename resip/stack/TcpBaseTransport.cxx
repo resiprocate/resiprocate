@@ -20,6 +20,10 @@ using namespace resip;
 const size_t TcpBaseTransport::MaxWriteSize = 4096;
 const size_t TcpBaseTransport::MaxReadSize = 4096;
 
+// The longest wait a stack thread may take while a listener retry is pending;
+// the same as the wait of a TransportThread.
+static const unsigned int ListenRetryMs = 25;
+
 TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
                                    int portNum, IpVersion version,
                                    const Data& pinterface,
@@ -28,7 +32,8 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
                                    unsigned transportFlags,
                                    const Data& netNs)
    : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags, netNs),
-     mListenQueuePending(false)
+     mListenQueuePending(false),
+     mLastAcceptError(0)
 {
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)==0 )
    {
@@ -155,8 +160,9 @@ TcpBaseTransport::buildFdSet( FdSet& fdset)
 }
 
 /**
-    Returns 1 if created new connection, -1 if "bad" error,
-    and 0 if nothing to do (EWOULDBLOCK)
+    Returns 1 if created new connection or the next accept() may succeed,
+    -1 if "bad" error, and 0 if the queue is empty (EWOULDBLOCK) or the
+    listener can accept no more
 **/
 int
 TcpBaseTransport::processListen()
@@ -178,12 +184,42 @@ TcpBaseTransport::processListen()
 #endif
                // !jf! this can not be ready in some cases
                // !kw! this will happen every epoll cycle
+               mLastAcceptError = 0;
+               return 0;
+            case ECONNABORTED:
+            case EPROTO:
+            case EINTR:
+               // Concerns one connection or, for EINTR, none, so the next accept()
+               // may succeed.
+               Transport::error(e);
+               return 1;
+            case EBADF:
+            case EINVAL:
+            case ENOTSOCK:
+               // The descriptor is no longer this listener: something else closed
+               // or reused it. A retry would act on whatever holds the number now.
+               if (e != mLastAcceptError)
+               {
+                  ErrLog(<< "Listener " << mTuple << " fd=" << mFd << " unusable, no longer accepting: "
+                         << Transport::errorToString(e));
+               }
+               mLastAcceptError = e;
                return 0;
             default:
-               Transport::error(e);
+               // A failure that persists repeats every retry; log it once.
+               if (e != mLastAcceptError)
+               {
+                  Transport::error(e);
+               }
+               else
+               {
+                  DebugLog(<< "accept() still failing: " << Transport::errorToString(e));
+               }
+               mLastAcceptError = e;
          }
          return -1;
       }
+      mLastAcceptError = 0;
       if(!configureConnectedSocket(sock))
       {
          closeSocket(sock);
@@ -455,12 +491,13 @@ TcpBaseTransport::process()
    if (mPollGrp)
    {
        processAllWriteRequests();
-       if (mListenQueuePending)
-       {
-          drainListenQueue();
-       }
    }
    mStateMachineFifo.flush();
+
+   if (mPollGrp && mListenQueuePending)
+   {
+      drainListenQueue();
+   }
 }
 
 void
@@ -496,12 +533,22 @@ TcpBaseTransport::processPollEvent(FdPollEventMask mask)
 void
 TcpBaseTransport::drainListenQueue()
 {
-   // In an epoll group the listener is edge-triggered: connections an error
-   // leaves in the queue raise no new event, and while the queue is full no
-   // new connection can.
+   // In an epoll group the listener is edge-triggered: connections left in the
+   // queue by an accept() error or a failed setup raise no new event, and while
+   // the queue is full no new connection can.
+   mListenQueuePending = (mPollGrp->getImplType() == FdPollGrp::EPollImpl);
    int result;
    while((result = processListen()) > 0);
-   mListenQueuePending = (result < 0);
+   if (result == 0)
+   {
+      mListenQueuePending = false;
+   }
+}
+
+unsigned int
+TcpBaseTransport::getTimeTillNextProcessMS()
+{
+   return (mPollGrp && mListenQueuePending) ? ListenRetryMs : UINT_MAX;
 }
 
 void
