@@ -187,6 +187,10 @@ class TransportSelector
       Transport* findTransportByVia(SipMessage* msg, const Tuple& dest, Tuple& src) const;
       Transport* findTlsTransport(const Data& domain, const Tuple& search) const;
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
+#if !defined(WIN32) || defined(NO_IPHLPAPI)
+      // returns target with the local address the kernel would send it from
+      Tuple lookupRouteSource(const Tuple& target) const;
+#endif
       void rebuildAnyPortTransportMaps(void);
 
       DnsInterface mDns;

@@ -775,6 +775,105 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target, Tupl
    return trans;
 }
 
+#if !defined(WIN32) || defined(NO_IPHLPAPI)
+Tuple
+TransportSelector::lookupRouteSource(const Tuple& target) const
+{
+   // this process will determine which interface the kernel would use to
+   // send a packet to the target by making a connect call on a udp socket.
+   Socket tmp = INVALID_SOCKET;
+   Data netNs = target.getNetNs();
+   // One IPV4 and IPV6 socket per namespace.  Even if we do not support netns,
+   // we still have the default namespace of "" (empty string).
+   if (target.isV4())
+   {
+      // If socket does not exist for namespace, create one
+      if (mSockets.find(netNs) == mSockets.end() || mSockets[netNs] == INVALID_SOCKET)
+      {
+#ifdef USE_NETNS
+         NetNs::setNs(netNs);
+#endif
+         mSockets[netNs] = InternalTransport::socket(UDP, V4); // may throw
+      }
+      tmp = mSockets[netNs];
+   }
+   else
+   {
+      // If socket does not exist for namespace, create one
+      if (mSocket6s.find(netNs) == mSocket6s.end() || mSocket6s[netNs] == INVALID_SOCKET)
+      {
+#ifdef USE_NETNS
+         NetNs::setNs(netNs);
+#endif
+         mSocket6s[netNs] = InternalTransport::socket(UDP, V6); // may throw
+      }
+      tmp = mSocket6s[netNs];
+   }
+
+#ifdef USE_NETNS
+   // Not sure if connect has to be done in netns context or just the socket create
+   NetNs::setNs(netNs);
+#endif
+
+   int ret = connect(tmp,&target.getSockaddr(), target.length());
+   if (ret < 0)
+   {
+      int e = getErrno();
+      Transport::error( e );
+      InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strError(e) );
+      throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+   }
+
+   Tuple source(target);
+   socklen_t len = source.length();
+   ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
+   if (ret < 0)
+   {
+      int e = getErrno();
+      Transport::error(e);
+      InfoLog(<< "Can't determine name of socket " << target << " : " << strError(e) );
+      throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+   }
+
+   // Unconnect.
+   // !jf! This is necessary, but I am not sure what we can do if this
+   // fails. I'm not sure the stack can recover from this error condition.
+   if (target.isV4())
+   {
+      ret = connect(tmp,
+                    (struct sockaddr*)&mUnspecified.v4Address,
+                    sizeof(mUnspecified.v4Address));
+   }
+#ifdef USE_IPV6
+   else
+   {
+      ret = connect(tmp,
+                    (struct sockaddr*)&mUnspecified6.v6Address,
+                    sizeof(mUnspecified6.v6Address));
+   }
+#else
+   else
+   {
+      resip_assert(0);
+   }
+#endif
+
+   if ( ret<0 )
+   {
+      int e =  getErrno();
+      //.dcm. OS X 10.5 workaround, we could #ifdef for specific OS X version.
+      if  (!(e ==EAFNOSUPPORT || e == EADDRNOTAVAIL))
+      {
+         ErrLog(<< "Can't disconnect socket :  " << strError(e) );
+         Transport::error(e);
+         throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
+      }
+   }
+
+   return source;
+}
+#endif
+
 Tuple
 TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target) const
 {
@@ -806,60 +905,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       //    search "getsockname" in MSDN library.
       // 3. We've experienced this issue on our production software.
 
-      // this process will determine which interface the kernel would use to
-      // send a packet to the target by making a connect call on a udp socket.
-      Socket tmp = INVALID_SOCKET;
-      Data netNs = target.getNetNs();
-      // One IPV4 and IPV6 socket per namespace.  Even if we do not support netns,
-      // we still have the default namespace of "" (empty string).
-      if (target.isV4())
-      {
-         // If socket does not exist for namespace, create one
-         if (mSockets.find(netNs) == mSockets.end() || mSockets[netNs] == INVALID_SOCKET)
-         {
-#ifdef USE_NETNS
-            NetNs::setNs(netNs);
-#endif
-            mSockets[netNs] = InternalTransport::socket(UDP, V4); // may throw
-         }
-         tmp = mSockets[netNs];
-      }
-      else
-      {
-         // If socket does not exist for namespace, create one
-         if (mSocket6s.find(netNs) == mSocket6s.end() || mSocket6s[netNs] == INVALID_SOCKET)
-         {
-#ifdef USE_NETNS
-            NetNs::setNs(netNs);
-#endif
-            mSocket6s[netNs] = InternalTransport::socket(UDP, V6); // may throw
-         }
-         tmp = mSocket6s[netNs];
-      }
-
-#ifdef USE_NETNS
-      // Not sure if connect has to be done in netns context or just the socket create
-      NetNs::setNs(netNs);
-#endif
-
-      int ret = connect(tmp,&target.getSockaddr(), target.length());
-      if (ret < 0)
-      {
-         int e = getErrno();
-         Transport::error( e );
-         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strError(e) );
-         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-      }
-
-      socklen_t len = source.length();
-      ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
-      if (ret < 0)
-      {
-         int e = getErrno();
-         Transport::error(e);
-         InfoLog(<< "Can't determine name of socket " << target << " : " << strError(e) );
-         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-      }
+      source = lookupRouteSource(target);
 
       // !kh! test if connected UDP technique results INADDR_ANY, i.e. 0.0.0.0.
       // if it does, assume the first avaiable interface.
@@ -881,40 +927,6 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
             source = getFirstInterface(false, target.getType());
          }
 # endif
-      }
-      // Unconnect.
-      // !jf! This is necessary, but I am not sure what we can do if this
-      // fails. I'm not sure the stack can recover from this error condition.
-      if (target.isV4())
-      {
-         ret = connect(mSockets[netNs],
-                       (struct sockaddr*)&mUnspecified.v4Address,
-                       sizeof(mUnspecified.v4Address));
-      }
-#ifdef USE_IPV6
-      else
-      {
-         ret = connect(mSocket6s[netNs],
-                       (struct sockaddr*)&mUnspecified6.v6Address,
-                       sizeof(mUnspecified6.v6Address));
-      }
-#else
-      else
-      {
-         resip_assert(0);
-      }
-#endif
-
-      if ( ret<0 )
-      {
-         int e =  getErrno();
-         //.dcm. OS X 10.5 workaround, we could #ifdef for specific OS X version.
-         if  (!(e ==EAFNOSUPPORT || e == EADDRNOTAVAIL))
-         {
-            ErrLog(<< "Can't disconnect socket :  " << strError(e) );
-            Transport::error(e);
-            throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
-         }
       }
 #endif
 
