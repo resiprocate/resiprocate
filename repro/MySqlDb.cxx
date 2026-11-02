@@ -518,7 +518,7 @@ MySqlDb::addTlsPeerIdentity(const AbstractDb::Key& key, const AbstractDb::TlsPee
    Data command;
    {
       DataStream ds(command);
-      ds << "INSERT INTO " << tableName(TlsPeerIdentityTable) << " (peerName, tlsPeerIdentity)"
+      ds << "INSERT INTO " << tableName(TlsPeerIdentityTable) << " (peerName, authorizedIdentity)"
          << " VALUES('?', '?')"
          << " ON DUPLICATE KEY UPDATE"
          << " peerName='?', authorizedIdentity ='?'";
