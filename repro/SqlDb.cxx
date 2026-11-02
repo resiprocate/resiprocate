@@ -40,7 +40,10 @@ struct CustomQueryTag
 // query is scanned once: each tag becomes a placeholder per value, the values
 // are added in the order the tags appear, and a literal ? is written as ??.
 // Nothing taken from the values is ever written here, so a value that happens
-// to contain a tag name can't be expanded again.
+// to contain a tag name can't be expanded again.  A quoted tag written inside
+// single quotes anyway ('$peerNames', as an older repro.config example showed)
+// has those quotes dropped, since they would leave the values outside any
+// string literal.
 void
 expandCustomQuery(const Data& customQuery,
                   const std::vector<CustomQueryTag>& tags,
@@ -72,7 +75,15 @@ expandCustomQuery(const Data& customQuery,
          }
          if(tag != tags.end())
          {
-            ds.write(run, p - run);
+            const char* tagStart = p;
+            const char* tagEnd = p + tag->name.size();
+            if(tag->quoted && tagStart > run && tagStart[-1] == '\'' &&
+               tagEnd < end && *tagEnd == '\'')
+            {
+               tagStart--;
+               tagEnd++;
+            }
+            ds.write(run, tagStart - run);
             for(std::vector<Data>::size_type i = 0; i < tag->values->size(); i++)
             {
                if(i > 0)
@@ -82,7 +93,7 @@ expandCustomQuery(const Data& customQuery,
                ds << (tag->quoted ? "'?'" : "?");
             }
             values.insert(values.end(), tag->values->begin(), tag->values->end());
-            p += tag->name.size();
+            p = tagEnd;
             run = p;
             continue;
          }
@@ -256,18 +267,17 @@ SqlDb::dbEraseRecord(const Table table,
    Data command;
    {
       DataStream ds(command);
-      Data escapedKey;
       ds << "DELETE FROM " << tableName(table);
       if(isSecondaryKey)
       {
-         ds << " WHERE attr2='" << escapeString(pKey, escapedKey) << "'";
+         ds << " WHERE attr2='?'";
       }
       else
       {
-         ds << " WHERE attr='" << escapeString(pKey, escapedKey) << "'";
+         ds << " WHERE attr='?'";
       }
-   }   
-   query(command);
+   }
+   query(command, std::vector<Data>(1, pKey));
 }
 
 bool 
@@ -322,6 +332,7 @@ SqlDb::tableName(Table table) const
 
 /* ====================================================================
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. http://sipspectrum.com
  * Copyright (c) 2015 Daniel Pocock.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

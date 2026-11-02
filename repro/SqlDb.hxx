@@ -73,8 +73,8 @@ class SqlDb: public AbstractDb
 
       virtual int query(const resip::Data& queryCommand) const = 0;
       virtual int query(const resip::Data& queryTemplate, const std::vector<resip::Data>& values) const = 0;
-      virtual resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const = 0;
-      // Like escapeString, but reports failure; only used by fillPlaceholders
+      // Escapes str for use inside a single quoted literal; only used by
+      // fillPlaceholders, so values reach SQL only through query()
       virtual bool escapeValue(const resip::Data& str, resip::Data& escapedStr) const = 0;
 
       // name of the user column in the users table

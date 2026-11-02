@@ -70,7 +70,6 @@ class PostgreSqlDb: public SqlDb
       // values is 0 for a ready made command, otherwise queryText is a template for fillPlaceholders
       int runQuery(const resip::Data& queryText, const std::vector<resip::Data>* values, PGresult** result) const;
       int runSingleResultQuery(const resip::Data& queryText, const std::vector<resip::Data>* values, std::vector<resip::Data>& fields) const;
-      resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const;
       bool escapeValue(const resip::Data& str, resip::Data& escapedStr) const;
       const char* userColumn() const { return "username"; }
 

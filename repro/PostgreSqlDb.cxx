@@ -175,6 +175,7 @@ PostgreSqlDb::connectToDatabase() const
    if (rc != CONNECTION_OK)
    { 
       ErrLog( << "PostgreSQL connect failed: " << PQerrorMessage(mConn));
+      PQfinish(mConn);
       mConn = 0;
       setConnected(false);
       return -1;
@@ -237,9 +238,11 @@ PostgreSqlDb::runQuery(const Data& queryText, const std::vector<Data>* values, P
       if(rc != 0)
       {
          PQclear(_result);
-         if(rc == PGRES_FATAL_ERROR)
+         _result = 0;
+         if(PQstatus(mConn) == CONNECTION_BAD)
          {
-            // First failure may be a connection error - try to re-connect and then try again
+            // The connection was lost - try to re-connect and then try again
+            ErrLog( << "PostgreSQL query failed, reconnecting: " << PQerrorMessage(mConn));
             rc = connectToDatabase();
             if(rc == 0)
             {
@@ -249,6 +252,8 @@ PostgreSqlDb::runQuery(const Data& queryText, const std::vector<Data>* values, P
                if( rc != 0)
                {
                   ErrLog( << "PostgreSQL query failed (twice): " << PQerrorMessage(mConn));
+                  PQclear(_result);
+                  _result = 0;
                }
             }
          }
@@ -260,9 +265,16 @@ PostgreSqlDb::runQuery(const Data& queryText, const std::vector<Data>* values, P
    }
 
    // Now store result - if pointer to result pointer was supplied and no errors
-   if(rc == 0 && result)
+   if(rc == 0)
    {
-      *result = _result;
+      if(result)
+      {
+         *result = _result;
+      }
+      else
+      {
+         PQclear(_result);
+      }
    }
 
    if(rc != 0)
@@ -325,20 +337,6 @@ PostgreSqlDb::runSingleResultQuery(const Data& queryText, const std::vector<Data
       PQclear(result);
    }
    return rc;
-}
-
-resip::Data& 
-PostgreSqlDb::escapeString(const resip::Data& str, resip::Data& escapedStr) const
-{
-   int rc = 0;
-   escapedStr.truncate2(PQescapeStringConn(mConn, (char*)escapedStr.getBuf(str.size()*2+1), str.c_str(), str.size(), &rc));
-   if(rc != 0)
-   {
-      ErrLog(<< "PostgreSQL string escaping failed: " << PQerrorMessage(mConn));
-      // FIXME - should probably throw here.  According to the docs, there is a value in
-      // the output buffer even after failure so we'll try to use it and fail later.
-   }
-   return escapedStr;
 }
 
 bool
@@ -653,37 +651,28 @@ PostgreSqlDb::dbWriteRecord(const Table table,
    // Check if there is a secondary key or not and get it's value
    char* secondaryKey;
    unsigned int secondaryKeyLen;
-   Data escapedKey;
+   std::vector<Data> values;
    if(AbstractDb::getSecondaryKey(table, pKey, pData, (void**)&secondaryKey, &secondaryKeyLen) == 0)
    {
-      Data escapedSKey;
-      Data sKey(Data::Share, secondaryKey, secondaryKeyLen);
+      const Data sKey(secondaryKey, secondaryKeyLen);
       DataStream ds(command);
       ds << "DELETE FROM " << tableName(table)
-         << " WHERE attr='" << escapeString(pKey, escapedKey)
-         << "' AND attr2='" << escapeString(sKey, escapedSKey)
-         << "';"
+         << " WHERE attr='?' AND attr2='?';"
          << " INSERT INTO " << tableName(table)
-         << " (attr, attr2, value) VALUES ("
-         << "'" << escapeString(pKey, escapedKey)
-         << "', '" << escapeString(sKey, escapedSKey)
-         << "', '"  << pData.base64encode()
-         << "')";
+         << " (attr, attr2, value) VALUES ('?', '?', '?')";
+      values = { pKey, sKey, pKey, sKey, pData.base64encode() };
    }
    else
    {
       DataStream ds(command);
       ds << "DELETE FROM " << tableName(table)
-         << " WHERE attr='" << escapeString(pKey, escapedKey)
-         << "';"
+         << " WHERE attr='?';"
          << " INSERT INTO " << tableName(table)
-         << " (attr, value) VALUES ("
-         << "'" << escapeString(pKey, escapedKey)
-         << "', '"  << pData.base64encode()
-         << "')";
+         << " (attr, value) VALUES ('?', '?')";
+      values = { pKey, pKey, pData.base64encode() };
    }
 
-   return query(command, 0) == 0;
+   return query(command, values, 0) == 0;
 }
 
 bool 
@@ -692,16 +681,14 @@ PostgreSqlDb::dbReadRecord(const Table table,
                       resip::Data& pData) const
 { 
    Data command;
-   Data escapedKey;
    {
       DataStream ds(command);
-      ds << "SELECT value FROM " << tableName(table) 
-         << " WHERE attr='" << escapeString(pKey, escapedKey)
-         << "'";
+      ds << "SELECT value FROM " << tableName(table)
+         << " WHERE attr='?'";
    }
 
    PGresult* result = 0;
-   if(query(command, &result) != 0)
+   if(query(command, std::vector<Data>(1, pKey), &result) != 0)
    {
       return false;
    }
@@ -795,15 +782,16 @@ PostgreSqlDb::dbNextRecord(const Table table,
       }
       
       Data command;
+      std::vector<Data> values;
       {
          DataStream ds(command);
          ds << "SELECT value FROM " << tableName(table);
          if(!key.empty())
          {
-            Data escapedKey;
             // dbNextRecord is used to iterator through database tables that support duplication records
             // it is only appropriate for PostgreSQL tables that contain the attr2 non-unique index (secondary key)
-            ds << " WHERE attr2='" << escapeString(key, escapedKey) << "'";
+            ds << " WHERE attr2='?'";
+            values.push_back(key);
          }
          if(forUpdate)
          {
@@ -811,7 +799,7 @@ PostgreSqlDb::dbNextRecord(const Table table,
          }
       }
 
-      if(query(command, &mResult[table]) != 0)
+      if(query(command, values, &mResult[table]) != 0)
       {
          return false;
       }
@@ -858,6 +846,7 @@ PostgreSqlDb::dbBeginTransaction(const Table table)
 
 /* ====================================================================
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. http://sipspectrum.com
  * Copyright (c) 2015 Daniel Pocock.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

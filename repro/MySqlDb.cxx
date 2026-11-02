@@ -328,13 +328,6 @@ MySqlDb::runSingleResultQuery(const Data& queryText, const std::vector<Data>* va
    return rc;
 }
 
-resip::Data& 
-MySqlDb::escapeString(const resip::Data& str, resip::Data& escapedStr) const
-{
-   escapedStr.truncate2(mysql_real_escape_string(mConn, (char*)escapedStr.getBuf(str.size()*2+1), str.c_str(), str.size()));
-   return escapedStr;
-}
-
 bool
 MySqlDb::escapeValue(const resip::Data& str, resip::Data& escapedStr) const
 {
@@ -631,28 +624,25 @@ MySqlDb::dbWriteRecord(const Table table,
    // Check if there is a secondary key or not and get it's value
    char* secondaryKey;
    unsigned int secondaryKeyLen;
-   Data escapedKey;
+   std::vector<Data> values;
    if(AbstractDb::getSecondaryKey(table, pKey, pData, (void**)&secondaryKey, &secondaryKeyLen) == 0)
    {
-      Data escapedSKey;
-      Data sKey(Data::Share, secondaryKey, secondaryKeyLen);
       DataStream ds(command);
       ds << "REPLACE INTO " << tableName(table)
-         << " SET attr='" << escapeString(pKey, escapedKey)
-         << "', attr2='" << escapeString(sKey, escapedSKey)
-         << "', value='"  << pData.base64encode()
-         << "'";
+         << " SET attr='?', attr2='?', value='?'";
+      values.push_back(pKey);
+      values.push_back(Data(secondaryKey, secondaryKeyLen));
    }
    else
    {
       DataStream ds(command);
-      ds << "REPLACE INTO " << tableName(table) 
-         << " SET attr='" << escapeString(pKey, escapedKey)
-         << "', value='"  << pData.base64encode()
-         << "'";
+      ds << "REPLACE INTO " << tableName(table)
+         << " SET attr='?', value='?'";
+      values.push_back(pKey);
    }
+   values.push_back(pData.base64encode());
 
-   return query(command, 0) == 0;
+   return query(command, values, 0) == 0;
 }
 
 bool 
@@ -661,16 +651,14 @@ MySqlDb::dbReadRecord(const Table table,
                       resip::Data& pData) const
 { 
    Data command;
-   Data escapedKey;
    {
       DataStream ds(command);
-      ds << "SELECT value FROM " << tableName(table) 
-         << " WHERE attr='" << escapeString(pKey, escapedKey)
-         << "'";
+      ds << "SELECT value FROM " << tableName(table)
+         << " WHERE attr='?'";
    }
 
    MYSQL_RES* result = 0;
-   if(query(command, &result) != 0)
+   if(query(command, std::vector<Data>(1, pKey), &result) != 0)
    {
       return false;
    }
@@ -761,15 +749,16 @@ MySqlDb::dbNextRecord(const Table table,
       }
       
       Data command;
+      std::vector<Data> values;
       {
          DataStream ds(command);
          ds << "SELECT value FROM " << tableName(table);
          if(!key.empty())
          {
-            Data escapedKey;
             // dbNextRecord is used to iterator through database tables that support duplication records
             // it is only appropriate for MySQL tables that contain the attr2 non-unique index (secondary key)
-            ds << " WHERE attr2='" << escapeString(key, escapedKey) << "'";
+            ds << " WHERE attr2='?'";
+            values.push_back(key);
          }
          if(forUpdate)
          {
@@ -777,7 +766,7 @@ MySqlDb::dbNextRecord(const Table table,
          }
       }
 
-      if(query(command, &mResult[table]) != 0)
+      if(query(command, values, &mResult[table]) != 0)
       {
          return false;
       }
@@ -824,6 +813,7 @@ MySqlDb::dbBeginTransaction(const Table table)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. http://sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
