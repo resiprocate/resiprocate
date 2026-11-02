@@ -919,13 +919,21 @@ class SipStack : public FdSetIOObserver
           @details Adds a TU to the TU selection chain.  Tu's do not call receive or
           receiveAny, the SipStack will call postToTu on the appropriate
           Tu. Messages not associated with a registered TU go into SipStack::mTuFifo.
+
+          Once processing has started, the TU receives new requests only after
+          the TransactionController applies the registration; messages posted
+          to it are delivered from this call on.
       */
       void registerTransactionUser(TransactionUser&, const bool front = false);
 
-      /** @brief Queue a shutdown request to the specified TU **/
+      /** @brief Queue a shutdown request to the specified TU
+          @details The TransactionController handles the request, so call this
+          before shutdownAndJoinThreads(). **/
       void requestTransactionUserShutdown(TransactionUser&);
 
-      /** @brief Removes a TU from the TU selection chain **/
+      /** @brief Removes a TU from the TU selection chain
+          @details The TransactionController handles the request, so call this
+          before shutdownAndJoinThreads(). **/
       void unregisterTransactionUser(TransactionUser&);
 
       /**
@@ -1099,6 +1107,9 @@ class SipStack : public FdSetIOObserver
          TransactionUser. This means that, if you are working with 
          such a TransactionUser, you must have registered the TransactionUser 
          with the SipStack before making this call.
+
+         An override of TransactionUser::setCongestionManager() must not call
+         into the SipStack: it runs under the TU list lock.
          
          If you are using the SipStack directly by implementing your own 
          subclass of TransactionUser, you can override 
@@ -1194,8 +1205,7 @@ class SipStack : public FdSetIOObserver
          @brief if this object exists, it gets notified when messages are posted 
             to any of the various fifos in the stack. 
          @note When running in multithreaded mode, this is only invoked when 
-            either app timers are scheduled, shutdown has been requested, or a 
-            TransactionUser has unregistered. The other fifos in the system are 
+            app timers are scheduled. The other fifos in the system are 
             associated with their own AsyncProcessHandlers, since they are being 
             processed by different threads.
       **/
@@ -1217,7 +1227,9 @@ class SipStack : public FdSetIOObserver
       /// Responsible for routing messages to the correct TU based on installed rules
       TuSelector mTuSelector;
 
-      /** @brief Protection for AppTimerQueue **/
+      /** @brief Protection for AppTimerQueue, and for mInternalThreadsRunning
+          and mProcessingHasStarted when registerTransactionUser() chooses
+          how to register a TU **/
       mutable Mutex mAppTimerMutex;
       
       /** @details timers associated with the application. When a timer fires, it is

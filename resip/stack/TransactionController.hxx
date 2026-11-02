@@ -98,6 +98,9 @@ class TransactionController
       void cancelClientInviteTransaction(const Data& tid, const resip::Tokens* reasons);
       void addTransport(std::unique_ptr<Transport> transport);
       void removeTransport(unsigned int transportKey);
+      void registerTransactionUser(TransactionUser& tu, const bool front);
+      void requestTransactionUserShutdown(TransactionUser& tu);
+      void unregisterTransactionUser(TransactionUser& tu);
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 

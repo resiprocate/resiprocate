@@ -17,6 +17,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionController.hxx"
 #include "resip/stack/TransactionState.hxx"
+#include "resip/stack/TransactionUserMessage.hxx"
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
 #endif
@@ -184,7 +185,7 @@ TransactionController::send(SipMessage* msg)
       SipMessage* resp(Helper::makeResponse(*msg, 503));
       resp->header(h_RetryAfter).value()=(uint32_t)mStateMacFifo.expectedWaitTimeMilliSec()/1000;
       resp->setTransactionUser(msg->getTransactionUser());
-      mTuSelector.add(resp, TimeLimitFifo<Message>::InternalElement);
+      mTuSelector.addFromAnyThread(resp, TimeLimitFifo<Message>::InternalElement);
       delete msg;
       return;
    }
@@ -275,6 +276,28 @@ void
 TransactionController::removeTransport(unsigned int transportKey)
 {
    mStateMacFifo.add(new RemoveTransport(transportKey));
+}
+
+void
+TransactionController::registerTransactionUser(TransactionUser& tu, const bool front)
+{
+   const TransactionUserMessage::Type type = front ? TransactionUserMessage::RegisterTransactionUserAtFront :
+                                                     TransactionUserMessage::RegisterTransactionUser;
+   std::unique_ptr<TransactionUserMessage> msg(new TransactionUserMessage(type, &tu));
+   mTuSelector.addPendingTransactionUser(tu);
+   mStateMacFifo.add(msg.release());
+}
+
+void
+TransactionController::requestTransactionUserShutdown(TransactionUser& tu)
+{
+   mStateMacFifo.add(new TransactionUserMessage(TransactionUserMessage::RequestShutdown, &tu));
+}
+
+void
+TransactionController::unregisterTransactionUser(TransactionUser& tu)
+{
+   mStateMacFifo.add(new TransactionUserMessage(TransactionUserMessage::RemoveTransactionUser, &tu));
 }
 
 void

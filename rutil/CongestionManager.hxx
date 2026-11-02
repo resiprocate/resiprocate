@@ -36,7 +36,6 @@ class FifoStatsInterface;
    The following fifos don't see much use, and are therefore not that vital, but they do have descriptions.
 
    - SipStack::mTUFifo
-   - TuSelector::mShutdownFifo
 
    @ingroup message_passing
 */

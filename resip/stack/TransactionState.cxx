@@ -508,6 +508,14 @@ TransactionState::process(TransactionController& controller,
          return;
       }
 
+      TransactionUserMessage* tuMessage = dynamic_cast<TransactionUserMessage*>(message);
+      if(tuMessage)
+      {
+         controller.mTuSelector.process(*tuMessage);
+         delete tuMessage;
+         return;
+      }
+
       InvokeAfterSocketCreationFunc* invokeAfterSocketCreationFunc = dynamic_cast<InvokeAfterSocketCreationFunc*>(message);
       if(invokeAfterSocketCreationFunc)
       {
@@ -2970,7 +2978,8 @@ void
 TransactionState::terminateClientTransaction(const Data& tid)
 {
    mState = Terminated;
-   if (mController.mTuSelector.isRegisteredForTransactionTermination(mTransactionUser))
+   if (mController.mTuSelector.isTransactionUserStillRegistered(mTransactionUser) && 
+       mTransactionUser->isRegisteredForTransactionTermination())
    {
       //StackLog (<< "Terminate client transaction " << tid);
       sendToTU(new TransactionTerminated(tid, true, mTransactionUser));
@@ -2981,7 +2990,8 @@ void
 TransactionState::terminateServerTransaction(const Data& tid)
 {
    mState = Terminated;
-   if (mController.mTuSelector.isRegisteredForTransactionTermination(mTransactionUser))
+   if (mController.mTuSelector.isTransactionUserStillRegistered(mTransactionUser) && 
+       mTransactionUser->isRegisteredForTransactionTermination())
    {
       //StackLog (<< "Terminate server transaction " << tid);
       sendToTU(new TransactionTerminated(tid, false, mTransactionUser));

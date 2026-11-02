@@ -257,12 +257,16 @@ SipStack::~SipStack()
 void 
 SipStack::run()
 {
-   if(mInternalThreadsRunning)
+   // registerTransactionUser() reads the flag under the same lock.
    {
-      return;
+      Lock lock(mAppTimerMutex);
+      if(mInternalThreadsRunning)
+      {
+         return;
+      }
+      mInternalThreadsRunning=true;
    }
 
-   mInternalThreadsRunning=true;
    delete mDnsThread;
    mDnsThread=new DnsThread(*mDnsStub);
    mDnsThread->run();
@@ -310,6 +314,8 @@ SipStack::shutdownAndJoinThreads()
       mTransportSelectorThread->shutdown();
       mTransportSelectorThread->join();
    }
+
+   Lock lock(mAppTimerMutex);
    mInternalThreadsRunning=false;
 }
 
@@ -959,7 +965,7 @@ void
 SipStack::post(std::unique_ptr<ApplicationMessage> message)
 {
    resip_assert(!mShuttingDown);
-   mTuSelector.add(message.release(), TimeLimitFifo<Message>::InternalElement);
+   mTuSelector.addFromAnyThread(message.release(), TimeLimitFifo<Message>::InternalElement);
 }
 
 void
@@ -967,7 +973,7 @@ SipStack::post(const ApplicationMessage& message)
 {
    resip_assert(!mShuttingDown);
    Message* toPost = message.clone();
-   mTuSelector.add(toPost, TimeLimitFifo<Message>::InternalElement);
+   mTuSelector.addFromAnyThread(toPost, TimeLimitFifo<Message>::InternalElement);
 }
 
 void
@@ -1116,6 +1122,13 @@ SipStack::setFallbackPostNotify(AsyncProcessHandler *handler)
 void
 SipStack::processTimers()
 {
+   // registerTransactionUser() reads the flag under the same lock; it must
+   // be set before the TransactionController runs here.
+   {
+      Lock lock(mAppTimerMutex);
+      mProcessingHasStarted = true;
+   }
+
    if(!mTransactionControllerThread)
    {
       mTransactionController->process();
@@ -1131,7 +1144,6 @@ SipStack::processTimers()
       mTransactionController->transportSelector().process();
    }
 
-   mTuSelector.process();
    Lock lock(mAppTimerMutex);
    mAppTimers.process();
 }
@@ -1172,7 +1184,7 @@ SipStack::getTimeTillNextProcessMS()
             resipMin(dnsNextProcess,
                resipMin(tcNextProcess,
                   resipMin(tsNextProcess,
-                     resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer())))));
+                     mAppTimers.msTillNextTimer()))));
 }
 
 void
@@ -1216,21 +1228,28 @@ SipStack::pollStatistics()
 void
 SipStack::registerTransactionUser(TransactionUser& tu, const bool front)
 {
-   mTuSelector.registerTransactionUser(tu, front);
+   Lock lock(mAppTimerMutex);
+   if(mInternalThreadsRunning || mProcessingHasStarted)
+   {
+      // The TransactionController may be reading the TU list.
+      mTransactionController->registerTransactionUser(tu, front);
+   }
+   else
+   {
+      mTuSelector.registerTransactionUser(tu, front);
+   }
 }
 
 void
 SipStack::requestTransactionUserShutdown(TransactionUser& tu)
 {
-   mTuSelector.requestTransactionUserShutdown(tu);
-   checkAsyncProcessHandler();
+   mTransactionController->requestTransactionUserShutdown(tu);
 }
 
 void
 SipStack::unregisterTransactionUser(TransactionUser& tu)
 {
-   mTuSelector.unregisterTransactionUser(tu);
-   checkAsyncProcessHandler();
+   mTransactionController->unregisterTransactionUser(tu);
 }
 
 void
