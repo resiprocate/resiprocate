@@ -27,12 +27,33 @@ class SqlDb: public AbstractDb
 
       // Perform a query that expects a single result/row - returns all column/field data in a vector
       virtual int singleResultQuery(const resip::Data& queryCommand, std::vector<resip::Data>& fields) const = 0;
+      // As above, with a ? in queryTemplate for each of values (see fillPlaceholders)
+      virtual int singleResultQuery(const resip::Data& queryTemplate, const std::vector<resip::Data>& values, std::vector<resip::Data>& fields) const = 0;
 
    protected:
       virtual void setConnected(bool connected) const { mConnected = connected; }
       virtual bool isConnected() const { return mConnected; }
 
-      void setToData(const std::set<resip::Data>& items, resip::Data& result, const resip::Data& sep = ",", const char quote = '\'') const;
+      // Builds statement from queryTemplate, replacing each ? with the next of
+      // values escaped for use inside a single quoted literal, so the template
+      // has to supply the quotes (WHERE user='?').  It is one left to right
+      // pass, so inserted text is never scanned again.  ?? is a literal ?.
+      // Fails if a value can't be escaped or the counts don't match.  This
+      // needs the connection, so it must only be called from query() with
+      // mMutex held and after the connection check.
+      bool fillPlaceholders(const resip::Data& queryTemplate, const std::vector<resip::Data>& values, resip::Data& statement) const;
+
+      // Appends CustomUserAuthQuery to ds as a template for fillPlaceholders,
+      // with its $user and $domain tags turned into placeholders and the values
+      // added to values
+      static void appendCustomUserAuthQuery(const resip::Data& customQuery,
+                                            const resip::Data& user,
+                                            const resip::Data& domain,
+                                            resip::DataStream& ds,
+                                            std::vector<resip::Data>& values);
+
+      void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds, std::vector<resip::Data>& values) const;
+      void tlsPeerIdentityWhereClauseToDataStream(const Key& key, resip::DataStream& ds, std::vector<resip::Data>& values) const;
 
       // when multiple threads are in use with the same connection, you need to
       // mutex calls to mysql_query and mysql_store_result:
@@ -51,14 +72,17 @@ class SqlDb: public AbstractDb
       virtual bool dbRollbackTransaction(const Table table);
 
       virtual int query(const resip::Data& queryCommand) const = 0;
+      virtual int query(const resip::Data& queryTemplate, const std::vector<resip::Data>& values) const = 0;
       virtual resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const = 0;
+      // Like escapeString, but reports failure; only used by fillPlaceholders
+      virtual bool escapeValue(const resip::Data& str, resip::Data& escapedStr) const = 0;
+
+      // name of the user column in the users table
+      virtual const char* userColumn() const = 0;
 
       mutable volatile bool mConnected;
       resip::Data mTlsPeerAuthorizationQuery;
       resip::Data mTableNamePrefix;
-
-      virtual void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;
-      virtual void tlsPeerIdentityWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;
 };
 
 }

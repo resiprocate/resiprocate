@@ -41,6 +41,7 @@ class PostgreSqlDb: public SqlDb
 
       // Perform a query that expects a single result/row - returns all column/field data in a vector
       virtual int singleResultQuery(const resip::Data& queryCommand, std::vector<resip::Data>& fields) const;
+      virtual int singleResultQuery(const resip::Data& queryTemplate, const std::vector<resip::Data>& values, std::vector<resip::Data>& fields) const;
 
    private:
       // Db manipulation routines
@@ -63,8 +64,15 @@ class PostgreSqlDb: public SqlDb
       void disconnectFromDatabase() const;
       int connectToDatabase() const;
       int query(const resip::Data& queryCommand, PGresult** result) const;
+      int query(const resip::Data& queryTemplate, const std::vector<resip::Data>& values, PGresult** result) const;
       virtual int query(const resip::Data& queryCommand) const;
+      virtual int query(const resip::Data& queryTemplate, const std::vector<resip::Data>& values) const;
+      // values is 0 for a ready made command, otherwise queryText is a template for fillPlaceholders
+      int runQuery(const resip::Data& queryText, const std::vector<resip::Data>* values, PGresult** result) const;
+      int runSingleResultQuery(const resip::Data& queryText, const std::vector<resip::Data>* values, std::vector<resip::Data>& fields) const;
       resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const;
+      bool escapeValue(const resip::Data& str, resip::Data& escapedStr) const;
+      const char* userColumn() const { return "username"; }
 
       resip::Data mDBConnInfo;
       resip::Data mDBServer;
@@ -77,9 +85,6 @@ class PostgreSqlDb: public SqlDb
       mutable PGconn* mConn;
       mutable PGresult* mResult[MaxTable];
       mutable int mRow[MaxTable];
-
-      void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
-      void tlsPeerIdentityWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
 };
 
 }

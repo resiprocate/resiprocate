@@ -195,18 +195,39 @@ inline int pqOK(const PGresult *result)
 int
 PostgreSqlDb::query(const Data& queryCommand, PGresult** result) const
 {
+   return runQuery(queryCommand, 0, result);
+}
+
+int
+PostgreSqlDb::query(const Data& queryTemplate, const std::vector<Data>& values, PGresult** result) const
+{
+   return runQuery(queryTemplate, &values, result);
+}
+
+int
+PostgreSqlDb::runQuery(const Data& queryText, const std::vector<Data>* values, PGresult** result) const
+{
    int rc = 0;
    PGresult *_result;
 
    initialize();
-
-   DebugLog( << "PostgreSqlDb::query: executing query: " << queryCommand);
 
    Lock lock(mMutex);
    if(mConn == 0 || !isConnected())
    {
       rc = connectToDatabase();
    }
+
+   // Escape the values here, under the lock and once there is a connection
+   Data filled;
+   if(rc == 0 && values && !fillPlaceholders(queryText, *values, filled))
+   {
+      rc = -1;
+   }
+   const Data& queryCommand = filled.empty() ? queryText : filled;
+
+   DebugLog( << "PostgreSqlDb::query: executing query: " << queryCommand);
+
    if(rc == 0)
    {
       resip_assert(mConn!=0);
@@ -258,11 +279,29 @@ PostgreSqlDb::query(const Data& queryCommand) const
 }
 
 int
+PostgreSqlDb::query(const Data& queryTemplate, const std::vector<Data>& values) const
+{
+   return query(queryTemplate, values, 0);
+}
+
+int
 PostgreSqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) const
 {
-   StackLog(<<"executing query: " << queryCommand);
+   return runSingleResultQuery(queryCommand, 0, fields);
+}
+
+int
+PostgreSqlDb::singleResultQuery(const Data& queryTemplate, const std::vector<Data>& values, std::vector<Data>& fields) const
+{
+   return runSingleResultQuery(queryTemplate, &values, fields);
+}
+
+int
+PostgreSqlDb::runSingleResultQuery(const Data& queryText, const std::vector<Data>* values, std::vector<Data>& fields) const
+{
+   StackLog(<<"executing query: " << queryText);
    PGresult* result=0;
-   int rc = query(queryCommand, &result);
+   int rc = runQuery(queryText, values, &result);
       
    if(rc == 0)
    {
@@ -302,6 +341,26 @@ PostgreSqlDb::escapeString(const resip::Data& str, resip::Data& escapedStr) cons
    return escapedStr;
 }
 
+bool
+PostgreSqlDb::escapeValue(const resip::Data& str, resip::Data& escapedStr) const
+{
+   if(mConn == 0)
+   {
+      ErrLog(<< "PostgreSQL string escaping failed: not connected");
+      escapedStr.clear();
+      return false;
+   }
+   int rc = 0;
+   escapedStr.truncate2(PQescapeStringConn(mConn, (char*)escapedStr.getBuf(str.size()*2+1), str.c_str(), str.size(), &rc));
+   if(rc != 0)
+   {
+      ErrLog(<< "PostgreSQL string escaping failed: " << PQerrorMessage(mConn));
+      escapedStr.clear();
+      return false;
+   }
+   return true;
+}
+
 bool 
 PostgreSqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
 { 
@@ -311,29 +370,22 @@ PostgreSqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& 
       // Use two queries together to simulate UPSERT
       // Real UPSERT is coming in PostgreSQL 9.5
       ds << "UPDATE " << tableName(UserTable) << " SET"
-         << " realm='" << rec.realm
-         << "', passwordHash='" << rec.passwordHash
-         << "', passwordHashAlt='" << rec.passwordHashAlt
-         << "', name='" << rec.name
-         << "', email='" << rec.email
-         << "', forwardAddress='" << rec.forwardAddress
-         << "' WHERE username = '" << rec.user
-         << "' AND domain='" << rec.domain
-         << "'; "
+         << " realm='?', passwordHash='?', passwordHashAlt='?',"
+         << " name='?', email='?', forwardAddress='?'"
+         << " WHERE username = '?' AND domain='?'; "
          << "INSERT INTO " << tableName(UserTable) << " (username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
-         << " SELECT '" 
-         << rec.user << "', '"
-         << rec.domain << "', '"
-         << rec.realm << "', '"
-         << rec.passwordHash << "', '"
-         << rec.passwordHashAlt << "', '"
-         << rec.name << "', '"
-         << rec.email << "', '"
-         << rec.forwardAddress << "'"
+         << " SELECT '?', '?', '?', '?', '?', '?', '?', '?'"
          << " WHERE NOT EXISTS (SELECT 1 FROM " << tableName(UserTable) << " WHERE "
-         << "username = '" << rec.user << "' AND domain = '" << rec.domain << "')";
+         << "username = '?' AND domain = '?')";
    }
-   return query(command, 0) == 0;
+   const std::vector<Data> values = {
+      // UPDATE
+      rec.realm, rec.passwordHash, rec.passwordHashAlt, rec.name, rec.email, rec.forwardAddress,
+      rec.user, rec.domain,
+      // INSERT
+      rec.user, rec.domain, rec.realm, rec.passwordHash, rec.passwordHashAlt, rec.name, rec.email, rec.forwardAddress,
+      rec.user, rec.domain };
+   return query(command, values, 0) == 0;
 }
 
 
@@ -343,14 +395,15 @@ PostgreSqlDb::getUser( const AbstractDb::Key& key ) const
    AbstractDb::UserRecord  ret;
 
    Data command;
+   std::vector<Data> values;
    {
       DataStream ds(command);
       ds << "SELECT username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM " << tableName(UserTable) << " ";
-      userWhereClauseToDataStream(key, ds);
+      userWhereClauseToDataStream(key, ds, values);
    }
    
    PGresult* result=0;
-   if(query(command, &result) != 0)
+   if(query(command, values, &result) != 0)
    {
       return ret;
    }
@@ -386,25 +439,28 @@ PostgreSqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
    std::vector<Data> ret;
 
    Data command;
+   std::vector<Data> values;
    {
       DataStream ds(command);
       Data user;
       Data domain;
       UserStore::getUserAndDomainFromKey(key, user, domain);
-      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE username = '" << user << "' AND domain = '" << domain << "' ";
-   
+      // user is the digest username of a request that isn't authenticated yet,
+      // so it only goes in as a value for query() to escape
+      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE username = '?' AND domain = '?' ";
+      values.push_back(user);
+      values.push_back(domain);
+
       // Note: domain is empty when querying for HTTP admin user - for this special user, 
       // we will only check the repro db, by not adding the UNION statement below
       if(!mCustomUserAuthQuery.empty() && !domain.empty())  
       {
-         ds << " UNION " << mCustomUserAuthQuery;
-         ds.flush();
-         command.replace("$user", user);
-         command.replace("$domain", domain);
+         ds << " UNION ";
+         appendCustomUserAuthQuery(mCustomUserAuthQuery, user, domain, ds, values);
       }
    }
 
-   if(singleResultQuery(command, ret) != 0 || ret.size() == 0)
+   if(singleResultQuery(command, values, ret) != 0 || ret.size() == 0)
    {
       return Data::Empty;
    }
@@ -484,13 +540,13 @@ PostgreSqlDb::addTlsPeerIdentity(const AbstractDb::Key& key, const AbstractDb::T
          << "' AND authorizedIdentity ='" << rec.authorizedIdentity
          << "'; " */
          << "INSERT INTO " << tableName(TlsPeerIdentityTable) << " (peerName, authorizedIdentity)"
-         << " SELECT '"
-         << rec.peerName << "', '"
-         << rec.authorizedIdentity << "'"
+         << " SELECT '?', '?'"
          << " WHERE NOT EXISTS (SELECT 1 FROM " << tableName(TlsPeerIdentityTable) << " WHERE "
-         << "peerName = '" << rec.peerName << "' AND authorizedIdentity = '" << rec.authorizedIdentity << "')";
+         << "peerName = '?' AND authorizedIdentity = '?')";
    }
-   return query(command, 0) == 0;
+   const std::vector<Data> values = { rec.peerName, rec.authorizedIdentity,
+                                      rec.peerName, rec.authorizedIdentity };
+   return query(command, values, 0) == 0;
 }
 
 
@@ -500,14 +556,15 @@ PostgreSqlDb::getTlsPeerIdentity( const AbstractDb::Key& key ) const
    AbstractDb::TlsPeerIdentityRecord  ret;
 
    Data command;
+   std::vector<Data> values;
    {
       DataStream ds(command);
       ds << "SELECT peerName, authorizedIdentity FROM " << tableName(TlsPeerIdentityTable);
-      tlsPeerIdentityWhereClauseToDataStream(key, ds);
+      tlsPeerIdentityWhereClauseToDataStream(key, ds, values);
    }
  
    PGresult* result=0;
-   if(query(command, &result) != 0)
+   if(query(command, values, &result) != 0)
    {
       return ret;
    }
@@ -797,28 +854,6 @@ PostgreSqlDb::dbBeginTransaction(const Table table)
    return false;
 }
 
-void 
-PostgreSqlDb::userWhereClauseToDataStream(const Key& key, DataStream& ds) const
-{
-   Data user;
-   Data domain;
-   UserStore::getUserAndDomainFromKey(key, user, domain);
-   ds << " WHERE username='" << user
-      << "' AND domain='" << domain
-      << "'";      
-}
-
-void
-PostgreSqlDb::tlsPeerIdentityWhereClauseToDataStream(const Key& key, DataStream& ds) const
-{
-   Data peerName;
-   Data authorizedIdentity;
-   TlsPeerIdentityStore::getTlsPeerIdentityFromKey(key, peerName, authorizedIdentity);
-   ds << " WHERE peerName='" << peerName
-      << "' AND authorizedIdentity='" << authorizedIdentity
-      << "'";
-}
-   
 #endif // USE_POSTGRESQL
 
 /* ====================================================================
