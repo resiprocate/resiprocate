@@ -8,7 +8,10 @@
 #include <vector>
 
 #ifdef RESIP_POLL_IMPL_EPOLL
+#  include <stdint.h>
 #  include <sys/epoll.h>
+#  include <sys/eventfd.h>
+#  include <unistd.h>
 #endif
 #if defined(RESIP_POLL_IMPL_POLL) && !defined(WIN32)
 #  include <poll.h>
@@ -488,10 +491,11 @@ static inline unsigned short
 CvtPollToUsrMask(unsigned long sysMask)
 {
    unsigned usrMask = 0;
-   if(sysMask & POLLIN)  usrMask |= FPEM_Read;
+   // A hangup can still have unread data; readers must drain it and close on EOF.
+   if(sysMask & (POLLIN|POLLHUP)) usrMask |= FPEM_Read;
    if(sysMask & POLLOUT) usrMask |= FPEM_Write;
    // POLLNVAL: the socket was closed while still in the set
-   if(sysMask & (POLLERR|POLLHUP|POLLNVAL)) usrMask |= FPEM_Error|FPEM_Read|FPEM_Write;
+   if(sysMask & (POLLERR|POLLNVAL)) usrMask |= FPEM_Error|FPEM_Read|FPEM_Write;
    // NOTE: above, fake read and write if error to encourage
    // apps to actually do something about it
    return usrMask;
@@ -690,6 +694,8 @@ class FdPollImplEpoll : public FdPollGrp
 
       virtual FdPollItemHandle  addPollItem(Socket fd,
                                   FdPollEventMask newMask, FdPollItemIf *item);
+      virtual FdPollItemHandle  addPollItemNotifyOnFailure(Socket fd,
+                                  FdPollEventMask newMask, FdPollItemIf *item);
       virtual void              modPollItem(FdPollItemHandle handle,
                                   FdPollEventMask newMask);
       virtual void              delPollItem(FdPollItemHandle handle);
@@ -702,10 +708,39 @@ class FdPollImplEpoll : public FdPollGrp
       virtual bool processFdSet(FdSet& fdset);
 
    protected:
+      enum ItemFlags
+      {
+         NotifyOnFailure = 0x01, // ctl failures become a deferred FPEM_Error
+         ErrorQueued = 0x02,     // a deferred FPEM_Error is waiting in mErrorQueue
+         NotRegistered = 0x04    // fd is not in the epoll set (ADD failed or MOD returned ENOENT)
+      };
+
+      struct ItemInfo
+      {
+         ItemInfo() : mItem(NULL), mSerial(0), mFlags(0) {}
+         FdPollItemIf*  mItem;
+         unsigned int   mSerial;  // identifies this registration of the fd
+         unsigned char  mFlags;   // ItemFlags
+      };
+
+      struct QueuedError
+      {
+         QueuedError(int fd, unsigned int serial) : mFd(fd), mSerial(serial) {}
+         int            mFd;
+         unsigned int   mSerial;
+      };
+
+      FdPollItemHandle          addItem(Socket fd, FdPollEventMask newMask,
+                                  FdPollItemIf *item, bool notifyOnFailure);
       void                      killCache(Socket fd);
       bool epollWait(int ms);
+      void                      queueError(int fd);
+      void                      cancelError(ItemInfo& info);
+      bool                      processQueuedErrors();
+      void                      updateWakeup();
 
-      std::vector<FdPollItemIf*>  mItems; // indexed by fd
+      std::vector<ItemInfo>     mItems; // indexed by fd
+      unsigned int              mNextSerial;
       int                       mEPollFd;       // from epoll_create()
 
       /*
@@ -716,6 +751,24 @@ class FdPollImplEpoll : public FdPollGrp
       std::vector<struct epoll_event> mEvCache;
       int                       mEvCacheCur;
       int                       mEvCacheLen;
+
+      /*
+       * Registrations whose epoll_ctl() failed. The failure cannot be
+       * reported to the item from inside add/modPollItem(), since the
+       * caller may not expect the item to go away under it, so it is
+       * reported as FPEM_Error on the next epollWait(). An entry only
+       * applies while the fd still has the registration serial it was
+       * queued for, so removing or reusing the fd cancels it.
+       */
+      std::vector<QueuedError>  mErrorQueue;
+      unsigned int              mErrorsQueued; // registrations with ErrorQueued set
+
+      /*
+       * Readable while mErrorsQueued > 0, so that a select() over the
+       * epoll fd (buildFdSet()) wakes up to deliver queued errors.
+       */
+      int                       mWakeupFd;
+      bool                      mWakeupSignaled;
 };
 
 };      // namespace
@@ -725,15 +778,32 @@ class FdPollImplEpoll : public FdPollGrp
 #define IMPL_EPOLL_HandleToFd(handle) ( ((char*)(handle)) - ((char*)0) - 1)
 
 FdPollImplEpoll::FdPollImplEpoll() :
-  mEPollFd(-1)
+  mNextSerial(0),
+  mEPollFd(-1),
+  mErrorsQueued(0),
+  mWakeupFd(-1),
+  mWakeupSignaled(false)
 {
-   int sz = 200;        // ignored
-   if ( (mEPollFd = epoll_create(sz)) < 0 )
+   if ( (mEPollFd = epoll_create(EpollMaxEventsPerWait)) < 0 )
    {
       CritLog(<<"epoll_create() failed: "<<strError(errno));
       abort();
    }
-   mEvCache.resize(sz);
+   if ( (mWakeupFd = eventfd(0, EFD_NONBLOCK|EFD_CLOEXEC)) < 0 )
+   {
+      CritLog(<<"eventfd() failed: "<<strError(errno));
+      abort();
+   }
+   struct epoll_event ev;
+   memset(&ev, 0, sizeof(ev));  // make valgrind happy
+   ev.events = EPOLLIN;
+   ev.data.fd = mWakeupFd;
+   if (epoll_ctl(mEPollFd, EPOLL_CTL_ADD, mWakeupFd, &ev) < 0)
+   {
+      CritLog(<<"epoll_ctl(ADD) of the wakeup eventfd failed: "<<strError(errno));
+      abort();
+   }
+   mEvCache.resize(EpollMaxEventsPerWait);
    mEvCacheCur = mEvCacheLen = 0;
 }
 
@@ -743,12 +813,15 @@ FdPollImplEpoll::~FdPollImplEpoll()
    unsigned itemIdx;
    for (itemIdx=0; itemIdx < mItems.size(); itemIdx++)
    {
-      FdPollItemIf *item = mItems[itemIdx];
-      if (item)
+      if (mItems[itemIdx].mItem)
       {
          CritLog(<<"FdPollItem idx="<<itemIdx
                <<" not deleted prior to destruction");
       }
+   }
+   if (mWakeupFd != -1)
+   {
+      close(mWakeupFd);
    }
    if (mEPollFd != -1)
    {
@@ -760,7 +833,8 @@ static inline unsigned short
 CvtSysToUsrMask(unsigned long sysMask)
 {
    unsigned usrMask = 0;
-   if(sysMask & EPOLLIN)  usrMask |= FPEM_Read;
+   // A hangup can still have unread data; readers must drain it and close on EOF.
+   if(sysMask & (EPOLLIN|EPOLLHUP)) usrMask |= FPEM_Read;
    if(sysMask & EPOLLOUT) usrMask |= FPEM_Write;
    if(sysMask & EPOLLERR) usrMask |= FPEM_Error|FPEM_Read|FPEM_Write;
    // NOTE: above, fake read and write if error to encourage
@@ -781,6 +855,19 @@ CvtUsrToSysMask(unsigned short usrMask)
 FdPollItemHandle
 FdPollImplEpoll::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *item)
 {
+   return addItem(fd, newMask, item, false);
+}
+
+FdPollItemHandle
+FdPollImplEpoll::addPollItemNotifyOnFailure(Socket fd, FdPollEventMask newMask, FdPollItemIf *item)
+{
+   return addItem(fd, newMask, item, true);
+}
+
+FdPollItemHandle
+FdPollImplEpoll::addItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *item,
+                         bool notifyOnFailure)
+{
    resip_assert(fd>=0);
    //DebugLog(<<"adding epoll item fd="<<fd);
    if (mItems.size() <= (unsigned)fd)
@@ -791,17 +878,53 @@ FdPollImplEpoll::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *i
       // Currently only iterator is destructor, so should be safe
       mItems.resize(newsz);
    }
-   FdPollItemIf *olditem = mItems[fd];
-   resip_assert(olditem == NULL);     // what is right thing to do?
-   mItems[fd] = item;
+   ItemInfo& info = mItems[fd];
+   const bool replacesItem = (info.mItem != NULL);
+   if (replacesItem)
+   {
+      // The previous owner either closed fd without calling delPollItem()
+      // first, or still owns it. Its delPollItem() would now remove this
+      // item instead.
+      ErrLog(<<"epoll fd="<<fd<<" added while still registered to another item");
+      resip_assert(info.mItem == NULL);
+   }
+   cancelError(info);
+   info.mItem = item;
+   info.mSerial = ++mNextSerial;
+   info.mFlags = notifyOnFailure ? NotifyOnFailure : 0;
+   killCache(fd);  // nothing pending for the old item may reach this one
    struct epoll_event ev;
    memset(&ev, 0, sizeof(ev));  // make valgrind happy
    ev.events = CvtUsrToSysMask(newMask);
    ev.data.fd = fd;
    if (epoll_ctl(mEPollFd, EPOLL_CTL_ADD, fd, &ev) < 0)
    {
-      CritLog(<<"epoll_ctl(ADD) failed: " << strError(errno));
-      abort();
+      int err = errno;
+      // EEXIST without a previous item: an earlier EPOLL_CTL_DEL for fd
+      // failed, so take the stale entry over. With a previous item, the
+      // entry is live and belongs to that item: fail as before.
+      if (err != EEXIST || replacesItem || epoll_ctl(mEPollFd, EPOLL_CTL_MOD, fd, &ev) < 0)
+      {
+         // A stale entry stays in the kernel unless MOD found it gone
+         bool entryRemains = false;
+         if (err == EEXIST && !replacesItem)
+         {
+            err = errno;
+            entryRemains = (err != ENOENT);
+         }
+         if (!notifyOnFailure || replacesItem)
+         {
+            // Preserve fail-fast behavior unless the item opts in to error cleanup.
+            CritLog(<<"epoll_ctl(ADD) fd="<<fd<<" failed: " << strError(err));
+            abort();
+         }
+         ErrLog(<<"epoll_ctl(ADD) fd="<<fd<<" failed: " << strError(err));
+         if (!entryRemains)
+         {
+            info.mFlags |= NotRegistered;
+         }
+         queueError(fd);
+      }
    }
    return IMPL_EPOLL_FdToHandle(fd);
 }
@@ -811,7 +934,15 @@ FdPollImplEpoll::modPollItem(const FdPollItemHandle handle, FdPollEventMask newM
 {
    int fd = IMPL_EPOLL_HandleToFd(handle);
    resip_assert(fd>=0 && ((unsigned)fd) < mItems.size());
-   resip_assert(mItems[fd] != NULL);
+   ItemInfo& info = mItems[fd];
+   resip_assert(info.mItem != NULL);
+
+   if (info.mFlags & NotRegistered)
+   {
+      // Already failed; the item gets (or got) its FPEM_Error
+      queueError(fd);
+      return;
+   }
 
    struct epoll_event ev;
    memset(&ev, 0, sizeof(ev));  // make valgrind happy
@@ -819,8 +950,21 @@ FdPollImplEpoll::modPollItem(const FdPollItemHandle handle, FdPollEventMask newM
    ev.data.fd = fd;
    if (epoll_ctl(mEPollFd, EPOLL_CTL_MOD, fd, &ev) < 0)
    {
-      CritLog(<<"epoll_ctl(MOD) failed: "<<strError(errno));
-      abort();
+      // Usually EBADF or ENOENT: fd was closed while still registered.
+      // Either way the item no longer gets the events it asked for, so
+      // tell it, rather than leave it waiting.
+      int err = errno;
+      if (!(info.mFlags & NotifyOnFailure))
+      {
+         CritLog(<<"epoll_ctl(MOD) fd="<<fd<<" failed: " << strError(err));
+         abort();
+      }
+      ErrLog(<<"epoll_ctl(MOD) fd="<<fd<<" failed: " << strError(err));
+      if (err == ENOENT)
+      {
+         info.mFlags |= NotRegistered;
+      }
+      queueError(fd);
    }
 }
 
@@ -830,14 +974,127 @@ FdPollImplEpoll::delPollItem(FdPollItemHandle handle)
    int fd = IMPL_EPOLL_HandleToFd(handle);
    //DebugLog(<<"deleting epoll item fd="<<fd);
    resip_assert(fd>=0 && ((unsigned)fd) < mItems.size());
-   resip_assert( mItems[fd] != NULL );
-   mItems[fd] = NULL;
+   ItemInfo& info = mItems[fd];
+   resip_assert( info.mItem != NULL );
+   const unsigned char flags = info.mFlags;
+   cancelError(info);
+   info.mItem = NULL;
+   info.mFlags = 0;
+   killCache(fd);
+   if (flags & NotRegistered)
+   {
+      // The expected teardown after a failed ADD (or MOD with ENOENT):
+      // there is no epoll entry to remove.
+      DebugLog(<<"epoll fd="<<fd<<" removed without an epoll entry");
+      return;
+   }
    if (epoll_ctl(mEPollFd, EPOLL_CTL_DEL, fd, NULL) < 0)
    {
-       CritLog(<<"epoll_ctl(DEL) fd="<<fd<<" failed: " << strError(errno));
-           abort();
+      int err = errno;
+      // EBADF/ENOENT usually means fd was closed before delPollItem().
+      // That only removes the epoll entry once every reference to the open
+      // file is closed; one kept by dup() or fork() leaves the entry, whose
+      // events would then reach whichever item reuses fd.
+      if (!(flags & NotifyOnFailure))
+      {
+         CritLog(<<"epoll_ctl(DEL) fd="<<fd<<" failed: " << strError(err));
+         abort();
+      }
+      WarningLog(<<"epoll_ctl(DEL) fd="<<fd<<" failed: " << strError(err));
    }
-   killCache(fd);
+}
+
+void
+FdPollImplEpoll::queueError(int fd)
+{
+   ItemInfo& info = mItems[fd];
+   if (!(info.mFlags & ErrorQueued))
+   {
+      mErrorQueue.push_back(QueuedError(fd, info.mSerial));
+      info.mFlags |= ErrorQueued;
+      ++mErrorsQueued;
+      updateWakeup();
+   }
+}
+
+void
+FdPollImplEpoll::cancelError(ItemInfo& info)
+{
+   // Its entry stays in mErrorQueue; processQueuedErrors() skips it
+   if (info.mFlags & ErrorQueued)
+   {
+      info.mFlags &= ~ErrorQueued;
+      resip_assert(mErrorsQueued > 0);
+      if (--mErrorsQueued == 0)
+      {
+         mErrorQueue.clear();
+      }
+      updateWakeup();
+   }
+}
+
+bool
+FdPollImplEpoll::processQueuedErrors()
+{
+   if (mErrorsQueued == 0)
+   {
+      return false;
+   }
+   bool didsomething = false;
+   // Only the errors queued so far: an item that fails again while handling
+   // its error is reported on the next call, not in a loop here
+   std::vector<QueuedError> errors;
+   errors.swap(mErrorQueue);
+   size_t idx = 0;
+   try
+   {
+      for (; idx < errors.size(); idx++)
+      {
+         const QueuedError& error = errors[idx];
+         ItemInfo& info = mItems[error.mFd];
+         if (info.mSerial != error.mSerial || !(info.mFlags & ErrorQueued))
+         {
+            continue;      // fd was removed or reused since
+         }
+         info.mFlags &= ~ErrorQueued;
+         --mErrorsQueued;
+         processItem(info.mItem, FPEM_Error|FPEM_Read|FPEM_Write);
+         didsomething = true;
+      }
+   }
+   catch (...)
+   {
+      // Keep undelivered errors if the caller catches a callback exception
+      mErrorQueue.insert(mErrorQueue.begin(), errors.begin() + idx + 1, errors.end());
+      updateWakeup();
+      throw;
+   }
+   updateWakeup();
+   return didsomething;
+}
+
+void
+FdPollImplEpoll::updateWakeup()
+{
+   const bool wanted = (mErrorsQueued > 0);
+   if (wanted == mWakeupSignaled)
+   {
+      return;
+   }
+   uint64_t value = 1;
+   if (wanted)
+   {
+      if (write(mWakeupFd, &value, sizeof(value)) < 0)
+      {
+         ErrLog(<<"write() to the epoll wakeup eventfd failed: "<<strError(errno));
+         return;
+      }
+   }
+   else if (read(mWakeupFd, &value, sizeof(value)) < 0 && errno != EAGAIN)
+   {
+      ErrLog(<<"read() from the epoll wakeup eventfd failed: "<<strError(errno));
+   }
+   mWakeupSignaled = wanted;
 }
 
 
@@ -862,7 +1119,7 @@ FdPollImplEpoll::delPollItem(FdPollItemHandle handle)
     An alternative approach would be use a serial number counter,
     as a lifetime indicator for each fd, and store both a 32-bit serial
     and 32-bit fd into the epoll event in the kernel. We could then
-    recognize stale events.
+    recognize stale events. (Queued errors already carry such a serial.)
 **/
 void
 FdPollImplEpoll::killCache(int fd)
@@ -899,8 +1156,9 @@ FdPollImplEpoll::buildFdSet(FdSet& fdset)
 bool
 FdPollImplEpoll::processFdSet(FdSet& fdset)
 {
+   // Queued errors keep the epoll fd readable through mWakeupFd
    int fd = getEPollFd();
-   if (fd !=- 1 && fdset.readyToRead(fd))
+   if (fd != -1 && fdset.readyToRead(fd))
    {
       return epollWait(0);
    }
@@ -910,53 +1168,53 @@ FdPollImplEpoll::processFdSet(FdSet& fdset)
 bool
 FdPollImplEpoll::epollWait(int waitMs)
 {
-   bool maybeMore;
-   bool didsomething=false;
-   do
+   bool didsomething = processQueuedErrors();
+   if (didsomething)
    {
-      int nfds = epoll_wait(mEPollFd, &mEvCache.front(), mEvCache.size(), waitMs);
-      if (nfds < 0)
+      waitMs = 0;
+   }
+   // Dispatch one complete batch so the caller can run timers and other work.
+   int nfds = epoll_wait(mEPollFd, &mEvCache.front(), mEvCache.size(), waitMs);
+   if (nfds < 0)
+   {
+      int err = errno;
+      if (err==EINTR)
       {
-         if (errno==EINTR)
-         {
-            // signal handler (like alarm) broke loop. generally ok
-            DebugLog(<<"epoll_wait() broken by EINTR");
-            nfds = 0;   // clean-up and return. could add return code
-            // to indicate this, but not needed by us
-         }
-         else
-         {
-            CritLog(<<"epoll_wait() failed: " << strError(errno));
-            abort();   // TBD: just throw instead?
-         }
+         // signal handler (like alarm) broke loop. generally ok
+         DebugLog(<<"epoll_wait() broken by EINTR");
+         nfds = 0;   // clean-up and return. could add return code
+         // to indicate this, but not needed by us
       }
-      waitMs = 0;             // don't wait anymore
-      mEvCacheLen = nfds;     // for killCache()
-      maybeMore = ( ((unsigned)nfds)==mEvCache.size()) ? 1 : 0;
-      int ne;
-      for (ne=0; ne < nfds; ne++)
+      else
       {
-         int fd = mEvCache[ne].data.fd;
-         if (fd == INVALID_SOCKET)
-         {
-            continue;      // was killed by killCache()
-         }
-         int sysEvtMask = mEvCache[ne].events;
-         resip_assert(fd>=0 && fd < (int)mItems.size());
-         FdPollItemIf *item = mItems[fd];
-         if (item == NULL)
-         {
-            /* this can happen if item was deleted after
-             * event was generated in kernel, etc. */
-            continue;
-         }
-         mEvCacheCur = ne;  // for killCache()
-         processItem(item, CvtSysToUsrMask(sysEvtMask));
-         item = NULL; // WATCHOUT: item may not exist anymore
-         didsomething = true;
+         CritLog(<<"epoll_wait() failed: " << strError(err));
+         abort();   // TBD: just throw instead?
       }
-      mEvCacheLen = 0;
-   } while (maybeMore);
+   }
+   mEvCacheLen = nfds;     // for killCache()
+   int ne;
+   for (ne=0; ne < nfds; ne++)
+   {
+      int fd = mEvCache[ne].data.fd;
+      if (fd == INVALID_SOCKET || fd == mWakeupFd)
+      {
+         continue;      // killed by killCache(), or queued errors (handled above)
+      }
+      int sysEvtMask = mEvCache[ne].events;
+      resip_assert(fd>=0 && fd < (int)mItems.size());
+      FdPollItemIf *item = mItems[fd].mItem;
+      if (item == NULL)
+      {
+         /* this can happen if item was deleted after
+          * event was generated in kernel, etc. */
+         continue;
+      }
+      mEvCacheCur = ne;  // for killCache()
+      processItem(item, CvtSysToUsrMask(sysEvtMask));
+      item = NULL; // WATCHOUT: item may not exist anymore
+      didsomething = true;
+   }
+   mEvCacheLen = 0;
    return didsomething;
 }
 

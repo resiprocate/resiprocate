@@ -191,7 +191,7 @@ ConnectionManager::addConnection(Connection* connection)
 
    if ( mPollGrp ) 
    {
-      connection->mPollItemHandle = mPollGrp->addPollItem(
+      connection->mPollItemHandle = mPollGrp->addPollItemNotifyOnFailure(
          connection->getSocket(), FPEM_Read|FPEM_Error, connection);
    }
    else 
