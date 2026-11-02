@@ -32,6 +32,7 @@
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
+#include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/FdPoll.hxx"
@@ -60,6 +61,7 @@
 #define gai_strerror strerror
 #endif
 
+#include <climits>
 #include <utility>
 #include <sys/types.h>
 
@@ -781,6 +783,7 @@ TransportSelector::lookupRouteSource(const Tuple& target) const
 {
    // this process will determine which interface the kernel would use to
    // send a packet to the target by making a connect call on a udp socket.
+   Lock lock(mSocketsMutex);
    Socket tmp = INVALID_SOCKET;
    Data netNs = target.getNetNs();
    // One IPV4 and IPV6 socket per namespace.  Even if we do not support netns,
@@ -1371,8 +1374,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 
          // !bwc! Moving average of message size. (Used to intelligently
          // predict how much space to reserve in the buffer, to minimize
-         // dynamic resizing.)
-         mAvgBufferSize.store((255*avgBufferSize + (int)send->data.size()+128)/256,
+         // dynamic resizing.) Concurrent calls may drop each other's sample.
+         // Computed in 64 bits, and clamped so that the reserve() above cannot
+         // overflow an int.
+         const uint64_t newAvgBufferSize = (255*(uint64_t)avgBufferSize + send->data.size() + 128)/256;
+         mAvgBufferSize.store((int)resipMin(newAvgBufferSize, (uint64_t)(INT_MAX/2)),
                               std::memory_order_relaxed);
 
          resip_assert(!send->data.empty());

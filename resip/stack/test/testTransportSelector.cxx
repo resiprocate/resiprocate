@@ -1,4 +1,7 @@
+#include <atomic>
 #include <memory>
+#include <thread>
+#include <vector>
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TcpTransport.hxx"
@@ -156,6 +159,11 @@ class TestTransportSelector : public TransportSelector
       Transport* findTransportByDest(const Tuple& dest)
       {
          return TransportSelector::findTransportByDest(dest);
+      }
+
+      unsigned int fifoSize() const
+      {
+         return mFifo.size();
       }
 
    private:
@@ -973,6 +981,83 @@ testFindTransportByDest()
    }
 }
 
+void
+testConcurrentTransmit()
+{
+   // Several threads transmit requests with a top Via without sent-by or
+   // transport.  With two transports, findTransportByDest() finds no single
+   // match, so each transmit() looks up its source interface through the
+   // shared fake socket; with one transport the test would not exercise the
+   // lock.
+   resipCout << "test concurrent transmit with source interface lookup" << std::endl;
+
+   TestTransportSelector ts;
+   ts.addTransport("127.0.0.1", 5060, V4, UDP);
+   ts.addTransport("127.0.0.1", 5100, V4, UDP);
+   const unsigned int fifoSizeBefore = ts.fifoSize();
+
+   const int numThreads = 8;
+   const int numTransmits = 200;
+   std::atomic<int> notStarted(numThreads);
+   std::atomic<int> unsent(0);
+   std::atomic<int> wrongVia(0);
+
+   std::vector<std::thread> threads;
+   for (int t = 0; t < numThreads; ++t)
+   {
+      threads.emplace_back([&]()
+      {
+         std::unique_ptr<SipMessage> msg(SipMessage::make(
+            "OPTIONS sip:bob@127.0.0.1:5080 SIP/2.0\r\n"
+            "Via: SIP/2.0/UDP 127.0.0.1;branch=z9hG4bK-concurrent\r\n"
+            "Max-Forwards: 70\r\n"
+            "To: <sip:bob@127.0.0.1>\r\n"
+            "From: <sip:alice@127.0.0.1>;tag=1\r\n"
+            "Call-ID: concurrent-transmit\r\n"
+            "CSeq: 1 OPTIONS\r\n"
+            "Content-Length: 0\r\n\r\n"));
+
+         // Start all threads at once, so that the first lookups race too.
+         --notStarted;
+         while (notStarted > 0)
+         {
+            std::this_thread::yield();
+         }
+
+         for (int i = 0; i < numTransmits; ++i)
+         {
+            // Neither the Via nor the target names the transport.
+            Via& via = msg->header(h_Vias).front();
+            via.transport().clear();
+            via.sentHost().clear();
+            via.sentPort() = 0;
+            Tuple target("127.0.0.1", 5080, V4, UDP);
+
+            if (ts.transmit(msg.get(), target) != TransportSelector::Sent)
+            {
+               ++unsent;
+            }
+
+            const Via& sentVia = msg->const_header(h_Vias).front();
+            if (sentVia.sentHost() != "127.0.0.1" ||
+                (sentVia.sentPort() != 5060 && sentVia.sentPort() != 5100))
+            {
+               ++wrongVia;
+            }
+         }
+      });
+   }
+
+   for (auto& thread : threads)
+   {
+      thread.join();
+   }
+
+   resip_assert(unsent == 0);
+   resip_assert(wrongVia == 0);
+   resip_assert(ts.fifoSize() == fifoSizeBefore);  // no TransportFailure
+}
+
 int
 main(int argc, char** argv)
 {
@@ -983,6 +1068,7 @@ main(int argc, char** argv)
    testFindTransportBySourceTlsTransport();
 #endif // USE_SSL
    testFindTransportByDest();
+   testConcurrentTransmit();
 
    return 0;
 }
