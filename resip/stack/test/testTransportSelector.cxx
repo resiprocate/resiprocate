@@ -989,12 +989,58 @@ testConcurrentTransmit()
    // match, so each transmit() looks up its source interface through the
    // shared fake socket; with one transport the test would not exercise the
    // lock.
+   //
+   // The transports are registered on any interface, so that whichever
+   // address the host picks as the source for 127.0.0.1 has a transport.
+   // Windows does not always pick 127.0.0.1: for a local destination,
+   // WinCompat returns the first address of the adapter, which can be
+   // another address on the loopback adapter.
    resipCout << "test concurrent transmit with source interface lookup" << std::endl;
 
    TestTransportSelector ts;
-   ts.addTransport("127.0.0.1", 5060, V4, UDP);
-   ts.addTransport("127.0.0.1", 5100, V4, UDP);
+   ts.addTransport(Data::Empty, 5060, V4, UDP);
+   ts.addTransport(Data::Empty, 5100, V4, UDP);
    const unsigned int fifoSizeBefore = ts.fifoSize();
+
+   auto makeRequest = []()
+   {
+      return std::unique_ptr<SipMessage>(SipMessage::make(
+         "OPTIONS sip:bob@127.0.0.1:5080 SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP 127.0.0.1;branch=z9hG4bK-concurrent\r\n"
+         "Max-Forwards: 70\r\n"
+         "To: <sip:bob@127.0.0.1>\r\n"
+         "From: <sip:alice@127.0.0.1>;tag=1\r\n"
+         "Call-ID: concurrent-transmit\r\n"
+         "CSeq: 1 OPTIONS\r\n"
+         "Content-Length: 0\r\n\r\n"));
+   };
+
+   // Returns true if msg was sent, with its Via filled in by transmit().
+   auto transmitUnrouted = [&ts](SipMessage* msg)
+   {
+      // Neither the Via nor the target names the transport.
+      Via& via = msg->header(h_Vias).front();
+      via.transport().clear();
+      via.sentHost().clear();
+      via.sentPort() = 0;
+      Tuple target("127.0.0.1", 5080, V4, UDP);
+      return ts.transmit(msg, target) == TransportSelector::Sent;
+   };
+
+   // A single threaded transmit gives the Via that every concurrent one
+   // must match.
+   Data expectedHost;
+   int expectedPort = 0;
+   {
+      std::unique_ptr<SipMessage> msg(makeRequest());
+      const bool sent = transmitUnrouted(msg.get());
+      resip_assert(sent);
+      const Via& sentVia = msg->const_header(h_Vias).front();
+      expectedHost = sentVia.sentHost();
+      expectedPort = sentVia.sentPort();
+      resip_assert(!expectedHost.empty());
+      resip_assert(expectedPort == 5060 || expectedPort == 5100);
+   }
 
    const int numThreads = 8;
    const int numTransmits = 200;
@@ -1007,15 +1053,7 @@ testConcurrentTransmit()
    {
       threads.emplace_back([&]()
       {
-         std::unique_ptr<SipMessage> msg(SipMessage::make(
-            "OPTIONS sip:bob@127.0.0.1:5080 SIP/2.0\r\n"
-            "Via: SIP/2.0/UDP 127.0.0.1;branch=z9hG4bK-concurrent\r\n"
-            "Max-Forwards: 70\r\n"
-            "To: <sip:bob@127.0.0.1>\r\n"
-            "From: <sip:alice@127.0.0.1>;tag=1\r\n"
-            "Call-ID: concurrent-transmit\r\n"
-            "CSeq: 1 OPTIONS\r\n"
-            "Content-Length: 0\r\n\r\n"));
+         std::unique_ptr<SipMessage> msg(makeRequest());
 
          // Start all threads at once, so that the first lookups race too.
          --notStarted;
@@ -1026,21 +1064,14 @@ testConcurrentTransmit()
 
          for (int i = 0; i < numTransmits; ++i)
          {
-            // Neither the Via nor the target names the transport.
-            Via& via = msg->header(h_Vias).front();
-            via.transport().clear();
-            via.sentHost().clear();
-            via.sentPort() = 0;
-            Tuple target("127.0.0.1", 5080, V4, UDP);
-
-            if (ts.transmit(msg.get(), target) != TransportSelector::Sent)
+            if (!transmitUnrouted(msg.get()))
             {
                ++unsent;
             }
 
             const Via& sentVia = msg->const_header(h_Vias).front();
-            if (sentVia.sentHost() != "127.0.0.1" ||
-                (sentVia.sentPort() != 5060 && sentVia.sentPort() != 5100))
+            if (sentVia.sentHost() != expectedHost ||
+                sentVia.sentPort() != expectedPort)
             {
                ++wrongVia;
             }
@@ -1076,6 +1107,7 @@ main(int argc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

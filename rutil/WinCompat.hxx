@@ -3,6 +3,7 @@
 
 #if defined(WIN32)
 #include <Iphlpapi.h>
+#include <atomic>
 #include <list>
 
 #include "rutil/BaseException.hxx"
@@ -65,7 +66,7 @@ class WinCompat
 
    private:
       static WinCompat* instance();
-      static WinCompat* mInstance;
+      static std::atomic<WinCompat*> mInstance;
 
       static GenericIPAddress determineSourceInterfaceWithIPv6(const GenericIPAddress& destination);
       static GenericIPAddress determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destination);

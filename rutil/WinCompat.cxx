@@ -116,22 +116,27 @@ WinCompat::getVersion()
 }
 
 
-WinCompat* WinCompat::mInstance = 0;
+std::atomic<WinCompat*> WinCompat::mInstance(nullptr);
 
 
 static Mutex WinComaptInstanceMutex;
 WinCompat *
 WinCompat::instance()
 {
-   if (!mInstance)
+   // Callers that skip the lock must see a fully constructed instance, so
+   // the pointer is published with release and read with acquire.
+   WinCompat* inst = mInstance.load(std::memory_order_acquire);
+   if (!inst)
    {
       Lock lock(WinComaptInstanceMutex);
-      if (!mInstance)
+      inst = mInstance.load(std::memory_order_relaxed);
+      if (!inst)
       {
-         mInstance = new WinCompat();
+         inst = new WinCompat();
+         mInstance.store(inst, std::memory_order_release);
       }
    }
-   return mInstance;
+   return inst;
 }
 
 
@@ -180,8 +185,9 @@ WinCompat::WinCompat() :
 
 void WinCompat::destroyInstance()
 {
-    delete mInstance;
-    mInstance = 0;
+    // Runs from winCompatInstanceCleaner at exit, after WinComaptInstanceMutex
+    // has been destroyed, so it does not take the lock.
+    delete mInstance.exchange(nullptr);
 }
 
 bool WinCompat::windowsEventLog(WORD type, WORD numStrings, LPCTSTR* strings)
@@ -661,6 +667,7 @@ WinCompat::getInterfaces(const Data& matching)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

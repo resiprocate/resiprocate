@@ -829,16 +829,14 @@ TransportSelector::lookupRouteSource(const Tuple& target) const
 
    Tuple source(target);
    socklen_t len = source.length();
-   ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
-   if (ret < 0)
+   int nameErr = 0;
+   if (getsockname(tmp,&source.getMutableSockaddr(), &len) < 0)
    {
-      int e = getErrno();
-      Transport::error(e);
-      InfoLog(<< "Can't determine name of socket " << target << " : " << strError(e) );
-      throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+      nameErr = getErrno();
    }
 
-   // Unconnect.
+   // Unconnect, also when getsockname() failed, so that the shared socket
+   // is not left connected to this target.
    // !jf! This is necessary, but I am not sure what we can do if this
    // fails. I'm not sure the stack can recover from this error condition.
    if (target.isV4())
@@ -860,6 +858,13 @@ TransportSelector::lookupRouteSource(const Tuple& target) const
       resip_assert(0);
    }
 #endif
+
+   if (nameErr)
+   {
+      Transport::error(nameErr);
+      InfoLog(<< "Can't determine name of socket " << target << " : " << strError(nameErr) );
+      throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+   }
 
    if ( ret<0 )
    {
