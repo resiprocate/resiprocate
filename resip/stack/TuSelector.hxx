@@ -5,7 +5,7 @@
 #include "resip/stack/StatisticsMessage.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "rutil/TimeLimitFifo.hxx"
-#include "rutil/Fifo.hxx"
+#include "rutil/Mutex.hxx"
 
 namespace resip
 {
@@ -16,6 +16,11 @@ class Message;
 class TransactionUser;
 class AsyncProcessHandler;
 
+// Members that read or change the TU list are for the thread that runs the
+// TransactionController, except addFromAnyThread(),
+// addPendingTransactionUser() and setCongestionManager(), which any thread
+// may call, and registerTransactionUser(), which is only for use before
+// processing starts.
 class TuSelector
 {
    public:
@@ -23,6 +28,7 @@ class TuSelector
       ~TuSelector();
       
       void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
+      void addFromAnyThread(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
       void add(ConnectionTerminated* term);
       void add(KeepAlivePong* pong);
       
@@ -32,10 +38,11 @@ class TuSelector
       TransactionUser* selectTransactionUser(const SipMessage& msg);
       bool haveTransactionUsers() const { return mTuSelectorMode; }
       void registerTransactionUser(TransactionUser&, const bool front = false);
-      void requestTransactionUserShutdown(TransactionUser&);
-      void unregisterTransactionUser(TransactionUser&);
-      void process();
-      unsigned int getTimeTillNextProcessMS();
+      // Messages from addFromAnyThread() reach the TU from this call on. The
+      // caller must queue a RegisterTransactionUser(AtFront) message for the
+      // TU, which process() applies.
+      void addPendingTransactionUser(TransactionUser&);
+      void process(TransactionUserMessage& msg);
       bool isTransactionUserStillRegistered(const TransactionUser* ) const;
 
       // Handler is notified when a message is posted
@@ -47,9 +54,11 @@ class TuSelector
       uint32_t getExpectedWait(TransactionUser* tu) const;
 
    private:
+      void activatePendingTransactionUser(TransactionUser& tu, const bool front);
+      void insert(TransactionUser& tu, const bool front);
       void remove(TransactionUser* tu);
       void markShuttingDown(TransactionUser* tu);
-      bool exists(TransactionUser* tu);
+      bool exists(TransactionUser* tu) const;
 
    private:
       struct Item
@@ -62,10 +71,15 @@ class TuSelector
       
       typedef std::vector<Item> TuList;
       TuList mTuList;
+      // TUs whose registration is queued but not yet applied.
+      typedef std::vector<TransactionUser*> PendingTuList;
+      PendingTuList mPendingTus;
+      // Held by other threads while they read the TU list, and by the owner
+      // thread only while it adds or removes a TU.
+      Mutex mTuListMutex;
       TimeLimitFifo<Message>& mFallBackFifo;
       CongestionManager* mCongestionManager;
       AsyncProcessHandler *mFallbackPostNotify;
-      Fifo<TransactionUserMessage> mShutdownFifo;
       bool mTuSelectorMode;
       StatisticsMessage::Payload mStatsPayload;
 };

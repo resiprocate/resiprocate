@@ -129,8 +129,8 @@ TuSelectorTimerQueue::add(unsigned int timeMs,Message* payload)
 void
 TuSelectorTimerQueue::processTimer(const TimerWithPayload& timer)
 {
-   mFifoSelector.add(timer.getMessage(), 
-                        TimeLimitFifo<Message>::InternalElement);
+   mFifoSelector.addFromAnyThread(timer.getMessage(),
+                                  TimeLimitFifo<Message>::InternalElement);
 }
 
 #ifdef USE_DTLS

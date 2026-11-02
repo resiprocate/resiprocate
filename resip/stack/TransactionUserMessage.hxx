@@ -13,7 +13,9 @@ class TransactionUserMessage : public TransactionMessage
       {
          RequestShutdown,
          RemoveTransactionUser,
-         TransactionUserRemoved
+         TransactionUserRemoved,
+         RegisterTransactionUser,
+         RegisterTransactionUserAtFront
       } Type;
 
       TransactionUserMessage(Type type, TransactionUser* tu);

@@ -508,6 +508,14 @@ TransactionState::process(TransactionController& controller,
          return;
       }
 
+      TransactionUserMessage* tuMessage = dynamic_cast<TransactionUserMessage*>(message);
+      if(tuMessage)
+      {
+         controller.mTuSelector.process(*tuMessage);
+         delete tuMessage;
+         return;
+      }
+
       InvokeAfterSocketCreationFunc* invokeAfterSocketCreationFunc = dynamic_cast<InvokeAfterSocketCreationFunc*>(message);
       if(invokeAfterSocketCreationFunc)
       {
