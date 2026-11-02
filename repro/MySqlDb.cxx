@@ -182,17 +182,38 @@ MySqlDb::connectToDatabase() const
 int
 MySqlDb::query(const Data& queryCommand, MYSQL_RES** result) const
 {
+   return runQuery(queryCommand, 0, result);
+}
+
+int
+MySqlDb::query(const Data& queryTemplate, const std::vector<Data>& values, MYSQL_RES** result) const
+{
+   return runQuery(queryTemplate, &values, result);
+}
+
+int
+MySqlDb::runQuery(const Data& queryText, const std::vector<Data>* values, MYSQL_RES** result) const
+{
    int rc = 0;
 
    initialize();
-
-   DebugLog( << "MySqlDb::query: executing query: " << queryCommand);
 
    Lock lock(mMutex);
    if(mConn == 0 || !isConnected())
    {
       rc = connectToDatabase();
    }
+
+   // Escape the values here, under the lock and once there is a connection
+   Data filled;
+   if(rc == 0 && values && !fillPlaceholders(queryText, *values, filled))
+   {
+      rc = CR_UNKNOWN_ERROR;
+   }
+   const Data& queryCommand = filled.empty() ? queryText : filled;
+
+   DebugLog( << "MySqlDb::query: executing query: " << queryCommand);
+
    if(rc == 0)
    {
       resip_assert(mConn!=0);
@@ -251,11 +272,29 @@ MySqlDb::query(const Data& queryCommand) const
 }
 
 int
+MySqlDb::query(const Data& queryTemplate, const std::vector<Data>& values) const
+{
+   return query(queryTemplate, values, 0);
+}
+
+int
 MySqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) const
 {
-   StackLog(<<"executing query: " << queryCommand);
+   return runSingleResultQuery(queryCommand, 0, fields);
+}
+
+int
+MySqlDb::singleResultQuery(const Data& queryTemplate, const std::vector<Data>& values, std::vector<Data>& fields) const
+{
+   return runSingleResultQuery(queryTemplate, &values, fields);
+}
+
+int
+MySqlDb::runSingleResultQuery(const Data& queryText, const std::vector<Data>* values, std::vector<Data>& fields) const
+{
+   StackLog(<<"executing query: " << queryText);
    MYSQL_RES* result=0;
-   int rc = query(queryCommand, &result);
+   int rc = runQuery(queryText, values, &result);
       
    if(rc == 0)
    {
@@ -296,43 +335,44 @@ MySqlDb::escapeString(const resip::Data& str, resip::Data& escapedStr) const
    return escapedStr;
 }
 
+bool
+MySqlDb::escapeValue(const resip::Data& str, resip::Data& escapedStr) const
+{
+   if(mConn == 0)
+   {
+      ErrLog( << "MySQL string escaping failed: not connected");
+      escapedStr.clear();
+      return false;
+   }
+   unsigned long len = mysql_real_escape_string(mConn, (char*)escapedStr.getBuf(str.size()*2+1), str.c_str(), str.size());
+   if(len == (unsigned long)-1)
+   {
+      ErrLog( << "MySQL string escaping failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+      escapedStr.clear();
+      return false;
+   }
+   escapedStr.truncate2(len);
+   return true;
+}
+
 bool 
 MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
 { 
    Data command;
    {
       DataStream ds(command);
-      Data eUser, eDomain, eRealm, ePwHash, ePwHashAlt, eName, eEmail, eFwd;
-      escapeString(rec.user, eUser);
-      escapeString(rec.domain, eDomain);
-      escapeString(rec.realm, eRealm);
-      escapeString(rec.passwordHash, ePwHash);
-      escapeString(rec.passwordHashAlt, ePwHashAlt);
-      escapeString(rec.name, eName);
-      escapeString(rec.email, eEmail);
-      escapeString(rec.forwardAddress, eFwd);
       ds << "INSERT INTO " << tableName(UserTable) << " (user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
-         << " VALUES('"
-         << eUser << "', '"
-         << eDomain << "', '"
-         << eRealm << "', '"
-         << ePwHash << "', '"
-         << ePwHashAlt << "', '"
-         << eName << "', '"
-         << eEmail << "', '"
-         << eFwd << "')"
+         << " VALUES('?', '?', '?', '?', '?', '?', '?', '?')"
          << " ON DUPLICATE KEY UPDATE"
-         << " user='" << eUser
-         << "', domain='" << eDomain
-         << "', realm='" << eRealm
-         << "', passwordHash='" << ePwHash
-         << "', passwordHashAlt='" << ePwHashAlt
-         << "', name='" << eName
-         << "', email='" << eEmail
-         << "', forwardAddress='" << eFwd
-         << "'";
+         << " user='?', domain='?', realm='?', passwordHash='?',"
+         << " passwordHashAlt='?', name='?', email='?', forwardAddress='?'";
    }
-   return query(command, 0) == 0;
+   const std::vector<Data> fields = { rec.user, rec.domain, rec.realm, rec.passwordHash,
+                                      rec.passwordHashAlt, rec.name, rec.email, rec.forwardAddress };
+   // once for VALUES and again for the UPDATE
+   std::vector<Data> values(fields);
+   values.insert(values.end(), fields.begin(), fields.end());
+   return query(command, values, 0) == 0;
 }
 
 
@@ -342,14 +382,15 @@ MySqlDb::getUser( const AbstractDb::Key& key ) const
    AbstractDb::UserRecord  ret;
 
    Data command;
+   std::vector<Data> values;
    {
       DataStream ds(command);
       ds << "SELECT user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM " << tableName(UserTable) << " ";
-      userWhereClauseToDataStream(key, ds);
+      userWhereClauseToDataStream(key, ds, values);
    }
    
    MYSQL_RES* result=0;
-   if(query(command, &result) != 0)
+   if(query(command, values, &result) != 0)
    {
       return ret;
    }
@@ -386,31 +427,28 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
    std::vector<Data> ret;
 
    Data command;
+   std::vector<Data> values;
    {
       DataStream ds(command);
       Data user;
       Data domain;
       UserStore::getUserAndDomainFromKey(key, user, domain);
-      // user comes straight from the Proxy-Authorization/Authorization username
-      // of an unauthenticated request, so it has to be escaped before it goes
-      // into the query (here and in the $user substitution below)
-      Data eUser, eDomain;
-      escapeString(user, eUser);
-      escapeString(domain, eDomain);
-      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE user = '" << eUser << "' AND domain = '" << eDomain << "' ";
+      // user is the digest username of a request that isn't authenticated yet,
+      // so it only goes in as a value for query() to escape
+      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE user = '?' AND domain = '?' ";
+      values.push_back(user);
+      values.push_back(domain);
 
-      // Note: domain is empty when querying for HTTP admin user - for this special user,
+      // Note: domain is empty when querying for HTTP admin user - for this special user, 
       // we will only check the repro db, by not adding the UNION statement below
-      if(!mCustomUserAuthQuery.empty() && !domain.empty())
+      if(!mCustomUserAuthQuery.empty() && !domain.empty())  
       {
-         ds << " UNION " << mCustomUserAuthQuery;
-         ds.flush();
-         command.replace("$user", eUser);
-         command.replace("$domain", eDomain);
+         ds << " UNION ";
+         appendCustomUserAuthQuery(mCustomUserAuthQuery, user, domain, ds, values);
       }
    }
 
-   if(singleResultQuery(command, ret) != 0 || ret.size() == 0)
+   if(singleResultQuery(command, values, ret) != 0 || ret.size() == 0)
    {
       return Data::Empty;
    }
@@ -480,19 +518,14 @@ MySqlDb::addTlsPeerIdentity(const AbstractDb::Key& key, const AbstractDb::TlsPee
    Data command;
    {
       DataStream ds(command);
-      Data ePeerName, eAuthId;
-      escapeString(rec.peerName, ePeerName);
-      escapeString(rec.authorizedIdentity, eAuthId);
       ds << "INSERT INTO " << tableName(TlsPeerIdentityTable) << " (peerName, tlsPeerIdentity)"
-         << " VALUES('"
-         << ePeerName << "', '"
-         << eAuthId << "')"
+         << " VALUES('?', '?')"
          << " ON DUPLICATE KEY UPDATE"
-         << " peerName='" << ePeerName
-         << "', authorizedIdentity ='" << eAuthId
-         << "'";
+         << " peerName='?', authorizedIdentity ='?'";
    }
-   return query(command, 0) == 0;
+   const std::vector<Data> values = { rec.peerName, rec.authorizedIdentity,
+                                      rec.peerName, rec.authorizedIdentity };
+   return query(command, values, 0) == 0;
 }
 
 
@@ -502,14 +535,15 @@ MySqlDb::getTlsPeerIdentity( const AbstractDb::Key& key ) const
    AbstractDb::TlsPeerIdentityRecord  ret;
 
    Data command;
+   std::vector<Data> values;
    {
       DataStream ds(command);
       ds << "SELECT peerName, authorizedIdentity FROM " << tableName(TlsPeerIdentityTable) << " ";
-      tlsPeerIdentityWhereClauseToDataStream(key, ds);
+      tlsPeerIdentityWhereClauseToDataStream(key, ds, values);
    }
 
    MYSQL_RES* result=0;
-   if(query(command, &result) != 0)
+   if(query(command, values, &result) != 0)
    {
       return ret;
    }
@@ -785,34 +819,6 @@ MySqlDb::dbBeginTransaction(const Table table)
    return false;
 }
 
-void 
-MySqlDb::userWhereClauseToDataStream(const Key& key, DataStream& ds) const
-{
-   Data user;
-   Data domain;
-   UserStore::getUserAndDomainFromKey(key, user, domain);
-   Data eUser, eDomain;
-   escapeString(user, eUser);
-   escapeString(domain, eDomain);
-   ds << " WHERE user='" << eUser
-      << "' AND domain='" << eDomain
-      << "'";
-}
-
-void
-MySqlDb::tlsPeerIdentityWhereClauseToDataStream(const Key& key, DataStream& ds) const
-{
-   Data peerName;
-   Data authorizedIdentity;
-   TlsPeerIdentityStore::getTlsPeerIdentityFromKey(key, peerName, authorizedIdentity);
-   Data ePeerName, eAuthId;
-   escapeString(peerName, ePeerName);
-   escapeString(authorizedIdentity, eAuthId);
-   ds << " WHERE peerName='" << ePeerName
-      << "' AND authorizedIdentity='" << eAuthId
-      << "'";
-}
-   
 #endif // USE_MYSQL
 
 /* ====================================================================
