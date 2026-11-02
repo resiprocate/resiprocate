@@ -75,6 +75,12 @@ public:
    /// not counted in its length (RFC 5766 11.5, RFC 8656 12.5): the padding after one of length bytes
    static size_t channelDataPadding(size_t length) { return (4 - length % 4) % 4; }
 
+   /// For a STUN or ChannelData message framed over TCP or TLS, from its first 4 bytes (header):
+   /// length is how much of it there is after them - the rest of a STUN header and its attributes,
+   /// or ChannelData's data - and padding is how much follows that (ChannelData's, not counted in
+   /// its length).  False if all of it, the 4 bytes and padding included, is more than bufferSize.
+   static bool framedLength(const char* header, size_t bufferSize, size_t& length, size_t& padding);
+
    /// For a UDP socket, between open() and bind().  UDP sockets don't set SO_REUSEADDR: there's no
    /// TIME_WAIT for it to help with, and it would let the socket share a port another socket has
    /// (or, on Windows, bind over it), splitting its traffic.  On Windows this sets

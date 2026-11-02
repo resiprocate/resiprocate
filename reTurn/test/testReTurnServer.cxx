@@ -1236,6 +1236,41 @@ testOversizedFrame()
    }
 }
 
+// The server closes a TCP or TLS connection on a message longer than its receive buffer (4096
+// bytes) - also one whose length, with the rest of a 20-byte STUN header added, no longer fits in
+// 16 bits, which once wrapped to a few bytes, read as a short message, leaving the rest of the
+// stream to be read as framing
+static void
+testServerOversizedFrame()
+{
+   cerr << "-- a message too long for the server" << endl;
+   // STUN Binding requests announcing 0xFFEF and 0xFFFF bytes of attributes: 0xFFFF + 16 once wrapped to 15
+   for (const std::string& header : { std::string("\x00\x01\xFF\xEF", 4), std::string("\x00\x01\xFF\xFF", 4) })
+   {
+      const std::string what = header[3] == '\xEF' ? "0xFFEF" : "0xFFFF";
+      asio::io_context io;
+      {
+         asio::ip::tcp::socket socket(io);
+         socket.connect(asio::ip::tcp::endpoint(localhost, turnPort));
+         asio::write(socket, asio::buffer(header));
+         const double seconds = secondsUntilClosed(socket, 2);
+         check(("server: a TCP message of length " + what + " closes the connection").c_str(), seconds >= 0 && seconds < 1);
+      }
+#ifdef USE_SSL
+      {
+         TlsClientConnection tls(io, tlsPort);
+         asio::error_code ec = tls.ec;
+         if (!ec)
+         {
+            asio::write(tls.stream, asio::buffer(header), ec);
+         }
+         const double seconds = ec ? -1 : secondsUntilClosed(tls.stream.next_layer(), 2);
+         check(("server: a TLS message of length " + what + " closes the connection").c_str(), seconds >= 0 && seconds < 1);
+      }
+#endif
+   }
+}
+
 // Runs test with a server configured from configFile
 static void
 runWithServer(const char* configFile, const std::function<void()>& test)
@@ -1288,6 +1323,7 @@ main(int argc, char** argv)
             testUdpAndTcp();
             testChannelDataPadding();
             testOversizedFrame();
+            testServerOversizedFrame();
 #ifdef USE_SSL
             testTls();
 

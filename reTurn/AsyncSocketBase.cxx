@@ -4,6 +4,7 @@
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
 
+#include <cstring>
 #include <functional>
 #include <iterator>
 
@@ -178,6 +179,26 @@ std::shared_ptr<DataBuffer>
 AsyncSocketBase::allocateBuffer(const size_t size)
 {
    return std::make_shared<DataBuffer>(size);
+}
+
+bool
+AsyncSocketBase::framedLength(const char* header, size_t bufferSize, size_t& length, size_t& padding)
+{
+   // Note:  For both StunMessages and ChannelData messages the length in bytes 3 and 4
+   uint16_t headerLength;
+   memcpy(&headerLength, &header[2], 2);
+   length = ntohs(headerLength);  // wider than 16 bits, so adding the rest of a STUN header can't wrap
+
+   padding = 0;
+   if((header[0] & 0xC0) == 0)  // If first 2 bits are 00 then this is a stun message
+   {
+      length += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
+   }
+   else
+   {
+      padding = channelDataPadding(length);
+   }
+   return 4 + length + padding <= bufferSize;
 }
 
 void
