@@ -499,7 +499,7 @@ class Transport : public FdSetIOObserver
 
       CongestionManager* mCongestionManager;
       ProducerFifoBuffer<TransactionMessage> mStateMachineFifo; // passed in
-      bool mShuttingDown;
+      std::atomic<bool> mShuttingDown;
 
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
    private:

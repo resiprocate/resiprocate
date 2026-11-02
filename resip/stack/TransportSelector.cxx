@@ -286,18 +286,17 @@ TransportSelector::addTransport(std::unique_ptr<Transport> autoTransport, bool i
 
    if (transport->shareStackProcessAndSelect())
    {
-      if ( mPollGrp )
-      {
-         transport->setPollGrp(mPollGrp);
-      }
       if(isStackRunning)
       {
-         // When stack is running we need to add to mSharedProcessTransports from 
-         // within TransportSelectorThread in order to be thread safe
-         mTransportsToAddRemove.add(transport); 
+         // Queue poll registration and list updates on the selector thread.
+         mTransportsToAddRemove.add(new TransportChange(transport, TransportChange::Add));
       }
       else
       {
+         if ( mPollGrp )
+         {
+            transport->setPollGrp(mPollGrp);
+         }
          // Stack isn't running yet - just add to mSharedProcess directly - this
          // ensures the mSharedProcessTransports list is propulated when the stack
          // starts to run.  When in multi-threaded stack mode the TransportSelectorThread 
@@ -372,10 +371,9 @@ TransportSelector::removeTransport(unsigned int transportKey)
 
       if (transportToRemove->shareStackProcessAndSelect())
       {
-         // Note:  We called shutdown above, therefor the TransportSelectorThread can tell this 
-         //        is a remove transpot request vs an addTransport request, by calling isShuttingDown().
-         mTransportsToAddRemove.add(transportToRemove); // Need to add to mSharedProcessTransports from within TransportSelectorThread
-         // Note:  Transport will be deleted from mTransportsToAddRemove handler (see checkTransportAddRemoveQueue)
+         // Keep the operation explicit: a pending add must not become a second
+         // remove when shutdown() is called before the selector drains the queue.
+         mTransportsToAddRemove.add(new TransportChange(transportToRemove, TransportChange::Remove));
       }
       else
       {
@@ -524,17 +522,20 @@ TransportSelector::checkTransportAddRemoveQueue()
    // This method ensures we add/remove from/to the mSharedProcessTransports 
    // list from the TransportSelectorThread
    
-   Transport* t(mTransportsToAddRemove.getNext(-1));
-   while(t)
+   std::unique_ptr<TransportChange> change(mTransportsToAddRemove.getNext(-1));
+   while(change)
    {
-      if(!t->isShuttingDown())
+      Transport* t = change->mTransport;
+      if(change->mOperation == TransportChange::Add)
       {
-         // If not shutting down then this is an addTransport request
+         if(mPollGrp)
+         {
+            t->setPollGrp(mPollGrp);
+         }
          mSharedProcessTransports.push_back(t);
       }
       else
       {
-         // If shutting down then this is a removeTransport request
          for(TransportList::iterator it = mSharedProcessTransports.begin(); it != mSharedProcessTransports.end(); it++)
          {
             if((*it)->getKey() == t->getKey())
@@ -544,11 +545,10 @@ TransportSelector::checkTransportAddRemoveQueue()
             }
          }
 
-         // Now delete the transport
-         delete t;
+         // The remove request owns the transport and deletes it after unlinking.
       }
 
-      t = mTransportsToAddRemove.getNext(-1);
+      change.reset(mTransportsToAddRemove.getNext(-1));
    }
 }
 

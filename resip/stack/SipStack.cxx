@@ -604,7 +604,7 @@ SipStack::addTransport(std::unique_ptr<Transport> transport)
        transport->setSipMessageLoggingHandlers(mTransportSipMessageLoggingHandlers);
    }
 
-   if(mProcessingHasStarted)
+   if(mInternalThreadsRunning || mProcessingHasStarted)
    {
        // Stack is running.  Need to queue add request for TransactionController Thread
        mTransactionController->addTransport(std::move(transport));
@@ -700,7 +700,7 @@ SipStack::removeTransport(unsigned int transportKey)
       }
    }
 
-   if(mProcessingHasStarted)
+   if(mInternalThreadsRunning || mProcessingHasStarted)
    {
        // Stack is running.  Need to queue remove request for TransactionController Thread
        mTransactionController->removeTransport(transportKey);
