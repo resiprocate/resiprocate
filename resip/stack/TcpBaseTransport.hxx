@@ -29,6 +29,7 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
       virtual bool isReliable() const { return true; }
       virtual bool isDatagram() const { return false; }
       virtual void process();
+      virtual unsigned int getTimeTillNextProcessMS();
       virtual void setPollGrp(FdPollGrp *grp);
       virtual void setRcvBufLen(int buflen);
 
@@ -55,7 +56,9 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
        *void sendFromRoundRobin(FdSet& fdset);
        */
 
-      // return 1 if accepted connection
+      // return 1 if accepted connection or the next accept() may succeed,
+      // 0 if the queue is empty or the listener can accept no more,
+      // -1 on another error
       int processListen();
 
       /* Helper to make a new outgoing TCP connection.
@@ -68,8 +71,16 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
       static const size_t MaxReadSize;
 
    private:
+      /** Accepts queued connections until accept() reports the queue empty.
+       *  In an epoll group, keeps mListenQueuePending set until then, so that
+       *  process() retries after an accept() error or a failed connection setup.
+       */
+      void drainListenQueue();
+
       static const int MaxBufferSize;
       ConnectionManager mConnectionManager;
+      bool mListenQueuePending; //!< an epoll listener may still have queued connections; process() retries while set
+      int mLastAcceptError; //!< errno of the last failed accept() of the listener, 0 after a success or an empty queue
       
       /** Helper to bind client socket for outbound connections.
        * Behavior depends on RESIP_TRANSPORT_FLAG_SYMMETRIC_CONNECTIONS:
