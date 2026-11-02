@@ -5,6 +5,7 @@
 #include <sys/select.h>
 #endif
 
+#include <atomic>
 #include <map>
 #include <vector>
 #include <list>
@@ -12,6 +13,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/GenericIPAddress.hxx"
+#include "rutil/Mutex.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/DnsInterface.hxx"
 #include "rutil/SelectInterruptor.hxx"
@@ -55,6 +57,11 @@ to provide cycles to the actual transports for sending data in their Fifo's and
 receiving data from the wire.  The mSharedProcessTransports list is one member that
 is expected to be accessed from TransportSelector processing loop only , all other 
 members are accessed from the TransactionController processing loop.
+
+transmit() may also be called from several threads at once, as long as no
+transport, SIP message logging handler or Security private key is added,
+removed or changed while a call runs.  The logging handlers' outboundMessage()
+is then called from those threads concurrently.
 */
 class TransportSelector
 {
@@ -186,6 +193,10 @@ class TransportSelector
       Transport* findTransportByVia(SipMessage* msg, const Tuple& dest, Tuple& src) const;
       Transport* findTlsTransport(const Data& domain, const Tuple& search) const;
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
+#if !defined(WIN32) || defined(NO_IPHLPAPI)
+      // returns target with the local address the kernel would send it from
+      Tuple lookupRouteSource(const Tuple& target) const;
+#endif
       void rebuildAnyPortTransportMaps(void);
 
       DnsInterface mDns;
@@ -224,6 +235,8 @@ class TransportSelector
       // fake socket(s) one for each netns, for connect() and route table lookups
       mutable HashMap<Data, Socket> mSockets;
       mutable HashMap<Data, Socket> mSocket6s;
+      // serializes the use of the fake sockets
+      mutable Mutex mSocketsMutex;
 
       // An AF_UNSPEC addr_in for rapid unconnect
       GenericIPAddress mUnspecified;
@@ -236,7 +249,7 @@ class TransportSelector
       // epoll support, for sharedprocess transports
       FdPollGrp* mPollGrp;
 
-      int mAvgBufferSize;
+      std::atomic<int> mAvgBufferSize;
       Fifo<Transport> mTransportsToAddRemove;
       std::unique_ptr<SelectInterruptor> mSelectInterruptor;
       FdPollItemHandle mInterruptorHandle;

@@ -32,6 +32,7 @@
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
+#include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/FdPoll.hxx"
@@ -60,6 +61,7 @@
 #define gai_strerror strerror
 #endif
 
+#include <climits>
 #include <utility>
 #include <sys/types.h>
 
@@ -775,6 +777,106 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target, Tupl
    return trans;
 }
 
+#if !defined(WIN32) || defined(NO_IPHLPAPI)
+Tuple
+TransportSelector::lookupRouteSource(const Tuple& target) const
+{
+   // this process will determine which interface the kernel would use to
+   // send a packet to the target by making a connect call on a udp socket.
+   Lock lock(mSocketsMutex);
+   Socket tmp = INVALID_SOCKET;
+   Data netNs = target.getNetNs();
+   // One IPV4 and IPV6 socket per namespace.  Even if we do not support netns,
+   // we still have the default namespace of "" (empty string).
+   if (target.isV4())
+   {
+      // If socket does not exist for namespace, create one
+      if (mSockets.find(netNs) == mSockets.end() || mSockets[netNs] == INVALID_SOCKET)
+      {
+#ifdef USE_NETNS
+         NetNs::setNs(netNs);
+#endif
+         mSockets[netNs] = InternalTransport::socket(UDP, V4); // may throw
+      }
+      tmp = mSockets[netNs];
+   }
+   else
+   {
+      // If socket does not exist for namespace, create one
+      if (mSocket6s.find(netNs) == mSocket6s.end() || mSocket6s[netNs] == INVALID_SOCKET)
+      {
+#ifdef USE_NETNS
+         NetNs::setNs(netNs);
+#endif
+         mSocket6s[netNs] = InternalTransport::socket(UDP, V6); // may throw
+      }
+      tmp = mSocket6s[netNs];
+   }
+
+#ifdef USE_NETNS
+   // Not sure if connect has to be done in netns context or just the socket create
+   NetNs::setNs(netNs);
+#endif
+
+   int ret = connect(tmp,&target.getSockaddr(), target.length());
+   if (ret < 0)
+   {
+      int e = getErrno();
+      Transport::error( e );
+      InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strError(e) );
+      throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+   }
+
+   Tuple source(target);
+   socklen_t len = source.length();
+   ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
+   if (ret < 0)
+   {
+      int e = getErrno();
+      Transport::error(e);
+      InfoLog(<< "Can't determine name of socket " << target << " : " << strError(e) );
+      throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+   }
+
+   // Unconnect.
+   // !jf! This is necessary, but I am not sure what we can do if this
+   // fails. I'm not sure the stack can recover from this error condition.
+   if (target.isV4())
+   {
+      ret = connect(tmp,
+                    (struct sockaddr*)&mUnspecified.v4Address,
+                    sizeof(mUnspecified.v4Address));
+   }
+#ifdef USE_IPV6
+   else
+   {
+      ret = connect(tmp,
+                    (struct sockaddr*)&mUnspecified6.v6Address,
+                    sizeof(mUnspecified6.v6Address));
+   }
+#else
+   else
+   {
+      resip_assert(0);
+   }
+#endif
+
+   if ( ret<0 )
+   {
+      int e =  getErrno();
+      //.dcm. OS X 10.5 workaround, we could #ifdef for specific OS X version.
+      if  (!(e ==EAFNOSUPPORT || e == EADDRNOTAVAIL))
+      {
+         ErrLog(<< "Can't disconnect socket :  " << strError(e) );
+         Transport::error(e);
+         throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
+      }
+   }
+
+   return source;
+}
+#endif
+
 Tuple
 TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target) const
 {
@@ -806,60 +908,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       //    search "getsockname" in MSDN library.
       // 3. We've experienced this issue on our production software.
 
-      // this process will determine which interface the kernel would use to
-      // send a packet to the target by making a connect call on a udp socket.
-      Socket tmp = INVALID_SOCKET;
-      Data netNs = target.getNetNs();
-      // One IPV4 and IPV6 socket per namespace.  Even if we do not support netns,
-      // we still have the default namespace of "" (empty string).
-      if (target.isV4())
-      {
-         // If socket does not exist for namespace, create one
-         if (mSockets.find(netNs) == mSockets.end() || mSockets[netNs] == INVALID_SOCKET)
-         {
-#ifdef USE_NETNS
-            NetNs::setNs(netNs);
-#endif
-            mSockets[netNs] = InternalTransport::socket(UDP, V4); // may throw
-         }
-         tmp = mSockets[netNs];
-      }
-      else
-      {
-         // If socket does not exist for namespace, create one
-         if (mSocket6s.find(netNs) == mSocket6s.end() || mSocket6s[netNs] == INVALID_SOCKET)
-         {
-#ifdef USE_NETNS
-            NetNs::setNs(netNs);
-#endif
-            mSocket6s[netNs] = InternalTransport::socket(UDP, V6); // may throw
-         }
-         tmp = mSocket6s[netNs];
-      }
-
-#ifdef USE_NETNS
-      // Not sure if connect has to be done in netns context or just the socket create
-      NetNs::setNs(netNs);
-#endif
-
-      int ret = connect(tmp,&target.getSockaddr(), target.length());
-      if (ret < 0)
-      {
-         int e = getErrno();
-         Transport::error( e );
-         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strError(e) );
-         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-      }
-
-      socklen_t len = source.length();
-      ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
-      if (ret < 0)
-      {
-         int e = getErrno();
-         Transport::error(e);
-         InfoLog(<< "Can't determine name of socket " << target << " : " << strError(e) );
-         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-      }
+      source = lookupRouteSource(target);
 
       // !kh! test if connected UDP technique results INADDR_ANY, i.e. 0.0.0.0.
       // if it does, assume the first avaiable interface.
@@ -881,40 +930,6 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
             source = getFirstInterface(false, target.getType());
          }
 # endif
-      }
-      // Unconnect.
-      // !jf! This is necessary, but I am not sure what we can do if this
-      // fails. I'm not sure the stack can recover from this error condition.
-      if (target.isV4())
-      {
-         ret = connect(mSockets[netNs],
-                       (struct sockaddr*)&mUnspecified.v4Address,
-                       sizeof(mUnspecified.v4Address));
-      }
-#ifdef USE_IPV6
-      else
-      {
-         ret = connect(mSocket6s[netNs],
-                       (struct sockaddr*)&mUnspecified6.v6Address,
-                       sizeof(mUnspecified6.v6Address));
-      }
-#else
-      else
-      {
-         resip_assert(0);
-      }
-#endif
-
-      if ( ret<0 )
-      {
-         int e =  getErrno();
-         //.dcm. OS X 10.5 workaround, we could #ifdef for specific OS X version.
-         if  (!(e ==EAFNOSUPPORT || e == EADDRNOTAVAIL))
-         {
-            ErrLog(<< "Can't disconnect socket :  " << strError(e) );
-            Transport::error(e);
-            throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
-         }
       }
 #endif
 
@@ -1350,7 +1365,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
                                                      msg->getTransactionId(),
                                                      remoteSigcompId));
 
-         send->data.reserve(mAvgBufferSize + mAvgBufferSize/4);
+         const int avgBufferSize = mAvgBufferSize.load(std::memory_order_relaxed);
+         send->data.reserve(avgBufferSize + avgBufferSize/4);
 
          DataStream str(send->data);
          msg->encode(str);
@@ -1358,8 +1374,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 
          // !bwc! Moving average of message size. (Used to intelligently
          // predict how much space to reserve in the buffer, to minimize
-         // dynamic resizing.)
-         mAvgBufferSize = (255*mAvgBufferSize + (int)send->data.size()+128)/256;
+         // dynamic resizing.) Concurrent calls may drop each other's sample.
+         // Computed in 64 bits, and clamped so that the reserve() above cannot
+         // overflow an int.
+         const uint64_t newAvgBufferSize = (255*(uint64_t)avgBufferSize + send->data.size() + 128)/256;
+         mAvgBufferSize.store((int)resipMin(newAvgBufferSize, (uint64_t)(INT_MAX/2)),
+                              std::memory_order_relaxed);
 
          resip_assert(!send->data.empty());
          DebugLog (<< "Transmitting to " << target
