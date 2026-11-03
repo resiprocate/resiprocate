@@ -258,7 +258,9 @@ InternalTransport::poke()
    // Transports). Once we have buffered producer queues in place, this 
    // performance concern will be rendered moot, and we'll be able to install 
    // the interruptor in mTxFifo.
-   if(mTxFifoOutBuffer.messageAvailable())
+   // mTxFifoOutBuffer is not checked: only the transport thread may read it,
+   // and that thread does not wait while the buffer holds messages.
+   if(mTxFifo.messageAvailable())
    {
       // This will interrupt the select statement and cause processing of 
       // this new outgoing message.
