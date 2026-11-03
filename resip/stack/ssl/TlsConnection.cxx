@@ -29,6 +29,28 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
+#if defined(USE_SSL)
+// The peer's address and port, for log lines - ie: 192.0.2.1:5061 or [2001:db8::1]:5061
+static Data
+peerAddress(const Tuple& who)
+{
+   Data host = who.presentationFormat();
+   Data address;
+   {
+      DataStream ds(address);
+      if (host.find(":") != Data::npos)
+      {
+         ds << "[" << host << "]:" << who.getPort();
+      }
+      else
+      {
+         ds << host << ":" << who.getPort();
+      }
+   }
+   return address;
+}
+#endif
+
 TlsConnection::TlsConnection(Transport* transport, const Tuple& tuple,
    Socket fd, Security* security,
    bool server, Data domain, SecurityTypes::SSLType sslType,
@@ -178,7 +200,7 @@ TlsConnection::checkState()
    {
       if (mServer)
       {
-         InfoLog(<< "TLS handshake starting (server mode)");
+         DebugLog(<< "TLS handshake starting (server mode)");
          SSL_set_accept_state(mSsl);
          mTlsState = Handshaking;
       }
@@ -191,7 +213,7 @@ TlsConnection::checkState()
          // handshake below as failed.
          if (!targetDomain.empty() && !DnsUtil::isIpAddress(targetDomain))
          {
-            InfoLog(<< "TLS handshake starting (client mode), SNI=" << targetDomain);
+            DebugLog(<< "TLS handshake starting (client mode), SNI=" << targetDomain);
             if (SSL_set_tlsext_host_name(mSsl, targetDomain.c_str()) != 1)
             {
                WarningLog(<< "Failed to set SNI " << targetDomain << ", continuing without it");
@@ -200,7 +222,7 @@ TlsConnection::checkState()
          }
          else
          {
-            InfoLog(<< "TLS handshake starting (client mode), no SNI for target <" << targetDomain << ">");
+            DebugLog(<< "TLS handshake starting (client mode), no SNI for target <" << targetDomain << ">");
          }
          SSL_set_connect_state(mSsl);
          mTlsState = Handshaking;
@@ -248,7 +270,12 @@ TlsConnection::checkState()
             Data failureString;
             DataStream ds(failureString);
             bool addToAdditionalFailureStrings = true;
-            ds << "TLS handshake failed: ";
+            ds << "TLS handshake failed (" << (mServer ? "server" : "client") << " mode), peer=" << peerAddress(who());
+            if (!mServer)
+            {
+               ds << ", target domain: <" << who().getTargetDomain() << ">";
+            }
+            ds << ": ";
             if (err == SSL_ERROR_SYSCALL)
             {
                int e = getErrno();
@@ -345,11 +372,6 @@ TlsConnection::checkState()
       {
          const char* sni = SSL_get_servername(mSsl, TLSEXT_NAMETYPE_host_name);
          mSni = sni ? Data(sni) : Data::Empty;
-         InfoLog(<< "TLS connected (server mode), SNI received: " << (sni ? sni : "<none>"));
-      }
-      else
-      {
-         InfoLog(<< "TLS connected (client mode)");
       }
    }
 
@@ -376,8 +398,8 @@ TlsConnection::checkState()
          {
             DataStream ds(failureString);
             ds << "Certificate name mismatch: trying to connect to <"
-               << who().getTargetDomain()
-               << "> remote cert domain(s) are <"
+               << who().getTargetDomain() << "> at " << peerAddress(who())
+               << ", remote cert domain(s) are <"
                << getPeerNamesData() << ">";
          }
          ErrLog(<< failureString);
@@ -386,7 +408,13 @@ TlsConnection::checkState()
       }
    }
 
-   InfoLog(<< "TLS handshake done for peer " << getPeerNamesData());
+   // One line per connection at Info level - the steps leading up to it are logged at Debug level
+   const SSL_CIPHER* cipher = SSL_get_current_cipher(mSsl);
+   InfoLog(<< "TLS handshake done (" << (mServer ? "server" : "client") << " mode), peer="
+           << peerAddress(who()) << ", "
+           << SSL_get_version(mSsl) << " " << (cipher ? SSL_CIPHER_get_name(cipher) : "<no cipher>")
+           << (mServer ? ", SNI received: <" : ", target domain: <") << (mServer ? mSni : who().getTargetDomain())
+           << ">, peer cert names: <" << getPeerNamesData() << ">");
    mTlsState = Up;
    if (!mOutstandingSends.empty())
    {
@@ -400,7 +428,7 @@ bool
 TlsConnection::handleOpenSSLErrorQueue(int ret, unsigned long err, const char* op, bool addToAdditionalFailureStrings)
 {
    bool hadReason = false;
-   ErrLog(<< op << " error=" << err << ", ret=" << ret);
+   ErrLog(<< op << " error=" << err << ", ret=" << ret << ", peer=" << peerAddress(who()));
    while (true)
    {
       const char* file;
@@ -546,11 +574,11 @@ TlsConnection::read(char* buf, int count)
                const int e = getErrno();
                if (bytesRead == 0 || e == 0)
                {
-                  InfoLog(<< "TLS connection closed by the peer without a close_notify");
+                  InfoLog(<< "TLS connection closed by the peer without a close_notify, peer=" << peerAddress(who()));
                }
                else
                {
-                  InfoLog(<< "TLS read failed, socket error=" << e << ": " << Transport::errorToString(e));
+                  InfoLog(<< "TLS read failed, socket error=" << e << ": " << Transport::errorToString(e) << ", peer=" << peerAddress(who()));
                }
                return -1;
             }
@@ -565,7 +593,7 @@ TlsConnection::read(char* buf, int count)
             if (err == SSL_ERROR_SSL &&
                 ERR_GET_REASON(ERR_peek_error()) == SSL_R_UNEXPECTED_EOF_WHILE_READING)
             {
-               InfoLog(<< "TLS connection closed by the peer without a close_notify");
+               InfoLog(<< "TLS connection closed by the peer without a close_notify, peer=" << peerAddress(who()));
                ERR_clear_error();
                return -1;
             }
@@ -791,10 +819,10 @@ TlsConnection::computePeerName()
    // print session info
    const SSL_CIPHER* ciph;
    ciph = SSL_get_current_cipher(mSsl);
-   InfoLog(<< "TLS session set up with "
-           << SSL_get_version(mSsl) << " "
-           << SSL_CIPHER_get_version(ciph) << " "
-           << SSL_CIPHER_get_name(ciph) << " ");
+   DebugLog(<< "TLS session set up with "
+            << SSL_get_version(mSsl) << " "
+            << SSL_CIPHER_get_version(ciph) << " "
+            << SSL_CIPHER_get_name(ciph) << " ");
 
    // get the certificate if other side has one
 #if OPENSSL_VERSION_NUMBER < 0x30000000L

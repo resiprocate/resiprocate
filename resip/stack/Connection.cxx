@@ -297,7 +297,7 @@ Connection::performWrite()
    if (nBytes < 0)
    {
       //fail(data.transactionId);
-      InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
+      InfoLog(<< "Write failed on socket: " << this->getSocket() << " " << mWho << ", closing connection");
       return -1;
    }
    else if (nBytes == 0)
@@ -558,7 +558,7 @@ Connection::checkConnectionTimedout()
          Data failureString;
          {
             DataStream ds(failureString);
-            ds << "Exception on socket " << mWho.mFlowKey << ", errNum=" << errNum << ", err=" << Transport::errorToString(errNum);
+            ds << "Exception on socket " << mWho.mFlowKey << " " << mWho << ", errNum=" << errNum << ", err=" << Transport::errorToString(errNum);
          }
          InfoLog(<< failureString << "; closing connection");
          setFailureReason(TransportFailure::ConnectionException, errNum, failureString);
@@ -567,7 +567,7 @@ Connection::checkConnectionTimedout()
       }
       else if (errNum != 0)
       {
-         WarningLog(<< "checkConnectionTimedout " << mWho.mFlowKey << " code: " << errNum << "; ignoring - should we error out?");
+         WarningLog(<< "checkConnectionTimedout " << mWho.mFlowKey << " " << mWho << " code: " << errNum << "; ignoring - should we error out?");
       }
    }
    return false;
@@ -596,7 +596,7 @@ Connection::processPollEvent(FdPollEventMask mask)
       Data failureString;
       {
          DataStream ds(failureString);
-         ds << "Exception on socket " << fd << ", errNum=" << errNum << ", err=" << Transport::errorToString(errNum);
+         ds << "Exception on socket " << fd << " " << mWho << ", errNum=" << errNum << ", err=" << Transport::errorToString(errNum);
       }
 
       InfoLog(<< failureString << "; closing connection");
