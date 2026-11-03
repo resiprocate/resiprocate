@@ -6,8 +6,6 @@
 using namespace resip;
 using namespace std;;
 
-const ParserContainerBase::HeaderKit ParserContainerBase::HeaderKit::Empty;
-
 ParserContainerBase::ParserContainerBase(Headers::Type type)
    : mType(type),
      mPool(0)
@@ -156,7 +154,7 @@ ParserContainerBase::copyParsers(const Parsers& parsers)
    {
       // Copy c'tor and assignment operator for HeaderKit are actually poor
       // man's move semantics, so we have to implement real copy semantics here.
-      mParsers.push_back(HeaderKit::Empty);
+      mParsers.push_back(HeaderKit());
 
       HeaderKit& kit(mParsers.back());
       if(p->pc)

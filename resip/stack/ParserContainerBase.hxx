@@ -133,8 +133,6 @@ class ParserContainerBase
       class HeaderKit
       {
          public:
-            static const HeaderKit Empty;
-
             HeaderKit(): pc(0){}
 
             // Poor man's move c'tor, watch out!
