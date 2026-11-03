@@ -13,7 +13,7 @@ using namespace std;
 namespace resip
 {
 
-long
+uint64_t
 parseOpenSSLCTXOption(const Data& optionName)
 {
    if(optionName == "SSL_OP_ALL")

@@ -1,6 +1,7 @@
 #if !defined(RESIP_SECURITY_HXX)
 #define RESIP_SECURITY_HXX
 
+#include <cstdint>
 #include <map>
 #include <vector>
 #include <list>
@@ -87,9 +88,12 @@ class BaseSecurity
        * they are implemented as static fields.  In the next release branch,
        * non-static versions could be added and the static values
        * used as defaults.
+       *
+       * 64 bits, since OpenSSL 3 has options above bit 31 (a long is 32 bits
+       * on Windows).
        */
-      static long OpenSSLCTXSetOptions;
-      static long OpenSSLCTXClearOptions;
+      static uint64_t OpenSSLCTXSetOptions;
+      static uint64_t OpenSSLCTXClearOptions;
 
       BaseSecurity(const CipherList& cipherSuite = StrongestSuite, 
                    const Data& defaultPrivateKeyPassPhrase = Data::Empty, 
@@ -198,7 +202,7 @@ class BaseSecurity
       static bool allowWildcardCertificates() { return mAllowWildcardCertificates; }
 
       static SecurityTypes::SSLType parseSSLType(const Data& typeName);
-      static long parseOpenSSLCTXOption(const Data& optionName);
+      static uint64_t parseOpenSSLCTXOption(const Data& optionName);
 
    public:
       SSL_CTX*       getTlsCtx ();

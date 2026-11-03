@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "DtlsSocket.hxx"
+#include "rutil/Socket.hxx"
 
 extern "C" 
 {
@@ -14,7 +15,7 @@ namespace dtls
 
 class TestDtlsUdpSocketContext: public DtlsSocketContext {
   public:
-     TestDtlsUdpSocketContext(int fd,struct sockaddr_in *peerAddr);
+     TestDtlsUdpSocketContext(resip::Socket fd,struct sockaddr_in *peerAddr);
      virtual ~TestDtlsUdpSocketContext(){};
      virtual void write(const unsigned char* data, unsigned int len);
      virtual void handshakeCompleted();
@@ -23,7 +24,7 @@ class TestDtlsUdpSocketContext: public DtlsSocketContext {
      void recvRtpData(unsigned char *in, unsigned int inlen, unsigned char *out, unsigned int *outlen,unsigned int maxoutlen);
      
   private:
-     int mFd;
+     resip::Socket mFd;
      struct sockaddr_in mPeerAddr;
      uint32_t ssrc = 0x12345678;
      srtp_policy_t srtpPolicyIn;

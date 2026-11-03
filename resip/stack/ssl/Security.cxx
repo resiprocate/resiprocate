@@ -182,8 +182,8 @@ BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT
  * An application must change these flags before creating the 
  * SSL_CTX object / Security object instance.
  */
-long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
-long BaseSecurity::OpenSSLCTXClearOptions = 0;
+uint64_t BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
+uint64_t BaseSecurity::OpenSSLCTXClearOptions = 0;
 
 Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase, const Data& dHParamsFilename) :
    BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase, dHParamsFilename)
@@ -2847,7 +2847,7 @@ BaseSecurity::parseSSLType(const Data& typeName)
    Converts a string containing an OpenSSL option name
    (for SSL_CTX_set_options) to the numeric value from ssl.h - see resip::parseOpenSSLCTXOption
 */
-long
+uint64_t
 BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
 {
    return resip::parseOpenSSLCTXOption(optionName);

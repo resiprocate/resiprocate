@@ -1,6 +1,7 @@
 #if !defined(RETURN_CONFIG_HXX)
 #define RETURN_CONFIG_HXX 
 
+#include <cstdint>
 #include <map>
 #include <asio.hpp>
 #ifdef USE_SSL
@@ -77,8 +78,8 @@ public:
    unsigned long mTlsHandshakeTimeout;  // seconds, 0 for none
    unsigned long mTcpConnectionIdleTimeout;  // seconds a TCP/TLS connection without an allocation may receive nothing, 0 for none
    unsigned long mMaxTcpConnectionsPerIp;    // TCP and TLS connections from one client IP address, 0 for no limit
-   long mOpenSSLCTXSetOptions;    // SSL_OP_* flags for SSL_CTX_set_options, as repro's settings of the same name
-   long mOpenSSLCTXClearOptions;  // SSL_OP_* flags for SSL_CTX_clear_options
+   uint64_t mOpenSSLCTXSetOptions;    // SSL_OP_* flags for SSL_CTX_set_options, as repro's settings of the same name
+   uint64_t mOpenSSLCTXClearOptions;  // SSL_OP_* flags for SSL_CTX_clear_options
 
    resip::Data mUsersDatabaseFilename;
    bool mUserDatabaseHashedPasswords;

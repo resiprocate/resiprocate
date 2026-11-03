@@ -115,7 +115,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
       std::set<Data> values;
       if (getConfigValue(name, values))
       {
-         long& options = (Data(name) == "OpenSSLCTXSetOptions") ? mOpenSSLCTXSetOptions : mOpenSSLCTXClearOptions;
+         uint64_t& options = (Data(name) == "OpenSSLCTXSetOptions") ? mOpenSSLCTXSetOptions : mOpenSSLCTXClearOptions;
          options = 0;
          for (const Data& value : values)
          {

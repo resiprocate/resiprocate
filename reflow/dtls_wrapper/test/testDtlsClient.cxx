@@ -102,7 +102,7 @@ int main(int argc,char **argv)
             if (strlen(inbuf) == 0) {
                exit(0);
             }
-            sockContext->sendRtpData((const unsigned char *)inbuf,strlen(inbuf));
+            sockContext->sendRtpData((const unsigned char *)inbuf,(unsigned int)strlen(inbuf));
          }
          if (fdset.readyToRead(fd))
          {

@@ -583,7 +583,7 @@ ReproRunner::loadPlugins()
 }
 
 void
-ReproRunner::setOpenSSLCTXOptionsFromConfig(const Data& configVar, long& opts)
+ReproRunner::setOpenSSLCTXOptionsFromConfig(const Data& configVar, uint64_t& opts)
 {
 #ifdef USE_SSL
    std::set<Data> values;

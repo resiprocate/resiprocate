@@ -134,6 +134,13 @@ main(int argc, const char** argv)
 
    assert(Security::parseOpenSSLCTXOption("SSL_OP_NO_SSLv2") == SSL_OP_NO_SSLv2);
    assert(Security::parseOpenSSLCTXOption("SSL_OP_NO_SSLv3") == SSL_OP_NO_SSLv3);
+   // Options above bit 31 must survive where long is 32 bits (Windows)
+#ifdef SSL_OP_NO_TX_CERTIFICATE_COMPRESSION
+   assert(Security::parseOpenSSLCTXOption("SSL_OP_NO_TX_CERTIFICATE_COMPRESSION") == SSL_OP_NO_TX_CERTIFICATE_COMPRESSION);
+#endif
+#ifdef SSL_OP_CRYPTOPRO_TLSEXT_BUG
+   assert(Security::parseOpenSSLCTXOption("SSL_OP_CRYPTOPRO_TLSEXT_BUG") == (uint64_t)SSL_OP_CRYPTOPRO_TLSEXT_BUG);
+#endif
    try
    {
 #ifndef WIN32

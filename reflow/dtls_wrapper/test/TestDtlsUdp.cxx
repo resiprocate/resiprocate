@@ -60,7 +60,7 @@ using namespace std;
 using namespace dtls;
 using namespace resip;
 
-TestDtlsUdpSocketContext::TestDtlsUdpSocketContext(int fd,sockaddr_in *peerAddr)
+TestDtlsUdpSocketContext::TestDtlsUdpSocketContext(Socket fd,sockaddr_in *peerAddr)
 {
    mFd=fd;
    memcpy(&mPeerAddr,peerAddr,sizeof(sockaddr_in));
@@ -142,12 +142,12 @@ TestDtlsUdpSocketContext::handshakeCompleted()
    if(mSocket->getSocketType()==DtlsSocket::Client) 
    {
       const char *testData="test data";
-      sendRtpData((const unsigned char *)testData,strlen(testData)+1);
+      sendRtpData((const unsigned char *)testData,(unsigned int)strlen(testData)+1);
 
 
 #if defined(WIN32)
       const char *testData2="test bobo";
-      sendRtpData((const unsigned char *)testData2,strlen(testData)+1);
+      sendRtpData((const unsigned char *)testData2,(unsigned int)strlen(testData2)+1);
 #endif
    }
 }

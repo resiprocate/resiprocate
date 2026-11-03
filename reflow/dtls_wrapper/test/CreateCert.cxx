@@ -56,10 +56,10 @@ int dtls::createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*
 //                                      -1, 0);
    resip_assert(ret);
    ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_ASC, 
-                                     (unsigned char *) aor.data(), aor.size(), 
+                                     (unsigned char *) aor.data(), (int)aor.size(),
                                      -1, 0);
    resip_assert(ret);
-   
+
    ret = X509_set_issuer_name(cert, subject);
    resip_assert(ret);
    ret = X509_set_subject_name(cert, subject);

@@ -63,7 +63,8 @@ int TestTimerContext::select(resip::FdSet& fdSet)
 {
    if(mTimer)
    {
-      return fdSet.selectMilliSeconds(getRemainingTime());
+      // With a timer set, the remaining time is at most its lifetime (an unsigned int)
+      return fdSet.selectMilliSeconds((unsigned long)getRemainingTime());
    }
    else
    {

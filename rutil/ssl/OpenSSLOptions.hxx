@@ -1,6 +1,8 @@
 #if !defined(RESIP_OPENSSLOPTIONS_HXX)
 #define RESIP_OPENSSLOPTIONS_HXX
 
+#include <cstdint>
+
 #include "rutil/Data.hxx"
 
 namespace resip
@@ -11,8 +13,11 @@ namespace resip
    OpenSSLCTXSetOptions / OpenSSLCTXClearOptions settings of repro and
    reTurnServer) to its value for SSL_CTX_set_options / SSL_CTX_clear_options.
    Throws std::invalid_argument for a name it doesn't know.
+
+   The value is 64 bits because OpenSSL 3 has options above bit 31, which a
+   long would lose on Windows.
 */
-long parseOpenSSLCTXOption(const Data& optionName);
+uint64_t parseOpenSSLCTXOption(const Data& optionName);
 
 }
 

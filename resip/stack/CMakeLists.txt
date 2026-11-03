@@ -394,6 +394,15 @@ target_add_conditional_sources(resip TRUE
    gen/ParameterHash.cxx
 )
 
+if(MSVC)
+   # gperf's hash() starts with "unsigned int hval = len;" where len is a size_t
+   set_source_files_properties(
+      gen/HeaderHash.cxx
+      gen/MethodHash.cxx
+      gen/ParameterHash.cxx
+      PROPERTIES COMPILE_OPTIONS /wd4267)
+endif()
+
 if(WIN32)
    if(WITH_SSL)
       target_link_libraries(resip crypt32 Ncrypt)

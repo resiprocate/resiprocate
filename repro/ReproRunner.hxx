@@ -6,6 +6,7 @@
 #include "resip/dum/TlsPeerAuthManager.hxx"
 #include "resip/stack/StatisticsHandler.hxx"
 #include "resip/stack/DomainMatcher.hxx"
+#include <cstdint>
 #include <memory>
 
 #include "repro/AuthenticatorFactory.hxx"
@@ -67,7 +68,7 @@ protected:
    virtual void cleanupObjects();
 
    virtual bool loadPlugins();
-   virtual void setOpenSSLCTXOptionsFromConfig(const resip::Data& configVar, long& opts);
+   virtual void setOpenSSLCTXOptionsFromConfig(const resip::Data& configVar, uint64_t& opts);
    virtual bool createSipStack();
    virtual bool createDatastore();
    virtual bool createProxy();
@@ -141,6 +142,7 @@ protected:
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
