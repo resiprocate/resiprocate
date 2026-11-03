@@ -250,16 +250,12 @@ InternalTransport::setPollGrp(FdPollGrp *grp)
 void 
 InternalTransport::poke()
 {
-   // !bwc! I have tried installing mSelectInterruptor in mTxFifo, but it 
-   // hampers performance. This seems to be because we get a significant 
-   // performance boost from having multiple messages added to mTxFifo before 
-   // mSelectInterruptor is invoked (this is what the TransactionController 
-   // does; it processes at most 16 TransactionMessages, and then pokes the 
-   // Transports). Once we have buffered producer queues in place, this 
-   // performance concern will be rendered moot, and we'll be able to install 
-   // the interruptor in mTxFifo.
-   // mTxFifoOutBuffer is not checked: only the transport thread may read it,
-   // and that thread does not wait while the buffer holds messages.
+   // mSelectInterruptor is not installed in mTxFifo: one wake-up per batch is
+   // faster than one per message. The TransactionController processes up to
+   // 16 messages, then calls poke().
+   // Only the transport thread may read mTxFifoOutBuffer. Messages already in
+   // it need no wake-up: UDP keeps the socket armed for write while it holds
+   // any, and TCP drains it before waiting.
    if(mTxFifo.messageAvailable())
    {
       // This will interrupt the select statement and cause processing of 
