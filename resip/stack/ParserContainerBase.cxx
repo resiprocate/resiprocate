@@ -152,9 +152,8 @@ ParserContainerBase::copyParsers(const Parsers& parsers)
    mParsers.reserve(mParsers.size() + parsers.size());
    for(Parsers::const_iterator p=parsers.begin(); p!=parsers.end(); ++p)
    {
-      // Copy c'tor and assignment operator for HeaderKit are actually poor
-      // man's move semantics, so we have to implement real copy semantics here.
-      mParsers.push_back(HeaderKit());
+      // HeaderKit is move-only, so make the real (deep) copy here.
+      mParsers.emplace_back();
 
       HeaderKit& kit(mParsers.back());
       if(p->pc)

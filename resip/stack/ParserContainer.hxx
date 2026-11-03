@@ -55,7 +55,7 @@ class ParserContainer : public ParserContainerBase
          {
             // create, store without copying -- 
             // keeps the HeaderFieldValue from reallocating its buffer
-            mParsers.push_back(HeaderKit());
+            mParsers.emplace_back();
             mParsers.back().hfv.init(i->getBuffer(),i->getLength(),false);
          }
       }
@@ -71,7 +71,7 @@ class ParserContainer : public ParserContainerBase
          {
             // create, store without copying -- 
             // keeps the HeaderFieldValue from reallocating its buffer
-            mParsers.push_back(HeaderKit());
+            mParsers.emplace_back();
             mParsers.back().hfv.init(i->getBuffer(),i->getLength(),false);
          }
       }
@@ -151,7 +151,7 @@ class ParserContainer : public ParserContainerBase
       */
       void push_front(const T & t) 
       { 
-         mParsers.insert(mParsers.begin(), HeaderKit());
+         mParsers.emplace(mParsers.begin());
          mParsers.front().pc=makeParser(t);
       }
 
@@ -160,7 +160,7 @@ class ParserContainer : public ParserContainerBase
       */
       void push_back(const T & t) 
       { 
-         mParsers.push_back(HeaderKit());
+         mParsers.emplace_back();
          mParsers.back().pc=makeParser(t);
       }
             

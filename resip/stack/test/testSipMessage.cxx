@@ -2508,6 +2508,86 @@ main(int argc, char** argv)
       assert(constIds.getByIndex(3) == nullptr);
    }
 
+   {
+      // ParserContainer growth, push_front, erase, copy and reverse must keep
+      // every entry (parsed and unparsed) intact, and copies must not disturb
+      // the source.
+      const char* txt =
+         "INVITE sip:bob@example.com SIP/2.0\r\n"
+         "Via: SIP/2.0/UDP 10.0.0.1:5060;branch=z9hG4bK-524287-1\r\n"
+         "Max-Forwards: 70\r\n"
+         "To: <sip:bob@example.com>\r\n"
+         "From: <sip:alice@example.com>;tag=1\r\n"
+         "Call-ID: kitmove\r\n"
+         "CSeq: 1 INVITE\r\n"
+         "Contact: <sip:a@x>\r\n"
+         "Contact: <sip:b@x>\r\n"
+         "Contact: <sip:c@x>\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n";
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      ParserContainer<NameAddr>& contacts = msg->header(h_Contacts);
+      assert(contacts.size() == 3);
+
+      auto valueAt = [](const ParserContainerBase& pc, size_t i)
+      {
+         Data v;
+         bool found = pc.getHeaderValueByIndex(i, v);
+         assert(found);
+         (void)found;
+         return v;
+      };
+
+      // Parse only the middle entry, so the container holds a mix.
+      assert(contacts.getByIndex(1)->uri().user() == "b");
+
+      // Grow well past the reserved capacity to force reallocations.
+      for (int i = 0; i < 20; ++i)
+      {
+         contacts.push_back(NameAddr(Data("<sip:p") + Data(i) + "@x>"));
+      }
+      contacts.push_front(NameAddr(Data("<sip:f@x>")));
+      assert(contacts.size() == 24);
+
+      // Order is now f, a, b, c, p0..p19.
+      assert(contacts.getByIndex(0)->uri().user() == "f");
+      assert(valueAt(contacts, 1) == "<sip:a@x>");
+      assert(contacts.getByIndex(2)->uri().user() == "b");
+      assert(valueAt(contacts, 3) == "<sip:c@x>");
+      for (int i = 0; i < 20; ++i)
+      {
+         assert(contacts.getByIndex(4 + i)->uri().user() == Data("p") + Data(i));
+      }
+
+      std::vector<Data> before;
+      for (size_t i = 0; i < contacts.size(); ++i)
+      {
+         before.push_back(valueAt(contacts, i));
+      }
+
+      ParserContainer<NameAddr> copy(contacts);
+      assert(copy.size() == contacts.size());
+      for (size_t i = 0; i < contacts.size(); ++i)
+      {
+         assert(valueAt(copy, i) == before[i]);
+         assert(valueAt(contacts, i) == before[i]);
+      }
+
+      copy.erase(copy.begin());
+      copy.pop_back();
+      assert(copy.size() == 22);
+      assert(valueAt(copy, 0) == "<sip:a@x>");
+      assert(contacts.size() == 24);
+
+      ParserContainer<NameAddr> rev = contacts.reverse();
+      assert(rev.size() == contacts.size());
+      for (size_t i = 0; i < contacts.size(); ++i)
+      {
+         assert(valueAt(rev, i) == before[contacts.size() - 1 - i]);
+         assert(valueAt(contacts, i) == before[i]);
+      }
+   }
+
    resipCerr << "\nTEST OK" << endl;
    return 0;
 }

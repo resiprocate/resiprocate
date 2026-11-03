@@ -4,6 +4,7 @@
 #include <limits>
 #include <memory>
 #include <stddef.h>
+#include <utility>
 
 // .bwc. gcc 4.2 and above support stateful allocators. I don't know about other 
 // compilers; if you do, add them here please.
@@ -133,9 +134,12 @@ class StlPoolAllocator
          return std::numeric_limits<size_type>::max()/_sz;
       }
 
-      void construct(pointer p, const_reference orig)
+      // Forward the arguments so containers can move-construct (and emplace)
+      // elements instead of always copying them.
+      template<typename U, typename... Args>
+      void construct(U* p, Args&&... args)
       {
-         new (p) T(orig);
+         ::new((void*)p) U(std::forward<Args>(args)...);
       }
 
       void destroy(pointer ptr)

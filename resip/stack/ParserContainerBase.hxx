@@ -135,24 +135,25 @@ class ParserContainerBase
          public:
             HeaderKit(): pc(0){}
 
-            // Poor man's move c'tor, watch out!
-            HeaderKit(const HeaderKit& orig) 
-            : pc(orig.pc),
-               hfv(orig.hfv)
+            // Move-only: a kit does not own pc (the container frees it), so
+            // a copy would leave two kits pointing at one parser. Real copies
+            // are made explicitly by ParserContainerBase::copyParsers.
+            HeaderKit(const HeaderKit&) = delete;
+            HeaderKit& operator=(const HeaderKit&) = delete;
+
+            HeaderKit(HeaderKit&& orig) noexcept
+            : pc(orig.pc)
             {
-               HeaderKit& nc_orig = const_cast<HeaderKit&>(orig);
-               std::swap(nc_orig.pc, pc);
-               hfv.swap(nc_orig.hfv);
+               orig.pc = 0;
+               hfv.swap(orig.hfv);
             }
- 
-            // Poor man's move semantics, watch out!
-            HeaderKit& operator=(const HeaderKit& rhs)
+
+            HeaderKit& operator=(HeaderKit&& rhs) noexcept
             {
                if(this!=&rhs)
                {
-                  HeaderKit& nc_orig = const_cast<HeaderKit&>(rhs);
-                  std::swap(nc_orig.pc, pc);
-                  hfv.swap(nc_orig.hfv);
+                  std::swap(rhs.pc, pc);
+                  hfv.swap(rhs.hfv);
                }
                return *this;
             }
@@ -224,7 +225,7 @@ class ParserContainerBase
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2023 SIP Spectrum, Inc. www.sipspectrum.com
+ * Copyright (c) 2023-2026 SIP Spectrum, Inc. www.sipspectrum.com
  * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without

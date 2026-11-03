@@ -106,3 +106,5 @@ media/samples/record_prompt.h
 # Doxygen output (Doxyfile, CMake "doc" target)
 /doxygen
 /Doxyfile.doc
+
+.DS_Store
