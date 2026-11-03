@@ -71,7 +71,8 @@ InternalTransport::~InternalTransport()
 bool
 InternalTransport::isFinished() const
 {
-   return !mTxFifoOutBuffer.messageAvailable();
+   // Called from the TransactionController thread; see poke().
+   return !mTxFifo.messageAvailable();
 }
 
 Socket
