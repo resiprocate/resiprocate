@@ -15,6 +15,7 @@
 #include "resip/stack/BasicNonceHelper.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/NonceHelper.hxx"
+#include "resip/stack/OctetContents.hxx"
 #include "rutil/Coders.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/Logger.hxx"
@@ -871,6 +872,29 @@ Helper::isDigestTypeSupportedInResipA1HashString(const Data& resipA1HashString, 
    return !pb.eof();
 }
 
+// The body to hash when checking a digest response.  Only qop=auth-int covers
+// the body.  It is hashed as the bytes that arrived, through an opaque wrapper,
+// because SipMessage::getContents() can parse the body and credentials have not
+// been checked yet at this point.  holder keeps the wrapper alive for the caller.
+static const Contents*
+getDigestEntityBody(const SipMessage& request, const Data& qop, std::unique_ptr<Contents>& holder)
+{
+   if (qop != Symbols::authInt)
+   {
+      return nullptr;
+   }
+
+   const HeaderFieldValue& rawBody = request.getRawBody();
+   if (rawBody.getBuffer() == nullptr)
+   {
+      // Not a received body: either none at all, or one set with setContents().
+      return request.getContents();
+   }
+
+   holder = std::make_unique<OctetContents>(rawBody, OctetContents::getStaticType());
+   return holder.get();
+}
+
 Helper::AuthResult
 Helper::authenticateRequest(const SipMessage& request,
                             const Data& realm,
@@ -981,6 +1005,8 @@ Helper::authenticateRequest(const SipMessage& request,
             {
                if (i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
                {
+                  std::unique_ptr<Contents> bodyHolder;
+                  const Contents* entityBody = getDigestEntityBody(request, i->param(p_qop), bodyHolder);
                   Data responseDigest;
                   if (isPasswordHashResipA1)
                   {
@@ -991,7 +1017,7 @@ Helper::authenticateRequest(const SipMessage& request,
                         i->param(p_qop),
                         i->param(p_cnonce),
                         i->param(p_nc),
-                        request.getContents(),
+                        entityBody,
                         digestType);
                   }
                   else
@@ -1005,7 +1031,7 @@ Helper::authenticateRequest(const SipMessage& request,
                         i->param(p_qop),
                         i->param(p_cnonce),
                         i->param(p_nc),
-                        request.getContents(),
+                        entityBody,
                         digestType);
                   }
                   if (i->param(p_response) == responseDigest)
@@ -1148,6 +1174,8 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                {
                   if (i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
                   {
+                     std::unique_ptr<Contents> bodyHolder;
+                     const Contents* entityBody = getDigestEntityBody(request, i->param(p_qop), bodyHolder);
                      if (i->param(p_response) == makeResponseDigestWithA1(extractA1FromResipA1HashString(resipPasswordHashA1, digestType),
                         getMethodName(request.header(h_RequestLine).getMethod()),
                         i->param(p_uri),
@@ -1155,7 +1183,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                         i->param(p_qop),
                         i->param(p_cnonce),
                         i->param(p_nc),
-                        request.getContents(),
+                        entityBody,
                         digestType))
                      {
                         if (i->exists(p_username))

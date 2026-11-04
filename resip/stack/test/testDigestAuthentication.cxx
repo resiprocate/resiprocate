@@ -19,6 +19,7 @@
 #include "resip/stack/ParserCategories.hxx"
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/OctetContents.hxx"
 #include "resip/stack/test/TestSupport.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/DataStream.hxx"
@@ -1211,6 +1212,64 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
       assert(res == Helper::Expired);
       respair = Helper::advancedAuthenticateRequest(*request, realm, passwordResipA1, 1, false /* proxyAuthorization? */);
       assert(respair.first == Helper::Expired);
+   }
+
+   // Checking credentials must not parse the body.  Content-Disposition makes
+   // SipMessage::getContents() parse a body as soon as it creates it, and this
+   // one has no boundaries, so that parse would throw.  With qop=auth-int the
+   // digest covers the body as it arrived, without parsing it.
+   {
+      const Data body("this body has none of the boundaries it promises\r\n");
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/TCP 192.0.2.1:5060;branch=z9hG4bK776asdhds\r\n"
+               "To: <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: 314159\r\n"
+               "CSeq: 14 INVITE\r\n"
+               "Content-Type: multipart/mixed; boundary=xyz\r\n"
+               "Content-Disposition: session\r\n"
+               "Content-Length: ");
+      txt += Data((uint64_t)body.size());
+      txt += "\r\n\r\n";
+      txt += body;
+
+      const Data realm("localhost");
+      const Data username("bob");
+      const Data password("secret");
+      const Data cnonce("366fead6");
+      const Data nc("00000009");
+      const Data uri("sip:bob@biloxi.com");
+      const Data passwordResipA1 = Helper::createResipA1HashString(username, realm, password);
+      const OctetContents entity(body);
+
+      for (const Data& qop : { Data("auth"), Data("auth-int") })
+      {
+         for (const Data& tryPassword : { password, Data("wrong") })
+         {
+            unique_ptr<SipMessage> request(TestSupport::makeMessage(txt));
+            unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, true /* useAuth? */));
+            const Data nonce = challenge->header(h_ProxyAuthenticates).front().param(p_nonce);
+
+            Auth auth;
+            auth.scheme() = "Digest";
+            auth.param(p_username) = username;
+            auth.param(p_realm) = realm;
+            auth.param(p_nonce) = nonce;
+            auth.param(p_uri) = uri;
+            auth.param(p_qop) = qop;
+            auth.param(p_cnonce) = cnonce;
+            auth.param(p_nc) = nc;
+            auth.param(p_response) = Helper::makeResponseDigest(username, tryPassword, realm, "INVITE", uri,
+                                                                nonce, qop, cnonce, nc, &entity);
+            request->header(h_ProxyAuthorizations).push_back(auth);
+
+            const Helper::AuthResult expected = tryPassword == password ? Helper::Authenticated : Helper::Failed;
+            assert(Helper::authenticateRequest(*request, realm, password) == expected);
+            assert(Helper::authenticateRequestWithA1(*request, realm, passwordResipA1) == expected);
+            assert(Helper::advancedAuthenticateRequest(*request, realm, passwordResipA1).first == expected);
+         }
+      }
+      cerr << "credentials checked without parsing the body" << endl;
    }
 
    cerr << "ALL OK" << endl;
