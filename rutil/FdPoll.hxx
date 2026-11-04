@@ -76,6 +76,9 @@ class FdPollGrp
 
       typedef enum {FdSetImpl = 0, PollImpl, EPollImpl } ImplType;
 
+      /// Most readiness events the epoll group dispatches per waitAndProcess()
+      enum { EpollMaxEventsPerWait = 200 };
+
       /// factory
       static FdPollGrp* create(const char *implName=NULL);
       /// Return candidate impl names with vertical bar (|) between them
@@ -86,6 +89,20 @@ class FdPollGrp
       virtual ImplType getImplType() const = 0;
 
       virtual FdPollItemHandle addPollItem(Socket sock, FdPollEventMask newMask, FdPollItemIf *item) = 0;
+      /// Like addPollItem(), but if the epoll group cannot add or modify
+      /// this registration, it reports that to the item as a deferred
+      /// FPEM_Error instead of aborting, and a failed delete is only logged.
+      /// The item must call delPollItem() and clean up on FPEM_Error, and
+      /// must call delPollItem() before closing the fd. Adding an fd that
+      /// another item still holds asserts in debug builds and aborts if the
+      /// epoll entry is still live (EEXIST); if the previous owner closed the
+      /// fd without delPollItem(), release builds log it and take the fd
+      /// over. Other groups never abort on these failures, so for them this
+      /// is addPollItem().
+      virtual FdPollItemHandle addPollItemNotifyOnFailure(Socket sock, FdPollEventMask newMask, FdPollItemIf *item)
+      {
+         return addPollItem(sock, newMask, item);
+      }
       virtual void modPollItem(FdPollItemHandle handle, FdPollEventMask newMask) = 0;
       virtual void delPollItem(FdPollItemHandle handle) = 0;
 
@@ -93,6 +110,8 @@ class FdPollGrp
       /// already occurs or occurs before {ms} expires, then
       /// FdPollItem will be informed (via cb method) and this method will
       /// return. Returns true iff any file activity occured.
+      /// May return with events still pending; callers must continue calling
+      /// waitAndProcess() to service them. epoll dispatches one complete batch.
       /// ms<0: wait forever, ms=0: don't wait, ms>0: wait this long
       /// NOTE: "forever" may be a little as 60sec or as much as forever
       virtual bool waitAndProcess(int ms=0) = 0;
