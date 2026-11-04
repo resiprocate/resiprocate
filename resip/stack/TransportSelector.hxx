@@ -250,7 +250,30 @@ class TransportSelector
       FdPollGrp* mPollGrp;
 
       std::atomic<int> mAvgBufferSize;
-      Fifo<Transport> mTransportsToAddRemove;
+      struct TransportChange
+      {
+         enum Operation { Add, Remove };
+
+         TransportChange(Transport* transport, Operation operation)
+            : mTransport(transport), mOperation(operation) {}
+         // A copy would delete a removed transport twice
+         TransportChange(const TransportChange&) = delete;
+         TransportChange& operator=(const TransportChange&) = delete;
+
+         ~TransportChange()
+         {
+            // Removed transports are no longer owned by mTransports. This also
+            // cleans them up if the selector stops before processing the queue.
+            if(mOperation == Remove)
+            {
+               delete mTransport;
+            }
+         }
+
+         Transport* mTransport;
+         Operation mOperation;
+      };
+      Fifo<TransportChange> mTransportsToAddRemove;
       std::unique_ptr<SelectInterruptor> mSelectInterruptor;
       FdPollItemHandle mInterruptorHandle;
 
