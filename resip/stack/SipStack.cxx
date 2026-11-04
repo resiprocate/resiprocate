@@ -267,13 +267,18 @@ SipStack::run()
    mDnsThread=new DnsThread(*mDnsStub);
    mDnsThread->run();
 
-   delete mTransactionControllerThread;
-   mTransactionControllerThread=new TransactionControllerThread(*mTransactionController);
-   mTransactionControllerThread->run();
-
+   // Construct both threads before starting either: each constructor changes
+   // state the other thread uses (the selector's interruptor, which the
+   // TransactionController pokes after handling requests queued before run(),
+   // and the TransactionController fifo's interruptor, which the selector
+   // signals when it receives).
    delete mTransportSelectorThread;
    mTransportSelectorThread=new TransportSelectorThread(mTransactionController->transportSelector());
+   delete mTransactionControllerThread;
+   mTransactionControllerThread=new TransactionControllerThread(*mTransactionController);
+
    mTransportSelectorThread->run();
+   mTransactionControllerThread->run();
 }
 
 void
@@ -592,11 +597,9 @@ SipStack::addTransport(std::unique_ptr<Transport> transport)
       mPorts[transport->port()]++;  // add port / increment reference count
    }
 
-   // Add to CongestionManager if required
-   if(mCongestionManager)
-   {
-       transport->setCongestionManager(mCongestionManager);
-   }
+   // The TransactionController binds the CongestionManager when it adds the
+   // transport, so the binding follows setCongestionManager() calls made
+   // while the addition is queued.
 
    // Set Sip Message Logging Handler if one was provided
    if (!mTransportSipMessageLoggingHandlers.empty())
@@ -604,16 +607,9 @@ SipStack::addTransport(std::unique_ptr<Transport> transport)
        transport->setSipMessageLoggingHandlers(mTransportSipMessageLoggingHandlers);
    }
 
-   if(mInternalThreadsRunning || mProcessingHasStarted)
-   {
-       // Stack is running.  Need to queue add request for TransactionController Thread
-       mTransactionController->addTransport(std::move(transport));
-   }
-   else
-   {
-       // Stack isn't running yet - just add transport directly on transport selector from this thread
-       mTransactionController->transportSelector().addTransport(std::move(transport), false /* isStackRunning */); 
-   }
+   // Queued even before processing starts, so that only the thread that runs
+   // the TransactionController changes the TransportSelector.
+   mTransactionController->addTransport(std::move(transport));
 }
 
 void 
@@ -700,16 +696,8 @@ SipStack::removeTransport(unsigned int transportKey)
       }
    }
 
-   if(mInternalThreadsRunning || mProcessingHasStarted)
-   {
-       // Stack is running.  Need to queue remove request for TransactionController Thread
-       mTransactionController->removeTransport(transportKey);
-   }
-   else
-   {
-       // Stack isn't running yet - just remove transport directly on transport selector from this thread
-       mTransactionController->transportSelector().removeTransport(transportKey); 
-   }
+   // Queued even before processing starts, like addTransport()
+   mTransactionController->removeTransport(transportKey);
 }
 
 Fifo<TransactionMessage>&

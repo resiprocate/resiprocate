@@ -495,7 +495,15 @@ TransactionState::process(TransactionController& controller,
       AddTransport* addTransport = dynamic_cast<AddTransport*>(message);
       if(addTransport)
       {
-         controller.mTransportSelector.addTransport(addTransport->getTransport(), true /* isStackRunning */);
+         std::unique_ptr<Transport> transport(addTransport->getTransport());
+         // Bind the congestion manager in effect now: a queued transport is not
+         // yet in the TransportSelector, so SipStack::setCongestionManager()
+         // could not reach it.
+         if(controller.mCongestionManager)
+         {
+            transport->setCongestionManager(controller.mCongestionManager);
+         }
+         controller.mTransportSelector.addTransport(std::move(transport), true /* isStackRunning */);
          delete addTransport;
          return;
       }

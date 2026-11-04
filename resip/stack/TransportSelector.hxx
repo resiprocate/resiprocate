@@ -256,6 +256,9 @@ class TransportSelector
 
          TransportChange(Transport* transport, Operation operation)
             : mTransport(transport), mOperation(operation) {}
+         // A copy would delete a removed transport twice
+         TransportChange(const TransportChange&) = delete;
+         TransportChange& operator=(const TransportChange&) = delete;
 
          ~TransportChange()
          {

@@ -538,7 +538,7 @@ TransportSelector::checkTransportAddRemoveQueue()
       {
          for(TransportList::iterator it = mSharedProcessTransports.begin(); it != mSharedProcessTransports.end(); it++)
          {
-            if((*it)->getKey() == t->getKey())
+            if(*it == t)
             {
                mSharedProcessTransports.erase(it);
                break;

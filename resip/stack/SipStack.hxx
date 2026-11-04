@@ -7,7 +7,6 @@
 
 #include <set>
 #include <iosfwd>
-#include <atomic>
 
 #include "rutil/CongestionManager.hxx"
 #include "rutil/FdSetIOObserver.hxx"
@@ -1245,8 +1244,8 @@ class SipStack : public FdSetIOObserver
 
       TransactionControllerThread* mTransactionControllerThread;
       TransportSelectorThread* mTransportSelectorThread;
-      std::atomic<bool> mInternalThreadsRunning;
-      std::atomic<bool> mProcessingHasStarted;
+      bool mInternalThreadsRunning;
+      bool mProcessingHasStarted; 
 
       /** @brief store all domains that this stack is responsible for.
           @note Controlled by addAlias and addTransport interface
