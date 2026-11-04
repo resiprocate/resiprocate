@@ -503,7 +503,7 @@ TransactionState::process(TransactionController& controller,
          {
             transport->setCongestionManager(controller.mCongestionManager);
          }
-         controller.mTransportSelector.addTransport(std::move(transport), true /* isStackRunning */);
+         controller.mTransportSelector.addTransport(std::move(transport), true /* queueSharedTransport */);
          delete addTransport;
          return;
       }

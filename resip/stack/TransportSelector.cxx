@@ -189,7 +189,7 @@ TransportSelector::isFinished() const
 }
 
 void
-TransportSelector::addTransport(std::unique_ptr<Transport> autoTransport, bool isStackRunning)
+TransportSelector::addTransport(std::unique_ptr<Transport> autoTransport, bool queueSharedTransport)
 {
    Transport* transport = autoTransport.release();
 
@@ -286,21 +286,19 @@ TransportSelector::addTransport(std::unique_ptr<Transport> autoTransport, bool i
 
    if (transport->shareStackProcessAndSelect())
    {
-      if(isStackRunning)
+      if(queueSharedTransport)
       {
          // Queue poll registration and list updates on the selector thread.
          mTransportsToAddRemove.add(new TransportChange(transport, TransportChange::Add));
       }
       else
       {
+         // Only for unit tests that never run the process loop: add directly
+         // from this thread.
          if ( mPollGrp )
          {
             transport->setPollGrp(mPollGrp);
          }
-         // Stack isn't running yet - just add to mSharedProcess directly - this
-         // ensures the mSharedProcessTransports list is propulated when the stack
-         // starts to run.  When in multi-threaded stack mode the TransportSelectorThread 
-         // will assume ownership (FdPollGrp control) of all the transports using this list.
          mSharedProcessTransports.push_back(transport);
       }
    }

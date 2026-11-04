@@ -104,7 +104,12 @@ class TransportSelector
       void poke();
 
       /// Add/Remove a transport
-      void addTransport(std::unique_ptr<Transport> transport, bool isStackRunning);
+      /// When queueSharedTransport is true, a transport that shares the stack's
+      /// process loop is registered and added to the process list by the
+      /// TransportSelector's own processing (see checkTransportAddRemoveQueue).
+      /// The SipStack always passes true; false adds it directly, for unit tests
+      /// that never run the process loop.
+      void addTransport(std::unique_ptr<Transport> transport, bool queueSharedTransport);
       void removeTransport(unsigned int transportKey);
 
       /// DNS Resolution

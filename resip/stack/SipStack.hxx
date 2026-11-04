@@ -337,6 +337,11 @@ class SipStack : public FdSetIOObserver
          Used by the application to add in a new built-in transport.  The transport is
          created and then added to the Transport Selector.
 
+         The TransactionController adds the transport to the Transport Selector,
+         even before processing starts, so the transport does not send, receive
+         or start its own thread until the stack is processed.  SIP messages sent
+         after this call are handled after the transport is added.
+
          @throws Transport::Exception If the transport couldn't be added, usually
                                       because the port was already bound.
 
@@ -415,7 +420,8 @@ class SipStack : public FdSetIOObserver
 
       /**
           Used to plug-in custom transports.  Adds the transport to the Transport
-          Selector.
+          Selector.  As with the other addTransport(), the TransactionController
+          applies the addition.
 
           @param transport Pointer to an externally created transport.  SipStack
                            assumes ownership.
@@ -423,7 +429,9 @@ class SipStack : public FdSetIOObserver
       void addTransport(std::unique_ptr<Transport> transport);
 
       /**
-          Used to remove a previously added transport.
+          Used to remove a previously added transport.  The TransactionController
+          applies the removal, and the transport is deleted by the thread that
+          processes the transports.
 
           @param transportKey The key for the transpor to remove.  Use Transport::getKey 
                  to get the key of a transport after it is added to the stack.
@@ -1111,7 +1119,13 @@ class SipStack : public FdSetIOObserver
 
          An override of TransactionUser::setCongestionManager() must not call
          into the SipStack: it runs under the TU list lock.
-         
+
+         Transports, including ones added before this call whose addition is
+         still queued, use the manager in effect when the TransactionController
+         adds them.  Call this before processing starts (before run() or the
+         first process call): the stack does not lock its transports against
+         a change made while it runs.
+
          If you are using the SipStack directly by implementing your own 
          subclass of TransactionUser, you can override 
          TransactionUser::setCongestionManager() to register additional fifos 
@@ -1245,7 +1259,6 @@ class SipStack : public FdSetIOObserver
       TransactionControllerThread* mTransactionControllerThread;
       TransportSelectorThread* mTransportSelectorThread;
       bool mInternalThreadsRunning;
-      bool mProcessingHasStarted; 
 
       /** @brief store all domains that this stack is responsible for.
           @note Controlled by addAlias and addTransport interface

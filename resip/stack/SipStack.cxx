@@ -114,7 +114,6 @@ SipStack::SipStack(Security* pSecurity,
    mTransactionControllerThread(0),
    mTransportSelectorThread(0),
    mInternalThreadsRunning(false),
-   mProcessingHasStarted(false),
    mShuttingDown(false),
    mStatisticsManagerEnabled(true),
    mSocketFunc(socketFunc),
@@ -210,7 +209,6 @@ SipStack::init(const SipStackOptions& options)
    mTransportSelectorThread = 0;
 
    mInternalThreadsRunning = false;
-   mProcessingHasStarted = false;
    mShuttingDown = false;
    mStatisticsManagerEnabled = true;
    mSocketFunc = options.mSocketFunc;
@@ -1147,7 +1145,6 @@ unsigned int
 SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
-   mProcessingHasStarted = true;
 
    unsigned int dnsNextProcess = (mDnsThread ? 
                            INT_MAX : mDnsStub->getTimeTillNextProcessMS());

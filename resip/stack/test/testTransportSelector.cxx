@@ -144,7 +144,7 @@ class TestTransportSelector : public TransportSelector
             resip_assert(0);  // Tests do not support the provided transport type.
          }
 
-         TransportSelector::addTransport(std::move(transport), false);
+         TransportSelector::addTransport(std::move(transport), false /* queueSharedTransport */);
          mNextTransportKey++;
 
          return actualTransportKey;
