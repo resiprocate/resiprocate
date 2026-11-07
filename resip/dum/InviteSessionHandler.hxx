@@ -125,6 +125,9 @@ class InviteSessionHandler
       // You should only override the following method if genericOfferAnswer is true
       virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const Contents&);      
 
+      /// called when an Update is received w/o an OfferAnswerType
+      virtual void onSessionTimerRequest(InviteSessionHandle, const SipMessage& msg);
+
       /// called when a modified body is received in a 2xx response to a
       /// session-timer reINVITE. Under normal circumstances where the response
       /// body is unchanged from current remote body no handler is called
