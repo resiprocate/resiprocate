@@ -1360,6 +1360,7 @@ Data::urlDecode(EncodeStream& s) const
          {
             s << (char) hexpair2int( *(p+1), *(p+2));
             p += 2;
+            i += 2;
          }
          else
          {
