@@ -515,6 +515,32 @@ main(int argc, char* argv[])
 
    }
 
+   {
+      // A frag whose headers are not terminated by a blank line must not
+      // take a body (or a body length) from beyond the end of the frag,
+      // whatever its Content-Length claims.  Plain assert: tassert failures
+      // do not fail the test run.
+      const char* frags[] = {
+         "SIP/2.0 200 OK\r\nContent-Length: 100000\r\n",
+         "To: <sip:a@b>\r\nContent-Length: 100000",
+         "SIP/2.0 200 OK\r\nContent-Length: 100000\r\n\r\n" };
+      for (const char* fragText : frags)
+      {
+         const Data txt(fragText);
+         SipFrag frag(HeaderFieldValue(txt.data(), (unsigned int)txt.size()),
+                      SipFrag::getStaticType());
+         frag.checkParsed();
+         assert(frag.message().getRawBody().getLength() == 0);
+
+         Data encoded;
+         {
+            DataStream ds(encoded);
+            frag.encode(ds);
+         }
+         assert(encoded.size() < txt.size() + 32);
+      }
+   }
+
    tassert_report();
 
    return 0;
@@ -523,6 +549,7 @@ main(int argc, char* argv[])
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

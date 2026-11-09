@@ -222,40 +222,53 @@ GenericPidfContents::parse(ParseBuffer& pb)
 void 
 GenericPidfContents::parseChildren(XMLCursor& xml, NodeList& nodeList)
 {
+   // The node's tag, prefix and value are copied rather than shared: when the
+   // document contains comments, XMLCursor parses a comment-stripped copy that
+   // it owns, so anything sharing its memory would dangle once parse() returns.
    Node* node = new Node();
-   node->mAttributes = xml.getAttributes(); // !slg! yuck - yes we are copying memory for attributes
-   node->mValue.duplicate(xml.getValue());  // use Data::duplicate to avoid copying memory
-   ParseBuffer pb(xml.getTag());
-   const char* anchor = pb.position();
-   pb.skipToChar(Symbols::COLON[0]);
-   if (!pb.eof())
+   try
    {
-      pb.skipChar();
-      pb.data(node->mNamespacePrefix, anchor);
-      anchor = pb.position();
-      pb.skipToEnd();
-      pb.data(node->mTag, anchor);
-   }
-   else
-   {
-      // No namespace prefix
-      node->mTag.duplicate(xml.getTag()); // use Data::duplicate to avoid copying memory
-   }
-
-   if (node->mValue.empty() && xml.firstChild())
-   {
-      do
+      node->mAttributes = xml.getAttributes(); // !slg! yuck - yes we are copying memory for attributes
+      node->mValue = xml.getValue();
+      ParseBuffer pb(xml.getTag());
+      const char* anchor = pb.position();
+      pb.skipToChar(Symbols::COLON[0]);
+      if (!pb.eof())
       {
-         if (!xml.getValue().empty())
+         pb.skipChar();
+         node->mNamespacePrefix = pb.data(anchor);
+         anchor = pb.position();
+         pb.skipToEnd();
+         node->mTag = pb.data(anchor);
+      }
+      else
+      {
+         // No namespace prefix
+         node->mTag = xml.getTag();
+      }
+
+      if (node->mValue.empty() && xml.firstChild())
+      {
+         do
          {
-            node->mValue.duplicate(xml.getValue()); // use Data::duplicate to avoid copying memory
-         }
-         else
-         {
-            parseChildren(xml, node->mChildren);
-         }
-      } while (xml.nextSibling());
-      xml.parent();
+            if (!xml.getValue().empty())
+            {
+               node->mValue = xml.getValue();
+            }
+            else
+            {
+               parseChildren(xml, node->mChildren);
+            }
+         } while (xml.nextSibling());
+         xml.parent();
+      }
+   }
+   catch (...)
+   {
+      // node is not yet owned by nodeList - release it and any children
+      cleanupNodeMemory(node->mChildren);
+      delete node;
+      throw;
    }
    nodeList.push_back(node);
 }

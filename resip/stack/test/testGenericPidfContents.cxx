@@ -893,6 +893,60 @@ main(int argc, char** argv)
       }
    }
 
+   // Parsed values must stay valid after parse() returns when the document
+   // contains comments (the parser works on a comment-stripped copy).
+   {
+      const Data txt("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
+                     "<!-- leading comment -->" CRLF
+                     "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\" entity=\"sip:bob@example.com\">" CRLF
+                     "  <tuple id=\"t1\"><!-- inner comment -->" CRLF
+                     "    <status><basic>open</basic></status>" CRLF
+                     "    <note>at desk</note>" CRLF
+                     "  </tuple>" CRLF
+                     "</presence>" CRLF);
+      HeaderFieldValue hfv(txt.data(), (unsigned int)txt.size());
+      GenericPidfContents pidf(hfv, GenericPidfContents::getStaticType());
+      assert(pidf.getRootNodes().size() == 1);
+      const GenericPidfContents::Node* tuple = pidf.getRootNodes().front();
+      assert(tuple->mTag == "tuple");
+      assert(tuple->mChildren.size() == 2);
+      assert(tuple->mChildren.front()->mChildren.front()->mValue == "open");
+      assert(tuple->mChildren.back()->mValue == "at desk");
+      assert(pidf.getSimplePresenceOnline() == true);
+      assert(pidf.getSimplePresenceNote() == "at desk");
+
+      Data encoded;
+      {
+         DataStream ds(encoded);
+         pidf.encode(ds);
+      }
+      assert(encoded.find("at desk") != Data::npos);
+   }
+
+   // A malformed element must fail the parse cleanly (and must not leak the
+   // partially built nodes - checked when run under a leak checker).
+   {
+      const char* bad[] = {
+         "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\" entity=\"sip:a@b\"><a b></a></presence>",
+         "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\" entity=\"sip:a@b\"><a><b c=1/></a></presence>" };
+      for (const char* badText : bad)
+      {
+         const Data txt(badText);
+         HeaderFieldValue hfv(txt.data(), (unsigned int)txt.size());
+         GenericPidfContents pidf(hfv, GenericPidfContents::getStaticType());
+         bool failed = false;
+         try
+         {
+            pidf.checkParsed();
+         }
+         catch (ParseException&)
+         {
+            failed = true;
+         }
+         assert(failed);
+      }
+   }
+
    cerr << "All OK" << endl;
    return 0;
 }

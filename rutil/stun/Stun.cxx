@@ -600,8 +600,15 @@ namespace resip
 
                //overlay on parse, ownership is buffer parsed from
             case TurnData:
-               msg.hasTurnData = true;
-               msg.turnData = new resip::Data(resip::Data::Share, body, attrLen);
+               if (!msg.hasTurnData)
+               {
+                  msg.hasTurnData = true;
+                  msg.turnData = new resip::Data(resip::Data::Share, body, attrLen);
+               }
+               else
+               {
+                  if (verbose) clog << "Duplicate TurnData in message - ignoring." << endl;
+               }
                break;
 
                //case TurnNonce:

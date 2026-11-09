@@ -228,12 +228,22 @@ SipFrag::parse(ParseBuffer& pb)
    {
       size_t used = scanTermCharPtr - buffer;
 
-      // !ah! I think this is broken .. if we are UDP then the 
+      // The scanner was given the sentinel CRLFCRLF appended past the end of
+      // the frag, so when the frag itself does not end its headers with a blank
+      // line the scan terminates inside the sentinel and used exceeds size.
+      // Clamp it, otherwise size - used underflows and the body would claim
+      // bytes beyond the frag.
+      if (used > size)
+      {
+         used = size;
+      }
+
+      // !ah! I think this is broken .. if we are UDP then the
       // remainder is the SigFrag, not the Content-Length... ??
       if (mMessage->exists(h_ContentLength))
       {
-         mMessage->setBody(scanTermCharPtr,
-                           static_cast<int>(size - used));
+         mMessage->setBody(buffer + used,
+                           static_cast<uint32_t>(size - used));
       }
       else
       {
@@ -253,6 +263,7 @@ SipFrag::parse(ParseBuffer& pb)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026, SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
