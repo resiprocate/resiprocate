@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<list xmlns="urn:ietf:params:xml:ns:rlmi" uri="sip:alice@atlanta.example.com" version="1" fullState="true">
+  <resource uri="sip:bob@biloxi.example.com">
+    <instance id="1" state="active" uri="sip:bob@192.0.2.4"/>
+  </resource>
+</list>

@@ -363,22 +363,6 @@ static void fuzzSip(const resip::Data& buffer)
   }
 }
 
-/*
-
-TODO: add fuzzing for those classes
-
-resip/stack/SipFrag.cxx:SipFrag::parse(ParseBuffer& pb)
-resip/stack/StatusLine.cxx:StatusLine::parse(ParseBuffer& pb)
-resip/stack/StringCategory.cxx:StringCategory::parse(ParseBuffer& pb)
-resip/stack/Token.cxx:Token::parse(ParseBuffer& pb)
-resip/stack/TokenOrQuotedStringCategory.cxx:TokenOrQuotedStringCategory::parse(ParseBuffer& pb)
-resip/stack/UInt32Category.cxx:UInt32Category::parse(ParseBuffer& pb)
-resip/stack/Via.cxx:Via::parse(ParseBuffer& pb)
-resip/stack/WarningCategory.cxx:WarningCategory::parse(ParseBuffer& pb)
-resip/stack/X509Contents.cxx:X509Contents::parse(ParseBuffer& pb)
-
-*/
-
 static void fuzzUri(const resip::HeaderFieldValue& hfv)
 {
   resip::Uri uri(hfv, resip::Headers::UNKNOWN);
@@ -389,6 +373,163 @@ static void fuzzUri(const resip::HeaderFieldValue& hfv)
   catch (const resip::ParseException&)
   {
   }
+}
+
+// Parsers that previously had no fuzz coverage at all (Via.cxx, Token.cxx,
+// TokenOrQuotedStringCategory.cxx, SipFrag.cxx, StatusLine.cxx,
+// StringCategory.cxx, UInt32Category.cxx, WarningCategory.cxx and
+// X509Contents.cxx all sat at or near 0% line coverage).  Each one is a
+// header-field-value or contents parser whose input arrives unchanged from
+// the wire, so the fuzz buffer goes straight into the parser constructor and
+// is then round-tripped through encode() the same way the test suite does.
+// Fuzzing rationale: these are core SIP wire-protocol parsers driven by
+// attacker-controlled bytes; memory-safety violations here are directly
+// exploitable on the network path.
+
+static void fuzzSipFrag(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("message", "sipfrag");
+    resip::SipFrag payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+        resip::Data encoded;
+        resip::DataStream ds(encoded);
+        payload.encode(ds);
+        ds.flush();
+    }
+    catch (const resip::ParseException&)
+    {
+    }
+}
+
+static void fuzzStatusLine(const resip::HeaderFieldValue& hfv)
+{
+    resip::StatusLine payload(hfv);
+    try
+    {
+        payload.checkParsed();
+        resip::Data encoded;
+        resip::DataStream ds(encoded);
+        payload.encode(ds);
+        ds.flush();
+    }
+    catch (const resip::ParseException&)
+    {
+    }
+}
+
+static void fuzzStringCategory(const resip::HeaderFieldValue& hfv)
+{
+    resip::StringCategory payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+        resip::Data encoded;
+        resip::DataStream ds(encoded);
+        payload.encode(ds);
+        ds.flush();
+    }
+    catch (const resip::ParseException&)
+    {
+    }
+}
+
+static void fuzzToken(const resip::HeaderFieldValue& hfv)
+{
+    resip::Token payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+        resip::Data encoded;
+        resip::DataStream ds(encoded);
+        payload.encode(ds);
+        ds.flush();
+    }
+    catch (const resip::ParseException&)
+    {
+    }
+}
+
+static void fuzzTokenOrQuotedStringCategory(const resip::HeaderFieldValue& hfv)
+{
+    resip::TokenOrQuotedStringCategory payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+        resip::Data encoded;
+        resip::DataStream ds(encoded);
+        payload.encode(ds);
+        ds.flush();
+    }
+    catch (const resip::ParseException&)
+    {
+    }
+}
+
+static void fuzzUInt32Category(const resip::HeaderFieldValue& hfv)
+{
+    resip::UInt32Category payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+        resip::Data encoded;
+        resip::DataStream ds(encoded);
+        payload.encode(ds);
+        ds.flush();
+    }
+    catch (const resip::ParseException&)
+    {
+    }
+}
+
+static void fuzzVia(const resip::HeaderFieldValue& hfv)
+{
+    resip::Via payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+        resip::Data encoded;
+        resip::DataStream ds(encoded);
+        payload.encode(ds);
+        ds.flush();
+    }
+    catch (const resip::ParseException&)
+    {
+    }
+}
+
+static void fuzzWarningCategory(const resip::HeaderFieldValue& hfv)
+{
+    resip::WarningCategory payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+        resip::Data encoded;
+        resip::DataStream ds(encoded);
+        payload.encode(ds);
+        ds.flush();
+    }
+    catch (const resip::ParseException&)
+    {
+    }
+}
+
+static void fuzzX509Contents(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("application", "pkix-cert");
+    resip::X509Contents payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+        resip::Data encoded;
+        resip::DataStream ds(encoded);
+        payload.encode(ds);
+        ds.flush();
+    }
+    catch (const resip::ParseException&)
+    {
+    }
 }
 
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
@@ -429,6 +570,15 @@ extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data,
   fuzzSdp(hfv);
   fuzzSip(buffer);
   fuzzUri(hfv);
+  fuzzSipFrag(hfv);
+  fuzzStatusLine(hfv);
+  fuzzStringCategory(hfv);
+  fuzzToken(hfv);
+  fuzzTokenOrQuotedStringCategory(hfv);
+  fuzzUInt32Category(hfv);
+  fuzzVia(hfv);
+  fuzzWarningCategory(hfv);
+  fuzzX509Contents(hfv);
 
   // leaks or hogs memory
   //fuzzDialogInfoContents(hfv);

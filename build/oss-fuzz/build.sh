@@ -40,6 +40,10 @@ cmake --build _build --target fuzzUtil fuzzStack aresfuzz aresfuzzname
 cp _build/rutil/test/fuzzUtil $OUT/
 cp _build/resip/stack/test/fuzzStack $OUT/
 
+# seed corpus and dictionary for fuzzStack
+cp build/oss-fuzz/fuzzStack.dict $OUT/
+(cd build/oss-fuzz/fuzzStack-seeds && zip -qj "$OUT/fuzzStack_seed_corpus.zip" ./*)
+
 # those fuzz targets are too small
 #  See: https://github.com/google/oss-fuzz/issues/1331
 #cp _build/rutil/dns/ares/{aresfuzz,aresfuzzname} $OUT/
