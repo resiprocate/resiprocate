@@ -343,6 +343,16 @@ class TestData
          }
 
          {
+            // an escape followed by a truncated one at the end must stop at
+            // the end of the input, not read past it
+            assert(Data("%41%").urlDecoded() == "A");
+            assert(Data("%41%4").urlDecoded() == "A");
+            assert(Data("a%41b%4").urlDecoded() == "aAb");
+            assert(Data("%41%42%").urlDecoded() == "AB");
+            assert(Data("%41%42").urlDecoded() == "AB");
+         }
+
+         {
             Data needsCharEncode("CharEncode % me");
             cerr << "original " << needsCharEncode << endl;
             cerr << "charEncoded " << needsCharEncode.charEncoded() << endl;
