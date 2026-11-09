@@ -14,6 +14,7 @@
 # ---------------------------------------------------------------------------
 *.dat                          -text
 resip/stack/test/testTFSM-*    -text
+build/oss-fuzz/fuzzStack-seeds/* -text
 
 # ---------------------------------------------------------------------------
 # Files that Windows tooling expects to be CRLF

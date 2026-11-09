@@ -45,6 +45,10 @@ cp _build/resip/stack/test/fuzzXmlContents $OUT/
 cp build/oss-fuzz/fuzzXmlContents.dict $OUT/
 (cd build/oss-fuzz/fuzzXmlContents-seeds && zip -qj "$OUT/fuzzXmlContents_seed_corpus.zip" ./*)
 
+# seed corpus and dictionary for fuzzStack
+cp build/oss-fuzz/fuzzStack.dict $OUT/
+(cd build/oss-fuzz/fuzzStack-seeds && zip -qj "$OUT/fuzzStack_seed_corpus.zip" ./*)
+
 # those fuzz targets are too small
 #  See: https://github.com/google/oss-fuzz/issues/1331
 #cp _build/rutil/dns/ares/{aresfuzz,aresfuzzname} $OUT/
