@@ -1,0 +1,10 @@
+<dialog-info xmlns="urn:ietf:params:xml:ns:dialog-info" version="3" state="partial" entity="sip:bob@biloxi.example.com">
+ <dialog id="d1">
+  <state>proceeding</state>
+ </dialog>
+ <dialog id="d2" call-id="xyz" local-tag="lt" remote-tag="rt" direction="recipient">
+  <local><identity>sip:bob@biloxi.example.com</identity><target uri="sip:192.0.2.4"/></local>
+  <remote><identity>sip:alice@atlanta.example.com</identity></remote>
+  <state event="wait">trying</state>
+ </dialog>
+</dialog-info>
