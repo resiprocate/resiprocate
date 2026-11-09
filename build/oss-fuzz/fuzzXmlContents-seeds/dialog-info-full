@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dialog-info xmlns="urn:ietf:params:xml:ns:dialog-info" version="0" state="full" entity="sip:alice@atlanta.example.com">
+ <dialog id="abc" call-id="a84b4c76e66710@pc33" local-tag="1928301774" remote-tag="a6c85cf" direction="initiator">
+  <state event="rejected" code="486">terminated</state>
+ </dialog>
+</dialog-info>

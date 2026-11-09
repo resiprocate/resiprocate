@@ -35,10 +35,15 @@ cmake -S . -B _build \
     -DWITH_C_ARES=OFF \
     -DWITH_SSL=OFF
 
-cmake --build _build --target fuzzUtil fuzzStack aresfuzz aresfuzzname
+cmake --build _build --target fuzzUtil fuzzStack aresfuzz aresfuzzname fuzzXmlContents
 
 cp _build/rutil/test/fuzzUtil $OUT/
 cp _build/resip/stack/test/fuzzStack $OUT/
+cp _build/resip/stack/test/fuzzXmlContents $OUT/
+
+# seed corpus and dictionary for fuzzXmlContents
+cp build/oss-fuzz/fuzzXmlContents.dict $OUT/
+(cd build/oss-fuzz/fuzzXmlContents-seeds && zip -qj "$OUT/fuzzXmlContents_seed_corpus.zip" ./*)
 
 # those fuzz targets are too small
 #  See: https://github.com/google/oss-fuzz/issues/1331
