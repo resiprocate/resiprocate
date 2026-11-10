@@ -121,12 +121,16 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
    {
       pbtemp.skipWhitespace();
    }
-   if (*pbtemp.position() == LA_QUOTE[0] &&
+   // Only look at bytes that are inside the buffer; the document may end
+   // right after the root start tag.
+   if (pbtemp.end() - pbtemp.position() >= 2 &&
+       *pbtemp.position() == LA_QUOTE[0] &&
        *(pbtemp.position()+1) == SLASH[0])
    {
       pbtemp.skipChar();
       pbtemp.skipChar();
-      if (strncmp(mRoot->mTag.data(), pbtemp.position(), mRoot->mTag.size()) == 0)
+      if (static_cast<size_t>(pbtemp.end() - pbtemp.position()) >= mRoot->mTag.size() &&
+          strncmp(mRoot->mTag.data(), pbtemp.position(), mRoot->mTag.size()) == 0)
       {
          // no children ever
          mRoot->mPb.reset(mRoot->mPb.end());
@@ -618,7 +622,8 @@ XMLCursor::Node::skipToEndTag(unsigned int depth)
 const char*
 XMLCursor::Node::skipComments(ParseBuffer& pb)
 {
-   while (*pb.position() == LA_QUOTE[0] &&
+   while (pb.end() - pb.position() >= 4 &&
+          *pb.position() == LA_QUOTE[0] &&
           *(pb.position()+1) == BANG[0] &&
           *(pb.position()+2) == HYPHEN[0] &&
           *(pb.position()+3) == HYPHEN[0])

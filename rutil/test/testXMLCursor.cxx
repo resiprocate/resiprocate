@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include <cassert>
+#include <cstring>
 
 using namespace resip;
 using namespace std;
@@ -510,8 +511,39 @@ main()
       }
    }
 
+   // Documents that end abruptly after the root start tag or after a comment
+   // must not be read past their end.  Each one is copied into an exact-size
+   // heap buffer so an address sanitizer build catches any over-read.
+   {
+      const char* truncated[] = {
+         "<root><",
+         "<root>",
+         "<root><!--c-->",
+         "<root><!--c--><",
+         "<!--c--><root></",
+         "<?xml version=\"1.0\"?><root><" };
+      for (const char* text : truncated)
+      {
+         const size_t len = strlen(text);
+         char* buf = new char[len];
+         memcpy(buf, text, len);
+         try
+         {
+            XMLCursor xmlc(ParseBuffer(buf, len));
+            if (xmlc.firstChild())
+            {
+               xmlc.nextSibling();
+            }
+         }
+         catch (ParseException&)
+         {
+         }
+         delete[] buf;
+      }
+   }
+
    cerr << "All OK" << endl;
-      
+
    return 0;
 }
 /* ====================================================================

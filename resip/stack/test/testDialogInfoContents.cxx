@@ -1,6 +1,7 @@
 #include "resip/stack/DialogInfoContents.hxx"
 #include "resip/stack/SdpContents.hxx"
 #include <iostream>
+#include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
 #include "TestSupport.hxx"
 
@@ -467,13 +468,43 @@ main(int argc, char** argv)
       assert(assign.getDialogs().size() == 1);
    }
 
+   // Unrecognized enumerated values (document state, dialog state, event,
+   // direction) must encode safely.
+   {
+      const Data txt("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
+                     "<dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"1\" state=\"bogus\"" CRLF
+                     "             entity=\"sip:alice@example.com\">" CRLF
+                     "  <dialog id=\"d1\" direction=\"sideways\">" CRLF
+                     "    <state event=\"exploded\">wobbling</state>" CRLF
+                     "  </dialog>" CRLF
+                     "</dialog-info>" CRLF);
+      HeaderFieldValue hfv(txt.data(), (unsigned int)txt.size());
+      DialogInfoContents dic(hfv, DialogInfoContents::getStaticType());
+      dic.checkParsed();  // non-const: marks dirty, so encode() re-encodes from the parsed values
+      assert(dic.getDialogInfoState() == DialogInfoContents::MaxDialogInfoState);
+      assert(dic.getDialogs().size() == 1);
+      assert(dic.getDialogs().front().getState() == DialogInfoContents::MaxDialogState);
+
+      Data encoded;
+      {
+         DataStream ds(encoded);
+         dic.encode(ds);
+      }
+      assert(encoded.find("<dialog id=\"d1\"") != Data::npos);
+      assert(Data(DialogInfoContents::dialogStateToString(DialogInfoContents::MaxDialogState)).empty());
+      assert(Data(DialogInfoContents::dialogInfoStateToString(DialogInfoContents::MaxDialogInfoState)).empty());
+      assert(Data(DialogInfoContents::dialogStateEventToString(DialogInfoContents::MaxOrUnsetDialogStateEvent)).empty());
+      assert(Data(DialogInfoContents::directionToString(DialogInfoContents::MaxOrUnsetDirection)).empty());
+      assert(Data(DialogInfoContents::dialogStateToString(DialogInfoContents::Confirmed)) == "confirmed");
+   }
+
    cerr << "All OK" << endl;
    return 0;
 }
 
 /* ====================================================================
 *
-* Copyright (c) 2016 SIP Spectrum, Inc.  All rights reserved.
+* Copyright (c) 2016-2026 SIP Spectrum, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions

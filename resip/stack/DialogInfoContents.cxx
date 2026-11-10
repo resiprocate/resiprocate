@@ -32,6 +32,15 @@ DialogInfoContents::init()
    return true;
 }
 
+// Unrecognized values parse to the enum's Max sentinel, so never index past
+// the end of a string table.
+template <size_t N>
+static const char*
+enumToString(const char* (&strings)[N], int value)
+{
+   return (value >= 0 && static_cast<size_t>(value) < N) ? strings[value] : "";
+}
+
 static const char* DialogInfoStateStrings[] =
 {
    "full",
@@ -41,7 +50,7 @@ static const char* DialogInfoStateStrings[] =
 const char* 
 DialogInfoContents::dialogInfoStateToString(const DialogInfoState& dialogInfoState)
 {
-   return DialogInfoStateStrings[dialogInfoState];
+   return enumToString(DialogInfoStateStrings, dialogInfoState);
 }
 
 DialogInfoContents::DialogInfoState 
@@ -69,7 +78,7 @@ static const char* DialogStateStrings[] =
 const char* 
 DialogInfoContents::dialogStateToString(const DialogState& dialogState)
 {
-   return DialogStateStrings[dialogState];
+   return enumToString(DialogStateStrings, dialogState);
 }
 
 DialogInfoContents::DialogState 
@@ -99,7 +108,7 @@ static const char* DialogStateEventStrings[] =
 const char* 
 DialogInfoContents::dialogStateEventToString(const DialogStateEvent& dialogStateEvent)
 {
-   return DialogStateEventStrings[dialogStateEvent];
+   return enumToString(DialogStateEventStrings, dialogStateEvent);
 }
 
 DialogInfoContents::DialogStateEvent
@@ -124,7 +133,7 @@ static const char* DirectionStrings[] =
 const char*
 DialogInfoContents::directionToString(const Direction& direction)
 {
-   return DirectionStrings[direction];
+   return enumToString(DirectionStrings, direction);
 }
 
 DialogInfoContents::Direction
@@ -950,7 +959,7 @@ DialogInfoContents::removeDialog(const Data& id)
 
 /* ====================================================================
 *
-* Copyright (c) 2016 SIP Spectrum, Inc.  All rights reserved.
+* Copyright (c) 2016-2026 SIP Spectrum, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions
