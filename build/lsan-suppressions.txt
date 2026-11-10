@@ -1,0 +1,20 @@
+# LeakSanitizer suppressions for resiprocate builds with ENABLE_ASAN.
+# Use with: LSAN_OPTIONS=suppressions=<path to this file>
+# (LSAN_OPTIONS is split on spaces, so the path must not contain any.)
+#
+# Data is declared with #pragma pack(4) (see rutil/Data.hxx), so a Data inside
+# another object or an array can start at an address that isn't a multiple of
+# 8, and so can its mBuf pointer.  LeakSanitizer only looks for pointers at
+# 8-byte-aligned addresses, so the heap buffer of a Data that is still alive at
+# exit can be reported as a leak when it isn't one.  Only Data values longer
+# than the local buffer (16 bytes by default) use the heap.
+#
+# The objects still alive at exit are the ones created during static
+# initialization (header and parameter names, content type registrations and
+# so on), so suppress reports for memory allocated then.  clang names static
+# initializers __cxx_global_var_init*, and gcc
+# __static_initialization_and_destruction_*; both call them from
+# _GLOBAL__sub_I_*.
+leak:_GLOBAL__sub_I_
+leak:__cxx_global_var_init
+leak:__static_initialization_and_destruction_

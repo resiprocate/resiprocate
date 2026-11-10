@@ -220,12 +220,12 @@ Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE> arg)
 Data::Data(size_type capacity,
            const Data::PreallocateType&) 
    : mBuf(capacity > LocalAlloc 
-          ? new char[capacity + 1]
+          ? new char[checkedSize(capacity) + 1]
           : mPreBuffer),
      mSize(0),
      mCapacity(capacity > LocalAlloc
-               ? capacity
-               : LocalAlloc),
+               ? static_cast<StoredSize>(capacity)
+               : static_cast<StoredSize>(LocalAlloc)),
      mShareEnum(capacity > LocalAlloc ? Take : Borrow)
 {
    resip_assert( capacity >= 0 );
@@ -236,12 +236,12 @@ Data::Data(size_type capacity,
 // pre-allocate capacity
 Data::Data(size_type capacity, bool) 
    : mBuf(capacity > LocalAlloc 
-          ? new char[capacity + 1]
+          ? new char[checkedSize(capacity) + 1]
           : mPreBuffer),
      mSize(0),
      mCapacity(capacity > LocalAlloc
-               ? capacity
-               : LocalAlloc),
+               ? static_cast<StoredSize>(capacity)
+               : static_cast<StoredSize>(LocalAlloc)),
      mShareEnum(capacity > LocalAlloc ? Take : Borrow)
 {
    resip_assert( capacity >= 0 );
@@ -264,7 +264,7 @@ Data::Data(const unsigned char* str, size_type length)
 // operator[], append, reserve
 Data::Data(const char* str, size_type length, bool) 
    : mBuf(const_cast<char*>(str)),
-     mSize(length),
+     mSize(checkedSize(length)),
      mCapacity(mSize),
      mShareEnum(Share)
 {
@@ -274,7 +274,7 @@ Data::Data(const char* str, size_type length, bool)
 void
 Data::initFromString(const char* str, size_type len)
 {
-   mSize = len;
+   mSize = checkedSize(len);
    if(len > 0)
    {
       resip_assert(str);
@@ -306,7 +306,7 @@ Data::initFromString(const char* str, size_type len)
 
 Data::Data(ShareEnum se, const char* buffer, size_type length)
    : mBuf(const_cast<char*>(buffer)),
-     mSize(length),
+     mSize(checkedSize(length)),
      mCapacity(mSize),
      mShareEnum(se)
 {
@@ -315,8 +315,8 @@ Data::Data(ShareEnum se, const char* buffer, size_type length)
 
 Data::Data(ShareEnum se, const char* buffer, size_type length, size_type capacity)
    : mBuf(const_cast<char*>(buffer)),
-     mSize(length),
-     mCapacity(capacity),
+     mSize(checkedSize(length)),
+     mCapacity(checkedSize(capacity)),
      mShareEnum(se)
 {
    resip_assert(buffer);
@@ -324,7 +324,7 @@ Data::Data(ShareEnum se, const char* buffer, size_type length, size_type capacit
 
 Data::Data(ShareEnum se, const char* buffer)
    : mBuf(const_cast<char*>(buffer)),
-     mSize((Data::size_type)strlen(buffer)),
+     mSize(checkedSize(strlen(buffer))),
      mCapacity(mSize),
      mShareEnum(se)
 {
@@ -507,7 +507,7 @@ Data::Data(double value,
       memcpy(mBuf+1, m.mBuf, m.size());
       mBuf[1+m.size()] = '.';
       memcpy(mBuf+1+m.size()+1, d.mBuf, d.size()+1);
-      mSize = m.size() + d.size() + 2;
+      mSize = checkedSize(m.size() + d.size() + 2);
    }
    else
    {
@@ -518,7 +518,7 @@ Data::Data(double value,
       memcpy(mBuf, m.mBuf, m.size());
       mBuf[m.size()] = '.';
       memcpy(mBuf+m.size()+1, d.mBuf, d.size()+1);
-      mSize = m.size() + d.size() + 1;
+      mSize = checkedSize(m.size() + d.size() + 1);
    }
 
    resip_assert(mBuf[mSize] == 0);
@@ -627,12 +627,14 @@ Data&
 Data::setBuf(ShareEnum se, const char* buffer, size_type length)
 {
    resip_assert(buffer);
+   // Check before releasing anything, so a too-large length leaves *this as it was.
+   const StoredSize size = checkedSize(length);
    if (mShareEnum == Take)
    {
       delete[] mBuf;
    }
    mBuf = const_cast<char*>(buffer);
-   mCapacity = mSize = length;
+   mCapacity = mSize = size;
    mShareEnum = se;
    return *this;
 }
@@ -708,7 +710,7 @@ Data::copy(const char *buf, size_type length)
    // {buf} might be part of ourselves already, in which case {length}
    // is smaller than our capacity, so resize above won't happen, so
    // just memmove (not memcpy) and everything good
-   mSize = length;
+   mSize = checkedSize(length);
    if (mSize>0)
    {
       memmove(mBuf, buf, mSize);
@@ -735,7 +737,7 @@ Data::getBuf(size_type length)
    // even if we don't NULL-term it, it may have NULL term from before.
    // But if external buffer (taken or borrow'd) then don't know if it
    // has a NULL or not.
-   mSize = length;
+   mSize = checkedSize(length);
    return mBuf;
 }
 
@@ -930,7 +932,7 @@ Data::truncate(size_type len)
    if (len < mSize)
    {
       (*this)[len] = 0;
-      mSize = len;
+      mSize = static_cast<StoredSize>(len);
    }
 
    return mSize;
@@ -942,7 +944,7 @@ Data::truncate2(size_type len)
    if (len < mSize)
    {
       // NOTE: Do not write terminating NULL, to avoid un-doing Share
-      mSize = len;
+      mSize = static_cast<StoredSize>(len);
    }
    return *this;
 }
@@ -950,8 +952,8 @@ Data::truncate2(size_type len)
 Data 
 Data::operator+(const Data& data) const
 {
-   Data tmp(mSize + (int)data.mSize, Data::Preallocate);
-   tmp.mSize = mSize + data.mSize;
+   Data tmp(size() + data.size(), Data::Preallocate);
+   tmp.mSize = checkedSize(size() + data.size());
    tmp.mCapacity = tmp.mSize;
    memcpy(tmp.mBuf, mBuf, mSize);
    memcpy(tmp.mBuf + mSize, data.mBuf, data.mSize);
@@ -979,7 +981,7 @@ Data::operator^=(const Data& rhs)
    {
       *c1++ ^= *c2++;
    }
-   mSize = resipMax(size(), rhs.size());
+   mSize = checkedSize(resipMax(size(), rhs.size()));
    
    return *this;
 }
@@ -996,7 +998,7 @@ Data::at(size_type p)
       own();
       if (p > mSize)
       {
-         mSize = p + 1;
+         mSize = checkedSize(p + 1);
          mBuf[mSize] = 0;
       }
    }
@@ -1036,8 +1038,8 @@ Data::operator+(const char* str) const
 {
    resip_assert(str);
    Data::size_type l = (Data::size_type)strlen(str);
-   Data tmp(mSize + l, Data::Preallocate);
-   tmp.mSize = mSize + l;
+   Data tmp(size() + l, Data::Preallocate);
+   tmp.mSize = checkedSize(size() + l);
    tmp.mCapacity = tmp.mSize;
    memcpy(tmp.mBuf, mBuf, mSize);
    memcpy(tmp.mBuf + mSize, str, l+1);
@@ -1058,22 +1060,22 @@ Data&
 Data::append(const char* str, size_type len)
 {
    resip_assert(str);
-   if (mCapacity <= mSize + len)  // append null terminates, thus the equality
+   if (mCapacity <= size() + len)  // append null terminates, thus the equality
    {
       // .dlb. pad for future growth?
-      resize(((mSize + len +16)*3)/2, true);
+      resize(grownCapacity(size() + len), true);
    }
    else
    {
       if (mShareEnum == Share)
       {
-         resize(mSize + len, true);
+         resize(size() + len, true);
       }
    }
 
    // could conceivably overlap
    memmove(mBuf + mSize, str, len);
-   mSize += len;
+   mSize = checkedSize(size() + len);
    mBuf[mSize] = 0;
 
    return *this;
@@ -1083,8 +1085,8 @@ Data::append(const char* str, size_type len)
 Data
 Data::operator+(char c) const
 {
-   Data tmp(mSize + 1, Data::Preallocate);
-   tmp.mSize = mSize + 1;
+   Data tmp(size() + 1, Data::Preallocate);
+   tmp.mSize = checkedSize(size() + 1);
    tmp.mCapacity = tmp.mSize;
    memcpy(tmp.mBuf, mBuf, mSize);
    tmp.mBuf[mSize] = c;
@@ -1135,6 +1137,7 @@ Data::resize(size_type newCapacity,
 {
    resip_assert(newCapacity >= mCapacity || mShareEnum == Data::Share);
 
+   const StoredSize storedCapacity = checkedSize(newCapacity);
    char *oldBuf = mBuf;
    bool needToDelete=(mShareEnum==Take);
 
@@ -1167,7 +1170,7 @@ Data::resize(size_type newCapacity,
       delete[] oldBuf;
    }
 
-   mCapacity = newCapacity;
+   mCapacity = storedCapacity;
 }
 
 Data
@@ -1577,7 +1580,7 @@ Data::trunc(size_type s) const
 Data
 Data::hex() const
 {
-   Data ret( 2*mSize, Data::Preallocate);
+   Data ret(2*size(), Data::Preallocate);
 
    const char* p = mBuf;
    char* r = ret.mBuf;
@@ -1592,7 +1595,7 @@ Data::hex() const
       *r++ = hexmap[low];
    }
    *r = 0;
-   ret.mSize = 2*mSize;
+   ret.mSize = checkedSize(2*size());
    return ret;
 }
 
@@ -1628,7 +1631,7 @@ Data::fromHex() const
 
       *r++ = (inversehexmap[high] << 4) + inversehexmap[low];
    }
-   ret.mSize = resultSize;
+   ret.mSize = checkedSize(resultSize);
    return ret;
 }
 
@@ -1975,9 +1978,9 @@ Data::replace(const Data& match,
         count < max && offset != Data::npos; 
         offset = find(match, offset+replaceWith.size()))
    {
-      if (mSize + incr >= mCapacity)
+      if (size() + incr >= mCapacity)
       {
-         resize((mCapacity + incr) * 3 / 2, true);
+         resize(grownCapacity(size() + incr), true);
       }
       else
       {
@@ -1987,7 +1990,7 @@ Data::replace(const Data& match,
       // move the memory forward (or backward)
       memmove(mBuf + offset + replaceWith.size(), mBuf + offset + match.size(), mSize - offset - match.size());
       memcpy(mBuf + offset, replaceWith.data(), replaceWith.size());
-      mSize += incr;
+      mSize = checkedSize(size() + incr);
 
       ++count;
    }

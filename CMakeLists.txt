@@ -244,6 +244,9 @@ endif()
 # under the sanitizers.  They apply to everything built from here on, libraries
 # included, since a sanitizer only checks code that was compiled with it.
 # Leave these off for the OSS-Fuzz build: it supplies its own -fsanitize flags.
+# With ENABLE_ASAN, run the tests with
+# LSAN_OPTIONS=suppressions=<source dir>/build/lsan-suppressions.txt, which
+# lists leak reports known to be false positives.
 option(ENABLE_ASAN "Build with AddressSanitizer" FALSE)
 option(ENABLE_UBSAN "Build with UndefinedBehaviorSanitizer (not available with MSVC)" FALSE)
 if(ENABLE_ASAN)

@@ -538,7 +538,7 @@ ParseBuffer::data(Data& data, const char* start) const
    {
       delete[] data.mBuf;
    }
-   data.mSize = (unsigned int)(mPosition - start);
+   data.mSize = Data::checkedSize(mPosition - start);
    data.mBuf = const_cast<char*>(start);
    data.mCapacity = data.mSize;
    data.mShareEnum = Data::Share;
@@ -641,7 +641,7 @@ ParseBuffer::dataUnescaped(Data& dataToUse, const char* start) const
       }
    }
    *target = 0;
-   dataToUse.mSize = (Data::size_type)(target - dataToUse.mBuf);
+   dataToUse.mSize = Data::checkedSize(target - dataToUse.mBuf);
 }
 
 Data
@@ -1026,6 +1026,7 @@ ParseBuffer::Pointer::operator*() const
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

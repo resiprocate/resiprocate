@@ -5,7 +5,9 @@
 #include "config.h"
 #endif
 
+#include <cstdint>
 #include <iostream>
+#include <new>
 #include <string>
 #include <bitset>
 #if RESIP_HAVE_STRING_VIEW
@@ -1072,16 +1074,43 @@ class Data
           bulk allocation/deallocation of Data  members. */
       enum {LocalAlloc = RESIP_DATA_LOCAL_SIZE };
 
+      // The size fields are stored as 32 bits to keep Data small: with the
+      // pack(4) above, a Data is 36 bytes on 64-bit platforms instead of 48.
+      // size_type stays size_t in the interface, so a Data holds at most
+      // MaxStoredSize bytes; every path that sets a size or capacity goes
+      // through checkedSize(), which throws std::bad_alloc beyond that.
+      // Sums of sizes must be computed as size_type (e.g. via size()), not
+      // on the 32-bit fields directly, so that they can't wrap.
+      typedef uint32_t StoredSize;
+      // One less than the maximum, so that capacity + 1 (for the terminating
+      // NULL) still fits.
+      static constexpr size_type MaxStoredSize = 0xFFFFFFFEu;
+      static StoredSize checkedSize(size_type size)
+      {
+         if (size > MaxStoredSize)
+         {
+            throw std::bad_alloc();
+         }
+         return static_cast<StoredSize>(size);
+      }
+      // New capacity for growing to hold at least needed bytes, with room for
+      // future growth but never above MaxStoredSize.
+      static size_type grownCapacity(size_type needed)
+      {
+         const size_type grown = (needed + 16) / 2 * 3;
+         return (needed > MaxStoredSize || grown <= MaxStoredSize) ? grown : MaxStoredSize;
+      }
+
       char* mBuf;
-      size_type mSize;
-      size_type mCapacity;
+      StoredSize mSize;
+      StoredSize mCapacity;
       char mPreBuffer[LocalAlloc];
       // Null terminator for mPreBuffer when mSize==LocalAlloc lands here; this
       // is ok, because Borrow==0.
-      // Note: we could use a char here, and expand mPreBuffer by 3 bytes, but 
-      // this imposes a performance penalty since it requires operating on a 
+      // Note: we could use a char here, and expand mPreBuffer by 3 bytes, but
+      // this imposes a performance penalty since it requires operating on a
       // memory location smaller than a word (requires masking and such).
-      size_type mShareEnum;
+      StoredSize mShareEnum;
 
       friend std::ostream& operator<<(std::ostream& strm, const Data& d);
 #ifndef RESIP_USE_STL_STREAMS

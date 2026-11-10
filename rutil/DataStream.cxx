@@ -82,7 +82,7 @@ DataBuffer::sync()
    if (len > 0)
    {
       size_t pos = gptr() - eback();  // remember the get position
-      mStr.mSize += len;
+      mStr.mSize = Data::checkedSize(mStr.size() + len);
       char* gbuf = const_cast<char*>(mStr.data());
       // reset the get buffer
       setg(gbuf, gbuf+pos, gbuf+mStr.size());
@@ -105,10 +105,12 @@ DataBuffer::overflow(int c)
       size_t pos = gptr() - eback();  // remember the get position
 
       // update the length
-      mStr.mSize += len;
+      mStr.mSize = Data::checkedSize(mStr.size() + len);
 
       // resize the underlying Data and reset the input buffer
-      mStr.resize(((mStr.mCapacity+16)*3)/2, true);
+      // grownCapacity() exceeds the current capacity (or resize() throws),
+      // so there is always room for at least one more character.
+      mStr.resize(Data::grownCapacity(static_cast<Data::size_type>(mStr.mCapacity) + 1), true);
 
       char* gbuf = const_cast<char*>(mStr.mBuf);
       // reset the get buffer
@@ -181,7 +183,8 @@ DataStream::~DataStream()
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
- * Copyright 2000-2005
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

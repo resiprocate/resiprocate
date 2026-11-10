@@ -646,7 +646,7 @@ main(int arc, char** argv)
          Data msg("Checking hash of: ");
          msg += hdr;
          TR _tr(msg);
-         assert(Headers::getType(Headers::getHeaderName(i).c_str(), Headers::getHeaderName(i).size()) == i);
+         assert(Headers::getType(Headers::getHeaderName(i).data(), Headers::getHeaderName(i).size()) == i);
       }
       checkHeaderName(To);
       checkHeaderName(From);
@@ -814,7 +814,7 @@ main(int arc, char** argv)
          {
 	    
             TR _tr( Data("Checking hash of: ") +  Data(ParameterTypes::ParameterNames[i]));
-            assert(ParameterTypes::getType(ParameterTypes::ParameterNames[i].c_str(), 
+            assert(ParameterTypes::getType(ParameterTypes::ParameterNames[i].data(), 
                                            ParameterTypes::ParameterNames[i].size()) == i);
          }
       }

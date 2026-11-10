@@ -3,8 +3,11 @@
 #include "rutil/Log.hxx"
 #include "rutil/compat.hxx"
 #include "assert.h"
+#include <cstdint>
+#include <functional>
 #include <iostream>
 #include <limits>
+#include <new>
 #include <math.h>
 
 using namespace resip;
@@ -1888,6 +1891,47 @@ class TestData
             Data& dref = d;
             d = std::move(dref);
             assert(d == "some value");
+         }
+
+         {
+            // Sizes are stored as 32 bits.  Anything larger must throw
+            // std::bad_alloc before memory is read, allocated or released.
+            assert(sizeof(Data) == sizeof(char*) + 3 * sizeof(uint32_t) + Data::LocalAlloc);
+            assert(Data::grownCapacity(100) == 174);
+            assert(Data::grownCapacity(Data::MaxStoredSize - 10) == Data::MaxStoredSize);
+            assert(Data::grownCapacity(Data::MaxStoredSize) == Data::MaxStoredSize);
+
+            if (sizeof(size_t) > sizeof(uint32_t))
+            {
+               const size_t tooBig = static_cast<size_t>(Data::MaxStoredSize) + 1;
+               const char* buf = "x";
+               auto throwsBadAlloc = [](const std::function<void()>& f)
+               {
+                  try
+                  {
+                     f();
+                  }
+                  catch (std::bad_alloc&)
+                  {
+                     return true;
+                  }
+                  return false;
+               };
+               assert(throwsBadAlloc([&]{ Data d(Data::Share, buf, tooBig); }));
+               assert(throwsBadAlloc([&]{ Data d(buf, tooBig, true); }));
+               assert(throwsBadAlloc([&]{ Data d(tooBig, Data::Preallocate); }));
+               assert(throwsBadAlloc([&]{ Data d; d.reserve(tooBig); }));
+               assert(throwsBadAlloc([&]{ Data d("abc"); d.append(buf, tooBig); }));
+
+               // setBuf() leaves the Data unchanged when it throws.
+               Data owned("a string longer than the local buffer");
+               assert(throwsBadAlloc([&]{ owned.setBuf(Data::Share, buf, tooBig); }));
+               assert(owned == "a string longer than the local buffer");
+
+               // The largest size still fits.
+               Data big(Data::Share, buf, Data::MaxStoredSize);
+               assert(big.size() == Data::MaxStoredSize);
+            }
          }
 
          std::cerr << "All OK" << endl;
