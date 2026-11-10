@@ -36,7 +36,8 @@ check(const char* what, bool cond)
 static Mime
 signedType()
 {
-   const Data txt("multipart/signed; boundary=BOUND; "
+   // The parsed parameters point into txt, so it has to outlive the Mime.
+   static const Data txt("multipart/signed; boundary=BOUND; "
                   "protocol=\"application/pkcs7-signature\"; micalg=sha256\r\n");
    ParseBuffer pb(txt.data(), txt.size());
    Mime m;

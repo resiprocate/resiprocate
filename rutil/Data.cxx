@@ -777,7 +777,7 @@ resip::operator==(const Data& lhs, const std::string_view rhs) noexcept
 bool
 resip::operator<(const Data& lhs, const Data& rhs)
 {
-   int res = memcmp(lhs.mBuf, rhs.mBuf, resipMin(lhs.mSize, rhs.mSize));
+   int res = memcmp(lhs.mBuf, rhs.mBuf, resipMin(lhs.size(), rhs.size()));
 
    if (res < 0)
    {
@@ -798,7 +798,7 @@ resip::operator<(const Data& lhs, const char* rhs)
 {
    resip_assert(rhs);
    Data::size_type l = (Data::size_type)strlen(rhs);
-   int res = memcmp(lhs.mBuf, rhs, resipMin(lhs.mSize, l));
+   int res = memcmp(lhs.mBuf, rhs, resipMin(lhs.size(), l));
 
    if (res < 0)
    {
@@ -819,7 +819,7 @@ resip::operator<(const char* lhs, const Data& rhs)
 {
    resip_assert(lhs);
    Data::size_type l = (Data::size_type)strlen(lhs);
-   int res = memcmp(lhs, rhs.mBuf, resipMin(l, rhs.mSize));
+   int res = memcmp(lhs, rhs.mBuf, resipMin(l, rhs.size()));
 
    if (res < 0)
    {
@@ -979,7 +979,7 @@ Data::operator^=(const Data& rhs)
    {
       *c1++ ^= *c2++;
    }
-   mSize = resipMax(mSize, rhs.mSize);
+   mSize = resipMax(size(), rhs.size());
    
    return *this;
 }
