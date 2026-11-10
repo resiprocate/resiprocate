@@ -286,7 +286,8 @@ SipMessage::init(const SipMessage& rhs)
    }
    if (rhs.mStartLine != nullptr)
    {
-      mStartLine = rhs.mStartLine->clone(mStartLineMem);
+      const size_t size = dynamic_cast<const RequestLine*>(rhs.mStartLine) ? sizeof(RequestLine) : sizeof(StatusLine);
+      mStartLine = rhs.mStartLine->clone(mPool.allocate(size));
    }
    if (rhs.mContents != nullptr)
    {
@@ -348,7 +349,9 @@ SipMessage::freeMem(bool leaveResponseStuff)
 
    if (mStartLine)
    {
+      void* mem = dynamic_cast<void*>(mStartLine);
       mStartLine->~StartLine();
+      mPool.deallocate(mem);
       mStartLine = nullptr;
    }
 
@@ -966,14 +969,14 @@ SipMessage::setStartLine(const char* st, uint32_t len)
    if (len >= 4 && !strncasecmp(st,"SIP/",4))
    {
       // Response
-      mStartLine = new (mStartLineMem) StatusLine(st, len);
+      mStartLine = new (mPool.allocate(sizeof(StatusLine))) StatusLine(st, len);
       //!dcm! should invoke the statusline parser here once it does limited validation
       mResponse = true;
    }
    else
    {
       // Request
-      mStartLine = new (mStartLineMem) RequestLine(st, len);
+      mStartLine = new (mPool.allocate(sizeof(RequestLine))) RequestLine(st, len);
       //!dcm! should invoke the responseline parser here once it does limited validation
       mRequest = true;
    }
@@ -1372,7 +1375,7 @@ SipMessage::header(const RequestLineType& l)
    resip_assert (!isResponse());
    if (mStartLine == nullptr)
    { 
-      mStartLine = new (mStartLineMem) RequestLine;
+      mStartLine = new (mPool.allocate(sizeof(RequestLine))) RequestLine;
       mRequest = true;
    }
    return *static_cast<RequestLine*>(mStartLine);
@@ -1396,7 +1399,7 @@ SipMessage::header(const StatusLineType& l)
    resip_assert (!isRequest());
    if (mStartLine == nullptr)
    { 
-      mStartLine = new (mStartLineMem) StatusLine;
+      mStartLine = new (mPool.allocate(sizeof(StatusLine))) StatusLine;
       mResponse = true;
    }
    return *static_cast<StatusLine*>(mStartLine);

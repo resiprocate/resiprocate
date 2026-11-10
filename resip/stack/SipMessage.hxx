@@ -1141,8 +1141,9 @@ class SipMessage : public TransactionMessage
       std::vector<char*> mBufferList;
 
       // special case for the first line of message
+      // Allocated from mPool, sized for the actual RequestLine or StatusLine,
+      // rather than reserving room for the larger of the two in every message.
       StartLine* mStartLine;
-      char mStartLineMem[sizeof(RequestLine) > sizeof(StatusLine) ? sizeof(RequestLine) : sizeof(StatusLine)];
 
       // raw text for the contents (all of them)
       HeaderFieldValue mContentsHfv;
