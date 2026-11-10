@@ -1,0 +1,6 @@
+<presence xmlns="urn:ietf:params:xml:ns:pidf" entity="pres:bob@biloxi.example.com">
+ <note xml:lang="en">I am here</note>
+ <tuple id="t1"><status><basic>open</basic></status><contact priority="0.5">sip:bob@192.0.2.4</contact></tuple>
+ <tuple id="t2"><status><basic>closed</basic></status></tuple>
+ <tuple id="t3"><status><basic>open</basic></status><contact>sip:bob@voicemail</contact></tuple>
+</presence>

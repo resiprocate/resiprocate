@@ -162,3 +162,7 @@ add_fuzzing_executable(fuzzStack fuzzStack.cxx TestSupport.cxx)
 set_target_properties(fuzzStack PROPERTIES FOLDER resip/Fuzzing)
 target_include_directories(fuzzStack PRIVATE ${POPT_INCLUDE_DIRS})
 target_link_libraries(fuzzStack PRIVATE resip ${POPT_LIBRARIES})
+
+add_fuzzing_executable(fuzzXmlContents fuzzXmlContents.cxx)
+set_target_properties(fuzzXmlContents PROPERTIES FOLDER resip/Fuzzing)
+target_link_libraries(fuzzXmlContents PRIVATE resip)
