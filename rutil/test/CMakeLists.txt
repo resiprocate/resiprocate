@@ -52,3 +52,7 @@ add_fuzzing_executable(fuzzUtil fuzzUtil.cxx)
 set_target_properties(fuzzUtil PROPERTIES FOLDER rutil/FuzzingTests)
 target_link_libraries(fuzzUtil PRIVATE rutil)
 
+add_fuzzing_executable(fuzzStun fuzzStun.cxx)
+set_target_properties(fuzzStun PROPERTIES FOLDER rutil/FuzzingTests)
+target_link_libraries(fuzzStun PRIVATE rutil)
+
