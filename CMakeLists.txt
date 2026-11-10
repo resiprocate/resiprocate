@@ -240,6 +240,34 @@ if(BUILD_TESTING)
     enable_testing()
 endif()
 
+# Sanitizer builds, for debugging and for running the tests and fuzz targets
+# under the sanitizers.  They apply to everything built from here on, libraries
+# included, since a sanitizer only checks code that was compiled with it.
+# Leave these off for the OSS-Fuzz build: it supplies its own -fsanitize flags.
+option(ENABLE_ASAN "Build with AddressSanitizer" FALSE)
+option(ENABLE_UBSAN "Build with UndefinedBehaviorSanitizer (not available with MSVC)" FALSE)
+if(ENABLE_ASAN)
+   if(MSVC)
+      # Requires the "C++ AddressSanitizer" Visual Studio component.  The
+      # runtime checks (/RTC) can't be combined with ASan, so drop them from
+      # the Debug flags.
+      add_compile_options(/fsanitize=address)
+      foreach(_flags CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG)
+         string(REGEX REPLACE "/RTC[1csu]+" "" ${_flags} "${${_flags}}")
+      endforeach()
+   else()
+      add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+      add_link_options(-fsanitize=address)
+   endif()
+endif()
+if(ENABLE_UBSAN)
+   if(MSVC)
+      message(FATAL_ERROR "ENABLE_UBSAN is not supported with MSVC")
+   endif()
+   add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer)
+   add_link_options(-fsanitize=undefined)
+endif()
+
 ########################
 ### Helper functions ###
 ########################
