@@ -2640,10 +2640,10 @@ namespace resip
 
       StunAddress4 from;
 
-      getMessage(myFd, msg, &msgLen, &from.addr, &from.port, verbose);
-
       StunMessage resp;
-      bool ok = stunParseMessage(msg, msgLen, resp, verbose);
+      bool ok = getMessage(myFd, msg, &msgLen, &from.addr, &from.port, verbose) &&
+         stunParseMessage(msg, msgLen, resp, verbose) &&
+         resp.hasMappedAddress;
       if (!ok)
       {
          closeSocket(myFd);
@@ -2729,16 +2729,16 @@ namespace resip
       for (i = 0; i < NUM; i++)
       {
          msgLen = sizeof(msg) / sizeof(*msg);
-         getMessage(fd[i],
-            msg,
-            &msgLen,
-            &from.addr,
-            &from.port, verbose);
-
          StunMessage resp;
-         bool ok = stunParseMessage(msg, msgLen, resp, verbose);
+         bool ok = getMessage(fd[i], msg, &msgLen, &from.addr, &from.port, verbose) &&
+            stunParseMessage(msg, msgLen, resp, verbose) &&
+            resp.hasMappedAddress;
          if (!ok)
          {
+            for (int j = 0; j < NUM; j++)
+            {
+               closeSocket(fd[j]);
+            }
             return false;
          }
 
