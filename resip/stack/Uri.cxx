@@ -79,16 +79,14 @@ Uri::Uri(const Uri& rhs,
      mUser(rhs.mUser),
      mUserParameters(rhs.mUserParameters),
      mPort(rhs.mPort),
-     mPassword(rhs.mPassword),
-     mNetNs(rhs.mNetNs),
-     mPath(rhs.mPath),
      mHostCanonicalized(rhs.mHostCanonicalized),
      mCanonicalHost(rhs.mCanonicalHost),
      mIsBetweenAngleQuotes(rhs.mIsBetweenAngleQuotes),
      mIsBareAddrSpec(rhs.mIsBareAddrSpec),
      mEmbeddedHeadersText(rhs.mEmbeddedHeadersText.get() ? new Data(*rhs.mEmbeddedHeadersText) : 0),
      mEmbeddedHeaders(rhs.mEmbeddedHeaders.get() ? new SipMessage(*rhs.mEmbeddedHeaders) : 0),
-     mUserRaw(rhs.mUserRaw ? new Data(*rhs.mUserRaw) : nullptr)
+     mUserRaw(rhs.mUserRaw ? new Data(*rhs.mUserRaw) : nullptr),
+     mRare(rhs.mRare ? new RareParts(*rhs.mRare) : nullptr)
 {}
 
 
@@ -362,7 +360,6 @@ Uri::operator=(const Uri& rhs)
       ParserCategory::operator=(rhs);
       mScheme = rhs.mScheme;
       mHost = rhs.mHost;
-      mPath = rhs.mPath;
       mHostCanonicalized = rhs.mHostCanonicalized;
       mCanonicalHost = rhs.mCanonicalHost;
       mUser = rhs.mUser;
@@ -376,8 +373,21 @@ Uri::operator=(const Uri& rhs)
       }
       mUserParameters = rhs.mUserParameters;
       mPort = rhs.mPort;
-      mPassword = rhs.mPassword;
-      mNetNs = rhs.mNetNs;
+      if (rhs.mRare)
+      {
+         if (mRare)
+         {
+            *mRare = *rhs.mRare;
+         }
+         else
+         {
+            mRare.reset(new RareParts(*rhs.mRare));
+         }
+      }
+      else
+      {
+         mRare.reset();
+      }
       if (rhs.mEmbeddedHeaders.get() != 0)
       {
          mEmbeddedHeaders.reset(new SipMessage(*rhs.mEmbeddedHeaders));
@@ -600,10 +610,10 @@ Uri::operator==(const Uri& other) const
    if (isEqualNoCase(mScheme, other.mScheme) &&
        userEqual &&
        isEqualNoCase(mUserParameters,other.mUserParameters) &&
-       mPassword == other.mPassword &&
+       rare(&RareParts::mPassword) == other.rare(&RareParts::mPassword) &&
        mPort == other.mPort &&
-       mNetNs == other.mNetNs &&
-       mPath == mPath)
+       rare(&RareParts::mNetNs) == other.rare(&RareParts::mNetNs) &&
+       rare(&RareParts::mPath) == other.rare(&RareParts::mPath))
    {
       for (ParameterList::const_iterator it = mParameters.begin(); it != mParameters.end(); ++it)
       {
@@ -908,7 +918,8 @@ Uri::aorEqual(const resip::Uri& rhs) const
    }
    
    return (mUser == rhs.mUser) && (mCanonicalHost == rhs.mCanonicalHost) && (mPort == rhs.mPort) &&
-           isEqualNoCase(mScheme, rhs.mScheme) && (mNetNs == rhs.mNetNs);
+           isEqualNoCase(mScheme, rhs.mScheme) &&
+           (rare(&RareParts::mNetNs) == rhs.rare(&RareParts::mNetNs));
 }
 
 void 
@@ -1187,7 +1198,7 @@ Uri::parse(ParseBuffer& pb)
    {
       mScheme.clear();
       pb.skipToOneOf("?;", ParseBuffer::Whitespace);
-      pb.data(mPath, start);
+      pb.data(rare(&RareParts::mPath), start);
       if (!pb.eof() && !ParseBuffer::oneOf(*pb.position(), ParseBuffer::Whitespace))
       {
          parseParameters(pb);
@@ -1349,9 +1360,9 @@ Uri::parse(ParseBuffer& pb)
             atSign=pb.position();
             // password
 #ifdef HANDLE_CHARACTER_ESCAPING
-            pb.dataUnescaped(mPassword, afterColon);
+            pb.dataUnescaped(rare(&RareParts::mPassword), afterColon);
 #else
-            pb.data(mPassword, afterColon);
+            pb.data(rare(&RareParts::mPassword), afterColon);
 #endif
             pb.reset(afterColon-1);
          }
@@ -1543,13 +1554,14 @@ Uri::encodeParsed(EncodeStream& str) const
       {
          str << Symbols::SEMI_COLON[0] << mUserParameters;
       }
-      if (!mPassword.empty())
+      const Data& password = rare(&RareParts::mPassword);
+      if (!password.empty())
       {
          str << Symbols::COLON;
 #ifdef HANDLE_CHARACTER_ESCAPING
-         mPassword.escapeToStream(str, getPasswordEncodingTable());
+         password.escapeToStream(str, getPasswordEncodingTable());
 #else
-         str << mPassword;
+         str << password;
 #endif
       }
    }
@@ -1572,9 +1584,10 @@ Uri::encodeParsed(EncodeStream& str) const
    {
       str << Symbols::COLON << mPort;
    }
-   if (!mPath.empty())
+   const Data& path = rare(&RareParts::mPath);
+   if (!path.empty())
    {
-      str << mPath;
+      str << path;
    }
    encodeParameters(str);
    encodeEmbeddedHeaders(str);
@@ -1766,6 +1779,7 @@ HashValueImp(resip::Uri, resip::Data::from(data).hash());
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

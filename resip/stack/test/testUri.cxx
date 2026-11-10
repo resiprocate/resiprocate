@@ -1457,12 +1457,53 @@ main(int argc, char* argv[])
       assert(uri.host().empty());
    }
 
+   {
+      // Password, net namespace and path are stored out of line.  Check that
+      // they survive parsing, copying, assignment and encoding, and that they
+      // take part in equality.
+      Uri withPassword("sip:alice:secret@example.com");
+      assert(withPassword.password() == "secret");
+      Uri copied(withPassword);
+      assert(copied.password() == "secret");
+      assert(Data::from(copied) == "sip:alice:secret@example.com");
+      Uri assigned("sip:bob@example.com");
+      assigned = withPassword;
+      assert(assigned.password() == "secret");
+      assert(assigned == withPassword);
+
+      Uri plain("sip:alice@example.com");
+      const Uri& constPlain = plain;
+      assert(constPlain.password().empty());
+      assert(constPlain.path().empty());
+      assert(constPlain.netNs().empty());
+      assert(!(plain == withPassword));
+      // Assigning a Uri without these parts clears them.
+      assigned = plain;
+      assert(assigned.password().empty());
+      assert(assigned == plain);
+
+      plain.netNs() = "vrf1";
+      Uri sameNs("sip:alice@example.com");
+      assert(!(plain == sameNs));
+      assert(!plain.aorEqual(sameNs));
+      sameNs.netNs() = "vrf1";
+      assert(plain == sameNs);
+      assert(plain.aorEqual(sameNs));
+
+      // Paths are compared too.
+      Uri root("/");
+      Uri other("/other");
+      assert(other.path() == "/other");
+      assert(!(root == other));
+   }
+
    cerr << endl << "All OK" << endl;
    return 0;
 }
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

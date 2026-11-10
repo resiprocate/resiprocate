@@ -45,8 +45,8 @@ class Uri : public ParserCategory
       const Data& userParameters() const {checkParsed(); return mUserParameters;}
       Data& opaque() {checkParsed(); return mHost;}
       const Data& opaque() const {checkParsed(); return mHost;}
-      Data& path() {checkParsed(); return mPath;}
-      const Data& path() const {checkParsed(); return mPath;}
+      Data& path() {checkParsed(); return rare(&RareParts::mPath);}
+      const Data& path() const {checkParsed(); return rare(&RareParts::mPath);}
 
       // Returns user@host[:port] (no scheme)
       Data getAor() const;
@@ -144,11 +144,11 @@ class Uri : public ParserCategory
       const Data& scheme() const {checkParsed(); return mScheme;}
       int& port() {checkParsed(); return mPort;}
       int port() const {checkParsed(); return mPort;}
-      Data& password() {checkParsed(); return mPassword;}
-      const Data& password() const {checkParsed(); return mPassword;}
+      Data& password() {checkParsed(); return rare(&RareParts::mPassword);}
+      const Data& password() const {checkParsed(); return rare(&RareParts::mPassword);}
 
-      Data& netNs() {return(mNetNs);}
-      const Data& netNs() const {return(mNetNs);}
+      Data& netNs() {return rare(&RareParts::mNetNs);}
+      const Data& netNs() const {return rare(&RareParts::mNetNs);}
 
       Data toString() const;
 
@@ -340,9 +340,6 @@ class Uri : public ParserCategory
       Data mUser;
       Data mUserParameters;
       int mPort;
-      Data mPassword;
-      Data mNetNs;  ///< Net namespace name scoping host and port
-      Data mPath;
 
       void getAorInternal(bool dropScheme, bool addPort, Data& aor) const;
       mutable bool mHostCanonicalized;
@@ -357,6 +354,31 @@ class Uri : public ParserCategory
       // As-received user-part bytes, kept only when the user part contains a
       // percent-escape, so that escaping is preserved verbatim on re-encode.
       std::unique_ptr<Data> mUserRaw;
+
+      // Parts that almost no URI has, kept out of line so that every Uri (and
+      // every NameAddr, which contains one) is smaller.  Allocated the first
+      // time a non-const accessor or the parser needs one; the const
+      // accessors return Data::Empty while it doesn't exist.
+      struct RareParts
+      {
+         Data mPassword;
+         Data mNetNs;  ///< Net namespace name scoping host and port
+         Data mPath;
+      };
+      std::unique_ptr<RareParts> mRare;
+
+      Data& rare(Data RareParts::* part)
+      {
+         if (!mRare)
+         {
+            mRare.reset(new RareParts);
+         }
+         return (*mRare).*part;
+      }
+      const Data& rare(Data RareParts::* part) const
+      {
+         return mRare ? (*mRare).*part : Data::Empty;
+      }
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 
@@ -385,6 +407,7 @@ HashValue(resip::Uri);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
