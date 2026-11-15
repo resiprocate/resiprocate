@@ -20,11 +20,11 @@ class WsCookieContext
 
       WsCookieContext& operator=(const WsCookieContext& rhs);
 
-      Data getWsSessionInfo() const { return mWsSessionInfo; };
-      Data getWsSessionExtra() const { return mWsSessionExtra; };
-      Data getWsSessionMAC() const { return mWsSessionMAC; };
-      Uri getWsFromUri() const { return mWsFromUri; };
-      Uri getWsDestUri() const { return mWsDestUri; };
+      const Data& getWsSessionInfo() const { return mWsSessionInfo; };
+      const Data& getWsSessionExtra() const { return mWsSessionExtra; };
+      const Data& getWsSessionMAC() const { return mWsSessionMAC; };
+      const Uri& getWsFromUri() const { return mWsFromUri; };
+      const Uri& getWsDestUri() const { return mWsDestUri; };
       time_t getExpiresTime() const { return mExpiresTime; };
 
    private:

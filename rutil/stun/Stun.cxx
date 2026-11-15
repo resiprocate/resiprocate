@@ -43,6 +43,7 @@
 
 #include "Udp.hxx"
 #include "Stun.hxx"
+#include "rutil/ConstantTimeEquals.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Random.hxx"
 #ifndef USE_SSL
@@ -1043,13 +1044,7 @@ namespace resip
                   password.value, password.sizeValue);
 
       // Constant-time comparison to avoid leaking HMAC bytes via timing.
-      unsigned char diff = 0;
-      for (int i = 0; i < 20; ++i)
-      {
-         diff |= static_cast<unsigned char>(computed[i]) ^
-                 static_cast<unsigned char>(message.messageIntegrity.hash[i]);
-      }
-      return diff == 0;
+      return constantTimeEquals(computed, message.messageIntegrity.hash, sizeof(computed));
    }
 
 

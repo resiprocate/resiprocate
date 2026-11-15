@@ -6,6 +6,8 @@
 #include "repro/BasicWsConnectionValidator.hxx"
 #include "resip/stack/Cookie.hxx"
 #include "resip/stack/WsCookieContext.hxx"
+#include "rutil/ConstantTimeEquals.hxx"
+#include "rutil/DataException.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/stun/Stun.hxx"
 #include "rutil/Logger.hxx"
@@ -34,23 +36,23 @@ bool BasicWsConnectionValidator::validateConnection(const resip::WsCookieContext
    unsigned char hmac[20];
    computeHmac((char*)hmac, message.data(), (int)message.size(), mWsCookieAuthSharedSecret.data(), (int)mWsCookieAuthSharedSecret.size());
 
-   // Compare all 40 hex digits whatever the first mismatch, so the time taken
-   // to reject a cookie doesn't tell the peer how many leading digits of its
-   // MAC were right.  As before, case is ignored and anything after the 40th
-   // digit is not looked at.
-   const Data mac = wsCookieContext.getWsSessionMAC();
-   const Data expected = Data(hmac, 20).hex();
-   bool macMatches = mac.size() >= expected.size();
-   if(macMatches)
+   // The MAC must be exactly the HMAC in hex, in either case.  Decoding it
+   // depends only on what the peer sent; the comparison with the HMAC is
+   // constant time, so the time taken to reject a cookie doesn't tell the peer
+   // how much of its MAC was right.
+   const Data& mac = wsCookieContext.getWsSessionMAC();
+   bool macMatches = false;
+   if(mac.size() == 2 * sizeof(hmac))
    {
-      unsigned char diff = 0;
-      for(Data::size_type i = 0; i < expected.size(); i++)
+      try
       {
-         unsigned char c = (unsigned char)mac[i];
-         c |= (unsigned char)((c >= 'A' && c <= 'Z') << 5);  // fold to lower case without a branch
-         diff |= c ^ (unsigned char)expected[i];
+         const Data macBytes = mac.fromHex();
+         macMatches = constantTimeEquals(macBytes.data(), hmac, sizeof(hmac));
       }
-      macMatches = (diff == 0);
+      catch(DataException&)
+      {
+         // Not hex, so it can't match
+      }
    }
 
    if(!macMatches)

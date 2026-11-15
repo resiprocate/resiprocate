@@ -73,6 +73,7 @@ set(INCLUDES
    ssl/OpenSSLInit.hxx
    ssl/OpenSSLOptions.hxx
    CountStream.hxx
+   ConstantTimeEquals.hxx
    Crc32.hxx
    vmd5.hxx
    XMLCursor.hxx
@@ -112,6 +113,7 @@ add_library(rutil
    Coders.cxx
    ConfigParse.cxx
    CountStream.cxx
+   ConstantTimeEquals.cxx
    Crc32.cxx
    ServerProcess.cxx
    Data.cxx

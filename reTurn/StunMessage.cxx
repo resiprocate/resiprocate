@@ -6,6 +6,7 @@
 #include "StunMessage.hxx"
 
 #include <rutil/compat.hxx>
+#include <rutil/ConstantTimeEquals.hxx>
 #include <rutil/Crc32.hxx>
 #include <rutil/Timer.hxx>
 #include <rutil/Random.hxx>
@@ -1985,12 +1986,7 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
       memcpy(lengthposition, &originalLength, 2);
 
       // Constant-time comparison to avoid leaking the expected HMAC via timing.
-      unsigned char diff = 0;
-      for (int i = 0; i < 20; ++i)
-      {
-         diff |= static_cast<unsigned char>(mMessageIntegrity.hash[i]) ^ hmac[i];
-      }
-      return diff == 0;
+      return constantTimeEquals(mMessageIntegrity.hash, hmac, sizeof(hmac));
    }
    else
    {
@@ -2025,12 +2021,7 @@ StunMessage::checkMessageIntegritySha256(const Data& hmacKey)
       memcpy(lengthposition, &originalLength, 2);
 
       // Constant-time comparison to avoid leaking the expected HMAC via timing.
-      unsigned char diff = 0;
-      for (int i = 0; i < 32; ++i)
-      {
-         diff |= static_cast<unsigned char>(mMessageIntegritySha256.hash[i]) ^ hmac[i];
-      }
-      return diff == 0;
+      return constantTimeEquals(mMessageIntegritySha256.hash, hmac, sizeof(hmac));
    }
    else
    {
