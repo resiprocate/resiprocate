@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstring>
 #include <iostream>
 
 // Cajun JSON
@@ -36,6 +37,18 @@ public:
       return false;
    }
 };
+
+// Converts the first size bytes of packet, copied to a buffer of exactly that
+// size, so that reading past the end of the packet shows up under ASan
+static Data
+convertExact(HepAgent& agent, const unsigned char* packet, size_t size)
+{
+   char* buf = new char[size];
+   memcpy(buf, packet, size);
+   Data json(agent.convertRTCPtoJSON(Data(Data::Share, buf, (Data::size_type)size)));
+   delete [] buf;
+   return json;
+}
 
 int
 main(int argc, char *argv[])
@@ -92,6 +105,52 @@ main(int argc, char *argv[])
       assert(json::Number(rr0["packets_lost"]).Value() == 0);
       assert(json::Number(rr0["lsr"]).Value() == 2851933704);
       assert(json::Number(rr0["dlsr"]).Value() == 9301);
+   }
+
+   // The whole SR still converts from a buffer of its exact size
+   {
+      Data json(convertExact(agent, packet1SenderReport, sizeof(packet1SenderReport)));
+      assert(!json.empty());
+   }
+
+   // An RR with no report blocks is just the header and SSRC
+   {
+      static const unsigned char emptyReceiverReport[] = {
+        0x80, 0xc9, 0x00, 0x01, 0xa1, 0xa4, 0x21, 0x46
+      };
+      Data json(convertExact(agent, emptyReceiverReport, sizeof(emptyReceiverReport)));
+      json::Object j;
+      DataStream stream(json);
+      json::Reader::Read(j, stream);
+      assert(json::Number(j["type"]).Value() == 201);
+      assert(json::Number(j["report_count"]).Value() == 0);
+   }
+
+   // Packets too short for the SR sender info or for the number of report
+   // blocks in their header are not converted
+   {
+      // SR cut off after the SSRC
+      assert(convertExact(agent, packet1SenderReport, 8).empty());
+      // SR cut off after the sender info, before its report block
+      assert(convertExact(agent, packet1SenderReport, 28).empty());
+      // SR missing the last 4 bytes of its report block
+      assert(convertExact(agent, packet1SenderReport, sizeof(packet1SenderReport) - 4).empty());
+
+      // RR whose header claims 31 report blocks, with none in the packet
+      static const unsigned char shortReceiverReport[] = {
+        0x9f, 0xc9, 0x00, 0x01, 0xa1, 0xa4, 0x21, 0x46
+      };
+      assert(convertExact(agent, shortReceiverReport, sizeof(shortReceiverReport)).empty());
+   }
+
+   // Packets shorter than an RTCP header and SSRC, or not RTCP version 2
+   {
+      assert(convertExact(agent, packet1SenderReport, 4).empty());
+
+      static const unsigned char version1ReceiverReport[] = {
+        0x40, 0xc9, 0x00, 0x01, 0xa1, 0xa4, 0x21, 0x46
+      };
+      assert(convertExact(agent, version1ReceiverReport, sizeof(version1ReceiverReport)).empty());
    }
 
    return 0;

@@ -164,14 +164,12 @@ HepAgent::convertRTCPtoJSON(const Data& rtcpRaw)
    const struct rtcp_msg* msg = reinterpret_cast<const struct rtcp_msg*>(rtcpRaw.data());
 
    StackLog(<< "buffer size: " << rtcpRaw.size());
-   resip_assert(rtcpRaw.size() >= 8);
 
    if(rtcpRaw.size() < 8)
    {
       ErrLog(<<"too small to be a valid RTCP packet");
       return "";
    }
-   // FIXME - check size more carefully depending on the type of RTCP packet
 
    // FIXME - check for multiple RTCP packets in a single UDP datagram
    //       - does HOMER require these to be submitted as separate HEP messages?
@@ -199,13 +197,25 @@ HepAgent::convertRTCPtoJSON(const Data& rtcpRaw)
       << " packet type: " << pt
       << " length: " << (ntohs(msg->hdr.length)*2) << " bytes");
 
-   resip_assert(version == 2);
    if(version != 2)
    {
       ErrLog(<<"unsupported RTCP version: " << version);
       return "";
    }
   
+   // The report blocks follow the SSRC in an RR, and the SSRC and 20 bytes of
+   // sender info in an SR.  The header gives their number, but they all have
+   // to be in the packet.
+   if(pt == RTCP_SR || pt == RTCP_RR)
+   {
+      const size_t reportsOffset = (pt == RTCP_SR) ? 28 : 8;
+      if(rtcpRaw.size() < reportsOffset + rrCount * sizeof(struct rtcp_rr))
+      {
+         ErrLog(<<"RTCP packet too small for its " << rrCount << " report blocks: " << rtcpRaw.size() << " bytes");
+         return "";
+      }
+   }
+
    stream << "{" << "\"type\":" << pt << ",";
 
    const struct rtcp_rr *rr;
