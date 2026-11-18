@@ -1272,6 +1272,87 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
       cerr << "credentials checked without parsing the body" << endl;
    }
 
+#ifdef USE_SSL
+   // The client picks the algorithm.  When the stored A1 has no hash for it (a
+   // plain 32 digit MD5 HA1, or a tagged string without that tag), a response
+   // computed with an empty A1, so without the password, must not be accepted.
+   {
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Content-Length: 0\r\n"
+               "\r\n");
+
+      const Data realm("localhost");
+      const Data username("bob");
+      const Data password("secret");
+      const Data cnonce("366fead6");
+      const Data nc("00000001");
+      const Data uri("sip:bob@biloxi.com");
+      const Data md5A1 = Helper::extractA1FromResipA1HashString(
+         Helper::createResipA1HashString(username, realm, password), MD5);
+      assert(md5A1.size() == 32);
+
+      for (const Data& storedA1 : { md5A1, Data("[MD5]") + md5A1 })
+      {
+         for (const DigestType digestType : { SHA256, SHA512_256 })
+         {
+            for (const Data& qop : { Data::Empty, Data("auth") })
+            {
+               unique_ptr<SipMessage> request(TestSupport::makeMessage(txt));
+               unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, true /* useAuth? */));
+               const Data nonce = challenge->header(h_ProxyAuthenticates).front().param(p_nonce);
+
+               Auth auth;
+               auth.scheme() = "Digest";
+               auth.param(p_username) = username;
+               auth.param(p_realm) = realm;
+               auth.param(p_nonce) = nonce;
+               auth.param(p_uri) = uri;
+               auth.param(p_algorithm) = DigestStream::getDigestName(digestType);
+               if (!qop.empty())
+               {
+                  auth.param(p_qop) = qop;
+                  auth.param(p_cnonce) = cnonce;
+                  auth.param(p_nc) = nc;
+               }
+               auth.param(p_response) = Helper::makeResponseDigestWithA1(Data::Empty, "INVITE", uri, nonce, qop,
+                                                                         qop.empty() ? Data::Empty : cnonce,
+                                                                         qop.empty() ? Data::Empty : nc,
+                                                                         0, digestType);
+               request->header(h_ProxyAuthorizations).push_back(auth);
+
+               assert(Helper::authenticateRequestWithA1(*request, realm, storedA1) == Helper::Failed);
+               assert(Helper::advancedAuthenticateRequest(*request, realm, storedA1).first == Helper::Failed);
+            }
+         }
+
+         // MD5 credentials still check against the MD5 hash
+         unique_ptr<SipMessage> request(TestSupport::makeMessage(txt));
+         unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, true /* useAuth? */));
+         const Data nonce = challenge->header(h_ProxyAuthenticates).front().param(p_nonce);
+
+         Auth auth;
+         auth.scheme() = "Digest";
+         auth.param(p_username) = username;
+         auth.param(p_realm) = realm;
+         auth.param(p_nonce) = nonce;
+         auth.param(p_uri) = uri;
+         auth.param(p_algorithm) = "MD5";
+         auth.param(p_response) = Helper::makeResponseDigest(username, password, realm, "INVITE", uri, nonce);
+         request->header(h_ProxyAuthorizations).push_back(auth);
+
+         assert(Helper::authenticateRequestWithA1(*request, realm, storedA1) == Helper::Authenticated);
+         assert(Helper::advancedAuthenticateRequest(*request, realm, storedA1).first == Helper::Authenticated);
+      }
+      cerr << "A1 without a hash for the requested algorithm rejected" << endl;
+   }
+#endif
+
    cerr << "ALL OK" << endl;
    return 0;
 }
