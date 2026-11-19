@@ -417,8 +417,9 @@ class Helper
       static Data createResipA1HashString(const Data& username,
                                           const Data& realm,
                                           const Data& password);
-      // Extract the algorithm specific A1 hash from a custom resip A1 hash string. Returns empty string if hash 
-      // algorithm not found in string.
+      // Extract the algorithm specific A1 hash from a custom resip A1 hash string. Returns empty string if hash
+      // algorithm not found in string, or if the hash is not the right length for the algorithm.  Never hash
+      // an empty A1: the result would not depend on the password.
       static Data extractA1FromResipA1HashString(const Data& resipA1HashString, DigestType digestType);
       static bool isDigestTypeSupportedInResipA1HashString(const Data& resipA1HashString, DigestType digestType);
 

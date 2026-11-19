@@ -17,6 +17,7 @@
 #include "resip/stack/NonceHelper.hxx"
 #include "resip/stack/OctetContents.hxx"
 #include "rutil/Coders.hxx"
+#include "rutil/ConstantTimeEquals.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
@@ -817,9 +818,31 @@ Helper::createResipA1HashString(const Data& username,
    return result;
 }
 
-// Extract the algorithm specific A1 hash from a custom resip A1 hash string. Returns empty string if hash 
-// algorithm not found in string.
-Data 
+// Length of the hex encoding of a digestType hash.
+static size_t
+digestHexSize(DigestType digestType)
+{
+   switch (digestType)
+   {
+   case resip::MD5:
+      return 32;
+   case resip::SHA1:
+      return 40;
+#ifdef USE_SSL
+   case resip::SHA256:
+   case resip::SHA512_256:
+      return 64;
+   case resip::SHA512:
+      return 128;
+#endif
+   }
+   return 0;
+}
+
+// Extract the algorithm specific A1 hash from a custom resip A1 hash string. Returns empty string if hash
+// algorithm not found in string, or if the hash found is not the right length for the algorithm.  Callers
+// must not hash an empty A1: the result would not depend on the password.
+Data
 Helper::extractA1FromResipA1HashString(const Data& resipA1HashString, DigestType digestType)
 {
    if (resipA1HashString.size() == 32)
@@ -848,28 +871,19 @@ Helper::extractA1FromResipA1HashString(const Data& resipA1HashString, DigestType
       pb.skipN(digestTag.size());
       const char* anchor = (const char*)pb.position();
       pb.skipToChar('[');
-      return pb.data(anchor);
+      Data a1 = pb.data(anchor);
+      if (a1.size() == digestHexSize(digestType))
+      {
+         return a1;
+      }
    }
    return Data::Empty;
 }
 
-bool 
+bool
 Helper::isDigestTypeSupportedInResipA1HashString(const Data& resipA1HashString, DigestType digestType)
 {
-   if (resipA1HashString.size() == 32)
-   {
-      // Backward compatibility - assume MD5 if no tags found / size is full md5 hash in hex (32 bytes)
-      return digestType == MD5;
-   }
-
-   ParseBuffer pb(resipA1HashString);
-   Data digestTag;
-   {
-      DataStream digestTagStream(digestTag);
-      digestTagStream << "[" << DigestStream::getDigestName(digestType) << "]";
-   }
-   pb.skipToChars(digestTag);
-   return !pb.eof();
+   return !extractA1FromResipA1HashString(resipA1HashString, digestType).empty();
 }
 
 // The body to hash when checking a digest response.  Only qop=auth-int covers
@@ -893,6 +907,76 @@ getDigestEntityBody(const SipMessage& request, const Data& qop, std::unique_ptr<
 
    holder = std::make_unique<OctetContents>(rawBody, OctetContents::getStaticType());
    return holder.get();
+}
+
+namespace
+{
+enum DigestCheckResult
+{
+   DigestMatch,
+   DigestMismatch,
+   DigestUnsupportedQop,
+   DigestIncomplete,          // missing uri, or cnonce/nc with a qop
+   DigestNoHashForAlgorithm   // the stored A1 has no usable hash for the algorithm
+};
+}
+
+// Checks the response in auth, whose nonce, realm and algorithm the caller has
+// already validated, against passwordOrResipPasswordHashA1.
+static DigestCheckResult
+checkDigestResponse(const SipMessage& request,
+                    const Auth& auth,
+                    const Data& realm,
+                    const Data& passwordOrResipPasswordHashA1,
+                    bool isPasswordHashResipA1,
+                    DigestType digestType)
+{
+   const bool hasQop = auth.exists(p_qop);
+   if (hasQop && auth.param(p_qop) != Symbols::auth && auth.param(p_qop) != Symbols::authInt)
+   {
+      InfoLog(<< "Unsupported qop=" << auth.param(p_qop));
+      return DigestUnsupportedQop;
+   }
+   if (!auth.exists(p_uri) || (hasQop && (!auth.exists(p_cnonce) || !auth.exists(p_nc))))
+   {
+      return DigestIncomplete;
+   }
+
+   // The client picks the algorithm, and the stored A1 may have no hash for
+   // it.  With an empty A1 the expected response would not depend on the
+   // password.
+   Data a1;
+   if (isPasswordHashResipA1)
+   {
+      a1 = Helper::extractA1FromResipA1HashString(passwordOrResipPasswordHashA1, digestType);
+      if (a1.empty())
+      {
+         InfoLog(<< "No " << DigestStream::getDigestName(digestType) << " hash in the A1 for this user.");
+         return DigestNoHashForAlgorithm;
+      }
+   }
+
+   const Data& qop = hasQop ? auth.param(p_qop) : Data::Empty;
+   const Data& cnonce = hasQop ? auth.param(p_cnonce) : Data::Empty;
+   const Data& nc = hasQop ? auth.param(p_nc) : Data::Empty;
+   std::unique_ptr<Contents> bodyHolder;
+   const Contents* entityBody = getDigestEntityBody(request, qop, bodyHolder);
+   const Data& method = getMethodName(request.header(h_RequestLine).getMethod());
+
+   const Data expected = isPasswordHashResipA1 ?
+      Helper::makeResponseDigestWithA1(a1, method, auth.param(p_uri), auth.param(p_nonce),
+                                       qop, cnonce, nc, entityBody, digestType) :
+      Helper::makeResponseDigest(auth.param(p_username), passwordOrResipPasswordHashA1, realm,
+                                 method, auth.param(p_uri), auth.param(p_nonce),
+                                 qop, cnonce, nc, entityBody, digestType);
+
+   const Data& response = auth.param(p_response);
+   if (response.size() == expected.size() &&
+       constantTimeEquals(response.data(), expected.data(), expected.size()))
+   {
+      return DigestMatch;
+   }
+   return DigestMismatch;
 }
 
 Helper::AuthResult
@@ -948,6 +1032,7 @@ Helper::authenticateRequest(const SipMessage& request,
    //ParserContainer<Auth>::const_iterator i = auths.begin();
 
    ParserContainer<Auth>::iterator i = auths.begin();
+   bool noHashForAlgorithm = false;
 
    for (; i != auths.end(); i++)
    {
@@ -999,103 +1084,19 @@ Helper::authenticateRequest(const SipMessage& request,
             << " uri=" << i->param(p_uri)
             << " nonce=" << i->param(p_nonce));
 
-         // The client picks the algorithm, and the stored A1 may have no hash
-         // for it.  With an empty A1 the expected response would not depend on
-         // the password.
-         Data a1;
-         if (isPasswordHashResipA1)
+         switch (checkDigestResponse(request, *i, realm, passwordOrResipPasswordHashA1, isPasswordHashResipA1, digestType))
          {
-            a1 = extractA1FromResipA1HashString(passwordOrResipPasswordHashA1, digestType);
-            if (a1.empty())
-            {
-               InfoLog(<< "No " << DigestStream::getDigestName(digestType) << " hash in the A1 for this user.");
-               return Failed;
-            }
-         }
-
-         if (i->exists(p_qop))
-         {
-            if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
-            {
-               if (i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
-               {
-                  std::unique_ptr<Contents> bodyHolder;
-                  const Contents* entityBody = getDigestEntityBody(request, i->param(p_qop), bodyHolder);
-                  Data responseDigest;
-                  if (isPasswordHashResipA1)
-                  {
-                     responseDigest = makeResponseDigestWithA1(a1,
-                        getMethodName(request.header(h_RequestLine).getMethod()),
-                        i->param(p_uri),
-                        i->param(p_nonce),
-                        i->param(p_qop),
-                        i->param(p_cnonce),
-                        i->param(p_nc),
-                        entityBody,
-                        digestType);
-                  }
-                  else
-                  {
-                     responseDigest = makeResponseDigest(i->param(p_username),
-                        passwordOrResipPasswordHashA1,
-                        realm,
-                        getMethodName(request.header(h_RequestLine).getMethod()),
-                        i->param(p_uri),
-                        i->param(p_nonce),
-                        i->param(p_qop),
-                        i->param(p_cnonce),
-                        i->param(p_nc),
-                        entityBody,
-                        digestType);
-                  }
-                  if (i->param(p_response) == responseDigest)
-                  {
-                     return Authenticated;
-                  }
-                  else
-                  {
-                     return Failed;
-                  }
-               }
-            }
-            else
-            {
-               InfoLog(<< "Unsupported qop=" << i->param(p_qop));
-               return Failed;
-            }
-         }
-         else if (i->exists(p_uri))
-         {
-            Data responseDigest;
-            if (isPasswordHashResipA1)
-            {
-               responseDigest = makeResponseDigestWithA1(a1,
-                  getMethodName(request.header(h_RequestLine).getMethod()),
-                  i->param(p_uri),
-                  i->param(p_nonce),
-                  Data::Empty /* qop */, Data::Empty /* cnonce */, Data::Empty /* cnonceCount */, 0 /* body */,
-                  digestType);
-            }
-            else
-            {
-               responseDigest = makeResponseDigest(i->param(p_username),
-                  passwordOrResipPasswordHashA1,
-                  realm,
-                  getMethodName(request.header(h_RequestLine).getMethod()),
-                  i->param(p_uri),
-                  i->param(p_nonce),
-                  Data::Empty /* qop */, Data::Empty /* cnonce */, Data::Empty /* cnonceCount */, 0 /* body */,
-                  digestType);
-            }
-
-            if (i->param(p_response) == responseDigest)
-            {
-               return Authenticated;
-            }
-            else
-            {
-               return Failed;
-            }
+         case DigestMatch:
+            return Authenticated;
+         case DigestMismatch:
+         case DigestUnsupportedQop:
+            return Failed;
+         case DigestNoHashForAlgorithm:
+            // Another credential in the request may use an algorithm we do have
+            noHashForAlgorithm = true;
+            break;
+         case DigestIncomplete:
+            break;
          }
       }
       else
@@ -1104,7 +1105,7 @@ Helper::authenticateRequest(const SipMessage& request,
       }
    }
 
-   return BadlyFormed;
+   return noHashForAlgorithm ? Failed : BadlyFormed;
 }
 
 std::pair<Helper::AuthResult,Data>
@@ -1136,6 +1137,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
 
    if (auths)
    {
+      bool noHashForAlgorithm = false;
       for (ParserContainer<Auth>::const_iterator i = auths->begin(); i != auths->end(); i++)
       {
          if (i->exists(p_realm) &&
@@ -1182,71 +1184,23 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                return make_pair(BadlyFormed, username);
             }
 
-            // The client picks the algorithm, and the stored A1 may have no
-            // hash for it.  With an empty A1 the expected response would not
-            // depend on the password.
-            const Data a1 = extractA1FromResipA1HashString(resipPasswordHashA1, digestType);
-            if (a1.empty())
+            switch (checkDigestResponse(request, *i, realm, resipPasswordHashA1, true /* isPasswordHashResipA1? */, digestType))
             {
-               InfoLog(<< "No " << DigestStream::getDigestName(digestType) << " hash in the A1 for this user.");
+            case DigestMatch:
+               if (i->exists(p_username))
+               {
+                  username = i->param(p_username);
+               }
+               return make_pair(Authenticated, username);
+            case DigestMismatch:
+            case DigestUnsupportedQop:
                return make_pair(Failed, username);
-            }
-
-            if (i->exists(p_qop))
-            {
-               if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
-               {
-                  if (i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
-                  {
-                     std::unique_ptr<Contents> bodyHolder;
-                     const Contents* entityBody = getDigestEntityBody(request, i->param(p_qop), bodyHolder);
-                     if (i->param(p_response) == makeResponseDigestWithA1(a1,
-                        getMethodName(request.header(h_RequestLine).getMethod()),
-                        i->param(p_uri),
-                        i->param(p_nonce),
-                        i->param(p_qop),
-                        i->param(p_cnonce),
-                        i->param(p_nc),
-                        entityBody,
-                        digestType))
-                     {
-                        if (i->exists(p_username))
-                        {
-                           username = i->param(p_username);
-                        }
-                        return make_pair(Authenticated, username);
-                     }
-                     else
-                     {
-                        return make_pair(Failed, username);
-                     }
-                  }
-               }
-               else
-               {
-                  InfoLog(<< "Unsupported qop=" << i->param(p_qop));
-                  return make_pair(Failed, username);
-               }
-            }
-            else if (i->exists(p_uri))
-            {
-               if (i->param(p_response) == makeResponseDigestWithA1(a1,
-                  getMethodName(request.header(h_RequestLine).getMethod()),
-                  i->param(p_uri),
-                  i->param(p_nonce),
-                  Data::Empty /* qop */, Data::Empty /* cnonce */, Data::Empty /* cnonceCount */, 0 /* body */,
-                  digestType))
-               {
-                  if (i->exists(p_username))
-                  {
-                     username = i->param(p_username);
-                  }
-                  return make_pair(Authenticated, username);
-               }
-               else
-               {
-                  return make_pair(Failed, username);
-               }
+            case DigestNoHashForAlgorithm:
+               // Another credential in the request may use an algorithm we do have
+               noHashForAlgorithm = true;
+               break;
+            case DigestIncomplete:
+               break;
             }
          }
          else
@@ -1254,7 +1208,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             return make_pair(BadlyFormed, username);
          }
       }
-      return make_pair(BadlyFormed, username);
+      return make_pair(noHashForAlgorithm ? Failed : BadlyFormed, username);
    }
    DebugLog(<< "No authentication headers. Failing request.");
    return make_pair(Failed, username);
@@ -1600,9 +1554,18 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    DigestType digestType = MD5;
    isDigestAlgorithmSupported(challenge, digestType);
 
-   if (!authQop.empty())
+   const Data a1 = Helper::extractA1FromResipA1HashString(resipPasswordHashA1, digestType);
+   if (a1.empty())
    {
-      auth.param(p_response) = Helper::makeResponseDigestWithA1(Helper::extractA1FromResipA1HashString(resipPasswordHashA1, digestType),
+      // A response made from an empty A1 would not depend on the password, so
+      // send none.  ClientAuthManager checks isDigestTypeSupportedInResipA1HashString
+      // before it gets here.
+      WarningLog(<< "No " << DigestStream::getDigestName(digestType) << " hash in the A1 for " << username
+                 << ", sending credentials without a response");
+   }
+   else if (!authQop.empty())
+   {
+      auth.param(p_response) = Helper::makeResponseDigestWithA1(a1,
                                                                 getMethodName(request.header(h_RequestLine).getMethod()), 
                                                                 digestUri, 
                                                                 challenge.param(p_nonce),
@@ -1618,7 +1581,7 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    else
    {
       resip_assert(challenge.exists(p_realm));
-      auth.param(p_response) = Helper::makeResponseDigestWithA1(Helper::extractA1FromResipA1HashString(resipPasswordHashA1, digestType),
+      auth.param(p_response) = Helper::makeResponseDigestWithA1(a1,
                                                                 getMethodName(request.header(h_RequestLine).getMethod()),
                                                                 digestUri, 
                                                                 challenge.param(p_nonce),

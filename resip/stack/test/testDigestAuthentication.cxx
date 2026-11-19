@@ -1353,6 +1353,173 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
    }
 #endif
 
+   // An A1 that is empty, or whose hash is missing or the wrong length, must
+   // not let MD5 credentials through either: a response computed from the
+   // garbage, or from an empty A1, does not depend on the password.
+   {
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Content-Length: 0\r\n"
+               "\r\n");
+
+      const Data realm("localhost");
+      const Data username("bob");
+      const Data password("secret");
+      const Data cnonce("366fead6");
+      const Data nc("00000001");
+      const Data uri("sip:bob@biloxi.com");
+      const Data md5A1 = Helper::extractA1FromResipA1HashString(
+         Helper::createResipA1HashString(username, realm, password), MD5);
+      assert(md5A1.size() == 32);
+      const Data truncated = md5A1.substr(0, 20);
+
+      assert(Helper::extractA1FromResipA1HashString(Data("[MD5]") + truncated, MD5).empty());
+      assert(!Helper::isDigestTypeSupportedInResipA1HashString(Data("[MD5]") + truncated, MD5));
+      assert(Helper::isDigestTypeSupportedInResipA1HashString(Data("[MD5]") + md5A1, MD5));
+
+      // stored A1, and the A1 an attacker would guess the server hashes
+      const std::pair<Data, Data> cases[] =
+      {
+         { Data::Empty, Data::Empty },
+         { md5A1 + "\n", Data::Empty },           // untagged, not 32 digits
+         { Data("[MD5]") + truncated, truncated },
+         { Data("[MD5]") + truncated, Data::Empty },
+         { Data("[MD5][SHA-256]") + md5A1, Data::Empty }
+      };
+      for (const auto& c : cases)
+      {
+         for (const Data& qop : { Data::Empty, Data("auth") })
+         {
+            unique_ptr<SipMessage> request(TestSupport::makeMessage(txt));
+            unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, true /* useAuth? */));
+            const Data nonce = challenge->header(h_ProxyAuthenticates).front().param(p_nonce);
+
+            Auth auth;
+            auth.scheme() = "Digest";
+            auth.param(p_username) = username;
+            auth.param(p_realm) = realm;
+            auth.param(p_nonce) = nonce;
+            auth.param(p_uri) = uri;
+            auth.param(p_algorithm) = "MD5";
+            if (!qop.empty())
+            {
+               auth.param(p_qop) = qop;
+               auth.param(p_cnonce) = cnonce;
+               auth.param(p_nc) = nc;
+            }
+            auth.param(p_response) = Helper::makeResponseDigestWithA1(c.second, "INVITE", uri, nonce, qop,
+                                                                      qop.empty() ? Data::Empty : cnonce,
+                                                                      qop.empty() ? Data::Empty : nc,
+                                                                      0, MD5);
+            request->header(h_ProxyAuthorizations).push_back(auth);
+
+            assert(Helper::authenticateRequestWithA1(*request, realm, c.first) == Helper::Failed);
+            assert(Helper::advancedAuthenticateRequest(*request, realm, c.first).first == Helper::Failed);
+         }
+      }
+
+      // A response of the wrong length is rejected (and not read past its end)
+      {
+         unique_ptr<SipMessage> request(TestSupport::makeMessage(txt));
+         unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, true /* useAuth? */));
+         const Data nonce = challenge->header(h_ProxyAuthenticates).front().param(p_nonce);
+         const Data response = Helper::makeResponseDigest(username, password, realm, "INVITE", uri, nonce);
+
+         Auth auth;
+         auth.scheme() = "Digest";
+         auth.param(p_username) = username;
+         auth.param(p_realm) = realm;
+         auth.param(p_nonce) = nonce;
+         auth.param(p_uri) = uri;
+         auth.param(p_algorithm) = "MD5";
+         auth.param(p_response) = response.substr(0, 16);
+         request->header(h_ProxyAuthorizations).push_back(auth);
+
+         assert(Helper::authenticateRequestWithA1(*request, realm, md5A1) == Helper::Failed);
+         assert(Helper::advancedAuthenticateRequest(*request, realm, md5A1).first == Helper::Failed);
+      }
+      cerr << "A1 with a missing or malformed hash rejected for MD5" << endl;
+
+#ifdef USE_SSL
+      // With an MD5-only A1, a SHA-256 credential is skipped and a valid MD5
+      // credential after it in the same request is still checked.
+      {
+         unique_ptr<SipMessage> request(TestSupport::makeMessage(txt));
+         unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, true /* useAuth? */));
+         const Data nonce = challenge->header(h_ProxyAuthenticates).front().param(p_nonce);
+
+         Auth sha;
+         sha.scheme() = "Digest";
+         sha.param(p_username) = username;
+         sha.param(p_realm) = realm;
+         sha.param(p_nonce) = nonce;
+         sha.param(p_uri) = uri;
+         sha.param(p_algorithm) = DigestStream::getDigestName(SHA256);
+         sha.param(p_response) = Helper::makeResponseDigest(username, password, realm, "INVITE", uri, nonce,
+                                                            Data::Empty, Data::Empty, Data::Empty, 0, SHA256);
+         request->header(h_ProxyAuthorizations).push_back(sha);
+
+         assert(Helper::authenticateRequestWithA1(*request, realm, md5A1) == Helper::Failed);
+         assert(Helper::advancedAuthenticateRequest(*request, realm, md5A1).first == Helper::Failed);
+
+         Auth md5 = sha;
+         md5.param(p_algorithm) = "MD5";
+         md5.param(p_response) = Helper::makeResponseDigest(username, password, realm, "INVITE", uri, nonce);
+         request->header(h_ProxyAuthorizations).push_back(md5);
+
+         assert(Helper::authenticateRequestWithA1(*request, realm, md5A1) == Helper::Authenticated);
+         std::pair<Helper::AuthResult, Data> result = Helper::advancedAuthenticateRequest(*request, realm, md5A1);
+         assert(result.first == Helper::Authenticated);
+         assert(result.second == username);
+      }
+
+      // A malformed credential (qop without cnonce/nc) is still BadlyFormed,
+      // whether or not the A1 has a hash for its algorithm.
+      for (const Data& storedA1 : { md5A1, Helper::createResipA1HashString(username, realm, password) })
+      {
+         unique_ptr<SipMessage> request(TestSupport::makeMessage(txt));
+         unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, true /* useAuth? */));
+         const Data nonce = challenge->header(h_ProxyAuthenticates).front().param(p_nonce);
+
+         Auth auth;
+         auth.scheme() = "Digest";
+         auth.param(p_username) = username;
+         auth.param(p_realm) = realm;
+         auth.param(p_nonce) = nonce;
+         auth.param(p_uri) = uri;
+         auth.param(p_algorithm) = DigestStream::getDigestName(SHA256);
+         auth.param(p_qop) = "auth";
+         auth.param(p_response) = Helper::makeResponseDigestWithA1(Data::Empty, "INVITE", uri, nonce, Data::Empty,
+                                                                   Data::Empty, Data::Empty, 0, SHA256);
+         request->header(h_ProxyAuthorizations).push_back(auth);
+
+         assert(Helper::authenticateRequestWithA1(*request, realm, storedA1) == Helper::BadlyFormed);
+         assert(Helper::advancedAuthenticateRequest(*request, realm, storedA1).first == Helper::BadlyFormed);
+      }
+
+      // The client does not send a response it could only make from an empty A1
+      {
+         unique_ptr<SipMessage> request(TestSupport::makeMessage(txt));
+         std::vector<DigestType> digestTypes;
+         digestTypes.push_back(SHA256);
+         unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, true /* useAuth? */, false /* stale? */, digestTypes));
+
+         unsigned int nonceCount = 0;
+         Data nonceCountString;
+         Auth auth = Helper::makeChallengeResponseAuthWithA1(*request, username, md5A1,
+                                                             challenge->header(h_ProxyAuthenticates).front(),
+                                                             cnonce, nonceCount, nonceCountString);
+         assert(!auth.exists(p_response));
+      }
+      cerr << "MD5-only A1 skips SHA-256 credentials" << endl;
+#endif
+   }
+
    cerr << "ALL OK" << endl;
    return 0;
 }
