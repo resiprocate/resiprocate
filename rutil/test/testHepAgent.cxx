@@ -1,6 +1,6 @@
 #include <cassert>
-#include <cstring>
 #include <iostream>
+#include <vector>
 
 // Cajun JSON
 #include "cajun/json/reader.h"
@@ -43,11 +43,8 @@ public:
 static Data
 convertExact(HepAgent& agent, const unsigned char* packet, size_t size)
 {
-   char* buf = new char[size];
-   memcpy(buf, packet, size);
-   Data json(agent.convertRTCPtoJSON(Data(Data::Share, buf, (Data::size_type)size)));
-   delete [] buf;
-   return json;
+   std::vector<char> buf(packet, packet + size);
+   return agent.convertRTCPtoJSON(Data(Data::Share, buf.data(), (Data::size_type)size));
 }
 
 int

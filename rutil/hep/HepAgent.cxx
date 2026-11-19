@@ -134,23 +134,41 @@ ntoh_cpl(const void *x)
    return (int32_t)(ntohl(*v));
 }
 
+// Reads a 32-bit field in network byte order from any offset in the packet
+static uint32_t
+readUInt32(const uint8_t* p)
+{
+   uint32_t v;
+   memcpy(&v, p, sizeof(v));
+   return ntohl(v);
+}
+
+// Offsets and sizes on the wire (RFC 3550 section 6.4).  The packet is read
+// from these rather than through struct rtcp_msg, whose layout only holds a
+// decoded packet and doesn't match the wire on every compiler (MSVC pads its
+// header to 8 bytes after the bit-fields).
+static const size_t RTCP_SSRC_OFFSET = 4;
+static const size_t RTCP_SR_REPORTS_OFFSET = 28;   // header, SSRC, sender info
+static const size_t RTCP_RR_REPORTS_OFFSET = 8;    // header, SSRC
+static const size_t RTCP_REPORT_BLOCK_SIZE = 24;
+
 void
-encodeRRvec(DataStream& stream, const struct rtcp_rr *rr_vec, int rrCount)
+encodeRRvec(DataStream& stream, const uint8_t *rr_vec, int rrCount)
 {
    stream << "\"report_blocks\":[";
 
    for(int i = 0 ; i < rrCount; i++)
    {
-      const struct rtcp_rr *rr = &rr_vec[i];
+      const uint8_t *rr = rr_vec + i * RTCP_REPORT_BLOCK_SIZE;
       stream << ((i>0) ? "," : "")
              << "{"
-             << "\"source_ssrc\":" << ntohl(rr->ssrc) << ","
-             << "\"highest_seq_no\":" << ntohl(rr->last_seq) << ","
-             << "\"fraction_lost\":" << +(reinterpret_cast<const uint8_t *>(&rr->fraction_lost_32))[0] << ","  // 8 bits
-             << "\"ia_jitter\":" << ntohl(rr->jitter) << ","
-             << "\"packets_lost\":" << ntoh_cpl(&rr->fraction_lost_32) << ","
-             << "\"lsr\":" << ntohl(rr->lsr) << ","
-             << "\"dlsr\":" << ntohl(rr->dlsr)
+             << "\"source_ssrc\":" << readUInt32(rr) << ","
+             << "\"highest_seq_no\":" << readUInt32(rr + 8) << ","
+             << "\"fraction_lost\":" << +rr[4] << ","  // 8 bits
+             << "\"ia_jitter\":" << readUInt32(rr + 12) << ","
+             << "\"packets_lost\":" << ntoh_cpl(rr + 4) << ","
+             << "\"lsr\":" << readUInt32(rr + 16) << ","
+             << "\"dlsr\":" << readUInt32(rr + 20)
              << "}";
    }
 
@@ -161,7 +179,6 @@ Data
 HepAgent::convertRTCPtoJSON(const Data& rtcpRaw)
 {
    const uint8_t* raw = reinterpret_cast<const uint8_t*>(rtcpRaw.data());
-   const struct rtcp_msg* msg = reinterpret_cast<const struct rtcp_msg*>(rtcpRaw.data());
 
    StackLog(<< "buffer size: " << rtcpRaw.size());
 
@@ -177,11 +194,6 @@ HepAgent::convertRTCPtoJSON(const Data& rtcpRaw)
    Data json;
    DataStream stream(json);
 
-#ifdef RTCP_TRUST_BIT_FIELD_ORDER
-   unsigned int version = msg->hdr.version;
-   unsigned int rrCount = msg->hdr.count;
-   bool p = msg->hdr.p;
-#else
    // we can't trust the order of bit-fields in a struct
    // on all compilers and platforms to match the order
    // on the wire
@@ -189,13 +201,13 @@ HepAgent::convertRTCPtoJSON(const Data& rtcpRaw)
    unsigned int version = (byte0 & 0xc0) >> 6;
    unsigned int rrCount = (byte0 & 0x1f);
    bool p = (byte0 & 0x20) >> 5;
-#endif
-   unsigned int pt = msg->hdr.pt;
+   unsigned int pt = raw[1];
+   unsigned int length = (raw[2] << 8) | raw[3];
 
    StackLog(<<"RTCP version: " << version << " p " << p
       << " RR count: " << rrCount
       << " packet type: " << pt
-      << " length: " << (ntohs(msg->hdr.length)*2) << " bytes");
+      << " length: " << (length*2) << " bytes");
 
    if(version != 2)
    {
@@ -208,8 +220,8 @@ HepAgent::convertRTCPtoJSON(const Data& rtcpRaw)
    // to be in the packet.
    if(pt == RTCP_SR || pt == RTCP_RR)
    {
-      const size_t reportsOffset = (pt == RTCP_SR) ? 28 : 8;
-      if(rtcpRaw.size() < reportsOffset + rrCount * sizeof(struct rtcp_rr))
+      const size_t reportsOffset = (pt == RTCP_SR) ? RTCP_SR_REPORTS_OFFSET : RTCP_RR_REPORTS_OFFSET;
+      if(rtcpRaw.size() < reportsOffset + rrCount * RTCP_REPORT_BLOCK_SIZE)
       {
          ErrLog(<<"RTCP packet too small for its " << rrCount << " report blocks: " << rtcpRaw.size() << " bytes");
          return "";
@@ -218,26 +230,25 @@ HepAgent::convertRTCPtoJSON(const Data& rtcpRaw)
 
    stream << "{" << "\"type\":" << pt << ",";
 
-   const struct rtcp_rr *rr;
    switch (pt)
    {
       case RTCP_SR:
+         // the sender info follows the SSRC: NTP timestamp (seconds and
+         // fraction), RTP timestamp, packet count, octet count
          stream << "\"sender_information\":{"
-                << "\"ntp_timestamp_sec\":" << ntohl(msg->r.sr.ntp_sec) << ","
-                << "\"ntp_timestamp_usec\":" << ntohl(msg->r.sr.ntp_frac) << ","
-                << "\"octets\":" << ntohl(msg->r.sr.osent) << ","
-                << "\"rtp_timestamp\":" << ntohl(msg->r.sr.rtp_ts) << ","
-                << "\"packets\":" << ntohl(msg->r.sr.psent)
+                << "\"ntp_timestamp_sec\":" << readUInt32(raw + 8) << ","
+                << "\"ntp_timestamp_usec\":" << readUInt32(raw + 12) << ","
+                << "\"octets\":" << readUInt32(raw + 24) << ","
+                << "\"rtp_timestamp\":" << readUInt32(raw + 16) << ","
+                << "\"packets\":" << readUInt32(raw + 20)
                 << "},"
-                << "\"ssrc\":" << ntohl(msg->r.sr.ssrc) << ",";
-         rr = reinterpret_cast<const struct rtcp_rr*>(&msg->r.sr.rrv);
-         encodeRRvec(stream, rr, rrCount);
+                << "\"ssrc\":" << readUInt32(raw + RTCP_SSRC_OFFSET) << ",";
+         encodeRRvec(stream, raw + RTCP_SR_REPORTS_OFFSET, rrCount);
          break;
 
       case RTCP_RR:
-         stream << "\"ssrc\":" << ntohl(msg->r.rr.ssrc) << ",";
-         rr = reinterpret_cast<const struct rtcp_rr*>(&msg->r.rr.rrv);
-         encodeRRvec(stream, rr, rrCount);
+         stream << "\"ssrc\":" << readUInt32(raw + RTCP_SSRC_OFFSET) << ",";
+         encodeRRvec(stream, raw + RTCP_RR_REPORTS_OFFSET, rrCount);
          break;
 
       default:
@@ -254,6 +265,11 @@ void
 HepAgent::sendRTCP(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const Data& rtcpRaw, const Data& correlationId)
 {
    Data json(convertRTCPtoJSON(rtcpRaw));
+   if(json.empty())
+   {
+      // convertRTCPtoJSON has already logged why
+      return;
+   }
 
    StackLog(<< "source: " << source
       << " destination: " << destination
