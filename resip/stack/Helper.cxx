@@ -999,6 +999,20 @@ Helper::authenticateRequest(const SipMessage& request,
             << " uri=" << i->param(p_uri)
             << " nonce=" << i->param(p_nonce));
 
+         // The client picks the algorithm, and the stored A1 may have no hash
+         // for it.  With an empty A1 the expected response would not depend on
+         // the password.
+         Data a1;
+         if (isPasswordHashResipA1)
+         {
+            a1 = extractA1FromResipA1HashString(passwordOrResipPasswordHashA1, digestType);
+            if (a1.empty())
+            {
+               InfoLog(<< "No " << DigestStream::getDigestName(digestType) << " hash in the A1 for this user.");
+               return Failed;
+            }
+         }
+
          if (i->exists(p_qop))
          {
             if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
@@ -1010,7 +1024,7 @@ Helper::authenticateRequest(const SipMessage& request,
                   Data responseDigest;
                   if (isPasswordHashResipA1)
                   {
-                     responseDigest = makeResponseDigestWithA1(extractA1FromResipA1HashString(passwordOrResipPasswordHashA1, digestType),
+                     responseDigest = makeResponseDigestWithA1(a1,
                         getMethodName(request.header(h_RequestLine).getMethod()),
                         i->param(p_uri),
                         i->param(p_nonce),
@@ -1055,7 +1069,7 @@ Helper::authenticateRequest(const SipMessage& request,
             Data responseDigest;
             if (isPasswordHashResipA1)
             {
-               responseDigest = makeResponseDigestWithA1(extractA1FromResipA1HashString(passwordOrResipPasswordHashA1, digestType),
+               responseDigest = makeResponseDigestWithA1(a1,
                   getMethodName(request.header(h_RequestLine).getMethod()),
                   i->param(p_uri),
                   i->param(p_nonce),
@@ -1168,6 +1182,16 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                return make_pair(BadlyFormed, username);
             }
 
+            // The client picks the algorithm, and the stored A1 may have no
+            // hash for it.  With an empty A1 the expected response would not
+            // depend on the password.
+            const Data a1 = extractA1FromResipA1HashString(resipPasswordHashA1, digestType);
+            if (a1.empty())
+            {
+               InfoLog(<< "No " << DigestStream::getDigestName(digestType) << " hash in the A1 for this user.");
+               return make_pair(Failed, username);
+            }
+
             if (i->exists(p_qop))
             {
                if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
@@ -1176,7 +1200,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                   {
                      std::unique_ptr<Contents> bodyHolder;
                      const Contents* entityBody = getDigestEntityBody(request, i->param(p_qop), bodyHolder);
-                     if (i->param(p_response) == makeResponseDigestWithA1(extractA1FromResipA1HashString(resipPasswordHashA1, digestType),
+                     if (i->param(p_response) == makeResponseDigestWithA1(a1,
                         getMethodName(request.header(h_RequestLine).getMethod()),
                         i->param(p_uri),
                         i->param(p_nonce),
@@ -1206,7 +1230,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             }
             else if (i->exists(p_uri))
             {
-               if (i->param(p_response) == makeResponseDigestWithA1(extractA1FromResipA1HashString(resipPasswordHashA1, digestType),
+               if (i->param(p_response) == makeResponseDigestWithA1(a1,
                   getMethodName(request.header(h_RequestLine).getMethod()),
                   i->param(p_uri),
                   i->param(p_nonce),
