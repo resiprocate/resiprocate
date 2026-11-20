@@ -46,6 +46,16 @@ that all users adapt their repro.config.  The legacy database configuration
 options are still supported for now but they are likely to be phased out
 in a future release of reSIProcate.
 
+Important - web admin accounts in v1.15.0 and beyond
+----------------------------------------------------
+
+Every account in the HttpAdminUserFile (/etc/repro/users.txt) is now an
+administrator.  Before v1.15.0, only the account named 'admin' could see the
+web admin configuration pages; any other account could log in but saw an
+empty page.  (The REST API under /api/v1 already gave every account full
+access.)  If users.txt contains accounts other than admin, check that each
+one should have full administrative access, and remove any that should not.
+
 Quick start
 -----------
 
@@ -57,7 +67,9 @@ There is a built-in web server listening on port 5080
 with username = admin, password = admin.
 
 You can (and definitely should) change the password in
-/etc/repro/repro.config
+/etc/repro/users.txt, for example with:
+
+  # htdigest /etc/repro/users.txt repro admin
 
 Using the web interface, you can:
 - add SIP accounts for your devices

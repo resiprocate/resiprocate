@@ -510,14 +510,17 @@ WebAdmin::buildPage( const Data& method,
    
    DebugLog( << "building page for user=" << authenticatedUser  );
 
+   // Every path above either set authenticatedUser or returned, and every
+   // account in HttpAdminUserFile is an administrator.
+   resip_assert( !authenticatedUser.empty() );
+
    Data page;
-   if ( !authenticatedUser.empty() )
    {
       DataStream s(page);
       s << mPageOutlinePre;
-      
-      // admin only pages 
-      if ( pageName == Data("user.html")    ) {}; /* do nothing */ 
+
+      // configuration pages (user.html is the landing page after login)
+      if ( pageName == Data("user.html")    ) {}; /* do nothing */
       //if ( pageName == Data("input")    ) ; /* do nothing */ 
       if ( pageName == Data("domains.html")    ) buildDomainsSubPage(s);
       if ( pageName == Data("acls.html")       ) buildAclsSubPage(s);
@@ -544,8 +547,7 @@ WebAdmin::buildPage( const Data& method,
       s << mPageOutlinePost;
       s.flush();
    }
-   
-   resip_assert( !authenticatedUser.empty() );
+
    resip_assert( !page.empty() );
    
    setPage( page, pageNumber,200 );
