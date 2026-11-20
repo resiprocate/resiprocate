@@ -80,7 +80,6 @@ class WebAdmin : public HttpBase,
 
    private: 
       resip::Data buildDefaultPage();
-      resip::Data buildUserPage();
       
       void buildDomainsSubPage(resip::DataStream& s);
       void buildAclsSubPage(resip::DataStream& s);
