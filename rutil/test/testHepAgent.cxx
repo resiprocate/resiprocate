@@ -9,6 +9,7 @@
 
 #include "rutil/hep/HepAgent.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Socket.hxx"
 
 using namespace resip;
 using namespace std;
@@ -50,13 +51,10 @@ convertExact(HepAgent& agent, const unsigned char* packet, size_t size)
 int
 main(int argc, char *argv[])
 {
+   initNetwork();
    Log::initialize(Log::Cout, Log::Stack, argv[0]);
 
    MyHepAgent agent;
-
-   sockaddr_in sa;
-   sa.sin_addr.s_addr = inet_addr("127.0.0.1");
-   GenericIPAddress anon(sa);
 
    // Values have been extracted using Wireshark
    // SSRC values presented in both decimal and hex for quick comparison
