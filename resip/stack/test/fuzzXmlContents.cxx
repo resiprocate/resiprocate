@@ -5,18 +5,12 @@
 #include "resip/stack/GenericPidfContents.hxx"
 #include "resip/stack/Mime.hxx"
 
-// dialog-info (RFC 4237) and presence PIDF (RFC 3863) documents arrive as
+// dialog-info (RFC 4235) and presence PIDF (RFC 3863) documents arrive as
 // attacker-controlled SIP message bodies and are parsed by reSIProcate's own
-// XML pull parser (rutil/XMLCursor).  fuzzStack.cxx deliberately excludes
-// these two Contents classes ("leaks or hogs memory"), so up to this harness
-// existed no fuzz coverage at all for DialogInfoContents.cxx,
-// GenericPidfContents.cxx or XMLCursor.cxx, which all sat at or near 0%.
-// This target feeds the fuzz buffer to each XML-based Contents class, checks
-// the parse, round-trips it through encode() and exercises the public
-// accessors, the same way the test suite does.  Fuzzing rationale: XML
-// documents on the SIP wire are untrusted input; memory-safety violations
-// and leaks on these paths are genuine findings and will be reported as
-// such, never muted.
+// XML pull parser (rutil/XMLCursor).  This target feeds the fuzz buffer to
+// each XML-based Contents class, checks the parse, round-trips it through
+// encode() and exercises the public accessors, the same way the test suite
+// does.
 
 static void fuzzDialogInfoContents(const resip::HeaderFieldValue& hfv)
 {
@@ -47,6 +41,10 @@ static void fuzzGenericPidfContents(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
         (void)payload.getEntity();
+        (void)payload.getSimplePresenceOnline();
+        (void)payload.getSimplePresenceNote();
+        (void)payload.getSimplePresenceTupleId();
+        (void)payload.getSimplePresenceList();
         resip::Data encoded;
         resip::DataStream ds(encoded);
         payload.encode(ds);

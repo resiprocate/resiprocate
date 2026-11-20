@@ -6,7 +6,6 @@
 #include "resip/stack/CallId.hxx"
 #include "resip/stack/CpimContents.hxx"
 #include "resip/stack/DateCategory.hxx"
-#include "resip/stack/DialogInfoContents.hxx"
 #include "resip/stack/DtmfPayloadContents.hxx"
 #include "resip/stack/ExpiresCategory.hxx"
 #include "resip/stack/GenericPidfContents.hxx"
@@ -18,7 +17,6 @@
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/OctetContents.hxx"
-#include "resip/stack/GenericPidfContents.hxx"
 #include "resip/stack/Pkcs7Contents.hxx"
 #include "resip/stack/Pkcs8Contents.hxx"
 #include "resip/stack/PlainContents.hxx"
@@ -114,35 +112,9 @@ static void fuzzDateCategory(const resip::HeaderFieldValue& hfv)
     }
 }
 
-static void fuzzDialogInfoContents(const resip::HeaderFieldValue& hfv)
-{
-    static const resip::Mime type("application", "sdp");
-    resip::DialogInfoContents payload(hfv, type);
-    try
-    {
-        payload.checkParsed();
-    }
-    catch (const resip::ParseException&)
-    {
-    }
-}
-
 static void fuzzExpiresCategory(const resip::HeaderFieldValue& hfv)
 {
     resip::ExpiresCategory payload(hfv, resip::Headers::UNKNOWN);
-    try
-    {
-        payload.checkParsed();
-    }
-    catch (const resip::ParseException&)
-    {
-    }
-}
-
-static void fuzzGenericPidfContents(const resip::HeaderFieldValue& hfv)
-{
-    static const resip::Mime type("application", "pidf+xml");
-    resip::GenericPidfContents payload(hfv, type);
     try
     {
         payload.checkParsed();
@@ -429,10 +401,6 @@ extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data,
   fuzzSdp(hfv);
   fuzzSip(buffer);
   fuzzUri(hfv);
-
-  // leaks or hogs memory
-  //fuzzDialogInfoContents(hfv);
-  //fuzzGenericPidfContents(hfv);
 
   return 0;
 }
