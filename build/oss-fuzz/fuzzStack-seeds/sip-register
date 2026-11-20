@@ -1,0 +1,11 @@
+REGISTER sip:registrar.biloxi.example.com SIP/2.0
+Via: SIP/2.0/UDP 192.0.2.4:5060;branch=z9hG4bKnashds7
+Max-Forwards: 70
+From: Bob <sip:bob@biloxi.example.com>;tag=456248
+To: Bob <sip:bob@biloxi.example.com>
+Call-ID: 8435171@192.0.2.4
+CSeq: 1 REGISTER
+Contact: <sip:bob@192.0.2.4>
+Expires: 7200
+Content-Length: 0
+
