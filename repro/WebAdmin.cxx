@@ -323,7 +323,6 @@ WebAdmin::buildPage( const Data& method,
       ( pageName != Data("input") ) && 
       ( pageName != Data("cert.cer") ) && 
       ( ! pageName.prefix("cert") ) && 
-      ( pageName != Data("userTest.html") ) && 
       ( pageName != Data("domains.html")  ) &&
       ( pageName != Data("acls.html")  ) &&
       ( pageName != Data("addUser.html") ) && 
@@ -512,7 +511,7 @@ WebAdmin::buildPage( const Data& method,
    DebugLog( << "building page for user=" << authenticatedUser  );
 
    Data page;
-   if ( authenticatedUser == Data("admin") )
+   if ( !authenticatedUser.empty() )
    {
       DataStream s(page);
       s << mPageOutlinePre;
@@ -544,23 +543,6 @@ WebAdmin::buildPage( const Data& method,
       
       s << mPageOutlinePost;
       s.flush();
-
-      if ( pageName == Data("userTest.html")   ) page=buildUserPage();
-   }
-   else if ( !authenticatedUser.empty() )
-   {
-      // user only pages 
-      if ( pageName == Data("user.html") ) page=buildUserPage(); 
-      //if ( pageName == Data("input") ) page=buildUserPage();
-
-      if(page.empty())
-      {
-         DataStream s(page);
-         s << "Invalid page request";
-         s.flush();
-         setPage(page, pageNumber, 500);
-         return;
-      }
    }
    
    resip_assert( !authenticatedUser.empty() );
@@ -2331,37 +2313,6 @@ WebAdmin::buildReloadCertsSubPage(resip::DataStream& s)
 {
     mProxy.getStack().reloadCertificates();
     s << "<p class=\"notice ok\"><em>Reloaded certificates.</em></p>" << endl;
-}
-
-Data 
-WebAdmin::buildUserPage()
-{ 
-   Data ret;
-   {
-      DataStream s(ret);
-      
-      s <<  "<!DOCTYPE html>" << endl
-        <<    "<html lang=\"en\">" << endl
-        <<    "<head>" << endl
-        <<    "<meta charset=\"utf-8\" />" << endl
-        <<    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" << endl
-        <<    "<title>Repro Proxy</title>" << endl
-        <<    faviconLink()
-        <<    standaloneStyle()
-        <<    "</head>" << endl
-        <<    "<body>" << endl
-        <<    "<div class=\"card\">" << endl
-        <<    "  <div class=\"brand\">" << productMarkSvg() << "<span class=\"name\">Repro</span></div>" << endl;
-
-      //buildAddUserSubPage(s); // !cj! TODO - should do beter page here
-
-      s <<    "</div>" << endl
-        <<    "</body>" << endl
-        <<    "</html>" << endl;
-            
-      s.flush();
-   }
-   return ret;
 }
 
 Data

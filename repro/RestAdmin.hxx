@@ -21,7 +21,7 @@ class WebAdmin;
 // the /api/v1/ prefix and delegates to RestAdmin::dispatch.
 //
 // Authentication is performed by WebAdmin before dispatch is called; the
-// authenticated user (empty if challenges are disabled) is passed through.
+// authenticated user ("admin" if challenges are disabled) is passed through.
 //
 // Because we do not parse HTTP request bodies, all mutating endpoints take
 // their parameters in the query string.
@@ -69,7 +69,7 @@ public:
    // method is the HTTP verb (e.g. "GET"); uri is the full request URI
    // (path + optional query string). pageNumber identifies the pending
    // HTTP connection to reply on. authenticatedUser is the username that
-   // authenticated, or empty if challenges were disabled.
+   // authenticated, or "admin" if challenges were disabled.
    void dispatch(const resip::Data& method,
                  const resip::Data& uri,
                  int pageNumber,
