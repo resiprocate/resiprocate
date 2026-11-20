@@ -1687,10 +1687,9 @@ Data::clear()
 int 
 Data::convertInt() const
 {
-   int val = 0;
    char* p = mBuf;
    const char* const end = mBuf + mSize;
-   int s = 1;
+   bool negative = false;
 
    for (; p != end; ++p)
    {
@@ -1699,12 +1698,12 @@ Data::convertInt() const
          goto sign_char;
       }
    }
-   return val;
+   return 0;
 sign_char:
 
    if (*p == '-')
    {
-      s = -1;
+      negative = true;
       ++p;
    }
    else if (*p == '+')
@@ -1712,16 +1711,33 @@ sign_char:
       ++p;
    }
 
-   for(; p != end; ++p)
    {
-      if (!isdigit(static_cast< unsigned char >(*p)))
+      // Accumulate the magnitude unsigned, and saturate at INT_MAX / INT_MIN
+      // (as strtol does) instead of overflowing on long digit strings.
+      const unsigned int limit = negative
+         ? static_cast<unsigned int>(INT_MAX) + 1u
+         : static_cast<unsigned int>(INT_MAX);
+      unsigned int magnitude = 0;
+      for(; p != end; ++p)
       {
-         break;
+         if (!isdigit(static_cast< unsigned char >(*p)))
+         {
+            break;
+         }
+         const unsigned int digit = static_cast<unsigned int>(*p - '0');
+         if (magnitude > (limit - digit) / 10)
+         {
+            magnitude = limit;
+            break;
+         }
+         magnitude = magnitude * 10 + digit;
       }
-      val *= 10;
-      val += (*p) - '0';
+      if (!negative)
+      {
+         return static_cast<int>(magnitude);
+      }
+      return magnitude == limit ? INT_MIN : -static_cast<int>(magnitude);
    }
-   return s*val;
 }
 
 unsigned long
@@ -1830,7 +1846,9 @@ sign_char:
 double 
 Data::convertDouble() const
 {
-   long val = 0;
+   // Accumulated as double, so a long digit string can't overflow (a huge
+   // integer part gives a large value or infinity, as strtod does).
+   double val = 0;
    char* p = mBuf;
    const char* const end = p + mSize;
    int s = 1;
@@ -1872,7 +1890,7 @@ sign_char:
 
 decimals:
    ++p;
-   long d = 0;
+   double d = 0;
    double div = 1.0;
    for(; p != end; ++p)
    {
@@ -1880,9 +1898,13 @@ decimals:
       {
          break;
       }
-      d *= 10;
-      d += *p - '0';
-      div *= 10;
+      // Digits beyond what a double can hold don't change the result; ignoring
+      // them also keeps d and div finite (inf/inf would give NaN).
+      if (div < 1e18)
+      {
+         d = d * 10 + (*p - '0');
+         div *= 10;
+      }
    }
    return s*(val + d/div);
 }

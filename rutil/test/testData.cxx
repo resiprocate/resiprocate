@@ -3,6 +3,7 @@
 #include "rutil/Log.hxx"
 #include "rutil/compat.hxx"
 #include "assert.h"
+#include <climits>
 #include <cstdint>
 #include <functional>
 #include <iostream>
@@ -420,6 +421,14 @@ class TestData
 
 	    Data s9("    --17");
 	    assert(s9.convertInt() == 0);
+
+            // Out-of-range values saturate instead of overflowing.
+            assert(Data("2147483647").convertInt() == INT_MAX);
+            assert(Data("2147483648").convertInt() == INT_MAX);
+            assert(Data("-2147483648").convertInt() == INT_MIN);
+            assert(Data("-2147483649").convertInt() == INT_MIN);
+            assert(Data("4999999999999999999999998#6").convertInt() == INT_MAX);
+            assert(Data("  -99999999999999999999 trailing").convertInt() == INT_MIN);
          }
 
          {
@@ -542,6 +551,12 @@ class TestData
 
             Data s4(".foo");
             assert(s4.convertDouble() == 0);
+
+            // Long digit strings don't overflow.
+            assert(approximatelyEqual(Data("12345678901234567890123").convertDouble(), 1.2345678901234568e22, 1e-12f));
+            assert(approximatelyEqual(Data("-0.1234567890123456789012345").convertDouble(), -0.12345678901234568, 1e-12f));
+            const Data manyDecimals = Data("1.") + Data(std::string(400, '5'));
+            assert(approximatelyEqual(manyDecimals.convertDouble(), 1.5555555555555556, 1e-12f));
 
             Data s5("     .");
             assert(s5.convertDouble() == 0);
