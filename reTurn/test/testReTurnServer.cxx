@@ -83,6 +83,9 @@ static const unsigned short relayPortsTlsPort = 45357;
 static const char* const limitsConfig = "testReTurnServer_limits.config";
 static const unsigned short limitsTurnPort = 45484;
 static const unsigned short limitsTlsPort = 45355;
+static const char* const noLoopbackConfig = "testReTurnServer_noloopback.config";
+static const unsigned short noLoopbackTurnPort = 45488;
+static const unsigned short noLoopbackTlsPort = 45359;
 static const asio::ip::address localhost = asio::ip::make_address("127.0.0.1");
 
 // A local TCP port that's free now, for a client asked to use a given port.  (Not a fixed one: a
@@ -144,11 +147,13 @@ private:
    std::thread mThread;
 };
 
+// The peers are on 127.0.0.1, so loopback peers are allowed unless allowLoopbackPeers is false
 static bool
-writeConfig(const char* file, unsigned short port, unsigned short tlsPort, const char* extra)
+writeConfig(const char* file, unsigned short port, unsigned short tlsPort, const char* extra, bool allowLoopbackPeers = true)
 {
    std::ofstream config(file);
    config << "TurnAddress = 127.0.0.1\n"
+          << "AllowLoopbackPeers = " << (allowLoopbackPeers ? "true" : "false") << "\n"
           << "TurnPort = " << port << "\n"
           << "TlsTurnPort = " << tlsPort << "\n"
           << "AuthenticationRealm = reTurn\n"
@@ -996,6 +1001,103 @@ testRelayPortInUse()
    first.destroyAllocation();
 }
 
+// Sends request from client's socket to the server on port, and returns the error code of the
+// response: 0 for a success response, -1 for none.  With a key, the request carries user test's
+// credentials, with the realm and nonce from the server's last error response.
+static int
+rawRequest(Peer& client, unsigned short port, StunMessage& request, const resip::Data& key, resip::Data& realm, resip::Data& nonce)
+{
+   if (!key.empty())
+   {
+      request.mHasMessageIntegrity = true;
+      request.mHmacKey = key;
+      request.setUsername("test");
+      request.setRealm(realm.c_str());
+      request.setNonce(nonce.c_str());
+   }
+   char buffer[1500];
+   const unsigned int size = request.stunEncodeMessage(buffer, sizeof(buffer));
+   client.sendTo(std::string(buffer, size), asio::ip::udp::endpoint(localhost, port));
+   asio::ip::udp::endpoint from;
+   std::string received = client.receive(from);
+   if (received.empty())
+   {
+      return -1;
+   }
+   StunMessage response(StunTuple(StunTuple::UDP, localhost, client.port()), StunTuple(StunTuple::UDP, localhost, port),
+                        &received[0], (unsigned int)received.size());
+   if (!response.isValid())
+   {
+      return -1;
+   }
+   if (response.mHasRealm)
+   {
+      realm = *response.mRealm;
+   }
+   if (response.mHasNonce)
+   {
+      nonce = *response.mNonce;
+   }
+   return response.mHasErrorCode ? response.mErrorCode.errorClass * 100 + response.mErrorCode.number : 0;
+}
+
+// Without AllowLoopbackPeers, a client can't relay to the server's own host: a channel or
+// permission for a loopback or unspecified peer address is refused with 403 (Forbidden), and a
+// peer on 127.0.0.1 gets nothing through the relay
+static void
+testLoopbackPeers()
+{
+   cerr << "-- loopback peers, without AllowLoopbackPeers" << endl;
+   InProcessServer server(noLoopbackConfig);
+   Peer peer;
+   TurnUdpSocket client(localhost, 0);
+   check("loopback peers: allocation", !allocateOn(client, noLoopbackTurnPort));
+   for (const char* address : { "127.0.0.1", "127.1.2.3", "0.0.0.0", "::1", "::", "::ffff:127.0.0.1", "::ffff:0.0.0.0" })
+   {
+      check((std::string("loopback peers: a channel to ") + address + " is refused with 403").c_str(),
+            client.setActiveDestination(asio::ip::make_address(address), peer.port()).value() == 403);
+   }
+   // Sent in a Send indication, as the channel wasn't bound
+   check("loopback peers: sends to the peer on 127.0.0.1", !client.sendTo(localhost, peer.port(), toPeerA.data(), (unsigned int)toPeerA.size()));
+   asio::ip::udp::endpoint from;
+   check("loopback peers: the peer gets nothing", peer.receive(from, std::chrono::milliseconds(500)).empty());
+   check("loopback peers: a public peer address is still allowed",
+         !client.setActiveDestination(asio::ip::make_address("192.0.2.1"), 9));
+   client.destroyAllocation();
+
+   // CreatePermission, which the clients don't send, from an allocation made by hand
+   Peer rawClient;
+   resip::Data key;
+   resip::Data realm;
+   resip::Data nonce;
+   const auto allocate = [&]()
+   {
+      StunMessage request;
+      request.createHeader(StunMessage::StunClassRequest, StunMessage::TurnAllocateMethod);
+      request.mHasTurnRequestedTransport = true;
+      request.mTurnRequestedTransport = StunMessage::RequestedTransportUdp;
+      return rawRequest(rawClient, noLoopbackTurnPort, request, key, realm, nonce);
+   };
+   const auto createPermission = [&](std::initializer_list<const char*> addresses)
+   {
+      StunMessage request;
+      request.createHeader(StunMessage::StunClassRequest, StunMessage::TurnCreatePermissionMethod);
+      for (const char* address : addresses)
+      {
+         StunMessage::setStunAtrAddressFromTuple(request.mTurnXorPeerAddress[request.mCntTurnXorPeerAddress++],
+                                                 StunTuple(StunTuple::UDP, asio::ip::make_address(address), peer.port()));
+      }
+      return rawRequest(rawClient, noLoopbackTurnPort, request, key, realm, nonce);
+   };
+   check("loopback peers, by hand: an allocation is challenged", allocate() == 401);
+   StunMessage().calculateHmacKey(key, "test", realm, "1234");
+   check("loopback peers, by hand: allocation", allocate() == 0);
+   check("loopback peers, by hand: a permission for 127.0.0.1 is refused with 403", createPermission({ "127.0.0.1" }) == 403);
+   check("loopback peers, by hand: and for ::ffff:127.0.0.1", createPermission({ "::ffff:127.0.0.1" }) == 403);
+   check("loopback peers, by hand: and for a public address and 0.0.0.0 together", createPermission({ "192.0.2.1", "0.0.0.0" }) == 403);
+   check("loopback peers, by hand: a permission for a public address is still given", createPermission({ "192.0.2.1" }) == 0);
+}
+
 // A TCP proxy between one client and the server on serverPort, recording what each sends
 class TcpRecorder
 {
@@ -1309,7 +1411,8 @@ main(int argc, char** argv)
            writeConfig(idleConfig, idleTurnPort, idleTlsPort,
                        "TcpConnectionIdleTimeout = 1\n") &&
            writeConfig(limitsConfig, limitsTurnPort, limitsTlsPort,
-                       "TcpConnectionIdleTimeout = 0\nMaxTcpConnectionsPerIp = 4\nMaxAllocationsPerUser = 2\n");
+                       "TcpConnectionIdleTimeout = 0\nMaxTcpConnectionsPerIp = 4\nMaxAllocationsPerUser = 2\n") &&
+           writeConfig(noLoopbackConfig, noLoopbackTurnPort, noLoopbackTlsPort, "", false);
    check("certificates, users and config files written", ready);
 
    if (ready)
@@ -1336,6 +1439,7 @@ main(int argc, char** argv)
             runWithServer(idleConfig, testIdleTimeout);
             runWithServer(limitsConfig, testLimits);
             testRelayPortInUse();
+            testLoopbackPeers();
             {
                // The clients outlive the server
                std::unique_ptr<TurnUdpSocket> udpClient;
@@ -1355,7 +1459,7 @@ main(int argc, char** argv)
       }
    }
 
-   for (const char* file : { caFile, certFile, keyFile, usersFile, defaultConfig, noTls12Config, idleConfig, limitsConfig, relayPortsConfig })
+   for (const char* file : { caFile, certFile, keyFile, usersFile, defaultConfig, noTls12Config, idleConfig, limitsConfig, relayPortsConfig, noLoopbackConfig })
    {
       remove(file);
    }

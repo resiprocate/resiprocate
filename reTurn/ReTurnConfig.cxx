@@ -58,6 +58,7 @@ ReTurnConfig::ReTurnConfig() :
    mDefaultAllocationLifetime(600), // 10 minutes
    mMaxAllocationLifetime(3600),    // 1 hour
    mMaxAllocationsPerUser(0),       // 0 - no max
+   mAllowLoopbackPeers(false),
    mTlsServerCertificateFilename("server.pem"),
    mTlsServerPrivateKeyFilename(""),
    mTlsTempDhFilename("dh2048.pem"),
@@ -101,6 +102,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mDefaultAllocationLifetime = getConfigUnsignedLong("DefaultAllocationLifetime", mDefaultAllocationLifetime);
    mMaxAllocationLifetime = getConfigUnsignedLong("MaxAllocationLifetime", mMaxAllocationLifetime);
    mMaxAllocationsPerUser = getConfigUnsignedLong("MaxAllocationsPerUser", mMaxAllocationsPerUser);
+   mAllowLoopbackPeers = getConfigBool("AllowLoopbackPeers", mAllowLoopbackPeers);
    mTlsServerCertificateFilename = getConfigData("TlsServerCertificateFilename", mTlsServerCertificateFilename);
    mTlsServerPrivateKeyFilename = getConfigData("TlsServerPrivateKeyFilename", mTlsServerPrivateKeyFilename);
    mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);

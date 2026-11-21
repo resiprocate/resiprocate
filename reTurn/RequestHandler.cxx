@@ -177,6 +177,30 @@ RequestHandler::buildErrorResponseWithRealmAndNonce(StunMessage& response, unsig
    response.setNonce(nonce.c_str());
 }
 
+// Loopback and unspecified addresses (127.0.0.0/8, 0.0.0.0/8, ::1, ::, and the same as IPv4-mapped
+// IPv6 addresses) are the TURN server's own host: relaying to them would let a client reach, and
+// get answers from, services there that only listen on loopback.  Not allowed as peers unless
+// AllowLoopbackPeers is set.
+bool
+RequestHandler::isPeerAddressAllowed(const asio::ip::address& address)
+{
+   if(getConfig().mAllowLoopbackPeers)
+   {
+      return true;
+   }
+   asio::ip::address peer = address;
+   if(peer.is_v6() && peer.to_v6().is_v4_mapped())
+   {
+      peer = asio::ip::make_address_v4(asio::ip::v4_mapped, peer.to_v6());
+   }
+   if(peer.is_v4())
+   {
+      const unsigned char firstByte = peer.to_v4().to_bytes()[0];
+      return firstByte != 0 && firstByte != 127;
+   }
+   return !peer.is_loopback() && !peer.is_unspecified();
+}
+
 void 
 RequestHandler::generateNonce(const Data& timestamp, Data& nonce, const StunMessage& request)
 {
@@ -778,6 +802,17 @@ RequestHandler::processTurnCreatePermissionRequest(TurnAllocationManager& turnAl
    {
       StunTuple remoteAddress;
       remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
+      // No permission is installed unless every peer address is allowed
+      for (int i = 0; i < request.mCntTurnXorPeerAddress; i++)
+      {
+         StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress[i]);
+         if(!isPeerAddressAllowed(remoteAddress.getAddress()))
+         {
+            WarningLog(<< "Create permission requested for peer address " << remoteAddress.getAddress().to_string() << ", which is not allowed.  Sending 403. Sender=" << request.mRemoteTuple);
+            buildErrorResponse(response, 403, "Forbidden");
+            return RespondFromReceiving;
+         }
+      }
       for (int i = 0; i < request.mCntTurnXorPeerAddress; i++)
       {
          StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress[i]);
@@ -847,6 +882,13 @@ RequestHandler::processTurnChannelBindRequest(TurnAllocationManager& turnAllocat
       remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
       // Shouldn't have more than one xor-peer-address attribute in this request
       StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress[0]);
+
+      if(!isPeerAddressAllowed(remoteAddress.getAddress()))
+      {
+         WarningLog(<< "Channel bind requested for peer address " << remoteAddress.getAddress().to_string() << ", which is not allowed.  Sending 403. Sender=" << request.mRemoteTuple);
+         buildErrorResponse(response, 403, "Forbidden");
+         return RespondFromReceiving;
+      }
 
       if(!allocation->addChannelBinding(remoteAddress, request.mTurnChannelNumber))
       {
