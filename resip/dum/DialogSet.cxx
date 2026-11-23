@@ -667,8 +667,22 @@ DialogSet::dispatch(const SipMessage& msg)
          case OPTIONS:
             if (dialog)
             {
-               DebugLog(<< "in dialog options request");
-               break;
+               // An in-dialog OPTIONS goes to the InviteSession (it can be a session refresh probe - see
+               // InviteSession::sessionRefresh).  A dialog without one (a subscription dialog, for instance) has
+               // nothing to dispatch it to, so it is answered like an out-of-dialog OPTIONS.
+               if (dialog->mInviteSession)
+               {
+                  DebugLog(<< "in dialog options request");
+                  break;
+               }
+               DebugLog(<< "in dialog options request, no invite session - handling as out of dialog");
+               if (rejectOverlappingRequest(request, mServerOutOfDialogRequest))
+               {
+                  return;
+               }
+               mServerOutOfDialogRequest = makeServerOutOfDialog(request);
+               mServerOutOfDialogRequest->dispatch(request);
+               return;
             }
             // fallthrough
 
@@ -1292,6 +1306,7 @@ resip::operator<<(EncodeStream& strm, const DialogSet& ds)
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

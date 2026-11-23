@@ -129,6 +129,7 @@ class DumTestCase : public DumFixture
    CPPUNIT_TEST_SUITE( DumTestCase ); 
 
       CPPUNIT_TEST(testSessionTimerExpirationUasRefresher);
+      CPPUNIT_TEST(testInDialogOptionsOnSubscriptionDialog);
       // TODO SLG - add more SessionTimer tests - UAC refresher, UAS refresher, UAC no refresher, UAS no refresher, etc.
       CPPUNIT_TEST(testUASEarlyUpdateNoPrack);
 
@@ -332,6 +333,39 @@ class DumTestCase : public DumFixture
          
          //jason->getProfile()->removeSupportedOptionTag(Token(Symbols::Timer));
          jason->getProfile()->clearSupportedOptionTags();
+      }
+
+      void testInDialogOptionsOnSubscriptionDialog()
+      {
+         InfoLog(<< "testInDialogOptionsOnSubscriptionDialog");
+
+         // jason subscribes to sheila, then sheila sends an OPTIONS inside the subscription dialog.  The dialog has
+         // no InviteSession, so jason must answer it like an out-of-dialog OPTIONS (he has no OPTIONS handler, so
+         // DUM answers it) - it used to be dropped as a "Spurious OPTIONS", leaving sheila's transaction to time out.
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientSubscription clientSub(jason);
+
+         Data txt("Messages-Waiting: yes\r\n"
+                  "Message-Account: sip:sheila@mail.sipfoundry.org\r\n"
+                  "Voice-Message: 2/8 (0/2)\r\n");
+         HeaderFieldValue hfv(txt.begin(), txt.size());
+         std::shared_ptr<resip::Contents> mwc = std::make_shared<MessageWaitingContents>(hfv, Mime("application", "simple-message-summary"));
+
+         Seq(jason->subscribe(NameAddr(sheila->getContact()), Data("message-summary")),
+             sheila->expect(SUBSCRIBE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send202ToSubscribe(), sheila->notify(mwc, "message-summary", "active", 3600, 3600, true))),
+             And(Sub(jason->expect(ClientSubscription_NewSubscription, clientSub, *TestEndPoint::AlwaysTruePred, WaitForCommand, jason->noAction()),
+                     clientSub.expect(ClientSubscription_UpdateActive, *TestEndPoint::AlwaysTruePred, WaitForCommand, clientSub.acceptUpdate())),
+                 Sub(sheila->expect(NOTIFY/200, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         // sheila's only dialog is the subscription one, so the request goes inside it.  The subscription is left
+         // to the fixture's cleanup, as in testSubscribeRequestRefreshBetweenDumUaAndTestEndPoint.
+         Seq(sheila->request(jason->getAor().uri(), OPTIONS),
+             sheila->expect(OPTIONS/200, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()),
+             WaitForEndOfTest);
+         ExecuteSequences();
       }
 
       class DialogEventInfoRemoteTagUpdater;
