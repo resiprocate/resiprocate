@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 #include <set>
+#include <unordered_map>
 
 #include "TestSupport.hxx"
 #include "resip/stack/UnknownParameterType.hxx"
@@ -1409,6 +1410,41 @@ main(int argc, char* argv[])
       uriSet.insert(uri1);
       uriSet.insert(uri2);
       assert(uriSet.size() == 1);
+   }
+
+   // Regression test (GitHub issue #517): std::hash<Uri> must agree with operator== for Uris that are
+   // written differently but compare equal, or an unordered_map lookup misses a key that is there.  The
+   // user part is kept as received on the wire (%61 vs a), so the hash can't be taken from the encoded form.
+   {
+      const char* equalPairs[][2] = {
+         { "sip:alice@example.invalid", "sip:%61lice@example.invalid" },      // escaped user part
+         { "sip:alice@example.invalid", "sip:alice@EXAMPLE.invalid" },        // host case
+         { "SIP:alice@example.invalid", "sip:alice@example.invalid" },        // scheme case
+         { "sip:alice@example.invalid;transport=tcp;lr", "sip:alice@example.invalid;lr;transport=tcp" },  // parameter order
+         { "sip:alice@example.invalid;foo=bar", "sip:alice@example.invalid" }, // unknown parameter on one side only
+         { "sip:alice@[::1]", "sip:alice@[0:0:0:0:0:0:0:1]" },               // IPv6 host
+         { "sip:alice@example.invalid:5070", "sip:%61lice@Example.Invalid:5070" },
+      };
+      for (size_t i = 0; i < sizeof(equalPairs) / sizeof(equalPairs[0]); ++i)
+      {
+         Uri uri1(equalPairs[i][0]);
+         Uri uri2(equalPairs[i][1]);
+         std::cerr << "Uri hash vs operator==: " << uri1 << " / " << uri2 << std::endl;
+         assert(uri1 == uri2);
+         assert(std::hash<Uri>()(uri1) == std::hash<Uri>()(uri2));
+
+         std::unordered_map<Uri, int> uriMap;
+         uriMap[uri1] = 1;
+         assert(uriMap.find(uri2) != uriMap.end());
+         uriMap[uri2] = 2;
+         assert(uriMap.size() == 1);
+      }
+
+      // The user part is case-sensitive for sip:, so these differ - check the hash isn't simply ignoring the user
+      Uri alice("sip:alice@example.invalid");
+      Uri bob("sip:bob@example.invalid");
+      assert(!(alice == bob));
+      assert(std::hash<Uri>()(alice) != std::hash<Uri>()(bob));
    }
 
    // Malformed urn: NID/NSS must be rejected with a ParseException instead

@@ -184,7 +184,11 @@ class Uri : public ParserCategory
       bool operator==(const Uri& other) const;
       bool operator!=(const Uri& other) const;
       bool operator<(const Uri& other) const;
-      
+
+      /// Hash that agrees with operator==:  Uris that compare equal have the same hash, as
+      /// std::unordered_map and HashMap require.  This is what std::hash<resip::Uri> returns.
+      size_t hash() const;
+
       bool aorEqual(const Uri& rhs) const;
       void setIsBetweenAngleQuotes(bool value) { mIsBetweenAngleQuotes = value; }
 

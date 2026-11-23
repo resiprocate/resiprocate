@@ -708,6 +708,42 @@ Uri::operator==(const Uri& other) const
    return true;
 }
 
+size_t
+Uri::hash() const
+{
+   // Uris that compare equal must hash equal, so only what operator== compares is hashed, in the form it
+   // compares it:  the scheme and host without regard to case (an IPv6 host canonicalized), the user part
+   // decoded - not as written on the wire, which keeps the sender's escaping (%61 vs a) - and the port.
+   // Parameters are left out:  operator== ignores their order, and parameters other than the significant ones
+   // when only one side has them.  Leaving a field out can only make more Uris share a hash, never break the
+   // contract.
+   checkParsed();
+
+   if (!mHostCanonicalized)
+   {
+      if (DnsUtil::isIpV6Address(mHost))
+      {
+         mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
+      }
+      else
+      {
+         mCanonicalHost = mHost;
+         mCanonicalHost.lowercase();
+      }
+      mHostCanonicalized = true;
+   }
+
+   // As in operator==:  the user part is case-sensitive for sip:, sips: and urn:, and not for other schemes
+   const bool userCaseSensitive = isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips) ||
+                                  isEqualNoCase(mScheme, Symbols::Urn);
+
+   size_t h = mScheme.caseInsensitivehash();
+   h = h * 31 + (userCaseSensitive ? mUser.hash() : mUser.caseInsensitivehash());
+   h = h * 31 + mCanonicalHost.caseInsensitivehash();
+   h = h * 31 + static_cast<size_t>(mPort);
+   return h;
+}
+
 bool 
 Uri::operator!=(const Uri& other) const
 {
@@ -1774,7 +1810,7 @@ defineParam(wsSrcPort, "ws-src-port", UInt32Parameter, "RESIP INTERNAL (WebSocke
 
 #undef defineParam
 
-HashValueImp(resip::Uri, resip::Data::from(data).hash());
+HashValueImp(resip::Uri, data.hash());
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
