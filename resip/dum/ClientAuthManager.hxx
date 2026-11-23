@@ -48,11 +48,18 @@ class ClientAuthManager
             
             void clear();
 
-            bool handleAuth(UserProfile& userProfile, const Auth& auth, bool isProxyCredential);
+            // auth must be a challenge that findCredential accepted, and credential the one it returned
+            bool handleAuth(const Auth& auth, bool isProxyCredential, const UserProfile::DigestCredential& credential);
             void authSucceeded();
 
             void addAuthentication(SipMessage& origRequest);
-            void transitionToFailedIfInitial();
+            bool isFailed() const { return mState == Failed; }
+
+            // True if we can answer auth:  its algorithm and qop are supported (by us or by the
+            // ClientAuthExtension) and userProfile has a credential for its realm that works with that
+            // algorithm.  Looks at nothing but its arguments, so a challenge can be checked before any
+            // realm state changes.
+            static bool findCredential(UserProfile& userProfile, const Auth& auth, UserProfile::DigestCredential& credential);
 
          private:
             typedef enum
@@ -66,7 +73,6 @@ class ClientAuthManager
 
             void transition(State s);
             static const Data& getStateString(State s);
-            bool findCredential(UserProfile& userProfile, const Auth& auth);  
             UserProfile::DigestCredential mCredential;
             bool mIsProxyCredential;
             

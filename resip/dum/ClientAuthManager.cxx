@@ -8,6 +8,7 @@
 #include "rutil/Random.hxx"
 #include "resip/dum/ClientAuthExtension.hxx"
 
+#include <set>
 #include <utility>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -207,15 +208,17 @@ ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Si
       return false;
    }
 
-   // As long we handled at least one WWW or Proxy Authenticate - we are good
+   // As long we handled at least one WWW or Proxy Authenticate - we are good.  Both are looked at:  a
+   // forking proxy aggregates the challenges from all branches into one response (RFC 3261 section 16.7),
+   // so a single response can carry both.
    bool handled = false;
    if (challenge.exists(h_WWWAuthenticates))
    {
       handled = handleChallenge(userProfile, challenge.header(h_WWWAuthenticates), false /* isProxyCredential */);
    }
-   if (!handled && challenge.exists(h_ProxyAuthenticates))
+   if (challenge.exists(h_ProxyAuthenticates))
    {
-      handled = handleChallenge(userProfile, challenge.header(h_ProxyAuthenticates), true /* isProxyCredential */);
+      handled = handleChallenge(userProfile, challenge.header(h_ProxyAuthenticates), true /* isProxyCredential */) || handled;
    }
 
    if (!handled)
@@ -232,28 +235,50 @@ ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Si
 bool 
 ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Auths& auths, bool isProxyCredential)
 {
+   // Every realm we have credentials for is answered:  a forking proxy can aggregate challenges from several
+   // realms into one response (RFC 3261 section 22.3).  A realm can be challenged with several headers, one per
+   // algorithm in the server's order of preference, and we answer the topmost one we can use (RFC 8760 section
+   // 2.4).  Whether a header is usable is decided before the realm's state is touched:  a header we can't answer
+   // (an algorithm we don't support, for instance) says nothing about our credentials, so it must neither fail
+   // the realm nor stop us from answering a later header for the same realm.
    bool ret = false;
+   std::set<Data> answeredRealms;
    for (Auths::const_iterator i = auths.begin(); i != auths.end(); ++i)
    {
-      if (i->exists(p_realm))
+      if (!i->exists(p_realm))
       {
-         if (mRealms[i->param(p_realm)].handleAuth(userProfile, *i, isProxyCredential))
-         {
-            // We have credentials for the realm and we support the algorithm and qop
-            // We should only be responding to one authenticates header
-            ret = true;
-            break;
-         }
+         continue;
+      }
+      const Data& realm = i->param(p_realm);
+      if (answeredRealms.count(realm) != 0)
+      {
+         continue;  // already answering a header higher up for this realm
+      }
+      UserProfile::DigestCredential credential;
+      if (!RealmState::findCredential(userProfile, *i, credential))
+      {
+         continue;
+      }
+      answeredRealms.insert(realm);
+      if (mRealms[realm].handleAuth(*i, isProxyCredential, credential))
+      {
+         ret = true;
       }
    }
 
-   // Now that we have tried all auth headers, make sure we mark any realm states still 
-   // Initial as Failed.  If any were successful, they have already transitioned to Current.
+   // A realm we were answering before, that this challenge has no usable header for, is dropped - there is
+   // nothing we could send for it.  Failed realms are kept, so that they are not retried.
    for (Auths::const_iterator i = auths.begin(); i != auths.end(); ++i)
    {
-      if (i->exists(p_realm))
+      if (!i->exists(p_realm) || answeredRealms.count(i->param(p_realm)) != 0)
       {
-         mRealms[i->param(p_realm)].transitionToFailedIfInitial();
+         continue;
+      }
+      RealmStates::iterator it = mRealms.find(i->param(p_realm));
+      if (it != mRealms.end() && !it->second.isFailed())
+      {
+         DebugLog(<< "No usable challenge for realm " << it->first << ", no longer answering it");
+         mRealms.erase(it);
       }
    }
 
@@ -324,22 +349,20 @@ ClientAuthManager::RealmState::authSucceeded()
 {
    switch(mState)
    {
-      case Initial:
-         resip_assert(0);
-         break;
       case Current:
       case Cached:
       case TryOnce:
          transition(Cached);
          break;
+      case Initial:
       case Failed:
-         resip_assert(0);
-         break;         
+         // Nothing was sent for this realm - another realm in the same challenge was answered
+         break;
    };
 }
 
 bool 
-ClientAuthManager::RealmState::handleAuth(UserProfile& userProfile, const Auth& auth, bool isProxyCredential)
+ClientAuthManager::RealmState::handleAuth(const Auth& auth, bool isProxyCredential, const UserProfile::DigestCredential& credential)
 {
    DebugLog(<< "ClientAuthManager::RealmState::handleAuth: " << this << " " << auth << " is proxy: " << isProxyCredential);
    mIsProxyCredential = isProxyCredential;   //this changing dynamically would be very bizarre..should trap w/ enum
@@ -347,6 +370,7 @@ ClientAuthManager::RealmState::handleAuth(UserProfile& userProfile, const Auth& 
    {
       case Initial:
          mAuth = auth;
+         transition(Current);
          break;
       case Current:
          if (auth.exists(p_stale) && auth.param(p_stale) == "true")
@@ -383,26 +407,8 @@ ClientAuthManager::RealmState::handleAuth(UserProfile& userProfile, const Auth& 
          return false;
    }
 
-   if (findCredential(userProfile, auth))
-   {
-      // If we are in the Initial state, we are still looking for an Auth header 
-      // we can respond to.  Since we have found one now, transition to Current state.
-      if (mState == Initial)
-      {
-         transition(Current);
-      }
-      return true;
-   }
-   else
-   {
-      // Allow a failure to find credentials when we are in the Initial state and 
-      // looking we are for an Auth header we can respond to.
-      if (mState != Initial)
-      {
-         transition(Failed);
-      }
-      return false;
-   }
+   mCredential = credential;
+   return true;
 }
 
 void
@@ -412,11 +418,14 @@ ClientAuthManager::RealmState::clear()
 }
 
 bool 
-ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Auth& auth)
+ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Auth& auth, UserProfile::DigestCredential& credential)
 {
-   DigestType digestType;
-   if (!(Helper::algorithmAndQopSupported(auth, digestType) || 
-         ClientAuthExtension::instance().algorithmAndQopSupported(auth)))
+   // The extension is asked first, as ClientAuthDecorator does when it builds the response:  a challenge the
+   // extension takes is answered by the extension, so its credential is not checked against the built-in
+   // algorithms.
+   const bool useExtension = ClientAuthExtension::instance().algorithmAndQopSupported(auth);
+   DigestType digestType = MD5;
+   if (!useExtension && !Helper::algorithmAndQopSupported(auth, digestType))
    {
       DebugLog(<<"Unsupported algorithm or qop: " << auth);
       return false;
@@ -424,22 +433,20 @@ ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Au
 
    const Data& realm = auth.param(p_realm);
    //!dcm! -- icky, expose static empty soon...ptr instead of reference?
-   mCredential = userProfile.getDigestCredential(realm);
+   credential = userProfile.getDigestCredential(realm);
 
-   if (mCredential.realm.empty())
+   if (credential.realm.empty())
    {
       DebugLog(<< "Got a 401 or 407 but could not find credentials for realm: " << realm);
-      // DebugLog (<< auth);
-      // DebugLog (<< response);
       return false;
    }
 
    // If credential is provided in hash form, check if credential supports Auth algorithm
-   if (mCredential.isPasswordA1Hash)
+   if (credential.isPasswordA1Hash && !useExtension)
    {
-      if (!Helper::isDigestTypeSupportedInResipA1HashString(mCredential.password, digestType))
+      if (!Helper::isDigestTypeSupportedInResipA1HashString(credential.password, digestType))
       {
-         DebugLog(<< "Password hash for " << mCredential.user << "@" << mCredential.realm << " doesn't contain " << DigestStream::getDigestName(digestType) << " hash.");
+         DebugLog(<< "Password hash for " << credential.user << "@" << credential.realm << " doesn't contain " << DigestStream::getDigestName(digestType) << " hash.");
          return false;
       }
    }
@@ -449,8 +456,8 @@ ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Au
 void 
 ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
 {
-   resip_assert(mState != Failed);
-   if (mState == Failed) return;
+   // A Failed realm can sit beside one that is being answered (a challenge can carry several realms)
+   if (mState == Initial || mState == Failed) return;
 
    Data nonceCountString;
    Data authQop = Helper::qopOption(mAuth);
@@ -463,15 +470,6 @@ ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
    // may be modifying the message body
    std::unique_ptr<MessageDecorator> clientAuthDecorator(new ClientAuthDecorator(mIsProxyCredential, mAuth, mCredential, authQop, nonceCountString));
    request.addOutboundDecorator(std::move(clientAuthDecorator));
-}
-
-void
-ClientAuthManager::RealmState::transitionToFailedIfInitial()
-{
-   if (mState == Initial)
-   {
-      transition(Failed);
-   }
 }
 
 // bool
@@ -495,6 +493,7 @@ ClientAuthManager::RealmState::transitionToFailedIfInitial()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -44,6 +44,7 @@ sample_app(limpc-dum limpc.cxx UserAgent.cxx CommandLineParser.cxx)
 #sample_app(rlsServer rlsServer.cxx)    # deprecated
 #sample_app(test3pcc test3pcc.cxx)      # deprecated
 test(BasicCall BasicCall.cxx)
+test(testClientAuthManager testClientAuthManager.cxx)
 test(testContactInstanceRecord testContactInstanceRecord.cxx)
 test(testRequestValidationHandler testRequestValidationHandler.cxx)
 test(testDialogSetId testDSI.cxx)
