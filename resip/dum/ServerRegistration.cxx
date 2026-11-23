@@ -221,7 +221,20 @@ ServerRegistration::dispatch(const SipMessage& msg)
        delete(this);
        return;
    }
-   
+
+   // RFC 3261 section 10.3 step 5: the address-of-record must be in a domain
+   // this registrar is responsible for, otherwise respond with 404.
+   if (!mDum.isMyDomain(mAor.host()))
+   {
+       InfoLog( << "Rejecting registration for " << mAor << ": domain is not served by this registrar" );
+
+       auto failure = std::make_shared<SipMessage>();
+       mDum.makeResponse(*failure, msg, 404);
+       mDum.send(failure);
+       delete(this);
+       return;
+   }
+
    if (handler->asyncProcessing())
    {
       mAsyncState = asyncStateWaitingForInitialContactList;

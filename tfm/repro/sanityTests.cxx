@@ -11045,10 +11045,10 @@ class MyTestCase
          TEST(testRegisterBogusAuth);
          //TEST(testRegisterLateDigestResponse); //Extremely long test (around 50 minutes).
          TEST(testRegisterClientRetransmits);
-         //TEST(testRegisterNoUserInTo); //repro doesn't compain about this yet
+         //TEST(testRegisterNoUserInTo); //repro allows third-party registrations (RFC 3261 10.3 step 4 leaves this to local policy)
          //TEST(testRegisterUserInReqUri); //repro doesn't compain about this yet
-         //TEST(testRegisterUnknownAorHost); //repro doesn't compain about this yet
-         //TEST(testRegisterUnknownAorUser); //repro doesn't compain about this yet
+         TEST(testRegisterUnknownAorHost);
+         //TEST(testRegisterUnknownAorUser); //repro allows third-party registrations and does not look up the AOR user
          TEST(testOversizeCallIdRegister); //message is getting dropped. Why?
          TEST(testOversizeContactRegister); //message is getting dropped. Why?
          TEST(testRefresh);
@@ -11083,10 +11083,10 @@ class MyTestCase
          TEST(testRegisterBogusAuthWithOutbound);
          //TEST(testRegisterLateDigestResponseWithOutbound); //Extremely long test (around 50 minutes).
          TEST(testRegisterClientRetransmitsWithOutbound);
-         //TEST(testRegisterNoUserInToWithOutbound); //repro doesn't complain about this yet
+         //TEST(testRegisterNoUserInToWithOutbound); //repro allows third-party registrations (RFC 3261 10.3 step 4 leaves this to local policy)
          //TEST(testRegisterUserInReqUriWithOutbound); //repro doesn't complain about this yet
-         //TEST(testRegisterUnknownAorHostWithOutbound); //repro doesn't complain about this yet
-         //TEST(testRegisterUnknownAorUserWithOutbound); //repro doesn't complain about this yet
+         TEST(testRegisterUnknownAorHostWithOutbound);
+         //TEST(testRegisterUnknownAorUserWithOutbound); //repro allows third-party registrations and does not look up the AOR user
          TEST(testOversizeCallIdRegisterWithOutbound); //message is getting dropped. Why?
          TEST(testOversizeContactRegisterWithOutbound); //message is getting dropped. Why?
          TEST(testRefreshWithOutbound);
