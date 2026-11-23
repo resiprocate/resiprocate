@@ -10317,12 +10317,33 @@ class TestHolder : public ReproFixture
          int mSeq;
    };
 
+   // !dlb! move to ProvisioningUtils
+   class SetFromTag
+   {
+      public:
+         SetFromTag(const Data& tag) :
+            mTag(tag)
+         {}
+
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
+         {
+            DebugLog (<< "SetFromTag=" << mTag << endl << *msg);
+
+            msg->header(h_From).param(p_tag) = mTag;
+
+            return msg;
+         }
+
+      private:
+         Data mTag;
+   };
+
    void testRegisterNewCallId()
    {
       WarningLog(<< "*!testRegisterNewCallId!*");
 
       SetCallId scallid("callid2345");
-      
+
       Seq(jason->registerUser(83, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(jason->getDefaultContacts(), 83)),
@@ -10330,6 +10351,7 @@ class TestHolder : public ReproFixture
       ExecuteSequences();
 
       Seq(condition(scallid, jason->registerUser(83, jason->getDefaultContacts())),
+          jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(jason->getDefaultContacts(), 83)),
           500);
 
@@ -10344,14 +10366,18 @@ class TestHolder : public ReproFixture
       SetCSeqSequence sseq(4);
       SetCSeqSequence sseq1(5);
       StripAuth stripAuths;
-      
+      // Same Call-ID and CSeq but a new From tag, so that DUM's merged request detection (RFC 3261 section 8.2.2.2)
+      // does not answer it with a 482 before the registrar sees it
+      SetFromTag sfromtag("fromtag2346");
+
       Seq(condition(compose(sseq, scallid), jason->registerUser(83, jason->getDefaultContacts())),
           jason->expect(REGISTER/407, from(proxy), 1000, condition(sseq1, jason->digestRespond())),
           jason->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(jason->getDefaultContacts(), 83)),
           500);
       ExecuteSequences();
 
-      Seq(condition(compose(stripAuths, sseq, scallid), jason->registerUser(83, jason->getDefaultContacts())),
+      // Same Call-ID, same CSeq: rejected
+      Seq(condition(compose(stripAuths, sseq, scallid, sfromtag), jason->registerUser(83, jason->getDefaultContacts())),
           jason->expect(REGISTER/407, from(proxy), 1000, condition(sseq1, jason->digestRespond())),
           jason->expect(REGISTER/400, from(proxy), 10000, jason->noAction()),
           500);
@@ -10363,12 +10389,15 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<< "*!testRegisterNewCallIdSameSequence!*");
 
+      // Use a Call-ID of our own for the first registration: the user's normal registration Call-ID may already
+      // have a live binding with a higher CSeq from an earlier test, which would make this REGISTER fail.
+      SetCallId scallid0("callid2347a");
       SetCallId scallid("callid2347");
       SetCSeqSequence sseq(4);
       SetCSeqSequence sseq1(5);
       StripAuth stripAuths;
-      
-      Seq(condition(sseq, jason->registerUser(83, jason->getDefaultContacts())),
+
+      Seq(condition(compose(sseq, scallid0), jason->registerUser(83, jason->getDefaultContacts())),
           jason->expect(REGISTER/407, from(proxy), 1000, condition(sseq1, jason->digestRespond())),
           jason->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(jason->getDefaultContacts(), 83)),
           500);
@@ -10380,6 +10409,129 @@ class TestHolder : public ReproFixture
           jason->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(jason->getDefaultContacts(), 83)),
           500);
 
+      ExecuteSequences();
+   }
+
+   // RFC 3261 section 10.3 step 7: a REGISTER with the same Call-ID as an existing binding but a lower CSeq must fail
+   void testRegisterLowerCSeq()
+   {
+      WarningLog(<< "*!testRegisterLowerCSeq!*");
+
+      SetCallId scallid("callid2348");
+      SetCSeqSequence sseq10(10);
+      SetCSeqSequence sseq11(11);
+      SetCSeqSequence sseq2(2);
+      SetCSeqSequence sseq3(3);
+      SetCSeqSequence sseq12(12);
+      SetCSeqSequence sseq13(13);
+      StripAuth stripAuths;
+
+      Seq(condition(compose(stripAuths, sseq10, scallid), jason->registerUser(83, jason->getDefaultContacts())),
+          jason->expect(REGISTER/407, from(proxy), 1000, condition(sseq11, jason->digestRespond())),
+          jason->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(jason->getDefaultContacts(), 83)),
+          500);
+      ExecuteSequences();
+
+      // Same Call-ID, lower CSeq: rejected
+      Seq(condition(compose(stripAuths, sseq2, scallid), jason->registerUser(83, jason->getDefaultContacts())),
+          jason->expect(REGISTER/407, from(proxy), 1000, condition(sseq3, jason->digestRespond())),
+          jason->expect(REGISTER/400, from(proxy), 10000, jason->noAction()),
+          500);
+      ExecuteSequences();
+
+      // Same Call-ID, higher CSeq: accepted
+      Seq(condition(compose(stripAuths, sseq12, scallid), jason->registerUser(83, jason->getDefaultContacts())),
+          jason->expect(REGISTER/407, from(proxy), 1000, condition(sseq13, jason->digestRespond())),
+          jason->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(jason->getDefaultContacts(), 83)),
+          500);
+      ExecuteSequences();
+   }
+
+   // RFC 3261 section 10.3 step 6: "Contact: *" with the same Call-ID as an existing binding must have a higher CSeq
+   void testUnregisterAllLowerCSeq()
+   {
+      WarningLog(<< "*!testUnregisterAllLowerCSeq!*");
+
+      SetCallId scallid("callid2349");
+      SetCSeqSequence sseq10(10);
+      SetCSeqSequence sseq11(11);
+      SetCSeqSequence sseq4(4);
+      SetCSeqSequence sseq5(5);
+      SetCSeqSequence sseq12(12);
+      SetCSeqSequence sseq13(13);
+      StripAuth stripAuths;
+
+      NameAddr na;
+      na.setAllContacts();
+      set<NameAddr> all;
+      all.insert(na);
+      set<NameAddr> emptySet;
+
+      Seq(condition(compose(stripAuths, sseq10, scallid), jason->registerUser(83, jason->getDefaultContacts())),
+          jason->expect(REGISTER/407, from(proxy), 1000, condition(sseq11, jason->digestRespond())),
+          jason->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(jason->getDefaultContacts(), 83)),
+          500);
+      ExecuteSequences();
+
+      // Same Call-ID, lower CSeq: rejected
+      Seq(condition(compose(stripAuths, sseq4, scallid), jason->registerUser(0, all)),
+          jason->expect(REGISTER/407, from(proxy), 1000, condition(sseq5, jason->digestRespond())),
+          jason->expect(REGISTER/400, from(proxy), 10000, jason->noAction()),
+          500);
+      ExecuteSequences();
+
+      // Same Call-ID, higher CSeq: all bindings removed
+      Seq(condition(compose(stripAuths, sseq12, scallid), jason->registerUser(0, all)),
+          jason->expect(REGISTER/407, from(proxy), 1000, condition(sseq13, jason->digestRespond())),
+          jason->expect(REGISTER/200, from(proxy), 10000, new CheckFetchedContacts(emptySet)),
+          500);
+      ExecuteSequences();
+   }
+
+   // !dlb! move to ProvisioningUtils
+   class AppendAllContacts
+   {
+      public:
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
+         {
+            NameAddr all;
+            all.setAllContacts();
+            msg->header(h_Contacts).push_back(all);
+            return msg;
+         }
+   };
+
+   // A REGISTER that fails part way through its Contacts must not leave the earlier Contacts registered
+   void testRegisterFailureRollsBack()
+   {
+      WarningLog(<< "*!testRegisterFailureRollsBack!*");
+
+      NameAddr na;
+      na.setAllContacts();
+      set<NameAddr> all;
+      all.insert(na);
+      set<NameAddr> emptySet;
+      AppendAllContacts appendAll;
+
+      // Start with no bindings
+      Seq(jason->registerUser(0, all),
+          jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+          jason->expect(REGISTER/200, from(proxy), 10000, new CheckFetchedContacts(emptySet)),
+          500);
+      ExecuteSequences();
+
+      // A valid Contact followed by "*" is rejected after the valid Contact has been processed
+      Seq(condition(appendAll, jason->registerUser(83, jason->getDefaultContacts())),
+          jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+          jason->expect(REGISTER/400, from(proxy), 10000, jason->noAction()),
+          500);
+      ExecuteSequences();
+
+      // The valid Contact must not have been registered
+      Seq(jason->registerUser(83, emptySet),
+          jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+          jason->expect(REGISTER/200, from(proxy), 10000, new CheckFetchedContacts(emptySet)),
+          500);
       ExecuteSequences();
    }
    
@@ -10913,6 +11065,12 @@ class MyTestCase
          TEST(testFetch);
          TEST(testExpiryCleanup);
          //TEST(testFetchNonExistent); //repro doesn't compain about this yet
+         TEST(testRegisterNewCallId);
+         TEST(testRegisterOutOfSequence);
+         TEST(testRegisterNewCallIdSameSequence);
+         TEST(testRegisterLowerCSeq);
+         TEST(testUnregisterAllLowerCSeq);
+         TEST(testRegisterFailureRollsBack);
 
          TEST(testRegisterBasicWithOutbound);
          TEST(testMultiple1WithOutbound);

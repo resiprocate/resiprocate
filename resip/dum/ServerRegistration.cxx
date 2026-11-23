@@ -287,17 +287,42 @@ ServerRegistration::processRegistration(const SipMessage& msg)
    uint64_t now=Timer::getTimeSecs();
    uint32_t expires=0;
 
+   // The bindings as they were before this request, for the Call-ID/CSeq ordering check (RFC 3261 section 10.3).
+   // This must be a snapshot, so that the check never sees changes made for earlier contacts in this same request.
+   ContactList asyncExistingContacts;
+   const ContactList* existingContacts = nullptr;
+   if (mDum.getMasterProfile()->serverRegistrationCSeqCheckEnabled())
+   {
+      if (!async)
+      {
+         existingContacts = mOriginalContacts.get();
+      }
+      else if (mAsyncLocalStore && mAsyncLocalStore->getContacts())
+      {
+         for (const auto& existing : *mAsyncLocalStore->getContacts())
+         {
+            // Only bindings with a Call-ID can be checked, so there is no need to copy the others
+            if (existing && !existing->mCallId.empty())
+            {
+               asyncExistingContacts.push_back(*existing);
+            }
+         }
+         existingContacts = &asyncExistingContacts;
+      }
+   }
+
    for (; i != iEnd; ++i)
    {
       if (!i->isWellFormed())
       {
          auto failure = std::make_shared<SipMessage>();
          mDum.makeResponse(*failure, msg, 400, "Malformed Contact");
-         mDum.send(failure);
          if (!async)
          {
-            database->unlockRecord(mAor);
+            // Undo any bindings already changed for earlier contacts in this request
+            rollbackAndUnlock();
          }
+         mDum.send(failure);
          delete(this);
          return;
       }
@@ -312,13 +337,24 @@ ServerRegistration::processRegistration(const SipMessage& msg)
          {
             auto failure = std::make_shared<SipMessage>();
             mDum.makeResponse(*failure, msg, 400, "Invalid use of 'Contact: *'");
-            mDum.send(failure);
             if (!async)
             {
-               database->unlockRecord(mAor);
+               // Undo any bindings already changed for earlier contacts in this request
+               rollbackAndUnlock();
             }
+            mDum.send(failure);
             delete(this);
             return;
+         }
+
+         if (existingContacts)
+         {
+            const ContactInstanceRecord* stale = findStaleBinding(*existingContacts, nullptr, msg, now);
+            if (stale)
+            {
+               rejectStaleCSeq(*stale, msg);
+               return;
+            }
          }
 
          if (!async)
@@ -348,6 +384,8 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       {
          rec.mUserAgent = msg.header(h_UserAgent).value();
       }
+      rec.mCallId = msg.header(h_CallId).value();
+      rec.mCSeq = msg.header(h_CSeq).sequence();
       if(!msg.empty(h_Paths))
       {
          rec.mSipPath=msg.header(h_Paths);
@@ -364,10 +402,21 @@ ServerRegistration::processRegistration(const SipMessage& msg)
          // We have rejected the request. Bail.
          if (!async)
          {
-            database->unlockRecord(mAor);
+            // Undo any bindings already changed for earlier contacts in this request
+            rollbackAndUnlock();
          }
          delete(this);
          return;
+      }
+
+      if (existingContacts)
+      {
+         const ContactInstanceRecord* stale = findStaleBinding(*existingContacts, &rec, msg, now);
+         if (stale)
+         {
+            rejectStaleCSeq(*stale, msg);
+            return;
+         }
       }
 
       // Add ContactInstanceRecord to List
@@ -571,7 +620,74 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
    return true;
 }
 
-bool 
+const ContactInstanceRecord*
+ServerRegistration::findStaleBinding(const ContactList& existingContacts,
+                                     const ContactInstanceRecord* rec,
+                                     const resip::SipMessage& msg,
+                                     uint64_t now)
+{
+   const Data& callId = msg.header(h_CallId).value();
+   const unsigned int cseq = msg.header(h_CSeq).sequence();
+
+   for (const auto& existing : existingContacts)
+   {
+      // Expired and lingering (removed) bindings no longer exist.  A binding stored without a Call-ID (by an older
+      // version, a registration sync peer that does not send it, or an application that does not store it) cannot
+      // be checked.
+      if (existing.mRegExpires <= now || existing.mCallId.empty())
+      {
+         continue;
+      }
+      if (rec && !(existing == *rec))
+      {
+         continue;
+      }
+      // Call-ID comparison is case-sensitive (RFC 3261 section 20.8)
+      if (existing.mCallId == callId && cseq <= existing.mCSeq)
+      {
+         return &existing;
+      }
+   }
+   return nullptr;
+}
+
+void
+ServerRegistration::rejectStaleCSeq(const ContactInstanceRecord& staleBinding, const resip::SipMessage& msg)
+{
+   WarningLog(<< "Rejecting REGISTER for " << mAor << " with Call-ID " << msg.header(h_CallId).value()
+              << ": CSeq " << msg.header(h_CSeq).sequence() << " is not higher than CSeq " << staleBinding.mCSeq
+              << " of existing binding " << staleBinding.mContact.uri() << " (RFC 3261 section 10.3)");
+
+   auto failure = std::make_shared<SipMessage>();
+   mDum.makeResponse(*failure, msg, 400, "Invalid CSeq number");
+   if (!mDum.mServerRegistrationHandler->asyncProcessing())
+   {
+      // Undo any bindings already changed for earlier contacts in this request
+      rollbackAndUnlock();
+   }
+   mDum.send(failure);
+   delete(this);
+}
+
+void
+ServerRegistration::rollbackAndUnlock()
+{
+   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+
+   // processRegistration() only changes the database after adding the contact to mRequestContacts, so if that is
+   // still empty there is nothing to undo.
+   if (!mRequestContacts.empty())
+   {
+      database->removeAor(mAor);
+      if (mOriginalContacts)
+      {
+         database->addAor(mAor, *mOriginalContacts);
+      }
+   }
+   database->unlockRecord(mAor);
+}
+
+bool
 ServerRegistration::flowTokenNeededForTls(const ContactInstanceRecord &rec) const
 {
    const resip::NameAddr& contact(rec.mContact);
@@ -835,6 +951,7 @@ ServerRegistration::AsyncLocalStore::removeAllContacts()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

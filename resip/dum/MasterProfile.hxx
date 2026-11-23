@@ -156,6 +156,15 @@ class MasterProfile : public UserProfile
       virtual uint32_t& serverRegistrationDefaultExpiresTime() noexcept;
       virtual uint32_t serverRegistrationDefaultExpiresTime() const noexcept;
 
+      /// When enabled (the default), the Registration Server enforces the Call-ID/CSeq ordering
+      /// rules of RFC 3261 section 10.3 (steps 6 and 7): a REGISTER that has the same Call-ID as an
+      /// existing binding, but a CSeq that is not higher than the one that created or last refreshed
+      /// that binding, is rejected with a 400 and no bindings are changed.  Disable this to accept
+      /// such requests, for example from devices that keep their Call-ID across a reboot but restart
+      /// their CSeq numbering.
+      virtual bool& serverRegistrationCSeqCheckEnabled() noexcept;
+      virtual bool serverRegistrationCSeqCheckEnabled() const noexcept;
+
       ///Set this to include the RequestURI in merge request detection.
       ///*!*!*!*!*!*! RED FLASHING LIGHT *!*!*!*!*!*! 
       ///When false, DUM implements the policy that all RURIs that arrive are equivalent,
@@ -214,6 +223,7 @@ class MasterProfile : public UserProfile
       uint32_t mServerRegistrationMinExpires;
       uint32_t mServerRegistrationMaxExpires;
       uint32_t mServerRegistrationDefaultExpires;
+      bool mServerRegistrationCSeqCheckEnabled;
 
       bool mAdditionalTransactionTerminatingResponsesEnabled;
       std::set<int> mAdditionalTransactionTerminatingResponsess;

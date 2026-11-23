@@ -76,6 +76,25 @@ class ServerRegistration: public NonDialogUsage
                                 const resip::SipMessage& msg,
                                 bool hasFlow) const;
 
+      /** RFC 3261 section 10.3 steps 6 and 7: returns a live binding from existingContacts that has the same
+          Call-ID as the request but a CSeq that is not lower than the request's, or null if there is none.  Only
+          bindings that match rec are checked, or all bindings if rec is null ("Contact: *").  Bindings stored
+          without a Call-ID are never considered stale.
+        */
+      static const ContactInstanceRecord* findStaleBinding(const ContactList& existingContacts,
+                                                           const ContactInstanceRecord* rec,
+                                                           const resip::SipMessage& msg,
+                                                           uint64_t now);
+
+      /** Rejects the request with "400 Invalid CSeq number", undoing any changes it has made.  Deletes this object.
+        */
+      void rejectStaleCSeq(const ContactInstanceRecord& staleBinding, const resip::SipMessage& msg);
+
+      /** For synchronous processing only: undo any database changes this request has made so far, then unlock the
+          record.  Used when processing fails part way through a REGISTER.
+        */
+      void rollbackAndUnlock();
+
       SipMessage mRequest;
       Uri mAor;
       std::shared_ptr<ContactList> mOriginalContacts;  // Used only for non-async processing
@@ -183,6 +202,10 @@ class ServerRegistration: public NonDialogUsage
             }
 
             unsigned int numContacts() { if(mModifiedContacts.get()) return (unsigned int)mModifiedContacts->size(); return 0; }
+
+            /** The current (possibly modified) contact list, or null once released.
+            */
+            const ContactPtrList* getContacts() const noexcept { return mModifiedContacts.get(); }
          private:
             std::unique_ptr<ContactRecordTransactionLog> mLog;
             std::unique_ptr<ContactPtrList> mModifiedContacts;
@@ -203,6 +226,7 @@ class ServerRegistration: public NonDialogUsage
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -23,6 +23,7 @@ MasterProfile::MasterProfile() :
    mServerRegistrationMinExpires(0),
    mServerRegistrationMaxExpires(UINT_MAX),
    mServerRegistrationDefaultExpires(3600),
+   mServerRegistrationCSeqCheckEnabled(true),
    mAdditionalTransactionTerminatingResponsesEnabled(false)
 {
    // Default settings
@@ -430,10 +431,22 @@ MasterProfile::serverRegistrationDefaultExpiresTime() noexcept
    return mServerRegistrationDefaultExpires;
 }
 
-uint32_t 
+uint32_t
 MasterProfile::serverRegistrationDefaultExpiresTime() const noexcept
 {
    return mServerRegistrationDefaultExpires;
+}
+
+bool&
+MasterProfile::serverRegistrationCSeqCheckEnabled() noexcept
+{
+   return mServerRegistrationCSeqCheckEnabled;
+}
+
+bool
+MasterProfile::serverRegistrationCSeqCheckEnabled() const noexcept
+{
+   return mServerRegistrationCSeqCheckEnabled;
 }
 
 bool 

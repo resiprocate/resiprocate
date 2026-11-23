@@ -991,6 +991,10 @@ ReproRunner::createDialogUsageManager()
    {
        profile->allowBadRegistrationEnabled() = true;
    }
+   if(mProxyConfig->getConfigBool("DisableRegistrarCSeqCheck", false))
+   {
+       profile->serverRegistrationCSeqCheckEnabled() = false;
+   }
 #ifdef PACKAGE_VERSION
    Data serverText(mProxyConfig->getConfigData("ServerText", "repro " PACKAGE_VERSION));
 #else
