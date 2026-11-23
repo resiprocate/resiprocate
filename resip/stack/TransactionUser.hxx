@@ -169,9 +169,10 @@ class TransactionUser
 
       const TimeLimitFifo<Message>* getFifo() { return(&mFifo); } const
       
-      virtual uint16_t getExpectedWait() const
+      /// Expected time, in milliseconds, for a new message to be serviced by this TU
+      virtual uint32_t getExpectedWait() const
       {
-         return (uint16_t)mFifo.expectedWaitTimeMilliSec();
+         return (uint32_t)mFifo.expectedWaitTimeMilliSec();
       }
       
       // .bwc. This specifies whether the TU can cope with dropped responses
@@ -277,6 +278,7 @@ operator<<(EncodeStream& strm, const TransactionUser& tu);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

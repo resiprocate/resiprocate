@@ -250,6 +250,7 @@ DumFixture::initialize(int argc, char** argv)
    duane->addClientSubscriptionHandler("message-summary", duane);
    duane->addServerSubscriptionHandler("presence", duane);
    duane->addServerSubscriptionHandler("message-summary", duane);
+   duane->addServerPagerMessageHandler(duane);
 //   duane->run();
    
    hiss = createAnonDumUserAgent("hiss", sipEndPoint->getUri().host(), sipEndPoint->getUri().port());

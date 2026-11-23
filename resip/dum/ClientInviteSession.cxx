@@ -1437,11 +1437,12 @@ ClientInviteSession::dispatchReceivedUpdateEarly(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
          // If we receive an UPDATE before we have generated a final response to a previous UPDATE on the 
-         // same dialog, then we MUST return a 500 response with a Retry-After header (random duration 0-10 seconds)
+         // same dialog, then we MUST return a 500 response with a Retry-After header (RFC 3261 says a random
+         // duration of 0-10 seconds; we use 1-10 so the peer never retries immediately)
          {
             auto u500 = std::make_shared<SipMessage>();
             mDialog.makeResponse(*u500, msg, 500);
-            u500->header(h_RetryAfter).value() = Random::getRandom() % 10;
+            u500->header(h_RetryAfter).value() = 1 + Random::getRandom() % 10;
             send(u500);
          }
          break;
@@ -1578,6 +1579,7 @@ ClientInviteSession::onFailureAspect(ClientInviteSessionHandle c, const SipMessa
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

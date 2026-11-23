@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <algorithm>
+
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
@@ -183,7 +185,9 @@ TransactionController::send(SipMessage* msg)
    {
       // Need to 503 this.
       SipMessage* resp(Helper::makeResponse(*msg, 503));
-      resp->header(h_RetryAfter).value()=(uint32_t)mStateMacFifo.expectedWaitTimeMilliSec()/1000;
+      // Round the expected wait up to whole seconds, and never advertise 0 - it invites an
+      // immediate retry from a peer we are too busy to serve
+      resp->header(h_RetryAfter).value()=std::max<uint32_t>(1, (uint32_t)((mStateMacFifo.expectedWaitTimeMilliSec() + 999)/1000));
       resp->setTransactionUser(msg->getTransactionUser());
       mTuSelector.addFromAnyThread(resp, TimeLimitFifo<Message>::InternalElement);
       delete msg;
@@ -327,6 +331,7 @@ TransactionController::invokeAfterSocketCreationFunc(TransportType type)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

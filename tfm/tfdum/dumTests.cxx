@@ -47,6 +47,7 @@
 
 #include "tfm/TfmHelper.hxx"
 #include "tfm/CheckPrivacy.hxx"
+#include "tfm/SipEvent.hxx"
 
 #include <functional>
 
@@ -76,6 +77,52 @@ static const int NonOwner491 = 3000;
 
 const Data transport("udp");
 static NameAddr localhost;
+
+// Sends a MESSAGE into the DialogSet of a received INVITE: To carries the INVITE's From tag (the DUM's
+// local tag) and From carries a tag that matches no Dialog, so the DialogSet handles it with no Dialog.
+class SendMessageIntoDialogSet : public TestSipEndPoint::MessageExpectAction
+{
+   public:
+      SendMessageIntoDialogSet(TestSipEndPoint& endPoint, const Data& fromTag, unsigned int cseq)
+         : TestSipEndPoint::MessageExpectAction(endPoint),
+           mFromTag(fromTag),
+           mCSeq(cseq)
+      {
+      }
+
+      std::shared_ptr<SipMessage> go(std::shared_ptr<SipMessage> invite) override
+      {
+         resip_assert(invite->isRequest() && invite->method() == INVITE);
+         auto message = std::make_shared<SipMessage>();
+         RequestLine rLine(MESSAGE);
+         rLine.uri() = invite->header(h_Contacts).front().uri();
+         message->header(h_RequestLine) = rLine;
+         message->header(h_To) = invite->header(h_From);
+         message->header(h_From) = invite->header(h_To);
+         message->header(h_From).param(p_tag) = mFromTag;
+         message->header(h_CallId) = invite->header(h_CallId);
+         message->header(h_CSeq).method() = MESSAGE;
+         message->header(h_CSeq).sequence() = mCSeq;
+         message->header(h_MaxForwards).value() = 70;
+         Via via;
+         via.param(p_branch); // creates a new branch
+         message->header(h_Vias).push_front(via);
+         message->setContents(std::make_unique<PlainContents>(Data("hello")));
+         return message;
+      }
+
+      Data toString() const override { return "SendMessageIntoDialogSet"; }
+
+   private:
+      Data mFromTag;
+      unsigned int mCSeq;
+};
+
+static bool hasRetryAfter(std::shared_ptr<Event> event)
+{
+   SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
+   return sipEvent && sipEvent->getMessage() && sipEvent->getMessage()->exists(h_RetryAfter);
+}
 
 class DumTestCase : public DumFixture
 {
@@ -186,6 +233,7 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testSubscribeQueuedRequestRefresh);
       CPPUNIT_TEST(testSubscribeRequestRefreshBetweenDumUaAndTestEndPoint);
       CPPUNIT_TEST(testIMBasic);
+      CPPUNIT_TEST(testIMOverlappingInDialogSet);
       CPPUNIT_TEST(testIMMergedRequestArrivedSameTime);
       CPPUNIT_TEST(testIMMergedRequestArrivedWithin32Seconds);
       CPPUNIT_TEST(testIMMergedRequestArrivedMoreThan32SecondsApart);
@@ -3214,6 +3262,41 @@ class DumTestCase : public DumFixture
             Data mTag;
             Data mCallId;
       };
+
+      // Two MESSAGEs reach an early UAC DialogSet with no matching Dialog while the application holds
+      // the first one unanswered.  The second must be refused with 500 + Retry-After rather than
+      // replacing the first in the DialogSet; replacing it used to orphan a usage that then touched
+      // the DialogSet after the DialogSet was destroyed.
+      void testIMOverlappingInDialogSet()
+      {
+         WarningLog(<< "testIMOverlappingInDialogSet");
+
+         TestClientInviteSession uac(duane);
+         TestServerPagerMessage srvPager(duane);
+
+         Seq(duane->invite(sipEndPoint->getContact(), standardOffer),
+             sipEndPoint->expect(INVITE, from(duane->getInstanceId()), WaitForCommand,
+                                 chain(sipEndPoint->ring(),
+                                       new SendMessageIntoDialogSet(*sipEndPoint, "overlap", 10),
+                                       new SendMessageIntoDialogSet(*sipEndPoint, "overlap", 11))),
+             And(Sub(duane->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     duane->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     duane->expect(ServerPagerMessage_MessageArrived, srvPager, *TestEndPoint::AlwaysTruePred, WaitForCommand, srvPager.noAction())),
+                 Sub(sipEndPoint->expect(MESSAGE/500, alwaysMatches(), WaitForCommand,
+                                         sipEndPoint->check1(hasRetryAfter, "500 to overlapping MESSAGE has Retry-After")))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         // The first MESSAGE is still owned by the DialogSet and can be answered.  Then reject the
+         // INVITE, which destroys the DialogSet.
+         Seq(srvPager.accept(),
+             sipEndPoint->expect(MESSAGE/200, alwaysMatches(), WaitForCommand, sipEndPoint->respond(486)),
+             And(Sub(sipEndPoint->expect(ACK, alwaysMatches(), WaitForCommand, sipEndPoint->noAction())),
+                 Sub(duane->expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     duane->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
 
       void testIMMergedRequestArrivedSameTime()
       {

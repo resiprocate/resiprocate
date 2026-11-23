@@ -405,7 +405,7 @@ Transport::makeFailedResponse(const SipMessage& msg,
 }
 
 std::unique_ptr<SendData>
-Transport::make503(SipMessage& msg, uint16_t retryAfter)
+Transport::make503(SipMessage& msg, uint32_t retryAfter)
 {
   std::unique_ptr<SendData> result;
   if (msg.isResponse()) return result;
@@ -432,7 +432,8 @@ Transport::make503(SipMessage& msg, uint16_t retryAfter)
    // .bwc. msg is completely unverified. Handle with caution.
    result=makeSendData(dest, Data::Empty, Data::Empty, remoteSigcompId);
    static const Data retryAfterHeader("Retry-After: ");
-   Data value(retryAfter);
+   // Never advertise 0 - it invites an immediate retry from a peer we are too busy to serve
+   Data value(retryAfter == 0 ? 1 : retryAfter);
    Helper::makeRawResponse(result->data, msg, 503, retryAfterHeader+value+"\r\n");
 
   return result;

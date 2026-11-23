@@ -32,7 +32,13 @@ ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
 
 ServerOutOfDialogReq::~ServerOutOfDialogReq()
 {
-   mDialogSet.mServerOutOfDialogRequest = nullptr;
+   // Clear the DialogSet's pointer only if it still refers to this usage.  If another usage
+   // has replaced it, clearing it would orphan that usage: ~DialogSet would no longer delete
+   // it, and it could later touch the DialogSet after the DialogSet is gone.
+   if (mDialogSet.mServerOutOfDialogRequest == this)
+   {
+      mDialogSet.mServerOutOfDialogRequest = nullptr;
+   }
 }
 
 void

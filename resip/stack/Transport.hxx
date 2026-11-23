@@ -315,7 +315,7 @@ class Transport : public FdSetIOObserver
                               int responseCode = 400,
                               const char * warning = nullptr);
       std::unique_ptr<SendData> make503(SipMessage& msg,
-                                      uint16_t retryAfter);
+                                      uint32_t retryAfter);
 
       std::unique_ptr<SendData> make100(SipMessage& msg);
       void setRemoteSigcompId(SipMessage&msg, Data& id);
@@ -537,6 +537,7 @@ EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

@@ -33,7 +33,13 @@ ServerRegistration::ServerRegistration(DialogUsageManager& dum,  DialogSet& dial
 
 ServerRegistration::~ServerRegistration()
 {
-   mDialogSet.mServerRegistration = nullptr;
+   // Clear the DialogSet's pointer only if it still refers to this usage.  If another usage
+   // has replaced it, clearing it would orphan that usage: ~DialogSet would no longer delete
+   // it, and it could later touch the DialogSet after the DialogSet is gone.
+   if (mDialogSet.mServerRegistration == this)
+   {
+      mDialogSet.mServerRegistration = nullptr;
+   }
 }
 
 void 

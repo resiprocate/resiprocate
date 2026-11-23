@@ -105,7 +105,13 @@ ClientPagerMessage::ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialo
 ClientPagerMessage::~ClientPagerMessage()
 {
    this->clearMsgQueued();
-   mDialogSet.mClientPagerMessage = 0;
+   // Clear the DialogSet's pointer only if it still refers to this usage.  If another usage
+   // has replaced it, clearing it would orphan that usage: ~DialogSet would no longer delete
+   // it, and it could later touch the DialogSet after the DialogSet is gone.
+   if (mDialogSet.mClientPagerMessage == this)
+   {
+      mDialogSet.mClientPagerMessage = nullptr;
+   }
 }
 
 SipMessage&
@@ -335,6 +341,7 @@ ClientPagerMessage::dump(EncodeStream& strm) const
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

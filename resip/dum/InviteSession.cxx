@@ -2192,7 +2192,7 @@ InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
          // responded to the first one. Bastard!
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 500);
-         response->header(h_RetryAfter).value() = Random::getRandom() % 10;
+         response->header(h_RetryAfter).value() = 1 + Random::getRandom() % 10;
          send(response);
          break;
       }
@@ -2547,7 +2547,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
          // responded to the first one.
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 500);
-         response->header(h_RetryAfter).value() = Random::getRandom() % 10;
+         response->header(h_RetryAfter).value() = 1 + Random::getRandom() % 10;
          send(response);
          WarningLog(<<"an INFO message was received before the application called acceptNIT() for the previous INFO message");
       }
@@ -2694,7 +2694,7 @@ InviteSession::dispatchMessage(const SipMessage& msg)
          // responded to the first one.
          auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 500);
-         response->header(h_RetryAfter).value() = Random::getRandom() % 10;
+         response->header(h_RetryAfter).value() = 1 + Random::getRandom() % 10;
          send(response);
       }
       else

@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <algorithm>
+
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
 #include "resip/stack/AddTransport.hxx"
@@ -2820,8 +2822,10 @@ TransactionState::sendToTU(TransactionMessage* msg)
                SipMessage* response(Helper::makeResponse(*sipMsg, 503));
                delete sipMsg;
                
-               uint16_t retryAfter=mController.mTuSelector.getExpectedWait(mTransactionUser);
-               response->header(h_RetryAfter).value()=retryAfter;
+               // getExpectedWait() is in milliseconds, Retry-After is in seconds.  Round up, and
+               // never advertise 0 - it invites an immediate retry from a peer we are too busy to serve
+               uint32_t expectedWaitMs=mController.mTuSelector.getExpectedWait(mTransactionUser);
+               response->header(h_RetryAfter).value()=std::max<uint32_t>(1, (expectedWaitMs + 999)/1000);
                response->setFromTU();
                if(mMethod==INVITE)
                {
@@ -3097,6 +3101,7 @@ resip::operator<<(EncodeStream& strm, const resip::TransactionState& state)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

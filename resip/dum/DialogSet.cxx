@@ -22,6 +22,7 @@
 #include "resip/dum/DumHelper.hxx"
 #include "resip/dum/SubscriptionCreator.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -271,6 +272,24 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
    return false;
 }
 
+// Only one non-dialog server usage of each kind can be tracked by a DialogSet. An overlapping request that would
+// replace a live usage is refused instead, so the existing usage is never orphaned.
+bool
+DialogSet::rejectOverlappingRequest(const SipMessage& request, const BaseUsage* existing)
+{
+   if (existing == nullptr)
+   {
+      return false;
+   }
+   InfoLog(<< "Rejecting " << request.brief() << " with 500: a previous request of this type is still pending in DialogSet " << mId);
+   auto response = std::make_shared<SipMessage>();
+   mDum.makeResponse(*response, request, 500);
+   // Random back-off, as for the RFC 3261 section 14.2 overlapping re-INVITE case, but never 0: the first
+   // request is likely still pending, so an immediate retry would just be refused again.
+   response->header(h_RetryAfter).value() = 1 + Random::getRandom() % 10;
+   mDum.send(response);
+   return true;
+}
 
 void
 DialogSet::dispatch(const SipMessage& msg)
@@ -576,7 +595,10 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                // No dialog needed here
                DebugLog(<< "out of dialog refer request with norefersub");
-               resip_assert(mServerOutOfDialogRequest == 0);
+               if (rejectOverlappingRequest(request, mServerOutOfDialogRequest))
+               {
+                  return;
+               }
                mServerOutOfDialogRequest = makeServerOutOfDialog(request);
                mServerOutOfDialogRequest->dispatch(request);
                return;
@@ -605,7 +627,10 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                // unsolicited - not allowed but commonly implemented
                // by large companies with a bridge as their logo
-               resip_assert(mServerOutOfDialogRequest == 0);
+               if (rejectOverlappingRequest(request, mServerOutOfDialogRequest))
+               {
+                  return;
+               }
                mServerOutOfDialogRequest = makeServerOutOfDialog(request);
                mServerOutOfDialogRequest->dispatch(request);
                return;
@@ -629,6 +654,10 @@ DialogSet::dispatch(const SipMessage& msg)
             // !jf! move this to DialogUsageManager
             if(!dialog)
             {
+               if (rejectOverlappingRequest(request, mServerPagerMessage))
+               {
+                  return;
+               }
                mServerPagerMessage = makeServerPagerMessage(request);
                mServerPagerMessage->dispatch(request);
                return;
@@ -647,7 +676,10 @@ DialogSet::dispatch(const SipMessage& msg)
             // !jf! move this to DialogUsageManager
             DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );
             // only can be one ServerOutOfDialogReq at a time
-            resip_assert(mServerOutOfDialogRequest == 0);
+            if (rejectOverlappingRequest(request, mServerOutOfDialogRequest))
+            {
+               return;
+            }
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
             mServerOutOfDialogRequest->dispatch(request);
             return;

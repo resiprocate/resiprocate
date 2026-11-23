@@ -71,7 +71,13 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
 ClientRegistration::~ClientRegistration()
 {
    DebugLog ( << "ClientRegistration::~ClientRegistration" );
-   mDialogSet.mClientRegistration = nullptr;
+   // Clear the DialogSet's pointer only if it still refers to this usage.  If another usage
+   // has replaced it, clearing it would orphan that usage: ~DialogSet would no longer delete
+   // it, and it could later touch the DialogSet after the DialogSet is gone.
+   if (mDialogSet.mClientRegistration == this)
+   {
+      mDialogSet.mClientRegistration = nullptr;
+   }
 
    // !dcm! Will not interact well with multiple registrations from the same AOR
    mDialogSet.mUserProfile->setServiceRoute(NameAddrs());
@@ -952,6 +958,9 @@ ClientRegistration::checkProfileRetry(const SipMessage& msg)
       (mState == Adding || mState == Refreshing) &&
       !mEndWhenDone)
    {
+      // A Retry-After of 0 is valid (retry now), but we deliberately fall back to the profile's
+      // retry time for it: a registrar that keeps answering with Retry-After: 0 would otherwise
+      // have us re-REGISTER in a tight loop.
       if (msg.exists(h_RetryAfter) && msg.header(h_RetryAfter).value() > 0)
       {
          // Use retry interval from error response
