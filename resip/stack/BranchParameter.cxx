@@ -107,10 +107,14 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
       pb.skipToOneOf(delimiter);
       pb.data(mTransactionId, start);
    }
-   catch(resip::ParseException& e)
+   catch(resip::ParseException&)
    {
+      // The destructor won't run for an object whose constructor throws, so
+      // release the copy of a non-standard-case magic cookie here.
+      delete mInteropMagicCookie;
+      mInteropMagicCookie = 0;
       mTransactionId=generateTransactionId();
-      throw e;
+      throw;
    }
 }
 

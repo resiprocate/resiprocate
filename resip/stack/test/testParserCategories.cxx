@@ -1960,6 +1960,22 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Via with a malformed branch after a non-standard-case cookie");
+      // The branch parse fails after the cookie has been copied.  Under
+      // LeakSanitizer this checks that the copy is released.
+      const char* viaString = "SIP/2.0/UDP host;branch=Z9HG4BK-524287-x";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(hfv, Headers::UNKNOWN);
+      try
+      {
+         via.checkParsed();
+      }
+      catch (ParseException&)
+      {
+      }
+   }
+
+   {
       TR _tr("Branch parameter 1");
       
       Data txt("=z9hG4bK" RESIP_COOKIE "1---jason");
