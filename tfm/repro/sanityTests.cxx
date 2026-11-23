@@ -289,22 +289,30 @@ class TestHolder : public ReproFixture
       static std::shared_ptr<SipMessage>
       addRecordRoute(std::shared_ptr<SipMessage> msg)
       {
-         resip::NameAddr rr("bogus@blahblahblah");
+         resip::NameAddr rr("<sip:bogus@blahblahblah;lr>");
          msg->header(h_RecordRoutes).push_front(rr);
          return msg;
       }
-      
+
       class AssertNoRecordRoutes : public ExpectAction
       {
          public:
-            AssertNoRecordRoutes();
+            AssertNoRecordRoutes() {}
+            using ExpectAction::operator();
             virtual void operator()(std::shared_ptr<Event> event)
             {
                SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
-               resip_assert(sipEvent);
+               if (!sipEvent)
+               {
+                  throw ExpectAction::Exception("AssertNoRecordRoutes: event is not a SipEvent");
+               }
                std::shared_ptr<SipMessage> msg = sipEvent->getMessage();
-               resip_assert(!msg->exists(h_RecordRoutes));
+               if (msg->exists(h_RecordRoutes))
+               {
+                  throw ExpectAction::Exception("AssertNoRecordRoutes: unexpected Record-Route in " + Data::from(msg->brief()));
+               }
             }
+            virtual resip::Data toString() const { return "AssertNoRecordRoutes"; }
       };
 
       static std::shared_ptr<SipMessage>
@@ -11035,6 +11043,7 @@ class MyTestCase
          TEST(testInfo);
 //Registrar tests
          TEST(testRegisterBasic);
+         TEST(testRegisterWithRecordRoute);
          TEST(testMultiple1);
          TEST(testMixedExpires);
          TEST(testThirdPartyRegistration);
@@ -11073,6 +11082,7 @@ class MyTestCase
          TEST(testRegisterFailureRollsBack);
 
          TEST(testRegisterBasicWithOutbound);
+         TEST(testRegisterWithRecordRouteWithOutbound);
          TEST(testMultiple1WithOutbound);
          TEST(testMixedExpiresWithOutbound);
          TEST(testThirdPartyRegistrationWithOutbound);

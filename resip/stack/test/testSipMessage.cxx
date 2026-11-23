@@ -159,6 +159,55 @@ main(int argc, char** argv)
       //InfoLog(<< response);
    }
 
+   {
+      // Helper::makeResponse copies Record-Route into 18x/2xx responses, but
+      // never for REGISTER (RFC 3261 10.3), PUBLISH (RFC 3903 6) or
+      // MESSAGE (RFC 3428).
+      struct Case { const char* method; bool expectRecordRoute; };
+      const Case cases[] = {
+         { "INVITE", true },
+         { "SUBSCRIBE", true },
+         { "OPTIONS", true },
+         { "REGISTER", false },
+         { "PUBLISH", false },
+         { "MESSAGE", false },
+      };
+      for (const Case& c : cases)
+      {
+         Data method(c.method);
+         Data txt(method + " sip:bob@example.com SIP/2.0\r\n"
+            "Via: SIP/2.0/UDP 192.0.2.1:5060;branch=z9hG4bK" RESIP_COOKIE "rrtest\r\n"
+            "Record-Route: <sip:pd-rr.example;lr>\r\n"
+            "Max-Forwards: 70\r\n"
+            "To: <sip:bob@example.com>\r\n"
+            "From: <sip:alice@example.com>;tag=1234\r\n"
+            "Call-ID: rr-copy-test\r\n"
+            "CSeq: 1 " + method + "\r\n"
+            "Contact: <sip:alice@192.0.2.1:5060>\r\n"
+            "Content-Length: 0\r\n"
+            "\r\n");
+         unique_ptr<SipMessage> msg(SipMessage::make(txt, true /* isExternal */));
+         assert(msg.get());
+
+         for (int code : { 180, 200 })
+         {
+            SipMessage response;
+            Helper::makeResponse(response, *msg, code);
+            assert(response.exists(h_RecordRoutes) == c.expectRecordRoute);
+            if (c.expectRecordRoute)
+            {
+               assert(response.header(h_RecordRoutes).size() == 1);
+               assert(response.header(h_RecordRoutes).front().uri().host() == "pd-rr.example");
+            }
+         }
+
+         // Failure responses never carry Record-Route.
+         SipMessage failure;
+         Helper::makeResponse(failure, *msg, 486);
+         assert(!failure.exists(h_RecordRoutes));
+      }
+   }
+
    static ExtensionParameter p_tag_ext("tag");
    {
       Data txt(

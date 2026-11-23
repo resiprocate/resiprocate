@@ -452,7 +452,13 @@ Helper::makeResponse(SipMessage& response,
    
    //response.header(h_ContentLength).value() = 0;
    
-   if (responseCode >= 180 && responseCode < 300 && request.exists(h_RecordRoutes))
+   // Record-Route is copied so a dialog-creating response carries the route
+   // set (RFC 3261 12.1.1).  It must not appear in responses to REGISTER
+   // (RFC 3261 10.3), PUBLISH (RFC 3903 6) or MESSAGE (RFC 3428 Table 2).
+   const MethodTypes method = request.method();
+   if (responseCode >= 180 && responseCode < 300 &&
+       method != REGISTER && method != PUBLISH && method != MESSAGE &&
+       request.exists(h_RecordRoutes))
    {
       response.header(h_RecordRoutes) = request.header(h_RecordRoutes);
    }
