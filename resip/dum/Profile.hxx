@@ -107,6 +107,31 @@ class Profile
       virtual Profile::SessionTimerMode getDefaultSessionTimerMode() const noexcept;
       virtual void unsetDefaultSessionTimerMode() noexcept;
 
+      /// Only used if timer option tag is set in MasterProfile, and only when we are the refresher.
+      /// The status codes that, when the far end rejects one of our session refreshes (reINVITE, UPDATE
+      /// or OPTIONS) with one of them, are treated as proof that the session is alive - the session
+      /// timer is restarted instead of letting the session expire.
+      /// Default: 405, 415, 420, 488 and 501 - responses that a UA only sends for a dialog it still
+      /// holds.  Responses that typically come from elements in the path when the far end has gone
+      /// away (eg. 503, 404, 480) are deliberately not included, so the session timer still cleans up
+      /// zombie sessions.  Only add a code if it can come only from a UA that still holds the dialog:
+      /// a code that a proxy can send for a far end that has gone away keeps such a session up
+      /// forever, since every rejected refresh restarts the timer.
+      /// Codes that never reach this check are ignored (a warning is logged):  codes outside 300-699,
+      /// 408, 481, 430 and 410 (these end the session) and 422 (the refresh is retried with a larger
+      /// Session-Expires).  Note:  a 405 or 501 to an UPDATE always makes DUM send later session
+      /// refreshes as reINVITEs (or OPTIONS) instead, whether or not it is in this set.
+      /// Keeping the session alive on a rejection deviates from RFC 4028 section 10, which says that
+      /// only a 2xx response to a session refresh extends the session.  In practice the deviation only
+      /// matters when the far end doesn't enforce the session timer itself:  a peer that negotiated
+      /// session timers and follows the RFC sends a BYE before its own timer expires, since our refresh
+      /// was not accepted, and a proxy that asked for a session timer drops its state.  Set an empty
+      /// set to have every rejected refresh let the session expire (DUM calls onSessionExpired a little
+      /// before the session interval runs out), as RFC 4028 specifies.
+      virtual void setSessionRefreshKeepAliveRejectionCodes(const std::set<int>& codes);
+      virtual const std::set<int>& getSessionRefreshKeepAliveRejectionCodes() const noexcept;
+      virtual void unsetSessionRefreshKeepAliveRejectionCodes();
+
       /// The amount of time that can pass before dum will resubmit an unreliable provisional response
       virtual void set1xxRetransmissionTime(int secs) noexcept;
       virtual int get1xxRetransmissionTime() const noexcept;
@@ -274,6 +299,9 @@ class Profile
       bool mHasDefaultSessionTimerMode;
       SessionTimerMode mDefaultSessionTimerMode;
 
+      bool mHasSessionRefreshKeepAliveRejectionCodes;
+      std::set<int> mSessionRefreshKeepAliveRejectionCodes;
+
       bool mHas1xxRetransmissionTime;
       int m1xxRetransmissionTime;
 
@@ -344,6 +372,7 @@ class Profile
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

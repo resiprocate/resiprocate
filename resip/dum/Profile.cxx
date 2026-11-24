@@ -2,6 +2,7 @@
 #include "resip/dum/Profile.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/HeaderTypes.hxx"
+#include "rutil/Logger.hxx"
 
 #include <utility>
 
@@ -34,8 +35,9 @@ Profile::reset()
    unsetDefaultStaleCallTime();  
    unsetDefaultStaleReInviteTime();  
    unsetDefaultSessionTime(); 
-   unsetDefaultSessionTimerMode();   
-   unset1xxRetransmissionTime();   
+   unsetDefaultSessionTimerMode();
+   unsetSessionRefreshKeepAliveRejectionCodes();
+   unset1xxRetransmissionTime();
    unset1xxRelResubmitTime();
    unsetOverrideHostAndPort(); 
    unsetAdvertisedCapabilities();
@@ -342,6 +344,55 @@ Profile::unsetDefaultSessionTimerMode() noexcept
    {
       mHasDefaultSessionTimerMode = true;
       mDefaultSessionTimerMode = Profile::PreferCallerRefreshes;
+   }
+}
+
+void
+Profile::setSessionRefreshKeepAliveRejectionCodes(const std::set<int>& codes)
+{
+   std::set<int> accepted;
+   for (int code : codes)
+   {
+      if (code < 300 || code > 699 ||
+          code == 408 || code == 481 || code == 430 || code == 410 ||  // these end the session
+          code == 422)                                                 // the refresh is retried
+      {
+         WarningLog(<< "setSessionRefreshKeepAliveRejectionCodes: ignoring " << code
+                    << " - a session refresh rejected with this code never reaches this check");
+         continue;
+      }
+      accepted.insert(code);
+   }
+   mSessionRefreshKeepAliveRejectionCodes = std::move(accepted);
+   mHasSessionRefreshKeepAliveRejectionCodes = true;
+}
+
+const std::set<int>&
+Profile::getSessionRefreshKeepAliveRejectionCodes() const noexcept
+{
+   // Fall through setting (if required)
+   if (!mHasSessionRefreshKeepAliveRejectionCodes && mBaseProfile)
+   {
+       return mBaseProfile->getSessionRefreshKeepAliveRejectionCodes();
+   }
+   return mSessionRefreshKeepAliveRejectionCodes;
+}
+
+void
+Profile::unsetSessionRefreshKeepAliveRejectionCodes()
+{
+   if (mBaseProfile)
+   {
+      mHasSessionRefreshKeepAliveRejectionCodes = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasSessionRefreshKeepAliveRejectionCodes = true;
+      mSessionRefreshKeepAliveRejectionCodes = { 405,    // Method Not Allowed
+                                                 415,    // Unsupported Media Type
+                                                 420,    // Bad Extension
+                                                 488,    // Not Acceptable Here
+                                                 501 };  // Not Implemented
    }
 }
 
@@ -1026,6 +1077,7 @@ Profile::unsetHandleInviteSession491AsGeneralFailureEnabled()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

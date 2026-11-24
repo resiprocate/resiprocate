@@ -261,7 +261,7 @@ class InviteSession : public DialogUsage
       typedef enum
       {
          OnRedirect, // 3xx
-         OnGeneralFailure, // 481 or 408
+         OnGeneralFailure, // 481, 408, 430 or 410
          OnInvite, // UAS
          OnInviteOffer,// UAS
          OnInviteReliableOffer, // UAS
@@ -347,12 +347,24 @@ class InviteSession : public DialogUsage
 
       void setSessionTimerHeaders(SipMessage& msg);
       void sessionRefresh();
+      void resendSessionModificationAfter422();
       void checkDeferredSessionExpiration();
       bool expireSessionAfterFailedModification();
       void setSessionTimerPreferences();
       void startSessionTimer();
       void handleSessionTimerResponse(const SipMessage& msg);
       void handleSessionTimerRequest(SipMessage &response, const SipMessage& request);
+      // Session timer handling for a rejected reINVITE, UPDATE or session refresh OPTIONS that we sent.  May
+      // stop using UPDATE for refreshes (405/501), restart the session timer (see
+      // Profile::setSessionRefreshKeepAliveRejectionCodes), or resend
+      // the session refresh using another method.
+      // Returns true only when it resent the session refresh: the session is then already in a new Sent*
+      // state with a new transaction outstanding, so the caller must stop handling the response - no
+      // transition to Connected, no reset of the proposed offer/answer, no onOfferRejected callback.
+      // Returns false when nothing was resent (whether or not the session timer was restarted): the caller
+      // finishes the rejected modification as usual.
+      bool handleSessionModificationRejected(const SipMessage& response);
+      bool isFarEndAliveRejection(int statusCode) const;
 
       static Data toData(State state);
       void transition(State target);
@@ -419,6 +431,7 @@ class InviteSession : public DialogUsage
       unsigned int mSessionExpirationTimerSeq;
       bool mSessionRefreshReInvite;
       bool mSessionExpirationPending;  // Session-Expiration timer fired while a session modification was in flight
+      bool mUpdateRefreshRejected;     // Peer rejected an UPDATE with 405/501 - send session refreshes as reINVITEs
 
       class QueuedNIT
       {

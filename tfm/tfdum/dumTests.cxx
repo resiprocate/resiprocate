@@ -130,6 +130,16 @@ class DumTestCase : public DumFixture
 
       CPPUNIT_TEST(testSessionTimerExpirationUasRefresher);
       CPPUNIT_TEST(testInDialogOptionsOnSubscriptionDialog);
+      CPPUNIT_TEST(testSessionTimerRefreshRejectedFarEndAlive);
+      CPPUNIT_TEST(testSessionTimerRefreshRejectedFarEndGone);
+      CPPUNIT_TEST(testSessionTimerNegotiatedRefreshRejectedFarEndAlive);
+      CPPUNIT_TEST(testSessionTimerRefreshRejectedStrictRfc);
+      CPPUNIT_TEST(testSessionTimerUpdateRefreshRejectedFallsBackToReinvite);
+      CPPUNIT_TEST(testSessionTimerConfiguredKeepAliveRejectionCode);
+      CPPUNIT_TEST(testSessionTimerUpdateFallbackWithoutKeepAliveCodes);
+      CPPUNIT_TEST(testSessionTimerOptionsRefreshRejected);
+      CPPUNIT_TEST(testSessionTimer422ToOfferReinviteResendsOffer);
+      CPPUNIT_TEST(testSessionTimerUasRefresherRefreshRejectedFarEndAlive);
       // TODO SLG - add more SessionTimer tests - UAC refresher, UAS refresher, UAC no refresher, UAS no refresher, etc.
       CPPUNIT_TEST(testUASEarlyUpdateNoPrack);
 
@@ -366,6 +376,323 @@ class DumTestCase : public DumFixture
              sheila->expect(OPTIONS/200, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()),
              WaitForEndOfTest);
          ExecuteSequences();
+      }
+
+      // Session timer refresher tests.  jason (DUM, UAC) uses a 90 second session interval, so as the refresher it
+      // sends a session refresh 45 seconds after connecting, and expires the session at 90 - min(32, 90/3) = 60
+      // seconds if no refresh succeeds.  sheila is a raw SIP endpoint, so the answer conditioner controls what she
+      // advertises (session timer support, Allow).
+      static std::shared_ptr<SipMessage> noSessionTimerSupport(std::shared_ptr<SipMessage> msg)
+      {
+         return msg;
+      }
+
+      static TestSipEndPoint::MessageConditionerFn allowMethods(std::vector<MethodTypes> methods)
+      {
+         return [methods](std::shared_ptr<SipMessage> msg)
+         {
+            for (MethodTypes method : methods)
+            {
+               msg->header(h_Allows).push_back(Token(getMethodName(method)));
+            }
+            return msg;
+         };
+      }
+
+      void startSessionTimerRefresherTest(TestClientInviteSession& uac, TestSipEndPoint::MessageConditionerFn answerConditioner)
+      {
+         jason->getProfile()->addSupportedOptionTag(Token(Symbols::Timer));
+         jason->getProfile()->setDefaultSessionTime(90);
+
+         TestSipEndPoint* sheila = sipEndPoint;
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, condition(answerConditioner, sheila->answer(answer))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      void endSessionTimerRefresherTest()
+      {
+         jason->getProfile()->unsetDefaultSessionTime();
+         jason->getProfile()->unsetSessionRefreshKeepAliveRejectionCodes();
+         jason->getProfile()->clearSupportedOptionTags();
+      }
+
+      void testSessionTimerRefreshRejectedFarEndAlive()
+      {
+         InfoLog(<< "testSessionTimerRefreshRejectedFarEndAlive");
+
+         // sheila doesn't support session timers, so jason is the refresher.  sheila rejecting the refresh
+         // reINVITE with a 488 shows she still holds the dialog, so the session timer is restarted instead of
+         // the session expiring at 60 seconds - the next refresh is sent 45 seconds after the rejection.
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         startSessionTimerRefresherTest(uac, noSessionTimerSupport);
+
+         Seq(new TestEndPoint::NoSeqAction,
+             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->send488()),
+             And(Sub(uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
+             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->answer(answer)),
+             sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         endSessionTimerRefresherTest();
+      }
+
+      void testSessionTimerRefreshRejectedFarEndGone()
+      {
+         InfoLog(<< "testSessionTimerRefreshRejectedFarEndGone");
+
+         // A 503 to the refresh is what a proxy returns when it can't reach a far end that has gone away, so it
+         // is not taken as proof the session is alive - the session expires at 60 seconds (zombie cleanup).
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         startSessionTimerRefresherTest(uac, noSessionTimerSupport);
+
+         Seq(new TestEndPoint::NoSeqAction,
+             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->send503()),
+             And(Sub(uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
+             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, 20 * Seconds, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         endSessionTimerRefresherTest();
+      }
+
+      void testSessionTimerNegotiatedRefreshRejectedFarEndAlive()
+      {
+         InfoLog(<< "testSessionTimerNegotiatedRefreshRejectedFarEndAlive");
+
+         // Same as testSessionTimerRefreshRejectedFarEndAlive, but with the session timer negotiated (Session-Expires
+         // in the 200 with refresher=uac) - a rejection from a far end that still holds the dialog restarts the
+         // session timer whether or not the session timer was negotiated.
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         startSessionTimerRefresherTest(uac, SessionTimerControl(SessionTimerControl::Uac, 90));
+
+         Seq(new TestEndPoint::NoSeqAction,
+             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->send488()),
+             And(Sub(uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
+             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds,
+                            condition(SessionTimerControl(SessionTimerControl::Uac, 90), sheila->answer(answer))),
+             sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         endSessionTimerRefresherTest();
+      }
+
+      void testSessionTimerRefreshRejectedStrictRfc()
+      {
+         InfoLog(<< "testSessionTimerRefreshRejectedStrictRfc");
+
+         // With no keep-alive rejection codes, RFC 4028 section 10 applies as written:  only a 2xx extends the
+         // session, so the 488 to the refresh leaves the session to expire at 60 seconds.
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         jason->getProfile()->setSessionRefreshKeepAliveRejectionCodes({});
+         startSessionTimerRefresherTest(uac, SessionTimerControl(SessionTimerControl::Uac, 90));
+
+         Seq(new TestEndPoint::NoSeqAction,
+             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->send488()),
+             And(Sub(uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
+             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, 20 * Seconds, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         endSessionTimerRefresherTest();
+      }
+
+      void testSessionTimerUpdateRefreshRejectedFallsBackToReinvite()
+      {
+         InfoLog(<< "testSessionTimerUpdateRefreshRejectedFallsBackToReinvite");
+
+         // sheila lists UPDATE in Allow, so jason refreshes with UPDATE - but she rejects it with a 405.  jason
+         // retries the refresh straight away as a reINVITE, which succeeds.
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         startSessionTimerRefresherTest(uac, allowMethods({ INVITE, ACK, CANCEL, BYE, UPDATE }));
+
+         Seq(new TestEndPoint::NoSeqAction,
+             sheila->expect(UPDATE, from(jason->getInstanceId()), 50 * Seconds, sheila->respond(405)),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->answer(answer)),
+             sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         endSessionTimerRefresherTest();
+      }
+
+      void testSessionTimerConfiguredKeepAliveRejectionCode()
+      {
+         InfoLog(<< "testSessionTimerConfiguredKeepAliveRejectionCode");
+
+         // Codes that never reach the keep-alive check are dropped from the configured set.
+         jason->getProfile()->setSessionRefreshKeepAliveRejectionCodes({ 200, 299, 408, 410, 422, 430, 481, 700, 480 });
+         CPPUNIT_ASSERT(jason->getProfile()->getSessionRefreshKeepAliveRejectionCodes() == std::set<int>({ 480 }));
+
+         // 480 is not a keep-alive code by default, but is configured as one here - so a 480 to the refresh
+         // reINVITE restarts the session timer instead of the session expiring at 60 seconds.
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         startSessionTimerRefresherTest(uac, noSessionTimerSupport);
+
+         Seq(new TestEndPoint::NoSeqAction,
+             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->respond(480)),
+             And(Sub(uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
+             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->answer(answer)),
+             sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         endSessionTimerRefresherTest();
+      }
+
+      void testSessionTimerUpdateFallbackWithoutKeepAliveCodes()
+      {
+         InfoLog(<< "testSessionTimerUpdateFallbackWithoutKeepAliveCodes");
+
+         // Same as testSessionTimerUpdateRefreshRejectedFallsBackToReinvite, but with no keep-alive rejection codes:
+         // stopping use of UPDATE after a 405 is about which method the peer accepts, not about whether it is
+         // alive, so jason still retries the refresh straight away as a reINVITE.
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         jason->getProfile()->setSessionRefreshKeepAliveRejectionCodes({});
+         startSessionTimerRefresherTest(uac, allowMethods({ INVITE, ACK, CANCEL, BYE, UPDATE }));
+
+         Seq(new TestEndPoint::NoSeqAction,
+             sheila->expect(UPDATE, from(jason->getInstanceId()), 50 * Seconds, sheila->respond(405)),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->answer(answer)),
+             sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         endSessionTimerRefresherTest();
+      }
+
+      void testSessionTimerOptionsRefreshRejected()
+      {
+         InfoLog(<< "testSessionTimerOptionsRefreshRejected");
+
+         // sheila doesn't support session timers or UPDATE but lists OPTIONS in Allow, so jason refreshes with
+         // OPTIONS.  She rejects the first one with a 501 - the session must return to Connected (rather than
+         // staying in SentOptions forever) and, as she is still present, keep refreshing.
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         startSessionTimerRefresherTest(uac, allowMethods({ INVITE, ACK, CANCEL, BYE, OPTIONS }));
+
+         Seq(new TestEndPoint::NoSeqAction,
+             sheila->expect(OPTIONS, from(jason->getInstanceId()), 50 * Seconds, sheila->respond(501)),
+             sheila->expect(OPTIONS, from(jason->getInstanceId()), 50 * Seconds, chain(sheila->ok(), sheila->pause(PauseTime), uac.end())),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         endSessionTimerRefresherTest();
+      }
+
+      void testSessionTimer422ToOfferReinviteResendsOffer()
+      {
+         InfoLog(<< "testSessionTimer422ToOfferReinviteResendsOffer");
+
+         // sheila doesn't support session timers but lists OPTIONS in Allow - the case where jason refreshes the
+         // session with OPTIONS.  jason sends a reINVITE carrying a new offer, and sheila rejects it with a 422
+         // (Min-SE: 120).  The retry must be the same reINVITE with the offer and the larger Session-Expires - not
+         // a session refresh OPTIONS, which would drop the application's offer.
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         startSessionTimerRefresherTest(uac, allowMethods({ INVITE, ACK, CANCEL, BYE, OPTIONS }));
+
+         TestSipEndPoint::MessageConditionerFn minSE120 = [](std::shared_ptr<SipMessage> msg)
+         {
+            msg->header(h_MinSE).value() = 120;
+            return msg;
+         };
+
+         Seq(uac.provideOffer(*standardOffer),
+             sheila->expect(INVITE, hasMessageBodyMatch(), WaitForCommand, condition(minSE120, sheila->respond(422))),
+             sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()),
+             sheila->expect(INVITE, hasMessageBodyMatch(), WaitForCommand, sheila->answer(answer)),
+             And(Sub(uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()))),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         endSessionTimerRefresherTest();
+      }
+
+      void testSessionTimerUasRefresherRefreshRejectedFarEndAlive()
+      {
+         InfoLog(<< "testSessionTimerUasRefresherRefreshRejectedFarEndAlive");
+
+         // sheila calls jason and makes jason (uas) the refresher (Session-Expires: 90;refresher=uas).  sheila lists
+         // UPDATE in Allow, so jason refreshes with an UPDATE 45 seconds after connecting.  sheila rejects the first
+         // refresh with a 488, which shows she still holds the dialog, so the session timer is restarted instead of
+         // the session expiring at 60 seconds - the next refresh is sent 45 seconds after the rejection.
+         jason->getProfile()->addSupportedOptionTag(Token(Symbols::Timer));
+         jason->getProfile()->setDefaultSessionTime(90);
+
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestServerInviteSession uas(jason);
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         TestSipEndPoint::MessageConditionerFn uasRefresher = [](std::shared_ptr<SipMessage> msg)
+         {
+            msg->header(h_Supporteds).push_back(Token(Symbols::Timer));
+            return SessionTimerControl(SessionTimerControl::Uas, 90)(msg);
+         };
+
+         Seq(condition(uasRefresher, sheila->invite(jason->getContact(), offer)),
+             And(Sub(optional(sheila->expect(INVITE/100, new TestSipEndPoint::AlwaysMatches(), WaitFor100, sheila->noAction()))),
+                 Sub(jason->expect(Invite_NewServerSession, uas, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+                     uas.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*answer), uas.accept(200))),
+                     And(Sub(uas.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
+                         Sub(sheila->expect(INVITE/200, from(jason->getInstanceId()), WaitForResponse, sheila->ack()))))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), 50 * Seconds, sheila->send488()),
+             uas.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), 50 * Seconds,
+                            chain(condition(SessionTimerControl(SessionTimerControl::Uac, 90), sheila->ok()), sheila->pause(PauseTime), uas.end())),
+             And(Sub(uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         endSessionTimerRefresherTest();
       }
 
       class DialogEventInfoRemoteTagUpdater;

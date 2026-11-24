@@ -83,6 +83,7 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mSessionExpirationTimerSeq(0),
      mSessionRefreshReInvite(false),
      mSessionExpirationPending(false),
+     mUpdateRefreshRejected(false),
      mReferSub(true),
      mCurrentEncryptionLevel(DialogUsageManager::None),
      mProposedEncryptionLevel(DialogUsageManager::None),
@@ -1736,7 +1737,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
             // Change interval to min from 422 response
             mSessionInterval = msg.header(h_MinSE).value();
             mMinSE = mSessionInterval;
-            sessionRefresh();
+            resendSessionModificationAfter422();
          }
          else
          {
@@ -1749,6 +1750,10 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          break;
 
       case OnUpdateRejected:
+         if (handleSessionModificationRejected(msg))
+         {
+            break;  // session refresh was resent
+         }
          transition(Connected);
          mProposedLocalOfferAnswer.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
@@ -1856,7 +1861,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
             // Change interval to min from 422 response
             mSessionInterval = msg.header(h_MinSE).value();
             mMinSE = mSessionInterval;
-            sessionRefresh();
+            resendSessionModificationAfter422();
          }
          else
          {
@@ -1888,6 +1893,8 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       case OnInviteFailure:
       case On487Invite:
          mStaleReInviteTimerSeq++;
+         mSessionRefreshReInvite = false;
+         handleSessionModificationRejected(msg);
          transition(Connected);
          mProposedLocalOfferAnswer.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
@@ -1968,7 +1975,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
             // Change interval to min from 422 response
             mSessionInterval = msg.header(h_MinSE).value();
             mMinSE = mSessionInterval;
-            sessionRefresh();
+            resendSessionModificationAfter422();
          }
          else
          {
@@ -2000,6 +2007,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
       case OnInviteFailure:
       case On487Invite:
          mStaleReInviteTimerSeq++;
+         handleSessionModificationRejected(msg);
          transition(Connected);
          mProposedLocalOfferAnswer.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
@@ -2051,6 +2059,22 @@ InviteSession::dispatchSentOptions(const SipMessage& msg)
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
+         break;
+
+      case OnRedirect:
+      case Unknown:
+         if (msg.isResponse() && msg.header(h_CSeq).method() == OPTIONS && msg.header(h_StatusLine).statusCode() >= 300)
+         {
+            // Our session refresh OPTIONS was rejected - the transaction is over, so go back to Connected.
+            // Without this the session stays in SentOptions forever:  no further refreshes are sent, and a
+            // session expiry is deferred indefinitely, waiting for the OPTIONS to complete.
+            transition(Connected);
+            handleSessionModificationRejected(msg);
+         }
+         else
+         {
+            dispatchOthers(msg);
+         }
          break;
 
       default:
@@ -2827,11 +2851,12 @@ InviteSession::setSessionTimerHeaders(SipMessage &msg)
 void
 InviteSession::sessionRefresh()
 {
-   // Note:  We could get a 422 to a provideOffer reINVITE, and sessionRefresh can get called.
-   //        In this case we want to make sure we resend the reINVITE and not an UPDATE.  The
-   //        mState != SentReinvite check handles this.
+   // Note:  A 422 to one of our session modifications is retried by resendSessionModificationAfter422, not
+   //        here - this function picks a refresh method, and a retry must resend the request that got the 422.
+   //        The mState != SentReinvite check is kept so that a reINVITE in progress is never replaced by an
+   //        UPDATE.
    DialogUsageManager::EncryptionLevel encryptionLevel = mCurrentEncryptionLevel;
-   if (updateMethodSupported() && mState != SentReinvite) 
+   if (updateMethodSupported() && !mUpdateRefreshRejected && mState != SentReinvite)
    {
       transition(SentUpdate);
       mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
@@ -2870,6 +2895,43 @@ InviteSession::sessionRefresh()
    setSessionTimerHeaders(*mLastLocalSessionModification);
 
    InfoLog (<< "sessionRefresh: Sending " << mLastLocalSessionModification->brief());
+   DumHelper::setOutgoingEncryptionLevel(*mLastLocalSessionModification, encryptionLevel);
+   send(mLastLocalSessionModification);
+}
+
+void
+InviteSession::resendSessionModificationAfter422()
+{
+   // RFC 4028 section 7.4:  on a 422 the UAC retries the same request with a Session-Expires of at least the
+   // Min-SE from the response (the caller has already raised mSessionInterval and mMinSE).  Resend the
+   // request that got the 422 - same method, same offer (or lack of one), same state - with only the session
+   // timer headers changed.  Picking a refresh method here instead (as sessionRefresh does) could replace a
+   // reINVITE carrying the application's offer with a bodyless OPTIONS or UPDATE, losing the offer.
+   // The body is rebuilt rather than reused, since the sent copy may have been encrypted.
+   const MethodTypes method = mLastLocalSessionModification->header(h_CSeq).method();
+   mDialog.makeRequest(*mLastLocalSessionModification, method);
+
+   DialogUsageManager::EncryptionLevel encryptionLevel = mCurrentEncryptionLevel;
+   if (method == INVITE)
+   {
+      startStaleReInviteTimer();
+   }
+   if (mState == SentReinviteNoOffer || !mProposedLocalOfferAnswer)
+   {
+      // requestOffer reINVITE, or a session refresh UPDATE - neither carries an offer
+      mLastLocalSessionModification->setContents(0);
+   }
+   else
+   {
+      InviteSession::setOfferAnswer(*mLastLocalSessionModification, mProposedLocalOfferAnswer.get());
+      if (!mSessionRefreshReInvite)
+      {
+         encryptionLevel = mProposedEncryptionLevel;  // the application's offer
+      }
+   }
+   setSessionTimerHeaders(*mLastLocalSessionModification);
+
+   InfoLog (<< "Resending after 422: " << mLastLocalSessionModification->brief());
    DumHelper::setOutgoingEncryptionLevel(*mLastLocalSessionModification, encryptionLevel);
    send(mLastLocalSessionModification);
 }
@@ -2933,6 +2995,63 @@ InviteSession::expireSessionAfterFailedModification()
    mProposedLocalOfferAnswer.reset();
    checkDeferredSessionExpiration();
    return isTerminated();
+}
+
+bool
+InviteSession::isFarEndAliveRejection(int statusCode) const
+{
+   // Responses that a UA sends about a request it received on a dialog it still holds - the far end
+   // understood the request and objected to it.  See Profile::setSessionRefreshKeepAliveRejectionCodes
+   // for the defaults, and for why responses that typically come from an element in the path when the far
+   // end has gone away (503, 404, 480, ...) are not included.
+   const std::set<int>& codes = mDialog.mDialogSet.getUserProfile()->getSessionRefreshKeepAliveRejectionCodes();
+   return codes.find(statusCode) != codes.end();
+}
+
+bool
+InviteSession::handleSessionModificationRejected(const SipMessage& response)
+{
+   // Called when the peer rejects a reINVITE, UPDATE or session refresh OPTIONS that we sent - other than the
+   // responses that end the session (408, 481, 430, 410) or that are retried elsewhere (422, 491).  RFC 4028
+   // section 10:  only a 2xx response to a session refresh extends the session, and for other responses the
+   // UAC SHOULD follow the rules specific to that response code and retry if possible.
+   // Returns true only if the session refresh was resent (we are now in a new Sent* state), in which case the
+   // caller must not finish the rejected modification - see the declaration in InviteSession.hxx.
+   if (mSessionInterval < 90)  // session timers not in use
+   {
+      return false;
+   }
+
+   const int code = response.header(h_StatusLine).statusCode();
+   const MethodTypes method = response.header(h_CSeq).method();
+
+   // The peer listed UPDATE in Allow but won't take one - refresh using the other methods from now on.  An
+   // UPDATE sent as a session refresh carries no offer (an UPDATE carrying the application's offer is not
+   // retried here - the application is told the offer was rejected).
+   if (method == UPDATE && (code == 405 || code == 501) && !mUpdateRefreshRejected)
+   {
+      mUpdateRefreshRejected = true;
+      if (mSessionRefresher && !mProposedLocalOfferAnswer)
+      {
+         InfoLog(<< "Session refresh UPDATE rejected with " << code << " - retrying the session refresh without UPDATE");
+         transition(Connected);
+         sessionRefresh();
+         return true;
+      }
+      InfoLog(<< "UPDATE rejected with " << code << " - session refreshes will no longer use UPDATE");
+   }
+
+   // A rejection from a far end that still holds the dialog is proof the session is alive - see
+   // Profile::setSessionRefreshKeepAliveRejectionCodes.  Only the refresher runs this - if the peer is the
+   // refresher it is the peer's refresh, not ours, that keeps the session going.
+   if (mSessionRefresher && isFarEndAliveRejection(code))
+   {
+      InfoLog(<< "Far end rejected our " << getMethodName(method) << " with " << code
+              << " - the far end is still present, so restarting the session timer");
+      startSessionTimer();
+   }
+
+   return false;
 }
 
 void
@@ -3363,7 +3482,10 @@ InviteSession::toEvent(const SipMessage& msg, const Contents* offerAnswer)
    bool reliable = isReliable(msg);
    bool sentOffer = mProposedLocalOfferAnswer.get();
 
-   if (code == 481 || code == 408)
+   // 481 and 408 end the dialog (RFC 3261 section 12.2.1.2).  430 (Flow Failed - 410 for pre-RFC 5626
+   // outbound) means the connection the dialog's route set is pinned to is gone, so no further request
+   // on this dialog can be delivered either.
+   if (code == 481 || code == 408 || code == 430 || code == 410)
    {
       return OnGeneralFailure;
    }
