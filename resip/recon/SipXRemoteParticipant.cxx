@@ -948,7 +948,7 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
             remoteRtpPort = (*itRemMediaLine)->getConnections().front().getPort();
             // b=RR:0 and b=RS:0 turn RTCP off (RFC 3556), and SdpHelper then
             // adds no RTCP connections to the media line
-            if((*itRemMediaLine)->getRtcpConnections().size() != 0)
+            if((*itRemMediaLine)->isRtcpEnabled())
             {
                remoteRtcpPort = (*itRemMediaLine)->getRtcpConnections().front().getPort();
             }

@@ -366,7 +366,9 @@ SipXRemoteParticipantDialogSet::setActiveDestination(const char* address, unsign
    {
       mMediaStream->getRtpFlow()->setActiveDestination(address, rtpPort);
    }
-   if(mMediaStream && mMediaStream->getRtcpFlow())
+   // A 0 rtcp port means the remote disabled rtcp (RFC 3556 b=RR:0/b=RS:0), so
+   // leave the rtcp flow alone rather than pointing it at port 0
+   if(mMediaStream && mMediaStream->getRtcpFlow() && rtcpPort != 0)
    {
       mMediaStream->getRtcpFlow()->setActiveDestination(address, rtcpPort);
    }
@@ -377,7 +379,7 @@ SipXRemoteParticipantDialogSet::setActiveDestination(const char* address, unsign
       getMediaInterface()->getInterface()->setConnectionDestination(mMediaConnectionId,
                                       address, 
                                       rtpPort,  /* audio rtp port */
-                                      rtcpPort, /* audio rtcp port */
+                                      rtcpPort != 0 ? rtcpPort : -1, /* audio rtcp port */
                                       -1 /* video rtp port */, 
                                       -1 /* video rtcp port */);
    }
@@ -392,7 +394,9 @@ SipXRemoteParticipantDialogSet::startDtlsClient(const char* address, unsigned sh
    {
       mMediaStream->getRtpFlow()->startDtlsClient(address, rtpPort);
    }
-   if(mMediaStream && mMediaStream->getRtcpFlow())
+   // See setActiveDestination - no rtcp port means no rtcp, so don't start a
+   // DTLS client that would handshake against port 0
+   if(mMediaStream && mMediaStream->getRtcpFlow() && rtcpPort != 0)
    {
       mMediaStream->getRtcpFlow()->startDtlsClient(address, rtcpPort);
    }

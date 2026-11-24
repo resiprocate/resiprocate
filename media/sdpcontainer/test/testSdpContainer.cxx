@@ -395,6 +395,57 @@ int main(int argc, char* argv[])
    }
 
    {
+      // RFC 3556 b=RR:0 with b=RS:0 disables rtcp, at session level and at
+      // media level, and the media line then carries no rtcp connection
+      char rtcpOffTxt[] = "v=0\r\n"
+         "o=- 1 1 IN IP4 192.0.2.1\r\n"
+         "s=-\r\n"
+         "c=IN IP4 192.0.2.1\r\n"
+         "b=RR:0\r\n"
+         "b=RS:0\r\n"
+         "t=0 0\r\n"
+         "m=audio 4000 RTP/AVP 0\r\n"
+         "a=rtpmap:0 PCMU/8000\r\n"
+         "m=audio 4002 RTP/AVP 0\r\n"
+         "b=RR:64\r\n"
+         "a=rtpmap:0 PCMU/8000\r\n"
+         "m=audio 4004 RTP/AVP 0\r\n"
+         "b=RR:0\r\n"
+         "b=RS:0\r\n"
+         "a=rtpmap:0 PCMU/8000\r\n";
+
+      HeaderFieldValue rtcpOffHfv(rtcpOffTxt, sizeof(rtcpOffTxt));
+      Mime rtcpOffType("application", "sdp");
+      SdpContents rtcpOffResipSdp(rtcpOffHfv, rtcpOffType);
+
+      Sdp* rtcpOffSdp = SdpHelper::createSdpFromResipSdp(rtcpOffResipSdp);
+      assert(rtcpOffSdp);
+      assert(rtcpOffSdp->getMediaLines().size() == 3);
+
+      Sdp::MediaLineList::const_iterator itRtcpOff = rtcpOffSdp->getMediaLines().begin();
+
+      // Session level b=RR:0/b=RS:0 is inherited, so no rtcp connection to read
+      assert((*itRtcpOff)->getConnections().size() == 1);
+      assert((*itRtcpOff)->getConnections().front().getPort() == 4000);
+      assert((*itRtcpOff)->getRtcpConnections().size() == 0);
+      assert(!(*itRtcpOff)->isRtcpEnabled());
+
+      // A non zero media level b=RR overrides the session level setting
+      itRtcpOff++;
+      assert((*itRtcpOff)->isRtcpEnabled());
+      assert((*itRtcpOff)->getRtcpConnections().size() == 1);
+      assert((*itRtcpOff)->getRtcpConnections().front().getPort() == 4003);
+
+      // Media level b=RR:0/b=RS:0 disables rtcp on its own
+      itRtcpOff++;
+      assert((*itRtcpOff)->getConnections().front().getPort() == 4004);
+      assert((*itRtcpOff)->getRtcpConnections().size() == 0);
+      assert(!(*itRtcpOff)->isRtcpEnabled());
+
+      delete rtcpOffSdp;
+   }
+
+   {
       // Test helpers
       char txt[] = "v=0\r\n"  
          "o=- 333525334858460 333525334858460 IN IP4 192.168.0.156\r\n"
