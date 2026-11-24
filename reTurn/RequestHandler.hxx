@@ -73,6 +73,7 @@ private:
    // Utility methods
    void buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg);
    void buildErrorResponseWithRealmAndNonce(StunMessage& response, unsigned short errorCode, const char* msg, const resip::Data& realm, const StunMessage& request);
+   bool isPeerAddressAllowed(const asio::ip::address& address);
    void generateNonce(const resip::Data& timestamp, resip::Data& nonce, const StunMessage& request);
    enum CheckNonceResult { Valid, NotValid, Expired };
    CheckNonceResult checkNonce(const resip::Data& nonce, const StunMessage& request);

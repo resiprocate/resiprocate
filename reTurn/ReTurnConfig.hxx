@@ -70,6 +70,7 @@ public:
    unsigned long mDefaultAllocationLifetime;
    unsigned long mMaxAllocationLifetime;
    unsigned long mMaxAllocationsPerUser;  // over all transports, 0 for no limit
+   bool mAllowLoopbackPeers;              // whether clients may relay to loopback and unspecified addresses
 
    resip::Data mTlsServerCertificateFilename;
    resip::Data mTlsServerPrivateKeyFilename;
