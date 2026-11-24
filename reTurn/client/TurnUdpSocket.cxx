@@ -19,6 +19,13 @@ TurnUdpSocket::TurnUdpSocket(const asio::ip::address& address, unsigned short po
    mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
    if(!errorCode)
    {
+      // IPv6 only, on every platform, as in AsyncUdpSocketBase::bind: a dual-stack socket on
+      // [::]:port can't be bound beside one on 0.0.0.0:port
+      if(address.is_v6())
+      {
+         asio::error_code ignored;
+         mSocket.set_option(asio::ip::v6_only(true), ignored);
+      }
       AsyncSocketBase::setExclusiveAddressUse(mSocket);
       mSocket.bind(asio::ip::udp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
    }
