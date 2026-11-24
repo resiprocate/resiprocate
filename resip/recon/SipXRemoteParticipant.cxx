@@ -947,7 +947,11 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
             remoteMediaDirection = (*itRemMediaLine)->getDirection();
             remoteRtpPort = (*itRemMediaLine)->getConnections().front().getPort();
             // b=RR:0 and b=RS:0 turn RTCP off (RFC 3556), and SdpHelper then
-            // adds no RTCP connections to the media line
+            // adds no RTCP connections to the media line.
+            // Only the RTCP port is used: RTCP goes to the RTP address even if
+            // a=rtcp (RFC 3605) names a different one, because sipX's
+            // setConnectionDestination takes a single address for RTP and RTCP
+            // when the FlowManager isn't used.
             if((*itRemMediaLine)->isRtcpEnabled())
             {
                remoteRtcpPort = (*itRemMediaLine)->getRtcpConnections().front().getPort();

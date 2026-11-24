@@ -376,10 +376,13 @@ SipXRemoteParticipantDialogSet::setActiveDestination(const char* address, unsign
    }
    else
    {
+      // sipX replaces an rtcp port below 1 with rtpPort + 1, so 0 or -1 would
+      // still send rtcp.  It only skips the rtcp destination for ports up to 9
+      // (SDP's discard port), so pass 9 when the remote disabled rtcp.
       getMediaInterface()->getInterface()->setConnectionDestination(mMediaConnectionId,
                                       address, 
                                       rtpPort,  /* audio rtp port */
-                                      rtcpPort != 0 ? rtcpPort : -1, /* audio rtcp port */
+                                      rtcpPort != 0 ? rtcpPort : 9, /* audio rtcp port */
                                       -1 /* video rtp port */, 
                                       -1 /* video rtcp port */);
    }
