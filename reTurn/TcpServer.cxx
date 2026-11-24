@@ -20,15 +20,12 @@ TcpServer::TcpServer(asio::io_context& ioService, RequestHandler& requestHandler
 
    mAcceptor.open(endpoint.protocol());
    mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
-#ifdef USE_IPV6
-#ifdef __linux__
+   // IPv6 only, as the IPv4 address has its own server: on every platform, as asio makes IPv6
+   // sockets dual-stack on Windows, and some BSDs do by default
    if(address.is_v6())
    {
-      asio::ip::v6_only v6_opt(true);
-      mAcceptor.set_option(v6_opt);
+      mAcceptor.set_option(asio::ip::v6_only(true));
    }
-#endif
-#endif
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 

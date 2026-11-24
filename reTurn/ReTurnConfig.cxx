@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <sstream>
 
@@ -41,6 +43,70 @@ using namespace std::chrono;
 
 namespace reTurn {
 
+void
+PeerAddressList::add(const resip::Data& entry)
+{
+   const std::string text(entry.c_str(), entry.size());
+   const std::string::size_type slash = text.find('/');
+   const std::string addressText = text.substr(0, slash);
+   asio::error_code ec;
+   const asio::ip::address address = asio::ip::make_address(addressText, ec);
+   // Some platforms take shorthand IPv4 addresses ("10.0.0" or "10"), which aren't meant here
+   if(ec || (address.is_v4() && (addressText.find_first_not_of("0123456789.") != std::string::npos ||
+                                 std::count(addressText.begin(), addressText.end(), '.') != 3)))
+   {
+      throw std::invalid_argument("not an IP address or address range: " + text);
+   }
+   const unsigned long maxPrefix = address.is_v4() ? 32 : 128;
+   unsigned long prefix = maxPrefix;
+   if(slash != std::string::npos)
+   {
+      const std::string bits = text.substr(slash + 1);
+      if(bits.empty() || bits.size() > 3 || bits.find_first_not_of("0123456789") != std::string::npos ||
+         (prefix = std::stoul(bits)) > maxPrefix)
+      {
+         throw std::invalid_argument("not an IP address or address range: " + text);
+      }
+   }
+   if(address.is_v4())
+   {
+      mV4.push_back(asio::ip::make_network_v4(address.to_v4(), (unsigned short)prefix).canonical());
+   }
+   else
+   {
+      // Without any scope id, as the peer addresses it's compared with have none
+      mV6.push_back(asio::ip::make_network_v6(asio::ip::address_v6(address.to_v6().to_bytes()), (unsigned short)prefix).canonical());
+   }
+}
+
+bool
+PeerAddressList::contains(const asio::ip::address& address) const
+{
+   if(address.is_v4())
+   {
+      return std::any_of(mV4.begin(), mV4.end(), [&address](const asio::ip::network_v4& range)
+         { return asio::ip::make_network_v4(address.to_v4(), range.prefix_length()).network() == range.network(); });
+   }
+   const asio::ip::address_v6 v6(address.to_v6().to_bytes());
+   return std::any_of(mV6.begin(), mV6.end(), [&v6](const asio::ip::network_v6& range)
+      { return asio::ip::make_network_v6(v6, range.prefix_length()).network() == range.network(); });
+}
+
+std::string
+PeerAddressList::toString() const
+{
+   std::string list;
+   for(const auto& range : mV4)
+   {
+      list += (list.empty() ? "" : ", ") + range.to_string();
+   }
+   for(const auto& range : mV6)
+   {
+      list += (list.empty() ? "" : ", ") + range.to_string();
+   }
+   return list;
+}
+
 ReTurnConfig::ReTurnConfig() :
    mSoftwareName(SOFTWARE_STRING),
    mPadSoftwareName(true),
@@ -58,7 +124,7 @@ ReTurnConfig::ReTurnConfig() :
    mDefaultAllocationLifetime(600), // 10 minutes
    mMaxAllocationLifetime(3600),    // 1 hour
    mMaxAllocationsPerUser(0),       // 0 - no max
-   mAllowLoopbackPeers(false),
+   mAllowLocalPeers(false),
    mTlsServerCertificateFilename("server.pem"),
    mTlsServerPrivateKeyFilename(""),
    mTlsTempDhFilename("dh2048.pem"),
@@ -102,7 +168,29 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mDefaultAllocationLifetime = getConfigUnsignedLong("DefaultAllocationLifetime", mDefaultAllocationLifetime);
    mMaxAllocationLifetime = getConfigUnsignedLong("MaxAllocationLifetime", mMaxAllocationLifetime);
    mMaxAllocationsPerUser = getConfigUnsignedLong("MaxAllocationsPerUser", mMaxAllocationsPerUser);
-   mAllowLoopbackPeers = getConfigBool("AllowLoopbackPeers", mAllowLoopbackPeers);
+   mAllowLocalPeers = getConfigBool("AllowLocalPeers", mAllowLocalPeers);
+   // Both empty unless set; reTurnServer.config sets DeniedPeerAddresses to the ranges that are
+   // never a peer to relay to (multicast, reserved and link-local)
+   for(const std::pair<const char*, PeerAddressList*>& setting : { std::make_pair("AllowedPeerAddresses", &mAllowedPeerAddresses),
+                                                                   std::make_pair("DeniedPeerAddresses", &mDeniedPeerAddresses) })
+   {
+      std::vector<Data> entries;
+      getConfigValue(setting.first, entries);
+      for(const Data& entry : entries)
+      {
+         if(!entry.empty())
+         {
+            try
+            {
+               setting.second->add(entry);
+            }
+            catch(const std::invalid_argument& e)
+            {
+               throw std::invalid_argument(std::string(setting.first) + ": " + e.what());
+            }
+         }
+      }
+   }
    mTlsServerCertificateFilename = getConfigData("TlsServerCertificateFilename", mTlsServerCertificateFilename);
    mTlsServerPrivateKeyFilename = getConfigData("TlsServerPrivateKeyFilename", mTlsServerPrivateKeyFilename);
    mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);

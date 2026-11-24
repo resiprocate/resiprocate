@@ -74,6 +74,18 @@ ChannelManager::createChannelBinding(const StunTuple& peerTuple, unsigned short 
    return remotePeer;
 }
 
+void
+ChannelManager::removeChannelBinding(const StunTuple& peerTuple)
+{
+   TupleRemotePeerMap::iterator it = mTupleRemotePeerMap.find(peerTuple);
+   if(it != mTupleRemotePeerMap.end())
+   {
+      mChannelRemotePeerMap.erase(it->second->getChannel());
+      delete it->second;
+      mTupleRemotePeerMap.erase(it);
+   }
+}
+
 RemotePeer* 
 ChannelManager::findRemotePeerByChannel(unsigned short channelNumber)
 {

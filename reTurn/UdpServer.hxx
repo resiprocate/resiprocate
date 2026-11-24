@@ -37,6 +37,9 @@ public:
 
    void cleanupResponseMap(const asio::error_code& e, UInt128 tid);
 
+   /// The allocations made through this server; only to be used on its io_context's thread
+   TurnAllocationManager& getTurnAllocationManager() { return mTurnAllocationManager; }
+
 private:
    /// Handle completion of a receive operation
    void onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data) override;
@@ -83,6 +86,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

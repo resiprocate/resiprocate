@@ -188,7 +188,16 @@ int main(int argc, char* argv[])
 
          turnData = "This test should be a Channel Data message in TCP/TLS but not in UDP - since ChannelBindResponse is not yet received.";
          InfoLog( << "CLIENT: Sending: " << turnData);
-         turnSocket.setActiveDestination(asio::ip::make_address("127.0.0.1"), 2000);
+         rc = turnSocket.setActiveDestination(asio::ip::make_address("127.0.0.1"), 2000);
+         if(rc)
+         {
+            InfoLog( << "CLIENT: Error setting active destination: rc=" << rc.value() << " " << rc.message());
+            if(rc.value() == 403)
+            {
+               InfoLog( << "CLIENT: The peer is on the server's host: set AllowLocalPeers = true in the server's reTurnServer.config to test with it");
+            }
+            return 1;
+         }
          turnSocket.send(turnData.c_str(), turnData.size());
 
          // Receive Data
@@ -246,6 +255,7 @@ int main(int argc, char* argv[])
 
 /* ====================================================================
 
+ Copyright (c) 2026, SIP Spectrum, Inc. https://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

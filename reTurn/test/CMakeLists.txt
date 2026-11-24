@@ -19,4 +19,5 @@ endif()
 # reTurnServer end to end over UDP, TCP and TLS, run in-process with the sync and async clients
 test(testReTurnServer testReTurnServer.cxx TlsTestSupport.hxx)
 target_link_libraries(testReTurnServer reTurnServerLib)
-target_compile_definitions(testReTurnServer PRIVATE RETURN_TEST_DH_FILE="${CMAKE_SOURCE_DIR}/reTurn/dh2048.pem")
+target_compile_definitions(testReTurnServer PRIVATE RETURN_TEST_DH_FILE="${CMAKE_SOURCE_DIR}/reTurn/dh2048.pem"
+                                                    RETURN_TEST_SHIPPED_CONFIG="${CMAKE_SOURCE_DIR}/reTurn/reTurnServer.config")

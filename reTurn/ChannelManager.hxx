@@ -18,6 +18,7 @@ public:
    void clear();
    RemotePeer* createChannelBinding(const StunTuple& peerTuple);
    RemotePeer* createChannelBinding(const StunTuple& peerTuple, unsigned short channel);
+   void removeChannelBinding(const StunTuple& peerTuple);  // deletes its RemotePeer
 
    RemotePeer* findRemotePeerByChannel(unsigned short channelNumber);
    RemotePeer* findRemotePeerByPeerAddress(const StunTuple& peerAddress);
@@ -39,7 +40,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2024 SIP Spectrum, Inc http://www.sipspectrum.com
+ Copyright (c) 2024-2026 SIP Spectrum, Inc http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

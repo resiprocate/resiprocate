@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <fstream>
 #include <functional>
+#include <future>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -24,6 +25,8 @@
 #include "../ReTurnConfig.hxx"
 #include "../RequestHandler.hxx"
 #include "../TcpServer.hxx"
+#include "../TurnAllocation.hxx"
+#include "../TurnAllocationKey.hxx"
 #include "../TurnManager.hxx"
 #include "../UdpServer.hxx"
 #include "../client/ErrorCode.hxx"
@@ -83,9 +86,9 @@ static const unsigned short relayPortsTlsPort = 45357;
 static const char* const limitsConfig = "testReTurnServer_limits.config";
 static const unsigned short limitsTurnPort = 45484;
 static const unsigned short limitsTlsPort = 45355;
-static const char* const noLoopbackConfig = "testReTurnServer_noloopback.config";
-static const unsigned short noLoopbackTurnPort = 45488;
-static const unsigned short noLoopbackTlsPort = 45359;
+static const char* const noLocalPeersConfig = "testReTurnServer_nolocalpeers.config";
+static const unsigned short noLocalPeersTurnPort = 45488;
+static const unsigned short noLocalPeersTlsPort = 45359;
 static const asio::ip::address localhost = asio::ip::make_address("127.0.0.1");
 
 // A local TCP port that's free now, for a client asked to use a given port.  (Not a fixed one: a
@@ -134,6 +137,20 @@ public:
       mIo.reset();
    }
 
+   // Whether the allocation of the UDP client on clientPort has a permission for address, looked
+   // at on the server's thread
+   bool hasPermission(unsigned short clientPort, const asio::ip::address& address)
+   {
+      std::promise<bool> result;
+      asio::post(*mIo, [&]()
+      {
+         TurnAllocation* allocation = mUdpServer->getTurnAllocationManager().findTurnAllocation(
+            TurnAllocationKey(StunTuple(StunTuple::UDP, mConfig.mTurnAddress, mConfig.mTurnPort), StunTuple(StunTuple::UDP, localhost, clientPort)));
+         result.set_value(allocation && allocation->existsPermission(address));
+      });
+      return result.get_future().get();
+   }
+
 private:
    ReTurnConfig mConfig;
    std::unique_ptr<asio::io_context> mIo{new asio::io_context};
@@ -147,13 +164,13 @@ private:
    std::thread mThread;
 };
 
-// The peers are on 127.0.0.1, so loopback peers are allowed unless allowLoopbackPeers is false
+// The peers are on 127.0.0.1, so local peers are allowed unless allowLocalPeers is false
 static bool
-writeConfig(const char* file, unsigned short port, unsigned short tlsPort, const char* extra, bool allowLoopbackPeers = true)
+writeConfig(const char* file, unsigned short port, unsigned short tlsPort, const char* extra, bool allowLocalPeers = true)
 {
    std::ofstream config(file);
    config << "TurnAddress = 127.0.0.1\n"
-          << "AllowLoopbackPeers = " << (allowLoopbackPeers ? "true" : "false") << "\n"
+          << "AllowLocalPeers = " << (allowLocalPeers ? "true" : "false") << "\n"
           << "TurnPort = " << port << "\n"
           << "TlsTurnPort = " << tlsPort << "\n"
           << "AuthenticationRealm = reTurn\n"
@@ -1041,28 +1058,229 @@ rawRequest(Peer& client, unsigned short port, StunMessage& request, const resip:
    return response.mHasErrorCode ? response.mErrorCode.errorClass * 100 + response.mErrorCode.number : 0;
 }
 
-// Without AllowLoopbackPeers, a client can't relay to the server's own host: a channel or
-// permission for a loopback or unspecified peer address is refused with 403 (Forbidden), and a
-// peer on 127.0.0.1 gets nothing through the relay
-static void
-testLoopbackPeers()
+// This host's address on its route to outside (a TEST-NET address, to which nothing is sent), or
+// the unspecified address if it has no such route
+static asio::ip::address
+ownAddressTowards(const char* outside)
 {
-   cerr << "-- loopback peers, without AllowLoopbackPeers" << endl;
-   InProcessServer server(noLoopbackConfig);
+   asio::io_context io;
+   asio::ip::udp::socket socket(io);
+   const asio::ip::udp::endpoint to(asio::ip::make_address(outside), 9);
+   asio::error_code ec;
+   socket.open(to.protocol(), ec);
+   if (!ec)
+   {
+      socket.connect(to, ec);
+   }
+   asio::ip::address address;
+   if (!ec)
+   {
+      address = socket.local_endpoint(ec).address();
+   }
+   return ec || address.is_loopback() ? asio::ip::address() : address;
+}
+
+// PeerAddressList, which AllowedPeerAddresses and DeniedPeerAddresses are read into, and how
+// they're read
+static void
+testPeerAddressList()
+{
+   cerr << "-- peer address lists" << endl;
+   const auto in = [](std::initializer_list<const char*> entries, const char* address)
+   {
+      PeerAddressList list;
+      for (const char* entry : entries)
+      {
+         list.add(entry);
+      }
+      return list.contains(asio::ip::make_address(address));
+   };
+   const auto refused = [](const char* entry)
+   {
+      try
+      {
+         PeerAddressList().add(entry);
+         return false;
+      }
+      catch (const std::invalid_argument&)
+      {
+         return true;
+      }
+   };
+   check("peer address list: an address in an IPv4 range", in({ "10.0.0.0/8" }, "10.255.1.2"));
+   check("peer address list: an address outside it", !in({ "10.0.0.0/8" }, "11.0.0.1"));
+   check("peer address list: a single IPv4 address", in({ "192.0.2.5" }, "192.0.2.5") && !in({ "192.0.2.5" }, "192.0.2.6"));
+   check("peer address list: a range given with host bits", in({ "192.0.2.77/24" }, "192.0.2.1"));
+   check("peer address list: /0", in({ "0.0.0.0/0" }, "203.0.113.9"));
+   check("peer address list: an address in an IPv6 range", in({ "fc00::/7" }, "fd12::1"));
+   check("peer address list: a single IPv6 address", in({ "2001:db8::5" }, "2001:db8::5") && !in({ "2001:db8::5" }, "2001:db8::6"));
+   check("peer address list: an IPv4 address isn't in an IPv6 range", !in({ "::/0" }, "192.0.2.1"));
+   check("peer address list: nor an IPv6 address in an IPv4 range", !in({ "0.0.0.0/0" }, "2001:db8::1"));
+   check("peer address list: several ranges", in({ "10.0.0.0/8", "fc00::/7", "192.0.2.0/24" }, "192.0.2.200"));
+   for (const char* entry : { "", "10.0.0.0/", "10.0.0.0/33", "fc00::/129", "10.0.0.0/8x", "10.0.0.0/-1", "10.0.0/8", "10/8", "10.0.0", "0x0a.0.0.1", "localhost", "10.0.0.0/0008" })
+   {
+      check((std::string("peer address list: \"") + entry + "\" is refused").c_str(), refused(entry));
+   }
+
+   const ReTurnConfig defaults;
+   check("peer address lists: empty unless configured",
+         defaults.mDeniedPeerAddresses.empty() && defaults.mAllowedPeerAddresses.empty() && !defaults.mAllowLocalPeers);
+
+   // The shipped reTurnServer.config refuses the ranges never to relay to, and local peers
+   {
+      ReTurnConfig shipped;
+      char program[] = "testReTurnServer";
+      char configFile[] = RETURN_TEST_SHIPPED_CONFIG;
+      // With a path, so it isn't taken as relative to the config file's directory
+      std::string usersOption = std::string("--UserDatabaseFile=./") + usersFile;
+      char* argv[] = { program, configFile, &usersOption[0], nullptr };
+      bool parsed = false;
+      try
+      {
+         shipped.parseConfig(3, argv, configFile);
+         parsed = true;
+      }
+      catch (const std::exception& e)
+      {
+         cerr << "     (" << e.what() << ")" << endl;
+      }
+      check("peer address lists: the shipped reTurnServer.config is read", parsed);
+      check("peer address lists: the shipped reTurnServer.config refuses multicast, reserved and link-local peers",
+            parsed &&
+            shipped.mDeniedPeerAddresses.contains(asio::ip::make_address("224.0.0.1")) &&
+            shipped.mDeniedPeerAddresses.contains(asio::ip::make_address("255.255.255.255")) &&
+            shipped.mDeniedPeerAddresses.contains(asio::ip::make_address("169.254.169.254")) &&
+            shipped.mDeniedPeerAddresses.contains(asio::ip::make_address("ff02::1")) &&
+            shipped.mDeniedPeerAddresses.contains(asio::ip::make_address("fe80::1")) &&
+            !shipped.mDeniedPeerAddresses.contains(asio::ip::make_address("192.0.2.1")) &&
+            !shipped.mDeniedPeerAddresses.contains(asio::ip::make_address("10.0.0.1")));
+      check("peer address lists: and local peers, and allows no exceptions",
+            parsed && !shipped.mAllowLocalPeers && shipped.mAllowedPeerAddresses.empty());
+   }
+
+   // A bad entry in the config file stops the server starting
+   const char* const badConfig = "testReTurnServer_badpeers.config";
+   for (const char* setting : { "DeniedPeerAddresses = 10.0.0.0/8, 10.0.0.0/33\n", "AllowedPeerAddresses = not-an-address\n" })
+   {
+      bool threw = false;
+      if (writeConfig(badConfig, turnPort, tlsPort, setting))
+      {
+         ReTurnConfig config;
+         char program[] = "testReTurnServer";
+         char* argv[] = { program, nullptr };
+         try
+         {
+            config.parseConfig(1, argv, badConfig);
+         }
+         catch (const std::invalid_argument&)
+         {
+            threw = true;
+         }
+      }
+      check((std::string("peer address lists: a bad entry in the config file is refused: ") + setting).c_str(), threw);
+   }
+   remove(badConfig);
+}
+
+// RequestHandler::toComparableAddress, which the peer address checks compare by
+static void
+testComparableAddress()
+{
+   cerr << "-- addresses compared as peers" << endl;
+   const auto comparable = [](const char* address) { return RequestHandler::toComparableAddress(asio::ip::make_address(address)).to_string(); };
+   check("comparable address: IPv4 as is", comparable("192.0.2.1") == "192.0.2.1");
+   check("comparable address: IPv4-mapped as IPv4", comparable("::ffff:192.0.2.1") == "192.0.2.1");
+   check("comparable address: IPv4-compatible as IPv4", comparable("::192.0.2.1") == "192.0.2.1");
+   check("comparable address: NAT64 well-known prefix as IPv4", comparable("64:ff9b::192.0.2.1") == "192.0.2.1");
+   check("comparable address: :: in 0.0.0.0/8", comparable("::") == "0.0.0.0");
+   check("comparable address: ::1 in 0.0.0.0/8", comparable("::1") == "0.0.0.1");
+   check("comparable address: other IPv6 as is", comparable("2001:db8::1") == "2001:db8::1");
+   check("comparable address: a NAT64 network-specific prefix as is", comparable("64:ff9b:1::c000:201") == "64:ff9b:1::c000:201");
+   check("comparable address: IPv6 without its scope id", comparable("fe80::1%1") == "fe80::1");
+}
+
+// Without AllowLocalPeers, a client can't relay to the server's own host: a channel or
+// permission for a loopback or unspecified peer address, or one of the host's own, in any of its
+// IPv6 forms, is refused with 403 (Forbidden), and installs no permission
+static void
+testLocalPeers()
+{
+   cerr << "-- local peers, without AllowLocalPeers" << endl;
+   InProcessServer server(noLocalPeersConfig);
    Peer peer;
    TurnUdpSocket client(localhost, 0);
-   check("loopback peers: allocation", !allocateOn(client, noLoopbackTurnPort));
-   for (const char* address : { "127.0.0.1", "127.1.2.3", "0.0.0.0", "::1", "::", "::ffff:127.0.0.1", "::ffff:0.0.0.0" })
+   check("local peers: allocation", !allocateOn(client, noLocalPeersTurnPort));
+   for (const char* address : { "127.0.0.1", "127.1.2.3", "0.0.0.0", "::1", "::", "::ffff:127.0.0.1", "::ffff:0.0.0.0",
+                                "::127.0.0.1", "64:ff9b::127.0.0.1", "64:ff9b::0.0.0.0" })
    {
-      check((std::string("loopback peers: a channel to ") + address + " is refused with 403").c_str(),
+      check((std::string("local peers: a channel to ") + address + " is refused with 403").c_str(),
             client.setActiveDestination(asio::ip::make_address(address), peer.port()).value() == 403);
    }
-   // Sent in a Send indication, as the channel wasn't bound
-   check("loopback peers: sends to the peer on 127.0.0.1", !client.sendTo(localhost, peer.port(), toPeerA.data(), (unsigned int)toPeerA.size()));
-   asio::ip::udp::endpoint from;
-   check("loopback peers: the peer gets nothing", peer.receive(from, std::chrono::milliseconds(500)).empty());
-   check("loopback peers: a public peer address is still allowed",
+   // The refused channel isn't kept: it's refused again, rather than found, and there's no active
+   // destination to send to
+   check("local peers: a channel to 127.0.0.1 is refused again",
+         client.setActiveDestination(localhost, peer.port()).value() == 403);
+   check("local peers: nothing to send to after a refused channel",
+         client.send(toPeerA.data(), (unsigned int)toPeerA.size()).value() == reTurn::NoActiveDestination);
+
+   const asio::ip::address ownV4 = ownAddressTowards("192.0.2.1");
+   if (ownV4.is_unspecified())
+   {
+      cerr << "     (no route to outside over IPv4: not checking this host's own IPv4 address)" << endl;
+   }
+   else
+   {
+      const std::string own = ownV4.to_string();
+      for (const std::string& address : { own, "::ffff:" + own, "64:ff9b::" + own })
+      {
+         check(("local peers: a channel to this host's own address, " + address + ", is refused with 403").c_str(),
+               client.setActiveDestination(asio::ip::make_address(address), peer.port()).value() == 403);
+      }
+   }
+#if !defined(WIN32) || defined(USE_IPV6)
+   // (Only listed on Windows with USE_IPV6)
+   const asio::ip::address ownV6 = ownAddressTowards("2001:db8::1");
+   if (ownV6.is_unspecified() || ownV6.to_v6().is_link_local())
+   {
+      cerr << "     (no route to outside over IPv6: not checking this host's own IPv6 address)" << endl;
+   }
+   else
+   {
+      check(("local peers: a channel to this host's own address, " + ownV6.to_string() + ", is refused with 403").c_str(),
+            client.setActiveDestination(ownV6, peer.port()).value() == 403);
+   }
+#endif
+
+   check("local peers: a public peer address is still allowed",
          !client.setActiveDestination(asio::ip::make_address("192.0.2.1"), 9));
+   check("local peers: and one in the NAT64 well-known prefix",
+         !client.setActiveDestination(asio::ip::make_address("64:ff9b::192.0.2.1"), 9));
+
+   // The server has the shipped config's DeniedPeerAddresses and 198.51.100.0/24, and
+   // AllowedPeerAddresses = 198.51.100.7, 127.0.0.2, 224.0.0.7 (see main)
+   for (const char* address : { "224.0.0.1", "239.255.255.250", "255.255.255.255", "240.0.0.1", "169.254.169.254",
+                                "ff02::1", "fe80::1", "::ffff:224.0.0.1", "64:ff9b::169.254.169.254" })
+   {
+      check((std::string("peer address lists: a channel to ") + address + ", in the shipped config's denied ranges, is refused with 403").c_str(),
+            client.setActiveDestination(asio::ip::make_address(address), 9).value() == 403);
+   }
+   for (const char* address : { "198.51.100.1", "198.51.100.255", "::ffff:198.51.100.1", "64:ff9b::198.51.100.1" })
+   {
+      check((std::string("peer address lists: a channel to ") + address + ", in the added denied range, is refused with 403").c_str(),
+            client.setActiveDestination(asio::ip::make_address(address), 9).value() == 403);
+   }
+   check("peer address lists: a channel to 198.51.100.7, in DeniedPeerAddresses and AllowedPeerAddresses, is allowed",
+         !client.setActiveDestination(asio::ip::make_address("198.51.100.7"), 9));
+   check("peer address lists: and to ::ffff:198.51.100.7",
+         !client.setActiveDestination(asio::ip::make_address("::ffff:198.51.100.7"), 9));
+   check("peer address lists: a channel to 224.0.0.7, denied but in AllowedPeerAddresses, is allowed",
+         !client.setActiveDestination(asio::ip::make_address("224.0.0.7"), 9));
+   check("peer address lists: a channel to 127.0.0.2, local but in AllowedPeerAddresses, is allowed",
+         !client.setActiveDestination(asio::ip::make_address("127.0.0.2"), peer.port()));
+   check("peer address lists: while 127.0.0.3 is still refused",
+         client.setActiveDestination(asio::ip::make_address("127.0.0.3"), peer.port()).value() == 403);
+   check("peer address lists: and 198.51.101.1, outside the denied range, is allowed",
+         !client.setActiveDestination(asio::ip::make_address("198.51.101.1"), 9));
    client.destroyAllocation();
 
    // CreatePermission, which the clients don't send, from an allocation made by hand
@@ -1076,7 +1294,7 @@ testLoopbackPeers()
       request.createHeader(StunMessage::StunClassRequest, StunMessage::TurnAllocateMethod);
       request.mHasTurnRequestedTransport = true;
       request.mTurnRequestedTransport = StunMessage::RequestedTransportUdp;
-      return rawRequest(rawClient, noLoopbackTurnPort, request, key, realm, nonce);
+      return rawRequest(rawClient, noLocalPeersTurnPort, request, key, realm, nonce);
    };
    const auto createPermission = [&](std::initializer_list<const char*> addresses)
    {
@@ -1087,15 +1305,21 @@ testLoopbackPeers()
          StunMessage::setStunAtrAddressFromTuple(request.mTurnXorPeerAddress[request.mCntTurnXorPeerAddress++],
                                                  StunTuple(StunTuple::UDP, asio::ip::make_address(address), peer.port()));
       }
-      return rawRequest(rawClient, noLoopbackTurnPort, request, key, realm, nonce);
+      return rawRequest(rawClient, noLocalPeersTurnPort, request, key, realm, nonce);
    };
-   check("loopback peers, by hand: an allocation is challenged", allocate() == 401);
+   const asio::ip::address publicPeer = asio::ip::make_address("192.0.2.1");
+   check("local peers, by hand: an allocation is challenged", allocate() == 401);
    StunMessage().calculateHmacKey(key, "test", realm, "1234");
-   check("loopback peers, by hand: allocation", allocate() == 0);
-   check("loopback peers, by hand: a permission for 127.0.0.1 is refused with 403", createPermission({ "127.0.0.1" }) == 403);
-   check("loopback peers, by hand: and for ::ffff:127.0.0.1", createPermission({ "::ffff:127.0.0.1" }) == 403);
-   check("loopback peers, by hand: and for a public address and 0.0.0.0 together", createPermission({ "192.0.2.1", "0.0.0.0" }) == 403);
-   check("loopback peers, by hand: a permission for a public address is still given", createPermission({ "192.0.2.1" }) == 0);
+   check("local peers, by hand: allocation", allocate() == 0);
+   check("local peers, by hand: a permission for 127.0.0.1 is refused with 403", createPermission({ "127.0.0.1" }) == 403);
+   check("local peers, by hand: and not installed", !server.hasPermission(rawClient.port(), localhost));
+   check("local peers, by hand: and for ::ffff:127.0.0.1", createPermission({ "::ffff:127.0.0.1" }) == 403);
+   check("local peers, by hand: and for 64:ff9b::127.0.0.1", createPermission({ "64:ff9b::127.0.0.1" }) == 403);
+   // All or nothing: the public address before the refused one gets no permission either
+   check("local peers, by hand: and for a public address and 0.0.0.0 together", createPermission({ "192.0.2.1", "0.0.0.0" }) == 403);
+   check("local peers, by hand: and the public address isn't installed", !server.hasPermission(rawClient.port(), publicPeer));
+   check("local peers, by hand: a permission for a public address is still given", createPermission({ "192.0.2.1" }) == 0);
+   check("local peers, by hand: and installed", server.hasPermission(rawClient.port(), publicPeer));
 }
 
 // A TCP proxy between one client and the server on serverPort, recording what each sends
@@ -1412,7 +1636,10 @@ main(int argc, char** argv)
                        "TcpConnectionIdleTimeout = 1\n") &&
            writeConfig(limitsConfig, limitsTurnPort, limitsTlsPort,
                        "TcpConnectionIdleTimeout = 0\nMaxTcpConnectionsPerIp = 4\nMaxAllocationsPerUser = 2\n") &&
-           writeConfig(noLoopbackConfig, noLoopbackTurnPort, noLoopbackTlsPort, "", false);
+           writeConfig(noLocalPeersConfig, noLocalPeersTurnPort, noLocalPeersTlsPort,
+                       // The shipped config's denied ranges, and one more; separated by commas or spaces
+                       "DeniedPeerAddresses = 224.0.0.0/4, 240.0.0.0/4, 169.254.0.0/16, ff00::/8, fe80::/10, 198.51.100.0/24\n"
+                       "AllowedPeerAddresses = 198.51.100.7, 127.0.0.2 224.0.0.7\n", false);
    check("certificates, users and config files written", ready);
 
    if (ready)
@@ -1439,7 +1666,9 @@ main(int argc, char** argv)
             runWithServer(idleConfig, testIdleTimeout);
             runWithServer(limitsConfig, testLimits);
             testRelayPortInUse();
-            testLoopbackPeers();
+            testPeerAddressList();
+            testComparableAddress();
+            testLocalPeers();
             {
                // The clients outlive the server
                std::unique_ptr<TurnUdpSocket> udpClient;
@@ -1459,7 +1688,7 @@ main(int argc, char** argv)
       }
    }
 
-   for (const char* file : { caFile, certFile, keyFile, usersFile, defaultConfig, noTls12Config, idleConfig, limitsConfig, relayPortsConfig, noLoopbackConfig })
+   for (const char* file : { caFile, certFile, keyFile, usersFile, defaultConfig, noTls12Config, idleConfig, limitsConfig, relayPortsConfig, noLocalPeersConfig })
    {
       remove(file);
    }

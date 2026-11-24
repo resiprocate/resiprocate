@@ -194,6 +194,10 @@ public:
    virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e)
    {
       WarningLog( << "MyTurnAsyncSocketHandler::onChannelBindFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
+      if(e.value() == 403)
+      {
+         WarningLog( << "MyTurnAsyncSocketHandler::onChannelBindFailure: the peer is on the server's host: set AllowLocalPeers = true in the server's reTurnServer.config to test with it");
+      }
    }
 
    virtual void onSendSuccess(unsigned int socketDesc)

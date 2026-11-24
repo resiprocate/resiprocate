@@ -441,6 +441,16 @@ TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned shor
       mActiveDestination = mChannelManager.createChannelBinding(remoteTuple);
       resip_assert(mActiveDestination);
       errorCode = channelBind(*mActiveDestination);
+      // If the server refused the binding (an error response, such as 403 for a peer it doesn't
+      // allow), there's no channel and no permission for the peer: forget both, so that send()
+      // fails instead of sending what the server drops.  Not on other errors, such as a timeout,
+      // where the server may have bound the channel.
+      if(errorCode && errorCode.category() == asio::error::misc_category &&
+         errorCode.value() >= 300 && errorCode.value() < 700)
+      {
+         mChannelManager.removeChannelBinding(remoteTuple);
+         mActiveDestination = 0;
+      }
    }
 
    return errorCode;

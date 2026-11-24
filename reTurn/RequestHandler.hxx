@@ -1,6 +1,7 @@
 #ifndef REQUEST_HANDLER_HXX
 #define REQUEST_HANDLER_HXX
 
+#include <set>
 #include <string>
 
 #include "DataBuffer.hxx"
@@ -43,6 +44,11 @@ public:
    const ReTurnConfig& getConfig() { return mTurnManager.getConfig(); }
    TurnManager& getTurnManager() { return mTurnManager; }
 
+   /// An IPv6 address that carries an IPv4 one (IPv4-mapped ::ffff:a.b.c.d, IPv4-compatible
+   /// ::a.b.c.d, or in the NAT64 well-known prefix 64:ff9b::a.b.c.d) as that IPv4 address; any
+   /// other IPv6 address without its scope id; an IPv4 address as is
+   static asio::ip::address toComparableAddress(const asio::ip::address& address);
+
 private:
 
    TurnManager& mTurnManager;
@@ -55,6 +61,12 @@ private:
    unsigned short mAlt3489Port;
 
    resip::Data mPrivateNonceKey;
+
+   // This host's own addresses (its interfaces' and the configured ones), refused as peers
+   // unless AllowLocalPeers is set.  Gathered once, on construction: a TURN server's
+   // addresses are expected not to change.
+   std::set<asio::ip::address> mLocalAddresses;
+   void gatherLocalAddresses();
 
    // Authentication handler
    bool handleAuthentication(StunMessage& request, StunMessage& response);

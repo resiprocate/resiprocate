@@ -1,8 +1,20 @@
 #include "RequestHandler.hxx"
+#include <algorithm>
+#include <cerrno>
+#include <cstring>
 #include <ctype.h>
 #include <fstream>
 #include <sstream>
 #include <string>
+#if defined(WIN32)
+#include <rutil/DnsUtil.hxx>
+#else
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#endif
 
 #include "TurnAllocation.hxx"
 #include "AsyncSocketBase.hxx"
@@ -42,6 +54,19 @@ RequestHandler::RequestHandler(TurnManager& turnManager,
       mRFC3489SupportEnabled = false;
    }
    mPrivateNonceKey = Random::getCryptoRandomHex(24);
+
+   if(!getConfig().mAllowLocalPeers)
+   {
+      gatherLocalAddresses();
+   }
+   if(!getConfig().mAllowedPeerAddresses.empty())
+   {
+      InfoLog(<< "Peer addresses allowed (AllowedPeerAddresses): " << getConfig().mAllowedPeerAddresses.toString());
+   }
+   if(!getConfig().mDeniedPeerAddresses.empty())
+   {
+      InfoLog(<< "Peer addresses refused (DeniedPeerAddresses): " << getConfig().mDeniedPeerAddresses.toString());
+   }
 }
 
 RequestHandler::ProcessResult 
@@ -177,28 +202,133 @@ RequestHandler::buildErrorResponseWithRealmAndNonce(StunMessage& response, unsig
    response.setNonce(nonce.c_str());
 }
 
-// Loopback and unspecified addresses (127.0.0.0/8, 0.0.0.0/8, ::1, ::, and the same as IPv4-mapped
-// IPv6 addresses) are the TURN server's own host: relaying to them would let a client reach, and
-// get answers from, services there that only listen on loopback.  Not allowed as peers unless
-// AllowLoopbackPeers is set.
+asio::ip::address
+RequestHandler::toComparableAddress(const asio::ip::address& address)
+{
+   if(!address.is_v6())
+   {
+      return address;
+   }
+   asio::ip::address_v6::bytes_type bytes = address.to_v6().to_bytes();
+   static const unsigned char nat64Prefix[4] = { 0x00, 0x64, 0xff, 0x9b };
+   const bool v4Mapped = std::all_of(bytes.begin(), bytes.begin() + 10, [](unsigned char b) { return b == 0; }) &&
+                         bytes[10] == 0xff && bytes[11] == 0xff;
+   const bool v4Compatible = std::all_of(bytes.begin(), bytes.begin() + 12, [](unsigned char b) { return b == 0; });
+   const bool nat64 = std::equal(nat64Prefix, nat64Prefix + 4, bytes.begin()) &&
+                      std::all_of(bytes.begin() + 4, bytes.begin() + 12, [](unsigned char b) { return b == 0; });
+   if(v4Mapped || v4Compatible || nat64)
+   {
+      // :: and ::1 come out as 0.0.0.0 and 0.0.0.1, in 0.0.0.0/8 as the unspecified address is
+      return asio::ip::address_v4(asio::ip::address_v4::bytes_type{ { bytes[12], bytes[13], bytes[14], bytes[15] } });
+   }
+   // A peer address from a request has no scope id, an interface's link-local one does
+   return asio::ip::address_v6(bytes);
+}
+
+// Interface addresses come from getifaddrs, or on Windows from DnsUtil::getInterfaces (IPv6 ones
+// only when rutil is built with USE_IPV6).  The configured TurnAddress, TurnV6Address and
+// AltStunAddress are added, in case an interface's are missed.
+void
+RequestHandler::gatherLocalAddresses()
+{
+   // Loopback ones (127.0.0.1, ::1) are refused anyway, and ::1 would show as 0.0.0.1
+   const auto add = [this](const asio::ip::address& a)
+   {
+      if(!a.is_unspecified() && !a.is_loopback())
+      {
+         mLocalAddresses.insert(toComparableAddress(a));
+      }
+   };
+#if defined(WIN32)
+   for(const auto& nameAndAddress : DnsUtil::getInterfaces())
+   {
+      asio::error_code ec;
+      const asio::ip::address a = asio::ip::make_address(nameAndAddress.second.c_str(), ec);
+      if(!ec)
+      {
+         add(a);
+      }
+   }
+#else
+   struct ifaddrs* interfaces = 0;
+   if(getifaddrs(&interfaces) == 0)
+   {
+      for(struct ifaddrs* i = interfaces; i; i = i->ifa_next)
+      {
+         if(!i->ifa_addr)
+         {
+            continue;
+         }
+         if(i->ifa_addr->sa_family == AF_INET)
+         {
+            const struct sockaddr_in* sin = reinterpret_cast<const struct sockaddr_in*>(i->ifa_addr);
+            add(asio::ip::address_v4(ntohl(sin->sin_addr.s_addr)));
+         }
+         else if(i->ifa_addr->sa_family == AF_INET6)
+         {
+            const struct sockaddr_in6* sin6 = reinterpret_cast<const struct sockaddr_in6*>(i->ifa_addr);
+            asio::ip::address_v6::bytes_type bytes;
+            memcpy(bytes.data(), &sin6->sin6_addr, bytes.size());
+            add(asio::ip::address_v6(bytes));
+         }
+      }
+      freeifaddrs(interfaces);
+   }
+   else
+   {
+      WarningLog(<< "Unable to get this host's interface addresses (errno=" << errno << "), only the configured ones are refused as peers");
+   }
+#endif
+   add(getConfig().mTurnAddress);
+   add(getConfig().mTurnV6Address);
+   add(getConfig().mAltStunAddress);
+
+   std::string list;
+   for(const auto& a : mLocalAddresses)
+   {
+      list += (list.empty() ? "" : ", ") + a.to_string();
+   }
+   InfoLog(<< "This host's own addresses, refused as peers (AllowLocalPeers is false): " << list);
+}
+
+// In this order:
+// - an address in AllowedPeerAddresses is allowed;
+// - unless AllowLocalPeers is set, one on the TURN server's own host - loopback and unspecified
+//   addresses (127.0.0.0/8, 0.0.0.0/8, ::1 and ::) and the host's own addresses - is refused:
+//   relaying to them would let a client reach, and get answers from, services there that
+//   aren't meant to be reachable from outside;
+// - one in DeniedPeerAddresses is refused;
+// - any other is allowed.
+// An IPv6 address carrying an IPv4 one is taken as that IPv4 address throughout.
 bool
 RequestHandler::isPeerAddressAllowed(const asio::ip::address& address)
 {
-   if(getConfig().mAllowLoopbackPeers)
+   const ReTurnConfig& config = getConfig();
+   const asio::ip::address peer = toComparableAddress(address);
+   if(config.mAllowedPeerAddresses.contains(peer))
    {
       return true;
    }
-   asio::ip::address peer = address;
-   if(peer.is_v6() && peer.to_v6().is_v4_mapped())
+   if(!config.mAllowLocalPeers)
    {
-      peer = asio::ip::make_address_v4(asio::ip::v4_mapped, peer.to_v6());
+      if(peer.is_v4())
+      {
+         const unsigned char firstByte = peer.to_v4().to_bytes()[0];
+         if(firstByte == 0 || firstByte == 127)
+         {
+            return false;
+         }
+      }
+      else if(peer.is_loopback() || peer.is_unspecified())
+      {
+         return false;
+      }
+      if(mLocalAddresses.count(peer) != 0)
+      {
+         return false;
+      }
    }
-   if(peer.is_v4())
-   {
-      const unsigned char firstByte = peer.to_v4().to_bytes()[0];
-      return firstByte != 0 && firstByte != 127;
-   }
-   return !peer.is_loopback() && !peer.is_unspecified();
+   return !config.mDeniedPeerAddresses.contains(peer);
 }
 
 void 

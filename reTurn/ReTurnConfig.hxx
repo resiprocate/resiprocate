@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <map>
+#include <string>
+#include <vector>
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
@@ -20,6 +22,26 @@ namespace reTurn {
 
 typedef std::map<resip::Data,reTurn::UserAuthData> RealmUsers;
 typedef std::pair<resip::Data, resip::Data> RealmUserPair;
+
+/// IPv4 and IPv6 address ranges, for AllowedPeerAddresses and DeniedPeerAddresses
+class PeerAddressList
+{
+public:
+   /// Adds an address range in CIDR form ("10.0.0.0/8", "fc00::/7"), or a single address.
+   /// Throws std::invalid_argument if entry is neither.
+   void add(const resip::Data& entry);
+   /// Whether address is in one of the ranges.  An IPv4 address is only in IPv4 ranges and an
+   /// IPv6 address only in IPv6 ranges, so an IPv6 address carrying an IPv4 one (as ::ffff:a.b.c.d)
+   /// should be given as that IPv4 address (see RequestHandler::toComparableAddress).
+   bool contains(const asio::ip::address& address) const;
+   bool empty() const { return mV4.empty() && mV6.empty(); }
+   /// The ranges, comma separated
+   std::string toString() const;
+
+private:
+   std::vector<asio::ip::network_v4> mV4;
+   std::vector<asio::ip::network_v6> mV6;
+};
 
 class ReTurnConfig : public resip::ConfigParse
 {
@@ -70,7 +92,9 @@ public:
    unsigned long mDefaultAllocationLifetime;
    unsigned long mMaxAllocationLifetime;
    unsigned long mMaxAllocationsPerUser;  // over all transports, 0 for no limit
-   bool mAllowLoopbackPeers;              // whether clients may relay to loopback and unspecified addresses
+   bool mAllowLocalPeers;                 // whether clients may relay to this host: loopback, unspecified and its own addresses
+   PeerAddressList mAllowedPeerAddresses; // peers allowed even if local or denied
+   PeerAddressList mDeniedPeerAddresses;  // peers refused
 
    resip::Data mTlsServerCertificateFilename;
    resip::Data mTlsServerPrivateKeyFilename;

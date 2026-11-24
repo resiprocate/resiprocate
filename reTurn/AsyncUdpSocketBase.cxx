@@ -31,15 +31,14 @@ AsyncUdpSocketBase::bind(const asio::ip::address& address, unsigned short port)
    mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
    if(!errorCode)
    {
-#ifdef USE_IPV6
-#ifdef __linux__
+      // IPv6 only, on every platform: asio makes IPv6 sockets dual-stack on Windows (and some
+      // BSDs do by default), where with SO_EXCLUSIVEADDRUSE a socket on [::]:port can't be bound
+      // beside one on 0.0.0.0:port, such as the IPv6 and IPv4 UDP servers'
       if(address.is_v6())
       {
-         asio::ip::v6_only v6_opt(true);
-         mSocket.set_option(v6_opt);
+         asio::error_code ignored;
+         mSocket.set_option(asio::ip::v6_only(true), ignored);
       }
-#endif
-#endif
       setExclusiveAddressUse(mSocket);
       mSocket.set_option(asio::socket_base::receive_buffer_size(66560));
       //mSocket.set_option(asio::socket_base::send_buffer_size(66560));

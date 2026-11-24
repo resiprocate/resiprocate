@@ -251,6 +251,10 @@ void TurnLoadGenAsyncSocketHandler::onChannelBindSuccess(unsigned int socketDesc
 void TurnLoadGenAsyncSocketHandler::onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e)
 {
    ErrLog(LOG_PREFIX << "MyTurnAsyncSocketHandler::onChannelBindFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
+   if(e.value() == 403)
+   {
+      ErrLog(LOG_PREFIX << "MyTurnAsyncSocketHandler::onChannelBindFailure: the echo server is on the TURN server's host: set AllowLocalPeers = true in the server's reTurnServer.config to test with it");
+   }
 }
 
 void TurnLoadGenAsyncSocketHandler::onSendSuccess(unsigned int socketDesc)
@@ -284,7 +288,7 @@ void TurnLoadGenAsyncSocketHandler::onIncomingBindRequestProcessed(unsigned int 
 
 /* ====================================================================
 
- Copyright (c) 2024 SIP Spectrum, Inc http://www.sipspectrum.com
+ Copyright (c) 2024-2026 SIP Spectrum, Inc http://www.sipspectrum.com
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
