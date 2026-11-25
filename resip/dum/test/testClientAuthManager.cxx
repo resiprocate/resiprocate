@@ -3,6 +3,9 @@
 //    answer neither asserts nor stays failed for later challenges
 //  - a realm challenged with several algorithms answers the topmost usable one, also when it is
 //    re-challenged after the first success (the unusable algorithm listed first must not fail the realm)
+//  - a response with both a SHA-256 and an MD5 challenge answers SHA-256 when it can be used, and falls
+//    back to MD5 when it can't (a build without SHA-256, or an A1 hash credential with only an MD5 hash) -
+//    the answer is checked with Helper::authenticateRequest, as a server would
 //  - WWW-Authenticate and Proxy-Authenticate in the same (aggregated) response are both answered
 //  - a challenge whose algorithm only a ClientAuthExtension supports reaches the extension's A1 handler,
 //    without the credential being checked against the built-in algorithms
@@ -10,6 +13,7 @@
 // ClientAuthManager is driven directly, as DialogSet does:  handle() with the request and the 401/407,
 // then addAuthentication() on the retried request, whose decorators add the Authorization headers.
 
+#include "resip/stack/Helper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/ClientAuthExtension.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
@@ -271,6 +275,82 @@ testA1HashWithoutTheAlgorithm()
    CHECK(answers(findAuth(msg, false, "r.invalid"), "n2", "MD5"));
 }
 
+// A 401 as a server sends it (nonce from Helper, qop "auth,auth-int"), with one WWW-Authenticate per
+// algorithm in the order given.  The algorithms are set by name, so a SHA-256 header can be offered even
+// to a build without SHA-256 support.
+static unique_ptr<SipMessage>
+makeServerChallenge(const SipMessage& request, const char* realm, const char* firstAlgorithm, const char* secondAlgorithm)
+{
+   unique_ptr<SipMessage> response(Helper::makeWWWChallenge(request, realm, true /* useAuth */, false /* stale */));
+   Auth challenge = response->header(h_WWWAuthenticates).front();
+   response->remove(h_WWWAuthenticates);
+   challenge.param(p_algorithm) = firstAlgorithm;
+   response->header(h_WWWAuthenticates).push_back(challenge);
+   challenge.param(p_algorithm) = secondAlgorithm;
+   response->header(h_WWWAuthenticates).push_back(challenge);
+   return response;
+}
+
+// Answers the SHA-256 + MD5 challenge from makeServerChallenge with credential, checks which algorithm was
+// used, and checks the answer as the server would - with the plain text password
+static void
+checkSha256AndMd5Challenge(const char* name, const UserProfile::DigestCredential& credential,
+                           const char* firstAlgorithm, const char* secondAlgorithm, const char* expectedAlgorithm)
+{
+   cerr << "  " << name << ": challenge " << firstAlgorithm << ", " << secondAlgorithm
+        << " - expecting " << expectedAlgorithm << endl;
+   const Data callId(Data("sha256-md5-") + name);
+   UserProfile profile;
+   profile.setDigestCredential(credential.realm, credential.user, credential.password, credential.isPasswordA1Hash);
+   ClientAuthManager manager;
+   unique_ptr<SipMessage> request = makeRegister(callId);
+
+   unique_ptr<SipMessage> challenge = makeServerChallenge(*request, credential.realm.c_str(), firstAlgorithm, secondAlgorithm);
+   CHECK(manager.handle(profile, *request, *challenge));
+   SipMessage msg = retried(manager, *request);
+   CHECK(authCount(msg, false) == 1);
+   const Auth* auth = findAuth(msg, false, credential.realm.c_str());
+   CHECK(auth && auth->exists(p_algorithm) && isEqualNoCase(auth->param(p_algorithm), expectedAlgorithm));
+   CHECK(Helper::authenticateRequest(msg, credential.realm, "secret") == Helper::Authenticated);
+   CHECK(Helper::authenticateRequest(msg, credential.realm, "wrong") == Helper::Failed);  // the check above means something
+}
+
+// A response with both a SHA-256 and an MD5 challenge, when SHA-256 can be used:  the topmost one is answered
+static void
+testSha256AndMd5ChallengeSha256Supported()
+{
+   cerr << "testSha256AndMd5ChallengeSha256Supported" << endl;
+#ifdef USE_SSL
+   const UserProfile::DigestCredential password("r.invalid", "alice", "secret", false);
+   // A1 hash holding a hash for every algorithm this build supports
+   const UserProfile::DigestCredential a1AllAlgorithms("r.invalid", "alice",
+                                                       Helper::createResipA1HashString("alice", "r.invalid", "secret"), true);
+
+   checkSha256AndMd5Challenge("password", password, "SHA-256", "MD5", "SHA-256");
+   checkSha256AndMd5Challenge("a1-all", a1AllAlgorithms, "SHA-256", "MD5", "SHA-256");
+   // The server prefers MD5:  it is listed first, so it is answered although SHA-256 is supported too
+   checkSha256AndMd5Challenge("password-md5-first", password, "MD5", "SHA-256", "MD5");
+#else
+   cerr << "  skipped - SHA-256 needs USE_SSL" << endl;
+#endif
+}
+
+// A response with both a SHA-256 and an MD5 challenge, when SHA-256 can't be used:  fall back to MD5
+static void
+testSha256AndMd5ChallengeFallbackToMd5()
+{
+   cerr << "testSha256AndMd5ChallengeFallbackToMd5" << endl;
+   // The credential is an A1 hash with only an MD5 hash in it, so SHA-256 can't be answered whether or not
+   // this build supports it
+   const UserProfile::DigestCredential a1Md5Only("r.invalid", "alice", "[MD5]" + Data("alice:r.invalid:secret").md5(), true);
+   checkSha256AndMd5Challenge("a1-md5-only", a1Md5Only, "SHA-256", "MD5", "MD5");
+#ifndef USE_SSL
+   // This build has no SHA-256 at all
+   const UserProfile::DigestCredential password("r.invalid", "alice", "secret", false);
+   checkSha256AndMd5Challenge("password-no-sha256", password, "SHA-256", "MD5", "MD5");
+#endif
+}
+
 static void
 testWwwAndProxyInOneResponse()
 {
@@ -362,6 +442,8 @@ main(int argc, char* argv[])
    testTwoRealmsOneUsable();
    testUnsupportedAlgorithmListedFirst();
    testA1HashWithoutTheAlgorithm();
+   testSha256AndMd5ChallengeSha256Supported();
+   testSha256AndMd5ChallengeFallbackToMd5();
    testWwwAndProxyInOneResponse();
    testExtensionAlgorithmWithA1Credential();
 
