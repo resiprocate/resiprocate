@@ -11,8 +11,10 @@
 
 
 CPTextTestProgressListener::CPTextTestProgressListener()
+   : mTestController(0),
+     mTestCount(0),
+     mTestNumber(0)
 {
-   mTestController = 0;
 }
 
 
@@ -26,10 +28,35 @@ CPTextTestProgressListener::stopAllTestsUponFirstFailure(CppUnit::TestResult * p
    mTestController = pController;
 }
 
-void 
+void
+CPTextTestProgressListener::startTestRun( CppUnit::Test *test, CppUnit::TestResult * /*eventManager*/ )
+{
+   mTestCount = test->countTestCases();
+   mTestNumber = 0;
+}
+
+// Each line is flushed as it is written, so that progress can be followed while the tests run (e.g. under ctest --verbose)
+void
 CPTextTestProgressListener::startTest( CppUnit::Test *test )
 {
-	CppUnit::stdCOut() << "Starting test:  " << test->getName() << std::endl;
+   ++mTestNumber;
+   mTestStart = std::chrono::steady_clock::now();
+   CppUnit::stdCOut() << "Starting test " << progress() << ":  " << test->getName() << std::endl;
+}
+
+void
+CPTextTestProgressListener::endTest( CppUnit::Test *test )
+{
+   const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - mTestStart).count();
+   CppUnit::stdCOut() << "Finished test " << progress() << ":  " << test->getName()
+                      << " (" << elapsedMs / 1000 << "." << (elapsedMs % 1000) / 100 << " s)" << std::endl;
+}
+
+std::string
+CPTextTestProgressListener::progress() const
+{
+   // The number of tests is only known when the listener is told about the start of the run
+   return std::to_string(mTestNumber) + (mTestCount > 0 ? "/" + std::to_string(mTestCount) : std::string());
 }
 
 

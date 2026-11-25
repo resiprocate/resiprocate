@@ -136,7 +136,15 @@ jobs:
       # (sanityTests, dumTests) depend on timing, and CI runners occasionally
       # stall the whole process for seconds; a genuine regression fails both runs.
       - name: Test
-        run: make -j1 CTEST_OUTPUT_ON_FAILURE=1 ARGS="--repeat until-pass:2" test
+        id: test
+        run: ctest --output-on-failure --repeat until-pass:2 --exclude-regex "^(sanityTests|dumTests)$"
+
+      # The TFM suites run for half an hour or more, so their output is streamed
+      # (--verbose) to show each test as it starts and finishes.  They run
+      # whenever the other tests ran, even if some of those failed.
+      - name: Test TFM
+        if: ${{ !cancelled() && (steps.test.outcome == 'success' || steps.test.outcome == 'failure') }}
+        run: ctest --verbose --repeat until-pass:2 --tests-regex "^(sanityTests|dumTests)$"
 
       # The TFM suites log in detail to resiprocate.log in their working
       # directories (the source tree, under ctest).  Keep those logs when a run

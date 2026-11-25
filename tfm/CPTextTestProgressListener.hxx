@@ -3,6 +3,9 @@
 
 #include <cppunit/TestListener.h>
 
+#include <chrono>
+#include <string>
+
 
 
 /*! 
@@ -19,7 +22,9 @@ public:
   /// Destructor.
   virtual ~CPTextTestProgressListener();
 
+  void startTestRun( CppUnit::Test *test, CppUnit::TestResult *eventManager );
   void startTest( CppUnit::Test *test );
+  void endTest( CppUnit::Test *test );
   void addFailure( const CppUnit::TestFailure &failure );
 
   void endTestRun( CppUnit::Test *test, 
@@ -34,7 +39,12 @@ private:
   void operator =( const CPTextTestProgressListener &copy );
 
 private:
+   std::string progress() const;  // e.g. "12/168"
+
    CppUnit::TestResult * mTestController;
+   int mTestCount;    // tests in this run
+   int mTestNumber;   // the test now running, from 1
+   std::chrono::steady_clock::time_point mTestStart;
 };
 
 
