@@ -198,6 +198,48 @@ class DumTestCase : public DumFixture
 
       CPPUNIT_TEST(testReinviteWithByeSentAfterMissedAck);
 
+      // An in-dialog UPDATE must always get a final response, and a call can be ended while
+      // an UPDATE of ours is pending
+      CPPUNIT_TEST(testUACEarlyUpdateNoOffer);
+      CPPUNIT_TEST(testUACAnsweredUpdateNoOffer);
+      CPPUNIT_TEST(testUACAnsweredUpdateOffer);
+      CPPUNIT_TEST(testUACPrackSentAnswerUpdateNoOffer);
+      CPPUNIT_TEST(testUACPrackSentAnswerUpdateOffer);
+      CPPUNIT_TEST(testUACPrackQueuedUpdateUpdateNoOffer);
+      CPPUNIT_TEST(testUACPrackQueuedUpdateUpdateOffer);
+      CPPUNIT_TEST(testUACPrackQueuedUpdateCancel);
+      CPPUNIT_TEST(testUACPrackUpdateGlareUpdateNoOffer);
+      CPPUNIT_TEST(testUACPrackUpdateGlareEnd);
+      CPPUNIT_TEST(testUACPrackUpdateGlareCancel);
+      CPPUNIT_TEST(testUASWaitingToHangupUpdateNoOffer);
+      CPPUNIT_TEST(testUASWaitingToHangupUpdateOffer);
+      CPPUNIT_TEST(testReInviteWaitingToHangupUpdateNoOffer);
+      CPPUNIT_TEST(testReInviteWaitingToHangupUpdateOffer);
+      // A BYE must always get a response, whatever state the call is in
+      CPPUNIT_TEST(testUACPrackUpdateEarlyBye);
+      CPPUNIT_TEST(testUACPrackUpdateGlareBye);
+      CPPUNIT_TEST(testUACPrackReceivedUpdateBye);
+      CPPUNIT_TEST(testUACPrackUpdate200NoAnswer);
+      CPPUNIT_TEST(testUASAcceptedWaitingAnswerBye);
+      CPPUNIT_TEST(testUASWaitingToHangupBye);
+      CPPUNIT_TEST(testUASPrackReceivedUpdateBye);
+      CPPUNIT_TEST(testUASPrackReceivedUpdateWaitingAnswerBye);
+      CPPUNIT_TEST(testReInviteWaitingToHangupBye);
+      // Ending a call answers an UPDATE we have not answered yet, and a CANCEL crossing our 200
+      CPPUNIT_TEST(testUACPrackReceivedUpdateEnd);
+      CPPUNIT_TEST(testUACPrackReceivedUpdateCancel);
+      CPPUNIT_TEST(testUASPrackReceivedUpdateEnd);
+      CPPUNIT_TEST(testUASPrackReceivedUpdateWaitingAnswerEnd);
+      CPPUNIT_TEST(testUASWaitingToHangupCancel);
+      // Responses to the INVITE and to our UPDATE are handled while an early UPDATE is pending
+      CPPUNIT_TEST(testUACPrackUpdateEarlyRejected);
+      CPPUNIT_TEST(testUACPrackUpdateEarlyConnected);
+      CPPUNIT_TEST(testUACPrackUpdateGlareConnected);
+      CPPUNIT_TEST(testUACPrackUpdateEarlyProvisional);
+      CPPUNIT_TEST(testUACPrackReceivedUpdateConnected);
+      CPPUNIT_TEST(testUACPrackReceivedUpdateInviteFailure);
+      CPPUNIT_TEST(testUACPrackReceivedUpdateProvisional);
+
       CPPUNIT_TEST(testOutOfDialogReferNoReferSubWithoutReferSubHeader);
       CPPUNIT_TEST(testOutOfDialogRefer);
       CPPUNIT_TEST(testOutOfDialogReferNoReferSub);
@@ -5807,6 +5849,947 @@ class DumTestCase : public DumFixture
               WaitForEndOfSeq);
 
           ExecuteSequences();
+      }
+
+      // Offer for sheila to put in an UPDATE
+      static std::shared_ptr<SdpContents> sheilaOffer()
+      {
+         return std::shared_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
+      }
+
+      // Control for the tests below: UAC_Early already answers an UPDATE that has no offer
+      void testUACEarlyUpdateNoOffer()
+      {
+         InfoLog(<< "testUACEarlyUpdateNoOffer");
+
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->ring()),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->update("jason")),
+             sheila->expect(UPDATE/200, from(jason->getInstanceId()), WaitForCommand, uac.end()),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      // UAC_Answered: 2xx carried an offer that the application has not yet answered
+      void uacAnsweredUpdate(bool withOffer)
+      {
+         InfoLog(<< "uacAnsweredUpdate withOffer=" << withOffer);
+
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+
+         auto updateAction = withOffer ? sheila->update("jason", sheilaOffer()) : sheila->update("jason");
+
+         Seq(jason->invite(sheila->getContact(), 0 /* No Offer */),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->answer(offer)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, updateAction),
+             sheila->expect(UPDATE/(withOffer ? 500 : 200), new TestSipEndPoint::AlwaysMatches(), WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             sheila->expect(ACK, from(jason->getInstanceId()), WaitForCommand, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      void testUACAnsweredUpdateNoOffer()
+      {
+         uacAnsweredUpdate(false);
+      }
+
+      void testUACAnsweredUpdateOffer()
+      {
+         uacAnsweredUpdate(true);
+      }
+
+      // UAC_SentAnswer: the PRACK carrying our answer has not been responded to
+      void uacPrackSentAnswerUpdate(bool withOffer)
+      {
+         InfoLog(<< "uacPrackSentAnswerUpdate withOffer=" << withOffer);
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+
+         auto updateAction = withOffer ? sheila->update("jason", sheilaOffer()) : sheila->update("jason");
+
+         Seq(jason->invite(sheila->getContact(), 0 /* No Offer */),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(offer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, updateAction),
+             sheila->expect(UPDATE/(withOffer ? 500 : 200), new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction()),
+             // Answer a retransmission of the PRACK, so that none are left over for the next test
+             sheila->expect(PRACK, from(jason->getInstanceId()), CallTimeout,
+                            chain(sheila->ok(), sheila->pause(100), uac.end())),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUACPrackSentAnswerUpdateNoOffer()
+      {
+         uacPrackSentAnswerUpdate(false);
+      }
+
+      void testUACPrackSentAnswerUpdateOffer()
+      {
+         uacPrackSentAnswerUpdate(true);
+      }
+
+      // UAC_QueuedUpdate: as above, with an offer queued until the PRACK is responded to
+      void uacPrackQueuedUpdateUpdate(bool withOffer)
+      {
+         InfoLog(<< "uacPrackQueuedUpdateUpdate withOffer=" << withOffer);
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         auto updateAction = withOffer ? sheila->update("jason", sheilaOffer()) : sheila->update("jason");
+
+         Seq(jason->invite(sheila->getContact(), 0 /* No Offer */),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(offer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand,
+                            chain(uac.provideOffer(*standardOffer), sheila->pause(100), updateAction)),
+             sheila->expect(UPDATE/(withOffer ? 491 : 200), new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction()),
+             // Answer a retransmission of the PRACK: DUM must then send the UPDATE it queued
+             sheila->expect(PRACK, from(jason->getInstanceId()), CallTimeout, sheila->ok()),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, sheila->answerUpdate(answer)),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.end()),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUACPrackQueuedUpdateUpdateNoOffer()
+      {
+         uacPrackQueuedUpdateUpdate(false);
+      }
+
+      void testUACPrackQueuedUpdateUpdateOffer()
+      {
+         uacPrackQueuedUpdateUpdate(true);
+      }
+
+      // UAC_SentUpdateEarlyGlare: our UPDATE got a 491 and we are waiting to resend it
+      void testUACPrackUpdateGlareUpdateNoOffer()
+      {
+         InfoLog(<< "testUACPrackUpdateGlareUpdateNoOffer");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send491(), sheila->pause(500), sheila->update("jason"))),
+             sheila->expect(UPDATE/200, from(jason->getInstanceId()), WaitForCommand, sheila->noAction()),
+             // Let DUM resend its UPDATE and connect
+             sheila->expect(UPDATE, from(jason->getInstanceId()), Owner491, sheila->answerUpdate(answer)),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->answer()),
+             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()))),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAS_WaitingToHangup: end() was called while still waiting for the ACK to our 200
+      void uasWaitingToHangupUpdate(bool withOffer)
+      {
+         InfoLog(<< "uasWaitingToHangupUpdate withOffer=" << withOffer);
+
+         TestClientRegistration regScott(scott);
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+
+         const Data user(scott->getAor().uri().user());
+         auto updateAction = withOffer ? david->update(user, offer) : david->update(user);
+
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeNone),
+             optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE / 407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.accept())),
+             And(Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
+                 Sub(david->expect(INVITE / 200, from(proxy), WaitForResponse,
+                                   chain(uas.end(), david->pause(100), updateAction)))),
+             optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(UPDATE / 407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(UPDATE / (withOffer ? 488 : 200), from(proxy), WaitForCommand, david->noAction()),
+             // DUM retransmits its 200 until it is ACKed
+             david->expect(INVITE / 200, from(proxy), CallTimeout, david->ack()),
+             And(Sub(david->expect(BYE, from(proxy), WaitForCommand, david->ok())),
+                 Sub(scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      void testUASWaitingToHangupUpdateNoOffer()
+      {
+         uasWaitingToHangupUpdate(false);
+      }
+
+      void testUASWaitingToHangupUpdateOffer()
+      {
+         uasWaitingToHangupUpdate(true);
+      }
+
+      // end() while waiting to resend our UPDATE must hang up the call
+      void testUACPrackUpdateGlareEnd()
+      {
+         InfoLog(<< "testUACPrackUpdateGlareEnd");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send100(),  // DumUserAgent learns the AppDialogSet that cancelInvite() needs from onTrying
+                                  sheila->reliableProvisional(answer, 1))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send491(), sheila->pause(500), uac.end())),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // Ending the DialogSet while waiting to resend our UPDATE must cancel the INVITE
+      void testUACPrackUpdateGlareCancel()
+      {
+         InfoLog(<< "testUACPrackUpdateGlareCancel");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send100(),  // DumUserAgent learns the AppDialogSet that cancelInvite() needs from onTrying
+                                  sheila->reliableProvisional(answer, 1))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send491(), sheila->pause(500), jason->cancelInvite())),
+             And(Sub(sheila->expect(CANCEL, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // Ending the DialogSet while an offer is queued behind our PRACK must cancel the INVITE
+      void testUACPrackQueuedUpdateCancel()
+      {
+         InfoLog(<< "testUACPrackQueuedUpdateCancel");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), 0 /* No Offer */),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send100(),  // DumUserAgent learns the AppDialogSet that cancelInvite() needs from onTrying
+                                  sheila->reliableProvisional(offer, 1))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand,
+                            chain(uac.provideOffer(*standardOffer), sheila->pause(100),  // before our PRACK is retransmitted
+                                  jason->cancelInvite())),
+             And(Sub(sheila->expect(CANCEL, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             // Answer a retransmission of the PRACK, so that none are left over for the next test
+             sheila->expect(PRACK, from(jason->getInstanceId()), CallTimeout, sheila->ok()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // InviteSession::WaitingToHangup: end() was called while waiting for the ACK to our re-INVITE 200
+      void reInviteWaitingToHangupUpdate(bool withOffer)
+      {
+         InfoLog(<< "reInviteWaitingToHangupUpdate withOffer=" << withOffer);
+
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         auto updateAction = withOffer ? sheila->update("jason", sheilaOffer()) : sheila->update("jason");
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->answer(answer)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForCommand, sheila->reInvite("jason")))),
+             optional(sheila->expect(INVITE/100, new TestSipEndPoint::AlwaysMatches(), WaitFor100, sheila->noAction())),
+             uac.expect(Invite_OfferRequired, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideOffer(*standardOffer)),
+             sheila->expect(INVITE/200, from(jason->getInstanceId()), WaitForCommand,
+                            chain(uac.end(), sheila->pause(100), updateAction)),
+             sheila->expect(UPDATE/(withOffer ? 488 : 200), new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction()),
+             // DUM retransmits its 200 until it is ACKed
+             sheila->expect(INVITE/200, from(jason->getInstanceId()), CallTimeout, sheila->ack(answer)),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      void testReInviteWaitingToHangupUpdateNoOffer()
+      {
+         reInviteWaitingToHangupUpdate(false);
+      }
+
+      void testReInviteWaitingToHangupUpdateOffer()
+      {
+         reInviteWaitingToHangupUpdate(true);
+      }
+
+      // UAC_SentUpdateEarly: the peer hangs up while our UPDATE is pending
+      void testUACPrackUpdateEarlyBye()
+      {
+         InfoLog(<< "testUACPrackUpdateEarlyBye");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->bye(), sheila->respond(488))),
+             And(Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->send487()),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     // The 487 to our INVITE arrives after the dialog has gone, so DUM reports it on a new session
+                     jason->expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_SentUpdateEarlyGlare: the peer hangs up while we wait to resend our UPDATE
+      void testUACPrackUpdateGlareBye()
+      {
+         InfoLog(<< "testUACPrackUpdateGlareBye");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send491(), sheila->pause(100), sheila->bye())),
+             And(Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->send487()),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     // The 487 to our INVITE arrives after the dialog has gone, so DUM reports it on a new session
+                     jason->expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_ReceivedUpdateEarly: the peer hangs up before we answer the offer in its UPDATE
+      void testUACPrackReceivedUpdateBye()
+      {
+         InfoLog(<< "testUACPrackReceivedUpdateBye");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->ok(), sheila->update("jason", sheilaOffer()), sheila->pause(300), sheila->bye())),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             And(Sub(sheila->expect(UPDATE/487, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->send487()),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     // The 487 to our INVITE arrives after the dialog has gone, so DUM reports it on a new session
+                     jason->expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_SentUpdateEarly: a 200 to our UPDATE that has no answer is reported, and we can make a new offer
+      void testUACPrackUpdate200NoAnswer()
+      {
+         InfoLog(<< "testUACPrackUpdate200NoAnswer");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()),
+             uac.expect(Invite_IllegalNegotiation, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideOffer(*standardOffer)),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, sheila->answerUpdate(answer)),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.end()),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAS_AcceptedWaitingAnswer: the caller hangs up instead of sending the ACK with its answer
+      void testUASAcceptedWaitingAnswerBye()
+      {
+         InfoLog(<< "testUASAcceptedWaitingAnswerBye");
+
+         TestClientRegistration regScott(scott);
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+
+         Seq(david->invite(scott->getAor().uri()),
+             optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE / 407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             uas.expect(Invite_OfferRequired, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideOffer(*standardOffer), uas.accept())),
+             david->expect(INVITE / 200, from(proxy), WaitForResponse, david->bye()),
+             And(Sub(optional(david->expect(BYE / 100, from(proxy), WaitFor100, david->noAction())),
+                     david->expect(BYE / 200, from(proxy), WaitForCommand, david->noAction())),
+                 Sub(scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      // UAS_WaitingToHangup: the caller hangs up before sending the ACK we are waiting for
+      void testUASWaitingToHangupBye()
+      {
+         InfoLog(<< "testUASWaitingToHangupBye");
+
+         TestClientRegistration regScott(scott);
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeNone),
+             optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE / 407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.accept())),
+             And(Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
+                 Sub(david->expect(INVITE / 200, from(proxy), WaitForResponse,
+                                   chain(uas.end(), david->pause(50), david->bye())))),
+             And(Sub(optional(david->expect(BYE / 100, from(proxy), WaitFor100, david->noAction())),
+                     david->expect(BYE / 200, from(proxy), WaitForCommand, david->noAction())),
+                 Sub(scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      // UAS_ReceivedUpdate and UAS_ReceivedUpdateWaitingAnswer: the caller hangs up before we answer the
+      // offer in its UPDATE
+      void uasPrackReceivedUpdateBye(bool accepted)
+      {
+         InfoLog(<< "uasPrackReceivedUpdateBye accepted=" << accepted);
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE / 407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             david->expect(INVITE / 183, from(scott->getInstanceId()), WaitForCommand, david->prack()),
+             optional(david->expect(PRACK / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK / 407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(PRACK / 100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, david->update(scott->getAor().uri().user(), offer)),
+             david->expect(PRACK / 200, from(scott->getInstanceId()), WaitForCommand, david->noAction()),
+             optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(UPDATE / 407, from(proxy), WaitForCommand, chain(david->digestRespond(), david->pause(300), david->bye())),
+             optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand,
+                          accepted ? static_cast<ActionBase*>(uas.accept()) : static_cast<ActionBase*>(uas.noAction())),
+             And(Sub(david->expect(UPDATE / 487, alwaysMatches(), WaitForCommand, david->noAction())),
+                 Sub(optional(david->expect(BYE / 100, from(proxy), WaitFor100, david->noAction())),
+                     david->expect(BYE / 200, from(proxy), WaitForCommand, david->noAction())),
+                 Sub(david->expect(INVITE / 487, alwaysMatches(), WaitForCommand, david->ack())),
+                 Sub(scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASPrackReceivedUpdateBye()
+      {
+         uasPrackReceivedUpdateBye(false);
+      }
+
+      void testUASPrackReceivedUpdateWaitingAnswerBye()
+      {
+         uasPrackReceivedUpdateBye(true);
+      }
+
+      // InviteSession::WaitingToHangup: the peer hangs up before sending the ACK to our re-INVITE 200
+      void testReInviteWaitingToHangupBye()
+      {
+         InfoLog(<< "testReInviteWaitingToHangupBye");
+
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->answer(answer)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForCommand, sheila->reInvite("jason")))),
+             optional(sheila->expect(INVITE/100, new TestSipEndPoint::AlwaysMatches(), WaitFor100, sheila->noAction())),
+             uac.expect(Invite_OfferRequired, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideOffer(*standardOffer)),
+             sheila->expect(INVITE/200, from(jason->getInstanceId()), WaitForCommand,
+                            chain(uac.end(), sheila->pause(100), sheila->bye())),
+             And(Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      // UAC_ReceivedUpdateEarly: ending the call answers the UPDATE whose offer we have not answered
+      void testUACPrackReceivedUpdateEnd()
+      {
+         InfoLog(<< "testUACPrackReceivedUpdateEnd");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send100(),  // DumUserAgent learns the AppDialogSet that cancelInvite() needs from onTrying
+                                  sheila->reliableProvisional(answer, 1))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->ok(), sheila->update("jason", sheilaOffer()))),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.end()),
+             And(Sub(sheila->expect(UPDATE/488, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_ReceivedUpdateEarly: cancelling the call terminates the UPDATE whose offer we have not answered
+      void testUACPrackReceivedUpdateCancel()
+      {
+         InfoLog(<< "testUACPrackReceivedUpdateCancel");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send100(),  // DumUserAgent learns the AppDialogSet that cancelInvite() needs from onTrying
+                                  sheila->reliableProvisional(answer, 1))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->ok(), sheila->update("jason", sheilaOffer()))),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, jason->cancelInvite()),
+             And(Sub(sheila->expect(UPDATE/487, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(sheila->expect(CANCEL, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAS_ReceivedUpdate and UAS_ReceivedUpdateWaitingAnswer: ending the call answers the UPDATE whose
+      // offer we have not answered
+      void uasPrackReceivedUpdateEnd(bool accepted)
+      {
+         InfoLog(<< "uasPrackReceivedUpdateEnd accepted=" << accepted);
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE / 407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             david->expect(INVITE / 183, from(scott->getInstanceId()), WaitForCommand, david->prack()),
+             optional(david->expect(PRACK / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK / 407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(PRACK / 100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, david->update(scott->getAor().uri().user(), offer)),
+             david->expect(PRACK / 200, from(scott->getInstanceId()), WaitForCommand, david->noAction()),
+             optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(UPDATE / 407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand,
+                           accepted ? static_cast<ActionBase*>(chain(uas.accept(), uas.end())) : static_cast<ActionBase*>(uas.end())),
+             And(Sub(david->expect(UPDATE / 488, alwaysMatches(), WaitForCommand, david->noAction())),
+                 Sub(david->expect(INVITE / 480, alwaysMatches(), WaitForCommand, david->ack())),
+                 Sub(scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASPrackReceivedUpdateEnd()
+      {
+         uasPrackReceivedUpdateEnd(false);
+      }
+
+      void testUASPrackReceivedUpdateWaitingAnswerEnd()
+      {
+         uasPrackReceivedUpdateEnd(true);
+      }
+
+      // UAS_WaitingToHangup: a CANCEL that crosses our 200 is answered while we wait for the ACK
+      void testUASWaitingToHangupCancel()
+      {
+         InfoLog(<< "testUASWaitingToHangupCancel");
+
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestServerInviteSession uas(jason);
+         std::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+
+         Seq(sheila->invite(jason->getContact(), offer),
+             optional(sheila->expect(INVITE/100, new TestSipEndPoint::AlwaysMatches(), WaitFor100, sheila->noAction())),
+             jason->expect(Invite_NewServerSession, uas, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             uas.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.accept())),
+             And(Sub(uas.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
+                 Sub(sheila->expect(INVITE/200, from(jason->getInstanceId()), WaitForResponse,
+                                    chain(uas.end(), sheila->pause(100), sheila->cancel())))),
+             sheila->expect(CANCEL/200, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction()),
+             // DUM retransmits its 200 until it is ACKed, and then hangs up
+             sheila->expect(INVITE/200, from(jason->getInstanceId()), CallTimeout, sheila->ack()),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok())),
+                 Sub(uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      // UAC_SentUpdateEarly: a rejected UPDATE is reported, and we can make a new offer
+      void testUACPrackUpdateEarlyRejected()
+      {
+         InfoLog(<< "testUACPrackUpdateEarlyRejected");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, sheila->send488()),
+             uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideOffer(*standardOffer)),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, sheila->answerUpdate(answer)),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.end()),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_SentUpdateEarly: the INVITE 200 (with SDP) is ACKed and reported, and our UPDATE then completes
+      void testUACPrackUpdateEarlyConnected()
+      {
+         InfoLog(<< "testUACPrackUpdateEarlyConnected");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->answer(answer), sheila->pause(300), sheila->answerUpdate(answer))),
+             And(Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.end()),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_SentUpdateEarlyGlare: the INVITE 200 is ACKed and reported, and our UPDATE is then resent
+      void testUACPrackUpdateGlareConnected()
+      {
+         InfoLog(<< "testUACPrackUpdateGlareConnected");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send491(), sheila->pause(100), sheila->answer(answer))),
+             And(Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), Owner491, sheila->answerUpdate(answer)),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.end()),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_SentUpdateEarly: a new reliable provisional is PRACKed and reported
+      void testUACPrackUpdateEarlyProvisional()
+      {
+         InfoLog(<< "testUACPrackUpdateEarlyProvisional");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->reliableProvisional(2), sheila->pause(300), sheila->answerUpdate(answer))),
+             And(Sub(jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.end()),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_ReceivedUpdateEarly: the INVITE 200 is ACKed and reported, and the UPDATE can still be answered
+      void testUACPrackReceivedUpdateConnected()
+      {
+         InfoLog(<< "testUACPrackReceivedUpdateConnected");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->update("jason", sheilaOffer()))),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->answer(answer)),
+             And(Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)))),
+             sheila->expect(UPDATE/200, from(jason->getInstanceId()), WaitForCommand, uac.end()),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_ReceivedUpdateEarly: a failure response to the INVITE ends the call and terminates the UPDATE
+      void testUACPrackReceivedUpdateInviteFailure()
+      {
+         InfoLog(<< "testUACPrackReceivedUpdateInviteFailure");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->update("jason", sheilaOffer()))),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->send487()),
+             And(Sub(sheila->expect(UPDATE/487, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_ReceivedUpdateEarly: a new reliable provisional is PRACKed and reported
+      void testUACPrackReceivedUpdateProvisional()
+      {
+         InfoLog(<< "testUACPrackReceivedUpdateProvisional");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->ok(), sheila->update("jason", sheilaOffer()), sheila->pause(300), sheila->reliableProvisional(2))),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             And(Sub(jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand,
+                                    chain(sheila->ok(), sheila->pause(100), uac.end())))),  // end once our PRACK is answered
+             And(Sub(sheila->expect(UPDATE/488, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
       }
 };
 

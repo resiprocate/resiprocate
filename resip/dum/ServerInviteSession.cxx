@@ -559,8 +559,8 @@ ServerInviteSession::end(EndReason reason)
       case UAS_NoAnswerReliableWaitingPrack:
       case UAS_NoAnswerReliable:
       case UAS_NoOfferReliable:
-      case UAS_ReceivedUpdate:   // !slg! todo: send 488U
-      case UAS_ReceivedUpdateWaitingAnswer: // !slg! todo: send 488U
+      case UAS_ReceivedUpdate:   // reject answers the pending UPDATE too
+      case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdate:
       case UAS_SentUpdateGlare:
       case UAS_SentUpdateAccepted:
@@ -635,6 +635,14 @@ ServerInviteSession::reject(int code, const Contents* contents, WarningCategory 
       case UAS_SentUpdateGlare:
       case UAS_SentUpdateAccepted:  // yes it's wrong to call reject after accept - however we can get here from end() as well.  We haven't sent our 200/Inv on the wire yet, so we can just reject the Invite session to end it
       {
+         if (mState == UAS_ReceivedUpdate || mState == UAS_ReceivedUpdateWaitingAnswer)
+         {
+            // We are ending the call, so answer the UPDATE whose offer we have not answered yet
+            auto u488 = std::make_shared<SipMessage>();
+            mDialog.makeResponse(*u488, *mLastRemoteSessionModification, 488);
+            send(u488);
+         }
+
          // !jf! the cleanup for 3xx may be a bit strange if we are in the middle of
          // an offer/answer exchange with PRACK. 
          // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
@@ -1305,6 +1313,12 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
          
+      case OnBye:
+         // The peer hung up before ACKing our 2xx
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         InviteSession::dispatchBye(msg);  // the INVITE has already been answered
+         break;
+
       case OnCancel:
       {
          // no transition
@@ -1884,10 +1898,6 @@ ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
          dispatchCancel(msg);
          break;
 
-      case OnBye:
-          dispatchBye(msg);
-          break;
-
       case OnUpdate:
       case OnUpdateOffer:
          // If we receive an UPDATE before we have generated a final response to a previous UPDATE on the 
@@ -1900,6 +1910,16 @@ ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
             send(u500);
          }
          break;
+
+      case OnBye:
+      {
+         // Terminate the UPDATE we have not answered yet, as for a re-INVITE in InviteSession::dispatchReceivedUpdateOrReinvite
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, *mLastRemoteSessionModification, 487); // Request Terminated
+         send(response);
+         dispatchBye(msg);
+         break;
+      }
 
       default:
          if(msg.isRequest())
@@ -1921,10 +1941,6 @@ ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
          dispatchCancel(msg);
          break;
 
-      case OnBye:
-          dispatchBye(msg);
-          break;
-
       case OnUpdate:
       case OnUpdateOffer:
          // A UAS that receives an UPDATE before it has generated a final response to a previous UPDATE on the 
@@ -1935,6 +1951,16 @@ ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
             send(u500);
          }
          break;
+
+      case OnBye:
+      {
+         // Terminate the UPDATE we have not answered yet, as for a re-INVITE in InviteSession::dispatchReceivedUpdateOrReinvite
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, *mLastRemoteSessionModification, 487); // Request Terminated
+         send(response);
+         dispatchBye(msg);
+         break;
+      }
 
       default:
          if(msg.isRequest())
@@ -2035,6 +2061,39 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
          break;
       }
       
+      case OnUpdate:
+      {
+         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+         break;
+      }
+
+      case OnUpdateOffer:
+      {
+         // We are ending the call, so no new offer can be accepted
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 488);
+         send(response);
+         break;
+      }
+
+      case OnBye:
+         // The peer hung up before ACKing our 2xx
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         InviteSession::dispatchBye(msg);  // the INVITE has already been answered
+         break;
+
+      case OnCancel:
+      {
+         // CANCEL and our 200 crossed - we are still waiting for the ACK, so that we can hang up
+         auto c200 = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*c200, msg, 200);
+         send(c200);
+         break;
+      }
+
       default:
          break;
    }

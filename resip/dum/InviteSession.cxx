@@ -2349,6 +2349,39 @@ InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
          }
          break;
       
+      case OnUpdate:
+      {
+         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+         break;
+      }
+
+      case OnUpdateOffer:
+      {
+         // We are ending the call, so no new offer can be accepted
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 488);
+         send(response);
+         break;
+      }
+
+      case OnBye:
+         // The peer hung up before ACKing our 2xx
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         dispatchBye(msg);
+         break;
+
+      case OnCancel:
+      {
+         // CANCEL and our 200 crossed - we are still waiting for the ACK, so that we can hang up
+         auto c200 = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*c200, msg, 200);
+         send(c200);
+         break;
+      }
+
       default:
          break;
    }

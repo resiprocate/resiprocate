@@ -229,11 +229,19 @@ ClientInviteSession::end(EndReason reason)
       case UAC_EarlyWithAnswer:
       case UAC_Answered:
       case UAC_SentUpdateEarly:
+      case UAC_SentUpdateEarlyGlare:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
       case UAC_QueuedUpdate:
       case UAC_Cancelled: // !jf! possibly incorrect to always BYE in UAC_Cancelled
       {
+         if (mState == UAC_ReceivedUpdateEarly)
+         {
+            // We are ending the call, so answer the UPDATE whose offer we have not answered yet
+            auto u488 = std::make_shared<SipMessage>();
+            mDialog.makeResponse(*u488, *mLastRemoteSessionModification, 488);
+            send(u488);
+         }
          const auto msg = sendBye();
          transition(Terminated);
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
@@ -325,9 +333,18 @@ ClientInviteSession::cancel()
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
       case UAC_SentUpdateEarly:
+      case UAC_SentUpdateEarlyGlare:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
+      case UAC_QueuedUpdate:
          InfoLog (<< toData(mState) << ": cancel");
+         if (mState == UAC_ReceivedUpdateEarly)
+         {
+            // Terminate the UPDATE whose offer we have not answered yet
+            auto u487 = std::make_shared<SipMessage>();
+            mDialog.makeResponse(*u487, *mLastRemoteSessionModification, 487); // Request Terminated
+            send(u487);
+         }
          startCancelTimer();
          transition(UAC_Cancelled);
          break;
@@ -352,6 +369,7 @@ ClientInviteSession::onForkAccepted()
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
       case UAC_SentUpdateEarly:
+      case UAC_SentUpdateEarlyGlare:
       case UAC_ReceivedUpdateEarly:
          InfoLog (<< toData(mState) << ": onForkAccepted");
          // !jf! should we avoid creating another timer here? I don't think it
@@ -987,6 +1005,25 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          dispatchBye(msg);
          break;
 
+      case OnUpdate:
+      {
+         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+         break;
+      }
+
+      case OnUpdateOffer:
+      {
+         // RFC3311 5.2: we have received an offer that we have not yet answered
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 500);
+         response->header(h_RetryAfter).value() = 1 + Random::getRandom() % 10;
+         send(response);
+         break;
+      }
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -1127,6 +1164,26 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
          dispatchBye(msg);
          break;
 
+      case OnUpdate:
+      {
+         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+         break;
+      }
+
+      case OnUpdateOffer:
+      {
+         // RFC3311 5.2: the offer/answer exchange done in our PRACK is not complete until the
+         // PRACK is answered - ask the peer to retry
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 500);
+         response->header(h_RetryAfter).value() = 1 + Random::getRandom() % 10;
+         send(response);
+         break;
+      }
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -1213,6 +1270,24 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case OnBye:
          dispatchBye(msg);
          break;
+
+      case OnUpdate:
+      {
+         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+         break;
+      }
+
+      case OnUpdateOffer:
+      {
+         // Glare: we have our own offer waiting to be sent in an UPDATE
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 491);
+         send(response);
+         break;
+      }
 
       default:
          // !kh!
@@ -1330,10 +1405,21 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
    {
       case On200Update:
          transition(UAC_EarlyWithAnswer);
-         setCurrentLocalOfferAnswer(msg);
-         mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
-         handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
+         if (offerAnswer)
+         {
+            setCurrentLocalOfferAnswer(msg);
+            mCurrentEncryptionLevel = getEncryptionLevel(msg);
+            mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
+            handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
+         }
+         else
+         {
+            // Our UPDATE carried an offer, so a 2xx without an answer is illegal - drop our offer, as
+            // InviteSession::dispatchSentUpdate does
+            mProposedLocalOfferAnswer.reset();
+            mProposedEncryptionLevel = DialogUsageManager::None;
+            handler->onIllegalNegotiation(getSessionHandle(), msg);
+         }
          break;
          
       case OnUpdateOffer:
@@ -1353,14 +1439,31 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
          break;
       }
 
+      case OnUpdateRejected:
+      case On422Update:
+         // Our offer was rejected - the session is as it was before we sent it
+         transition(UAC_EarlyWithAnswer);
+         mProposedLocalOfferAnswer.reset();
+         mProposedEncryptionLevel = DialogUsageManager::None;
+         handler->onOfferRejected(getSessionHandle(), &msg);
+         break;
+
       case On491Update:
          transition(UAC_SentUpdateEarlyGlare);
          start491Timer();
          break;
 
+      case On2xxOffer:
+      case On2xxAnswer:
+         // RFC6337 section 3.1.1 recommends we ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring SDP in 2xx received in SentUpdateEarly: " << msg.brief());
+         // No break is intentional
       case On2xx:
-         transition(SentUpdate);         
+         // our UPDATE is still pending - its answer will arrive in SentUpdate
+         transition(SentUpdate);
          sendAck();
+         handleFinalResponse(msg);
+         onConnectedAspect(getHandle(), msg);
          break;
          
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets
@@ -1377,7 +1480,22 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
          mDum.destroy(this);
          break;
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       case On200Prack:
+         break;
+
+      case On1xxOffer:
+      case On1xxAnswer:
+      case On1xxEarly:
+         // RFC6337 section 3.1.1 recommends we ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring SDP in 1xx received in SentUpdateEarly: " << msg.brief());
+         // No break is intentional
+      case On1xx:
+         handleProvisional(msg);
+         sendPrackIfNeeded(msg);
          break;
 
       default:
@@ -1400,10 +1518,17 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
          dispatchEarlyWithAnswer(msg);
          break;
          
+      case On2xxOffer:
+      case On2xxAnswer:
+         // RFC6337 section 3.1.1 recommends we ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring SDP in 2xx received in SentUpdateEarlyGlare: " << msg.brief());
+         // No break is intentional
       case On2xx:
-         //transition to connected state machine
-         transition(SentUpdateGlare);         
+         // transition to connected state machine - our UPDATE is resent when the glare timer fires
+         transition(SentUpdateGlare);
          sendAck();
+         handleFinalResponse(msg);
+         onConnectedAspect(getHandle(), msg);
          break;
          //!dcm! TODO This block below is repeated many, many times...refactor
          //!into a method. Prob. represents the effective ClientInvite superstate.
@@ -1421,6 +1546,33 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
          mDum.destroy(this);
          break;
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
+      case On1xxOffer:
+      case On1xxAnswer:
+      case On1xxEarly:
+         // RFC6337 section 3.1.1 recommends we ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring SDP in 1xx received in SentUpdateEarlyGlare: " << msg.brief());
+         // No break is intentional
+      case On1xx:
+         handleProvisional(msg);
+         sendPrackIfNeeded(msg);
+         break;
+
+      case On200Prack:
+         break;
+
+      case OnUpdate:
+      {
+         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+         break;
+      }
+
       default:
          WarningLog (<< "Don't know what this is : " << msg);
          break;
@@ -1430,6 +1582,7 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
 void
 ClientInviteSession::dispatchReceivedUpdateEarly(const SipMessage& msg)
 {
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
@@ -1447,11 +1600,67 @@ ClientInviteSession::dispatchReceivedUpdateEarly(const SipMessage& msg)
          }
          break;
 
+      case OnBye:
+      {
+         // Terminate the UPDATE we have not answered yet, as for a re-INVITE in InviteSession::dispatchReceivedUpdateOrReinvite
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, *mLastRemoteSessionModification, 487); // Request Terminated
+         send(response);
+         dispatchBye(msg);
+         break;
+      }
+
+      case On1xxOffer:
+      case On1xxAnswer:
+      case On1xxEarly:
+         // RFC6337 section 3.1.1 recommends we ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring SDP in 1xx received in ReceivedUpdateEarly: " << msg.brief());
+         // No break is intentional
+      case On1xx:
+         handleProvisional(msg);
+         sendPrackIfNeeded(msg);
+         break;
+
+      case On2xxOffer:
+      case On2xxAnswer:
+         // RFC6337 section 3.1.1 recommends we ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring SDP in 2xx received in ReceivedUpdateEarly: " << msg.brief());
+         // No break is intentional
+      case On2xx:
+         // the offer in the UPDATE is still to be answered - provideAnswer will answer it in ReceivedUpdate
+         transition(ReceivedUpdate);
+         sendAck();
+         handleFinalResponse(msg);
+         onConnectedAspect(getHandle(), msg);
+         break;
+
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionally not handled and should be treated as an INVITE failure
+      case OnInviteFailure:
+      case OnGeneralFailure:
+      case On422Invite:
+      case On487Invite:
+      case On491Invite:
+      {
+         // The call has failed - terminate the UPDATE whose offer we have not answered yet
+         auto u487 = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*u487, *mLastRemoteSessionModification, 487); // Request Terminated
+         send(u487);
+
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
+         onFailureAspect(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
+         mDum.destroy(this);
+         break;
+      }
+
+      case On200Prack:
+         break;
+
       default:
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
-   WarningLog (<< "Ignoring message received in ReceivedUpdateEarly: " << msg);
 }
 
 void

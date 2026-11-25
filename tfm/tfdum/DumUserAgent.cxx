@@ -425,8 +425,8 @@ DumUserAgent::send(std::shared_ptr<resip::SipMessage> msg)
 DumUaAction*
 DumUserAgent::cancelInvite()
 {
-   resip_assert(mAppDialogSet);
-   return new DumUaCommand(this, [this] { mAppDialogSet->end(); });
+   // mAppDialogSet is set by onTrying, which can happen after this action is created
+   return new DumUaCommand(this, [this] { resip_assert(mAppDialogSet); mAppDialogSet->end(); });
 }
 
 DumUaAction*
