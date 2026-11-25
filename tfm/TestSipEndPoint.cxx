@@ -3719,19 +3719,21 @@ TestSipEndPoint::UnknownHeaderMatch::isMatch(std::shared_ptr<SipMessage>& messag
 std::shared_ptr<SipMessage>
 TestSipEndPoint::Cancel::go(std::shared_ptr<SipMessage> msg)
 {
+   // Cancel the most recent INVITE sent on this call, so that a re-INVITE can be cancelled too
    std::shared_ptr<SipMessage> invite;
-   try
+   for (auto it = mEndPoint.mInvitesSent.rbegin(); it != mEndPoint.mInvitesSent.rend(); ++it)
    {
-      invite = mEndPoint.getSentInvite(msg->header(h_CallId));
-   }
-   catch(...)
-   {
-      if(!mEndPoint.mRequests.empty())
+      if ((*it)->header(h_CallId) == msg->header(h_CallId))
       {
-         invite= mEndPoint.mRequests.begin()->second;
+         invite = *it;
+         break;
       }
    }
-   
+   if (!invite && !mEndPoint.mRequests.empty())
+   {
+      invite = mEndPoint.mRequests.begin()->second;
+   }
+
    resip_assert(invite!=0);
    // Allow for CANCEL to be sent for non-INVITE.
    MethodTypes method=invite->method();

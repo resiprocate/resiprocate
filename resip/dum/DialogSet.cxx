@@ -37,6 +37,7 @@ using namespace std;
 DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mMergeKey(),
    mDialogs(),
+   mHadDialog(false),
    mCreator(creator),
    mId(*creator->getLastRequest()),
    mDum(dum),
@@ -59,6 +60,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
 DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mMergeKey(request, dum.getMasterProfile()->checkReqUriInMergeDetectionEnabled()),
    mDialogs(),
+   mHadDialog(false),
    mCreator(0),
    mId(request),
    mDum(dum),
@@ -172,6 +174,7 @@ void
 DialogSet::addDialog(Dialog *dialog)
 {
    mDialogs[dialog->getId()] = dialog;
+   mHadDialog = true;
 }
 
 BaseCreator*
@@ -926,6 +929,15 @@ DialogSet::dispatch(const SipMessage& msg)
          else if (code >= 300 && !mDialogs.empty())
          {
             dispatchToAllDialogs(msg);
+            return;
+         }
+         // If every dialog the INVITE created has already ended (e.g. an early dialog was hung up with a BYE),
+         // the application has already been told with onTerminated - don't create a new dialog just to report
+         // the INVITE failure on a session the application has never seen
+         else if (code >= 300 && mHadDialog && msg.header(h_CSeq).method() == INVITE)
+         {
+            InfoLog(<< "INVITE failure response after all its dialogs have ended, not creating a new dialog: " << msg.brief());
+            possiblyDie();
             return;
          }
       }

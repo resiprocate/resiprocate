@@ -113,6 +113,7 @@ class DialogSet
       Data mCancelKey;
       typedef std::map<DialogId,Dialog*> DialogMap;
       DialogMap mDialogs;
+      bool mHadDialog;  // a Dialog has been created in this DialogSet (it may since have been destroyed)
       BaseCreator* mCreator;
       DialogSetId mId;
       DialogUsageManager& mDum;

@@ -239,6 +239,9 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testUACPrackReceivedUpdateConnected);
       CPPUNIT_TEST(testUACPrackReceivedUpdateInviteFailure);
       CPPUNIT_TEST(testUACPrackReceivedUpdateProvisional);
+      CPPUNIT_TEST(testUACPrackUpdateGlareProvisional);
+      CPPUNIT_TEST(testUACPrackUpdateGlareForkAccepted);
+      CPPUNIT_TEST(testReInviteWaitingToHangupCancel);
 
       CPPUNIT_TEST(testOutOfDialogReferNoReferSubWithoutReferSubHeader);
       CPPUNIT_TEST(testOutOfDialogRefer);
@@ -6218,10 +6221,7 @@ class DumTestCase : public DumFixture
              sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->bye(), sheila->respond(488))),
              And(Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->send487()),
                      sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
-                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-                     // The 487 to our INVITE arrives after the dialog has gone, so DUM reports it on a new session
-                     jason->expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-                     jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
@@ -6247,10 +6247,7 @@ class DumTestCase : public DumFixture
                             chain(sheila->send491(), sheila->pause(100), sheila->bye())),
              And(Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->send487()),
                      sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
-                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-                     // The 487 to our INVITE arrives after the dialog has gone, so DUM reports it on a new session
-                     jason->expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-                     jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
@@ -6277,10 +6274,7 @@ class DumTestCase : public DumFixture
              And(Sub(sheila->expect(UPDATE/487, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
                  Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->send487()),
                      sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
-                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-                     // The 487 to our INVITE arrives after the dialog has gone, so DUM reports it on a new session
-                     jason->expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-                     jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
@@ -6790,6 +6784,111 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_SentUpdateEarlyGlare: a new reliable provisional is PRACKed and reported
+      void testUACPrackUpdateGlareProvisional()
+      {
+         InfoLog(<< "testUACPrackUpdateGlareProvisional");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send491(), sheila->pause(100), sheila->reliableProvisional(2))),
+             And(Sub(jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             // DUM then resends its UPDATE
+             sheila->expect(UPDATE, from(jason->getInstanceId()), Owner491, sheila->answerUpdate(answer)),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.end()),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
+                     sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
+                 Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // UAC_SentUpdateEarlyGlare: when another fork answers, this fork is destroyed once the forked 2xx timer
+      // fires, as in the other early states
+      void testUACPrackUpdateGlareForkAccepted()
+      {
+         InfoLog(<< "testUACPrackUpdateGlareForkAccepted");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uacA(jason);  // the fork in glare
+         TestClientInviteSession uacB(jason);  // the fork that answers
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         std::shared_ptr<SipMessage> secondRing;
+
+         // sheila's dialog helpers always use the first fork's To tag, so move responses to the second fork
+         TestSipEndPoint::MessageConditionerFn toSecondFork = [&secondRing](std::shared_ptr<SipMessage> msg)
+         {
+            msg->header(h_To).param(p_tag) = secondRing->header(h_To).param(p_tag);
+            return msg;
+         };
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->reliableProvisional(answer, 1), save(secondRing, sheila->ringNewBranch()))),
+             jason->expect(Invite_NewClientSession, uacA, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacA.noAction()),
+             jason->expect(Invite_Provisional, uacA, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacA.noAction()),
+             uacA.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacA.noAction()),
+             And(Sub(sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uacA.provideOffer(*standardOffer)))),
+                 Sub(jason->expect(Invite_NewClientSession, uacB, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacB.noAction()),
+                     jason->expect(Invite_Provisional, uacB, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacB.noAction()))),
+             // The first fork's UPDATE glares, and the second fork answers while the first waits to resend it
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand,
+                            chain(sheila->send491(), sheila->pause(100), condition(toSecondFork, sheila->answer(answer)))),
+             And(Sub(uacB.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacB.noAction()),
+                     uacB.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacB.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForCommand, sheila->noAction()))),
+             // The first fork resends its UPDATE once its glare timer fires, and is destroyed once the forked 2xx timer fires
+             And(Sub(sheila->expect(UPDATE, from(jason->getInstanceId()), Owner491, sheila->answerUpdate(answer))),
+                 Sub(uacA.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, Owner491, uacA.noAction()),
+                     jason->expect(Invite_ForkDestroyed, *TestEndPoint::AlwaysTruePred, CallTimeout, uacB.end()))),
+             And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, condition(toSecondFork, sheila->ok()))),
+                 Sub(uacB.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uacB.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      // InviteSession::WaitingToHangup: a CANCEL that crosses our re-INVITE 200 is answered while we wait for the ACK
+      void testReInviteWaitingToHangupCancel()
+      {
+         InfoLog(<< "testReInviteWaitingToHangupCancel");
+
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->answer(answer)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForCommand, sheila->reInvite("jason")))),
+             optional(sheila->expect(INVITE/100, new TestSipEndPoint::AlwaysMatches(), WaitFor100, sheila->noAction())),
+             uac.expect(Invite_OfferRequired, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideOffer(*standardOffer)),
+             sheila->expect(INVITE/200, from(jason->getInstanceId()), WaitForCommand,
+                            chain(uac.end(), sheila->pause(100), sheila->cancel())),
+             sheila->expect(CANCEL/200, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction()),
+             // DUM retransmits its 200 until it is ACKed, and then hangs up
+             sheila->expect(INVITE/200, from(jason->getInstanceId()), CallTimeout, sheila->ack(answer)),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
       }
 };
 
