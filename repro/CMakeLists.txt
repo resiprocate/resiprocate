@@ -1,5 +1,9 @@
-# Headers that belong to the repro executable
+# Headers that belong to the repro executable.  CommandServer uses ReproRunner
+# and WebAdmin, which only exist here, so it lives here too rather than in
+# reprolib.
 set(REPRO_INCLUDES
+   CommandServer.hxx
+   CommandServerThread.hxx
    HttpBase.hxx
    HttpConnection.hxx
    ReproRunner.hxx
@@ -11,6 +15,8 @@ set(REPRO_INCLUDES
 
 add_executable(repro
    repro.cxx
+   CommandServer.cxx
+   CommandServerThread.cxx
    HttpBase.cxx
    HttpConnection.cxx
    ReproRunner.cxx
@@ -75,8 +81,6 @@ set(INCLUDES
    AuthenticatorFactory.hxx
    BerkeleyDb.hxx
    BasicWsConnectionValidator.hxx
-   CommandServer.hxx
-   CommandServerThread.hxx
    ConfigStore.hxx
    FilterStore.hxx
    ForkControlMessage.hxx
@@ -158,8 +162,6 @@ add_library(reprolib
    AbstractDb.cxx
    BasicWsConnectionValidator.cxx
 
-   CommandServer.cxx
-   CommandServerThread.cxx
    ProxyConfig.cxx
 
    AccountingCollector.cxx
