@@ -132,19 +132,21 @@ jobs:
         if: ${{ matrix.c-compiler == 'clang-16' }}
         run: run-clang-tidy-16 -j ${{ steps.cpu-cores.outputs.count }} -quiet
 
-      # A failing test is run once more before failing the job.  The TFM suites
-      # (sanityTests, dumTests) depend on timing, and CI runners occasionally
-      # stall the whole process for seconds; a genuine regression fails both runs.
+      # A failing test is run once more before failing the job, since CI
+      # runners occasionally stall the whole process for seconds; a genuine
+      # regression fails both runs.
       - name: Test
         id: test
         run: ctest --output-on-failure --repeat until-pass:2 --exclude-regex "^(sanityTests|dumTests)$"
 
       # The TFM suites run for 15-25 minutes each, so their output is streamed
       # (--verbose) to show each test as it starts and finishes.  They run
-      # whenever the other tests ran, even if some of those failed.
+      # whenever the other tests ran, even if some of those failed.  They
+      # depend on timing, so each suite runs its failed test cases once more
+      # itself (tfm/RetryFailedTests.hxx) rather than ctest rerunning it all.
       - name: Test TFM
         if: ${{ !cancelled() && (steps.test.outcome == 'success' || steps.test.outcome == 'failure') }}
-        run: ctest --verbose --repeat until-pass:2 --tests-regex "^(sanityTests|dumTests)$"
+        run: ctest --verbose --tests-regex "^(sanityTests|dumTests)$"
 
       # The TFM suites log in detail to resiprocate.log in their working
       # directories (the source tree, under ctest).  Keep those logs when a run
