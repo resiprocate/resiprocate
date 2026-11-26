@@ -6,6 +6,7 @@
 #include "resip/dum/DialogUsage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <queue>
@@ -16,6 +17,7 @@ namespace resip
 
 class Contents;
 class SdpContents;
+class InviteSessionTestAccess;
 
 /** Base class for class ClientInviteSession and class ServerInviteSession.
     Implements common attributes and behavior (i.e.t post connected) of the two
@@ -465,6 +467,20 @@ class InviteSession : public DialogUsage
    private:
       friend class Dialog;
       friend class DialogUsageManager;
+      // Not part of DUM's API:  only DUM's own tests (tfm) define this class, to set sSessionTimerDivisor
+      friend class InviteSessionTestAccess;
+
+      // Starts a SessionRefresh or SessionExpiration timer for the given number of seconds, divided by
+      // sSessionTimerDivisor.  The timeout's duration() is always the undivided number of seconds.
+      void startSessionTimerTimeout(DumTimeout::Type type, unsigned long seconds, unsigned int seq);
+
+      // Divides how long DUM waits before sending a session refresh or expiring a session, so that DUM's tests
+      // don't have to wait out RFC 4028's 90 second minimum session interval.  It is always 1 outside of those
+      // tests, and there is deliberately no setter in DUM's API.  Only the local waits are divided:  the
+      // negotiated session interval (Session-Expires, Min-SE and the checks against 90 seconds) is unchanged, so
+      // any other value only ever refreshes or expires a session early - it never sends or accepts a session
+      // interval below the minimum.
+      static std::atomic<unsigned int> sSessionTimerDivisor;
 
       // Utility methods for handling particular methods
       void dispatchOthers(const SipMessage& msg);

@@ -139,7 +139,7 @@ jobs:
         id: test
         run: ctest --output-on-failure --repeat until-pass:2 --exclude-regex "^(sanityTests|dumTests)$"
 
-      # The TFM suites run for half an hour or more, so their output is streamed
+      # The TFM suites run for 15-25 minutes each, so their output is streamed
       # (--verbose) to show each test as it starts and finishes.  They run
       # whenever the other tests ran, even if some of those failed.
       - name: Test TFM

@@ -51,6 +51,8 @@ Data EndReasons[] =
 
 const Token SessionTimerToken(Symbols::Timer);
 
+std::atomic<unsigned int> InviteSession::sSessionTimerDivisor(1);
+
 const Data& InviteSession::getEndReasonString(InviteSession::EndReason reason)
 {
    if(reason != InviteSession::UserSpecified)
@@ -1588,7 +1590,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
             unsigned long refreshRetryDuration = timeout.duration() / 2;
             if (refreshRetryDuration > 32)
             {
-               mDum.addTimer(DumTimeout::SessionRefresh, refreshRetryDuration, getBaseHandle(), ++mSessionRefreshTimerSeq);
+               startSessionTimerTimeout(DumTimeout::SessionRefresh, refreshRetryDuration, ++mSessionRefreshTimerSeq);
                InfoLog(<< "Started Session Refresh Retry Timer for " << refreshRetryDuration << " seconds");
             }
          }
@@ -3121,15 +3123,15 @@ InviteSession::startSessionTimer()
       if(mSessionRefresher)
       {
          // Start Session-Refresh Timer to mSessionInterval / 2 (recommended by RFC4028)
-         mDum.addTimer(DumTimeout::SessionRefresh, mSessionInterval / 2, getBaseHandle(), ++mSessionRefreshTimerSeq);
+         startSessionTimerTimeout(DumTimeout::SessionRefresh, mSessionInterval / 2, ++mSessionRefreshTimerSeq);
          // Start Session-Expiration Timer to a bit before mSessionInterval
-         mDum.addTimer(DumTimeout::SessionExpiration, aBitBeforeExpiration, getBaseHandle(), ++mSessionExpirationTimerSeq);
+         startSessionTimerTimeout(DumTimeout::SessionExpiration, aBitBeforeExpiration, ++mSessionExpirationTimerSeq);
          InfoLog(<< "Started Session Refresh Timer for " << mSessionInterval / 2 << " seconds and Session Expiration Timer for " << aBitBeforeExpiration << " seconds (Session Interval is " << mSessionInterval << " seconds)");
       }
       else
       {
          // Start Session-Expiration Timer to a bit before mSessionInterval
-         mDum.addTimer(DumTimeout::SessionExpiration, aBitBeforeExpiration, getBaseHandle(), ++mSessionExpirationTimerSeq);
+         startSessionTimerTimeout(DumTimeout::SessionExpiration, aBitBeforeExpiration, ++mSessionExpirationTimerSeq);
          // increment refresh seq, incase old timers are running and we've switched roles to non refresher
          ++mSessionRefreshTimerSeq;
          InfoLog(<< "Started Session Expiration Timer for " << aBitBeforeExpiration << " seconds (Session Interval is " << mSessionInterval << " seconds)");
@@ -3140,6 +3142,25 @@ InviteSession::startSessionTimer()
       // increment seq, incase old timers are running and now session timers are disabled
       ++mSessionRefreshTimerSeq;
       ++mSessionExpirationTimerSeq;
+   }
+}
+
+void
+InviteSession::startSessionTimerTimeout(DumTimeout::Type type, unsigned long seconds, unsigned int seq)
+{
+   const unsigned int divisor = sSessionTimerDivisor.load();
+   if (divisor <= 1)
+   {
+      mDum.addTimer(type, seconds, getBaseHandle(), seq);
+   }
+   else
+   {
+      // Only DUM's TFM tests set this - see InviteSession.hxx.  The timeout keeps the undivided duration, which the
+      // SessionRefresh handler works from.
+      WarningLog(<< "Session timer waits are divided by " << divisor << " (a test setting): " << seconds
+                 << " seconds becomes " << seconds * 1000 / divisor << " ms");
+      DumTimeout timeout(type, seconds, getBaseHandle(), seq);
+      mDum.mStack.postMS(timeout, (unsigned int)(seconds * 1000 / divisor), &mDum);
    }
 }
 

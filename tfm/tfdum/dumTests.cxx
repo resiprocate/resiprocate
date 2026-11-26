@@ -71,9 +71,71 @@ static const int WaitForEndOfTest = 1000;
 static const int WaitForEndOfSeq = 1000;
 static const int Seconds = 1000;
 static const int CallTimeout = 40 * 1000;
+static const int WaitFor200RetransmissionsToStop = 10 * 1000;  // main()'s T2 of 8 seconds, plus slack
 static const int TimeOut = 5000;
 static const int Owner491 = 5000;
 static const int NonOwner491 = 3000;
+
+// Sets one of the stack's timers (resip::Timer::T1, TF, ...) for the length of a test and puts the old value back when
+// the test ends, even if it fails.  A test that waits for a timer to run out can use a shorter value than main() sets,
+// so it doesn't take minutes.  Set it before the test starts any transaction that should use the new value.
+class ScopedTimerValue
+{
+   public:
+      ScopedTimerValue(unsigned long& timer, unsigned long value) : mTimer(timer), mSaved(timer)
+      {
+         mTimer = value;
+      }
+      ~ScopedTimerValue()
+      {
+         mTimer = mSaved;
+      }
+      ScopedTimerValue(const ScopedTimerValue&) = delete;
+      ScopedTimerValue& operator=(const ScopedTimerValue&) = delete;
+
+   private:
+      unsigned long& mTimer;
+      const unsigned long mSaved;
+};
+
+namespace resip
+{
+// The test access InviteSession.hxx names as a friend.  It is defined only here, in DUM's tests.
+class InviteSessionTestAccess
+{
+   public:
+      static void setSessionTimerDivisor(unsigned int divisor)
+      {
+         InviteSession::sSessionTimerDivisor = divisor;
+      }
+};
+}
+
+// Divides DUM's session refresh and session expiration waits for the length of a test, so that a session timer test
+// with RFC 4028's minimum 90 second session interval refreshes at 4.5 seconds instead of 45, and expires at 6 seconds
+// instead of 60.  What is negotiated on the wire is unchanged.  Use sessionTimerWait() for the matching timeouts.
+class ScopedSessionTimerDivisor
+{
+   public:
+      static const unsigned int Divisor = 10;
+
+      ScopedSessionTimerDivisor()
+      {
+         resip::InviteSessionTestAccess::setSessionTimerDivisor(Divisor);
+      }
+      ~ScopedSessionTimerDivisor()
+      {
+         resip::InviteSessionTestAccess::setSessionTimerDivisor(1);
+      }
+      ScopedSessionTimerDivisor(const ScopedSessionTimerDivisor&) = delete;
+      ScopedSessionTimerDivisor& operator=(const ScopedSessionTimerDivisor&) = delete;
+};
+
+// A timeout of at most the given number of session timer seconds, divided like DUM's waits, plus some slack
+static int sessionTimerWait(int seconds)
+{
+   return seconds * Seconds / ScopedSessionTimerDivisor::Divisor + WaitForCommand;
+}
 
 const Data transport("udp");
 static NameAddr localhost;
@@ -309,8 +371,8 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testIMBasic);
       CPPUNIT_TEST(testIMOverlappingInDialogSet);
       CPPUNIT_TEST(testIMMergedRequestArrivedSameTime);
-      CPPUNIT_TEST(testIMMergedRequestArrivedWithin32Seconds);
-      CPPUNIT_TEST(testIMMergedRequestArrivedMoreThan32SecondsApart);
+      CPPUNIT_TEST(testIMMergedRequestArrivedWithinTimerF);
+      CPPUNIT_TEST(testIMMergedRequestArrivedAfterTimerF);
       CPPUNIT_TEST(testInDialogSubscribeSuccess);
       CPPUNIT_TEST(testUASSubscribeCreatingDialogFromInvite);
       CPPUNIT_TEST(testInDialogSubscribeWithoutEventHandler);
@@ -381,6 +443,7 @@ class DumTestCase : public DumFixture
       void testSessionTimerExpirationUasRefresher()
       {
          InfoLog(<< "testSessionTimerExpirationUasRefresher");
+         ScopedSessionTimerDivisor fastSessionTimers;
 
          jason->getProfile()->addSupportedOptionTag(Token(Symbols::Timer));
          
@@ -398,7 +461,7 @@ class DumTestCase : public DumFixture
              // sheila (uas) is the refresher but never refreshes, so jason (non-refresher) expires the session at
              // SE - min(32, SE/3) = 60 seconds after connecting.  DumUserAgent::onSessionExpired doesn't end the
              // session itself, so end it here.
-             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, 70 * Seconds, uac.end()),
+             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, sessionTimerWait(70), uac.end()),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
              WaitForEndOfSeq);
@@ -444,7 +507,8 @@ class DumTestCase : public DumFixture
       // Session timer refresher tests.  jason (DUM, UAC) uses a 90 second session interval, so as the refresher it
       // sends a session refresh 45 seconds after connecting, and expires the session at 90 - min(32, 90/3) = 60
       // seconds if no refresh succeeds.  sheila is a raw SIP endpoint, so the answer conditioner controls what she
-      // advertises (session timer support, Allow).
+      // advertises (session timer support, Allow).  The tests use ScopedSessionTimerDivisor, so DUM's waits are a
+      // tenth of the times given in these comments (4.5 and 6 seconds), while the messages still carry 90 seconds.
       static std::shared_ptr<SipMessage> noSessionTimerSupport(std::shared_ptr<SipMessage> msg)
       {
          return msg;
@@ -490,6 +554,7 @@ class DumTestCase : public DumFixture
       void testSessionTimerRefreshRejectedFarEndAlive()
       {
          InfoLog(<< "testSessionTimerRefreshRejectedFarEndAlive");
+         ScopedSessionTimerDivisor fastSessionTimers;
 
          // sheila doesn't support session timers, so jason is the refresher.  sheila rejecting the refresh
          // reINVITE with a 488 shows she still holds the dialog, so the session timer is restarted instead of
@@ -500,10 +565,10 @@ class DumTestCase : public DumFixture
          startSessionTimerRefresherTest(uac, noSessionTimerSupport);
 
          Seq(new TestEndPoint::NoSeqAction,
-             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->send488()),
+             sheila->expect(INVITE, from(jason->getInstanceId()), sessionTimerWait(50), sheila->send488()),
              And(Sub(uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
-             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->answer(answer)),
+             sheila->expect(INVITE, from(jason->getInstanceId()), sessionTimerWait(50), sheila->answer(answer)),
              sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
@@ -516,6 +581,7 @@ class DumTestCase : public DumFixture
       void testSessionTimerRefreshRejectedFarEndGone()
       {
          InfoLog(<< "testSessionTimerRefreshRejectedFarEndGone");
+         ScopedSessionTimerDivisor fastSessionTimers;
 
          // A 503 to the refresh is what a proxy returns when it can't reach a far end that has gone away, so it
          // is not taken as proof the session is alive - the session expires at 60 seconds (zombie cleanup).
@@ -524,10 +590,10 @@ class DumTestCase : public DumFixture
          startSessionTimerRefresherTest(uac, noSessionTimerSupport);
 
          Seq(new TestEndPoint::NoSeqAction,
-             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->send503()),
+             sheila->expect(INVITE, from(jason->getInstanceId()), sessionTimerWait(50), sheila->send503()),
              And(Sub(uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
-             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, 20 * Seconds, uac.end()),
+             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, sessionTimerWait(20), uac.end()),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
              WaitForEndOfSeq);
@@ -539,6 +605,7 @@ class DumTestCase : public DumFixture
       void testSessionTimerNegotiatedRefreshRejectedFarEndAlive()
       {
          InfoLog(<< "testSessionTimerNegotiatedRefreshRejectedFarEndAlive");
+         ScopedSessionTimerDivisor fastSessionTimers;
 
          // Same as testSessionTimerRefreshRejectedFarEndAlive, but with the session timer negotiated (Session-Expires
          // in the 200 with refresher=uac) - a rejection from a far end that still holds the dialog restarts the
@@ -549,10 +616,10 @@ class DumTestCase : public DumFixture
          startSessionTimerRefresherTest(uac, SessionTimerControl(SessionTimerControl::Uac, 90));
 
          Seq(new TestEndPoint::NoSeqAction,
-             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->send488()),
+             sheila->expect(INVITE, from(jason->getInstanceId()), sessionTimerWait(50), sheila->send488()),
              And(Sub(uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
-             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds,
+             sheila->expect(INVITE, from(jason->getInstanceId()), sessionTimerWait(50),
                             condition(SessionTimerControl(SessionTimerControl::Uac, 90), sheila->answer(answer))),
              sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
@@ -566,6 +633,7 @@ class DumTestCase : public DumFixture
       void testSessionTimerRefreshRejectedStrictRfc()
       {
          InfoLog(<< "testSessionTimerRefreshRejectedStrictRfc");
+         ScopedSessionTimerDivisor fastSessionTimers;
 
          // With no keep-alive rejection codes, RFC 4028 section 10 applies as written:  only a 2xx extends the
          // session, so the 488 to the refresh leaves the session to expire at 60 seconds.
@@ -575,10 +643,10 @@ class DumTestCase : public DumFixture
          startSessionTimerRefresherTest(uac, SessionTimerControl(SessionTimerControl::Uac, 90));
 
          Seq(new TestEndPoint::NoSeqAction,
-             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->send488()),
+             sheila->expect(INVITE, from(jason->getInstanceId()), sessionTimerWait(50), sheila->send488()),
              And(Sub(uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
-             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, 20 * Seconds, uac.end()),
+             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, sessionTimerWait(20), uac.end()),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
              WaitForEndOfSeq);
@@ -590,6 +658,7 @@ class DumTestCase : public DumFixture
       void testSessionTimerUpdateRefreshRejectedFallsBackToReinvite()
       {
          InfoLog(<< "testSessionTimerUpdateRefreshRejectedFallsBackToReinvite");
+         ScopedSessionTimerDivisor fastSessionTimers;
 
          // sheila lists UPDATE in Allow, so jason refreshes with UPDATE - but she rejects it with a 405.  jason
          // retries the refresh straight away as a reINVITE, which succeeds.
@@ -599,7 +668,7 @@ class DumTestCase : public DumFixture
          startSessionTimerRefresherTest(uac, allowMethods({ INVITE, ACK, CANCEL, BYE, UPDATE }));
 
          Seq(new TestEndPoint::NoSeqAction,
-             sheila->expect(UPDATE, from(jason->getInstanceId()), 50 * Seconds, sheila->respond(405)),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), sessionTimerWait(50), sheila->respond(405)),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->answer(answer)),
              sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
@@ -613,6 +682,7 @@ class DumTestCase : public DumFixture
       void testSessionTimerConfiguredKeepAliveRejectionCode()
       {
          InfoLog(<< "testSessionTimerConfiguredKeepAliveRejectionCode");
+         ScopedSessionTimerDivisor fastSessionTimers;
 
          // Codes that never reach the keep-alive check are dropped from the configured set.
          jason->getProfile()->setSessionRefreshKeepAliveRejectionCodes({ 200, 299, 408, 410, 422, 430, 481, 700, 480 });
@@ -626,10 +696,10 @@ class DumTestCase : public DumFixture
          startSessionTimerRefresherTest(uac, noSessionTimerSupport);
 
          Seq(new TestEndPoint::NoSeqAction,
-             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->respond(480)),
+             sheila->expect(INVITE, from(jason->getInstanceId()), sessionTimerWait(50), sheila->respond(480)),
              And(Sub(uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
-             sheila->expect(INVITE, from(jason->getInstanceId()), 50 * Seconds, sheila->answer(answer)),
+             sheila->expect(INVITE, from(jason->getInstanceId()), sessionTimerWait(50), sheila->answer(answer)),
              sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
@@ -642,6 +712,7 @@ class DumTestCase : public DumFixture
       void testSessionTimerUpdateFallbackWithoutKeepAliveCodes()
       {
          InfoLog(<< "testSessionTimerUpdateFallbackWithoutKeepAliveCodes");
+         ScopedSessionTimerDivisor fastSessionTimers;
 
          // Same as testSessionTimerUpdateRefreshRejectedFallsBackToReinvite, but with no keep-alive rejection codes:
          // stopping use of UPDATE after a 405 is about which method the peer accepts, not about whether it is
@@ -653,7 +724,7 @@ class DumTestCase : public DumFixture
          startSessionTimerRefresherTest(uac, allowMethods({ INVITE, ACK, CANCEL, BYE, UPDATE }));
 
          Seq(new TestEndPoint::NoSeqAction,
-             sheila->expect(UPDATE, from(jason->getInstanceId()), 50 * Seconds, sheila->respond(405)),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), sessionTimerWait(50), sheila->respond(405)),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->answer(answer)),
              sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, uac.end()),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
@@ -667,6 +738,7 @@ class DumTestCase : public DumFixture
       void testSessionTimerOptionsRefreshRejected()
       {
          InfoLog(<< "testSessionTimerOptionsRefreshRejected");
+         ScopedSessionTimerDivisor fastSessionTimers;
 
          // sheila doesn't support session timers or UPDATE but lists OPTIONS in Allow, so jason refreshes with
          // OPTIONS.  She rejects the first one with a 501 - the session must return to Connected (rather than
@@ -676,8 +748,8 @@ class DumTestCase : public DumFixture
          startSessionTimerRefresherTest(uac, allowMethods({ INVITE, ACK, CANCEL, BYE, OPTIONS }));
 
          Seq(new TestEndPoint::NoSeqAction,
-             sheila->expect(OPTIONS, from(jason->getInstanceId()), 50 * Seconds, sheila->respond(501)),
-             sheila->expect(OPTIONS, from(jason->getInstanceId()), 50 * Seconds, chain(sheila->ok(), sheila->pause(PauseTime), uac.end())),
+             sheila->expect(OPTIONS, from(jason->getInstanceId()), sessionTimerWait(50), sheila->respond(501)),
+             sheila->expect(OPTIONS, from(jason->getInstanceId()), sessionTimerWait(50), chain(sheila->ok(), sheila->pause(PauseTime), uac.end())),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
              WaitForEndOfSeq);
@@ -722,6 +794,7 @@ class DumTestCase : public DumFixture
       void testSessionTimerUasRefresherRefreshRejectedFarEndAlive()
       {
          InfoLog(<< "testSessionTimerUasRefresherRefreshRejectedFarEndAlive");
+         ScopedSessionTimerDivisor fastSessionTimers;
 
          // sheila calls jason and makes jason (uas) the refresher (Session-Expires: 90;refresher=uas).  sheila lists
          // UPDATE in Allow, so jason refreshes with an UPDATE 45 seconds after connecting.  sheila rejects the first
@@ -746,9 +819,9 @@ class DumTestCase : public DumFixture
                      uas.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*answer), uas.accept(200))),
                      And(Sub(uas.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
                          Sub(sheila->expect(INVITE/200, from(jason->getInstanceId()), WaitForResponse, sheila->ack()))))),
-             sheila->expect(UPDATE, from(jason->getInstanceId()), 50 * Seconds, sheila->send488()),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), sessionTimerWait(50), sheila->send488()),
              uas.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
-             sheila->expect(UPDATE, from(jason->getInstanceId()), 50 * Seconds,
+             sheila->expect(UPDATE, from(jason->getInstanceId()), sessionTimerWait(50),
                             chain(condition(SessionTimerControl(SessionTimerControl::Uac, 90), sheila->ok()), sheila->pause(PauseTime), uas.end())),
              And(Sub(uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
                  Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
@@ -1774,7 +1847,8 @@ class DumTestCase : public DumFixture
              uas.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, 5000, uas.end()),
              And(Sub(uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
                  Sub(david->expect(BYE, from(proxy), CallTimeout, david->ok()))),
-             CallTimeout);
+             // Long enough for one more retransmission of the 200 (at most T2 apart), which would fail the test
+             WaitFor200RetransmissionsToStop);
          ExecuteSequences();
       }
 
@@ -1802,7 +1876,8 @@ class DumTestCase : public DumFixture
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              And(Sub(uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
                  Sub(david->expect(BYE, contact(derek->getContact()), CallTimeout, david->ok()))),
-             CallTimeout);
+             // Long enough for one more retransmission of the 200 (at most T2 apart), which would fail the test
+             WaitFor200RetransmissionsToStop);
          ExecuteSequences();
       }
 
@@ -1826,7 +1901,7 @@ class DumTestCase : public DumFixture
              david->expect(INVITE/200, from(proxy), CallTimeout, david->ack()),
              uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
              david->expect(BYE, contact(derek->getContact()), CallTimeout, david->ok()),
-             CallTimeout);
+             WaitForEndOfTest);
          ExecuteSequences();
       }
  
@@ -3753,10 +3828,15 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
       };
 
-      void testIMMergedRequestArrivedWithin32Seconds()
-      {
-         WarningLog(<< "testIMMergedRequestArrivedWithin32Seconds");
+      // DUM remembers a request for Timer F (32 seconds by default) after its DialogSet ends, to detect a merged
+      // copy of it (RFC 3261 section 8.2.2.2).  These two tests shorten Timer F so they don't have to wait 32 seconds.
+      static const unsigned long MergedRequestTimerF = 8 * Seconds;
 
+      void testIMMergedRequestArrivedWithinTimerF()
+      {
+         WarningLog(<< "testIMMergedRequestArrivedWithinTimerF");
+
+         ScopedTimerValue tf(resip::Timer::TF, MergedRequestTimerF);
          int sequence = 1;
          Data tag = Helper::computeTag(Helper::tagSize);
          Data callId = Helper::computeCallId();
@@ -3775,7 +3855,7 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         sleepSeconds(25);
+         sleepSeconds(3);  // well inside the shortened Timer F above
 
          Seq(condition(SetMergedRequest(sequence, tag, callId), david->message(derek->getAor().uri(), "hello")),
              optional(david->expect(MESSAGE/407, from(proxy), WaitForResponse, david->digestRespond())),
@@ -3789,10 +3869,11 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
       }
 
-      void testIMMergedRequestArrivedMoreThan32SecondsApart()
+      void testIMMergedRequestArrivedAfterTimerF()
       {
-         WarningLog(<< "testIMMergedRequestArrivedMoreThan32SecondsApart");
+         WarningLog(<< "testIMMergedRequestArrivedAfterTimerF");
 
+         ScopedTimerValue tf(resip::Timer::TF, MergedRequestTimerF);
          int sequence = 1;
          Data tag = Helper::computeTag(Helper::tagSize);
          Data callId = Helper::computeCallId();
@@ -3811,7 +3892,7 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         sleepSeconds(40);
+         sleepSeconds(13);  // well past the shortened Timer F above
 
          Seq(condition(SetMergedRequest(sequence, tag, callId), david->message(derek->getAor().uri(), "hello")),
              optional(david->expect(MESSAGE/407, from(proxy), WaitForResponse, david->digestRespond())),
@@ -5409,14 +5490,19 @@ class DumTestCase : public DumFixture
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
       }
 
-      void testPrack1xxResubmission() 
+      void testPrack1xxResubmission()
       {
-         InfoLog(<< "testPrack1xxResubmission (takes 2.5 mintues to run)");
+         InfoLog(<< "testPrack1xxResubmission");
+
+         // While the INVITE is unanswered DUM sends a new reliable provisional every set1xxRelResubmitTime seconds,
+         // 150 by default.  A short interval tests the same thing.
+         const int resubmitSecs = 10;
 
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
          scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->set1xxRelResubmitTime(resubmitSecs);
 
          TestClientRegistration regScott(scott);
          
@@ -5435,7 +5521,7 @@ class DumTestCase : public DumFixture
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
-             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, 150000 + WaitForCommand, uac.noAction()),  // Wait 2.5 mins + 2000ms buffer time
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, resubmitSecs * Seconds + WaitForCommand, uac.noAction()),  // the resubmitted 183
              scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
              And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
@@ -5446,6 +5532,7 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
          scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->unset1xxRelResubmitTime();
       }
 
       void testPrackRequiredWithSupportedEssential() 
@@ -5673,7 +5760,12 @@ class DumTestCase : public DumFixture
 
       void testUASPrack18xRetransmissions() 
       {
-         InfoLog(<< "testUASPrack18xRetransmissions (takes ~128 seconds to run)");
+         InfoLog(<< "testUASPrack18xRetransmissions");
+
+         // DUM retransmits an unacknowledged reliable provisional at T1, doubling each time, and gives up at 64*T1
+         // (RFC 3262 section 3).  With main()'s T1 of 2 seconds that is over two minutes, so use the default T1
+         // here.  The expected times below are all computed from Timer::T1.
+         ScopedTimerValue t1(resip::Timer::T1, 500);
 
          scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
@@ -5688,7 +5780,7 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         int retransInterval = resip::Timer::T1;  // Set to 2000
+         int retransInterval = resip::Timer::T1;
 
          TestServerInviteSession uas(scott);
          
