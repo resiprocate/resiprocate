@@ -209,9 +209,15 @@ main()
       assert(t1.isEqualWithMask(t4, 8, true));
       assert(!t1.isEqualWithMask(t5, 8, true));    // transport type is different
       assert(!t1.isEqualWithMask(t6, 8, false));   // port is different
+      // A /0 mask matches every address (e.g. an ACL entry of 0.0.0.0/0).
+      assert(t1.isEqualWithMask(Tuple("10.20.30.40", 2060, UDP), 0, false));
+      assert(t1.isEqualWithMask(t4, 0, true));
+      // A mask longer than 32 bits is treated as /32.
+      assert(t1.isEqualWithMask(t2, 33, false));
+      assert(!t1.isEqualWithMask(t3, 33, false));
       assert(loopback.isLoopback());
       assert(!t1.isLoopback());
-      
+
       resip::Data token1;
       resip::Data token2;
       resip::Data token3;
@@ -428,6 +434,8 @@ main()
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

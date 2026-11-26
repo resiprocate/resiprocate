@@ -962,9 +962,25 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
          sockaddr_in* addr1 = (sockaddr_in*)&mSockaddr;
          sockaddr_in* addr2 = (sockaddr_in*)&compare.getSockaddr();
 
+         // Shifting a 32-bit value by 32 or more is undefined, and x86 turns
+         // a /0 mask into /32, so handle the ends of the range explicitly.
+         uint32_t mask4;
+         if (mask <= 0)
+         {
+            mask4 = 0;
+         }
+         else if (mask >= 32)
+         {
+            mask4 = 0xFFFFFFFF;
+         }
+         else
+         {
+            mask4 = 0xFFFFFFFFu << (32 - mask);
+         }
+
          return ((ignorePort || addr1->sin_port == addr2->sin_port)  &&
-                 (addr1->sin_addr.s_addr & htonl((0xFFFFFFFF << (32 - mask)))) == 
-                  (addr2->sin_addr.s_addr & htonl((0xFFFFFFFF << (32 - mask)))));
+                 (addr1->sin_addr.s_addr & htonl(mask4)) ==
+                  (addr2->sin_addr.s_addr & htonl(mask4)));
       }
 #ifdef USE_IPV6
       else if (mSockaddr.sa_family == compare.getSockaddr().sa_family && mSockaddr.sa_family == AF_INET6) // v6
