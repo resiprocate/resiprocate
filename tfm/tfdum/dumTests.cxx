@@ -14,6 +14,7 @@
 #include <cppunit/TextTestRunner.h>
 #include "tfm/CppTestSelector.hxx"
 #include "tfm/CPTextTestProgressListener.hxx"
+#include "tfm/RetryFailedTests.hxx"
 
 #include "DumUserAgent.hxx"
 #include "DumFixture.hxx"
@@ -7694,8 +7695,13 @@ int main(int argc, char** argv)
          CPTextTestProgressListener progress;
          runner.eventManager().addListener(&progress);
 
-         runner.addTest( CppUnit::TestFactoryRegistry::getRegistry().makeTest() );
+         CppUnit::Test* suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
+         runner.addTest(suite);
          success = runner.run("", false, true, false);
+         if (!success)
+         {
+            success = retryFailedTests(*suite, runner.result(), &progress);
+         }
          DebugLog(<< "Finished: waiting for all transactions to die.");
       
          sleepSeconds(32);

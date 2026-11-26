@@ -35,6 +35,7 @@
     <ClCompile Include="CountDown.cxx" />
     <ClCompile Include="CppTestSelector.cxx" />
     <ClCompile Include="CPTestProgressListener.cxx" />
+    <ClCompile Include="RetryFailedTests.cxx" />
     <ClCompile Include="DialogSet.cxx" />
     <ClCompile Include="DnsUtils.cxx" />
     <ClCompile Include="EndPoint.cxx" />
@@ -102,6 +103,7 @@
     <ClInclude Include="CountDown.hxx" />
     <ClInclude Include="CppTestSelector.hxx" />
     <ClInclude Include="CPTextTestProgressListener.hxx" />
+    <ClInclude Include="RetryFailedTests.hxx" />
     <ClInclude Include="DialogSet.hxx" />
     <ClInclude Include="DnsUtils.hxx" />
     <ClInclude Include="EndPoint.hxx" />

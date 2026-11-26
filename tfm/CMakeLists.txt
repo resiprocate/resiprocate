@@ -30,6 +30,7 @@ set(INCLUDES
    predicates/SubscribeExpires.hxx
    Renderer.hxx
    Resolver.hxx
+   RetryFailedTests.hxx
    RouteGuard.hxx
    RtpEvent.hxx
    SeqDecls.hxx
@@ -72,6 +73,7 @@ add_library(tfm
    StunEvent.cxx 
    TfmDns.cxx 
    CPTestProgressListener.cxx 
+   RetryFailedTests.cxx
    TestRtp.cxx 
    RtpEvent.cxx 
    CheckPrivacy.cxx 

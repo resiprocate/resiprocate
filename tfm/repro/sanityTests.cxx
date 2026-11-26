@@ -27,6 +27,7 @@
 #include "tfm/predicates/ExpectUtils.hxx"
 #include "tfm/CppTestSelector.hxx"
 #include "tfm/CPTextTestProgressListener.hxx"
+#include "tfm/RetryFailedTests.hxx"
 #include "tfm/TfmHelper.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
@@ -11359,8 +11360,13 @@ int main(int argc, char** argv)
          CPTextTestProgressListener progress;
          runner.eventManager().addListener(&progress);
 
-         runner.addTest( MyTestCase::suite() );
+         CppUnit::Test* suite = MyTestCase::suite();
+         runner.addTest(suite);
          success = runner.run("", false, true, false);
+         if (!success)
+         {
+            success = retryFailedTests(*suite, runner.result(), &progress);
+         }
          DebugLog(<< "Finished: waiting for all transactions to die.");
       
          sleepSeconds(32);
