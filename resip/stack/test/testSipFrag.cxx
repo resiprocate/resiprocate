@@ -541,6 +541,15 @@ main(int argc, char* argv[])
       }
    }
 
+   {
+      // Copying a SipFrag that was built in memory, so has no raw text,
+      // copies an empty header field value.
+      SipFrag frag(SipFrag::getStaticType());
+      std::unique_ptr<Contents> copy(frag.clone());
+      assert(copy.get());
+      SipFrag copy2(*static_cast<SipFrag*>(copy.get()));
+   }
+
    tassert_report();
 
    return 0;
