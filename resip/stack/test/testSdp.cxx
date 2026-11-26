@@ -193,7 +193,45 @@ main(int argc, char* argv[])
        {
        }
     }
-    
+
+    {
+       // Typed times (RFC 8866 5.10) are scaled to seconds.  One that doesn't
+       // fit in an int once scaled is rejected like any other bad number.
+       const char* txt = ("v=0\r\n"
+                          "o=- 1 1 IN IP4 192.0.2.1\r\n"
+                          "s=-\r\n"
+                          "t=0 0\r\n"
+                          "z=2882844526 -1h 2898848070 2d\r\n"
+                          "m=audio 17124 RTP/AVP 0\r\n");
+       HeaderFieldValue hfv(txt, strlen(txt));
+       Mime type("application", "sdp");
+       SdpContents sdp(hfv, type);
+       const std::list<SdpContents::Session::Timezones::Adjustment>& adj =
+          sdp.session().getTimezones().getAdjustments();
+       assert(adj.size() == 2);
+       assert(adj.front().offset == -3600);
+       assert(adj.back().offset == 2*86400);
+
+       const char* overflow = ("v=0\r\n"
+                               "o=- 1 1 IN IP4 192.0.2.1\r\n"
+                               "s=-\r\n"
+                               "t=0 0\r\n"
+                               "z=0 61486d\r\n"
+                               "m=audio 17124 RTP/AVP 0\r\n");
+       HeaderFieldValue hfv2(overflow, strlen(overflow));
+       SdpContents sdp2(hfv2, type);
+       bool threw = false;
+       try
+       {
+          sdp2.checkParsed();
+       }
+       catch (const resip::ParseException&)
+       {
+          threw = true;
+       }
+       assert(threw);
+    }
+
     {
        Data txt("v=0\r\n"
                 "o=CiscoSystemsSIP-GW-UserAgent 2087 3916 IN IP4 64.124.66.33\r\n"

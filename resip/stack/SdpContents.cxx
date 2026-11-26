@@ -3,6 +3,7 @@
 #endif
 
 #include <algorithm>
+#include <climits>
 
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/TrickleIceContents.hxx"
@@ -743,23 +744,32 @@ parseTypedTime(ParseBuffer& pb)
    int v = pb.integer();
    if (!pb.eof())
    {
+      int unit = 1;
       switch (*pb.position())
       {
     case 's' :
        pb.skipChar();
        break;
     case 'm' :
-       v *= 60;
+       unit = 60;
        pb.skipChar();
        break;
     case 'h' :
-       v *= 3600;
+       unit = 3600;
        pb.skipChar();
        break;
     case 'd' :
-       v *= 3600*24;
+       unit = 3600*24;
        pb.skipChar();
       }
+      // Reject a value that doesn't fit in an int once scaled to seconds,
+      // as pb.integer() does for the number itself.
+      const long long scaled = static_cast<long long>(v) * unit;
+      if (scaled > INT_MAX || scaled < INT_MIN)
+      {
+         pb.fail(__FILE__, __LINE__, "Typed time overflow");
+      }
+      v = static_cast<int>(scaled);
    }
    return v;
 }
@@ -858,7 +868,8 @@ SdpContents::Session::Timezones::parse(ParseBuffer& pb)
    while (!pb.eof() && *pb.position() != Symbols::CR[0])
    {
       Adjustment adj(0, 0);
-      adj.time = pb.integer();
+      // An NTP time, like the ones on the t= line; real values are past INT_MAX.
+      adj.time = pb.uInt32();
       pb.skipChar(Symbols::SPACE[0]);
       adj.offset = parseTypedTime(pb);
       addAdjustment(adj);
