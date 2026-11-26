@@ -142,8 +142,20 @@ class InviteSessionHandler
       /// called if an offer in a UPDATE or re-INVITE was rejected - not real
       /// useful. A SipMessage is provided if one is available
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage* msg)=0;
-      
-      /// called when INFO message is received 
+
+      /// Called when an UPDATE without an offer arrives - a session refresh (RFC 4028), a target refresh, or an
+      /// UPDATE sent for some other reason, eg. to carry a new P-Asserted-Identity - before DUM responds to it.
+      /// Return 200 to accept the UPDATE (the default), or a 400-699 status code to reject it.  A rejected UPDATE
+      /// changes nothing:  the remote target is not updated and the session is not refreshed.  If session timers
+      /// are in use and the code is one of Profile::getSessionRefreshKeepAliveRejectionCodes (488 is the natural
+      /// choice), DUM restarts its session timer, as a peer using the same codes keeps the session alive when its
+      /// refresh is rejected with one of them.  With any other code the session expires as RFC 4028 specifies,
+      /// unless a later refresh succeeds.  Any other return value is treated as 200 (a warning is logged).
+      /// Not called for an UPDATE that DUM rejects itself (eg. 491 or 500 while another offer/answer is in
+      /// progress), or once the application has ended the session.
+      virtual int onUpdateNoOfferAnswer(InviteSessionHandle, const SipMessage& msg);
+
+      /// called when INFO message is received
       /// the application must call acceptNIT() or rejectNIT()
       /// once it is ready for another message.
       virtual void onInfo(InviteSessionHandle, const SipMessage& msg)=0;
@@ -208,6 +220,7 @@ class InviteSessionHandler
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

@@ -1063,11 +1063,7 @@ ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
          break;
       case OnUpdate:
       {
-          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
-          // Note: target refresh handling is in Dialog::handleTargetRefresh
-          auto response = std::make_shared<SipMessage>();
-          mDialog.makeResponse(*response, msg, 200);
-          send(response);
+          respondToUpdateNoOfferAnswer(msg);
           break;
       }
       case OnInvite:
@@ -1406,11 +1402,7 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
 
       case OnUpdate:
       {
-          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
-          // Note: target refresh handling is in Dialog::handleTargetRefresh
-          auto response = std::make_shared<SipMessage>();
-          mDialog.makeResponse(*response, msg, 200);
-          send(response);
+          respondToUpdateNoOfferAnswer(msg);
           break;
       }
 
@@ -1612,11 +1604,7 @@ ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
 
       case OnUpdate:
       {
-          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
-          // Note: target refresh handling is in Dialog::handleTargetRefresh
-          auto response = std::make_shared<SipMessage>();
-          mDialog.makeResponse(*response, msg, 200);
-          send(response);
+          respondToUpdateNoOfferAnswer(msg);
           break;
       }
 
@@ -1702,11 +1690,7 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
 
       case OnUpdate:
       {
-          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
-          // Note: target refresh handling is in Dialog::handleTargetRefresh
-          auto response = std::make_shared<SipMessage>();
-          mDialog.makeResponse(*response, msg, 200);
-          send(response);
+          respondToUpdateNoOfferAnswer(msg);
           break;
       }
 
@@ -1793,11 +1777,7 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
 
       case OnUpdate:
       {
-          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
-          // Note: target refresh handling is in Dialog::handleTargetRefresh
-          auto response = std::make_shared<SipMessage>();
-          mDialog.makeResponse(*response, msg, 200);
-          send(response);
+          respondToUpdateNoOfferAnswer(msg);
           break;
       }
 
@@ -2006,11 +1986,7 @@ ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
 
       case OnUpdate:
       {
-          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
-          // Note: target refresh handling is in Dialog::handleTargetRefresh
-          auto response = std::make_shared<SipMessage>();
-          mDialog.makeResponse(*response, msg, 200);
-          send(response);
+          respondToUpdateNoOfferAnswer(msg);
           break;
       }
 
@@ -2228,11 +2204,7 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
          
       case OnUpdate:
       {
-          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
-          // Note: target refresh handling is in Dialog::handleTargetRefresh
-          auto response = std::make_shared<SipMessage>();
-          mDialog.makeResponse(*response, msg, 200);
-          send(response);
+          respondToUpdateNoOfferAnswer(msg);
           break;
       }
 
@@ -2272,10 +2244,7 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
       
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg);
          break;
       }
 

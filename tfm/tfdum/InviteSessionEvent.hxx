@@ -40,7 +40,8 @@ typedef enum
    Invite_IllegalNegotiation,
    Invite_SessionExpired,
    Invite_ReferNoSub,
-   Invite_Prack
+   Invite_Prack,
+   Invite_UpdateNoOfferAnswer
 } InviteEventType;
 
 static const char* InviteEventTypeText[] = 
@@ -76,7 +77,8 @@ static const char* InviteEventTypeText[] =
    "Illegal Negotiation",
    "Session Expired",
    "Refer No Sub",
-   "Prack"
+   "Prack",
+   "Update No Offer Answer"
 };
 
 class InviteEvent : public DumEvent

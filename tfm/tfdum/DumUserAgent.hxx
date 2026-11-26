@@ -34,6 +34,7 @@
 #include "DumEvent.hxx"
 #include "DumExpect.hxx"
 
+#include <atomic>
 #include <memory>
 
 class TestProxy;
@@ -103,6 +104,10 @@ class DumUserAgent : public EndPoint,
       // special handling required for UAC Prack scenario - must call provideOffer from 
       // onAnswer callback in order to get Offer to be provided in first PRACK
       ExpectAction* setOfferToProvideInNextOnAnswerCallback(std::shared_ptr<resip::SdpContents> offer);
+
+      // The status code onUpdateNoOfferAnswer returns, ie. how this UA answers an UPDATE without an offer:  200
+      // (the default) accepts it.  The callback runs on DUM's thread, so this is set before the test sends the UPDATE.
+      void setUpdateNoOfferAnswerResponse(int code) { mUpdateNoOfferAnswerResponse = code; }
 
 //      DumUaAction* start();
       DumUaAction* shutdownUa();
@@ -522,6 +527,7 @@ class DumUserAgent : public EndPoint,
       virtual void onOfferRequestRejected(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
       virtual void onOfferRequired(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
       virtual void onOfferRejected(resip::InviteSessionHandle, const resip::SipMessage* msg) override;
+      virtual int onUpdateNoOfferAnswer(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
       virtual void onInfo(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
       virtual void onInfoSuccess(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
       virtual void onInfoFailure(resip::InviteSessionHandle, const resip::SipMessage& msg) override;
@@ -620,6 +626,8 @@ private:
       // special handling required for UAC Prack scenario - must call provideOffer from 
       // onAnswer callback in order to get Offer to be provided in first PRACK
       std::shared_ptr<resip::SdpContents> mOfferToProvideInNextOnAnswerCallback;
+
+      std::atomic<int> mUpdateNoOfferAnswerResponse{200};
 
       typedef std::set<TestUsage*> TestUsages;
       TestUsages mTestUsages;

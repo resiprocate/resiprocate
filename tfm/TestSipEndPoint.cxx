@@ -913,38 +913,25 @@ TestSipEndPoint::Update::Update(TestSipEndPoint* from,
                                 const resip::Uri& to,
                                 bool matchUserOnly,
                                 std::shared_ptr<resip::SdpContents> sdp)
-   : mEndPoint(*from),
-     mTo(to),
+   : MessageAction(*from, to),
      mMatchUserOnly(matchUserOnly),
      mSdp(sdp)
 {
 }
 
-void 
-TestSipEndPoint::Update::operator()() 
-{ 
-   go(); 
-}
-
-void 
-TestSipEndPoint::Update::operator()(std::shared_ptr<Event> event)
-{
-   go();
-}
-
-void
+std::shared_ptr<SipMessage>
 TestSipEndPoint::Update::go()
 {
    DebugLog(<< "Update to: " << mTo);
    DeprecatedDialog* dialog;
    if( mMatchUserOnly )
    {
-      dialog = mEndPoint.getDialog(mTo.uri().user());
+      dialog = mEndPoint.getDialog(mTo.user());
    }
-   
+
    else
    {
-      dialog = mEndPoint.getDialog(mTo);
+      dialog = mEndPoint.getDialog(NameAddr(mTo));
    }
    
    if (!dialog) 
@@ -961,7 +948,7 @@ TestSipEndPoint::Update::go()
   
    DebugLog(<< "TestSipEndPoint::Update: " << *update);
    mEndPoint.storeSentUpdate(update);
-   mEndPoint.send(update);
+   return update;  // MessageAction applies any conditioner and sends it
 }
 
 resip::Data

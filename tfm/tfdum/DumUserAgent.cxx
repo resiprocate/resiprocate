@@ -647,6 +647,15 @@ DumUserAgent::onOfferRequestRejected(InviteSessionHandle h, const SipMessage& ms
    handleEvent(new InviteEvent(this, Invite_OfferRequestRejected, h, msg));
 }
 
+int
+DumUserAgent::onUpdateNoOfferAnswer(InviteSessionHandle h, const SipMessage& msg)
+{
+   const int code = mUpdateNoOfferAnswerResponse;
+   DebugLog(<< "onUpdateNoOfferAnswer - responding with " << code);
+   handleEvent(new InviteEvent(this, Invite_UpdateNoOfferAnswer, h, msg));
+   return code;
+}
+
 void
 DumUserAgent::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
 {

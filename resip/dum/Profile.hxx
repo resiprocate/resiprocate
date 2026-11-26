@@ -107,10 +107,13 @@ class Profile
       virtual Profile::SessionTimerMode getDefaultSessionTimerMode() const noexcept;
       virtual void unsetDefaultSessionTimerMode() noexcept;
 
-      /// Only used if timer option tag is set in MasterProfile, and only when we are the refresher.
+      /// Only used if timer option tag is set in MasterProfile.
       /// The status codes that, when the far end rejects one of our session refreshes (reINVITE, UPDATE
       /// or OPTIONS) with one of them, are treated as proof that the session is alive - the session
-      /// timer is restarted instead of letting the session expire.
+      /// timer is restarted instead of letting the session expire.  This applies when we are the
+      /// refresher.  The same codes apply the other way round:  when the application rejects the far
+      /// end's UPDATE without an offer with one of them (see InviteSessionHandler::onUpdateNoOfferAnswer),
+      /// DUM restarts its own session timer, so that both ends agree the session continues.
       /// Default: 405, 415, 420, 488 and 501 - responses that a UA only sends for a dialog it still
       /// holds.  Responses that typically come from elements in the path when the far end has gone
       /// away (eg. 503, 404, 480) are deliberately not included, so the session timer still cleans up

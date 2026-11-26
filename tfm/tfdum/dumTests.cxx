@@ -202,6 +202,9 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testSessionTimerOptionsRefreshRejected);
       CPPUNIT_TEST(testSessionTimer422ToOfferReinviteResendsOffer);
       CPPUNIT_TEST(testSessionTimerUasRefresherRefreshRejectedFarEndAlive);
+      CPPUNIT_TEST(testUpdateNoOfferAnswerRejected);
+      CPPUNIT_TEST(testUpdateNoOfferAnswerRejectedKeepAlive);
+      CPPUNIT_TEST(testUpdateNoOfferAnswerRejectedSessionExpires);
       // TODO SLG - add more SessionTimer tests - UAC refresher, UAS refresher, UAC no refresher, UAS no refresher, etc.
       CPPUNIT_TEST(testUASEarlyUpdateNoPrack);
 
@@ -829,6 +832,137 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
 
          endSessionTimerRefresherTest();
+      }
+
+      // Sets how a DumUserAgent's application answers an UPDATE without an offer (onUpdateNoOfferAnswer) for the
+      // length of a test, and puts back the default (accept it) when the test ends, even if it fails.
+      class ScopedUpdateNoOfferAnswerResponse
+      {
+         public:
+            ScopedUpdateNoOfferAnswerResponse(DumUserAgent* ua, int code) : mUa(ua)
+            {
+               mUa->setUpdateNoOfferAnswerResponse(code);
+            }
+            ~ScopedUpdateNoOfferAnswerResponse()
+            {
+               mUa->setUpdateNoOfferAnswerResponse(200);
+            }
+            ScopedUpdateNoOfferAnswerResponse(const ScopedUpdateNoOfferAnswerResponse&) = delete;
+            ScopedUpdateNoOfferAnswerResponse& operator=(const ScopedUpdateNoOfferAnswerResponse&) = delete;
+
+         private:
+            DumUserAgent* mUa;
+      };
+
+      // Moves the Contact of a request to a port nothing listens on, so that a request sent to it is lost
+      static std::shared_ptr<SipMessage> contactToUnusedPort(std::shared_ptr<SipMessage> msg)
+      {
+         msg->header(h_Contacts).front().uri().port() = 5099;
+         return msg;
+      }
+
+      void testUpdateNoOfferAnswerRejected()
+      {
+         InfoLog(<< "testUpdateNoOfferAnswerRejected");
+
+         // jason's application rejects sheila's UPDATE without an offer (onUpdateNoOfferAnswer returns 403).  The
+         // UPDATE asks for a new remote target, which a rejected request must not change (RFC 3261 section
+         // 12.2.2), so jason's BYE still reaches sheila at her original Contact.
+         ScopedUpdateNoOfferAnswerResponse reject(jason, 403);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->answer(answer)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse,
+                                    condition(contactToUnusedPort, sheila->update("jason"))))),
+             // The callback is made before DUM sends the response, so its event always comes first
+             uac.expect(Invite_UpdateNoOfferAnswer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(UPDATE/403, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      // sheila answers jason's INVITE as the session refresher (Session-Expires: 90;refresher=uas), so jason
+      // expires the session 60 seconds after connecting - 6 seconds with the divided session timers - unless
+      // sheila refreshes it.  She sends an UPDATE without an offer 3 seconds after connecting.
+      static const int UpdateAfterConnectMs = 3000;
+      static const int ExpiryAfterConnectMs = 60 * Seconds / ScopedSessionTimerDivisor::Divisor;
+
+      void testUpdateNoOfferAnswerRejectedKeepAlive()
+      {
+         InfoLog(<< "testUpdateNoOfferAnswerRejectedKeepAlive");
+         ScopedSessionTimerDivisor fastSessionTimers;
+         jason->getProfile()->addSupportedOptionTag(Token(Symbols::Timer));
+
+         // jason's application rejects sheila's refresh with a 488, one of the default keep-alive rejection codes, so
+         // jason restarts his session timer:  the session no longer expires 6 seconds after connecting.  sheila sends
+         // another UPDATE after that time - had the session expired, jason would have reported it first.
+         ScopedUpdateNoOfferAnswerResponse reject(jason, 488);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         const int pastFirstExpiry = ExpiryAfterConnectMs - UpdateAfterConnectMs + 1000;  // 7 seconds after connecting
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand,
+                            condition(SessionTimerControl(SessionTimerControl::Uas, 90), sheila->answer(answer))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse,
+                                    chain(sheila->pause(UpdateAfterConnectMs), sheila->update("jason"))))),
+             uac.expect(Invite_UpdateNoOfferAnswer, *TestEndPoint::AlwaysTruePred, UpdateAfterConnectMs + WaitForCommand, uac.noAction()),
+             sheila->expect(UPDATE/488, new TestSipEndPoint::AlwaysMatches(), WaitForCommand,
+                            chain(sheila->pause(pastFirstExpiry), sheila->update("jason"))),
+             uac.expect(Invite_UpdateNoOfferAnswer, *TestEndPoint::AlwaysTruePred, pastFirstExpiry + WaitForCommand, uac.noAction()),
+             sheila->expect(UPDATE/488, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->clearSupportedOptionTags();
+      }
+
+      void testUpdateNoOfferAnswerRejectedSessionExpires()
+      {
+         InfoLog(<< "testUpdateNoOfferAnswerRejectedSessionExpires");
+         ScopedSessionTimerDivisor fastSessionTimers;
+
+         // 403 is not a keep-alive rejection code, so rejecting sheila's refresh with it leaves the session to expire
+         // when it would have without the UPDATE, 6 seconds after connecting (RFC 4028).  Restarting the session
+         // timer would have moved that to 9 seconds, outside the time allowed here.
+         ScopedUpdateNoOfferAnswerResponse reject(jason, 403);
+         jason->getProfile()->addSupportedOptionTag(Token(Symbols::Timer));
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         std::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         const int untilExpiry = ExpiryAfterConnectMs - UpdateAfterConnectMs;  // 3 seconds
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand,
+                            condition(SessionTimerControl(SessionTimerControl::Uas, 90), sheila->answer(answer))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse,
+                                    chain(sheila->pause(UpdateAfterConnectMs), sheila->update("jason"))))),
+             uac.expect(Invite_UpdateNoOfferAnswer, *TestEndPoint::AlwaysTruePred, UpdateAfterConnectMs + WaitForCommand, uac.noAction()),
+             sheila->expect(UPDATE/403, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction()),
+             uac.expect(Invite_SessionExpired, *TestEndPoint::AlwaysTruePred, untilExpiry + 1500, uac.end()),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->clearSupportedOptionTags();
       }
 
       class DialogEventInfoRemoteTagUpdater;
@@ -5954,6 +6088,7 @@ class DumTestCase : public DumFixture
               optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
               david->expect(UPDATE / 407, from(proxy), WaitForCommand, david->digestRespond()),
               optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+              uas.expect(Invite_UpdateNoOfferAnswer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
               david->expect(UPDATE / 200, from(proxy), WaitForCommand, uas.accept()),
               scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
               david->expect(INVITE / 200, from(proxy), WaitForResponse, chain(david->ack(), david->bye())),
@@ -5970,6 +6105,20 @@ class DumTestCase : public DumFixture
          return std::shared_ptr<SdpContents>(static_cast<SdpContents*>(standardOffer->clone()));
       }
 
+      // Expects the response to an UPDATE sent to a DUM UA, for the tests below that send one with or without an
+      // offer.  Without an offer DUM also asks the application (onUpdateNoOfferAnswer, which these tests leave to
+      // accept it); with one it doesn't, and an unexpected callback fails the test.
+      template <typename Usage>
+      static TestEndPoint::ExpectBase* expectUpdateResponse(Usage& usage, bool withOffer, TestEndPoint::ExpectBase* response)
+      {
+         if (withOffer)
+         {
+            return response;
+         }
+         return And(Sub(usage.expect(Invite_UpdateNoOfferAnswer, *TestEndPoint::AlwaysTruePred, WaitForCommand, usage.noAction())),
+                    Sub(response));
+      }
+
       // Control for the tests below: UAC_Early already answers an UPDATE that has no offer
       void testUACEarlyUpdateNoOffer()
       {
@@ -5982,6 +6131,7 @@ class DumTestCase : public DumFixture
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->ring()),
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->update("jason")),
+             uac.expect(Invite_UpdateNoOfferAnswer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              sheila->expect(UPDATE/200, from(jason->getInstanceId()), WaitForCommand, uac.end()),
              And(Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->send487())),
                      sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
@@ -6006,7 +6156,8 @@ class DumTestCase : public DumFixture
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, updateAction),
-             sheila->expect(UPDATE/(withOffer ? 500 : 200), new TestSipEndPoint::AlwaysMatches(), WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             expectUpdateResponse(uac, withOffer,
+                                  sheila->expect(UPDATE/(withOffer ? 500 : 200), new TestSipEndPoint::AlwaysMatches(), WaitForCommand, uac.provideAnswer(*standardAnswer))),
              sheila->expect(ACK, from(jason->getInstanceId()), WaitForCommand, uac.end()),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(BYE, from(jason->getInstanceId()), WaitForCommand, sheila->ok()))),
@@ -6042,7 +6193,8 @@ class DumTestCase : public DumFixture
              jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
              sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, updateAction),
-             sheila->expect(UPDATE/(withOffer ? 500 : 200), new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction()),
+             expectUpdateResponse(uac, withOffer,
+                                  sheila->expect(UPDATE/(withOffer ? 500 : 200), new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
              // Answer a retransmission of the PRACK, so that none are left over for the next test
              sheila->expect(PRACK, from(jason->getInstanceId()), CallTimeout,
                             chain(sheila->ok(), sheila->pause(100), uac.end())),
@@ -6084,7 +6236,8 @@ class DumTestCase : public DumFixture
              uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
              sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand,
                             chain(uac.provideOffer(*standardOffer), sheila->pause(100), updateAction)),
-             sheila->expect(UPDATE/(withOffer ? 491 : 200), new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction()),
+             expectUpdateResponse(uac, withOffer,
+                                  sheila->expect(UPDATE/(withOffer ? 491 : 200), new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
              // Answer a retransmission of the PRACK: DUM must then send the UPDATE it queued
              sheila->expect(PRACK, from(jason->getInstanceId()), CallTimeout, sheila->ok()),
              sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, sheila->answerUpdate(answer)),
@@ -6125,6 +6278,7 @@ class DumTestCase : public DumFixture
              sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
              sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand,
                             chain(sheila->send491(), sheila->pause(500), sheila->update("jason"))),
+             uac.expect(Invite_UpdateNoOfferAnswer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              sheila->expect(UPDATE/200, from(jason->getInstanceId()), WaitForCommand, sheila->noAction()),
              // Let DUM resend its UPDATE and connect
              sheila->expect(UPDATE, from(jason->getInstanceId()), Owner491, sheila->answerUpdate(answer)),

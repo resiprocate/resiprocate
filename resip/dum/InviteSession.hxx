@@ -368,6 +368,11 @@ class InviteSession : public DialogUsage
       bool handleSessionModificationRejected(const SipMessage& response);
       bool isFarEndAliveRejection(int statusCode) const;
 
+      // Responds to a received UPDATE without an offer, in any state that accepts one:  asks the application
+      // (InviteSessionHandler::onUpdateNoOfferAnswer) whether to accept it, then sends the response.  Pass
+      // sessionTimerRefresh in the states where the UPDATE refreshes the session timer (Connected).
+      void respondToUpdateNoOfferAnswer(const SipMessage& update, bool sessionTimerRefresh = false);
+
       static Data toData(State state);
       void transition(State target);
 

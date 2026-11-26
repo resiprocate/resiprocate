@@ -110,21 +110,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       ReInvite* reInvite(const resip::Data& user);
       ReInvite* reInvite(const resip::Data& user, const std::shared_ptr<resip::SdpContents>& sdp);
                
-      class Update : public Action
-      {
-         public:
-            Update(TestSipEndPoint* from, const resip::Uri& to, bool matchUserOnly = false, std::shared_ptr<resip::SdpContents> sdp = nullptr);
-
-            void operator()();
-            void operator()(std::shared_ptr<Event> event);
-            void go();
-            resip::Data toString() const;
-         private:
-            TestSipEndPoint & mEndPoint;
-            resip::NameAddr mTo;
-            bool mMatchUserOnly;
-            std::shared_ptr<resip::SdpContents> mSdp;
-      };
+      class Update;  // defined after MessageAction
       friend class Update;
       Update* update(const TestSipEndPoint& endPoint);
       Update* update(const resip::Uri& url);
@@ -212,6 +198,19 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             std::shared_ptr<resip::SipMessage> mMsg;
             MessageConditionerFn mConditioner;
             RawConditionerFn mRawConditioner;
+      };
+
+      // A MessageAction, so that a test can change the UPDATE with condition() before it is sent
+      class Update : public MessageAction
+      {
+         public:
+            Update(TestSipEndPoint* from, const resip::Uri& to, bool matchUserOnly = false, std::shared_ptr<resip::SdpContents> sdp = nullptr);
+
+            virtual std::shared_ptr<resip::SipMessage> go();
+            virtual resip::Data toString() const;
+         private:
+            bool mMatchUserOnly;
+            std::shared_ptr<resip::SdpContents> mSdp;
       };
 
       typedef enum

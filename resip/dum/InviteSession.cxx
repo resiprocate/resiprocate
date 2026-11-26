@@ -1647,11 +1647,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately (likely session timer) - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         handleSessionTimerRequest(*response, msg);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg, true);  // in Connected it is also a session refresh
          break;
       }
 
@@ -2353,10 +2349,7 @@ InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
       
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg);
          break;
       }
 
@@ -3057,6 +3050,47 @@ InviteSession::isFarEndAliveRejection(int statusCode) const
    // end has gone away (503, 404, 480, ...) are not included.
    const std::set<int>& codes = mDialog.mDialogSet.getUserProfile()->getSessionRefreshKeepAliveRejectionCodes();
    return codes.find(statusCode) != codes.end();
+}
+
+void
+InviteSession::respondToUpdateNoOfferAnswer(const SipMessage& update, bool sessionTimerRefresh)
+{
+   int code = 200;
+   if (!isTerminated())  // the application has already ended the session - just accept it
+   {
+      code = mDum.mInviteSessionHandler->onUpdateNoOfferAnswer(getSessionHandle(), update);
+      if (code != 200 && (code < 400 || code > 699))
+      {
+         WarningLog(<< "onUpdateNoOfferAnswer returned " << code << ", which is not 200 or 400-699 - accepting the UPDATE");
+         code = 200;
+      }
+   }
+
+   auto response = std::make_shared<SipMessage>();
+   mDialog.makeResponse(*response, update, code);
+   // The application may have ended the session from the callback
+   if (sessionTimerRefresh && !isTerminated())
+   {
+      if (code == 200)
+      {
+         handleSessionTimerRequest(*response, update);
+      }
+      else if (mDum.getMasterProfile()->getSupportedOptionTags().find(SessionTimerToken) &&
+               mSessionInterval >= 90 &&  // session timers are in use on this session
+               isFarEndAliveRejection(code))
+      {
+         // RFC 4028 only refreshes the session on a 2xx.  But the far end is evidently still there, and
+         // a peer that keeps a session alive when its refresh is rejected with this code (see
+         // Profile::setSessionRefreshKeepAliveRejectionCodes) carries on - so restart our session timer too, so
+         // that both ends agree the session continues.  Nothing in the rejected UPDATE is acted on (RFC 3261
+         // section 12.2.2):  unlike handleSessionTimerRequest, the peer's capabilities and session timer
+         // headers are not stored, as for a rejected reINVITE - the existing session interval and refresher
+         // are kept.
+         InfoLog(<< "UPDATE rejected with " << code << " by the application - restarting the session timer");
+         startSessionTimer();
+      }
+   }
+   send(response);
 }
 
 bool

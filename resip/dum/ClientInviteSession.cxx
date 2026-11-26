@@ -963,10 +963,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg);
          break;
       }
      
@@ -1026,10 +1023,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg);
          break;
       }
 
@@ -1117,10 +1111,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg);
          break;
       }
 
@@ -1199,10 +1190,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg);
          break;
       }
 
@@ -1295,10 +1283,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg);
          break;
       }
 
@@ -1375,10 +1360,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg);
          break;
       }
 
@@ -1456,10 +1438,7 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
          
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg);
          break;
       }
 
@@ -1592,10 +1571,7 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
-         auto response = std::make_shared<SipMessage>();
-         mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         respondToUpdateNoOfferAnswer(msg);
          break;
       }
 
