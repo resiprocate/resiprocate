@@ -14,6 +14,12 @@ TransportDriver& TransportDriver::instance()
    static TransportDriver instance;
    return instance;
 }
+
+std::recursive_mutex& TransportDriver::endpointStateMutex()
+{
+   static std::recursive_mutex mutex;
+   return mutex;
+}
    
 
 TransportDriver::TransportDriver() : 
@@ -111,7 +117,8 @@ TransportDriver::process()
    FdSet fdset;
    buildFdSet(fdset); 
    fdset.selectMilliSeconds(25); //5 ms granularity
-   
+
+   std::lock_guard<std::recursive_mutex> stateLock(endpointStateMutex());
    Lock lock(mMutex);
    for (vector<Client*>::iterator it =  mClients.begin();
         it != mClients.end(); it++)

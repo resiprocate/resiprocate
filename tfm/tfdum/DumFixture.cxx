@@ -335,8 +335,18 @@ DumFixture::destroyStatic()
    }
    if( scott )
    {
-      delete scott; 
+      delete scott;
       scott = 0;
+   }
+   if( duane )
+   {
+      delete duane;
+      duane = 0;
+   }
+   if( hiss )
+   {
+      delete hiss;
+      hiss = 0;
    }
 
    if( proxy )
@@ -349,6 +359,12 @@ DumFixture::destroyStatic()
    {
       delete sipEndPoint;
       sipEndPoint = 0;
+   }
+
+   if( serviceEndPoint )
+   {
+      delete serviceEndPoint;
+      serviceEndPoint = 0;
    }
 
    if ( sipEndPointTcp )
@@ -368,6 +384,15 @@ DumFixture::destroyStatic()
       delete registrar;
       registrar = 0;
    }
+
+   delete standardOffer;
+   standardOffer = 0;
+   delete standardAnswer;
+   standardAnswer = 0;
+   delete standardOfferAudio;
+   standardOfferAudio = 0;
+   delete standardAnswerAudio;
+   standardAnswerAudio = 0;
 }
 
 std::unique_ptr<GenericPidfContents>

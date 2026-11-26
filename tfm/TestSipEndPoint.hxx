@@ -1002,7 +1002,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
          private:
             std::shared_ptr<resip::SipMessage>& mMsg;
-            Matcher* mMatcher;
+            std::unique_ptr<Matcher> mMatcher;
       };
          
       class From : public Matcher

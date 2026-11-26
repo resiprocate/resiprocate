@@ -184,6 +184,12 @@ TestSipEndPoint::~TestSipEndPoint()
    
    unregisterFromTransportDriver();
    delete mTransport;
+
+   // clean() frees these between tests; free what the last test left.
+   for (DialogList::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+   {
+      delete (*it);
+   }
 }
 
 void

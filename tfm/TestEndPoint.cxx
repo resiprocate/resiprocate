@@ -86,6 +86,11 @@ TestEndPoint::NoSeqAction::NoSeqAction() : EndPointAction(0)
 {
 }
 
+void
+TestEndPoint::NoSeqAction::operator()()
+{
+}
+
 void 
 TestEndPoint::NoSeqAction::operator()(TestEndPoint& user) 
 {

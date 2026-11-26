@@ -78,6 +78,8 @@ class TestEndPoint
          public:
             NoSeqAction();
             using EndPointAction::operator();
+            // There is no endpoint (it is null), so don't dereference it.
+            virtual void operator()();
             virtual void operator()(TestEndPoint& user);
             virtual resip::Data toString() const;
       };

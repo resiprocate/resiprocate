@@ -1059,31 +1059,30 @@ class DumTestCase : public DumFixture
 
          std::shared_ptr<SipMessage> sheilasRing;
 
-         // !jjg! leaks
-         DialogEventPred* pDi1 = new DialogEventPred(di1);
-         DialogEventPred* pDi2 = new DialogEventPred(di2);
-         DialogEventPred* pDi3 = new DialogEventPred(di3);
-         DialogEventPred* pDi4 = new DialogEventPred(di4);
+         DialogEventPred pDi1(di1);
+         DialogEventPred pDi2(di2);
+         DialogEventPred pDi3(di3);
+         DialogEventPred pDi4(di4);
 
          InviteHelper ih1(inviteMsg);
 
          Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
-             uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
+             uac.expect(DialogEvent_Trying, pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(save(sheilasRing, sheila->ring()), 
                                   new DialogEventInfoRemoteTagUpdater(&di2, sheilasRing),
                                   new DialogEventInfoRemoteTagUpdater(&di3, sheilasRing),
                                   new DialogEventInfoRemoteTagUpdater(&di4, sheilasRing))),
              jason->expect(Invite_NewClientSession, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             uac.expect(DialogEvent_Early, *pDi2, WaitForCommand, uac.noAction()),
+             uac.expect(DialogEvent_Early, pDi2, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->answer(answer)),
              jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             uac.expect(DialogEvent_Confirmed, *pDi3, WaitForCommand, uac.noAction()),
+             uac.expect(DialogEvent_Confirmed, pDi3, WaitForCommand, uac.noAction()),
              And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->bye()))),
              And(
                 Sub(jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
-                Sub(uac.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::RemoteBye, WaitForCommand, uac.noAction())),
+                Sub(uac.expect(DialogEvent_Terminated, pDi4, InviteSessionHandler::RemoteBye, WaitForCommand, uac.noAction())),
                 Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
@@ -1123,16 +1122,15 @@ class DumTestCase : public DumFixture
          di2.mRemoteTarget = std::unique_ptr<Uri>(new Uri(sheila->getContact().uri()));
          di2.mState = DialogEventInfo::Terminated;
 
-         // !jjg! leaks
-         DialogEventPred* pDi1 = new DialogEventPred(di1);
-         DialogEventPred* pDi2 = new DialogEventPred(di2);
+         DialogEventPred pDi1(di1);
+         DialogEventPred pDi2(di2);
 
          InviteHelper ih1(inviteMsg);
 
          Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
-             uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
+             uac.expect(DialogEvent_Trying, pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->send100(),sheila->send500())),
-             And(Sub(uac.expect(DialogEvent_Terminated, *pDi2, InviteSessionHandler::Error, WaitForCommand, uac.noAction()),
+             And(Sub(uac.expect(DialogEvent_Terminated, pDi2, InviteSessionHandler::Error, WaitForCommand, uac.noAction()),
                      jason->expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
                      jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction()))),
@@ -1181,16 +1179,15 @@ class DumTestCase : public DumFixture
 
          std::shared_ptr<SipMessage> sheilasRing;
 
-         // !jjg! leaks
-         DialogEventPred* pDi1 = new DialogEventPred(di1);
-         DialogEventPred* pDi2 = new DialogEventPred(di2);
-//         DialogEventPred* pDi3 = new DialogEventPred(di3);
-         DialogEventPred* pDi4 = new DialogEventPred(di4);
+         DialogEventPred pDi1(di1);
+         DialogEventPred pDi2(di2);
+//         DialogEventPred pDi3(di3);
+         DialogEventPred pDi4(di4);
 
          InviteHelper ih1(inviteMsg);
 
          Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
-             testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, testDialogEvt.noAction()),
+             testDialogEvt.expect(DialogEvent_Trying, pDi1, WaitForCommand, testDialogEvt.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(sheila->send100(),
                                   save(sheilasRing, sheila->ring()), 
@@ -1198,22 +1195,22 @@ class DumTestCase : public DumFixture
                                   new DialogEventInfoRemoteTagUpdater(&di3, sheilasRing),
                                   new DialogEventInfoRemoteTagUpdater(&di4, sheilasRing))),
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, testDialogEvt.noAction()),
-             testDialogEvt.expect(DialogEvent_Early, *pDi2, WaitForCommand, testDialogEvt.noAction()),
+             testDialogEvt.expect(DialogEvent_Early, pDi2, WaitForCommand, testDialogEvt.noAction()),
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
          Seq(jason->cancelInvite(),
              And(Sub(sheila->expect(CANCEL, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, chain(sheila->ok(), sheila->send487())),
                      sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
-                 Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::LocalCancel, WaitForCommand, testDialogEvt.noAction()),
+                 Sub(testDialogEvt.expect(DialogEvent_Terminated, pDi4, InviteSessionHandler::LocalCancel, WaitForCommand, testDialogEvt.noAction()),
                      jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()))),
              //jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             //uac.expect(DialogEvent_Confirmed, *pDi3, WaitForCommand, uac.noAction()),
+             //uac.expect(DialogEvent_Confirmed, pDi3, WaitForCommand, uac.noAction()),
              //And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
              //    Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->bye()))),
              //And(
              //   Sub(jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
-             //   Sub(uac.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::RemoteBye, WaitForCommand, uac.noAction())),
+             //   Sub(uac.expect(DialogEvent_Terminated, pDi4, InviteSessionHandler::RemoteBye, WaitForCommand, uac.noAction())),
              //   Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
@@ -1276,18 +1273,17 @@ class DumTestCase : public DumFixture
          std::shared_ptr<SipMessage> sheilasRing;
          std::shared_ptr<SipMessage> sheilasSecondRing;
 
-         // !jjg! leaks
-         DialogEventPred* pDi1 = new DialogEventPred(di1);
-         DialogEventPred* pDi2 = new DialogEventPred(di2);
-         DialogEventPred* pDi2a = new DialogEventPred(di2a);
-//         DialogEventPred* pDi3 = new DialogEventPred(di3);
-         DialogEventPred* pDi4 = new DialogEventPred(di4);
-         DialogEventPred* pDi4a = new DialogEventPred(di4a);
+         DialogEventPred pDi1(di1);
+         DialogEventPred pDi2(di2);
+         DialogEventPred pDi2a(di2a);
+//         DialogEventPred pDi3(di3);
+         DialogEventPred pDi4(di4);
+         DialogEventPred pDi4a(di4a);
 
          InviteHelper ih1(inviteMsg);
 
          Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
-             uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
+             uac.expect(DialogEvent_Trying, pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(sheila->send100(),  // DumUserAgent learns the AppDialogSet that cancelInvite() needs from onTrying
                                   save(sheilasRing, sheila->ring()),
@@ -1299,10 +1295,10 @@ class DumTestCase : public DumFixture
                                   new DialogEventInfoRemoteTagUpdater(&di3a, sheilasSecondRing),
                                   new DialogEventInfoRemoteTagUpdater(&di4a, sheilasSecondRing))),
              jason->expect(Invite_NewClientSession, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             uac.expect(DialogEvent_Early, *pDi2, WaitForCommand, uac.noAction()),
+             uac.expect(DialogEvent_Early, pDi2, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->noAction()),
              jason->expect(Invite_NewClientSession, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             uac.expect(DialogEvent_Early, *pDi2a, WaitForCommand, uac.noAction()),
+             uac.expect(DialogEvent_Early, pDi2a, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
@@ -1314,8 +1310,8 @@ class DumTestCase : public DumFixture
          Seq(jason->cancelInvite(),
              And(Sub(sheila->expect(CANCEL, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, chain(sheila->ok(), sheila->send487())),
                      sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForCommand, sheila->noAction())),
-                 Sub(uac.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::LocalCancel, WaitForCommand, uac.noAction())),
-                 Sub(uac.expect(DialogEvent_Terminated, *pDi4a, InviteSessionHandler::LocalCancel, WaitForCommand, uac.noAction())),
+                 Sub(uac.expect(DialogEvent_Terminated, pDi4, InviteSessionHandler::LocalCancel, WaitForCommand, uac.noAction())),
+                 Sub(uac.expect(DialogEvent_Terminated, pDi4a, InviteSessionHandler::LocalCancel, WaitForCommand, uac.noAction())),
                  Sub(jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
                      jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, CallTimeout, uac.noAction()))),
              WaitForEndOfSeq);
@@ -1370,11 +1366,10 @@ class DumTestCase : public DumFixture
 
          std::shared_ptr<SipMessage> sheilasRedirect;
 
-         // !jjg! leaks
-         DialogEventPred* pDi1 = new DialogEventPred(di1);
-         DialogEventPred* pDi2 = new DialogEventPred(di2);
-         DialogEventPred* pDi3 = new DialogEventPred(di3);
-         DialogEventPred* pDi4 = new DialogEventPred(di4);
+         DialogEventPred pDi1(di1);
+         DialogEventPred pDi2(di2);
+         DialogEventPred pDi3(di3);
+         DialogEventPred pDi4(di4);
 
          // when DUM processes a 3xx response it generates an INVITE to the new target
          // using the same CallID, To and From headers as in the original INVITE;
@@ -1384,12 +1379,12 @@ class DumTestCase : public DumFixture
          InviteHelper ih1(inviteMsg);
 
          Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
-             uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
+             uac.expect(DialogEvent_Trying, pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->send302(derek->getAor().uri())),
-             And(Sub(uac.expect(DialogEvent_Terminated, *pDi3, InviteSessionHandler::Rejected, WaitForCommand, uac.noAction()),
-                     uac.expect(DialogEvent_Trying, *pDi2, WaitForCommand, uac.noAction())),
+             And(Sub(uac.expect(DialogEvent_Terminated, pDi3, InviteSessionHandler::Rejected, WaitForCommand, uac.noAction()),
+                     uac.expect(DialogEvent_Trying, pDi2, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()))),
-             uac.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::Rejected, WaitForCommand, uac.noAction()),
+             uac.expect(DialogEvent_Terminated, pDi4, InviteSessionHandler::Rejected, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForResponse, uac.noAction()),
              jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              //sheila->expect(ACK, new TestSipEndPoint::AlwaysMatches(), WaitForResponse, sheila->noAction()),
@@ -1460,12 +1455,11 @@ class DumTestCase : public DumFixture
 
          std::shared_ptr<SipMessage> sheilasRing;
 
-         // !jjg! leaks
-         DialogEventPred* pDi1 = new DialogEventPred(di1);
-         DialogEventPred* pDi2 = new DialogEventPred(di2);
-         DialogEventPred* pDi3 = new DialogEventPred(di3);
-         DialogEventPred* pDi4 = new DialogEventPred(di4);
-         DialogEventPred* pDi5 = new DialogEventPred(di5);
+         DialogEventPred pDi1(di1);
+         DialogEventPred pDi2(di2);
+         DialogEventPred pDi3(di3);
+         DialogEventPred pDi4(di4);
+         DialogEventPred pDi5(di5);
 
          // when DUM processes a 3xx response it generates an INVITE to the new target
          // using the same CallID, To and From headers as in the original INVITE;
@@ -1475,17 +1469,17 @@ class DumTestCase : public DumFixture
          InviteHelper ih1(inviteMsg);
 
          Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
-             testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, testDialogEvt.noAction()),
+             testDialogEvt.expect(DialogEvent_Trying, pDi1, WaitForCommand, testDialogEvt.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(save(sheilasRing, sheila->ring()), 
                                   new DialogEventInfoRemoteTagUpdater(&di2, sheilasRing),
                                   new DialogEventInfoRemoteTagUpdater(&di3, sheilasRing),
                                   new DialogEventInfoRemoteTagUpdater(&di4, sheilasRing))),
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             testDialogEvt.expect(DialogEvent_Early, *pDi2, WaitForCommand, testDialogEvt.noAction()),
+             testDialogEvt.expect(DialogEvent_Early, pDi2, WaitForCommand, testDialogEvt.noAction()),
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->answer(answer)),
              jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             testDialogEvt.expect(DialogEvent_Confirmed, *pDi3, WaitForCommand, testDialogEvt.noAction()),
+             testDialogEvt.expect(DialogEvent_Confirmed, pDi3, WaitForCommand, testDialogEvt.noAction()),
              And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->refer(jason->getAor().uri(), contactDerek)))),
              //sheila->expect(REFER, from(jason->getInstanceId()), WaitForCommand, sheila->send202()),
@@ -1494,8 +1488,8 @@ class DumTestCase : public DumFixture
              And(
                 Sub(jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, 
                        jason->inviteFromRefer(uac.getReferMessage(), uac.getServerSubscription(), standardOffer)),
-                    testDialogEvt.expect(DialogEvent_Trying, *pDi5, WaitForCommand, testDialogEvt.noAction())),
-                Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::RemoteBye, WaitForCommand, uac.noAction())),
+                    testDialogEvt.expect(DialogEvent_Trying, pDi5, WaitForCommand, testDialogEvt.noAction())),
+                Sub(testDialogEvt.expect(DialogEvent_Terminated, pDi4, InviteSessionHandler::RemoteBye, WaitForCommand, uac.noAction())),
                 Sub(sheila->expect(NOTIFY, from(jason->getInstanceId()), WaitForCommand, sheila->ok())),
                 Sub(sheila->expect(BYE/200, from(jason->getInstanceId()), WaitForCommand, sheila->noAction()))),
              WaitForEndOfSeq);
@@ -1550,15 +1544,15 @@ class DumTestCase : public DumFixture
          di1.mLocalTarget = Uri("sip:anyone@anywhere.com");
          di1.mRemoteIdentity = derek->getAor();
          di1.mRemoteTarget = std::unique_ptr<Uri>(new Uri(derekContact));
-         DialogEventPred* pDi1 = new DialogEventPred(di1);
+         DialogEventPred pDi1(di1);
 
          TestDialogEventInfo di1a(di1);
          di1a.mState = DialogEventInfo::Early;
-         DialogEventPred* pDi1a = new DialogEventPred(di1a);
+         DialogEventPred pDi1a(di1a);
 
          TestDialogEventInfo di2(di1);
          di2.mState = DialogEventInfo::Confirmed;
-         DialogEventPred* pDi2 = new DialogEventPred(di2);
+         DialogEventPred pDi2(di2);
 
          TestDialogEventInfo di3;
          di3.mDialogEventId = "*";
@@ -1571,19 +1565,19 @@ class DumTestCase : public DumFixture
          di3.mRemoteIdentity = scott->getAor();
          di3.mReplacesId = std::unique_ptr<DialogId>(new DialogId("*", "*", "*"));
          di3.mReferredBy = std::unique_ptr<NameAddr>(new NameAddr(derek->getProfile()->getDefaultFrom()));
-         DialogEventPred* pDi3 = new DialogEventPred(di3);
+         DialogEventPred pDi3(di3);
 
          TestDialogEventInfo di4(di3);
          di4.mState = DialogEventInfo::Confirmed;
-         DialogEventPred* pDi4 = new DialogEventPred(di4);
+         DialogEventPred pDi4(di4);
 
          TestDialogEventInfo di5(di2);
          di5.mState = DialogEventInfo::Terminated;
-         DialogEventPred* pDi5 = new DialogEventPred(di5);
+         DialogEventPred pDi5(di5);
 
          TestDialogEventInfo di6(di4);
          di6.mState = DialogEventInfo::Terminated;
-         DialogEventPred* pDi6 = new DialogEventPred(di6);
+         DialogEventPred pDi6(di6);
 
          Seq(derek->registerUa(),
              derek->expect(Register_Success, regDerek, *TestEndPoint::AlwaysTruePred, WaitForRegistration, derek->noAction()),
@@ -1616,14 +1610,14 @@ class DumTestCase : public DumFixture
 
          // derek calls jason
          Seq(derek->invite(jason->getProfile()->getDefaultFrom(), standardOffer),
-             testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, testDialogEvt.noAction()),
+             testDialogEvt.expect(DialogEvent_Trying, pDi1, WaitForCommand, testDialogEvt.noAction()),
              jason->expect(Invite_NewServerSession, invSrvJasonFromDerek, dumFrom(derek), TimeOut, invSrvJasonFromDerek.noAction()),
              invSrvJasonFromDerek.expect(Invite_Offer, dumFrom(derek), TimeOut, 
                                          chain(invSrvJasonFromDerek.provisional(180), invSrvJasonFromDerek.provideAnswer(*standardAnswer), 
                                                invSrvJasonFromDerek.accept(200))),
 
-             And(Sub(testDialogEvt.expect(DialogEvent_Early, *pDi1a, WaitForCommand, testDialogEvt.noAction()),
-                     testDialogEvt.expect(DialogEvent_Confirmed, *pDi2, WaitForCommand, testDialogEvt.noAction()),
+             And(Sub(testDialogEvt.expect(DialogEvent_Early, pDi1a, WaitForCommand, testDialogEvt.noAction()),
+                     testDialogEvt.expect(DialogEvent_Confirmed, pDi2, WaitForCommand, testDialogEvt.noAction()),
                      invSrvJasonFromDerek.expect(Invite_Connected, dumFrom(derek), TimeOut, invSrvJasonFromDerek.noAction())),
                  Sub(derek->expect(Invite_NewClientSession, invDerekToJason, dumFrom(jason), TimeOut, derek->noAction()),
                      invDerekToJason.expect(Invite_Provisional, dumFrom(jason), TimeOut, invDerekToJason.noAction()),
@@ -1639,14 +1633,14 @@ class DumTestCase : public DumFixture
                                       scott->inviteFromRefer(invClientScottToDerek.getReferMessage(), 
                                                              invClientScottToDerek.getServerSubscription(), standardOffer))),
 
-             And(Sub(And(Sub(testDialogEvt.expect(DialogEvent_Trying, *pDi3, WaitForCommand, testDialogEvt.noAction()),
+             And(Sub(And(Sub(testDialogEvt.expect(DialogEvent_Trying, pDi3, WaitForCommand, testDialogEvt.noAction()),
                              jason->expect(Invite_NewServerSession, invSrvJasonFromScott, findMatchingDialogToReplace(jason), 
                                            TimeOut, invSrvJasonFromScott.noAction()),
                              invSrvJasonFromScott.expect(Invite_Offer, dumFrom(scott), TimeOut, 
                                                          chain(invSrvJasonFromScott.provideAnswer(*standardAnswer), invSrvJasonFromScott.accept(200))),
-                             testDialogEvt.expect(DialogEvent_Confirmed, *pDi4, WaitForCommand, testDialogEvt.noAction()),
+                             testDialogEvt.expect(DialogEvent_Confirmed, pDi4, WaitForCommand, testDialogEvt.noAction()),
                              invSrvJasonFromScott.expect(Invite_Connected, dumFrom(scott), TimeOut, invSrvJasonFromDerek.end())),
-                         Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi5, InviteSessionHandler::Replaced, WaitForCommand, testDialogEvt.noAction()),
+                         Sub(testDialogEvt.expect(DialogEvent_Terminated, pDi5, InviteSessionHandler::Replaced, WaitForCommand, testDialogEvt.noAction()),
                              invSrvJasonFromDerek.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, TimeOut, 
                                                          invSrvJasonFromDerek.noAction())))),
 
@@ -1673,7 +1667,7 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
 
          Seq(invSrvJasonFromScott.end(),
-             And(Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi6, InviteSessionHandler::LocalBye, WaitForCommand, testDialogEvt.noAction()),
+             And(Sub(testDialogEvt.expect(DialogEvent_Terminated, pDi6, InviteSessionHandler::LocalBye, WaitForCommand, testDialogEvt.noAction()),
                      invSrvJasonFromScott.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, TimeOut, invSrvJasonFromScott.noAction())),
                  Sub(invClientScott.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, TimeOut, invClientScott.noAction()))),
              WaitForEndOfSeq);
@@ -1770,11 +1764,10 @@ class DumTestCase : public DumFixture
 
          std::shared_ptr<SipMessage> sheilasInvite;
 
-         // !jjg! leaks
-         DialogEventPred* pDi1 = new DialogEventPred(di1);
-//         DialogEventPred* pDi2 = new DialogEventPred(di2);
-         DialogEventPred* pDi3 = new DialogEventPred(di3);
-         DialogEventPred* pDi4 = new DialogEventPred(di4);
+         DialogEventPred pDi1(di1);
+//         DialogEventPred pDi2(di2);
+         DialogEventPred pDi3(di3);
+         DialogEventPred pDi4(di4);
 
          Seq(chain(save(sheilasInvite, sheila->invite(jason->getAor().uri(), offer)),
                    new ExpectedDialogEventInfoBuilderUas(&di1, sheilasInvite),
@@ -1782,17 +1775,17 @@ class DumTestCase : public DumFixture
                    new ExpectedDialogEventInfoBuilderUas(&di3, sheilasInvite),
                    new ExpectedDialogEventInfoBuilderUas(&di4, sheilasInvite)),
              And(Sub(optional(sheila->expect(INVITE/100, from(proxy), WaitFor100, sheila->noAction()))),
-                 Sub(testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
+                 Sub(testDialogEvt.expect(DialogEvent_Trying, pDi1, WaitForCommand, uac.noAction()),
                      jason->expect(Invite_NewServerSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
                      uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uac.provideAnswer(*answer),
                                                                                                    uac.accept(200))),
-                     And(Sub(testDialogEvt.expect(DialogEvent_Confirmed, *pDi3, WaitForCommand, uac.noAction()),
+                     And(Sub(testDialogEvt.expect(DialogEvent_Confirmed, pDi3, WaitForCommand, uac.noAction()),
                              uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                          Sub(sheila->expect(INVITE/200, from(proxy), WaitForResponse, chain(sheila->ack(),
                                                                                             uac.end())))))),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(BYE, contact(jason->getContact()), CallTimeout, sheila->ok())),
-                 Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::LocalBye, WaitForCommand, uac.noAction()))),
+                 Sub(testDialogEvt.expect(DialogEvent_Terminated, pDi4, InviteSessionHandler::LocalBye, WaitForCommand, uac.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -1846,18 +1839,17 @@ class DumTestCase : public DumFixture
 
          std::shared_ptr<SipMessage> sheilasInvite;
 
-         // !jjg! leaks
-         DialogEventPred* pDi1 = new DialogEventPred(di1);
-         DialogEventPred* pDi2 = new DialogEventPred(di2);
+         DialogEventPred pDi1(di1);
+         DialogEventPred pDi2(di2);
 
          Seq(chain(save(sheilasInvite, sheila->invite(jason->getAor().uri(), offer)),
                    new ExpectedDialogEventInfoBuilderUas(&di1, sheilasInvite),
                    new ExpectedDialogEventInfoBuilderUas(&di2, sheilasInvite)),
              And(Sub(optional(sheila->expect(INVITE/100, from(proxy), WaitFor100, sheila->noAction()))),
-                 Sub(testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
+                 Sub(testDialogEvt.expect(DialogEvent_Trying, pDi1, WaitForCommand, uac.noAction()),
                      jason->expect(Invite_NewServerSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
                      uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.redirect(redirContacts)),
-                     And(Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi2, InviteSessionHandler::Rejected, WaitForCommand, uac.noAction()),
+                     And(Sub(testDialogEvt.expect(DialogEvent_Terminated, pDi2, InviteSessionHandler::Rejected, WaitForCommand, uac.noAction()),
                              uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                          Sub(sheila->expect(INVITE/302, from(proxy), WaitForResponse, sheila->ack()))))),
              WaitForEndOfSeq);
@@ -1909,11 +1901,10 @@ class DumTestCase : public DumFixture
 
          std::shared_ptr<SipMessage> sheilasInvite;
 
-         // !jjg! leaks
-         DialogEventPred* pDi1 = new DialogEventPred(di1);
-         DialogEventPred* pDi2 = new DialogEventPred(di2);
-//         DialogEventPred* pDi3 = new DialogEventPred(di3);
-         DialogEventPred* pDi4 = new DialogEventPred(di4);
+         DialogEventPred pDi1(di1);
+         DialogEventPred pDi2(di2);
+//         DialogEventPred pDi3(di3);
+         DialogEventPred pDi4(di4);
 
          Seq(chain(save(sheilasInvite, sheila->invite(jason->getAor().uri(), offer)),
                    new ExpectedDialogEventInfoBuilderUas(&di1, sheilasInvite),
@@ -1921,12 +1912,12 @@ class DumTestCase : public DumFixture
                    new ExpectedDialogEventInfoBuilderUas(&di3, sheilasInvite),
                    new ExpectedDialogEventInfoBuilderUas(&di4, sheilasInvite)),
              And(Sub(optional(sheila->expect(INVITE/100, from(proxy), WaitFor100, sheila->noAction()))),
-                 Sub(testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
+                 Sub(testDialogEvt.expect(DialogEvent_Trying, pDi1, WaitForCommand, uac.noAction()),
                      jason->expect(Invite_NewServerSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
                      uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provisional()),
                      And(Sub(sheila->expect(INVITE/180, from(proxy), WaitFor180, sheila->cancel())),
-                         Sub(testDialogEvt.expect(DialogEvent_Early, *pDi2, WaitForCommand, uac.noAction()))),
-                     And(Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::RemoteCancel, WaitForCommand, testDialogEvt.noAction()),
+                         Sub(testDialogEvt.expect(DialogEvent_Early, pDi2, WaitForCommand, uac.noAction()))),
+                     And(Sub(testDialogEvt.expect(DialogEvent_Terminated, pDi4, InviteSessionHandler::RemoteCancel, WaitForCommand, testDialogEvt.noAction()),
                              uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                          Sub(sheila->expect(CANCEL/200, from(proxy), WaitForResponse, sheila->noAction()),
                              sheila->expect(INVITE/487, from(proxy), WaitForResponse, sheila->ack()))))),
