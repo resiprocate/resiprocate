@@ -2,6 +2,7 @@
 #include <string.h>
 #include <assert.h>
 #include <limits>
+#include <memory>
 #include <sstream>
 #include <vector>
 #include "rutil/Logger.hxx"
@@ -180,6 +181,35 @@ main(int argc, char** argv)
       pb.skipChars("\r\n");
       pb.skipChars("\r\n");
       pb.assertEof();
+   }
+
+   // skipToTermCRLF() must stay inside the buffer when the line has no CRLF,
+   // or when its CRLF is the last thing in the buffer.  Exact-size heap
+   // copies let AddressSanitizer catch any read past the end.
+   {
+      const char* inputs[] = { "Content-Type: text/plain",
+                               "Content-Type: text/plain\r\n",
+                               "Content-Type: text/plain;\r\n charset=utf-8\r\n",
+                               "\r\n",
+                               "\r" };
+      for (const char* input : inputs)
+      {
+         const size_t len = strlen(input);
+         std::unique_ptr<char[]> buf(new char[len]);
+         memcpy(buf.get(), input, len);
+         ParseBuffer pb(buf.get(), len);
+         pb.skipToTermCRLF();
+         const bool endsWithCRLF = len >= 2 && input[len - 2] == '\r' && input[len - 1] == '\n';
+         if (endsWithCRLF)
+         {
+            // stops on the terminating CRLF
+            assert(pb.position() == buf.get() + len - 2);
+         }
+         else
+         {
+            assert(pb.eof());
+         }
+      }
    }
 
    {
@@ -566,6 +596,7 @@ main(int argc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

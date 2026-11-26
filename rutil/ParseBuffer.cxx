@@ -229,6 +229,12 @@ ParseBuffer::skipToTermCRLF()
    while (mPosition < mEnd)
    {
       skipToChars(CRLF);
+      // No CRLF left (we are at the end), or the CRLF ends the buffer, so
+      // nothing can follow it to continue the line.
+      if (mEnd - mPosition <= 2)
+      {
+         return CurrentPosition(*this);
+      }
       mPosition += 2;
       if ((*mPosition != ' ' &&
            *mPosition != '\t' &&
