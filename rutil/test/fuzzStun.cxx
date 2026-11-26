@@ -4,6 +4,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/stun/Stun.hxx"
 
+#include "FuzzStrict.h"
+
 // rutil/stun/Stun.cxx implements the STUN / TURN wire-format parser (RFC 3489
 // and RFC 5389 elements, plus turn-08 attributes) used by UdpTransport's STUN
 // client and the TFM test framework; reTurn has its own parser in
@@ -33,10 +35,13 @@ extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data,
    std::vector<char> buf(data, data + size);
 
    resip::StunMessage msg;
-   (void)resip::stunParseMessage(buf.data(),
-                                 static_cast<unsigned int>(buf.size()),
-                                 msg,
-                                 false);
+   if (!resip::stunParseMessage(buf.data(),
+                                static_cast<unsigned int>(buf.size()),
+                                msg,
+                                false))
+   {
+      fuzzRejected("stunParseMessage() failed");
+   }
 
    return 0;
 }

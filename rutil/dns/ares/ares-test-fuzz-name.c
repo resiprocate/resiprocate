@@ -6,6 +6,8 @@
 #include "ares.h"
 #include "ares_nameser.h"
 
+#include "FuzzStrict.h"
+
 // Entrypoint for Clang's libfuzzer, exercising query creation.
 int LLVMFuzzerTestOneInput(const unsigned char *data,
                            size_t size) {
@@ -16,8 +18,12 @@ int LLVMFuzzerTestOneInput(const unsigned char *data,
 
   unsigned char *buf = NULL;
   int buflen = 0;
-  ares_mkquery(name, ns_c_in, ns_t_aaaa, 1234, 0, &buf, &buflen);
+  int status = ares_mkquery(name, ns_c_in, ns_t_aaaa, 1234, 0, &buf, &buflen);
   free(buf);
   free(name);
+  if (status != ARES_SUCCESS)
+  {
+    fuzzRejected("ares_mkquery() failed");
+  }
   return 0;
 }

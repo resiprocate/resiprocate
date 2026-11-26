@@ -15,6 +15,10 @@
 *.dat                          -text
 resip/stack/test/testTFSM-*    -text
 build/oss-fuzz/fuzzStack-seeds/* -text
+build/oss-fuzz/*-regressions/* -text
+build/oss-fuzz/fuzzUtil-seeds/* -text
+build/oss-fuzz/aresfuzz-seeds/* -text
+build/oss-fuzz/aresfuzzname-seeds/* -text
 
 # ---------------------------------------------------------------------------
 # Files that Windows tooling expects to be CRLF

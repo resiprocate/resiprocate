@@ -2,10 +2,16 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 
+#include "FuzzStrict.h"
+
 static void fuzzDnsUtil(const resip::Data& buffer)
 {
-   resip::DnsUtil::isIpV4Address(buffer);
-   resip::DnsUtil::isIpV6Address(buffer);
+   const bool v4 = resip::DnsUtil::isIpV4Address(buffer);
+   const bool v6 = resip::DnsUtil::isIpV6Address(buffer);
+   if (!v4 && !v6)
+   {
+      fuzzRejected("neither an IPv4 nor an IPv6 address");
+   }
 }
 
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {

@@ -5,6 +5,8 @@
 #include "resip/stack/GenericPidfContents.hxx"
 #include "resip/stack/Mime.hxx"
 
+#include "FuzzStrict.h"
+
 // dialog-info (RFC 4235) and presence PIDF (RFC 3863) documents arrive as
 // attacker-controlled SIP message bodies and are parsed by reSIProcate's own
 // XML pull parser (rutil/XMLCursor).  This target feeds the fuzz buffer to
@@ -12,7 +14,7 @@
 // encode() and exercises the public accessors, the same way the test suite
 // does.
 
-static void fuzzDialogInfoContents(const resip::HeaderFieldValue& hfv)
+static bool fuzzDialogInfoContents(const resip::HeaderFieldValue& hfv)
 {
     static const resip::Mime type("application", "dialog-info+xml");
     resip::DialogInfoContents payload(hfv, type);
@@ -30,10 +32,12 @@ static void fuzzDialogInfoContents(const resip::HeaderFieldValue& hfv)
     }
     catch (const resip::ParseException&)
     {
+        return false;
     }
+    return true;
 }
 
-static void fuzzGenericPidfContents(const resip::HeaderFieldValue& hfv)
+static bool fuzzGenericPidfContents(const resip::HeaderFieldValue& hfv)
 {
     static const resip::Mime type("application", "pidf+xml");
     resip::GenericPidfContents payload(hfv, type);
@@ -52,7 +56,9 @@ static void fuzzGenericPidfContents(const resip::HeaderFieldValue& hfv)
     }
     catch (const resip::ParseException&)
     {
+        return false;
     }
+    return true;
 }
 
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
@@ -66,8 +72,14 @@ extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data,
 
   const resip::HeaderFieldValue hfv(reinterpret_cast<const char*>(data), size);
 
-  fuzzDialogInfoContents(hfv);
-  fuzzGenericPidfContents(hfv);
+  // Every input goes to both parsers.  A seed is meant for one of them, so
+  // strict mode only fails if neither accepted it.
+  const bool dialogInfo = fuzzDialogInfoContents(hfv);
+  const bool pidf = fuzzGenericPidfContents(hfv);
+  if (!dialogInfo && !pidf)
+  {
+    fuzzRejected("neither dialog-info nor PIDF parsed it");
+  }
 
   return 0;
 }

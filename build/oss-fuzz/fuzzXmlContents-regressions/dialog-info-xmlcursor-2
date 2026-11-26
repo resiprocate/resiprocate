@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dialog-info xmlns="urn:ietf:params:xml:nsudialog-info" version="0" state="full" £>6Ÿ¶õ:ãentity="sip:alice@atlanta.example.Mcom">
+ <dialog id="abc" call-id="a84b4c76e66710@pc33" local-tag="1928301774" remote-tag="a6c85cf" directioØ="initiator">
+  <state evenÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿt="rejected" code="486">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOterminated</state>
+ </dialog>
+</dialog-info>

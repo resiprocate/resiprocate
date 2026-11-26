@@ -1218,6 +1218,61 @@ list(APPEND CPACK_SOURCE_IGNORE_FILES "/config.h$")
 include (CPack)
 add_custom_target (dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 
+# An MSVC build with ENABLE_ASAN needs the ASan runtime DLL when it runs.
+# Visual Studio only adds it to PATH for projects that turn ASan on in their
+# own properties, and ours get /fsanitize=address as a compile option, so
+# RUN_TESTS, ctest, F5 and running an .exe directly can't find it.  Copy it
+# next to every executable instead.  add_custom_command(TARGET) only works in
+# the target's own directory, so one custom target does the copying and every
+# executable depends on it.
+if(MSVC AND ENABLE_ASAN)
+   get_filename_component(_asan_bin "${CMAKE_CXX_COMPILER}" DIRECTORY)
+   file(GLOB _asan_runtime "${_asan_bin}/clang_rt.asan_dynamic-*.dll")
+   if(NOT _asan_runtime)
+      message(WARNING "ENABLE_ASAN: no clang_rt.asan_dynamic DLL next to "
+                      "${CMAKE_CXX_COMPILER}; executables won't start unless "
+                      "it is on PATH")
+   else()
+      # One executable per output directory is enough to name that directory.
+      function(resip_collect_executables dir)
+         get_property(_targets DIRECTORY "${dir}" PROPERTY BUILDSYSTEM_TARGETS)
+         foreach(_t IN LISTS _targets)
+            get_target_property(_type ${_t} TYPE)
+            if(_type STREQUAL "EXECUTABLE")
+               set_property(GLOBAL APPEND PROPERTY RESIP_ASAN_EXECUTABLES ${_t})
+            endif()
+         endforeach()
+         get_property(_subdirs DIRECTORY "${dir}" PROPERTY SUBDIRECTORIES)
+         foreach(_s IN LISTS _subdirs)
+            resip_collect_executables("${_s}")
+         endforeach()
+      endfunction()
+      resip_collect_executables("${CMAKE_SOURCE_DIR}")
+      get_property(_asan_exes GLOBAL PROPERTY RESIP_ASAN_EXECUTABLES)
+
+      set(_asan_copy_commands)
+      set(_asan_seen_dirs)
+      foreach(_t IN LISTS _asan_exes)
+         get_target_property(_dir ${_t} BINARY_DIR)
+         get_target_property(_out ${_t} RUNTIME_OUTPUT_DIRECTORY)
+         if(_out)
+            set(_dir "${_out}")
+         endif()
+         if(NOT _dir IN_LIST _asan_seen_dirs)
+            list(APPEND _asan_seen_dirs "${_dir}")
+            list(APPEND _asan_copy_commands COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                 ${_asan_runtime} $<TARGET_FILE_DIR:${_t}>)
+         endif()
+      endforeach()
+      add_custom_target(asan_runtime ${_asan_copy_commands}
+                        COMMENT "Copying the ASan runtime next to the executables")
+      set_target_properties(asan_runtime PROPERTIES FOLDER CMakePredefinedTargets)
+      foreach(_t IN LISTS _asan_exes)
+         add_dependencies(${_t} asan_runtime)
+      endforeach()
+   endif()
+endif()
+
 ###############
 ### Summary ###
 ###############

@@ -38,6 +38,15 @@
 
 #include "TestSupport.hxx"
 
+#include "FuzzStrict.h"
+
+// Called when the selected parser rejects the input; ends the run in the
+// seed-replay tests (see FuzzStrict.h), and does nothing while fuzzing.
+static void rejected(const resip::BaseException& e)
+{
+    fuzzRejected(e.getMessage().c_str());
+}
+
 static void fuzzAuth(const resip::HeaderFieldValue& hfv)
 {
     resip::Auth payload(hfv, resip::Headers::UNKNOWN);
@@ -45,8 +54,9 @@ static void fuzzAuth(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -57,8 +67,9 @@ static void fuzzCSeqCategory(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -70,8 +81,9 @@ static void fuzzCpimContents(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -82,8 +94,9 @@ static void fuzzCallId(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -95,8 +108,9 @@ static void fuzzDtmfPayloadContents(const resip::HeaderFieldValue& hfv)
   {
     payload.checkParsed();
   }
-  catch (const resip::ParseException&)
+  catch (const resip::ParseException& e)
   {
+    rejected(e);
   }
 }
 
@@ -107,8 +121,9 @@ static void fuzzDateCategory(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -119,8 +134,9 @@ static void fuzzExpiresCategory(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -131,8 +147,9 @@ static void fuzzGenericUri(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -143,8 +160,9 @@ static void fuzzIntegerCategory(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -156,8 +174,9 @@ static void fuzzInvalidContents(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -169,8 +188,9 @@ static void fuzzMessageWaitingContents(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -181,8 +201,9 @@ static void fuzzMime(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -201,13 +222,15 @@ static void fuzzMultipartMixedContents(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
-    catch (const resip::MultipartMixedContents::Exception&)
+    catch (const resip::MultipartMixedContents::Exception& e)
     {
         // Malformed line endings and over-deep nesting are reported with
         // this exception rather than ParseException.
+        rejected(e);
     }
 }
 
@@ -217,8 +240,9 @@ static void fuzzNameAddr(const resip::Data& buffer)
   {
     resip::NameAddr illegal(buffer);
   }
-  catch (const resip::ParseException&)
+  catch (const resip::ParseException& e)
   {
+    rejected(e);
   }
 }
 
@@ -230,8 +254,9 @@ static void fuzzOctetContents(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -243,8 +268,9 @@ static void fuzzPkcs7Contents(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -256,8 +282,9 @@ static void fuzzPkcs8Contents(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -269,8 +296,9 @@ static void fuzzPlainContents(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -281,8 +309,9 @@ static void fuzzPrivacyCategory(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -293,8 +322,9 @@ static void fuzzRAckCategory(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -305,8 +335,9 @@ static void fuzzRequestLine(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -318,8 +349,9 @@ static void fuzzRlmi(const resip::HeaderFieldValue& hfv)
     {
         payload.checkParsed();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -331,8 +363,9 @@ static void fuzzSdp(const resip::HeaderFieldValue& hfv)
   {
     sdp.checkParsed();
   }
-  catch (const resip::ParseException&)
+  catch (const resip::ParseException& e)
   {
+    rejected(e);
   }
 }
 
@@ -341,9 +374,14 @@ static void fuzzSip(const resip::Data& buffer)
   try
   {
     std::unique_ptr<resip::SipMessage> msg(resip::TestSupport::makeMessage(buffer));
+    if (!msg)
+    {
+      fuzzRejected("not a SIP message");
+    }
   }
-  catch (const resip::ParseException&)
+  catch (const resip::ParseException& e)
   {
+    rejected(e);
   }
 }
 
@@ -354,8 +392,9 @@ static void fuzzUri(const resip::HeaderFieldValue& hfv)
   {
     uri.embedded();
   }
-  catch (const resip::ParseException&)
+  catch (const resip::ParseException& e)
   {
+    rejected(e);
   }
 }
 
@@ -382,8 +421,9 @@ static void fuzzSipFrag(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -398,8 +438,9 @@ static void fuzzStatusLine(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -414,8 +455,9 @@ static void fuzzStringCategory(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -430,8 +472,9 @@ static void fuzzToken(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -446,8 +489,9 @@ static void fuzzTokenOrQuotedStringCategory(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -462,8 +506,9 @@ static void fuzzUInt32Category(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -478,8 +523,9 @@ static void fuzzVia(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -494,8 +540,9 @@ static void fuzzWarningCategory(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
@@ -511,8 +558,9 @@ static void fuzzX509Contents(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::ParseException& e)
     {
+        rejected(e);
     }
 }
 
