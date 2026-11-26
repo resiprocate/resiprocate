@@ -1,0 +1,13 @@
+--boundary42
+Content-Type: text/plain
+
+hello
+--boundary42
+Content-Type: application/sdp
+
+v=0
+o=- 1 1 IN IP4 192.0.2.1
+s=-
+t=0 0
+
+--boundary42--

@@ -1,0 +1,11 @@
+From: Alice <im:alice@atlanta.example.com>
+To: Bob <im:bob@biloxi.example.com>
+DateTime: 2026-11-26T13:40:00-08:00
+Subject: lunch
+NS: MyFeatures <mid:MessageFeatures@id.example.com>
+MyFeatures.VitalMessageOption: Confirmation-requested
+
+Content-Type: text/plain
+Content-ID: <1234567890@atlanta.example.com>
+
+Lunch at noon?

@@ -1,4 +1,4 @@
-SIP/2.0 100 Trying
+SIP/2.0 100 Trying
 Via: SIP/2.0/UDP pc33.atlanta.example.com;branch=z9hG4bK776asdhds
 From: Alice <sip:alice@atlanta.example.com>;tag=1928301774
 To: Bob <sip:bob@biloxi.example.com>

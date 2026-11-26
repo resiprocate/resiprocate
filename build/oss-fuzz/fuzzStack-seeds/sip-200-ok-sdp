@@ -1,4 +1,4 @@
-SIP/2.0 200 OK
+SIP/2.0 200 OK
 Via: SIP/2.0/UDP pc33.atlanta.example.com;branch=z9hG4bK776asdhds;received=192.0.2.1
 To: Bob <sip:bob@biloxi.example.com>;tag=a6c85cf
 From: Alice <sip:alice@atlanta.example.com>;tag=1928301774

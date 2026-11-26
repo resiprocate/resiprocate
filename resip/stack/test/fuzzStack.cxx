@@ -188,7 +188,14 @@ static void fuzzMime(const resip::HeaderFieldValue& hfv)
 
 static void fuzzMultipartMixedContents(const resip::HeaderFieldValue& hfv)
 {
-    static const resip::Mime type("multipart", "mixed");
+    // Without a boundary parameter the contents generate a random one, which
+    // no input could match, so use a fixed boundary that the seeds also use.
+    static const resip::Mime type = []()
+    {
+        resip::Mime t("multipart", "mixed");
+        t.param(resip::p_boundary) = "boundary42";
+        return t;
+    }();
     resip::MultipartMixedContents payload(hfv, type);
     try
     {
@@ -196,6 +203,11 @@ static void fuzzMultipartMixedContents(const resip::HeaderFieldValue& hfv)
     }
     catch (const resip::ParseException&)
     {
+    }
+    catch (const resip::MultipartMixedContents::Exception&)
+    {
+        // Malformed line endings and over-deep nesting are reported with
+        // this exception rather than ParseException.
     }
 }
 
@@ -509,48 +521,74 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
   return 0;
 }
 
+typedef void (*FuzzTarget)(const resip::Data& buffer, const resip::HeaderFieldValue& hfv);
+
+#define FUZZ_HFV(f) [](const resip::Data&, const resip::HeaderFieldValue& hfv) { f(hfv); }
+#define FUZZ_BUF(f) [](const resip::Data& buffer, const resip::HeaderFieldValue&) { f(buffer); }
+
+// The first input byte selects one parser (modulo the table size) and the
+// rest of the input is handed to it, so each run exercises a single parser
+// and the fuzzer can mutate towards that parser's grammar.  Seed files start
+// with the index of the parser they are meant for.  Only append new entries,
+// so that existing seeds and corpus files keep selecting the same parser.
+static const FuzzTarget fuzzTargets[] =
+{
+  FUZZ_HFV(fuzzAuth),                        //  0
+  FUZZ_HFV(fuzzCSeqCategory),                //  1
+  FUZZ_HFV(fuzzCallId),                      //  2
+  FUZZ_HFV(fuzzCpimContents),                //  3
+  FUZZ_HFV(fuzzDtmfPayloadContents),         //  4
+  FUZZ_HFV(fuzzDateCategory),                //  5
+  FUZZ_HFV(fuzzExpiresCategory),             //  6
+  FUZZ_HFV(fuzzGenericUri),                  //  7
+  FUZZ_HFV(fuzzIntegerCategory),             //  8
+  FUZZ_HFV(fuzzInvalidContents),             //  9
+  FUZZ_HFV(fuzzMessageWaitingContents),      // 10
+  FUZZ_HFV(fuzzMime),                        // 11
+  FUZZ_HFV(fuzzMultipartMixedContents),      // 12
+  FUZZ_BUF(fuzzNameAddr),                    // 13
+  FUZZ_HFV(fuzzOctetContents),               // 14
+  FUZZ_HFV(fuzzPkcs7Contents),               // 15
+  FUZZ_HFV(fuzzPkcs8Contents),               // 16
+  FUZZ_HFV(fuzzPlainContents),               // 17
+  FUZZ_HFV(fuzzPrivacyCategory),             // 18
+  FUZZ_HFV(fuzzRAckCategory),                // 19
+  FUZZ_HFV(fuzzRequestLine),                 // 20
+  FUZZ_HFV(fuzzRlmi),                        // 21
+  FUZZ_HFV(fuzzSdp),                         // 22
+  FUZZ_BUF(fuzzSip),                         // 23
+  FUZZ_HFV(fuzzUri),                         // 24
+  FUZZ_HFV(fuzzSipFrag),                     // 25
+  FUZZ_HFV(fuzzStatusLine),                  // 26
+  FUZZ_HFV(fuzzStringCategory),              // 27
+  FUZZ_HFV(fuzzToken),                       // 28
+  FUZZ_HFV(fuzzTokenOrQuotedStringCategory), // 29
+  FUZZ_HFV(fuzzUInt32Category),              // 30
+  FUZZ_HFV(fuzzVia),                         // 31
+  FUZZ_HFV(fuzzWarningCategory),             // 32
+  FUZZ_HFV(fuzzX509Contents),                // 33
+};
+
+#undef FUZZ_HFV
+#undef FUZZ_BUF
+
 // Entrypoint for Clang's libfuzzer
 extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data,
                                       size_t size) {
 
-  const resip::Data buffer(resip::Data::Share, reinterpret_cast<const char*>(data), size);
-  const resip::HeaderFieldValue hfv(reinterpret_cast<const char*>(data), size);
+  if (size < 1)
+  {
+    return 0;
+  }
 
-  fuzzAuth(hfv);
-  fuzzCSeqCategory(hfv);
-  fuzzCallId(hfv);
-  fuzzCpimContents(hfv);
-  fuzzDtmfPayloadContents(hfv);
-  fuzzDateCategory(hfv);
-  fuzzExpiresCategory(hfv);
-  fuzzGenericUri(hfv);
-  fuzzIntegerCategory(hfv);
-  fuzzInvalidContents(hfv);
-  fuzzMessageWaitingContents(hfv);
-  fuzzMime(hfv);
-  fuzzMultipartMixedContents(hfv);
-  fuzzNameAddr(buffer);
-  fuzzOctetContents(hfv);
+  const FuzzTarget target = fuzzTargets[data[0] % (sizeof(fuzzTargets) / sizeof(fuzzTargets[0]))];
+  const char* payload = reinterpret_cast<const char*>(data + 1);
+  const size_t payloadSize = size - 1;
 
-  fuzzPkcs7Contents(hfv);
-  fuzzPkcs8Contents(hfv);
-  fuzzPlainContents(hfv);
-  fuzzPrivacyCategory(hfv);
-  fuzzRAckCategory(hfv);
-  fuzzRequestLine(hfv);
-  fuzzRlmi(hfv);
-  fuzzSdp(hfv);
-  fuzzSip(buffer);
-  fuzzUri(hfv);
-  fuzzSipFrag(hfv);
-  fuzzStatusLine(hfv);
-  fuzzStringCategory(hfv);
-  fuzzToken(hfv);
-  fuzzTokenOrQuotedStringCategory(hfv);
-  fuzzUInt32Category(hfv);
-  fuzzVia(hfv);
-  fuzzWarningCategory(hfv);
-  fuzzX509Contents(hfv);
+  const resip::Data buffer(resip::Data::Share, payload, payloadSize);
+  const resip::HeaderFieldValue hfv(payload, payloadSize);
+
+  target(buffer, hfv);
 
   return 0;
 }

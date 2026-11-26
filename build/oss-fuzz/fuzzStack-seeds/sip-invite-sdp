@@ -1,4 +1,4 @@
-INVITE sip:bob@atlanta.example.com SIP/2.0
+INVITE sip:bob@atlanta.example.com SIP/2.0
 Via: SIP/2.0/UDP pc33.atlanta.example.com;branch=z9hG4bK776asdhds
 Max-Forwards: 70
 To: Bob <sip:bob@biloxi.example.com>
