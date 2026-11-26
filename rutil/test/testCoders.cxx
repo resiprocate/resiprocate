@@ -6,6 +6,7 @@
 #endif
 #include <cassert>
 #include <memory>
+#include <vector>
 
 #include "rutil/compat.hxx"
 #include "rutil/Random.hxx"
