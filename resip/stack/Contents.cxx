@@ -483,12 +483,15 @@ Contents::preParseHeaders(ParseBuffer& pb)
          }
          case Headers::ContentDisposition :
          {
+            // A repeated header replaces the earlier one; free it first.
+            delete mDisposition;
             mDisposition = new H_ContentDisposition::Type;
             mDisposition->parse(subPb);
             break;
          }
          case Headers::ContentTransferEncoding :
          {
+            delete mTransferEncoding;
             mTransferEncoding = new H_ContentTransferEncoding::Type;
             mTransferEncoding->parse(subPb);
             break;
@@ -522,22 +525,26 @@ Contents::preParseHeaders(ParseBuffer& pb)
          {
             if (isEqualNoCase(headerName, "Content-Transfer-Encoding"))
             {
+               delete mTransferEncoding;
                mTransferEncoding = new StringCategory();
                mTransferEncoding->parse(subPb);
             }
             else if (isEqualNoCase(headerName, "Content-Description"))
             {
+               delete mDescription;
                mDescription = new StringCategory();
                mDescription->parse(subPb);
             }
             else if (isEqualNoCase(headerName, "Content-Id"))
             {
+               delete mId;
                mId = new Token();
                mId->parse(subPb);
             }
             // Some people put this in ...
             else if (isEqualNoCase(headerName, "Content-Length"))
             {
+               delete mLength;
                mLength = new StringCategory();
                mLength->parse(subPb);
             }
@@ -568,10 +575,9 @@ Contents::preParseHeaders(ParseBuffer& pb)
             }
             else
             {
-               // add to application headers someday
-               std::cerr << "Unknown MIME Content- header: " << headerName << std::endl;
-               ErrLog(<< "Unknown MIME Content- header: " << headerName);
-               resip_assert(false);
+               // add to application headers someday.  Until then skip it: a
+               // body part may legitimately carry headers we don't model.
+               InfoLog(<< "Ignoring unknown MIME header in body part: " << headerName);
             }
          }
       }

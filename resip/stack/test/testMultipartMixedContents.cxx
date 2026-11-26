@@ -217,6 +217,41 @@ main()
    }
 
    {
+      // A body part that repeats its MIME headers keeps the last of each
+      // (run with leak checking to see that the earlier ones are freed),
+      // and a header the parser doesn't model is skipped.
+      const Data txt("--b1\r\n"
+                     "Content-Type: text/plain\r\n"
+                     "Content-ID: <first@example.com>\r\n"
+                     "Content-ID: <second@example.com>\r\n"
+                     "Content-Description: first\r\n"
+                     "Content-Description: second\r\n"
+                     "Content-Length: 5\r\n"
+                     "Content-Length: 5\r\n"
+                     "Content-Disposition: inline\r\n"
+                     "Content-Disposition: attachment\r\n"
+                     "Content-Transfer-Encoding: 8bit\r\n"
+                     "Content-Transfer-Encoding: binary\r\n"
+                     "X-Unknown-Part-Header: ignored\r\n"
+                     "\r\n"
+                     "hello\r\n"
+                     "--b1--");
+      const Data typeTxt("multipart/mixed; boundary=b1");
+      ParseBuffer pb(typeTxt.data(), typeTxt.size());
+      Mime contentType;
+      contentType.parse(pb);
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      MultipartMixedContents mpc(hfv, contentType);
+      assert(mpc.parts().size() == 1);
+      const Contents* part = mpc.parts().front();
+      assert(part->header(h_ContentID).value() == "<second@example.com>");
+      assert(part->header(h_ContentDescription).value() == "second");
+      assert(part->header(h_ContentDisposition).value() == "attachment");
+      assert(part->header(h_ContentTransferEncoding).value() == "binary");
+   }
+
+   {
       const Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                      "To: <sip:bob@biloxi.com>\r\n"
                      "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
