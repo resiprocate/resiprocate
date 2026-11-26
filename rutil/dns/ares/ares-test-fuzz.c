@@ -5,7 +5,7 @@
 
 // Entrypoint for Clang's libfuzzer
 int LLVMFuzzerTestOneInput(const unsigned char *data,
-                           unsigned long size) {
+                           size_t size) {
   // Feed the data into each of the ares_parse_*_reply functions.
   struct hostent *host = NULL;
   ares_parse_a_reply(data, size, &host);

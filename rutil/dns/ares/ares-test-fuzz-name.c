@@ -8,7 +8,7 @@
 
 // Entrypoint for Clang's libfuzzer, exercising query creation.
 int LLVMFuzzerTestOneInput(const unsigned char *data,
-                           unsigned long size) {
+                           size_t size) {
   // Null terminate the data.
   char *name = malloc(size + 1);
   name[size] = '\0';
