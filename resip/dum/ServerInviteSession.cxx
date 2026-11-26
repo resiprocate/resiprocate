@@ -809,18 +809,24 @@ ServerInviteSession::acceptCommand(int statusCode)
 void 
 ServerInviteSession::dispatch(const SipMessage& msg)
 {
-   if (msg.isRequest())
+   // INFO and MESSAGE requests and responses are handled the same in every state
+   if (msg.header(h_CSeq).method() == INFO)
    {
-      if (msg.header(h_RequestLine).method() == INFO)
-      {
-         InviteSession::dispatchInfo(msg);
-         return;
-      }
-      if (msg.header(h_RequestLine).method() == MESSAGE)
-      {
-         InviteSession::dispatchMessage(msg);
-         return;
-      }
+      InviteSession::dispatchInfo(msg);
+      return;
+   }
+   if (msg.header(h_CSeq).method() == MESSAGE)
+   {
+      InviteSession::dispatchMessage(msg);
+      return;
+   }
+   // OPTIONS before the call is established gets a 200, as it does in an established call (RFC 3261 section 11.2)
+   if (msg.isRequest() && msg.header(h_RequestLine).method() == OPTIONS && mState >= UAS_Start && mState <= UAS_WaitingToHangup)
+   {
+      auto response = std::make_shared<SipMessage>();
+      mDialog.makeResponse(*response, msg, 200);
+      send(response);
+      return;
    }
 
    switch (mState)
@@ -1064,6 +1070,21 @@ ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
           send(response);
           break;
       }
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
+      case OnUpdateOffer:
+         rejectOffer(msg);
+         break;
+
+      case OnPrack:
+         dispatchPrackKeepingState(msg);
+         break;
+
       default:
          if(msg.isRequest())
          {
@@ -1198,6 +1219,16 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
          break;
       }
               
+      case OnPrack:
+      {
+         // should never get a prack here - we always queue up our 200/Inv response
+         InfoLog (<< "spurious PRACK in state=" << toData(mState));
+         auto p481 = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*p481, msg, 481);
+         send(p481);
+         break;
+      }
+
       default:
          if(msg.isRequest())
          {
@@ -1262,6 +1293,16 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
          break;
       }
               
+      case OnPrack:
+      {
+         // should never get a prack here - we always queue up our 200/Inv response
+         InfoLog (<< "spurious PRACK in state=" << toData(mState));
+         auto p481 = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*p481, msg, 481);
+         send(p481);
+         break;
+      }
+
       default:
          if(msg.isRequest())
          {
@@ -1410,6 +1451,17 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
          }
          break;
 
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
+      case OnUpdateOffer:
+         rejectOffer(msg);
+         break;
+
       default:
          if(msg.isRequest())
          {
@@ -1440,6 +1492,62 @@ ServerInviteSession::handlePrack(const SipMessage& msg)
    mDialog.makeResponse(*p481, msg, 481);
    send(p481);
    return false;
+}
+
+void
+ServerInviteSession::dispatchPrackKeepingState(const SipMessage& msg)
+{
+   // Used in states where a reliable provisional can still be unacknowledged, but that have no PRACK
+   // handling of their own (e.g. a reliable 1xx was sent, and then an UPDATE was sent or received)
+   if (handlePrack(msg))  // responds 481 itself if the PRACK matches no reliable provisional
+   {
+      const auto offerAnswer = InviteSession::getOfferAnswer(msg);
+      if (offerAnswer)
+      {
+         rejectOffer(msg);
+      }
+      else
+      {
+         auto p200 = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*p200, msg, 200);
+         send(p200);
+         mDum.mInviteSessionHandler->onPrack(getHandle(), msg);
+         if (!isTerminated() && !mQueuedResponses.empty() && mQueuedResponses.front().first < 200)
+         {
+            prackCheckQueue();  // send a queued provisional - a queued 2xx waits for the offer/answer to complete
+         }
+      }
+   }
+}
+
+void
+ServerInviteSession::rejectSecondInvite(const SipMessage& invite)
+{
+   // RFC 3261 section 14.2: a second INVITE before we have sent a final response to the first one
+   InfoLog (<< "INVITE received before the final response to the first INVITE, in state=" << toData(mState));
+   auto i500 = std::make_shared<SipMessage>();
+   mDialog.makeResponse(*i500, invite, 500);
+   i500->header(h_RetryAfter).value() = 1 + Random::getRandom() % 10;
+   send(i500);
+}
+
+void
+ServerInviteSession::rejectOffer(const SipMessage& request)
+{
+   // RFC 3311 section 5.2: 491 if we have sent an offer that has not been answered, otherwise 500 with Retry-After
+   // (we have received an offer that has not been answered, or the initial offer/answer is not complete yet)
+   InfoLog (<< "Offer received before the current offer/answer is complete, in state=" << toData(mState));
+   auto response = std::make_shared<SipMessage>();
+   if (mProposedLocalOfferAnswer)
+   {
+      mDialog.makeResponse(*response, request, 491);
+   }
+   else
+   {
+      mDialog.makeResponse(*response, request, 500);
+      response->header(h_RetryAfter).value() = 1 + Random::getRandom() % 10;
+   }
+   send(response);
 }
 
 void
@@ -1556,6 +1664,17 @@ ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
          }
          break;
 
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
+      case OnUpdateOffer:
+         rejectOffer(msg);
+         break;
+
       default:
          if(msg.isRequest())
          {
@@ -1634,6 +1753,17 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
                }
             }
          }
+         break;
+
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
+      case OnUpdateOffer:
+         rejectOffer(msg);
          break;
 
       default:
@@ -1723,6 +1853,17 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
          }
          break;
 
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
+      case OnUpdateOffer:
+         rejectOffer(msg);
+         break;
+
       default:
          if(msg.isRequest())
          {
@@ -1770,6 +1911,7 @@ ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
          prackCheckQueue();  // needed for when provideOffer then accept are both called in FirstSentAnswerReliable
          break;
 
+     case On422Update:
      case OnUpdateRejected:
      case OnGeneralFailure:  // handle 481 or 408 responses
          transition(UAS_NegotiatedReliable);
@@ -1781,6 +1923,17 @@ ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
       case On491Update:
          transition(UAS_SentUpdateGlare);
          start491Timer();
+         break;
+
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
+      case OnPrack:
+         dispatchPrackKeepingState(msg);
          break;
 
       default:
@@ -1813,6 +1966,17 @@ ServerInviteSession::dispatchSentUpdateGlare(const SipMessage& msg)
          handler->onOfferRejected(getSessionHandle(), &msg);
          // handle as if we received in NegotiatedReliable
          dispatchNegotiatedReliable(msg);
+         break;
+
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
+      case OnPrack:
+         dispatchPrackKeepingState(msg);
          break;
 
       default:
@@ -1862,6 +2026,7 @@ ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
          updateCheckQueue();
          break;
 
+      case On422Update:
       case OnUpdateRejected:
       case OnGeneralFailure:   // handle 481 or 408 responses
          transition(UAS_Accepted);
@@ -1876,6 +2041,21 @@ ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
          mProposedLocalOfferAnswer.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
          updateCheckQueue();
+         break;
+
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
+      case OnUpdateOffer:
+         rejectOffer(msg);
+         break;
+
+      case OnPrack:
+         dispatchPrackKeepingState(msg);
          break;
 
       default:
@@ -1921,6 +2101,17 @@ ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
          break;
       }
 
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
+      case OnPrack:
+         dispatchPrackKeepingState(msg);
+         break;
+
       default:
          if(msg.isRequest())
          {
@@ -1961,6 +2152,17 @@ ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
          dispatchBye(msg);
          break;
       }
+
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
+      case OnPrack:
+         dispatchPrackKeepingState(msg);
+         break;
 
       default:
          if(msg.isRequest())
@@ -2034,6 +2236,13 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
           break;
       }
 
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+         rejectSecondInvite(msg);
+         break;
+
       default:
          if(msg.isRequest())
          {
@@ -2091,6 +2300,27 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
          auto c200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*c200, msg, 200);
          send(c200);
+         break;
+      }
+
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      {
+         // We have answered the INVITE - an INVITE from the peer before it ACKs is glare
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 491);
+         send(response);
+         break;
+      }
+
+      case OnPrack:
+      {
+         InfoLog (<< "spurious PRACK in state=" << toData(mState));
+         auto p481 = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*p481, msg, 481);
+         send(p481);
          break;
       }
 

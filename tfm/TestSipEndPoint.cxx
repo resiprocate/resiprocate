@@ -3042,18 +3042,31 @@ TestSipEndPoint::Ack::go(std::shared_ptr<SipMessage> response)
    resip_assert(response->isResponse());
    int code = response->header(h_StatusLine).responseCode();
    std::shared_ptr<SipMessage> invite;
-   try
+   // ACK the INVITE this response is for, so that a response to a re-INVITE can be ACKed too
+   for (const auto& sent : mEndPoint.mInvitesSent)
    {
-      invite = mEndPoint.getSentInvite(response->header(h_CallId));
-   }
-   catch(...)
-   {
-      if(!mEndPoint.mRequests.empty())
+      if (sent->header(h_CallId) == response->header(h_CallId) &&
+          sent->header(h_CSeq).sequence() == response->header(h_CSeq).sequence())
       {
-         invite = mEndPoint.mRequests.begin()->second;
+         invite = sent;
+         break;
       }
    }
-   
+   if (!invite)
+   {
+      try
+      {
+         invite = mEndPoint.getSentInvite(response->header(h_CallId));
+      }
+      catch(...)
+      {
+         if(!mEndPoint.mRequests.empty())
+         {
+            invite = mEndPoint.mRequests.begin()->second;
+         }
+      }
+   }
+
 
    if (code == 200)
    {

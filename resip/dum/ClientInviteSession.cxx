@@ -442,16 +442,34 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 {
   try
   {
-     if (msg.isRequest())
+     // INFO and MESSAGE requests and responses are handled the same in every state
+     if (msg.header(h_CSeq).method() == INFO)
      {
-        if (msg.header(h_RequestLine).method() == INFO)
+        InviteSession::dispatchInfo(msg);
+        return;
+     }
+     if (msg.header(h_CSeq).method() == MESSAGE)
+     {
+        InviteSession::dispatchMessage(msg);
+        return;
+     }
+     if (msg.isRequest() && mState >= UAC_Start && mState < UAC_Cancelled)
+     {
+        if (msg.header(h_RequestLine).method() == OPTIONS)
         {
-           InviteSession::dispatchInfo(msg);
+           // OPTIONS before the call is established gets a 200, as it does in an established call (RFC 3261 section 11.2)
+           auto response = std::make_shared<SipMessage>();
+           mDialog.makeResponse(*response, msg, 200);
+           send(response);
            return;
         }
-        if (msg.header(h_RequestLine).method() == MESSAGE)
+        if (msg.header(h_RequestLine).method() == INVITE)
         {
-           InviteSession::dispatchMessage(msg);
+           // RFC 3261 section 14.2: an INVITE received while our INVITE is in progress
+           InfoLog (<< "INVITE received while our INVITE is in progress, in state=" << toData(mState));
+           auto response = std::make_shared<SipMessage>();
+           mDialog.makeResponse(*response, msg, 491);
+           send(response);
            return;
         }
      }
@@ -912,6 +930,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
+      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
@@ -1041,9 +1060,22 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 
    switch (toEvent(msg, offerAnswer.get()))
    {
+      case On1xxOffer:
+      case On1xxAnswer:
+      case On1xxEarly:
+         // RFC6337 section 3.1.1 recommends we ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring SDP in 1xx received in EarlyWithOffer: " << msg.brief());
+         // No break is intentional
       case On1xx: // must be reliable
          handleProvisional(msg);
          sendPrackIfNeeded(msg);
+         break;
+
+      case On2xxOffer:
+         // The 2xx repeats the offer we have not answered yet - the application's answer will go in the ACK
+         transition(UAC_Answered);
+         handleFinalResponse(msg);
+         onConnectedAspect(getHandle(), msg);
          break;
 
       case On2xx:
@@ -1138,6 +1170,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
 
+      case On1xxEarly:
       case On1xxOffer:
          // RFC6337 section 3.1.2 recommends we ignore any illegal SDP here to be more interoperable
          WarningLog(<< "Ignoring illegal SDP offer in 1xx: " << msg.brief());
@@ -1211,6 +1244,12 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          }
          break;
 
+      case On2xxOffer:
+      case On2xxAnswer:
+         // Our offer is only queued, so this SDP can't be an answer to it - RFC6337 section 3.1.2 recommends we
+         // ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring SDP in 2xx received in QueuedUpdate: " << msg.brief());
+         // No break is intentional
       case On2xx:
          transition(SentUpdate);
          {
@@ -1226,25 +1265,8 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          onConnectedAspect(getHandle(), msg);
          break;
 
-      case On2xxOffer:
-          // RFC6337 section 3.1.2 recommends we ignore any illegal SDP here to be more interoperable
-          WarningLog(<< "Ignoring illegal SDP offer in 2xx: " << msg.brief());
-          transition(Connected);
-          sendAck();
-          handleFinalResponse(msg);
-          onConnectedAspect(getHandle(), msg);
-          break;
-
-      case On2xxAnswer:
       case On1xxAnswer:
-         sendAck();
-         WarningLog(<< "Failure:  illegal offer/answer: " << msg.brief());
-         sendBye();
-         transition(Terminated);
-         onFailureAspect(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
-         break;
-
+      case On1xxEarly:
       case On1xxOffer:
          // RFC6337 section 3.1.2 recommends we ignore any illegal SDP here to be more interoperable
          WarningLog(<< "Ignoring illegal SDP offer in 1xx: " << msg.brief());
@@ -1307,6 +1329,8 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
    switch (toEvent(msg, offerAnswer.get()))
    {
+      case On1xxAnswer:
+      case On1xxEarly:
       case On1xxOffer:
          // RFC6337 section 3.1.1 recommends we ignore any illegal SDP here to be more interoperable
          WarningLog(<< "Ignoring illegal SDP offer in 1xx: " << msg.brief());
@@ -1473,6 +1497,7 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
+      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
@@ -1539,6 +1564,7 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
+      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          onFailureAspect(getHandle(), msg);

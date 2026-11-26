@@ -2310,7 +2310,7 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       transition(Terminated);
       mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, bye.get()); 
    }
-   else if(msg.isRequest())
+   else if(msg.isRequest() && msg.method() != ACK)  // an ACK never gets a response
    {
       if(msg.method() == BYE)
       {
@@ -2381,6 +2381,26 @@ InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
          send(c200);
          break;
       }
+
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      {
+         // We have answered the re-INVITE - an INVITE from the peer before it ACKs is glare
+         auto response = std::make_shared<SipMessage>();
+         mDialog.makeResponse(*response, msg, 491);
+         send(response);
+         break;
+      }
+
+      case OnOptions:
+         dispatchOptions(msg);
+         break;
+
+      case OnPrack:
+         dispatchPrack(msg);
+         break;
 
       default:
          break;
@@ -2512,14 +2532,10 @@ InviteSession::dispatchPrack(const SipMessage& msg)
    resip_assert(msg.header(h_CSeq).method() == PRACK);
    if(msg.isRequest())
    {
+      // RFC 3262 section 3: a PRACK that matches no unacknowledged reliable provisional gets a 481 - the call is unaffected
       auto rsp = std::make_shared<SipMessage>();
       mDialog.makeResponse(*rsp, msg, 481);
       send(rsp);
-
-      sendBye();
-      // !jf! should we make some other callback here
-      transition(Terminated);
-      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
    }
    else
    {

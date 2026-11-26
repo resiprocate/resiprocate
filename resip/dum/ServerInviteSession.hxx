@@ -109,6 +109,9 @@ class ServerInviteSession: public InviteSession
       void queueResponse(int code, bool earlyFlag);
       void sendUpdate(const Contents& offerAnswer);
       bool handlePrack(const SipMessage& msg); // verify that prack matches our last send reliable 1xx
+      void dispatchPrackKeepingState(const SipMessage& msg); // PRACK in a state that has no PRACK handling of its own
+      void rejectSecondInvite(const SipMessage& invite);     // RFC 3261 section 14.2
+      void rejectOffer(const SipMessage& request);           // RFC 3311 section 5.2
       void prackCheckQueue();                             // send a queued message after prack
       void updateCheckQueue();                            // send a queued message after update
 
@@ -134,6 +137,7 @@ class ServerInviteSession: public InviteSession
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
