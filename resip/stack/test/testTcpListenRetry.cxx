@@ -245,7 +245,14 @@ main()
 {
 #ifdef RESIP_POLL_IMPL_EPOLL
    FdPollGrp* pollGrp = FdPollGrp::create("epoll");
+#ifdef RESIP_TEST_UBSAN
+   // UndefinedBehaviorSanitizer's vptr check opens a pipe the first time it
+   // checks a type, which fails while descriptors are exhausted and is then
+   // reported as an object of the wrong type.  The other builds run this.
+   cerr << "SKIP: descriptor exhaustion under UndefinedBehaviorSanitizer" << endl;
+#else
    testDescriptorExhaustion(*pollGrp);
+#endif
    testConnectionSetupThrows(*pollGrp);
    testListenerDescriptorReplaced(*pollGrp);
    delete pollGrp;

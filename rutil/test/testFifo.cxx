@@ -129,7 +129,13 @@ void Producer::thread()
    {
       if (mFifo.wouldAccept(TimeLimitFifo<Foo>::EnforceTimeDepth))
       {
-         mFifo.add(new Foo(Data(n)), TimeLimitFifo<Foo>::EnforceTimeDepth);
+         // The time depth can change between wouldAccept() and add(), so
+         // the element may still be refused; it is then ours to delete.
+         Foo* foo = new Foo(Data(n));
+         if (!mFifo.add(foo, TimeLimitFifo<Foo>::EnforceTimeDepth))
+         {
+            delete foo;
+         }
       }
       else
       {
@@ -224,8 +230,13 @@ main()
       c = tlf.add(new Foo("second"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
       sleepMS(3000);
-      c = tlf.add(new Foo("nope"), TimeLimitFifo<Foo>::EnforceTimeDepth);
-      assert(!c);
+      {
+         // A rejected element stays ours to delete.
+         Foo* rejected = new Foo("nope");
+         c = tlf.add(rejected, TimeLimitFifo<Foo>::EnforceTimeDepth);
+         assert(!c);
+         delete rejected;
+      }
       c = tlf.add(new Foo("yep"), TimeLimitFifo<Foo>::IgnoreTimeDepth);
       assert(c);
       c = tlf.add(new Foo("internal"), TimeLimitFifo<Foo>::InternalElement);
@@ -256,8 +267,13 @@ main()
       c = tlfNS.add(new Foo("second"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
       sleepMS(3000);
-      c = tlfNS.add(new Foo("nope"), TimeLimitFifo<Foo>::EnforceTimeDepth);
-      assert(!c);
+      {
+         // A rejected element stays ours to delete.
+         Foo* rejected = new Foo("nope");
+         c = tlfNS.add(rejected, TimeLimitFifo<Foo>::EnforceTimeDepth);
+         assert(!c);
+         delete rejected;
+      }
       Foo* fp = tlfNS.getNext();
       assert(fp->mVal == "first");
       delete fp;
@@ -280,8 +296,13 @@ main()
       }
 
       sleepMS(6000);
-      c = tlfNS.add(new Foo("nope"), TimeLimitFifo<Foo>::EnforceTimeDepth);
-      assert(!c);
+      {
+         // A rejected element stays ours to delete.
+         Foo* rejected = new Foo("nope");
+         c = tlfNS.add(rejected, TimeLimitFifo<Foo>::EnforceTimeDepth);
+         assert(!c);
+         delete rejected;
+      }
 
       c = tlfNS.add(new Foo("yep"), TimeLimitFifo<Foo>::IgnoreTimeDepth);
       assert(c);
@@ -313,8 +334,13 @@ main()
          assert(c);
       }
 
-      c = tlfNS.add(new Foo("nope"), TimeLimitFifo<Foo>::IgnoreTimeDepth);
-      assert(!c);
+      {
+         // A rejected element stays ours to delete.
+         Foo* rejected = new Foo("nope");
+         c = tlfNS.add(rejected, TimeLimitFifo<Foo>::IgnoreTimeDepth);
+         assert(!c);
+         delete rejected;
+      }
 
       assert(tlfNS.size() == 8);
  
@@ -324,8 +350,13 @@ main()
       c = tlfNS.add(new Foo("yepAgain"), TimeLimitFifo<Foo>::InternalElement);
       assert(c);
 
-      c = tlfNS.add(new Foo("hard nope!"), TimeLimitFifo<Foo>::InternalElement);
-      assert(!c);
+      {
+         // A rejected element stays ours to delete.
+         Foo* rejected = new Foo("hard nope!");
+         c = tlfNS.add(rejected, TimeLimitFifo<Foo>::InternalElement);
+         assert(!c);
+         delete rejected;
+      }
 
       while (!tlfNS.empty())
       {
@@ -420,7 +451,8 @@ main()
 #ifdef VERBOSE
       cerr << "before getNext(1000) " << Timer::getTimeMs() << endl;
 #endif
-      tlfNS.getNext(1000);
+      // Waits up to a second; once a producer runs this may return an element.
+      delete tlfNS.getNext(1000);
 #ifdef VERBOSE
       cerr << "after getNext(1000) " << Timer::getTimeMs() << endl;
 #endif
@@ -429,7 +461,8 @@ main()
 #ifdef VERBOSE
       cerr << "before getNext(1000) " << Timer::getTimeMs() << endl;
 #endif
-      tlfNS.getNext(1000);
+      // Waits up to a second; once a producer runs this may return an element.
+      delete tlfNS.getNext(1000);
 #ifdef VERBOSE
       cerr << "after getNext(1000) " << Timer::getTimeMs() << endl;
 #endif
@@ -465,6 +498,8 @@ main()
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -2,6 +2,8 @@
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 
+#include <memory>
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
@@ -40,8 +42,8 @@ public:
          "Content-Length: 0\r\n"
          "\r\n"
          );
-      SipMessage* origrequest = SipMessage::make(origRequestTxt, false);
-      SipMessage* redirect = SipMessage::make(redirectResponseTxt, false);
+      std::unique_ptr<SipMessage> origrequest(SipMessage::make(origRequestTxt, false));
+      std::unique_ptr<SipMessage> redirect(SipMessage::make(redirectResponseTxt, false));
       if(origrequest && redirect)
       {
          TargetSet ts(*origrequest, mOrdering);
@@ -83,6 +85,7 @@ main (int argc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

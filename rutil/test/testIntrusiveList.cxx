@@ -107,6 +107,7 @@ main(int argc, char* argv[])
       {
          cerr << (*f)->va1 << endl;
       }
+      delete fooHead;
    }
 
    //=============================================================================
@@ -180,6 +181,7 @@ main(int argc, char* argv[])
       {
          cerr << (*f)->va1 << endl;
       }
+      delete fooFooHead;
    }
 
    //=============================================================================
@@ -253,6 +255,7 @@ main(int argc, char* argv[])
       {
          cerr << (*f)->va1 << endl;
       }
+      delete fooFooHead;
    }
 
    cerr << "All OK" << endl;
@@ -263,6 +266,7 @@ main(int argc, char* argv[])
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

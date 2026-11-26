@@ -24,14 +24,15 @@ using namespace resip;
 
 Data* randomData(int size)
 {
-   unsigned char * p = new unsigned char[size];
+   std::vector<unsigned char> p(size);
 
    for(int i = 0 ; i < size; i++)
    {
 	  p[i] = static_cast<unsigned char>(Random::getRandom()&0xff);
    }
 
-   return new Data(p,size);
+   // Data copies the bytes, so the buffer is only needed until here.
+   return new Data(p.data(),size);
 }
 
 
@@ -126,6 +127,7 @@ main()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

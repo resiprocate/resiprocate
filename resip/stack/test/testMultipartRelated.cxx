@@ -265,11 +265,11 @@ main()
       MultipartRelatedContents* mpc = dynamic_cast<MultipartRelatedContents*>(msg->getContents());
       assert(mpc);
 
-      Contents* copy = msg->getContents()->clone();
+      unique_ptr<Contents> copy(msg->getContents()->clone());
 
       traverseMulti(mpc);
       
-      MultipartRelatedContents* mpcCopy = dynamic_cast<MultipartRelatedContents*>(copy);
+      MultipartRelatedContents* mpcCopy = dynamic_cast<MultipartRelatedContents*>(copy.get());
       traverseMulti(mpcCopy);
    }
 
@@ -280,6 +280,7 @@ main()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

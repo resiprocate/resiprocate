@@ -18,3 +18,8 @@
 leak:_GLOBAL__sub_I_
 leak:__cxx_global_var_init
 leak:__static_initialization_and_destruction_
+#
+# The default logger (Log::mDefaultLoggerData) is also a static object, but
+# Log::initialize() can give it a log file name later.  A name longer than the
+# local buffer stays on the heap, owned by that static, until exit.
+leak:resip::Log::ThreadData::set

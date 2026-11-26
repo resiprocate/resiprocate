@@ -55,7 +55,7 @@ main(int argc, char** argv)
        CRLF
        );
 
-     SipMessage * r2 = TestSupport::makeMessage(txt2,true);
+     unique_ptr<SipMessage> r2(TestSupport::makeMessage(txt2,true));
 
      tassert(r2->exists(h_AllowEvents) );
 
@@ -67,6 +67,7 @@ main(int argc, char** argv)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
+ * Copyright (c) 2026 SIP Spectrum, Inc. https://www.sipspectrum.com
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
