@@ -1,0 +1,67 @@
+name: CIFuzz
+# Builds the OSS-Fuzz targets (build/oss-fuzz/build.sh) the way OSS-Fuzz does
+# and fuzzes each one briefly, so a change that breaks a fuzz target or adds
+# a crash is caught when it is pushed or proposed rather than by OSS-Fuzz
+# later.
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  Fuzzing:
+    name: Fuzzing (${{ matrix.sanitizer }})
+    runs-on: ubuntu-24.04
+    # Report findings without blocking the pull request while this is new.
+    continue-on-error: true
+    permissions:
+      contents: read
+      # For uploading the results to code scanning (not granted to pull
+      # requests from forks, so that step is allowed to fail).
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, undefined]
+    steps:
+    - name: Build Fuzzers
+      id: build
+      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'resiprocate'
+        dry-run: false
+        language: c++
+        sanitizer: ${{ matrix.sanitizer }}
+    # The time is shared between the fuzz targets.
+    - name: Run Fuzzers
+      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'resiprocate'
+        fuzz-seconds: 300
+        dry-run: false
+        language: c++
+        sanitizer: ${{ matrix.sanitizer }}
+        output-sarif: true
+    - name: Upload Crash
+      uses: actions/upload-artifact@v4
+      if: failure() && steps.build.outcome == 'success'
+      with:
+        name: artifacts-${{ matrix.sanitizer }}
+        path: ./out/artifacts
+    - name: Upload Sarif
+      if: always() && steps.build.outcome == 'success'
+      continue-on-error: true
+      uses: github/codeql-action/upload-sarif@v4
+      with:
+        # Path to SARIF file relative to the root of the repository
+        sarif_file: cifuzz-sarif/results.sarif
+        checkout_path: cifuzz-sarif
+        category: CIFuzz-${{ matrix.sanitizer }}
