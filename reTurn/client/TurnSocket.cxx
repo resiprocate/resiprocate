@@ -489,6 +489,7 @@ TurnSocket::channelBind(RemotePeer& remotePeer)
    remotePeer.setChannelConfirmed();
    mChannelBindingRefreshTimes[remotePeer.getChannel()] = time(0) + TURN_CHANNEL_BINDING_REFRESH_SECONDS;
 
+   delete response;
    return ret;
 }
 
