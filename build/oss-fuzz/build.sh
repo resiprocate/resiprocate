@@ -25,7 +25,8 @@ cmake -S . -B _build \
     -DBUILD_REFLOW=OFF \
     -DBUILD_REND=OFF \
     -DBUILD_REPRO=OFF \
-    -DBUILD_RETURN=OFF \
+    -DBUILD_RETURN=ON \
+    -DASIO_INCLUDE_DIR="$PWD/contrib/asio" \
     -DBUILD_TFM=OFF \
     -DREGENERATE_MEDIA_SAMPLES=OFF \
     -DUSE_DTLS=OFF \
@@ -35,8 +36,9 @@ cmake -S . -B _build \
     -DWITH_C_ARES=OFF \
     -DWITH_SSL=OFF
 
-cmake --build _build --target aresfuzz aresfuzzname fuzzStack fuzzStun fuzzUtil fuzzXmlContents
+cmake --build _build --target aresfuzz aresfuzzname fuzzReTurnStun fuzzStack fuzzStun fuzzUtil fuzzXmlContents
 
+cp _build/reTurn/test/fuzzReTurnStun $OUT/
 cp _build/rutil/test/fuzzUtil $OUT/
 cp _build/rutil/test/fuzzStun $OUT/
 cp _build/resip/stack/test/fuzzStack $OUT/
@@ -53,6 +55,10 @@ cp build/oss-fuzz/fuzzStack.dict $OUT/
 # seed corpus and dictionary for fuzzStun
 cp build/oss-fuzz/fuzzStun.dict $OUT/
 (cd build/oss-fuzz/fuzzStun-seeds && zip -qj "$OUT/fuzzStun_seed_corpus.zip" ./*)
+
+# seed corpus and dictionary for fuzzReTurnStun
+cp build/oss-fuzz/fuzzReTurnStun.dict $OUT/
+(cd build/oss-fuzz/fuzzReTurnStun-seeds && zip -qj "$OUT/fuzzReTurnStun_seed_corpus.zip" ./*)
 
 # those fuzz targets are too small
 #  See: https://github.com/google/oss-fuzz/issues/1331

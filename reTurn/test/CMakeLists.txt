@@ -21,3 +21,10 @@ test(testReTurnServer testReTurnServer.cxx TlsTestSupport.hxx)
 target_link_libraries(testReTurnServer reTurnServerLib)
 target_compile_definitions(testReTurnServer PRIVATE RETURN_TEST_DH_FILE="${CMAKE_SOURCE_DIR}/reTurn/dh2048.pem"
                                                     RETURN_TEST_SHIPPED_CONFIG="${CMAKE_SOURCE_DIR}/reTurn/reTurnServer.config")
+
+# fuzzing targets
+
+add_fuzzing_executable(fuzzReTurnStun fuzzReTurnStun.cxx)
+set_target_properties(fuzzReTurnStun PROPERTIES FOLDER reTurn/FuzzingTests)
+target_include_directories(fuzzReTurnStun PRIVATE ${PROJECT_SOURCE_DIR})
+target_link_libraries(fuzzReTurnStun PRIVATE reTurnCommon)
