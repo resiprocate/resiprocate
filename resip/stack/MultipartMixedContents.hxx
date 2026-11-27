@@ -90,7 +90,9 @@ class MultipartMixedContents : public Contents
       static constexpr unsigned int MaxNestingDepth = 32;
 
       /**
-      @brief Thrown when there is an error parsing a multi-part mixed contents envelope.
+      @brief No longer thrown: errors parsing a multipart envelope are
+      reported with resip::ParseException, as for every other kind of
+      contents.  Kept so that code which names it still compiles.
       @sa resip::BaseException
       */
       class Exception final : public BaseException

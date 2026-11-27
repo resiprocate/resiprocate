@@ -105,7 +105,7 @@ checkWalk(Contents* top, unsigned int levels, bool withinLimit)
       assert(parsed == levels);
       assert(dynamic_cast<SdpContents*>(c));
    }
-   catch (BaseException&)
+   catch (ParseException&)
    {
       assert(!withinLimit);
       assert(parsed == MultipartMixedContents::MaxNestingDepth + 1);
@@ -214,6 +214,33 @@ main()
       MultipartRelatedContents dest;
       dest = mpc;
       assert(dest == mpc);
+   }
+
+   {
+      // A boundary line must end in CRLF.  A bad line ending is reported with
+      // ParseException, as any other parse error in contents is.
+      const char* bodies[] = { "--b1X\r\nContent-Type: text/plain\r\n\r\nhi\r\n--b1--",
+                               "--b1\rX\nContent-Type: text/plain\r\n\r\nhi\r\n--b1--" };
+      const Data typeTxt("multipart/mixed; boundary=b1");
+      ParseBuffer pb(typeTxt.data(), typeTxt.size());
+      Mime contentType;
+      contentType.parse(pb);
+      for (const char* body : bodies)
+      {
+         const Data txt(body);
+         HeaderFieldValue hfv(txt.data(), txt.size());
+         MultipartMixedContents mpc(hfv, contentType);
+         bool threw = false;
+         try
+         {
+            mpc.checkParsed();
+         }
+         catch (ParseException&)
+         {
+            threw = true;
+         }
+         assert(threw);
+      }
    }
 
    {

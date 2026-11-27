@@ -208,7 +208,7 @@ MultipartMixedContents::parse(ParseBuffer& pb)
    // from a tree walk such as Helper::getSdp().
    if (mDepth > MaxNestingDepth)
    {
-      throw Exception("Multipart nesting too deep", __FILE__, __LINE__);
+      pb.fail(__FILE__, __LINE__, "Multipart nesting too deep");
    }
 
    const Data& boundaryToken = mType.param(p_boundary);
@@ -237,12 +237,12 @@ MultipartMixedContents::parse(ParseBuffer& pb)
  
       if( pb.eof() || *pb.position() != Symbols::CR[0] )
       {
-         throw Exception("Invalid line ending, missing CR",__FILE__,__LINE__);
+         pb.fail(__FILE__, __LINE__, "Invalid line ending, missing CR");
       }
       pb.skipChar();
       if( pb.eof() || *pb.position() != Symbols::LF[0] )
       {
-         throw Exception("Invalid line ending, missing LF",__FILE__,__LINE__);
+         pb.fail(__FILE__, __LINE__, "Invalid line ending, missing LF");
       }
       pb.skipChar();
       
