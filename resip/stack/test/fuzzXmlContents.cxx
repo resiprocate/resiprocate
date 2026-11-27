@@ -7,12 +7,13 @@
 
 #include "FuzzStrict.h"
 
-// dialog-info (RFC 4235) and presence PIDF (RFC 3863) documents arrive as
-// attacker-controlled SIP message bodies and are parsed by reSIProcate's own
+// dialog-info (RFC 4235) and presence PIDF (RFC 3863) documents arrive in
+// SIP message bodies from the network and are parsed by reSIProcate's own
 // XML pull parser (rutil/XMLCursor).  This target feeds the fuzz buffer to
 // each XML-based Contents class, checks the parse, round-trips it through
 // encode() and exercises the public accessors, the same way the test suite
-// does.
+// does.  It catches BaseException, as the stack's callers do around parsing;
+// a std::exception escaping a parser is a bug to report, so it isn't caught.
 
 static bool fuzzDialogInfoContents(const resip::HeaderFieldValue& hfv)
 {
@@ -30,7 +31,7 @@ static bool fuzzDialogInfoContents(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::BaseException&)
     {
         return false;
     }
@@ -54,7 +55,7 @@ static bool fuzzGenericPidfContents(const resip::HeaderFieldValue& hfv)
         payload.encode(ds);
         ds.flush();
     }
-    catch (const resip::ParseException&)
+    catch (const resip::BaseException&)
     {
         return false;
     }
