@@ -59,7 +59,7 @@ public:
    void createHeader(uint16_t stunclass, uint16_t method);  // Set info needed for a new stun message - set's tid as well
    void createUsernameAndPassword();  // Ensure mRemoteTuple is set first
    void generateShortTermPasswordForUsername(resip::Data& password);  // Ensure username is set first
-   void getTupleFromUsername(StunTuple& tuple);   // note: does not set transport type
+   bool getTupleFromUsername(StunTuple& tuple);   // false if the username is not one createUsernameAndPassword() built; note: does not set transport type
    void calculateHmacKey(resip::Data& hmacKey, const resip::Data& longtermAuthenticationPassword);
    void calculateHmacKeyForHa1(resip::Data& hmacKey, const resip::Data& ha1);
    void calculateHmacKey(resip::Data& hmacKey, const resip::Data& username, const resip::Data& realm, const resip::Data& longtermAuthenticationPassword);

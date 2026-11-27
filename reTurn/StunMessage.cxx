@@ -1882,43 +1882,73 @@ StunMessage::generateShortTermPasswordForUsername(Data& password)
    password = Data(hmac, sizeof(hmac)).hex();
 }
 
-void
+bool
 StunMessage::getTupleFromUsername(StunTuple& tuple)
 {
-   resip_assert(mHasUsername);
-   resip_assert(mUsername && mUsername->size() >= 92);
-   resip_assert(mUsername->size() == 92 || mUsername->size() == 108);
-
-   if (mUsername->size() > 92)  // if over a certain size, then contains IPv6 address
+   // createUsernameAndPassword() builds the username from the base64 of the
+   // client's address (8 characters for IPv4, 24 for IPv6), ':', the base64
+   // of its port as an unsigned int (8 characters), ':' and fixed-size hex
+   // fields, 92 or 108 characters in all.  The username comes from the
+   // request, so check that layout and the decoded sizes before using it.
+   if (!mHasUsername || !mUsername)
    {
-      Data addressPart(Data::Share, mUsername->data(), 24);
-      addressPart = addressPart.base64decode();
-      asio::ip::address_v6::bytes_type bytes;
-      memcpy(bytes.data(), addressPart.data(), bytes.size());
-      asio::ip::address_v6 addressv6(bytes);
-      tuple.setAddress(addressv6);
-
-      unsigned int port;
-      Data portPart(Data::Share, mUsername->data() + 25, 4);
-      portPart = portPart.base64decode();
-      memcpy(&port, portPart.data(), sizeof(port));
-      tuple.setPort(port);
+      return false;
+   }
+   const Data& username = *mUsername;
+   Data::size_type addressLength;
+   if (username.size() == 92)
+   {
+      addressLength = 8;
+   }
+   else if (username.size() == 108)
+   {
+      addressLength = 24;
    }
    else
    {
-      Data addressPart(Data::Share, mUsername->data(), 8);
-      addressPart = addressPart.base64decode();
-      asio::ip::address_v4::bytes_type bytes;
-      memcpy(bytes.data(), addressPart.data(), bytes.size());
-      asio::ip::address_v4 addressv4(bytes);
-      tuple.setAddress(addressv4);
-
-      unsigned int port;
-      Data portPart(Data::Share, mUsername->data() + 9, 4);
-      portPart = portPart.base64decode();
-      memcpy(&port, portPart.data(), sizeof(port));
-      tuple.setPort(port);
+      return false;
    }
+   const char* chars = username.data();
+   if (chars[addressLength] != ':' || chars[addressLength + 9] != ':')
+   {
+      return false;
+   }
+
+   const Data address = Data(Data::Share, chars, addressLength).base64decode();
+   const Data portBytes = Data(Data::Share, chars + addressLength + 1, 8).base64decode();
+   unsigned int port;
+   if (portBytes.size() != sizeof(port))
+   {
+      return false;
+   }
+   memcpy(&port, portBytes.data(), sizeof(port));
+   if (port > 0xFFFF)
+   {
+      return false;
+   }
+
+   if (addressLength == 24)
+   {
+      asio::ip::address_v6::bytes_type bytes;
+      if (address.size() != bytes.size())
+      {
+         return false;
+      }
+      memcpy(bytes.data(), address.data(), bytes.size());
+      tuple.setAddress(asio::ip::address_v6(bytes));
+   }
+   else
+   {
+      asio::ip::address_v4::bytes_type bytes;
+      if (address.size() != bytes.size())
+      {
+         return false;
+      }
+      memcpy(bytes.data(), address.data(), bytes.size());
+      tuple.setAddress(asio::ip::address_v4(bytes));
+   }
+   tuple.setPort(port);
+   return true;
 }
 
 void

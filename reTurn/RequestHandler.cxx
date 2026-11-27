@@ -558,14 +558,13 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
       {
          StunMessage::setTupleFromStunAtrAddress(response.mRemoteTuple, request.mResponseAddress);
 
-         // If the username is present and is greater than or equal to 92 bytes long, then we assume this username
-         // was obtained from a shared secret request
-         if (request.mHasUsername && (request.mUsername->size() >= 92 ) )
+         // If the username is one a shared secret request gave out (see
+         // StunMessage::createUsernameAndPassword()), it holds the address
+         // that sent that request: use it in REFLECTED-FROM.  Otherwise use
+         // the address this request came from.
+         StunTuple responseTuple;
+         if (request.mHasUsername && request.getTupleFromUsername(responseTuple))
          {
-            // Extract source address that sent the shared secret request from the encoded username and use this in response address
-            StunTuple responseTuple;
-            request.getTupleFromUsername(responseTuple);
-
             response.mHasReflectedFrom = true;
             StunMessage::setStunAtrAddressFromTuple(response.mReflectedFrom, responseTuple);
          }

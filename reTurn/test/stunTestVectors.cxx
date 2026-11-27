@@ -195,6 +195,43 @@ try
       assert(!msg.isValid());
    }
 
+   // getTupleFromUsername() recovers the address and port that
+   // createUsernameAndPassword() put in a shared-secret username
+   {
+      StunTuple v6remote(StunTuple::UDP, asio::ip::make_address("2001:db8::1234"), 40000);
+      for (const StunTuple* client : { &remote, &v6remote })
+      {
+         StunMessage secret;
+         secret.mRemoteTuple = *client;
+         secret.createUsernameAndPassword();
+         assert(secret.mUsername->size() == (client->getAddress().is_v6() ? 108u : 92u));
+         StunTuple tuple;
+         assert(secret.getTupleFromUsername(tuple));
+         assert(tuple.getAddress() == client->getAddress());
+         assert(tuple.getPort() == client->getPort());
+      }
+   }
+   // ... and rejects usernames it did not build
+   {
+      StunMessage secret;
+      secret.mRemoteTuple = remote;
+      secret.createUsernameAndPassword();
+      const std::string good(secret.mUsername->data(), secret.mUsername->size());
+      auto rejects = [&secret](const std::string& username)
+      {
+         *secret.mUsername = resip::Data(username);
+         StunTuple tuple;
+         return !secret.getTupleFromUsername(tuple);
+      };
+      assert(rejects(good.substr(0, 91)));                    // too short
+      assert(rejects(std::string(100, 'A')));                 // between the IPv4 and IPv6 lengths
+      assert(rejects(std::string(good).replace(8, 1, "A")));   // separator missing
+      assert(rejects(std::string(good).replace(0, 8, 8, '!'))); // address is not base64
+      assert(rejects(std::string(good).replace(9, 8, 8, '='))); // port decodes to fewer than 4 bytes
+      assert(rejects(std::string(good).replace(9, 8, "/////w=="))); // port above 65535
+      assert(!rejects(good));
+   }
+
    InfoLog(<< "All tests passed!");
    return 0;
 }
