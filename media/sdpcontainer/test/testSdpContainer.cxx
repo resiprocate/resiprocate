@@ -74,11 +74,14 @@ int main(int argc, char* argv[])
       Sdp::SdpTime* sdpTime = new Sdp::SdpTime(100, 200);
       Sdp::SdpTime::SdpTimeRepeat* repeat = new Sdp::SdpTime::SdpTimeRepeat(8, 800);
       sdpTime->addRepeat(*repeat);
+      delete repeat;
       repeat = new Sdp::SdpTime::SdpTimeRepeat(9, 900);
       repeat->addOffsetFromStartTime(20);
       repeat->addOffsetFromStartTime(21);
       sdpTime->addRepeat(*repeat);
+      delete repeat;
       sdp.addTime(*sdpTime);
+      delete sdpTime;
       sdp.addTime(300, 400);
       assert(sdp.getTimes().size() == 2);      
       assert(sdp.getTimes().front().getStartTime() == 100);
@@ -118,9 +121,11 @@ int main(int argc, char* argv[])
       group->addIdentificationTag("media1");
       group->addIdentificationTag("media2");
       sdp.addGroup(*group);
+      delete group;
       group = new Sdp::SdpGroup(Sdp::GROUP_SEMANTICS_FID);
       group->addIdentificationTag("fid1");
       sdp.addGroup(*group);
+      delete group;
       assert(sdp.getGroups().size() == 2);
       assert(sdp.getGroups().front().getSemantics() == Sdp::GROUP_SEMANTICS_LS);
       assert(sdp.getGroups().front().getIdentificationTags().size() == 2);
@@ -245,6 +250,7 @@ int main(int argc, char* argv[])
       crypto->setSrtpWsh(32);
       crypto->addCryptoKeyParam(SdpMediaLine::CRYPTO_KEY_METHOD_INLINE, "CyrptoKey", 10000, 1, 5);
       mediaLine->addCryptoSettings(*crypto);
+      delete crypto;
       crypto = new SdpMediaLine::SdpCrypto;
       crypto->setTag(2);
       crypto->setSuite(SdpMediaLine::CRYPTO_SUITE_TYPE_F8_128_HMAC_SHA1_80);
@@ -259,6 +265,7 @@ int main(int argc, char* argv[])
       assert(crypto->getCryptoKeyParams().front().getKeyValue() == "CryptoKey2");
       assert(crypto->getGenericSessionParams().size() == 2);
       mediaLine->addCryptoSettings(*crypto);
+      delete crypto;
       assert(mediaLine->getCryptos().size() == 2);
 
       mediaLine->setFingerPrint(SdpMediaLine::FINGERPRINT_HASH_FUNC_MD5, "this-is-a-finger-print");
@@ -349,6 +356,7 @@ int main(int argc, char* argv[])
       assert(codec->getNumChannels() == 1);
       assert(codec->getFormatParameters() == "annexb=no");
       mediaLine->addCodec(*codec);
+      delete codec;
       assert(mediaLine->getCodecs().size() == 1);
 
       SdpCandidate* sdpLocalCandidate = new SdpCandidate("f1", 1, SdpCandidate::CANDIDATE_TRANSPORT_TYPE_UDP, 100, "192.168.1.1", 6000, SdpCandidate::CANDIDATE_TYPE_HOST);
@@ -357,6 +365,7 @@ int main(int argc, char* argv[])
       assert(mediaLine->getCandidates().size() == 1);
       mediaLine->addCandidatePair(*sdpLocalCandidate, *sdpRemoteCandidate, SdpCandidatePair::OFFERER_REMOTE);
       assert(mediaLine->getCandidatePairs().size() == 1);
+      delete sdpLocalCandidate;
       delete sdpRemoteCandidate;
       sdpLocalCandidate = new SdpCandidate("f1", 2, SdpCandidate::CANDIDATE_TRANSPORT_TYPE_UDP, 101, "192.168.1.1", 6001, SdpCandidate::CANDIDATE_TYPE_HOST);
       sdpRemoteCandidate = new SdpCandidate("a1", 2, SdpCandidate::CANDIDATE_TRANSPORT_TYPE_UDP, 56, "192.168.1.1", 2346, SdpCandidate::CANDIDATE_TYPE_HOST);
@@ -377,6 +386,7 @@ int main(int argc, char* argv[])
       it2++;
       assert(it2->getPriority() == UINT64_C(236223201480));
 
+      delete sdpLocalCandidate;
       delete sdpRemoteCandidate;
 
       sdp.addMediaLine(mediaLine);
