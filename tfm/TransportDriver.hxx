@@ -9,7 +9,6 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <mutex>
 
 //#ifndef WIN32
 //#include <sys/select.h> // posix
@@ -38,12 +37,6 @@ class TransportDriver : public resip::ThreadIf
       void removeClient(Client* client);
       resip::Transport* getClientTransport(unsigned int transportKey);
       static TransportDriver& instance();
-
-      // Endpoints update their state (dialogs, stored requests) in this
-      // thread as messages arrive, and test actions read it in the thread
-      // running the sequences.  Both hold this mutex while they do.  Take it
-      // before mMutex: an action can add a client while holding it.
-      static std::recursive_mutex& endpointStateMutex();
 
    protected:
       void thread();

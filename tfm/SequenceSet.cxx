@@ -5,9 +5,6 @@
 #include "tfm/Sequence.hxx"
 #include "tfm/SequenceSet.hxx"
 #include "tfm/ExpectActionEvent.hxx"
-#include "tfm/TransportDriver.hxx"
-
-#include <mutex>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -176,8 +173,6 @@ SequenceSet::preLoop()
 #else
 	Sleep(100000/1000);
 #endif
-   // Actions read endpoint state that the transport driver thread updates.
-   std::lock_guard<std::recursive_mutex> stateLock(TransportDriver::endpointStateMutex());
    // start each sequence by executing the action
    for (list<SequenceClass*>::const_iterator i = mSequences.begin();
         i != mSequences.end(); i++)
@@ -239,8 +234,6 @@ SequenceSet::postLoop()
 void
 SequenceSet::handle(std::shared_ptr<Event> event)
 {
-   // Actions read endpoint state that the transport driver thread updates.
-   std::lock_guard<std::recursive_mutex> stateLock(TransportDriver::endpointStateMutex());
    //CerrLog( << "Current ActiveSet");
    for (set<SequenceClass*>::const_iterator i = mActiveSet.begin();
         i != mActiveSet.end(); i++) 

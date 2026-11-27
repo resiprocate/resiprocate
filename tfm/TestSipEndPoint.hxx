@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 
 class TestProxy;
 class TestSipEndPoint;
@@ -1225,6 +1226,11 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       UpdateList mUpdatesReceived;
       
    public: // !dlb! hack
+      // The transport driver thread updates this endpoint's state (dialogs,
+      // stored requests) in handleEvent() as messages arrive, while this
+      // endpoint's actions read it in the thread running the sequences.  Both
+      // hold this while they do.  Recursive, as an action can call another.
+      std::recursive_mutex mStateMutex;
       DialogList mDialogs;
       SentSubscribeList mSubscribesSent;
       //!dcm! allow MessageExpectAction to use the last message received if the

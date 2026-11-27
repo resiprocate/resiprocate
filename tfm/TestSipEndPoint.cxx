@@ -195,6 +195,7 @@ TestSipEndPoint::~TestSipEndPoint()
 void
 TestSipEndPoint::clean()
 {
+   std::lock_guard<std::recursive_mutex> stateLock(this->mStateMutex);
    DebugLog(<< *this << " Clearing out requests.");
    mInvitesSent.clear();
    mInvitesReceived.clear();
@@ -796,6 +797,7 @@ TestSipEndPoint::Refer::Refer(TestSipEndPoint* endPoint,
 void
 TestSipEndPoint::Refer::operator()(TestSipEndPoint& endPoint)
 {  
+   std::lock_guard<std::recursive_mutex> stateLock(endPoint.mStateMutex);
    DeprecatedDialog* dialog = endPoint.getDialog(mWho.user());
    resip_assert(dialog);
    const std::shared_ptr<SipMessage> refer(dialog->makeRefer(NameAddr(mTo)));
@@ -846,6 +848,7 @@ TestSipEndPoint::ReInvite::operator()()
 void 
 TestSipEndPoint::ReInvite::operator()(std::shared_ptr<Event> event)
 {
+   std::lock_guard<std::recursive_mutex> stateLock(mEndPoint.mStateMutex);
    go();
 }
 
@@ -1112,6 +1115,7 @@ TestSipEndPoint::MessageAction::setRawConditioner(RawConditionerFn conditioner)
 void
 TestSipEndPoint::MessageAction::operator()() 
 { 
+   std::lock_guard<std::recursive_mutex> stateLock(mEndPoint.mStateMutex);
    mMsg = go(); 
    if (mMsg)
    {
@@ -1466,6 +1470,7 @@ TestSipEndPoint::Subscribe::toString() const
 void
 TestSipEndPoint::Subscribe::operator()(std::shared_ptr<Event> event)
 {
+   std::lock_guard<std::recursive_mutex> stateLock(mEndPoint.mStateMutex);
    if (! mEndPoint.getDialog())
    {
       // subscribe creating a dialog from an incoming request, as opposed to the normal 1xx, 2xx response to INVITE.
@@ -1973,6 +1978,7 @@ TestSipEndPoint::MessageExpectAction::MessageExpectAction(TestSipEndPoint& from)
 void
 TestSipEndPoint::MessageExpectAction::operator()(std::shared_ptr<Event> event)
 {
+   std::lock_guard<std::recursive_mutex> stateLock(mEndPoint.mStateMutex);
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
 
    if (!sipEvent && !mEndPoint.mLastMessage)
@@ -4055,6 +4061,7 @@ TestSipEndPoint::process(FdSet& fdset)
 void 
 TestSipEndPoint::handleEvent(std::shared_ptr<Event> event)
 {
+   std::lock_guard<std::recursive_mutex> stateLock(this->mStateMutex);
    std::shared_ptr<SipEvent> sipEvent = std::dynamic_pointer_cast<SipEvent>(event);
    resip_assert(sipEvent);
    std::shared_ptr<SipMessage> msg = sipEvent->getMessage();
