@@ -7,26 +7,41 @@ concurrency:
 
 jobs:
   build:
-    name: Build with ${{ matrix.c-compiler }}
+    name: Build with ${{ matrix.name }}
     runs-on: ubuntu-24.04
     container:
       # Debian 12.  Bullseye (11) left LTS in August 2026 and its security
       # archive is being pruned, which broke dependency installation outright.
       # Trixie (13) no longer ships libpcre3-dev, which sipXtapi still needs.
       image: debian:bookworm-slim
-      options: --ulimit memlock=-1
+      # LeakSanitizer stops the process's threads with ptrace to scan them.
+      options: --ulimit memlock=-1 ${{ matrix.sanitize && '--cap-add SYS_PTRACE' || '' }}
     strategy:
       fail-fast: false
+      # Each entry is listed in full: an include entry that only adds a key
+      # (sanitize) to an existing c-compiler value would be merged into that
+      # job instead of creating a new one.
       matrix:
-        c-compiler: [gcc-12, clang-16]
         include:
-          - c-compiler: gcc-12
+          - name: gcc-12
+            c-compiler: gcc-12
             cxx-compiler: g++-12
-          - c-compiler: clang-16
+          - name: clang-16
+            c-compiler: clang-16
             cxx-compiler: clang++-16
+          # The same build with AddressSanitizer (including LeakSanitizer) and
+          # UndefinedBehaviorSanitizer, running every test, TFM included.
+          - name: clang-16 + sanitizers
+            c-compiler: clang-16
+            cxx-compiler: clang++-16
+            sanitize: true
     env:
       CC: /usr/bin/${{ matrix.c-compiler }}
       CXX: /usr/bin/${{ matrix.cxx-compiler }}
+      # Ignored by builds without sanitizers.  LSAN_OPTIONS is set in the
+      # Configure step, since it needs the path inside the container.
+      ASAN_OPTIONS: ${{ matrix.sanitize && 'detect_leaks=1' || '' }}
+      UBSAN_OPTIONS: ${{ matrix.sanitize && 'print_stacktrace=1:halt_on_error=1' || '' }}
     steps:
       - name: Get number of CPU cores
         uses: SimenB/github-actions-cpu-cores@v1.1.0
@@ -108,7 +123,9 @@ jobs:
       # the pinned commit or the build script changes.  tar preserves the
       # ExternalProject stamp mtimes, so on a hit the build sees sipXtapi as up
       # to date and skips it.  sipXtapi is built with the job's compiler, so
-      # each matrix entry has its own entry.  Bump the trailing salt (v1) to
+      # each compiler has its own entry.  The two clang-16 jobs share one:
+      # build/build_sipxtapi.sh sets its own flags, so sipXtapi is never built
+      # with sanitizers, and uninstrumented libraries work with ASan.  Bump the trailing salt (v1) to
       # force a rebuild, e.g. after changing the container image.
       - name: Cache sipXtapi
         uses: actions/cache@v4
@@ -122,14 +139,25 @@ jobs:
       - name: Bootstrap
         run: ./build/travis/bootstrap
 
+      # build/lsan-suppressions.txt explains the leak reports it suppresses.
+      # In a container job the expression github.workspace is the host's path,
+      # so the path comes from $GITHUB_WORKSPACE inside the container.
       - name: Configure
-        run: ./build/travis/configure
+        run: |
+          if [ "${{ matrix.sanitize }}" = "true" ]
+          then
+            echo "LSAN_OPTIONS=suppressions=$GITHUB_WORKSPACE/build/lsan-suppressions.txt" >> "$GITHUB_ENV"
+            ./build/travis/configure -DENABLE_ASAN=ON -DENABLE_UBSAN=ON
+          else
+            ./build/travis/configure
+          fi
 
       - name: Build
         run: ./build/travis/build
 
+      # The plain clang-16 job already runs clang-tidy.
       - name: Analyse
-        if: ${{ matrix.c-compiler == 'clang-16' }}
+        if: ${{ matrix.c-compiler == 'clang-16' && !matrix.sanitize }}
         run: run-clang-tidy-16 -j ${{ steps.cpu-cores.outputs.count }} -quiet
 
       # A failing test is run once more before failing the job, since CI
@@ -151,15 +179,14 @@ jobs:
       # The TFM suites log in detail to resiprocate.log in their working
       # directories (the source tree, under ctest).  Keep those logs when a run
       # fails, since a timing failure may not reproduce anywhere else.  Each run
-      # moves the previous log to resiprocate.log.old, which holds the first
-      # attempt when ctest has rerun a failed suite.  The paths are relative to
+      # moves the previous log to resiprocate.log.old.  The paths are relative to
       # the workspace: in a container job, github.workspace is the host's path.
       # Each matrix entry needs its own artifact name.
       - name: Upload TFM logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: tfm-logs-linux-${{ matrix.c-compiler }}
+          name: tfm-logs-linux-${{ matrix.sanitize && format('{0}-sanitizers', matrix.c-compiler) || matrix.c-compiler }}
           path: |
             tfm/repro/resiprocate.log
             tfm/repro/resiprocate.log.old
