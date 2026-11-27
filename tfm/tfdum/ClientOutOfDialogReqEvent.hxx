@@ -54,6 +54,7 @@ class ClientOutOfDialogReqEvent : public DumEvent
       Type getType() const { return mType; }
       
       resip::ClientOutOfDialogReqHandle& getHandle() { return mHandle; }
+      bool getUsageId(resip::Handled::Id& id) const override { id = mHandle.getId(); return true; }
 
    protected:
       Type mType;

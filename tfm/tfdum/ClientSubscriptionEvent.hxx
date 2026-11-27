@@ -74,6 +74,7 @@ class ClientSubscriptionEvent : public DumEvent
       Type getType() const { return mType; }
       
       resip::ClientSubscriptionHandle& getHandle() { return mHandle; }
+      bool getUsageId(resip::Handled::Id& id) const override { id = mHandle.getId(); return true; }
       
 
    protected:

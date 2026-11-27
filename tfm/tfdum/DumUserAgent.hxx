@@ -36,6 +36,8 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
+#include <set>
 
 class TestProxy;
 class DumUaAction;
@@ -611,6 +613,17 @@ class DumUserAgent : public EndPoint,
       resip::AppDialogSet* mAppDialogSet;
 
 private:
+      // A test that fails part way through can leave a call, subscription or
+      // registration behind, and its later events (a provisional, a refresh, a
+      // timeout) would be taken as events of whichever test is running by then.
+      // handleEvent() records the DUM usages each test's events come from,
+      // clean() marks them as earlier tests' usages, and their events are then
+      // logged and dropped.  handleEvent() runs in DUM's thread and clean() in
+      // the test's, hence the mutex.
+      std::mutex mUsagesMutex;
+      std::set<resip::Handled::Id> mUsagesThisTest;
+      std::set<resip::Handled::Id> mEarlierTestsUsages;
+
       bool mNatNavigator;
       resip::Data mStunAddr;
       int mStunPort;

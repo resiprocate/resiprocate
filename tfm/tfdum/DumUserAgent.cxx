@@ -116,6 +116,11 @@ DumUserAgent::clean()
    mTestUsages.clear();
    getDum().createDialogEventStateManager(0);
    //clear out handles/etc here
+
+   // Anything this test's usages report from now on belongs to no test.
+   std::lock_guard<std::mutex> lock(mUsagesMutex);
+   mEarlierTestsUsages.insert(mUsagesThisTest.begin(), mUsagesThisTest.end());
+   mUsagesThisTest.clear();
 }
 
 
@@ -1903,6 +1908,20 @@ DumUserAgent::handleEvent(Event* eventRaw)
 {
     std::shared_ptr<Event> event(eventRaw);
    StackLog(<< "DumUserAgent::handleEvent: " << *eventRaw);
+
+   // Drop events from usages an earlier test left behind (see clean()).
+   DumEvent* dumEvent = dynamic_cast<DumEvent*>(eventRaw);
+   Handled::Id usageId = 0;
+   if (dumEvent && dumEvent->getUsageId(usageId))
+   {
+      std::lock_guard<std::mutex> lock(mUsagesMutex);
+      if (mEarlierTestsUsages.count(usageId))
+      {
+         InfoLog(<< "DumUserAgent::handleEvent: dropping an event from a usage an earlier test left behind: " << *event);
+         return;
+      }
+      mUsagesThisTest.insert(usageId);
+   }
 
    std::shared_ptr<SequenceSet> sset = getSequenceSet().lock();
    if (sset)

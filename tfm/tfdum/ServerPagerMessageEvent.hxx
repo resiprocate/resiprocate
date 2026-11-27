@@ -50,6 +50,7 @@ class ServerPagerMessageEvent : public DumEvent
       Type getType() const { return mType; }
       
       resip::ServerPagerMessageHandle& getHandle() { return mHandle; }
+      bool getUsageId(resip::Handled::Id& id) const override { id = mHandle.getId(); return true; }
       
 
    protected:
