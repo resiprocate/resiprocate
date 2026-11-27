@@ -31,7 +31,7 @@ class ServerOutOfDialogReqEvent : public DumEvent
       {
       }
 
-      virtual resip::Data toString() const
+      resip::Data toString() const override
       {
          resip::Data buffer;
          {
@@ -41,7 +41,7 @@ class ServerOutOfDialogReqEvent : public DumEvent
          return buffer;
       }
 
-      virtual resip::Data briefString() const
+      resip::Data briefString() const override
       {
          return toString();
       }
