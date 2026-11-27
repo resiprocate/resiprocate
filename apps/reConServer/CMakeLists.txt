@@ -53,6 +53,14 @@ endif()
 
 target_link_libraries(reConServer PUBLIC recon ${SOCI_LIBRARIES})
 
+if(ENABLE_UBSAN)
+   # UBSan's vptr check refers to the typeinfo of every polymorphic class it
+   # checks, and soci_core doesn't export it for its internal classes (such as
+   # soci::details::ref_counted_statement), so the link fails.  Most of
+   # reConServer's sources include SOCI, so leave the vptr check off for it.
+   target_compile_options(reConServer PRIVATE -fno-sanitize=vptr)
+endif()
+
 # FIXME
 if(USE_SOCI_POSTGRESQL)
    target_link_libraries(reConServer PUBLIC -lsoci_postgresql)
